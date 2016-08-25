@@ -85,6 +85,7 @@ final class JsonConfigParser implements ConfigParser {
             String id = experimentObject.getString("id");
             String key = experimentObject.getString("key");
             String status = experimentObject.getString("status");
+            String layerId = experimentObject.getString("layerId");
 
             JSONArray audienceIdsJson = experimentObject.getJSONArray("audienceIds");
             List<String> audienceIds = new ArrayList<String>(audienceIdsJson.length());
@@ -100,7 +101,7 @@ final class JsonConfigParser implements ConfigParser {
             List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation(experimentObject.getJSONArray("trafficAllocation"));
 
-            experiments.add(new Experiment(id, key, status, audienceIds, variations, userIdToVariationKeyMap,
+            experiments.add(new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
                                            trafficAllocations, groupId));
         }
 

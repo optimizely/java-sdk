@@ -1,13 +1,14 @@
 {
   "accountId": "789",
   "projectId": "1234",
-  "version": "4",
+  "version": "2",
   "revision": "42",
   "experiments": [
     {
       "id": "223",
       "key": "etag1",
       "status": "Running",
+      "layerId": "1",
       "percentageIncluded": 9000,
       "audienceIds": [
         "100"
@@ -32,6 +33,7 @@
       "id": "118",
       "key": "etag2",
       "status": "Not started",
+      "layerId": "2",
       "audienceIds": [
         "100"
       ],
@@ -69,6 +71,7 @@
       "id": "301",
       "key": "group_etag2",
       "status": "Running",
+      "layerId": "3",
       "percentageIncluded": 10000,
       "audienceIds": [
         "100"
@@ -92,6 +95,7 @@
       "id": "300",
       "key": "group_etag1",
       "status": "Running",
+      "layerId": "4",
       "percentageIncluded": 10000,
       "audienceIds": [
         "100"
@@ -123,6 +127,7 @@
       "id": "302",
       "key": "overlapping_etag1",
       "status": "Running",
+      "layerId": "5",
       "percentageIncluded": 3000,
       "audienceIds": [
         "100"
