@@ -62,6 +62,7 @@ public class GroupJacksonDeserializer extends JsonDeserializer<Group> {
         String id = experimentJson.get("id").textValue();
         String key = experimentJson.get("key").textValue();
         String status = experimentJson.get("status").textValue();
+        String layerId = experimentJson.get("layerId").textValue();
         List<String> audienceIds = mapper.readValue(experimentJson.get("audienceIds").toString(),
                                                     new TypeReference<List<String>>(){});
         List<Variation> variations = mapper.readValue(experimentJson.get("variations").toString(),
@@ -71,8 +72,8 @@ public class GroupJacksonDeserializer extends JsonDeserializer<Group> {
         Map<String, String>  userIdToVariationKeyMap = mapper.readValue(
             experimentJson.get("forcedVariations").toString(), new TypeReference<Map<String, String>>(){});
 
-        return new Experiment(id, key, status, audienceIds, variations, userIdToVariationKeyMap, trafficAllocations,
-                              groupId);
+        return new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
+                              trafficAllocations, groupId);
     }
 
 }

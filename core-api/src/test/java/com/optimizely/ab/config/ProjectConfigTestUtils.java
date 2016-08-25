@@ -50,7 +50,7 @@ public final class ProjectConfigTestUtils {
     private static final ProjectConfig VALID_PROJECT_CONFIG = generateValidProjectConfig();
     private static ProjectConfig generateValidProjectConfig() {
         List<Experiment> experiments = asList(
-            new Experiment("223", "etag1", "Running",
+            new Experiment("223", "etag1", "Running", "1",
                            singletonList("100"),
                            asList(new Variation("276", "vtag1"),
                                   new Variation("277", "vtag2")),
@@ -58,7 +58,7 @@ public final class ProjectConfigTestUtils {
                            asList(new TrafficAllocation("276", 3500),
                                   new TrafficAllocation("277", 9000)),
                            ""),
-            new Experiment("118", "etag2", "Not started",
+            new Experiment("118", "etag2", "Not started", "2",
                            singletonList("100"),
                            asList(new Variation("278", "vtag3"),
                                   new Variation("279", "vtag4")),
@@ -98,7 +98,7 @@ public final class ProjectConfigTestUtils {
         userIdToVariationKeyMap.put("testUser2", "e1_vtag2");
 
         List<Experiment> randomGroupExperiments = asList(
-            new Experiment("301", "group_etag2", "Running",
+            new Experiment("301", "group_etag2", "Running", "3",
                            singletonList("100"),
                            asList(new Variation("282", "e2_vtag1"),
                                   new Variation("283", "e2_vtag2")),
@@ -106,7 +106,7 @@ public final class ProjectConfigTestUtils {
                            asList(new TrafficAllocation("282", 5000),
                                   new TrafficAllocation("283", 10000)),
                            "42"),
-            new Experiment("300", "group_etag1", "Running",
+            new Experiment("300", "group_etag1", "Running", "4",
                            singletonList("100"),
                            asList(new Variation("280", "e1_vtag1"),
                                   new Variation("281", "e1_vtag2")),
@@ -117,7 +117,7 @@ public final class ProjectConfigTestUtils {
         );
 
         List<Experiment> overlappingGroupExperiments = asList(
-            new Experiment("302", "overlapping_etag1", "Running",
+            new Experiment("302", "overlapping_etag1", "Running", "5",
                            singletonList("100"),
                            asList(new Variation("284", "e1_vtag1"),
                                   new Variation("285", "e1_vtag2")),
@@ -137,7 +137,7 @@ public final class ProjectConfigTestUtils {
                                                  Collections.<TrafficAllocation>emptyList());
         List<Group> groups = asList(randomPolicyGroup, overlappingPolicyGroup);
 
-        return new ProjectConfig("789", "1234", "4", "42", groups, experiments, attributes, events, audiences);
+        return new ProjectConfig("789", "1234", "2", "42", groups, experiments, attributes, events, audiences);
     }
 
     private static final ProjectConfig NO_AUDIENCE_PROJECT_CONFIG = generateNoAudienceProjectConfig();
@@ -147,7 +147,7 @@ public final class ProjectConfigTestUtils {
         userIdToVariationKeyMap.put("testUser2", "vtag2");
 
         List<Experiment> experiments = asList(
-            new Experiment("223", "etag1", "Running",
+            new Experiment("223", "etag1", "Running", "1",
                            Collections.<String>emptyList(),
                            asList(new Variation("276", "vtag1"),
                                   new Variation("277", "vtag2")),
@@ -155,7 +155,7 @@ public final class ProjectConfigTestUtils {
                            asList(new TrafficAllocation("276", 3500),
                                   new TrafficAllocation("277", 9000)),
                            ""),
-            new Experiment("118", "etag2", "Not started",
+            new Experiment("118", "etag2", "Not started", "2",
                            Collections.<String>emptyList(),
                            asList(new Variation("278", "vtag3"),
                                   new Variation("279", "vtag4")),
@@ -173,7 +173,7 @@ public final class ProjectConfigTestUtils {
                                         new EventType("098", "Total Revenue", singleExperimentId),
                                         new EventType("099", "clicked_purchase", multipleExperimentIds));
 
-        return new ProjectConfig("789", "1234", "4", "42", Collections.<Group>emptyList(), experiments, attributes,
+        return new ProjectConfig("789", "1234", "2", "42", Collections.<Group>emptyList(), experiments, attributes,
                                  events, Collections.<Audience>emptyList());
     }
 
