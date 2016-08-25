@@ -39,6 +39,9 @@ import javax.annotation.concurrent.Immutable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ProjectConfig {
 
+    public static final String V1 = "1";
+    public static final String V2 = "2";
+
     private final String accountId;
     private final String projectId;
     private final String revision;
