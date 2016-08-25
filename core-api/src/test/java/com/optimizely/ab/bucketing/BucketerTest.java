@@ -158,7 +158,7 @@ public class BucketerTest {
             new TrafficAllocation("4", 10000)
         );
 
-        Experiment experiment = new Experiment("1234", "exp_key", "Running", audienceIds, variations,
+        Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", audienceIds, variations,
                                                Collections.<String, String>emptyMap(), trafficAllocations, "");
 
         final AtomicInteger bucketValue = new AtomicInteger();
@@ -202,7 +202,7 @@ public class BucketerTest {
             new TrafficAllocation("1", 999)
         );
 
-        Experiment experiment = new Experiment("1234", "exp_key", "Running", audienceIds, variations,
+        Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", audienceIds, variations,
                                                Collections.<String, String>emptyMap(), trafficAllocations, "");
 
         final AtomicInteger bucketValue = new AtomicInteger();
@@ -241,7 +241,7 @@ public class BucketerTest {
 
         Map<String, String> userIdToVariationKeyMap = Collections.singletonMap("testUser1", "var1");
 
-        Experiment experiment = new Experiment("1234", "exp_key", "Running", Collections.<String>emptyList(),
+        Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", Collections.<String>emptyList(),
                                                variations, userIdToVariationKeyMap, trafficAllocations, "");
 
         logbackVerifier.expectMessage(Level.INFO, "User \"testUser1\" is forced in variation \"var1\".");
@@ -275,7 +275,7 @@ public class BucketerTest {
 
         Map<String, String> userIdToVariationKeyMap = Collections.singletonMap("testUser1", "var1");
 
-        Experiment experiment = new Experiment("1234", "exp_key", "Running", audienceIds, variations,
+        Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", audienceIds, variations,
                                                userIdToVariationKeyMap, trafficAllocations, "");
         bucketValue.set(1500);
         assertThat(algorithm.bucket(experiment, "testUser2").getKey(), is("var2"));
@@ -300,7 +300,7 @@ public class BucketerTest {
 
         Map<String, String> userIdToVariationKeyMap = Collections.singletonMap("testUser1", "invalidVarKey");
 
-        Experiment experiment = new Experiment("1234", "exp_key", "Running", Collections.<String>emptyList(),
+        Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", Collections.<String>emptyList(),
                                                variations, userIdToVariationKeyMap, trafficAllocations);
 
         logbackVerifier.expectMessage(

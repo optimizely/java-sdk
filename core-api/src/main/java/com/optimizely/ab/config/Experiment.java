@@ -38,6 +38,7 @@ public class Experiment implements IdKeyMapped {
     private final String id;
     private final String key;
     private final String status;
+    private final String layerId;
     private final String groupId;
 
     private final List<String> audienceIds;
@@ -56,19 +57,21 @@ public class Experiment implements IdKeyMapped {
     public Experiment(@JsonProperty("id") String id,
                       @JsonProperty("key") String key,
                       @JsonProperty("status") String status,
+                      @JsonProperty("layerId") String layerId,
                       @JsonProperty("audienceIds") List<String> audienceIds,
                       @JsonProperty("variations") List<Variation> variations,
                       @JsonProperty("forcedVariations") Map<String, String> userIdToVariationKeyMap,
                       @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation) {
-        this(id, key, status, audienceIds, variations, userIdToVariationKeyMap, trafficAllocation, "");
+        this(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap, trafficAllocation, "");
     }
 
-    public Experiment(String id, String key, String status, List<String> audienceIds, List<Variation> variations,
-                      Map<String, String> userIdToVariationKeyMap, List<TrafficAllocation> trafficAllocation,
-                      String groupId) {
+    public Experiment(String id, String key, String status, String layerId, List<String> audienceIds,
+                      List<Variation> variations, Map<String, String> userIdToVariationKeyMap,
+                      List<TrafficAllocation> trafficAllocation, String groupId) {
         this.id = id;
         this.key = key;
         this.status = status;
+        this.layerId = layerId;
         this.audienceIds = Collections.unmodifiableList(audienceIds);
         this.variations = Collections.unmodifiableList(variations);
         this.trafficAllocation = Collections.unmodifiableList(trafficAllocation);
@@ -88,6 +91,10 @@ public class Experiment implements IdKeyMapped {
 
     public String getStatus() {
         return status;
+    }
+
+    public String getLayerId() {
+        return layerId;
     }
 
     public List<String> getAudienceIds() {
