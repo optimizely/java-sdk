@@ -36,7 +36,7 @@ public class Attribute implements IdKeyMapped {
     private final String segmentId;
 
     @JsonCreator
-    public Attribute(@JsonProperty("is") String id,
+    public Attribute(@JsonProperty("id") String id,
                      @JsonProperty("key") String key,
                      @JsonProperty("segmentId") String segmentId) {
         this.id = id;
