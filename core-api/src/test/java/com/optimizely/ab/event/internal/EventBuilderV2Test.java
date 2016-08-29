@@ -26,12 +26,12 @@ import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.ProjectConfigTestUtils;
 import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.event.internal.payloadV2.Conversion;
-import com.optimizely.ab.event.internal.payloadV2.Decision;
-import com.optimizely.ab.event.internal.payloadV2.EventMetric;
-import com.optimizely.ab.event.internal.payloadV2.Feature;
-import com.optimizely.ab.event.internal.payloadV2.Impression;
-import com.optimizely.ab.event.internal.payloadV2.LayerState;
+import com.optimizely.ab.event.internal.payload.Conversion;
+import com.optimizely.ab.event.internal.payload.Decision;
+import com.optimizely.ab.event.internal.payload.EventMetric;
+import com.optimizely.ab.event.internal.payload.Feature;
+import com.optimizely.ab.event.internal.payload.Impression;
+import com.optimizely.ab.event.internal.payload.LayerState;
 import com.optimizely.ab.internal.ProjectValidationUtils;
 
 import org.junit.Test;
