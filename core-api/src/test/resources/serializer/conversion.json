@@ -31,8 +31,6 @@
       "value": 5000
     }
   ],
-  "eventFeatures": [
-
-  ],
+  "eventFeatures": [],
   "isGlobalHoldback": false
 }

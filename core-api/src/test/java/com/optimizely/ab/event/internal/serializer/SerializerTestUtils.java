@@ -18,12 +18,12 @@ package com.optimizely.ab.event.internal.serializer;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-import com.optimizely.ab.event.internal.payloadV2.Conversion;
-import com.optimizely.ab.event.internal.payloadV2.Decision;
-import com.optimizely.ab.event.internal.payloadV2.EventMetric;
-import com.optimizely.ab.event.internal.payloadV2.Feature;
-import com.optimizely.ab.event.internal.payloadV2.Impression;
-import com.optimizely.ab.event.internal.payloadV2.LayerState;
+import com.optimizely.ab.event.internal.payload.Conversion;
+import com.optimizely.ab.event.internal.payload.Decision;
+import com.optimizely.ab.event.internal.payload.EventMetric;
+import com.optimizely.ab.event.internal.payload.Feature;
+import com.optimizely.ab.event.internal.payload.Impression;
+import com.optimizely.ab.event.internal.payload.LayerState;
 
 import java.io.IOException;
 import java.util.Collections;

@@ -14,11 +14,11 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.event.internal.payloadV2;
+package com.optimizely.ab.event.internal.payload;
 
 import java.util.List;
 
-public class Conversion extends V2Event {
+public class Conversion extends Event {
 
     private String visitorId;
     private long timestamp;

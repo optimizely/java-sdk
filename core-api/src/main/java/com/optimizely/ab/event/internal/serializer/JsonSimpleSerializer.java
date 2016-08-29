@@ -16,13 +16,13 @@
  */
 package com.optimizely.ab.event.internal.serializer;
 
-import com.optimizely.ab.event.internal.payloadV2.Conversion;
-import com.optimizely.ab.event.internal.payloadV2.Decision;
-import com.optimizely.ab.event.internal.payloadV2.EventMetric;
-import com.optimizely.ab.event.internal.payloadV2.Feature;
-import com.optimizely.ab.event.internal.payloadV2.Impression;
-import com.optimizely.ab.event.internal.payloadV2.LayerState;
-import com.optimizely.ab.event.internal.payloadV2.V2Event;
+import com.optimizely.ab.event.internal.payload.Conversion;
+import com.optimizely.ab.event.internal.payload.Decision;
+import com.optimizely.ab.event.internal.payload.EventMetric;
+import com.optimizely.ab.event.internal.payload.Feature;
+import com.optimizely.ab.event.internal.payload.Impression;
+import com.optimizely.ab.event.internal.payload.LayerState;
+import com.optimizely.ab.event.internal.payload.Event;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -32,7 +32,7 @@ import java.util.List;
 @SuppressWarnings("unchecked")
 class JsonSimpleSerializer implements Serializer {
 
-    public <T extends V2Event> String serialize(T payload) {
+    public <T extends Event> String serialize(T payload) {
         JSONObject payloadJsonObj;
         if (payload instanceof Impression) {
             payloadJsonObj = serializeImpression((Impression)payload);
