@@ -16,8 +16,8 @@
  */
 package com.optimizely.ab.event.internal.serializer;
 
-import com.optimizely.ab.event.internal.payloadV2.Conversion;
-import com.optimizely.ab.event.internal.payloadV2.Impression;
+import com.optimizely.ab.event.internal.payload.Conversion;
+import com.optimizely.ab.event.internal.payload.Impression;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
