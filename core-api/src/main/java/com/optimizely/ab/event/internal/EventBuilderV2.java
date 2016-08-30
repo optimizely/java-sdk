@@ -70,11 +70,11 @@ public class EventBuilderV2 extends EventBuilder {
         impressionPayload.setIsGlobalHoldback(false);
         impressionPayload.setProjectId(projectConfig.getProjectId());
 
-        Decision decisionTicket = new Decision();
-        decisionTicket.setVariationId(variation.getId());
-        decisionTicket.setIsLayerHoldback(false);
-        decisionTicket.setExperimentId(activatedExperiment.getId());
-        impressionPayload.setDecision(decisionTicket);
+        Decision decision = new Decision();
+        decision.setVariationId(variation.getId());
+        decision.setIsLayerHoldback(false);
+        decision.setExperimentId(activatedExperiment.getId());
+        impressionPayload.setDecision(decision);
 
         impressionPayload.setLayerId(activatedExperiment.getLayerId());
         impressionPayload.setAccountId(projectConfig.getAccountId());
