@@ -87,7 +87,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
             String id = (String)experimentObject.get("id");
             String key = (String)experimentObject.get("key");
             String status = (String)experimentObject.get("status");
-            String layerId = (String)experimentObject.get("layerId");
+            Object layerIdObject = experimentObject.get("layerId");
+            String layerId = layerIdObject == null ? null : (String)layerIdObject;
 
             JSONArray audienceIdsJson = (JSONArray)experimentObject.get("audienceIds");
             List<String> audienceIds = new ArrayList<String>(audienceIdsJson.size());

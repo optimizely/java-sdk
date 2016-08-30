@@ -74,7 +74,8 @@ final class GsonHelpers {
         String id = experimentJson.get("id").getAsString();
         String key = experimentJson.get("key").getAsString();
         String status = experimentJson.get("status").getAsString();
-        String layerId = experimentJson.get("layerId").getAsString();
+        JsonElement layerIdJson = experimentJson.get("layerId");
+        String layerId = layerIdJson == null ? null : layerIdJson.getAsString();
 
         JsonArray audienceIdsJson = experimentJson.getAsJsonArray("audienceIds");
         List<String> audienceIds = new ArrayList<String>(audienceIdsJson.size());
