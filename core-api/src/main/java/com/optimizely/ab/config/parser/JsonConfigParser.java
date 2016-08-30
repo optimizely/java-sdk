@@ -85,7 +85,7 @@ final class JsonConfigParser implements ConfigParser {
             String id = experimentObject.getString("id");
             String key = experimentObject.getString("key");
             String status = experimentObject.getString("status");
-            String layerId = experimentObject.getString("layerId");
+            String layerId = experimentObject.has("layerId") ? experimentObject.getString("layerId") : null;
 
             JSONArray audienceIdsJson = experimentObject.getJSONArray("audienceIds");
             List<String> audienceIds = new ArrayList<String>(audienceIdsJson.length());

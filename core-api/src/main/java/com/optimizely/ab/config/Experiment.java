@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -65,9 +67,15 @@ public class Experiment implements IdKeyMapped {
         this(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap, trafficAllocation, "");
     }
 
-    public Experiment(String id, String key, String status, String layerId, List<String> audienceIds,
-                      List<Variation> variations, Map<String, String> userIdToVariationKeyMap,
-                      List<TrafficAllocation> trafficAllocation, String groupId) {
+    public Experiment(@Nonnull String id,
+                      @Nonnull String key,
+                      @Nonnull String status,
+                      @Nullable String layerId,
+                      @Nonnull List<String> audienceIds,
+                      @Nonnull List<Variation> variations,
+                      @Nonnull Map<String, String> userIdToVariationKeyMap,
+                      @Nonnull List<TrafficAllocation> trafficAllocation,
+                      @Nonnull String groupId) {
         this.id = id;
         this.key = key;
         this.status = status;
