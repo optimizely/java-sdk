@@ -66,7 +66,7 @@ public class EventBuilderV2Test {
     @Test
     public void createImpressionEvent() throws Exception {
         // use the "valid" project config and its associated experiment, variation, and attributes
-        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfig();
+        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV2();
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
         Attribute attribute = projectConfig.getAttributes().get(0);
@@ -103,7 +103,7 @@ public class EventBuilderV2Test {
     @Test
     public void createImpressionEventIgnoresUnknownAttributes() throws Exception {
         // use the "valid" project config and its associated experiment, variation, and attributes
-        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfig();
+        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV2();
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
 
@@ -126,7 +126,7 @@ public class EventBuilderV2Test {
     @Test
     public void createConversionEvent() throws Exception {
         // use the "valid" project config and its associated experiment, variation, and attributes
-        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfig();
+        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV2();
         Attribute attribute = projectConfig.getAttributes().get(0);
         EventType eventType = projectConfig.getEventTypes().get(0);
         String userId = "userId";
@@ -192,7 +192,7 @@ public class EventBuilderV2Test {
         long revenue = 1234L;
 
         // use the "valid" project config and its associated experiment, variation, and attributes
-        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfig();
+        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV2();
         Attribute attribute = projectConfig.getAttributes().get(0);
         EventType eventType = projectConfig.getEventTypes().get(0);
 
@@ -221,7 +221,7 @@ public class EventBuilderV2Test {
      */
     @Test
     public void createConversionParamsUserNotInAudience() throws Exception {
-        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfig();
+        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV2();
         Attribute attribute = projectConfig.getAttributes().get(0);
         EventType eventType = projectConfig.getEventTypes().get(2);
         String userId = "userId";
