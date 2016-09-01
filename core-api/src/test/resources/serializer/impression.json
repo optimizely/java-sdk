@@ -18,5 +18,7 @@
       "value": "testfeaturevalue",
       "shouldIndex": false
     }
-  ]
+  ],
+  "clientEngine": "java-sdk",
+  "clientVersion": "0.1.1"
 }

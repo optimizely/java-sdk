@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.event.internal.serializer;
 
+import com.google.gson.Gson;
+
 import com.optimizely.ab.event.internal.payload.Conversion;
 import com.optimizely.ab.event.internal.payload.Impression;
 
@@ -34,16 +36,25 @@ import static org.junit.Assert.assertThat;
 public class GsonSerializerTest {
 
     private GsonSerializer serializer = new GsonSerializer();
+    private Gson gson = new Gson();
 
     @Test
     public void serializeImpression() throws IOException {
         Impression impression = generateImpression();
-        assertThat(serializer.serialize(impression), is(generateImpressionJson()));
+        // can't compare JSON strings since orders could vary so compare objects instead
+        Impression actual = gson.fromJson(serializer.serialize(impression), Impression.class);
+        Impression expected = gson.fromJson(generateImpressionJson(), Impression.class);
+
+        assertThat(actual, is(expected));
     }
 
     @Test
     public void serializeConversion() throws IOException {
         Conversion conversion = generateConversion();
-        assertThat(serializer.serialize(conversion), is(generateConversionJson()));
+        // can't compare JSON strings since orders could vary so compare objects instead
+        Conversion actual = gson.fromJson(serializer.serialize(conversion), Conversion.class);
+        Conversion expected = gson.fromJson(generateConversionJson(), Conversion.class);
+
+        assertThat(actual, is(expected));
     }
 }

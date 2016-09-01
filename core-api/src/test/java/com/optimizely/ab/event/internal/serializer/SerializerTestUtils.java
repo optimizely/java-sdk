@@ -72,6 +72,7 @@ public class SerializerTestUtils {
         impression.setAccountId(accountId);
         impression.setDecision(decision);
         impression.setUserFeatures(userFeatures);
+        impression.setClientVersion("0.1.1");
 
         return impression;
     }
@@ -89,6 +90,7 @@ public class SerializerTestUtils {
         conversion.setEventMetrics(eventMetrics);
         conversion.setEventFeatures(eventFeatures);
         conversion.setIsGlobalHoldback(isGlobalHoldback);
+        conversion.setClientVersion("0.1.1");
 
         return conversion;
     }

@@ -108,6 +108,40 @@ public class Impression extends Event {
     }
 
     @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Impression))
+            return false;
+
+        if (!super.equals(other))
+            return false;
+
+        Impression otherImpression = (Impression)other;
+
+        return timestamp == otherImpression.timestamp &&
+               isGlobalHoldback == otherImpression.isGlobalHoldback &&
+               visitorId.equals(otherImpression.visitorId) &&
+               projectId.equals(otherImpression.projectId) &&
+               decision.equals(otherImpression.decision) &&
+               layerId.equals(otherImpression.layerId) &&
+               accountId.equals(otherImpression.accountId) &&
+               userFeatures.equals(otherImpression.userFeatures);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + visitorId.hashCode();
+        result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
+        result = 31 * result + (isGlobalHoldback ? 1 : 0);
+        result = 31 * result + projectId.hashCode();
+        result = 31 * result + decision.hashCode();
+        result = 31 * result + layerId.hashCode();
+        result = 31 * result + accountId.hashCode();
+        result = 31 * result + userFeatures.hashCode();
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "Impression{" +
                 "visitorId='" + visitorId + '\'' +
@@ -118,6 +152,7 @@ public class Impression extends Event {
                 ", layerId='" + layerId + '\'' +
                 ", accountId='" + accountId + '\'' +
                 ", userFeatures=" + userFeatures +
-                '}';
+                ", clientEngine='" + clientEngine +
+                ", clientVersion='" + clientVersion + '}';
     }
 }

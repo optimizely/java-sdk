@@ -94,6 +94,8 @@ public class EventBuilderV2Test {
         assertThat(impression.getLayerId(), is(activatedExperiment.getLayerId()));
         assertThat(impression.getAccountId(), is(projectConfig.getAccountId()));
         assertThat(impression.getUserFeatures(), is(expectedUserFeatures));
+        assertThat(impression.getClientEngine(), is("java-sdk"));
+        assertThat(impression.getClientVersion(), is(BuildVersionInfo.VERSION));
     }
 
     /**
@@ -182,6 +184,8 @@ public class EventBuilderV2Test {
         assertThat(conversion.getEventMetrics(), is(Collections.<EventMetric>emptyList()));
         assertThat(conversion.getEventFeatures(), is(Collections.<Feature>emptyList()));
         assertFalse(conversion.getIsGlobalHoldback());
+        assertThat(conversion.getClientEngine(), is("java-sdk"));
+        assertThat(conversion.getClientVersion(), is(BuildVersionInfo.VERSION));
     }
 
     /**
