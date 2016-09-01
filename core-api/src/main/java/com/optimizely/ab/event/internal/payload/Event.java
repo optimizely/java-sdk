@@ -22,8 +22,8 @@ import com.optimizely.ab.event.internal.BuildVersionInfo;
 
 public class Event {
 
-    protected final String clientEngine = "java-sdk";
-    protected String clientVersion = BuildVersionInfo.VERSION;
+    String clientEngine = "java-sdk";
+    String clientVersion = BuildVersionInfo.VERSION;
 
     public String getClientEngine() {
         return clientEngine;
