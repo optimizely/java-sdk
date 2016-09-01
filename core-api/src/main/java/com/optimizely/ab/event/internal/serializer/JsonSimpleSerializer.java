@@ -53,6 +53,8 @@ class JsonSimpleSerializer implements Serializer {
         jsonObject.put("layerId", impression.getLayerId());
         jsonObject.put("accountId", impression.getAccountId());
         jsonObject.put("userFeatures", serializeFeatures(impression.getUserFeatures()));
+        jsonObject.put("clientEngine", impression.getClientEngine());
+        jsonObject.put("clientVersion", impression.getClientVersion());
 
         return jsonObject;
     }
@@ -70,6 +72,8 @@ class JsonSimpleSerializer implements Serializer {
         jsonObject.put("eventMetrics", serializeEventMetrics(conversion.getEventMetrics()));
         jsonObject.put("eventFeatures", serializeFeatures(conversion.getEventFeatures()));
         jsonObject.put("isGlobalHoldback", conversion.getIsGlobalHoldback());
+        jsonObject.put("clientEngine", conversion.getClientEngine());
+        jsonObject.put("clientVersion", conversion.getClientVersion());
 
         return jsonObject;
     }
