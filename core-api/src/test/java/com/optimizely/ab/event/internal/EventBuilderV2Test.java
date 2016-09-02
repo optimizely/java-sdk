@@ -74,7 +74,7 @@ public class EventBuilderV2Test {
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
         Decision expectedDecision = new Decision(bucketedVariation.getId(), false, activatedExperiment.getId());
         Feature feature = new Feature(attribute.getId(), attribute.getKey(), Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
-                                      "value", false);
+                                      "value", true);
         List<Feature> expectedUserFeatures = Collections.singletonList(feature);
 
         LogEvent impressionEvent = builder.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation,
@@ -175,7 +175,7 @@ public class EventBuilderV2Test {
         assertThat(conversion.getAccountId(), is(projectConfig.getAccountId()));
 
         Feature feature = new Feature(attribute.getId(), attribute.getKey(), Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
-                                      "value", false);
+                                      "value", true);
         List<Feature> expectedUserFeatures = Collections.singletonList(feature);
         assertThat(conversion.getUserFeatures(), is(expectedUserFeatures));
         assertThat(conversion.getLayerStates(), is(expectedLayerStates));

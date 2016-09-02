@@ -46,7 +46,7 @@ public class SerializerTestUtils {
     private static final String featureName = "testfeature";
     private static final String featureType = "custom";
     private static final String featureValue = "testfeaturevalue";
-    private static final boolean shouldIndex = false;
+    private static final boolean shouldIndex = true;
     private static final List<Feature> userFeatures = Collections.singletonList(
             new Feature(featureId, featureName, featureType, featureValue, shouldIndex));
 

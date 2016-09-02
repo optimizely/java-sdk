@@ -16,7 +16,7 @@
       "name": "testfeature",
       "type": "custom",
       "value": "testfeaturevalue",
-      "shouldIndex": false
+      "shouldIndex": true
     }
   ],
   "clientEngine": "java-sdk",
