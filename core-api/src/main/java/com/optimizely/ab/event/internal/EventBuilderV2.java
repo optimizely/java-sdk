@@ -142,7 +142,7 @@ public class EventBuilderV2 extends EventBuilder {
             }
 
             features.add(new Feature(attribute.getId(), attributeKey, Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
-                                     attributeEntry.getValue(), false));
+                                     attributeEntry.getValue(), true));
         }
 
         return features;
@@ -152,10 +152,10 @@ public class EventBuilderV2 extends EventBuilder {
      * Helper method to create {@link LayerState} objects for all experiments mapped to an event.
      * <p>
      * Note, although the user may not have <i>activated</i> all experiments, we include all <i>possible</i> experiment
-     * mappings so that  activated experiment state doesn't have to be maintained and passed around server-side.
+     * mappings so that activated experiment state doesn't have to be maintained and passed around server-side.
      * <p>
-     * For example, in a project with multiple experiments, if user 'user1' activates experiment 'exp1' then converts,
-     * we need to ensure we attribute that conversion to 'exp1'. We can either do that by recording activation
+     * For example, in a project with multiple experiments, if user 'user1' activates experiment 'exp1' and then
+     * converts, we need to ensure we attribute that conversion to 'exp1'. We can either do that by recording activation
      * and passing that state around so it's available on conversion, or we can send all possible activations at
      * conversion-time and attribute conversions <i>only</i> to the experiments for which we also received an
      * impression.
@@ -167,13 +167,13 @@ public class EventBuilderV2 extends EventBuilder {
      * @param projectConfig the current project config
      * @param bucketer the bucketing algorithm to use
      * @param userId the user's id for the impression event
-     * @param goalKey the goal that the bucket map will be filtered by
+     * @param eventKey the goal that the bucket map will be filtered by
      * @param attributes the user's attributes
      */
     private List<LayerState> createLayerStates(ProjectConfig projectConfig, Bucketer bucketer, String userId,
-                                               String goalKey, Map<String, String> attributes) {
+                                               String eventKey, Map<String, String> attributes) {
         List<Experiment> allExperiments = projectConfig.getExperiments();
-        List<String> experimentIds = projectConfig.getExperimentIdsForGoal(goalKey);
+        List<String> experimentIds = projectConfig.getExperimentIdsForGoal(eventKey);
         List<LayerState> layerStates = new ArrayList<LayerState>();
 
         for (Experiment experiment : allExperiments) {
