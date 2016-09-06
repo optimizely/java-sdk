@@ -139,6 +139,46 @@ public class Conversion extends Event {
     }
 
     @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Conversion))
+            return false;
+
+        if (!super.equals(other))
+            return false;
+
+        Conversion otherConversion = (Conversion)other;
+
+        return timestamp == otherConversion.timestamp &&
+               isGlobalHoldback == otherConversion.isGlobalHoldback &&
+               visitorId.equals(otherConversion.visitorId) &&
+               projectId.equals(otherConversion.projectId) &&
+               accountId.equals(otherConversion.accountId) &&
+               userFeatures.equals(otherConversion.userFeatures) &&
+               layerStates.equals(otherConversion.layerStates) &&
+               eventEntityId.equals(otherConversion.eventEntityId) &&
+               eventName.equals(otherConversion.eventName) &&
+               eventMetrics.equals(otherConversion.eventMetrics) &&
+               eventFeatures.equals(otherConversion.eventFeatures);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + visitorId.hashCode();
+        result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
+        result = 31 * result + projectId.hashCode();
+        result = 31 * result + accountId.hashCode();
+        result = 31 * result + userFeatures.hashCode();
+        result = 31 * result + layerStates.hashCode();
+        result = 31 * result + eventEntityId.hashCode();
+        result = 31 * result + eventName.hashCode();
+        result = 31 * result + eventMetrics.hashCode();
+        result = 31 * result + eventFeatures.hashCode();
+        result = 31 * result + (isGlobalHoldback ? 1 : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "Conversion{" +
                 "visitorId='" + visitorId + '\'' +
@@ -152,6 +192,7 @@ public class Conversion extends Event {
                 ", eventMetrics=" + eventMetrics +
                 ", eventFeatures=" + eventFeatures +
                 ", isGlobalHoldback=" + isGlobalHoldback +
-                '}';
+                ", clientEngine='" + clientEngine +
+                ", clientVersion='" + clientVersion + '}';
     }
 }

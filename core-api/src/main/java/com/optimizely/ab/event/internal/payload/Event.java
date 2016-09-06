@@ -16,4 +16,43 @@
  */
 package com.optimizely.ab.event.internal.payload;
 
-public class Event { }
+import com.optimizely.ab.annotations.VisibleForTesting;
+
+import com.optimizely.ab.event.internal.BuildVersionInfo;
+
+public class Event {
+
+    String clientEngine = "java-sdk";
+    String clientVersion = BuildVersionInfo.VERSION;
+
+    public String getClientEngine() {
+        return clientEngine;
+    }
+
+    public String getClientVersion() {
+        return clientVersion;
+    }
+
+    @VisibleForTesting
+    public void setClientVersion(String clientVersion) {
+        this.clientVersion = clientVersion;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Event))
+            return false;
+
+        Event otherEvent = (Event)other;
+
+        return clientEngine.equals(otherEvent.clientEngine) &&
+               clientVersion.equals(otherEvent.clientVersion);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = clientEngine.hashCode();
+        result = 31 * result + clientVersion.hashCode();
+        return result;
+    }
+}

@@ -9,7 +9,7 @@
       "name": "testfeature",
       "type": "custom",
       "value": "testfeaturevalue",
-      "shouldIndex": false
+      "shouldIndex": true
     }
   ],
   "layerStates": [
@@ -32,5 +32,7 @@
     }
   ],
   "eventFeatures": [],
-  "isGlobalHoldback": false
+  "isGlobalHoldback": false,
+  "clientEngine": "java-sdk",
+  "clientVersion": "0.1.1"
 }

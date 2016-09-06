@@ -26,6 +26,8 @@ public class Feature {
     private String value;
     private boolean shouldIndex;
 
+    public Feature() { }
+
     public Feature(String id, String name, String type, String value, boolean shouldIndex) {
         this.id = id;
         this.name = name;
