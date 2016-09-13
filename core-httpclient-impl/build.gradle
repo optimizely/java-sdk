@@ -3,6 +3,7 @@ targetCompatibility = 1.6
 
 dependencies {
     compile project(':core-api')
+    testCompile project(':core-api').sourceSets.test.output
 
     provided group: 'com.google.code.findbugs', name: 'annotations', version: findbugsVersion
     provided group: 'com.google.code.findbugs', name: 'jsr305', version: findbugsVersion

@@ -18,6 +18,7 @@ package com.optimizely.ab.event;
 
 import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.NamedThreadFactory;
+import com.optimizely.ab.annotations.VisibleForTesting;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -66,6 +67,12 @@ public class AsyncEventHandler implements EventHandler {
                                                      0L, TimeUnit.MILLISECONDS,
                                                      new ArrayBlockingQueue<Runnable>(queueCapacity),
                                                      new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true));
+    }
+
+    @VisibleForTesting
+    public AsyncEventHandler(CloseableHttpClient httpClient, ExecutorService workerExecutor) {
+        this.httpClient = httpClient;
+        this.workerExecutor = workerExecutor;
     }
 
     @Override

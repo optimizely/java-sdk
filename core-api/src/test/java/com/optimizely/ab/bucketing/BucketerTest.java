@@ -446,7 +446,7 @@ public class BucketerTest {
     }
 
     /**
-     * Verify that {@link Bucketer#bucket(Experiment,String} saves a variation of an experiment for a user
+     * Verify that {@link Bucketer#bucket(Experiment,String)} saves a variation of an experiment for a user
      * when a {@link UserExperimentRecord} is present.
      */
     @Test public void bucketUserSaveActivationWithUserExperimentRecord() throws Exception {
@@ -471,7 +471,7 @@ public class BucketerTest {
     }
 
     /**
-     * Verify that {@link Bucketer#bucket(Experiment,String} logs correctly
+     * Verify that {@link Bucketer#bucket(Experiment,String)} logs correctly
      * when a {@link UserExperimentRecord} is present and fails to save an activation.
      */
     @Test public void bucketUserSaveActivationFailWithUserExperimentRecord() throws Exception {
@@ -497,7 +497,7 @@ public class BucketerTest {
 
     /**
      * Verify that {@link Bucketer#bucket(Experiment,String)} returns a variation that is
-     * stored in the provided {@link userExperimentRecord}.
+     * stored in the provided {@code userExperimentRecord}.
      */
     @Test public void bucketUserRestoreActivationWithUserExperimentRecord() throws Exception {
         final AtomicInteger bucketValue = new AtomicInteger();
