@@ -5,13 +5,14 @@ then read the guidelines below for information on submitting your code.
 
 ## Development process
 
-1. Create a branch off of `master`: `git checkout -b YOUR_NAME/branch_name`.
-2. Commit your changes. Make sure to add tests!
-3. Run `./gradlew clean check` to make sure there are no possible bugs.
-4. `git push` your changes to GitHub.
-5. Make sure that all unit tests are passing and that there are no merge conflicts between your branch and `master`.
-6. Open a pull request from `YOUR_NAME/branch_name` to `master`.
-7. A repository maintainer will review your pull request and, if all goes well, merge it!
+1. Create a fork of the `optimizely/java-sdk` repository.
+2. Create a branch off of `master`: `git checkout -b YOUR_NAME/branch_name`.
+3. Commit your changes. Make sure to add tests!
+4. Run `./gradlew clean check` to make sure there are no possible bugs.
+5. `git push` your changes to GitHub.
+6. Make sure that all unit tests are passing and that there are no merge conflicts between your branch and `master`.
+7. Open a pull request from `YOUR_NAME:YOUR_NAME/branch_name` to `optimizely:master`.
+8. A repository maintainer will review your pull request and, if all goes well, merge it!
 
 ## Pull request acceptance criteria
 
