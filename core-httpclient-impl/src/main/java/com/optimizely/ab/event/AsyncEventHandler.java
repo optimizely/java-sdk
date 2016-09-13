@@ -29,14 +29,14 @@ import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.CheckForNull;
 
@@ -44,81 +44,106 @@ import javax.annotation.CheckForNull;
  * {@link EventHandler} implementation that queues events and has a separate pool of threads responsible
  * for the dispatch.
  */
-public class AsyncEventHandler implements EventHandler, Closeable {
+public class AsyncEventHandler implements EventHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncEventHandler.class);
     private static final ProjectConfigResponseHandler EVENT_RESPONSE_HANDLER = new ProjectConfigResponseHandler();
 
     private final CloseableHttpClient httpClient;
     private final ExecutorService workerExecutor;
-    private final BlockingQueue<LogEvent> logEventQueue;
 
     public AsyncEventHandler(int queueCapacity, int numWorkers) {
         if (queueCapacity <= 0) {
             throw new IllegalArgumentException("queue capacity must be > 0");
         }
 
-        this.logEventQueue = new ArrayBlockingQueue<LogEvent>(queueCapacity);
         this.httpClient = HttpClients.custom()
             .setDefaultRequestConfig(HttpClientUtils.DEFAULT_REQUEST_CONFIG)
             .disableCookieManagement()
             .build();
 
-        this.workerExecutor = Executors.newFixedThreadPool(
-            numWorkers, new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true));
-
-        // create dispatch workers
-        for (int i = 0; i < numWorkers; i++) {
-            EventDispatchWorker worker = new EventDispatchWorker();
-            workerExecutor.submit(worker);
-        }
+        this.workerExecutor = new ThreadPoolExecutor(numWorkers, numWorkers,
+                                                     0L, TimeUnit.MILLISECONDS,
+                                                     new ArrayBlockingQueue<Runnable>(queueCapacity),
+                                                     new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true));
     }
 
     @Override
     public void dispatchEvent(LogEvent logEvent) {
-        // attempt to enqueue the log event for processing
-        boolean submitted = logEventQueue.offer(logEvent);
-        if (!submitted) {
-            logger.error("unable to enqueue event because queue is full");
+        try {
+            // attempt to enqueue the log event for processing
+            workerExecutor.execute(new EventDispatcher(logEvent));
+        } catch (RejectedExecutionException e) {
+            logger.error("event dispatch rejected");
         }
     }
 
-    @Override
-    public void close() throws IOException {
-        logger.info("closing event dispatcher");
+    /**
+     * Attempts to gracefully terminate all event dispatch workers and close all resources.
+     * This method blocks, awaiting the completion of any queued or ongoing event dispatches.
+     *
+     * Note: termination of ongoing event dispatching is best-effort.
+     *
+     * @param timeout maximum time to wait for event dispatches to complete
+     * @param unit the time unit of the timeout argument
+     */
+    public void shutdownAndAwaitTermination(long timeout, TimeUnit unit) {
 
-        // "close" all workers and the http client
+        // Disable new tasks from being submitted
+        logger.info("event handler shutting down. Attempting to dispatch previously submitted events");
+        workerExecutor.shutdown();
+
         try {
-            httpClient.close();
-        } catch (IOException e) {
-            logger.error("unable to close the event handler httpclient cleanly", e);
-        } finally {
+            // Wait a while for existing tasks to terminate
+            if (!workerExecutor.awaitTermination(timeout, unit)) {
+                int unprocessedCount = workerExecutor.shutdownNow().size();
+                logger.warn("timed out waiting for previously submitted events to be dispatched. "
+                            + "{} events were dropped. "
+                            + "Interrupting dispatch worker(s)", unprocessedCount);
+                // Cancel currently executing tasks
+                // Wait a while for tasks to respond to being cancelled
+                if (!workerExecutor.awaitTermination(timeout, unit)) {
+                    logger.error("unable to gracefully shutdown event handler");
+                }
+            }
+        } catch (InterruptedException ie) {
+            // (Re-)Cancel if current thread also interrupted
             workerExecutor.shutdownNow();
+            // Preserve interrupt status
+            Thread.currentThread().interrupt();
+        } finally {
+            try {
+                httpClient.close();
+            } catch (IOException e) {
+                logger.error("unable to close event dispatcher http client", e);
+            }
         }
+
+        logger.info("event handler shutdown complete");
     }
 
     //======== Helper classes ========//
 
-    private class EventDispatchWorker implements Runnable {
+    /**
+     * Wrapper runnable for the actual event dispatch.
+     */
+    private class EventDispatcher implements Runnable {
+
+        private final LogEvent logEvent;
+
+        EventDispatcher(LogEvent logEvent) {
+            this.logEvent = logEvent;
+        }
 
         @Override
         public void run() {
-            boolean terminate = false;
-
-            logger.info("starting event dispatch worker");
-            // event loop that'll block waiting for events to appear in the queue
-            //noinspection InfiniteLoopStatement
-            while (!terminate) {
-                try {
-                    LogEvent event = logEventQueue.take();
-                    HttpGet request = generateRequest(event);
-                    httpClient.execute(request, EVENT_RESPONSE_HANDLER);
-                } catch (InterruptedException e) {
-                    logger.info("terminating event dispatcher event loop");
-                    terminate = true;
-                } catch (Throwable t) {
-                    logger.error("event dispatcher threw exception but will continue", t);
-                }
+            try {
+                HttpGet request = generateRequest(logEvent);
+                httpClient.execute(request, EVENT_RESPONSE_HANDLER);
+            } catch (IOException e) {
+                logger.error("event dispatch failed", e);
+            } catch (URISyntaxException e) {
+                logger.error("unable to parse generated URI", e);
             }
         }
 
