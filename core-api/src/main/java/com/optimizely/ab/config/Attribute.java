@@ -35,6 +35,10 @@ public class Attribute implements IdKeyMapped {
     private final String key;
     private final String segmentId;
 
+    public Attribute(String id, String key) {
+        this(id, key, null);
+    }
+
     @JsonCreator
     public Attribute(@JsonProperty("id") String id,
                      @JsonProperty("key") String key,

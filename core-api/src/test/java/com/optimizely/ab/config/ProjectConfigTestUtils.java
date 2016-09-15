@@ -198,7 +198,7 @@ public final class ProjectConfigTestUtils {
                            "")
         );
 
-        List<Attribute> attributes = singletonList(new Attribute("134", "browser_type", "185"));
+        List<Attribute> attributes = singletonList(new Attribute("134", "browser_type"));
 
         List<String> singleExperimentId = singletonList("223");
         List<String> multipleExperimentIds = asList("118", "223");
@@ -295,7 +295,7 @@ public final class ProjectConfigTestUtils {
                            "")
         );
 
-        List<Attribute> attributes = singletonList(new Attribute("134", "browser_type", "185"));
+        List<Attribute> attributes = singletonList(new Attribute("134", "browser_type"));
 
         List<String> singleExperimentId = singletonList("223");
         List<String> multipleExperimentIds = asList("118", "223");

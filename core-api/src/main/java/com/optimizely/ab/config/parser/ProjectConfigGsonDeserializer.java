@@ -58,8 +58,14 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
         List<Group> groups = context.deserialize(jsonObject.get("groups").getAsJsonArray(), groupsType);
         List<Experiment> experiments =
             context.deserialize(jsonObject.get("experiments").getAsJsonArray(), experimentsType);
-        List<Attribute> attributes =
-            context.deserialize(jsonObject.get("dimensions").getAsJsonArray(), attributesType);
+
+        List<Attribute> attributes;
+        if (jsonObject.has("dimensions")) {
+            attributes = context.deserialize(jsonObject.get("dimensions"), attributesType);
+        } else {
+            attributes = context.deserialize(jsonObject.get("attributes"), attributesType);
+        }
+
         List<EventType> events =
             context.deserialize(jsonObject.get("events").getAsJsonArray(), eventsType);
         List<Audience> audiences =

@@ -59,7 +59,14 @@ final class JsonConfigParser implements ConfigParser {
             String version = rootObject.getString("version");
 
             List<Experiment> experiments = parseExperiments(rootObject.getJSONArray("experiments"));
-            List<Attribute> attributes = parseAttributes(rootObject.getJSONArray("dimensions"));
+
+            List<Attribute> attributes;
+            if (rootObject.has("dimensions")) {
+                attributes = parseAttributes(rootObject.getJSONArray("dimensions"));
+            } else {
+                attributes = parseAttributes(rootObject.getJSONArray("attributes"));
+            }
+
             List<EventType> events = parseEvents(rootObject.getJSONArray("events"));
             List<Audience> audiences = parseAudiences(rootObject.getJSONArray("audiences"));
             List<Group> groups = parseGroups(rootObject.getJSONArray("groups"));
@@ -154,9 +161,15 @@ final class JsonConfigParser implements ConfigParser {
             JSONObject attributeObject = (JSONObject)obj;
             String id = attributeObject.getString("id");
             String key = attributeObject.getString("key");
-            String segmentId = attributeObject.getString("segmentId");
 
-            attributes.add(new Attribute(id, key, segmentId));
+            Attribute attribute;
+            if (attributeObject.has("segmentId")) {
+                attribute = new Attribute(id, key, attributeObject.getString("segmentId"));
+            } else {
+                attribute = new Attribute(id, key);
+            }
+
+            attributes.add(attribute);
         }
 
         return attributes;
