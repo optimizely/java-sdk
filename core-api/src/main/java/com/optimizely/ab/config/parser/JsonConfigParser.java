@@ -61,7 +61,7 @@ final class JsonConfigParser implements ConfigParser {
             List<Experiment> experiments = parseExperiments(rootObject.getJSONArray("experiments"));
 
             List<Attribute> attributes;
-            if (rootObject.has("dimensions")) {
+            if (version.equals(ProjectConfig.V1)) {
                 attributes = parseAttributes(rootObject.getJSONArray("dimensions"));
             } else {
                 attributes = parseAttributes(rootObject.getJSONArray("attributes"));

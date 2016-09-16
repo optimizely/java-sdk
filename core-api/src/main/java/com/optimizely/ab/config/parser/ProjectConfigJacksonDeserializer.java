@@ -56,7 +56,7 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
                                                         new TypeReference<List<Experiment>>() {});
 
         List<Attribute> attributes;
-        if (node.has("dimensions")) {
+        if (version.equals(ProjectConfig.V1)) {
             attributes = mapper.readValue(node.get("dimensions").toString(), new TypeReference<List<Attribute>>() {});
         } else {
             attributes = mapper.readValue(node.get("attributes").toString(), new TypeReference<List<Attribute>>() {});

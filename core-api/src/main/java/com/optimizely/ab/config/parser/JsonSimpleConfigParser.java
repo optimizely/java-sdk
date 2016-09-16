@@ -63,7 +63,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             List<Experiment> experiments = parseExperiments((JSONArray)rootObject.get("experiments"));
 
             List<Attribute> attributes;
-            if (rootObject.containsKey("dimensions")) {
+            if (version.equals(ProjectConfig.V1)) {
                 attributes = parseAttributes((JSONArray)rootObject.get("dimensions"));
             } else {
                 attributes = parseAttributes((JSONArray)rootObject.get("attributes"));
