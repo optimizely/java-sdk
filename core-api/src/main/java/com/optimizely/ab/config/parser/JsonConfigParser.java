@@ -162,14 +162,7 @@ final class JsonConfigParser implements ConfigParser {
             String id = attributeObject.getString("id");
             String key = attributeObject.getString("key");
 
-            Attribute attribute;
-            if (attributeObject.has("segmentId")) {
-                attribute = new Attribute(id, key, attributeObject.getString("segmentId"));
-            } else {
-                attribute = new Attribute(id, key);
-            }
-
-            attributes.add(attribute);
+            attributes.add(new Attribute(id, key, attributeObject.optString("segmentId", null)));
         }
 
         return attributes;
