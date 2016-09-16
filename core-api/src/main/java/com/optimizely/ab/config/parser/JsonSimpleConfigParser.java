@@ -61,7 +61,14 @@ final class JsonSimpleConfigParser implements ConfigParser {
             String version = (String)rootObject.get("version");
 
             List<Experiment> experiments = parseExperiments((JSONArray)rootObject.get("experiments"));
-            List<Attribute> attributes = parseAttributes((JSONArray)rootObject.get("dimensions"));
+
+            List<Attribute> attributes;
+            if (version.equals(ProjectConfig.V1)) {
+                attributes = parseAttributes((JSONArray)rootObject.get("dimensions"));
+            } else {
+                attributes = parseAttributes((JSONArray)rootObject.get("attributes"));
+            }
+
             List<EventType> events = parseEvents((JSONArray)rootObject.get("events"));
             List<Audience> audiences = parseAudiences((JSONArray)parser.parse(rootObject.get("audiences").toString()));
             List<Group> groups = parseGroups((JSONArray)rootObject.get("groups"));

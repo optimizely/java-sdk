@@ -159,11 +159,10 @@
       "conditions": "[\"and\", [\"or\", [\"not\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\":\"firefox\"}]]]]"
     }
   ],
-  "dimensions": [
+  "attributes": [
     {
       "id": "134",
-      "key": "browser_type",
-      "segmentId": "185"
+      "key": "browser_type"
     }
   ],
   "events": [

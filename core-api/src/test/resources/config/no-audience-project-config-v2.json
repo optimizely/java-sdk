@@ -55,11 +55,10 @@
   ],
   "groups": [],
   "audiences": [],
-  "dimensions": [
+  "attributes": [
     {
       "id": "134",
-      "key": "browser_type",
-      "segmentId": "185"
+      "key": "browser_type"
     }
   ],
   "events": [
