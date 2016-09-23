@@ -608,6 +608,46 @@ public class OptimizelyTestV1 {
                    Collections.singletonMap("browser_type", "firefox")));
     }
 
+    /**
+     * Verify that {@link Optimizely#activate(String, String, Map)} gives precedence to forced variation bucketing
+     * over audience evaluation.
+     */
+    @Test
+    public void activateForcedVariationPrecedesAudienceEval() throws Exception {
+        String datafile = validConfigJsonV1();
+        ProjectConfig projectConfig = validProjectConfigV1();
+        Experiment experiment = projectConfig.getExperiments().get(0);
+        Variation expectedVariation = experiment.getVariations().get(0);
+
+        Optimizely optimizely = Optimizely.builder(datafile, mockEventHandler)
+            .withConfig(projectConfig)
+            .build();
+
+        logbackVerifier.expectMessage(Level.INFO, "User \"testUser1\" is forced in variation \"vtag1\".");
+        // no attributes provided for a experiment that has an audience
+        assertThat(optimizely.activate(experiment.getKey(), "testUser1"), is(expectedVariation));
+    }
+
+    /**
+     * Verify that {@link Optimizely#activate(String, String)} gives precedence to experiment status over forced
+     * variation bucketing.
+     */
+    @Test
+    public void activateExperimentStatusPrecedesForcedVariation() throws Exception {
+        String datafile = validConfigJsonV1();
+        ProjectConfig projectConfig = validProjectConfigV1();
+        Experiment experiment = projectConfig.getExperiments().get(1);
+
+        Optimizely optimizely = Optimizely.builder(datafile, mockEventHandler)
+            .withConfig(projectConfig)
+            .build();
+
+        logbackVerifier.expectMessage(Level.INFO, "Experiment \"etag2\" is not running.");
+        logbackVerifier.expectMessage(Level.INFO, "Not activating user \"testUser3\" for experiment \"etag2\".");
+        // testUser3 has a corresponding forced variation, but experiment status should be checked first
+        assertNull(optimizely.activate(experiment.getKey(), "testUser3"));
+    }
+
     //======== track tests ========//
 
     /**
@@ -1118,6 +1158,45 @@ public class OptimizelyTestV1 {
 
         assertNull(optimizely.getVariation(experiment.getKey(), "user",
                                            Collections.singletonMap("browser_type", "firefox")));
+    }
+
+    /**
+     * Verify that {@link Optimizely#getVariation(String, String, Map)} gives precedence to forced variation bucketing
+     * over audience evaluation.
+     */
+    @Test
+    public void getVariationForcedVariationPrecedesAudienceEval() throws Exception {
+        String datafile = validConfigJsonV1();
+        ProjectConfig projectConfig = validProjectConfigV1();
+        Experiment experiment = projectConfig.getExperiments().get(0);
+        Variation expectedVariation = experiment.getVariations().get(0);
+
+        Optimizely optimizely = Optimizely.builder(datafile, mockEventHandler)
+            .withConfig(projectConfig)
+            .build();
+
+        logbackVerifier.expectMessage(Level.INFO, "User \"testUser1\" is forced in variation \"vtag1\".");
+        // no attributes provided for a experiment that has an audience
+        assertThat(optimizely.getVariation(experiment.getKey(), "testUser1"), is(expectedVariation));
+    }
+
+    /**
+     * Verify that {@link Optimizely#getVariation(String, String)} gives precedence to experiment status over forced
+     * variation bucketing.
+     */
+    @Test
+    public void getVariationExperimentStatusPrecedesForcedVariation() throws Exception {
+        String datafile = validConfigJsonV1();
+        ProjectConfig projectConfig = validProjectConfigV1();
+        Experiment experiment = projectConfig.getExperiments().get(1);
+
+        Optimizely optimizely = Optimizely.builder(datafile, mockEventHandler)
+            .withConfig(projectConfig)
+            .build();
+
+        logbackVerifier.expectMessage(Level.INFO, "Experiment \"etag2\" is not running.");
+        // testUser3 has a corresponding forced variation, but experiment status should be checked first
+        assertNull(optimizely.getVariation(experiment.getKey(), "testUser3"));
     }
 
     //======== Helper methods ========//
