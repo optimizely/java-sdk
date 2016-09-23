@@ -246,7 +246,8 @@ public class Optimizely {
 
     public @Nullable Variation getVariation(@Nonnull Experiment experiment,
                                             @Nonnull String userId) throws UnknownExperimentException {
-        return bucketer.bucket(experiment, userId);
+
+        return getVariation(getProjectConfig(), experiment, Collections.<String, String>emptyMap(), userId);
     }
 
     public @Nullable Variation getVariation(@Nonnull String experimentKey,
