@@ -17,6 +17,7 @@
 package com.optimizely.ab;
 
 import ch.qos.logback.classic.Level;
+
 import com.optimizely.ab.bucketing.UserExperimentRecord;
 import com.optimizely.ab.config.ProjectConfigTestUtils;
 import com.optimizely.ab.error.ErrorHandler;
