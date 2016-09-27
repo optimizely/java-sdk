@@ -475,14 +475,9 @@ public class Optimizely {
             return this;
         }
 
-        public @Nullable Optimizely build() {
+        public Optimizely build() throws ConfigParseException {
             if (projectConfig == null) {
-                try {
-                    projectConfig = Optimizely.getProjectConfig(datafile);
-                } catch (ConfigParseException e) {
-                    logger.error("Datafile format invalid", e);
-                    return null;
-                }
+                projectConfig = Optimizely.getProjectConfig(datafile);
             }
 
             // use the default bucketer and event builder, if no overrides were provided

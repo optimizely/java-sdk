@@ -20,6 +20,7 @@ import ch.qos.logback.classic.Level;
 
 import com.optimizely.ab.bucketing.UserExperimentRecord;
 import com.optimizely.ab.config.ProjectConfigTestUtils;
+import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.EventHandler;
@@ -115,10 +116,8 @@ public class OptimizelyBuilderTest {
     }
 
     @Test
-    public void builderReturnsNullForInvalidDatafile() throws Exception {
-        logbackVerifier.expectMessage(Level.ERROR, "Datafile format invalid");
-        Optimizely optimizelyClient = Optimizely.builder("{invalidDatafile}", mockEventHandler).build();
-
-        assertNull(optimizelyClient);
+    public void builderThrowsConfigParseExceptionForInvalidDatafile() throws Exception {
+        thrown.expect(ConfigParseException.class);
+        Optimizely.builder("{invalidDatafile}", mockEventHandler).build();
     }
 }
