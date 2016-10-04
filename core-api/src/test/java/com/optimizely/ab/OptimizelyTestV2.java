@@ -684,7 +684,7 @@ public class OptimizelyTestV2 {
         List<Experiment> allExperiments = projectConfig.getExperiments();
         EventType eventType = projectConfig.getEventTypes().get(0);
 
-        EventBuilder eventBuilderV2 = new EventBuilderV2(ClientEngine.JAVA_SDK, BuildVersionInfo.VERSION);
+        EventBuilder eventBuilderV2 = new EventBuilderV2();
 
         Optimizely optimizely = Optimizely.builder(datafile, mockEventHandler)
                 .withBucketing(mockBucketer)

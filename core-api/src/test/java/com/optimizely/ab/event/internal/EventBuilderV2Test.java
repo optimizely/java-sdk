@@ -59,7 +59,7 @@ import static org.mockito.Mockito.when;
 public class EventBuilderV2Test {
 
     private Gson gson = new Gson();
-    private EventBuilderV2 builder = new EventBuilderV2(ClientEngine.JAVA_SDK, BuildVersionInfo.VERSION);
+    private EventBuilderV2 builder = new EventBuilderV2();
 
     /**
      * Verify {@link Impression} event creation

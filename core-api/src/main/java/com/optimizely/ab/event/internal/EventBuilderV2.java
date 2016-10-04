@@ -62,6 +62,10 @@ public class EventBuilderV2 extends EventBuilder {
 
     private Serializer serializer;
 
+    public EventBuilderV2() {
+        this(ClientEngine.JAVA_SDK, BuildVersionInfo.VERSION);
+    }
+
     public EventBuilderV2(ClientEngine clientEngine, String clientVersion) {
         this.clientEngine = clientEngine;
         this.clientVersion = clientVersion;
