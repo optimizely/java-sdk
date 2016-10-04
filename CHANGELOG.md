@@ -1,3 +1,7 @@
+## 1.0.1
+
+- Allow for configurability of `clientEngine` and `clientVersion` through `Optimizely.Builder`
+
 ## 1.0.0
 
 - Introduce support for Full Stack projects in Optimizely X with no breaking changes from previous version
