@@ -1,6 +1,8 @@
 ## 1.0.1
 
 - Allow for configurability of `clientEngine` and `clientVersion` through `Optimizely.Builder`
+- Remove ppid query string from V1 events
+
 
 ## 1.0.0
 
