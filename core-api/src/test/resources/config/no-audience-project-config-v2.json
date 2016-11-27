@@ -13,10 +13,12 @@
       "audienceIds": [],
       "variations": [{
         "id": "276",
-        "key": "vtag1"
+        "key": "vtag1",
+        "variables": []
       }, {
         "id": "277",
-        "key": "vtag2"
+        "key": "vtag2",
+        "variables": []
       }],
       "forcedVariations": {
         "testUser1": "vtag1",
@@ -38,10 +40,12 @@
       "audienceIds": [],
       "variations": [{
         "id": "278",
-        "key": "vtag3"
+        "key": "vtag3",
+        "variables": []
       }, {
         "id": "279",
-        "key": "vtag4"
+        "key": "vtag4",
+        "variables": []
       }],
       "forcedVariations": {},
       "trafficAllocation": [{
@@ -84,5 +88,6 @@
         "223"
       ]
     }
-  ]
+  ],
+  "variables": []
 }

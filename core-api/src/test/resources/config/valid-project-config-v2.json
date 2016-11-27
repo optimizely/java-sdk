@@ -15,10 +15,18 @@
       ],
       "variations": [{
         "id": "276",
-        "key": "vtag1"
+        "key": "vtag1",
+        "variables": [{
+          "id": "6",
+          "value": "true"
+        }]
       }, {
         "id": "277",
-        "key": "vtag2"
+        "key": "vtag2",
+        "variables": [{
+          "id": "6",
+          "value": "false"
+        }]
       }],
       "forcedVariations": {
         "testUser1": "vtag1"
@@ -41,10 +49,12 @@
       ],
       "variations": [{
         "id": "278",
-        "key": "vtag3"
+        "key": "vtag3",
+        "variables": []
       }, {
         "id": "279",
-        "key": "vtag4"
+        "key": "vtag4",
+        "variables": []
       }],
       "forcedVariations": {
         "testUser3": "vtag3"
@@ -82,10 +92,12 @@
       ],
       "variations": [{
         "id": "282",
-        "key": "e2_vtag1"
+        "key": "e2_vtag1",
+        "variables": []
       }, {
         "id": "283",
-        "key": "e2_vtag2"
+        "key": "e2_vtag2",
+        "variables": []
       }],
       "forcedVariations": {},
       "trafficAllocation": [{
@@ -106,10 +118,18 @@
       ],
       "variations": [{
         "id": "280",
-        "key": "e1_vtag1"
+        "key": "e1_vtag1",
+        "variables": [{
+          "id": "7",
+          "value": "true"
+        }]
       }, {
         "id": "281",
-        "key": "e1_vtag2"
+        "key": "e1_vtag2",
+        "variables": [{
+          "id": "7",
+          "value": "false"
+        }]
       }],
       "forcedVariations": {
         "testUser1": "e1_vtag1",
@@ -138,10 +158,12 @@
       ],
       "variations": [{
         "id": "284",
-        "key": "e1_vtag1"
+        "key": "e1_vtag1",
+        "variables": []
       }, {
         "id": "285",
-        "key": "e1_vtag2"
+        "key": "e1_vtag2",
+        "variables": []
       }],
       "forcedVariations": {
         "testUser1": "e1_vtag1",
@@ -198,6 +220,57 @@
       "experimentIds": [
         "118"
       ]
+    }
+  ],
+  "variables": [
+    {
+      "id": "1",
+      "key": "boolean_variable",
+      "type": "boolean",
+      "defaultValue": "false",
+      "status": "active"
+    },
+    {
+      "id": "2",
+      "key": "integer_variable",
+      "type": "integer",
+      "defaultValue": "5",
+      "status": "active"
+    },
+    {
+      "id": "3",
+      "key": "string_variable",
+      "type": "string",
+      "defaultValue": "string_live_variable",
+      "status": "active"
+    },
+    {
+      "id": "4",
+      "key": "float_variable",
+      "type": "float",
+      "defaultValue": "13.37",
+      "status": "active"
+    },
+    {
+      "id": "5",
+      "key": "archived_variable",
+      "type": "boolean",
+      "defaultValue": "true",
+      "status": "archived"
+    },
+    {
+      "id": "6",
+      "key": "etag1_variable",
+      "type": "boolean",
+      "defaultValue": "false",
+      "status": "active"
+    },
+    {
+      "id": "7",
+      "key": "group_etag1_variable",
+      "type": "boolean",
+      "defaultValue": "false",
+      "status": "active"
     }
   ]
 }

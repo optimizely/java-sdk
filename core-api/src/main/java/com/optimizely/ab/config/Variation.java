@@ -17,23 +17,34 @@
 package com.optimizely.ab.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.List;
 
 /**
  * Represents the Optimizely Variation configuration.
  *
  * @see <a href="http://developers.optimizely.com/server/reference/index.html#json">Project JSON</a>
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Variation implements IdKeyMapped {
 
     private final String id;
     private final String key;
+    private final List<LiveVariableInstance> liveVariableInstances;
+
+    public Variation(String id, String key) {
+        this(id, key, null);
+    }
 
     @JsonCreator
     public Variation(@JsonProperty("id") String id,
-                     @JsonProperty("key") String key) {
+                     @JsonProperty("key") String key,
+                     @JsonProperty("variables") List<LiveVariableInstance> liveVariableInstances) {
         this.id = id;
         this.key = key;
+        this.liveVariableInstances = liveVariableInstances;
     }
 
     public String getId() {
@@ -42,6 +53,10 @@ public class Variation implements IdKeyMapped {
 
     public String getKey() {
         return key;
+    }
+
+    public List<LiveVariableInstance> getLiveVariableInstances() {
+        return liveVariableInstances;
     }
 
     public boolean is(String otherKey) {

@@ -40,6 +40,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -183,16 +184,18 @@ public final class ProjectConfigTestUtils {
         List<Experiment> experiments = asList(
             new Experiment("223", "etag1", "Running", "1",
                            singletonList("100"),
-                           asList(new Variation("276", "vtag1"),
-                                  new Variation("277", "vtag2")),
+                           asList(new Variation("276", "vtag1",
+                                                Collections.singletonList(new LiveVariableInstance("6", "true"))),
+                                  new Variation("277", "vtag2",
+                                                Collections.singletonList(new LiveVariableInstance("6", "false")))),
                            Collections.singletonMap("testUser1", "vtag1"),
                            asList(new TrafficAllocation("276", 3500),
                                   new TrafficAllocation("277", 9000)),
                            ""),
             new Experiment("118", "etag2", "Not started", "2",
                            singletonList("100"),
-                           asList(new Variation("278", "vtag3"),
-                                  new Variation("279", "vtag4")),
+                           asList(new Variation("278", "vtag3", Collections.<LiveVariableInstance>emptyList()),
+                                  new Variation("279", "vtag4", Collections.<LiveVariableInstance>emptyList())),
                            Collections.singletonMap("testUser3", "vtag3"),
                            asList(new TrafficAllocation("278", 4500),
                                   new TrafficAllocation("279", 9000)),
@@ -232,16 +235,18 @@ public final class ProjectConfigTestUtils {
         List<Experiment> randomGroupExperiments = asList(
             new Experiment("301", "group_etag2", "Running", "3",
                            singletonList("100"),
-                           asList(new Variation("282", "e2_vtag1"),
-                                  new Variation("283", "e2_vtag2")),
+                           asList(new Variation("282", "e2_vtag1", Collections.<LiveVariableInstance>emptyList()),
+                                  new Variation("283", "e2_vtag2", Collections.<LiveVariableInstance>emptyList())),
                            Collections.<String, String>emptyMap(),
                            asList(new TrafficAllocation("282", 5000),
                                   new TrafficAllocation("283", 10000)),
                            "42"),
             new Experiment("300", "group_etag1", "Running", "4",
                            singletonList("100"),
-                           asList(new Variation("280", "e1_vtag1"),
-                                  new Variation("281", "e1_vtag2")),
+                           asList(new Variation("280", "e1_vtag1",
+                                                Collections.singletonList(new LiveVariableInstance("7", "true"))),
+                                  new Variation("281", "e1_vtag2",
+                                                Collections.singletonList(new LiveVariableInstance("7", "false")))),
                            userIdToVariationKeyMap,
                            asList(new TrafficAllocation("280", 3000),
                                   new TrafficAllocation("281", 10000)),
@@ -251,8 +256,8 @@ public final class ProjectConfigTestUtils {
         List<Experiment> overlappingGroupExperiments = asList(
             new Experiment("302", "overlapping_etag1", "Running", "5",
                            singletonList("100"),
-                           asList(new Variation("284", "e1_vtag1"),
-                                  new Variation("285", "e1_vtag2")),
+                           asList(new Variation("284", "e1_vtag1", Collections.<LiveVariableInstance>emptyList()),
+                                  new Variation("285", "e1_vtag2", Collections.<LiveVariableInstance>emptyList())),
                            userIdToVariationKeyMap,
                            asList(new TrafficAllocation("284", 1500),
                                   new TrafficAllocation("285", 3000)),
@@ -269,7 +274,25 @@ public final class ProjectConfigTestUtils {
                                                  Collections.<TrafficAllocation>emptyList());
         List<Group> groups = asList(randomPolicyGroup, overlappingPolicyGroup);
 
-        return new ProjectConfig("789", "1234", "2", "42", groups, experiments, attributes, events, audiences);
+        List<LiveVariable> liveVariables = asList(
+            new LiveVariable("1", "boolean_variable", "false", LiveVariable.VariableStatus.ACTIVE,
+                             LiveVariable.VariableType.BOOLEAN),
+            new LiveVariable("2", "integer_variable", "5", LiveVariable.VariableStatus.ACTIVE,
+                             LiveVariable.VariableType.INTEGER),
+            new LiveVariable("3", "string_variable", "string_live_variable", LiveVariable.VariableStatus.ACTIVE,
+                             LiveVariable.VariableType.STRING),
+            new LiveVariable("4", "float_variable", "13.37", LiveVariable.VariableStatus.ACTIVE,
+                             LiveVariable.VariableType.FLOAT),
+            new LiveVariable("5", "archived_variable", "true", LiveVariable.VariableStatus.ARCHIVED,
+                             LiveVariable.VariableType.BOOLEAN),
+            new LiveVariable("6", "etag1_variable", "false", LiveVariable.VariableStatus.ACTIVE,
+                             LiveVariable.VariableType.BOOLEAN),
+            new LiveVariable("7", "group_etag1_variable", "false", LiveVariable.VariableStatus.ACTIVE,
+                             LiveVariable.VariableType.BOOLEAN)
+        );
+
+        return new ProjectConfig("789", "1234", "2", "42", groups, experiments, attributes, events, audiences,
+                                 liveVariables);
     }
 
     private static final ProjectConfig NO_AUDIENCE_PROJECT_CONFIG_V2 = generateNoAudienceProjectConfigV2();
@@ -281,16 +304,16 @@ public final class ProjectConfigTestUtils {
         List<Experiment> experiments = asList(
             new Experiment("223", "etag1", "Running", "1",
                            Collections.<String>emptyList(),
-                           asList(new Variation("276", "vtag1"),
-                                  new Variation("277", "vtag2")),
+                           asList(new Variation("276", "vtag1", Collections.<LiveVariableInstance>emptyList()),
+                                  new Variation("277", "vtag2", Collections.<LiveVariableInstance>emptyList())),
                            userIdToVariationKeyMap,
                            asList(new TrafficAllocation("276", 3500),
                                   new TrafficAllocation("277", 9000)),
                            ""),
             new Experiment("118", "etag2", "Not started", "2",
                            Collections.<String>emptyList(),
-                           asList(new Variation("278", "vtag3"),
-                                  new Variation("279", "vtag4")),
+                           asList(new Variation("278", "vtag3", Collections.<LiveVariableInstance>emptyList()),
+                                  new Variation("279", "vtag4", Collections.<LiveVariableInstance>emptyList())),
                            Collections.<String, String>emptyMap(),
                            asList(new TrafficAllocation("278", 4500),
                                   new TrafficAllocation("279", 9000)),
@@ -372,6 +395,7 @@ public final class ProjectConfigTestUtils {
         verifyAttributes(actual.getAttributes(), expected.getAttributes());
         verifyEvents(actual.getEventTypes(), expected.getEventTypes());
         verifyAudiences(actual.getAudiences(), expected.getAudiences());
+        verifyLiveVariables(actual.getLiveVariables(), expected.getLiveVariables());
     }
 
     /**
@@ -410,6 +434,8 @@ public final class ProjectConfigTestUtils {
 
             assertThat(actualVariation.getId(), is(expectedVariation.getId()));
             assertThat(actualVariation.getKey(), is(expectedVariation.getKey()));
+            verifyLiveVariableInstances(actualVariation.getLiveVariableInstances(),
+                                        expectedVariation.getLiveVariableInstances());
         }
     }
 
@@ -492,6 +518,44 @@ public final class ProjectConfigTestUtils {
             assertThat(actualGroup.getPolicy(), is(expectedGroup.getPolicy()));
             verifyTrafficAllocations(actualGroup.getTrafficAllocation(), expectedGroup.getTrafficAllocation());
             verifyExperiments(actualGroup.getExperiments(), expectedGroup.getExperiments());
+        }
+    }
+
+    private static void verifyLiveVariables(List<LiveVariable> actual, List<LiveVariable> expected) {
+        // if using V1, live variables will be null
+        if (expected == null) {
+            assertNull(actual);
+        } else {
+            assertThat(actual.size(), is(expected.size()));
+
+            for (int i = 0; i < actual.size(); i++) {
+                LiveVariable actualLiveVariable = actual.get(i);
+                LiveVariable expectedLiveVariable = expected.get(i);
+
+                assertThat(actualLiveVariable.getId(), is(expectedLiveVariable.getId()));
+                assertThat(actualLiveVariable.getKey(), is(expectedLiveVariable.getKey()));
+                assertThat(actualLiveVariable.getDefaultValue(), is(expectedLiveVariable.getDefaultValue()));
+                assertThat(actualLiveVariable.getType(), is(expectedLiveVariable.getType()));
+                assertThat(actualLiveVariable.getStatus(), is(expectedLiveVariable.getStatus()));
+            }
+        }
+    }
+
+    private static void verifyLiveVariableInstances(List<LiveVariableInstance> actual,
+                                                    List<LiveVariableInstance> expected) {
+        // if using V1, live variable instances will be null
+        if (expected == null) {
+            assertNull(actual);
+        } else {
+            assertThat(actual.size(), is(expected.size()));
+
+            for (int i = 0; i < actual.size(); i++) {
+                LiveVariableInstance actualLiveVariableInstance = actual.get(i);
+                LiveVariableInstance expectedLiveVariableInstance = expected.get(i);
+
+                assertThat(actualLiveVariableInstance.getId(), is(expectedLiveVariableInstance.getId()));
+                assertThat(actualLiveVariableInstance.getValue(), is(expectedLiveVariableInstance.getValue()));
+            }
         }
     }
 }

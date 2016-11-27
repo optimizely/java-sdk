@@ -49,6 +49,7 @@ public class ProjectConfig {
     private final List<Attribute> attributes;
     private final List<EventType> events;
     private final List<Audience> audiences;
+    private final List<LiveVariable> liveVariables;
 
     // convenience mappings for efficient lookup
     private final Map<String, Experiment> experimentKeyMapping;
@@ -61,6 +62,13 @@ public class ProjectConfig {
     public ProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
                          List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
                          List<Audience> audiences) {
+        this(accountId, projectId, version, revision, groups, experiments, attributes, eventType, audiences,
+             null);
+    }
+
+    public ProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
+                         List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
+                         List<Audience> audiences, List<LiveVariable> liveVariables) {
 
         this.accountId = accountId;
         this.projectId = projectId;
@@ -75,6 +83,7 @@ public class ProjectConfig {
         this.attributes = Collections.unmodifiableList(attributes);
         this.events = Collections.unmodifiableList(eventType);
         this.audiences = Collections.unmodifiableList(audiences);
+        this.liveVariables = liveVariables == null ? null : Collections.unmodifiableList(liveVariables);
 
         // generate the name mappers
         this.experimentKeyMapping = ProjectConfigUtils.generateNameMapping(this.experiments);
@@ -145,6 +154,10 @@ public class ProjectConfig {
         Audience audience = audienceIdMapping.get(audienceId);
 
         return audience != null ? audience.getConditions() : null;
+    }
+
+    public List<LiveVariable> getLiveVariables() {
+        return liveVariables;
     }
 
     public Map<String, Experiment> getExperimentKeyMapping() {

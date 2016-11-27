@@ -23,6 +23,7 @@ import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.LiveVariableInstance;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
@@ -31,10 +32,8 @@ import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
-import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventBuilder;
 import com.optimizely.ab.event.internal.EventBuilderV2;
-import com.optimizely.ab.event.internal.payload.Event.ClientEngine;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.internal.ProjectValidationUtils;
 
@@ -1247,7 +1246,8 @@ public class OptimizelyTestV2 {
     private Experiment createUnknownExperiment() {
         return new Experiment("0987", "unknown_experiment", "Running", "1",
                 Collections.<String>emptyList(),
-                Collections.singletonList(new Variation("8765", "unknown_variation")),
+                Collections.singletonList(
+                        new Variation("8765", "unknown_variation", Collections.<LiveVariableInstance>emptyList())),
                 Collections.<String, String>emptyMap(),
                 Collections.singletonList(new TrafficAllocation("8765", 4999)));
     }
