@@ -37,8 +37,22 @@ import javax.annotation.concurrent.Immutable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ProjectConfig {
 
-    public static final String V1 = "1";
-    public static final String V2 = "2";
+    public enum Version {
+        V1 ("1"),
+        V2 ("2"),
+        V3 ("3");
+
+        private final String version;
+
+        Version(String version) {
+            this.version = version;
+        }
+
+        @Override
+        public String toString() {
+            return version;
+        }
+    }
 
     private final String accountId;
     private final String projectId;

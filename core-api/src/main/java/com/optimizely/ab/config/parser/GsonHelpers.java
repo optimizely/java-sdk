@@ -23,7 +23,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.LiveVariableInstance;
+import com.optimizely.ab.config.LiveVariableUsageInstance;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
 
@@ -43,13 +43,14 @@ final class GsonHelpers {
             String id = variationObject.get("id").getAsString();
             String key = variationObject.get("key").getAsString();
 
-            List<LiveVariableInstance> variableInstances = null;
+            List<LiveVariableUsageInstance> variableInstances = null;
             // this is an existence check rather than a version check since it's difficult to pass data
             // across deserializers.
             if (variationObject.has("variables")) {
-                Type liveVariableInstancesType = new TypeToken<List<LiveVariableInstance>>() {}.getType();
+                Type liveVariableUsageInstancesType = new TypeToken<List<LiveVariableUsageInstance>>() {}.getType();
                 variableInstances =
-                        context.deserialize(variationObject.getAsJsonArray("variables"), liveVariableInstancesType);
+                        context.deserialize(variationObject.getAsJsonArray("variables"),
+                                            liveVariableUsageInstancesType);
             }
 
             variations.add(new Variation(id, key, variableInstances));

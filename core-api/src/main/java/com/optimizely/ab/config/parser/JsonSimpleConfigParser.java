@@ -27,7 +27,7 @@ import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Group;
 import com.optimizely.ab.config.LiveVariable;
-import com.optimizely.ab.config.LiveVariableInstance;
+import com.optimizely.ab.config.LiveVariableUsageInstance;
 import com.optimizely.ab.config.LiveVariable.VariableStatus;
 import com.optimizely.ab.config.LiveVariable.VariableType;
 import com.optimizely.ab.config.ProjectConfig;
@@ -65,7 +65,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             List<Experiment> experiments = parseExperiments((JSONArray)rootObject.get("experiments"));
 
             List<Attribute> attributes;
-            if (version.equals(ProjectConfig.V1)) {
+            if (version.equals(ProjectConfig.Version.V1.toString())) {
                 attributes = parseAttributes((JSONArray)rootObject.get("dimensions"));
             } else {
                 attributes = parseAttributes((JSONArray)rootObject.get("attributes"));
@@ -76,7 +76,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             List<Group> groups = parseGroups((JSONArray)rootObject.get("groups"));
 
             List<LiveVariable> liveVariables = null;
-            if (version.equals(ProjectConfig.V2)) {
+            if (version.equals(ProjectConfig.Version.V3.toString())) {
                 liveVariables = parseLiveVariables((JSONArray)rootObject.get("variables"));
             }
 
@@ -133,12 +133,12 @@ final class JsonSimpleConfigParser implements ConfigParser {
             String id = (String)variationObject.get("id");
             String key = (String)variationObject.get("key");
 
-            List<LiveVariableInstance> liveVariableInstances = null;
+            List<LiveVariableUsageInstance> liveVariableUsageInstances = null;
             if (variationObject.containsKey("variables")) {
-                liveVariableInstances = parseLiveVariableInstances((JSONArray)variationObject.get("variables"));
+                liveVariableUsageInstances = parseLiveVariableInstances((JSONArray)variationObject.get("variables"));
             }
 
-            variations.add(new Variation(id, key, liveVariableInstances));
+            variations.add(new Variation(id, key, liveVariableUsageInstances));
         }
 
         return variations;
@@ -283,19 +283,19 @@ final class JsonSimpleConfigParser implements ConfigParser {
         return liveVariables;
     }
 
-    private List<LiveVariableInstance> parseLiveVariableInstances(JSONArray liveVariableInstancesJson) {
-        List<LiveVariableInstance> liveVariableInstances =
-                new ArrayList<LiveVariableInstance>(liveVariableInstancesJson.size());
+    private List<LiveVariableUsageInstance> parseLiveVariableInstances(JSONArray liveVariableInstancesJson) {
+        List<LiveVariableUsageInstance> liveVariableUsageInstances =
+                new ArrayList<LiveVariableUsageInstance>(liveVariableInstancesJson.size());
 
         for (Object obj : liveVariableInstancesJson) {
             JSONObject liveVariableInstanceObject = (JSONObject)obj;
             String id = (String)liveVariableInstanceObject.get("id");
             String value = (String)liveVariableInstanceObject.get("value");
 
-            liveVariableInstances.add(new LiveVariableInstance(id, value));
+            liveVariableUsageInstances.add(new LiveVariableUsageInstance(id, value));
         }
 
-        return liveVariableInstances;
+        return liveVariableUsageInstances;
     }
 }
 

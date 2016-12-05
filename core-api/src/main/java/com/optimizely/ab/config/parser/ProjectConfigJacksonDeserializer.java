@@ -57,7 +57,7 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
                                                         new TypeReference<List<Experiment>>() {});
 
         List<Attribute> attributes;
-        if (version.equals(ProjectConfig.V1)) {
+        if (version.equals(ProjectConfig.Version.V1.toString())) {
             attributes = mapper.readValue(node.get("dimensions").toString(), new TypeReference<List<Attribute>>() {});
         } else {
             attributes = mapper.readValue(node.get("attributes").toString(), new TypeReference<List<Attribute>>() {});
@@ -69,7 +69,7 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
                                                     new TypeReference<List<Audience>>() {});
 
         List<LiveVariable> liveVariables = null;
-        if (version.equals(ProjectConfig.V2)) {
+        if (version.equals(ProjectConfig.Version.V3.toString())) {
             liveVariables = mapper.readValue(node.get("variables").toString(),
                                              new TypeReference<List<LiveVariable>>() {});
         }

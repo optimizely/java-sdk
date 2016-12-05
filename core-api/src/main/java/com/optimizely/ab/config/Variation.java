@@ -32,7 +32,7 @@ public class Variation implements IdKeyMapped {
 
     private final String id;
     private final String key;
-    private final List<LiveVariableInstance> liveVariableInstances;
+    private final List<LiveVariableUsageInstance> liveVariableUsageInstances;
 
     public Variation(String id, String key) {
         this(id, key, null);
@@ -41,10 +41,10 @@ public class Variation implements IdKeyMapped {
     @JsonCreator
     public Variation(@JsonProperty("id") String id,
                      @JsonProperty("key") String key,
-                     @JsonProperty("variables") List<LiveVariableInstance> liveVariableInstances) {
+                     @JsonProperty("variables") List<LiveVariableUsageInstance> liveVariableUsageInstances) {
         this.id = id;
         this.key = key;
-        this.liveVariableInstances = liveVariableInstances;
+        this.liveVariableUsageInstances = liveVariableUsageInstances;
     }
 
     public String getId() {
@@ -55,8 +55,8 @@ public class Variation implements IdKeyMapped {
         return key;
     }
 
-    public List<LiveVariableInstance> getLiveVariableInstances() {
-        return liveVariableInstances;
+    public List<LiveVariableUsageInstance> getLiveVariableUsageInstances() {
+        return liveVariableUsageInstances;
     }
 
     public boolean is(String otherKey) {

@@ -61,7 +61,7 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
             context.deserialize(jsonObject.get("experiments").getAsJsonArray(), experimentsType);
 
         List<Attribute> attributes;
-        if (version.equals(ProjectConfig.V1)) {
+        if (version.equals(ProjectConfig.Version.V1.toString())) {
             attributes = context.deserialize(jsonObject.get("dimensions"), attributesType);
         } else {
             attributes = context.deserialize(jsonObject.get("attributes"), attributesType);
@@ -74,7 +74,7 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
 
         // live variables should be null if using V1
         List<LiveVariable> liveVariables = null;
-        if (version.equals(ProjectConfig.V2)) {
+        if (version.equals(ProjectConfig.Version.V3.toString())) {
             Type liveVariablesType = new TypeToken<List<LiveVariable>>() {}.getType();
             liveVariables = context.deserialize(jsonObject.getAsJsonArray("variables"), liveVariablesType);
         }

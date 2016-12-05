@@ -508,7 +508,7 @@ public class Optimizely {
             }
 
             if (eventBuilder == null) {
-                if (projectConfig.getVersion().equals(ProjectConfig.V1)) {
+                if (projectConfig.getVersion().equals(ProjectConfig.Version.V1.toString())) {
                     eventBuilder = new EventBuilderV1();
                 } else {
                     eventBuilder = new EventBuilderV2(clientEngine, clientVersion);
