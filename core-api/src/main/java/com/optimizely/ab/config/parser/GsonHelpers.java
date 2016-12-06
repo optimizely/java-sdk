@@ -43,17 +43,17 @@ final class GsonHelpers {
             String id = variationObject.get("id").getAsString();
             String key = variationObject.get("key").getAsString();
 
-            List<LiveVariableUsageInstance> variableInstances = null;
+            List<LiveVariableUsageInstance> variableUsageInstances = null;
             // this is an existence check rather than a version check since it's difficult to pass data
             // across deserializers.
             if (variationObject.has("variables")) {
                 Type liveVariableUsageInstancesType = new TypeToken<List<LiveVariableUsageInstance>>() {}.getType();
-                variableInstances =
+                variableUsageInstances =
                         context.deserialize(variationObject.getAsJsonArray("variables"),
                                             liveVariableUsageInstancesType);
             }
 
-            variations.add(new Variation(id, key, variableInstances));
+            variations.add(new Variation(id, key, variableUsageInstances));
         }
 
         return variations;
