@@ -24,6 +24,9 @@ import java.util.Map;
 
 public class ProjectConfigUtils {
 
+    /**
+     * Helper method for creating convenience mappings from key to entity
+     */
     public static <T extends IdKeyMapped> Map<String, T> generateNameMapping(List<T> nameables) {
         Map<String, T> nameMapping = new HashMap<String, T>();
         for (T nameable : nameables) {
@@ -33,6 +36,9 @@ public class ProjectConfigUtils {
         return Collections.unmodifiableMap(nameMapping);
     }
 
+    /**
+     * Helper method for creating convenience mappings from ID to entity
+     */
     public static <T extends IdMapped> Map<String, T> generateIdMapping(List<T> nameables) {
         Map<String, T> nameMapping = new HashMap<String, T>();
         for (T nameable : nameables) {
@@ -42,6 +48,9 @@ public class ProjectConfigUtils {
         return Collections.unmodifiableMap(nameMapping);
     }
 
+    /**
+     * Helper method to create a map from a live variable to all the experiments using it
+     */
     public static Map<String, List<Experiment>> generateLiveVariableIdToExperimentsMapping(
             List<Experiment> experiments) {
 
@@ -69,7 +78,10 @@ public class ProjectConfigUtils {
         return variableIdToExperiments;
     }
 
-    public static Map<String, Map<String, LiveVariableUsageInstance>> generateLiveVariableValueMap(
+    /**
+     * Helper method to create a map from variation ID to variable ID to {@link LiveVariableUsageInstance}
+     */
+    public static Map<String, Map<String, LiveVariableUsageInstance>> generateVariationToLiveVariableUsageInstancesMap(
             List<Experiment> experiments) {
 
         Map<String, Map<String, LiveVariableUsageInstance>> liveVariableValueMap =

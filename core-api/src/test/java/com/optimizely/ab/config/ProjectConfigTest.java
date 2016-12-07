@@ -128,6 +128,10 @@ public class ProjectConfigTest {
         Map<String, List<Experiment>> expectedLiveVariableIdToExperimentsMapping =
                 new HashMap<String, List<Experiment>>();
         expectedLiveVariableIdToExperimentsMapping.put("6", Collections.singletonList(ungroupedExpWithVariables));
+        expectedLiveVariableIdToExperimentsMapping.put("2", Collections.singletonList(ungroupedExpWithVariables));
+        expectedLiveVariableIdToExperimentsMapping.put("3", Collections.singletonList(ungroupedExpWithVariables));
+        expectedLiveVariableIdToExperimentsMapping.put("4", Collections.singletonList(ungroupedExpWithVariables));
+
         expectedLiveVariableIdToExperimentsMapping.put("7", Collections.singletonList(groupedExpWithVariables));
 
         assertThat(projectConfig.getLiveVariableIdToExperimentsMapping(),
@@ -146,10 +150,17 @@ public class ProjectConfigTest {
         Map<String, LiveVariableUsageInstance> ungroupedVariation276VariableValues =
                 new HashMap<String, LiveVariableUsageInstance>();
         ungroupedVariation276VariableValues.put("6", new LiveVariableUsageInstance("6", "True"));
+        ungroupedVariation276VariableValues.put("2", new LiveVariableUsageInstance("2", "10"));
+        ungroupedVariation276VariableValues.put("3", new LiveVariableUsageInstance("3", "string_var_vtag1"));
+        ungroupedVariation276VariableValues.put("4", new LiveVariableUsageInstance("4", "5.3"));
+
 
         Map<String, LiveVariableUsageInstance> ungroupedVariation277VariableValues =
                 new HashMap<String, LiveVariableUsageInstance>();
         ungroupedVariation277VariableValues.put("6", new LiveVariableUsageInstance("6", "False"));
+        ungroupedVariation277VariableValues.put("2", new LiveVariableUsageInstance("2", "20"));
+        ungroupedVariation277VariableValues.put("3", new LiveVariableUsageInstance("3", "string_var_vtag2"));
+        ungroupedVariation277VariableValues.put("4", new LiveVariableUsageInstance("4", "6.3"));
 
         expectedVariationToLiveVariableUsageInstanceMapping.put("276", ungroupedVariation276VariableValues);
         expectedVariationToLiveVariableUsageInstanceMapping.put("277", ungroupedVariation277VariableValues);

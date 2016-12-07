@@ -995,11 +995,11 @@ public class OptimizelyTestV3 {
     }
 
     /**
-     * Verify that {@link Optimizely#getVariableBoolean(String, boolean, String)} returns a boolean live variable
+     * Verify that {@link Optimizely#getVariableString(String, boolean, String, Map)} returns a string live variable
      * value when an proper variable key is provided and dispatches an impression when activateExperiment is true.
      */
     @Test
-    public void getVariableBooleanActivateExperimentTrue() throws Exception {
+    public void getVariableStringActivateExperimentTrue() throws Exception {
         String datafile = validConfigJsonV3();
         ProjectConfig projectConfig = validProjectConfigV3();
 
@@ -1015,18 +1015,19 @@ public class OptimizelyTestV3 {
             .withErrorHandler(new RaiseExceptionErrorHandler())
             .build();
 
-        assertTrue(optimizely.getVariableBoolean("etag1_variable", true, "userId",
-                                                 Collections.singletonMap("browser_type", "chrome")));
+        assertThat(optimizely.getVariableString("string_variable", true, "userId",
+                                                Collections.singletonMap("browser_type", "chrome")),
+                   is("string_var_vtag1"));
         verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
     }
 
     /**
-     * Verify that {@link Optimizely#getVariableBoolean(String, boolean, String)} returns a boolean live variable
+     * Verify that {@link Optimizely#getVariableString(String, boolean, String, Map)} returns a string live variable
      * value when an proper variable key is provided and doesn't dispatch an impression when activateExperiment is
      * false.
      */
     @Test
-    public void getVariableBooleanActivateExperimentFalse() throws Exception {
+    public void getVariableStringActivateExperimentFalse() throws Exception {
         String datafile = validConfigJsonV3();
         ProjectConfig projectConfig = validProjectConfigV3();
 
@@ -1042,9 +1043,86 @@ public class OptimizelyTestV3 {
             .withErrorHandler(new RaiseExceptionErrorHandler())
             .build();
 
-        assertTrue(optimizely.getVariableBoolean("etag1_variable", false, "userId",
-                                                 Collections.singletonMap("browser_type", "chrome")));
+        assertThat(optimizely.getVariableString("string_variable", false, "userId",
+                                                Collections.singletonMap("browser_type", "chrome")),
+                   is("string_var_vtag1"));
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
+    }
+
+    /**
+     * Verify that {@link Optimizely#getVariableBoolean(String, boolean, String, Map)} returns a boolean live variable
+     * value when an proper variable key is provided and dispatches an impression when activateExperiment is true.
+     */
+    @Test
+    public void getVariableBoolean() throws Exception {
+        String datafile = validConfigJsonV3();
+        ProjectConfig projectConfig = validProjectConfigV3();
+
+        Experiment activatedExperiment = projectConfig.getExperiments().get(0);
+        Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+
+        when(mockBucketer.bucket(activatedExperiment, "userId"))
+            .thenReturn(bucketedVariation);
+
+        Optimizely optimizely = Optimizely.builder(datafile, mockEventHandler)
+            .withConfig(projectConfig)
+            .withBucketing(mockBucketer)
+            .build();
+
+        assertTrue(optimizely.getVariableBoolean("etag1_variable", true, "userId",
+                                                 Collections.singletonMap("browser_type", "chrome")));
+    }
+
+    /**
+     * Verify that {@link Optimizely#getVariableFloat(String, boolean, String, Map)} returns a float live variable
+     * value when an proper variable key is provided and dispatches an impression when activateExperiment is true.
+     */
+    @Test
+    public void getVariableFloat() throws Exception {
+        String datafile = validConfigJsonV3();
+        ProjectConfig projectConfig = validProjectConfigV3();
+
+        Experiment activatedExperiment = projectConfig.getExperiments().get(0);
+        Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+
+        when(mockBucketer.bucket(activatedExperiment, "userId"))
+            .thenReturn(bucketedVariation);
+
+        Optimizely optimizely = Optimizely.builder(datafile, mockEventHandler)
+            .withConfig(projectConfig)
+            .withBucketing(mockBucketer)
+            .build();
+
+        assertThat(optimizely.getVariableFloat("float_variable", true, "userId",
+                                               Collections.singletonMap("browser_type", "chrome")),
+                   is(5.3f));
+        verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
+    }
+
+    /**
+     * Verify that {@link Optimizely#getVariableInteger(String, boolean, String, Map)} returns a integer live variable
+     * value when an proper variable key is provided and dispatches an impression when activateExperiment is true.
+     */
+    @Test
+    public void getVariableInteger() throws Exception {
+        String datafile = validConfigJsonV3();
+        ProjectConfig projectConfig = validProjectConfigV3();
+
+        Experiment activatedExperiment = projectConfig.getExperiments().get(0);
+        Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+
+        when(mockBucketer.bucket(activatedExperiment, "userId"))
+            .thenReturn(bucketedVariation);
+
+        Optimizely optimizely = Optimizely.builder(datafile, mockEventHandler)
+            .withConfig(projectConfig)
+            .withBucketing(mockBucketer)
+            .build();
+
+        assertThat(optimizely.getVariableInteger("integer_variable", true, "userId",
+                                                 Collections.singletonMap("browser_type", "chrome")),
+                   is(10));
+        verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
     }
 
     //======== getVariation tests ========//

@@ -312,13 +312,25 @@ public final class ProjectConfigTestUtils {
 
     private static final ProjectConfig VALID_PROJECT_CONFIG_V3 = generateValidProjectConfigV3();
     private static ProjectConfig generateValidProjectConfigV3() {
+        List<LiveVariableUsageInstance> variationVtag1VariableUsageInstances = asList(
+            new LiveVariableUsageInstance("6", "True"),
+            new LiveVariableUsageInstance("2", "10"),
+            new LiveVariableUsageInstance("3", "string_var_vtag1"),
+            new LiveVariableUsageInstance("4", "5.3")
+        );
+
+        List<LiveVariableUsageInstance> variationVtag2VariableUsageInstances = asList(
+            new LiveVariableUsageInstance("6", "False"),
+            new LiveVariableUsageInstance("2", "20"),
+            new LiveVariableUsageInstance("3", "string_var_vtag2"),
+            new LiveVariableUsageInstance("4", "6.3")
+        );
+
         List<Experiment> experiments = asList(
             new Experiment("223", "etag1", "Running", "1",
                            singletonList("100"),
-                           asList(new Variation("276", "vtag1",
-                                                Collections.singletonList(new LiveVariableUsageInstance("6", "True"))),
-                                  new Variation("277", "vtag2",
-                                                Collections.singletonList(new LiveVariableUsageInstance("6", "False")))),
+                           asList(new Variation("276", "vtag1", variationVtag1VariableUsageInstances),
+                                  new Variation("277", "vtag2", variationVtag2VariableUsageInstances)),
                            Collections.singletonMap("testUser1", "vtag1"),
                            asList(new TrafficAllocation("276", 3500),
                                   new TrafficAllocation("277", 9000)),

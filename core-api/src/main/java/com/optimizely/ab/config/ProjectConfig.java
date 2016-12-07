@@ -122,7 +122,7 @@ public class ProjectConfig {
             this.liveVariableIdToExperimentsMapping =
                     ProjectConfigUtils.generateLiveVariableIdToExperimentsMapping(this.experiments);
             this.variationToLiveVariableUsageInstanceMapping =
-                    ProjectConfigUtils.generateLiveVariableValueMap(this.experiments);
+                    ProjectConfigUtils.generateVariationToLiveVariableUsageInstancesMap(this.experiments);
         }
     }
 
