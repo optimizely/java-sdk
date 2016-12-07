@@ -259,14 +259,15 @@ public class Optimizely {
 
     public @Nullable String getVariableString(@Nonnull String variableKey,
                                               boolean activateExperiment,
-                                              @Nonnull String userId) {
+                                              @Nonnull String userId) throws UnknownLiveVariableException {
         return getVariableString(variableKey, activateExperiment, userId, Collections.<String, String>emptyMap());
     }
 
     public @Nullable String getVariableString(@Nonnull String variableKey,
                                               boolean activateExperiment,
                                               @Nonnull String userId,
-                                              @Nonnull Map<String, String> attributes) {
+                                              @Nonnull Map<String, String> attributes)
+            throws UnknownLiveVariableException {
 
         LiveVariable variable = getLiveVariableOrThrow(projectConfig, variableKey);
         if (variable == null) {
@@ -298,14 +299,15 @@ public class Optimizely {
 
     public @Nullable Boolean getVariableBoolean(@Nonnull String variableKey,
                                                 boolean activateExperiment,
-                                                @Nonnull String userId) {
+                                                @Nonnull String userId) throws UnknownLiveVariableException {
         return getVariableBoolean(variableKey, activateExperiment, userId, Collections.<String, String>emptyMap());
     }
 
     public @Nullable Boolean getVariableBoolean(@Nonnull String variableKey,
                                                 boolean activateExperiment,
                                                 @Nonnull String userId,
-                                                @Nonnull Map<String, String> attributes) {
+                                                @Nonnull Map<String, String> attributes)
+            throws UnknownLiveVariableException {
 
         String variableValueString = getVariableString(variableKey, activateExperiment, userId, attributes);
         if (variableValueString != null) {
@@ -317,14 +319,15 @@ public class Optimizely {
 
     public @Nullable Integer getVariableInteger(@Nonnull String variableKey,
                                                 boolean activateExperiment,
-                                                @Nonnull String userId) {
+                                                @Nonnull String userId) throws UnknownLiveVariableException {
         return getVariableInteger(variableKey, activateExperiment, userId, Collections.<String, String>emptyMap());
     }
 
     public @Nullable Integer getVariableInteger(@Nonnull String variableKey,
                                                 boolean activateExperiment,
                                                 @Nonnull String userId,
-                                                @Nonnull Map<String, String> attributes) {
+                                                @Nonnull Map<String, String> attributes)
+            throws UnknownLiveVariableException {
 
         String variableValueString = getVariableString(variableKey, activateExperiment, userId, attributes);
         if (variableValueString != null) {
@@ -341,14 +344,15 @@ public class Optimizely {
 
     public @Nullable Float getVariableFloat(@Nonnull String variableKey,
                                             boolean activateExperiment,
-                                            @Nonnull String userId) {
+                                            @Nonnull String userId) throws UnknownLiveVariableException {
         return getVariableFloat(variableKey, activateExperiment, userId, Collections.<String, String>emptyMap());
     }
 
     public @Nullable Float getVariableFloat(@Nonnull String variableKey,
                                             boolean activateExperiment,
                                             @Nonnull String userId,
-                                            @Nonnull Map<String, String> attributes) {
+                                            @Nonnull Map<String, String> attributes)
+            throws UnknownLiveVariableException {
 
         String variableValueString = getVariableString(variableKey, activateExperiment, userId, attributes);
         if (variableValueString != null) {
