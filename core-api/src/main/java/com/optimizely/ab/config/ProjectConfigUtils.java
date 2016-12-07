@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -39,5 +40,57 @@ public class ProjectConfigUtils {
         }
 
         return Collections.unmodifiableMap(nameMapping);
+    }
+
+    public static Map<String, List<Experiment>> generateLiveVariableIdToExperimentsMapping(
+            List<Experiment> experiments) {
+
+        Map<String, List<Experiment>> variableIdToExperiments =
+                new HashMap<String, List<Experiment>>();
+        for (Experiment experiment : experiments) {
+            if (!experiment.getVariations().isEmpty()) {
+                // if a live variable is used by an experiment, it will have instances in all variations so we can
+                // short-circuit after getting the live variables for the first variation
+                Variation variation = experiment.getVariations().get(0);
+                if (variation.getLiveVariableUsageInstances() != null) {
+                    for (LiveVariableUsageInstance usageInstance : variation.getLiveVariableUsageInstances()) {
+                        List<Experiment> experimentsUsingVariable = variableIdToExperiments.get(usageInstance.getId());
+                        if (experimentsUsingVariable == null) {
+                            experimentsUsingVariable = new ArrayList<Experiment>();
+                        }
+
+                        experimentsUsingVariable.add(experiment);
+                        variableIdToExperiments.put(usageInstance.getId(), experimentsUsingVariable);
+                    }
+                }
+            }
+        }
+
+        return variableIdToExperiments;
+    }
+
+    public static Map<String, Map<String, LiveVariableUsageInstance>> generateLiveVariableValueMap(
+            List<Experiment> experiments) {
+
+        Map<String, Map<String, LiveVariableUsageInstance>> liveVariableValueMap =
+                new HashMap<String, Map<String, LiveVariableUsageInstance>>();
+        for (Experiment experiment : experiments) {
+            for (Variation variation : experiment.getVariations()) {
+                if (variation.getLiveVariableUsageInstances() != null) {
+                    for (LiveVariableUsageInstance usageInstance : variation.getLiveVariableUsageInstances()) {
+                        Map<String, LiveVariableUsageInstance> liveVariableIdToValueMap =
+                                liveVariableValueMap.get(variation.getId());
+                        if (liveVariableIdToValueMap == null) {
+                            liveVariableIdToValueMap = new HashMap<String, LiveVariableUsageInstance>();
+                        }
+
+                        liveVariableIdToValueMap.put(usageInstance.getId(), usageInstance);
+                        liveVariableValueMap.put(variation.getId(), liveVariableIdToValueMap);
+                    }
+                }
+            }
+        }
+
+        return liveVariableValueMap;
     }
 }
