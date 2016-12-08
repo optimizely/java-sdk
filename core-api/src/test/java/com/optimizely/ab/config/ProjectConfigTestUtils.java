@@ -312,13 +312,25 @@ public final class ProjectConfigTestUtils {
 
     private static final ProjectConfig VALID_PROJECT_CONFIG_V3 = generateValidProjectConfigV3();
     private static ProjectConfig generateValidProjectConfigV3() {
+        List<LiveVariableUsageInstance> variationVtag1VariableUsageInstances = asList(
+            new LiveVariableUsageInstance("6", "True"),
+            new LiveVariableUsageInstance("2", "10"),
+            new LiveVariableUsageInstance("3", "string_var_vtag1"),
+            new LiveVariableUsageInstance("4", "5.3")
+        );
+
+        List<LiveVariableUsageInstance> variationVtag2VariableUsageInstances = asList(
+            new LiveVariableUsageInstance("6", "False"),
+            new LiveVariableUsageInstance("2", "20"),
+            new LiveVariableUsageInstance("3", "string_var_vtag2"),
+            new LiveVariableUsageInstance("4", "6.3")
+        );
+
         List<Experiment> experiments = asList(
             new Experiment("223", "etag1", "Running", "1",
                            singletonList("100"),
-                           asList(new Variation("276", "vtag1",
-                                                Collections.singletonList(new LiveVariableUsageInstance("6", "True"))),
-                                  new Variation("277", "vtag2",
-                                                Collections.singletonList(new LiveVariableUsageInstance("6", "False")))),
+                           asList(new Variation("276", "vtag1", variationVtag1VariableUsageInstances),
+                                  new Variation("277", "vtag2", variationVtag2VariableUsageInstances)),
                            Collections.singletonMap("testUser1", "vtag1"),
                            asList(new TrafficAllocation("276", 3500),
                                   new TrafficAllocation("277", 9000)),
@@ -419,7 +431,9 @@ public final class ProjectConfigTestUtils {
             new LiveVariable("6", "etag1_variable", "False", LiveVariable.VariableStatus.ACTIVE,
                              LiveVariable.VariableType.BOOLEAN),
             new LiveVariable("7", "group_etag1_variable", "False", LiveVariable.VariableStatus.ACTIVE,
-                             LiveVariable.VariableType.BOOLEAN)
+                             LiveVariable.VariableType.BOOLEAN),
+            new LiveVariable("8", "unused_string_variable", "unused_variable", LiveVariable.VariableStatus.ACTIVE,
+                             LiveVariable.VariableType.STRING)
         );
 
         return new ProjectConfig("789", "1234", "3", "42", groups, experiments, attributes, events, audiences,
@@ -674,6 +688,9 @@ public final class ProjectConfigTestUtils {
         }
     }
 
+    /**
+     * Verify that the provided live variable definitions are equivalent.
+     */
     private static void verifyLiveVariables(List<LiveVariable> actual, List<LiveVariable> expected) {
         // if using V1 or V2, live variables will be null
         if (expected == null) {
@@ -694,6 +711,9 @@ public final class ProjectConfigTestUtils {
         }
     }
 
+    /**
+     * Verify that the provided variation-level live variable usage instances are equivalent.
+     */
     private static void verifyLiveVariableInstances(List<LiveVariableUsageInstance> actual,
                                                     List<LiveVariableUsageInstance> expected) {
         // if using V1 or V2, live variable instances will be null

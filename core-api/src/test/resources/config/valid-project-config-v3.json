@@ -19,6 +19,15 @@
         "variables": [{
           "id": "6",
           "value": "True"
+        }, {
+          "id": "2",
+          "value": "10"
+        }, {
+          "id": "3",
+          "value": "string_var_vtag1"
+        }, {
+          "id": "4",
+          "value": "5.3"
         }]
       }, {
         "id": "277",
@@ -26,6 +35,15 @@
         "variables": [{
           "id": "6",
           "value": "False"
+        }, {
+          "id": "2",
+          "value": "20"
+        }, {
+          "id": "3",
+          "value": "string_var_vtag2"
+        }, {
+          "id": "4",
+          "value": "6.3"
         }]
       }],
       "forcedVariations": {
@@ -270,6 +288,13 @@
       "key": "group_etag1_variable",
       "type": "boolean",
       "defaultValue": "False",
+      "status": "active"
+    },
+    {
+      "id": "8",
+      "key": "unused_string_variable",
+      "type": "string",
+      "defaultValue": "unused_variable",
       "status": "active"
     }
   ]

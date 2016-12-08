@@ -68,10 +68,13 @@ public class ProjectConfig {
     // convenience mappings for efficient lookup
     private final Map<String, Experiment> experimentKeyMapping;
     private final Map<String, Attribute> attributeKeyMapping;
+    private final Map<String, LiveVariable> liveVariableKeyMapping;
     private final Map<String, EventType> eventNameMapping;
     private final Map<String, Audience> audienceIdMapping;
     private final Map<String, Experiment> experimentIdMapping;
     private final Map<String, Group> groupIdMapping;
+    private final Map<String, List<Experiment>> liveVariableIdToExperimentsMapping;
+    private final Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping;
 
     public ProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
                          List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
@@ -97,7 +100,6 @@ public class ProjectConfig {
         this.attributes = Collections.unmodifiableList(attributes);
         this.events = Collections.unmodifiableList(eventType);
         this.audiences = Collections.unmodifiableList(audiences);
-        this.liveVariables = liveVariables == null ? null : Collections.unmodifiableList(liveVariables);
 
         // generate the name mappers
         this.experimentKeyMapping = ProjectConfigUtils.generateNameMapping(this.experiments);
@@ -108,6 +110,20 @@ public class ProjectConfig {
         this.audienceIdMapping = ProjectConfigUtils.generateIdMapping(audiences);
         this.experimentIdMapping = ProjectConfigUtils.generateIdMapping(this.experiments);
         this.groupIdMapping = ProjectConfigUtils.generateIdMapping(groups);
+
+        if (liveVariables == null) {
+            this.liveVariables = null;
+            this.liveVariableKeyMapping = Collections.emptyMap();
+            this.liveVariableIdToExperimentsMapping = Collections.emptyMap();
+            this.variationToLiveVariableUsageInstanceMapping = Collections.emptyMap();
+        } else {
+            this.liveVariables = Collections.unmodifiableList(liveVariables);
+            this.liveVariableKeyMapping = ProjectConfigUtils.generateNameMapping(this.liveVariables);
+            this.liveVariableIdToExperimentsMapping =
+                    ProjectConfigUtils.generateLiveVariableIdToExperimentsMapping(this.experiments);
+            this.variationToLiveVariableUsageInstanceMapping =
+                    ProjectConfigUtils.generateVariationToLiveVariableUsageInstancesMap(this.experiments);
+        }
     }
 
     private List<Experiment> aggregateGroupExperiments(List<Group> groups) {
@@ -198,22 +214,40 @@ public class ProjectConfig {
         return groupIdMapping;
     }
 
+    public Map<String, LiveVariable> getLiveVariableKeyMapping() {
+        return liveVariableKeyMapping;
+    }
+
+    public Map<String, List<Experiment>> getLiveVariableIdToExperimentsMapping() {
+        return liveVariableIdToExperimentsMapping;
+    }
+
+    public Map<String, Map<String, LiveVariableUsageInstance>> getVariationToLiveVariableUsageInstanceMapping() {
+        return variationToLiveVariableUsageInstanceMapping;
+    }
+
     @Override
     public String toString() {
         return "ProjectConfig{" +
-               "accountId='" + accountId + '\'' +
-               ", projectId='" + projectId + '\'' +
-               ", revision='" + revision + '\'' +
-               ", version='" + version + '\'' +
-               ", groups=" + groups +
-               ", experiments=" + experiments +
-               ", attributes=" + attributes +
-               ", events=" + events +
-               ", audiences=" + audiences +
-               ", experimentKeyMapping=" + experimentKeyMapping +
-               ", attributeKeyMapping=" + attributeKeyMapping +
-               ", eventNameMapping=" + eventNameMapping +
-               ", audienceIdMapping=" + audienceIdMapping +
-               '}';
+                "accountId='" + accountId + '\'' +
+                ", projectId='" + projectId + '\'' +
+                ", revision='" + revision + '\'' +
+                ", version='" + version + '\'' +
+                ", groups=" + groups +
+                ", experiments=" + experiments +
+                ", attributes=" + attributes +
+                ", events=" + events +
+                ", audiences=" + audiences +
+                ", liveVariables=" + liveVariables +
+                ", experimentKeyMapping=" + experimentKeyMapping +
+                ", attributeKeyMapping=" + attributeKeyMapping +
+                ", liveVariableKeyMapping=" + liveVariableKeyMapping +
+                ", eventNameMapping=" + eventNameMapping +
+                ", audienceIdMapping=" + audienceIdMapping +
+                ", experimentIdMapping=" + experimentIdMapping +
+                ", groupIdMapping=" + groupIdMapping +
+                ", liveVariableIdToExperimentsMapping=" + liveVariableIdToExperimentsMapping +
+                ", variationToLiveVariableUsageInstanceMapping=" + variationToLiveVariableUsageInstanceMapping +
+                '}';
     }
 }

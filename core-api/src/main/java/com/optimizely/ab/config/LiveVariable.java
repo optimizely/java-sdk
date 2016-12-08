@@ -26,7 +26,7 @@ import com.google.gson.annotations.SerializedName;
  * Represents a live variable definition at the project level
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class LiveVariable {
+public class LiveVariable implements IdKeyMapped {
 
     public enum VariableStatus {
         @SerializedName("active")

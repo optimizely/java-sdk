@@ -20,6 +20,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import java.util.List;
 
 /**
@@ -47,15 +50,15 @@ public class Variation implements IdKeyMapped {
         this.liveVariableUsageInstances = liveVariableUsageInstances;
     }
 
-    public String getId() {
+    public @Nonnull String getId() {
         return id;
     }
 
-    public String getKey() {
+    public @Nonnull String getKey() {
         return key;
     }
 
-    public List<LiveVariableUsageInstance> getLiveVariableUsageInstances() {
+    public @Nullable List<LiveVariableUsageInstance> getLiveVariableUsageInstances() {
         return liveVariableUsageInstances;
     }
 
