@@ -431,7 +431,9 @@ public final class ProjectConfigTestUtils {
             new LiveVariable("6", "etag1_variable", "False", LiveVariable.VariableStatus.ACTIVE,
                              LiveVariable.VariableType.BOOLEAN),
             new LiveVariable("7", "group_etag1_variable", "False", LiveVariable.VariableStatus.ACTIVE,
-                             LiveVariable.VariableType.BOOLEAN)
+                             LiveVariable.VariableType.BOOLEAN),
+            new LiveVariable("8", "unused_string_variable", "unused_variable", LiveVariable.VariableStatus.ACTIVE,
+                             LiveVariable.VariableType.STRING)
         );
 
         return new ProjectConfig("789", "1234", "3", "42", groups, experiments, attributes, events, audiences,

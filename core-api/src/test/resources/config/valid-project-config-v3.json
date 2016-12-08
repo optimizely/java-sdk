@@ -289,6 +289,13 @@
       "type": "boolean",
       "defaultValue": "False",
       "status": "active"
+    },
+    {
+      "id": "8",
+      "key": "unused_string_variable",
+      "type": "string",
+      "defaultValue": "unused_variable",
+      "status": "active"
     }
   ]
 }

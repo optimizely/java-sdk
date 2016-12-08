@@ -279,6 +279,11 @@ public class Optimizely {
         Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping =
                 projectConfig.getVariationToLiveVariableUsageInstanceMapping();
 
+        if (experimentsUsingLiveVariable == null) {
+            logger.warn("No experiment is using variable \"{}\".", variable.getKey());
+            return variable.getDefaultValue();
+        }
+
         for (Experiment experiment : experimentsUsingLiveVariable) {
             Variation variation;
             if (activateExperiment) {
@@ -294,7 +299,7 @@ public class Optimizely {
             }
         }
 
-        return null;
+        return variable.getDefaultValue();
     }
 
     public @Nullable Boolean getVariableBoolean(@Nonnull String variableKey,

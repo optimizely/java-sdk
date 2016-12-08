@@ -1050,6 +1050,46 @@ public class OptimizelyTestV3 {
     }
 
     /**
+     * Verify that {@link Optimizely#getVariableString(String, boolean, String)} returns the default value of
+     * a live variable when no experiments are using the live variable.
+     */
+    @Test
+    public void getVariableStringReturnsDefaultValueNoExperimentsUsingLiveVariable() throws Exception {
+        String datafile = validConfigJsonV3();
+        ProjectConfig projectConfig = validProjectConfigV3();
+
+        Optimizely optimizely = Optimizely.builder(datafile, mockEventHandler)
+            .withConfig(projectConfig)
+            .build();
+
+        logbackVerifier.expectMessage(Level.WARN, "No experiment is using variable \"unused_string_variable\".");
+        assertThat(optimizely.getVariableString("unused_string_variable", true, "userId"), is("unused_variable"));
+    }
+
+    /**
+     * Verify that {@link Optimizely#getVariableString(String, boolean, String, Map)} returns the default value when
+     * a user isn't bucketed into a variation in the experiment.
+     */
+    @Test
+    public void getVariableStringReturnsDefaultValueUserNotInVariation() throws Exception {
+        String datafile = validConfigJsonV3();
+        ProjectConfig projectConfig = validProjectConfigV3();
+
+        // user isn't bucketed into a variation in any experiment
+        when(mockBucketer.bucket(any(Experiment.class), any(String.class)))
+            .thenReturn(null);
+
+        Optimizely optimizely = Optimizely.builder(datafile, mockEventHandler)
+            .withConfig(projectConfig)
+            .withBucketing(mockBucketer)
+            .build();
+
+        assertThat(optimizely.getVariableString("string_variable", true, "userId",
+                                                Collections.singletonMap("browser_type", "chrome")),
+                   is("string_live_variable"));
+    }
+
+    /**
      * Verify that {@link Optimizely#getVariableBoolean(String, boolean, String, Map)} returns a boolean live variable
      * value when an proper variable key is provided and dispatches an impression when activateExperiment is true.
      */
