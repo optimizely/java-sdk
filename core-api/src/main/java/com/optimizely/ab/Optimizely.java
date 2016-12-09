@@ -39,6 +39,8 @@ import com.optimizely.ab.event.internal.EventBuilderV1;
 import com.optimizely.ab.event.internal.EventBuilderV2;
 import com.optimizely.ab.event.internal.payload.Event.ClientEngine;
 import com.optimizely.ab.internal.ProjectValidationUtils;
+import com.optimizely.ab.notification.NotificationListener;
+import com.optimizely.ab.notification.NotificationBroadcaster;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,6 +91,7 @@ public class Optimizely {
     @VisibleForTesting final ProjectConfig projectConfig;
     @VisibleForTesting final EventHandler eventHandler;
     @VisibleForTesting final ErrorHandler errorHandler;
+    @VisibleForTesting final NotificationBroadcaster notificationBroadcaster = new NotificationBroadcaster();
 
     private Optimizely(@Nonnull ProjectConfig projectConfig,
                        @Nonnull Bucketer bucketer,
@@ -179,6 +182,8 @@ public class Optimizely {
         } catch (Exception e) {
             logger.error("Unexpected exception in event dispatcher", e);
         }
+
+        notificationBroadcaster.broadcastExperimentActivated(experiment, userId, attributes, variation);
 
         return variation;
     }
@@ -436,6 +441,33 @@ public class Optimizely {
      */
     private static ProjectConfig getProjectConfig(String datafile) throws ConfigParseException {
         return DefaultConfigParser.getInstance().parseProjectConfig(datafile);
+    }
+
+    //======== Notification listeners ========//
+
+    /**
+     * Add a {@link NotificationListener} if it does not exist already.
+     *
+     * @param listener listener to add
+     */
+    public void addNotificationListener(@Nonnull NotificationListener listener) {
+        notificationBroadcaster.addListener(listener);
+    }
+
+    /**
+     * Remove a {@link NotificationListener} if it exists.
+     *
+     * @param listener listener to remove
+     */
+    public void removeNotificationListener(@Nonnull NotificationListener listener) {
+        notificationBroadcaster.removeListener(listener);
+    }
+
+    /**
+     * Remove all {@link NotificationListener}.
+     */
+    public void clearNotificationListeners() {
+        notificationBroadcaster.clearListeners();
     }
 
     //======== Helper methods ========//
