@@ -109,9 +109,13 @@ public class Impression extends Event {
         this.userFeatures = userFeatures;
     }
 
-    public boolean getAnonymizeIP() { return anonymizeIP; }
+    public boolean getAnonymizeIP() {
+        return anonymizeIP;
+    }
 
-    public void setAnonymizeIP(boolean anonymizeIP) { this.anonymizeIP = anonymizeIP; }
+    public void setAnonymizeIP(boolean anonymizeIP) {
+        this.anonymizeIP = anonymizeIP;
+    }
 
     @Override
     public boolean equals(Object other) {
