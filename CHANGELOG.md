@@ -1,6 +1,7 @@
 ## 1.2.0
 
 - Change `UserExperimentRecord` to `UserProfile`
+- Add support for IP anonymization
 
 ## 1.1.0
 
