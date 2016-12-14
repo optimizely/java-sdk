@@ -79,8 +79,8 @@ public class ProjectConfig {
 
     public ProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
                          List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
-                         List<Audience> audiences, boolean anonymizeIP) {
-        this(accountId, projectId, version, revision, groups, experiments, attributes, eventType, audiences, anonymizeIP,
+                         List<Audience> audiences) {
+        this(accountId, projectId, version, revision, groups, experiments, attributes, eventType, audiences, false,
              null);
     }
 
@@ -239,6 +239,7 @@ public class ProjectConfig {
                 ", projectId='" + projectId + '\'' +
                 ", revision='" + revision + '\'' +
                 ", version='" + version + '\'' +
+                ", anonymizeIP='" + anonymizeIP + '\'' +
                 ", groups=" + groups +
                 ", experiments=" + experiments +
                 ", attributes=" + attributes +
