@@ -2,6 +2,7 @@
 
 - Change `UserExperimentRecord` to `UserProfile`
 - Add support for IP anonymization
+- Add `NotificationListener` for SDK events
 
 ## 1.1.0
 
