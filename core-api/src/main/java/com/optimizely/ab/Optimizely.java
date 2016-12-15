@@ -263,15 +263,15 @@ public class Optimizely {
     //======== live variable getters ========//
 
     public @Nullable String getVariableString(@Nonnull String variableKey,
-                                              boolean activateExperiment,
-                                              @Nonnull String userId) throws UnknownLiveVariableException {
-        return getVariableString(variableKey, activateExperiment, userId, Collections.<String, String>emptyMap());
+                                              @Nonnull String userId,
+                                              boolean activateExperiment) throws UnknownLiveVariableException {
+        return getVariableString(variableKey, userId, Collections.emptyMap(), activateExperiment);
     }
 
     public @Nullable String getVariableString(@Nonnull String variableKey,
-                                              boolean activateExperiment,
                                               @Nonnull String userId,
-                                              @Nonnull Map<String, String> attributes)
+                                              @Nonnull Map<String, String> attributes,
+                                              boolean activateExperiment)
             throws UnknownLiveVariableException {
 
         LiveVariable variable = getLiveVariableOrThrow(projectConfig, variableKey);
@@ -308,18 +308,18 @@ public class Optimizely {
     }
 
     public @Nullable Boolean getVariableBoolean(@Nonnull String variableKey,
-                                                boolean activateExperiment,
-                                                @Nonnull String userId) throws UnknownLiveVariableException {
-        return getVariableBoolean(variableKey, activateExperiment, userId, Collections.<String, String>emptyMap());
+                                                @Nonnull String userId,
+                                                boolean activateExperiment) throws UnknownLiveVariableException {
+        return getVariableBoolean(variableKey, userId, Collections.emptyMap(), activateExperiment);
     }
 
     public @Nullable Boolean getVariableBoolean(@Nonnull String variableKey,
-                                                boolean activateExperiment,
                                                 @Nonnull String userId,
-                                                @Nonnull Map<String, String> attributes)
+                                                @Nonnull Map<String, String> attributes,
+                                                boolean activateExperiment)
             throws UnknownLiveVariableException {
 
-        String variableValueString = getVariableString(variableKey, activateExperiment, userId, attributes);
+        String variableValueString = getVariableString(variableKey, userId, attributes, activateExperiment);
         if (variableValueString != null) {
             return Boolean.parseBoolean(variableValueString);
         }
@@ -328,18 +328,18 @@ public class Optimizely {
     }
 
     public @Nullable Integer getVariableInteger(@Nonnull String variableKey,
-                                                boolean activateExperiment,
-                                                @Nonnull String userId) throws UnknownLiveVariableException {
-        return getVariableInteger(variableKey, activateExperiment, userId, Collections.<String, String>emptyMap());
+                                                @Nonnull String userId,
+                                                boolean activateExperiment) throws UnknownLiveVariableException {
+        return getVariableInteger(variableKey, userId, Collections.emptyMap(), activateExperiment);
     }
 
     public @Nullable Integer getVariableInteger(@Nonnull String variableKey,
-                                                boolean activateExperiment,
                                                 @Nonnull String userId,
-                                                @Nonnull Map<String, String> attributes)
+                                                @Nonnull Map<String, String> attributes,
+                                                boolean activateExperiment)
             throws UnknownLiveVariableException {
 
-        String variableValueString = getVariableString(variableKey, activateExperiment, userId, attributes);
+        String variableValueString = getVariableString(variableKey, userId, attributes, activateExperiment);
         if (variableValueString != null) {
             try {
                 return Integer.parseInt(variableValueString);
@@ -353,18 +353,18 @@ public class Optimizely {
     }
 
     public @Nullable Float getVariableFloat(@Nonnull String variableKey,
-                                            boolean activateExperiment,
-                                            @Nonnull String userId) throws UnknownLiveVariableException {
-        return getVariableFloat(variableKey, activateExperiment, userId, Collections.<String, String>emptyMap());
+                                            @Nonnull String userId,
+                                            boolean activateExperiment) throws UnknownLiveVariableException {
+        return getVariableFloat(variableKey, userId, Collections.emptyMap(), activateExperiment);
     }
 
     public @Nullable Float getVariableFloat(@Nonnull String variableKey,
-                                            boolean activateExperiment,
                                             @Nonnull String userId,
-                                            @Nonnull Map<String, String> attributes)
+                                            @Nonnull Map<String, String> attributes,
+                                            boolean activateExperiment)
             throws UnknownLiveVariableException {
 
-        String variableValueString = getVariableString(variableKey, activateExperiment, userId, attributes);
+        String variableValueString = getVariableString(variableKey, userId, attributes, activateExperiment);
         if (variableValueString != null) {
             try {
                 return Float.parseFloat(variableValueString);

@@ -960,7 +960,7 @@ public class OptimizelyTestV3 {
     //======== live variable getters tests ========//
 
     /**
-     * Verify that {@link Optimizely#getVariableString(String, boolean, String)} returns null and logs properly when
+     * Verify that {@link Optimizely#getVariableString(String, String, boolean)} returns null and logs properly when
      * an invalid live variable key is provided and the {@link NoOpErrorHandler} is used.
      */
     @Test
@@ -973,11 +973,11 @@ public class OptimizelyTestV3 {
             .build();
 
         logbackVerifier.expectMessage(Level.ERROR, "Live variable \"invalid_key\" is not in the datafile.");
-        assertNull(optimizely.getVariableString("invalid_key", false, "userId"));
+        assertNull(optimizely.getVariableString("invalid_key", "userId", false));
     }
 
     /**
-     * Verify that {@link Optimizely#getVariableString(String, boolean, String)} returns throws an
+     * Verify that {@link Optimizely#getVariableString(String, String, boolean)} returns throws an
      * {@link UnknownLiveVariableException} when an invalid live variable key is provided and the
      * {@link RaiseExceptionErrorHandler} is used.
      */
@@ -993,11 +993,11 @@ public class OptimizelyTestV3 {
             .withErrorHandler(new RaiseExceptionErrorHandler())
             .build();
 
-        optimizely.getVariableString("invalid_key", false, "userId");
+        optimizely.getVariableString("invalid_key", "userId", false);
     }
 
     /**
-     * Verify that {@link Optimizely#getVariableString(String, boolean, String, Map)} returns a string live variable
+     * Verify that {@link Optimizely#getVariableString(String, String, Map, boolean)} returns a string live variable
      * value when an proper variable key is provided and dispatches an impression when activateExperiment is true.
      */
     @Test
@@ -1017,14 +1017,14 @@ public class OptimizelyTestV3 {
             .withErrorHandler(new RaiseExceptionErrorHandler())
             .build();
 
-        assertThat(optimizely.getVariableString("string_variable", true, "userId",
-                                                Collections.singletonMap("browser_type", "chrome")),
+        assertThat(optimizely.getVariableString("string_variable", "userId",
+                                                Collections.singletonMap("browser_type", "chrome"), true),
                    is("string_var_vtag1"));
         verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
     }
 
     /**
-     * Verify that {@link Optimizely#getVariableString(String, boolean, String, Map)} returns a string live variable
+     * Verify that {@link Optimizely#getVariableString(String, String, Map, boolean)} returns a string live variable
      * value when an proper variable key is provided and doesn't dispatch an impression when activateExperiment is
      * false.
      */
@@ -1045,14 +1045,14 @@ public class OptimizelyTestV3 {
             .withErrorHandler(new RaiseExceptionErrorHandler())
             .build();
 
-        assertThat(optimizely.getVariableString("string_variable", false, "userId",
-                                                Collections.singletonMap("browser_type", "chrome")),
+        assertThat(optimizely.getVariableString("string_variable", "userId",
+                                                Collections.singletonMap("browser_type", "chrome"), false),
                    is("string_var_vtag1"));
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
     }
 
     /**
-     * Verify that {@link Optimizely#getVariableString(String, boolean, String)} returns the default value of
+     * Verify that {@link Optimizely#getVariableString(String, String, boolean)} returns the default value of
      * a live variable when no experiments are using the live variable.
      */
     @Test
@@ -1065,11 +1065,11 @@ public class OptimizelyTestV3 {
             .build();
 
         logbackVerifier.expectMessage(Level.WARN, "No experiment is using variable \"unused_string_variable\".");
-        assertThat(optimizely.getVariableString("unused_string_variable", true, "userId"), is("unused_variable"));
+        assertThat(optimizely.getVariableString("unused_string_variable", "userId", true), is("unused_variable"));
     }
 
     /**
-     * Verify that {@link Optimizely#getVariableString(String, boolean, String, Map)} returns the default value when
+     * Verify that {@link Optimizely#getVariableString(String, String, Map, boolean)} returns the default value when
      * a user isn't bucketed into a variation in the experiment.
      */
     @Test
@@ -1086,13 +1086,13 @@ public class OptimizelyTestV3 {
             .withBucketing(mockBucketer)
             .build();
 
-        assertThat(optimizely.getVariableString("string_variable", true, "userId",
-                                                Collections.singletonMap("browser_type", "chrome")),
+        assertThat(optimizely.getVariableString("string_variable", "userId",
+                                                Collections.singletonMap("browser_type", "chrome"), true),
                    is("string_live_variable"));
     }
 
     /**
-     * Verify that {@link Optimizely#getVariableBoolean(String, boolean, String, Map)} returns a boolean live variable
+     * Verify that {@link Optimizely#getVariableBoolean(String, String, Map, boolean)} returns a boolean live variable
      * value when an proper variable key is provided and dispatches an impression when activateExperiment is true.
      */
     @Test
@@ -1111,12 +1111,12 @@ public class OptimizelyTestV3 {
             .withBucketing(mockBucketer)
             .build();
 
-        assertTrue(optimizely.getVariableBoolean("etag1_variable", true, "userId",
-                                                 Collections.singletonMap("browser_type", "chrome")));
+        assertTrue(optimizely.getVariableBoolean("etag1_variable", "userId",
+                                                 Collections.singletonMap("browser_type", "chrome"), true));
     }
 
     /**
-     * Verify that {@link Optimizely#getVariableFloat(String, boolean, String, Map)} returns a float live variable
+     * Verify that {@link Optimizely#getVariableFloat(String, String, Map, boolean)} returns a float live variable
      * value when an proper variable key is provided and dispatches an impression when activateExperiment is true.
      */
     @Test
@@ -1135,14 +1135,14 @@ public class OptimizelyTestV3 {
             .withBucketing(mockBucketer)
             .build();
 
-        assertThat(optimizely.getVariableFloat("float_variable", true, "userId",
-                                               Collections.singletonMap("browser_type", "chrome")),
+        assertThat(optimizely.getVariableFloat("float_variable", "userId",
+                                               Collections.singletonMap("browser_type", "chrome"), true),
                    is(5.3f));
         verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
     }
 
     /**
-     * Verify that {@link Optimizely#getVariableInteger(String, boolean, String, Map)} returns a integer live variable
+     * Verify that {@link Optimizely#getVariableInteger(String, String, Map, boolean)} returns a integer live variable
      * value when an proper variable key is provided and dispatches an impression when activateExperiment is true.
      */
     @Test
@@ -1161,8 +1161,8 @@ public class OptimizelyTestV3 {
             .withBucketing(mockBucketer)
             .build();
 
-        assertThat(optimizely.getVariableInteger("integer_variable", true, "userId",
-                                                 Collections.singletonMap("browser_type", "chrome")),
+        assertThat(optimizely.getVariableInteger("integer_variable", "userId",
+                                                 Collections.singletonMap("browser_type", "chrome"), true),
                    is(10));
         verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
     }
