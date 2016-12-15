@@ -1504,7 +1504,7 @@ public class OptimizelyTestV3 {
 
         // Check if listener is notified when live variable is accessed
         boolean activateExperiment = true;
-        optimizely.getVariableString("string_variable", activateExperiment, userId, attributes);
+        optimizely.getVariableString("string_variable", userId, attributes, activateExperiment);
         verify(listener, times(2))
                 .onExperimentActivated(activatedExperiment, userId, attributes, actualVariation);
     }
@@ -1558,7 +1558,7 @@ public class OptimizelyTestV3 {
 
         // Check if listener is notified after a live variable is accessed
         boolean activateExperiment = true;
-        optimizely.getVariableString("string_variable", activateExperiment, userId, attributes);
+        optimizely.getVariableString("string_variable", userId, attributes, activateExperiment);
         verify(listener, never())
                 .onExperimentActivated(activatedExperiment, userId, attributes, actualVariation);
     }
@@ -1611,7 +1611,7 @@ public class OptimizelyTestV3 {
 
         // Check if listener is notified after a live variable is accessed
         boolean activateExperiment = true;
-        optimizely.getVariableString("string_variable", activateExperiment, userId, attributes);
+        optimizely.getVariableString("string_variable", userId, attributes, activateExperiment);
         verify(listener, never())
                 .onExperimentActivated(activatedExperiment, userId, attributes, actualVariation);
     }
