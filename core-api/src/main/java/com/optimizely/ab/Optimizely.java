@@ -265,7 +265,7 @@ public class Optimizely {
     public @Nullable String getVariableString(@Nonnull String variableKey,
                                               @Nonnull String userId,
                                               boolean activateExperiment) throws UnknownLiveVariableException {
-        return getVariableString(variableKey, userId, Collections.emptyMap(), activateExperiment);
+        return getVariableString(variableKey, userId, Collections.<String, String>emptyMap(), activateExperiment);
     }
 
     public @Nullable String getVariableString(@Nonnull String variableKey,
@@ -310,7 +310,7 @@ public class Optimizely {
     public @Nullable Boolean getVariableBoolean(@Nonnull String variableKey,
                                                 @Nonnull String userId,
                                                 boolean activateExperiment) throws UnknownLiveVariableException {
-        return getVariableBoolean(variableKey, userId, Collections.emptyMap(), activateExperiment);
+        return getVariableBoolean(variableKey, userId, Collections.<String, String>emptyMap(), activateExperiment);
     }
 
     public @Nullable Boolean getVariableBoolean(@Nonnull String variableKey,
@@ -330,7 +330,7 @@ public class Optimizely {
     public @Nullable Integer getVariableInteger(@Nonnull String variableKey,
                                                 @Nonnull String userId,
                                                 boolean activateExperiment) throws UnknownLiveVariableException {
-        return getVariableInteger(variableKey, userId, Collections.emptyMap(), activateExperiment);
+        return getVariableInteger(variableKey, userId, Collections.<String, String>emptyMap(), activateExperiment);
     }
 
     public @Nullable Integer getVariableInteger(@Nonnull String variableKey,
@@ -355,7 +355,7 @@ public class Optimizely {
     public @Nullable Float getVariableFloat(@Nonnull String variableKey,
                                             @Nonnull String userId,
                                             boolean activateExperiment) throws UnknownLiveVariableException {
-        return getVariableFloat(variableKey, userId, Collections.emptyMap(), activateExperiment);
+        return getVariableFloat(variableKey, userId, Collections.<String, String>emptyMap(), activateExperiment);
     }
 
     public @Nullable Float getVariableFloat(@Nonnull String variableKey,
