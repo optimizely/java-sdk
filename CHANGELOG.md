@@ -1,5 +1,6 @@
 ## 1.2.0
 
+- Change position of `activateExperiment` parameter in the method signatures of `getVariableString`, `getVariableBoolean`, `getVariableInteger`, and `getVariableFloat`
 - Change `UserExperimentRecord` to `UserProfile`
 - Add support for IP anonymization
 - Add `NotificationListener` for SDK events
