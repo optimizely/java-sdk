@@ -258,6 +258,9 @@ public class Optimizely {
         } catch (Exception e) {
             logger.error("Unexpected exception in event dispatcher", e);
         }
+
+        notificationBroadcaster.broadcastEventTracked(eventName, userId, attributes, eventValue,
+                conversionEvent);
     }
 
     //======== live variable getters ========//
