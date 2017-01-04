@@ -1506,19 +1506,6 @@ public class OptimizelyTestV3 {
         optimizely.getVariableString("string_variable", userId, attributes, activateExperiment);
         verify(listener, times(2))
                 .onExperimentActivated(activatedExperiment, userId, attributes, actualVariation);
-
-        // Check if listener is notified after an event is tracked
-        EventType eventType = projectConfig.getEventTypes().get(0);
-        String eventKey = eventType.getKey();
-
-        when(mockEventBuilder.createConversionEvent(eq(projectConfig), eq(mockBucketer), eq(userId),
-                eq(eventType.getId()), eq(eventKey),
-                anyMapOf(String.class, String.class)))
-                .thenReturn(logEventToDispatch);
-
-        optimizely.track(eventKey, userId, attributes);
-        verify(listener, times(1))
-                .onEventTracked(eventKey, userId, attributes, null, logEventToDispatch);
     }
 
     /**
@@ -1573,19 +1560,6 @@ public class OptimizelyTestV3 {
         optimizely.getVariableString("string_variable", userId, attributes, activateExperiment);
         verify(listener, never())
                 .onExperimentActivated(activatedExperiment, userId, attributes, actualVariation);
-
-        // Check if listener is notified after an event is tracked
-        EventType eventType = projectConfig.getEventTypes().get(0);
-        String eventKey = eventType.getKey();
-
-        when(mockEventBuilder.createConversionEvent(eq(projectConfig), eq(mockBucketer), eq(userId),
-                eq(eventType.getId()), eq(eventKey),
-                anyMapOf(String.class, String.class)))
-                .thenReturn(logEventToDispatch);
-
-        optimizely.track(eventKey, userId, attributes);
-        verify(listener, never())
-                .onEventTracked(eventKey, userId, attributes, null, logEventToDispatch);
     }
 
     /**
@@ -1639,19 +1613,6 @@ public class OptimizelyTestV3 {
         optimizely.getVariableString("string_variable", userId, attributes, activateExperiment);
         verify(listener, never())
                 .onExperimentActivated(activatedExperiment, userId, attributes, actualVariation);
-
-        // Check if listener is notified after a event is tracked
-        EventType eventType = projectConfig.getEventTypes().get(0);
-        String eventKey = eventType.getKey();
-
-        when(mockEventBuilder.createConversionEvent(eq(projectConfig), eq(mockBucketer), eq(userId),
-                eq(eventType.getId()), eq(eventKey),
-                anyMapOf(String.class, String.class)))
-                .thenReturn(logEventToDispatch);
-
-        optimizely.track(eventKey, userId, attributes);
-        verify(listener, never())
-                .onEventTracked(eventKey, userId, attributes, null, logEventToDispatch);
     }
 
     //======== Helper methods ========//
