@@ -9,7 +9,7 @@ script:
     - "if [[ -n $TRAVIS_TAG ]]; then
           ./gradlew ship;
       else
-          ./gradlew build;
+          ./gradlew build --stacktrace;
       fi"
 cache:
   gradle: true
