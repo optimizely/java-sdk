@@ -51,9 +51,23 @@ public class Experiment implements IdKeyMapped {
     private final Map<String, Variation> variationIdToVariationMap;
     private final Map<String, String> userIdToVariationKeyMap;
 
-    // constant storing the status of a running experiment. Other possible statuses for an experiment
-    // include 'Not started', 'Paused', and 'Archived'
-    private static final String STATUS_RUNNING = "Running";
+    public enum ExperimentStatus {
+        RUNNING ("Running"),
+        LAUNCHED ("Launched"),
+        PAUSED ("Paused"),
+        NOT_STARTED ("Not started"),
+        ARCHIVED ("Archived");
+
+        private final String experimentStatus;
+
+        ExperimentStatus(String experimentStatus) {
+            this.experimentStatus = experimentStatus;
+        }
+
+        public String toString() {
+            return experimentStatus;
+        }
+    }
 
     @JsonCreator
     public Experiment(@JsonProperty("id") String id,
@@ -134,7 +148,12 @@ public class Experiment implements IdKeyMapped {
     }
 
     public boolean isRunning() {
-        return status.equals(STATUS_RUNNING);
+        return status.equals(ExperimentStatus.RUNNING.toString()) ||
+               status.equals(ExperimentStatus.LAUNCHED.toString());
+    }
+
+    public boolean isLaunched() {
+        return status.equals(ExperimentStatus.LAUNCHED.toString());
     }
 
     @Override
