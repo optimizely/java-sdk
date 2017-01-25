@@ -147,7 +147,7 @@ public class Experiment implements IdKeyMapped {
         return groupId;
     }
 
-    public boolean isRunning() {
+    public boolean isActive() {
         return status.equals(ExperimentStatus.RUNNING.toString()) ||
                status.equals(ExperimentStatus.LAUNCHED.toString());
     }
