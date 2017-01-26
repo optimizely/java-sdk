@@ -152,6 +152,10 @@ public class Experiment implements IdKeyMapped {
                status.equals(ExperimentStatus.LAUNCHED.toString());
     }
 
+    public boolean isRunning() {
+        return status.equals(ExperimentStatus.RUNNING.toString());
+    }
+
     public boolean isLaunched() {
         return status.equals(ExperimentStatus.LAUNCHED.toString());
     }

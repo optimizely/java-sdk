@@ -172,7 +172,7 @@ public class Optimizely {
             return null;
         }
 
-        if (!experiment.isLaunched()) {
+        if (experiment.isRunning()) {
             LogEvent impressionEvent =
                     eventBuilder.createImpressionEvent(projectConfig, experiment, variation, userId, attributes);
             logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());

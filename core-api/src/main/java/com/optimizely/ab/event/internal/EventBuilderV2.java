@@ -199,7 +199,7 @@ public class EventBuilderV2 extends EventBuilder {
         for (Experiment experiment : allExperiments) {
             if (experimentIds.contains(experiment.getId()) &&
                     ProjectValidationUtils.validatePreconditions(projectConfig, experiment, userId, attributes)) {
-                if (!experiment.isLaunched()) {
+                if (experiment.isRunning()) {
                     Variation bucketedVariation = bucketer.bucket(experiment, userId);
                     if (bucketedVariation != null) {
                         Decision decision = new Decision(bucketedVariation.getId(), false, experiment.getId());
