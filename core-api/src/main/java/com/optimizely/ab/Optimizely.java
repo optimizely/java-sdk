@@ -660,6 +660,11 @@ public class Optimizely {
             return this;
         }
 
+        public Builder withEventBuilder(EventBuilder eventBuilder) {
+            this.eventBuilder = eventBuilder;
+            return this;
+        }
+
         public Builder withUserProfile(UserProfile userProfile) {
             this.userProfile = userProfile;
             return this;
@@ -667,11 +672,6 @@ public class Optimizely {
 
         protected Builder withBucketing(Bucketer bucketer) {
             this.bucketer = bucketer;
-            return this;
-        }
-
-        protected Builder withEventBuilder(EventBuilder eventBuilder) {
-            this.eventBuilder = eventBuilder;
             return this;
         }
 
