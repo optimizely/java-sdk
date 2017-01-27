@@ -51,8 +51,11 @@ public class EventBuilderV2 extends EventBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger(EventBuilderV2.class);
 
-    static final String IMPRESSION_ENDPOINT = "https://logx.optimizely.com/log/decision";
-    static final String CONVERSION_ENDPOINT = "https://logx.optimizely.com/log/event";
+    static final String DEFAULT_IMPRESSION_ENDPOINT = "https://logx.optimizely.com/log/decision";
+    static final String DEFAULT_CONVERSION_ENDPOINT = "https://logx.optimizely.com/log/event";
+
+    private final String impressionEndpoint;
+    private final String conversionEndpoint;
 
     @VisibleForTesting
     public final ClientEngine clientEngine;
@@ -66,9 +69,19 @@ public class EventBuilderV2 extends EventBuilder {
         this(ClientEngine.JAVA_SDK, BuildVersionInfo.VERSION);
     }
 
-    public EventBuilderV2(ClientEngine clientEngine, String clientVersion) {
+    public EventBuilderV2(@Nonnull ClientEngine clientEngine,
+                          @Nonnull String clientVersion) {
+        this(clientEngine, clientVersion, DEFAULT_IMPRESSION_ENDPOINT, DEFAULT_CONVERSION_ENDPOINT);
+    }
+
+    public EventBuilderV2(@Nonnull ClientEngine clientEngine,
+                          @Nonnull String clientVersion,
+                          @Nonnull String impressionEndpoint,
+                          @Nonnull String conversionEndpoint) {
         this.clientEngine = clientEngine;
         this.clientVersion = clientVersion;
+        this.impressionEndpoint = impressionEndpoint;
+        this.conversionEndpoint = conversionEndpoint;
         this.serializer = DefaultJsonSerializer.getInstance();
     }
 
@@ -98,7 +111,7 @@ public class EventBuilderV2 extends EventBuilder {
         impressionPayload.setAnonymizeIP(projectConfig.getAnonymizeIP());
 
         String payload = this.serializer.serialize(impressionPayload);
-        return new LogEvent(RequestMethod.POST, IMPRESSION_ENDPOINT, Collections.<String, String>emptyMap(), payload);
+        return new LogEvent(RequestMethod.POST, impressionEndpoint, Collections.<String, String>emptyMap(), payload);
     }
 
     public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
@@ -139,7 +152,7 @@ public class EventBuilderV2 extends EventBuilder {
         conversionPayload.setClientVersion(clientVersion);
 
         String payload = this.serializer.serialize(conversionPayload);
-        return new LogEvent(RequestMethod.POST, CONVERSION_ENDPOINT, Collections.<String, String>emptyMap(), payload);
+        return new LogEvent(RequestMethod.POST, conversionEndpoint, Collections.<String, String>emptyMap(), payload);
     }
 
     /**

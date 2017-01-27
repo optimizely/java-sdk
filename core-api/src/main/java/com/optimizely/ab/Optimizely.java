@@ -645,16 +645,6 @@ public class Optimizely {
             this.eventHandler = eventHandler;
         }
 
-        public Builder withErrorHandler(ErrorHandler errorHandler) {
-            this.errorHandler = errorHandler;
-            return this;
-        }
-
-        public Builder withUserProfile(UserProfile userProfile) {
-            this.userProfile = userProfile;
-            return this;
-        }
-
         public Builder withClientEngine(ClientEngine clientEngine) {
             this.clientEngine = clientEngine;
             return this;
@@ -662,6 +652,16 @@ public class Optimizely {
 
         public Builder withClientVersion(String clientVersion) {
             this.clientVersion = clientVersion;
+            return this;
+        }
+
+        public Builder withErrorHandler(ErrorHandler errorHandler) {
+            this.errorHandler = errorHandler;
+            return this;
+        }
+
+        public Builder withUserProfile(UserProfile userProfile) {
+            this.userProfile = userProfile;
             return this;
         }
 
