@@ -645,16 +645,6 @@ public class Optimizely {
             this.eventHandler = eventHandler;
         }
 
-        public Builder withErrorHandler(ErrorHandler errorHandler) {
-            this.errorHandler = errorHandler;
-            return this;
-        }
-
-        public Builder withUserProfile(UserProfile userProfile) {
-            this.userProfile = userProfile;
-            return this;
-        }
-
         public Builder withClientEngine(ClientEngine clientEngine) {
             this.clientEngine = clientEngine;
             return this;
@@ -665,13 +655,23 @@ public class Optimizely {
             return this;
         }
 
-        protected Builder withBucketing(Bucketer bucketer) {
-            this.bucketer = bucketer;
+        public Builder withErrorHandler(ErrorHandler errorHandler) {
+            this.errorHandler = errorHandler;
             return this;
         }
 
-        protected Builder withEventBuilder(EventBuilder eventBuilder) {
+        public Builder withEventBuilder(EventBuilder eventBuilder) {
             this.eventBuilder = eventBuilder;
+            return this;
+        }
+
+        public Builder withUserProfile(UserProfile userProfile) {
+            this.userProfile = userProfile;
+            return this;
+        }
+
+        protected Builder withBucketing(Bucketer bucketer) {
+            this.bucketer = bucketer;
             return this;
         }
 
