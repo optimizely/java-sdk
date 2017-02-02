@@ -25,6 +25,7 @@ import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.Experiment.ExperimentStatus;
 import com.optimizely.ab.config.Group;
 import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.LiveVariableUsageInstance;
@@ -103,7 +104,10 @@ final class JsonSimpleConfigParser implements ConfigParser {
             JSONObject experimentObject = (JSONObject)obj;
             String id = (String)experimentObject.get("id");
             String key = (String)experimentObject.get("key");
-            String status = (String)experimentObject.get("status");
+            Object statusJson = experimentObject.get("status");
+            // TODO(vignesh): remove this null check after datafile generation is patched to not return null fields
+            String status = statusJson == null ? ExperimentStatus.NOT_STARTED.toString() :
+                    (String)experimentObject.get("status");
             Object layerIdObject = experimentObject.get("layerId");
             String layerId = layerIdObject == null ? null : (String)layerIdObject;
 

@@ -23,6 +23,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.Experiment.ExperimentStatus;
 import com.optimizely.ab.config.LiveVariableUsageInstance;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
@@ -86,7 +87,11 @@ final class GsonHelpers {
     static Experiment parseExperiment(JsonObject experimentJson, String groupId, JsonDeserializationContext context) {
         String id = experimentJson.get("id").getAsString();
         String key = experimentJson.get("key").getAsString();
-        String status = experimentJson.get("status").getAsString();
+        JsonElement experimentStatusJson = experimentJson.get("status");
+        // TODO(vignesh): remove this null check after datafile generation is patched to not return null fields
+        String status = experimentStatusJson.isJsonNull() ?
+                ExperimentStatus.NOT_STARTED.toString() : experimentStatusJson.getAsString();
+
         JsonElement layerIdJson = experimentJson.get("layerId");
         String layerId = layerIdJson == null ? null : layerIdJson.getAsString();
 

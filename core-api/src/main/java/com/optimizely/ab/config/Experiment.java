@@ -83,7 +83,7 @@ public class Experiment implements IdKeyMapped {
 
     public Experiment(@Nonnull String id,
                       @Nonnull String key,
-                      @Nonnull String status,
+                      @Nullable String status,
                       @Nullable String layerId,
                       @Nonnull List<String> audienceIds,
                       @Nonnull List<Variation> variations,
@@ -92,7 +92,8 @@ public class Experiment implements IdKeyMapped {
                       @Nonnull String groupId) {
         this.id = id;
         this.key = key;
-        this.status = status;
+        // TODO(vignesh): remove this null check after datafile generation is patched to not return null fields
+        this.status = status == null ? ExperimentStatus.NOT_STARTED.toString() : status;
         this.layerId = layerId;
         this.audienceIds = Collections.unmodifiableList(audienceIds);
         this.variations = Collections.unmodifiableList(variations);
