@@ -102,7 +102,6 @@ final class JsonConfigParser implements ConfigParser {
             JSONObject experimentObject = (JSONObject)obj;
             String id = experimentObject.getString("id");
             String key = experimentObject.getString("key");
-            // TODO(vignesh): remove this null check after datafile generation is patched to not return null fields
             String status = experimentObject.isNull("status") ?
                     ExperimentStatus.NOT_STARTED.toString() : experimentObject.getString("status");
             String layerId = experimentObject.has("layerId") ? experimentObject.getString("layerId") : null;

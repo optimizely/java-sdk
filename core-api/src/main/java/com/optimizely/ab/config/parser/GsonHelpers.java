@@ -88,7 +88,6 @@ final class GsonHelpers {
         String id = experimentJson.get("id").getAsString();
         String key = experimentJson.get("key").getAsString();
         JsonElement experimentStatusJson = experimentJson.get("status");
-        // TODO(vignesh): remove this null check after datafile generation is patched to not return null fields
         String status = experimentStatusJson.isJsonNull() ?
                 ExperimentStatus.NOT_STARTED.toString() : experimentStatusJson.getAsString();
 

@@ -105,7 +105,6 @@ final class JsonSimpleConfigParser implements ConfigParser {
             String id = (String)experimentObject.get("id");
             String key = (String)experimentObject.get("key");
             Object statusJson = experimentObject.get("status");
-            // TODO(vignesh): remove this null check after datafile generation is patched to not return null fields
             String status = statusJson == null ? ExperimentStatus.NOT_STARTED.toString() :
                     (String)experimentObject.get("status");
             Object layerIdObject = experimentObject.get("layerId");
