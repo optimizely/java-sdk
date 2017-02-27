@@ -498,7 +498,13 @@ public class Optimizely {
      * @return a {@link ProjectConfig} instance given a json string
      */
     private static ProjectConfig getProjectConfig(String datafile) throws ConfigParseException {
-        return DefaultConfigParser.getInstance().parseProjectConfig(datafile);
+        ProjectConfig projectConfig;
+        try {
+            projectConfig = DefaultConfigParser.getInstance().parseProjectConfig(datafile);
+        } catch (Exception e) {
+            throw new ConfigParseException(e.getMessage(), e);
+        }
+        return projectConfig;
     }
 
     //======== Notification listeners ========//
