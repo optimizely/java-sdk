@@ -62,6 +62,21 @@ public class OptimizelyBuilderTest {
 
     @Mock private ErrorHandler mockErrorHandler;
 
+    @Test(expected = ConfigParseException.class)
+    public void withNullConfig() throws Exception {
+        Optimizely optimizelyClient = Optimizely.builder(null, mockEventHandler).build();
+    }
+
+    @Test(expected = ConfigParseException.class)
+    public void withEmptyConfig() throws Exception {
+        Optimizely optimizelyClient = Optimizely.builder("", mockEventHandler).build();
+    }
+
+    @Test(expected = ConfigParseException.class)
+    public void withInvalidConfig() throws Exception {
+        Optimizely optimizelyClient = Optimizely.builder("malformed json", mockEventHandler).build();
+    }
+
     @Test
     public void withEventHandler() throws Exception {
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
