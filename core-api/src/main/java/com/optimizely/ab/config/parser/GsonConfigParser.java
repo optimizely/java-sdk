@@ -34,10 +34,10 @@ final class GsonConfigParser implements ConfigParser {
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
         if (json == null) {
-            throw new ConfigParseException("Unable to parse null datafile.");
+            throw new ConfigParseException("Unable to parse null json.");
         }
         if (json.length() == 0) {
-            throw new ConfigParseException("Unable to parse empty datafile.");
+            throw new ConfigParseException("Unable to parse empty json.");
         }
         Gson gson = new GsonBuilder()
             .registerTypeAdapter(ProjectConfig.class, new ProjectConfigGsonDeserializer())
