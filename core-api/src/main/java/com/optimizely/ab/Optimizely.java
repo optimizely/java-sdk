@@ -632,12 +632,12 @@ public class Optimizely {
      * @param projectConfig the current project config
      * @param attributes the attributes map to validate and potentially filter
      * @return the filtered attributes map (containing only attributes that are present in the project config) or an
-     * empty map if a null object was passed in
+     * empty map if a null attributes object is passed in
      */
     private Map<String, String> filterAttributes(@Nonnull ProjectConfig projectConfig,
                                                  @Nonnull Map<String, String> attributes) {
         if (attributes == null) {
-            logger.warn("Attributes is null. Was expecting a non-null value.");
+            logger.warn("Attributes is null when non-null was expected. Defaulting to an empty attributes map.");
             return Collections.<String, String>emptyMap();
         }
 
