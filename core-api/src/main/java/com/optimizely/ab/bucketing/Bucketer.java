@@ -47,8 +47,6 @@ public class Bucketer {
 
     private final ProjectConfig projectConfig;
 
-    @Nullable private final UserProfile userProfile;
-
     private static final Logger logger = LoggerFactory.getLogger(Bucketer.class);
 
     private static final int MURMUR_HASH_SEED = 1;
@@ -65,7 +63,6 @@ public class Bucketer {
 
     public Bucketer(ProjectConfig projectConfig, @Nullable UserProfile userProfile) {
         this.projectConfig = projectConfig;
-        this.userProfile = userProfile;
     }
 
     private String bucketToEntity(int bucketValue, List<TrafficAllocation> trafficAllocations) {
@@ -112,26 +109,7 @@ public class Bucketer {
         String experimentKey = experiment.getKey();
         String combinedBucketId = userId + experimentId;
 
-        // If a user profile instance is present then check it for a saved variation
-        if (userProfile != null) {
-            String variationId = userProfile.lookup(userId, experimentId);
-            if (variationId != null) {
-                Variation savedVariation = projectConfig
-                    .getExperimentIdMapping()
-                    .get(experimentId)
-                    .getVariationIdToVariationMap()
-                    .get(variationId);
-                logger.info("Returning previously activated variation \"{}\" of experiment \"{}\" "
-                            + "for user \"{}\" from user profile.",
-                            savedVariation.getKey(), experimentKey, userId);
-                // A variation is stored for this combined bucket id
-                return savedVariation;
-            } else {
-                logger.info("No previously activated variation of experiment \"{}\" "
-                            + "for user \"{}\" found in user profile.",
-                            experimentKey, userId);
-            }
-        }
+
 
         List<TrafficAllocation> trafficAllocations = experiment.getTrafficAllocation();
 
@@ -146,18 +124,6 @@ public class Bucketer {
             logger.info("User \"{}\" is in variation \"{}\" of experiment \"{}\".", userId, variationKey,
                         experimentKey);
 
-            // If a user profile is present give it a variation to store
-            if (userProfile != null) {
-                boolean saved = userProfile.save(userId, experimentId, bucketedVariationId);
-                if (saved) {
-                    logger.info("Saved variation \"{}\" of experiment \"{}\" for user \"{}\".",
-                                bucketedVariationId, experimentId, userId);
-                } else {
-                    logger.warn("Failed to save variation \"{}\" of experiment \"{}\" for user \"{}\".",
-                                bucketedVariationId, experimentId, userId);
-                }
-            }
-
             return bucketedVariation;
         }
 
@@ -169,20 +135,7 @@ public class Bucketer {
     public @Nullable Variation bucket(@Nonnull Experiment experiment,
                                       @Nonnull String userId) {
 
-        // if a user has a forced variation mapping, return the respective variation
-        Map<String, String> userIdToVariationKeyMap = experiment.getUserIdToVariationKeyMap();
-        if (userIdToVariationKeyMap.containsKey(userId)) {
-            String forcedVariationKey = userIdToVariationKeyMap.get(userId);
-            Variation forcedVariation = experiment.getVariationKeyToVariationMap().get(forcedVariationKey);
-            if (forcedVariation != null) {
-                logger.info("User \"{}\" is forced in variation \"{}\".", userId, forcedVariationKey);
-            } else {
-                logger.error("Variation \"{}\" is not in the datafile. Not activating user \"{}\".", forcedVariationKey,
-                             userId);
-            }
 
-            return forcedVariation;
-        }
 
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group
@@ -224,28 +177,5 @@ public class Bucketer {
         return (int)Math.floor(MAX_TRAFFIC_VALUE * ratio);
     }
 
-    @Nullable
-    public UserProfile getUserProfile() {
-        return userProfile;
-    }
 
-    /**
-     * Gives implementations of {@link UserProfile} a chance to remove records
-     * of experiments that are deleted or not running.
-     */
-    public void cleanUserProfiles() {
-        if (userProfile != null) {
-            Map<String, Map<String,String>> records = userProfile.getAllRecords();
-            if (records != null) {
-                for (Map.Entry<String,Map<String,String>> record : records.entrySet()) {
-                    for (String experimentId : record.getValue().keySet()) {
-                        Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
-                        if (experiment == null || !experiment.isActive()) {
-                            userProfile.remove(record.getKey(), experimentId);
-                        }
-                    }
-                }
-            }
-        }
-    }
 }

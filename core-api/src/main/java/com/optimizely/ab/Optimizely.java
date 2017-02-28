@@ -92,22 +92,25 @@ public class Optimizely {
     @VisibleForTesting final EventHandler eventHandler;
     @VisibleForTesting final ErrorHandler errorHandler;
     @VisibleForTesting final NotificationBroadcaster notificationBroadcaster = new NotificationBroadcaster();
+    @VisibleForTesting @Nullable private final UserProfile userProfile;
 
     private Optimizely(@Nonnull ProjectConfig projectConfig,
                        @Nonnull Bucketer bucketer,
                        @Nonnull EventHandler eventHandler,
                        @Nonnull EventBuilder eventBuilder,
-                       @Nonnull ErrorHandler errorHandler) {
+                       @Nonnull ErrorHandler errorHandler,
+                       @Nullable UserProfile userProfile) {
         this.projectConfig = projectConfig;
         this.bucketer = bucketer;
         this.eventHandler = eventHandler;
         this.eventBuilder = eventBuilder;
         this.errorHandler = errorHandler;
+        this.userProfile = userProfile;
     }
 
     // Do work here that should be done once per Optimizely lifecycle
     @VisibleForTesting void initialize() {
-        bucketer.cleanUserProfiles();
+        this.cleanUserProfiles();
     }
 
     //======== activate calls ========//
@@ -480,11 +483,69 @@ public class Optimizely {
                                             @Nonnull Map<String, String> attributes,
                                             @Nonnull String userId) {
 
+        // ---------- Check for Whitelisting ----------
+        // if a user has a forced variation mapping, return the respective variation
+        Map<String, String> userIdToVariationKeyMap = experiment.getUserIdToVariationKeyMap();
+        if (userIdToVariationKeyMap.containsKey(userId)) {
+            String forcedVariationKey = userIdToVariationKeyMap.get(userId);
+            Variation forcedVariation = experiment.getVariationKeyToVariationMap().get(forcedVariationKey);
+            if (forcedVariation != null) {
+                logger.info("User \"{}\" is forced in variation \"{}\".", userId, forcedVariationKey);
+            } else {
+                logger.error("Variation \"{}\" is not in the datafile. Not activating user \"{}\".", forcedVariationKey,
+                        userId);
+            }
+
+            return forcedVariation;
+        }
+
+        // ---------- Check User Profile for Sticky Bucketing ----------
+        // If a user profile instance is present then check it for a saved variation
+        String experimentId = experiment.getId();
+        String experimentKey = experiment.getKey();
+        if (userProfile != null) {
+            String variationId = userProfile.lookup(userId, experimentId);
+            if (variationId != null) {
+                Variation savedVariation = projectConfig
+                        .getExperimentIdMapping()
+                        .get(experimentId)
+                        .getVariationIdToVariationMap()
+                        .get(variationId);
+                logger.info("Returning previously activated variation \"{}\" of experiment \"{}\" "
+                                + "for user \"{}\" from user profile.",
+                        savedVariation.getKey(), experimentKey, userId);
+                // A variation is stored for this combined bucket id
+                return savedVariation;
+            } else {
+                logger.info("No previously activated variation of experiment \"{}\" "
+                                + "for user \"{}\" found in user profile.",
+                        experimentKey, userId);
+            }
+        }
+
+        // ---------- Check Pre Conditions ----------
         if (!ProjectValidationUtils.validatePreconditions(projectConfig, experiment, userId, attributes)) {
             return null;
         }
 
-        return bucketer.bucket(experiment, userId);
+        // ---------- Bucket User ----------
+        Variation bucketedVariation = bucketer.bucket(experiment, userId);
+        String bucketedVariationId = bucketedVariation.getId();
+
+        // ---------- Save Variation to User Profile ----------
+        // If a user profile is present give it a variation to store
+        if (userProfile != null) {
+            boolean saved = userProfile.save(userId, experimentId, bucketedVariationId);
+            if (saved) {
+                logger.info("Saved variation \"{}\" of experiment \"{}\" for user \"{}\".",
+                        bucketedVariationId, experimentId, userId);
+            } else {
+                logger.warn("Failed to save variation \"{}\" of experiment \"{}\" for user \"{}\".",
+                        bucketedVariationId, experimentId, userId);
+            }
+        }
+
+        return bucketedVariation;
     }
 
     /**
@@ -506,6 +567,31 @@ public class Optimizely {
         }
 
         return DefaultConfigParser.getInstance().parseProjectConfig(datafile);
+    }
+
+    @Nullable
+    public UserProfile getUserProfile() {
+        return userProfile;
+    }
+
+    /**
+     * Removes experiments that are no longer in the datafile as well as inactive experiments
+     * from the {@link UserProfile} implementation.
+     */
+    private void cleanUserProfiles() {
+        if (userProfile != null) {
+            Map<String, Map<String,String>> records = userProfile.getAllRecords();
+            if (records != null) {
+                for (Map.Entry<String,Map<String,String>> record : records.entrySet()) {
+                    for (String experimentId : record.getValue().keySet()) {
+                        Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
+                        if (experiment == null || !experiment.isActive()) {
+                            userProfile.remove(record.getKey(), experimentId);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     //======== Notification listeners ========//
@@ -779,7 +865,7 @@ public class Optimizely {
                 errorHandler = new NoOpErrorHandler();
             }
 
-            Optimizely optimizely = new Optimizely(projectConfig, bucketer, eventHandler, eventBuilder, errorHandler);
+            Optimizely optimizely = new Optimizely(projectConfig, bucketer, eventHandler, eventBuilder, errorHandler, userProfile);
             optimizely.initialize();
             return optimizely;
         }
