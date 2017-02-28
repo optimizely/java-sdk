@@ -118,7 +118,7 @@ public class OptimizelyBuilderTest {
             .withUserProfile(userProfile)
             .build();
 
-        assertThat(optimizelyClient.bucketer.getUserProfile(), is(userProfile));
+        assertThat(optimizelyClient.getUserProfile(), is(userProfile));
     }
 
     @Test
