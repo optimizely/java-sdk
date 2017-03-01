@@ -10,6 +10,8 @@ buildscript {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
         classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:latest.release'
     }
+    apply plugin: 'idea'
+
 }
 
 plugins {

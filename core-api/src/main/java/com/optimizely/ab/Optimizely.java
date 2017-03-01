@@ -197,7 +197,7 @@ public class Optimizely {
         }
 
         // bucket the user to the given experiment and dispatch an impression event
-        Variation variation = bucketer.bucket(experiment, userId);
+        Variation variation = this.getVariation(projectConfig, experiment, attributes, userId);
         if (variation == null) {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
@@ -482,6 +482,11 @@ public class Optimizely {
                                             @Nonnull Experiment experiment,
                                             @Nonnull Map<String, String> attributes,
                                             @Nonnull String userId) {
+        // ---------- Check that the experiment is Active -----------
+        if (!experiment.isActive()) {
+            logger.info("Experiment \"{}\" is not running.", experiment.getKey(), userId);
+            return null;
+        }
 
         // ---------- Check for Whitelisting ----------
         // if a user has a forced variation mapping, return the respective variation

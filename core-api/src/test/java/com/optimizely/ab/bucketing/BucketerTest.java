@@ -24,6 +24,7 @@ import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.internal.LogbackVerifier;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -54,6 +55,7 @@ import static org.mockito.Mockito.when;
  */
 @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
 public class BucketerTest {
+
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
