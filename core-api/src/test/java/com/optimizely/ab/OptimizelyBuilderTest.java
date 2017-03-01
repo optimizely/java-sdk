@@ -180,6 +180,7 @@ public class OptimizelyBuilderTest {
     @Test
     public void builderThrowsConfigParseExceptionForInvalidDatafile() throws Exception {
         thrown.expect(ConfigParseException.class);
-        Optimizely.builder("{invalidDatafile}", mockEventHandler).build();
+        String invalidJson = "{invalidDatafile}";
+        Optimizely.builder(invalidJson, mockEventHandler).build();
     }
 }
