@@ -170,14 +170,14 @@ public class OptimizelyTestV3 {
         ProjectConfig validProjectConfig = validProjectConfigV3();
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
 
-        Optimizely.builder(validDatafile, mockEventHandler)
-            .withBucketing(mockBucketer)
-            .withEventBuilder(mockEventBuilder)
-            .withConfig(validProjectConfig)
-            .withErrorHandler(mockErrorHandler)
-            .build();
+        Optimizely client = Optimizely.builder(validDatafile, mockEventHandler)
+                .withBucketing(mockBucketer)
+                .withEventBuilder(mockEventBuilder)
+                .withConfig(projectConfig)
+                .withErrorHandler(mockErrorHandler)
+                .build();
 
-        verify(mockBucketer).cleanUserProfiles();
+        verify(client).initialize();
     }
 
     /**

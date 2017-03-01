@@ -163,14 +163,14 @@ public class OptimizelyTestV2 {
     public void initializationOccursForBucketerWhenBuildingOptly() throws Exception {
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
 
-        Optimizely.builder(validDatafile, mockEventHandler)
+        Optimizely client = Optimizely.builder(validDatafile, mockEventHandler)
                 .withBucketing(mockBucketer)
                 .withEventBuilder(mockEventBuilder)
                 .withConfig(validProjectConfig)
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        verify(mockBucketer).cleanUserProfiles();
+        verify(client).initialize();
     }
 
     /**
