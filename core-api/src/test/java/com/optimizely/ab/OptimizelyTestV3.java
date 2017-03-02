@@ -487,7 +487,7 @@ public class OptimizelyTestV3 {
                 isNull(String.class));
 
         Map<String, String> actualValue = attributeCaptor.getValue();
-        assertTrue(actualValue.isEmpty());
+        assertThat(actualValue, is(Collections.<String, String>emptyMap()));
 
         // verify that dispatchEvent was called with the correct LogEvent object
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
@@ -977,7 +977,7 @@ public class OptimizelyTestV3 {
                 isNull(String.class));
 
         Map<String, String> actualValue = attributeCaptor.getValue();
-        assertTrue(actualValue.isEmpty());
+        assertThat(actualValue, is(Collections.<String, String>emptyMap()));
 
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
     }
