@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.BucketerTest;
+import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
@@ -67,10 +68,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.eq;
@@ -102,7 +101,8 @@ public class OptimizelyTestV3 {
     @Mock ErrorHandler mockErrorHandler;
 
     private static final String genericUserId = "genericUserId";
-    private static String validDatafile;
+    private static final String userProfileId = "userProfileId";
+	private static String validDatafile;
     private static String noAudienceDatafile;
     private static ProjectConfig validProjectConfig;
     private static ProjectConfig noAudienceProjectConfig;
@@ -1876,6 +1876,46 @@ public class OptimizelyTestV3 {
         optimizely.track(eventKey, userId, attributes);
         verify(listener, never())
                 .onEventTracked(eventKey, userId, attributes, null, logEventToDispatch);
+    }
+
+    /**
+     * Verify that {@link Optimizely#getVariation(String, String)} returns a variation that is
+     * stored in the provided {@link UserProfile} instead of calling {@link Bucketer#bucket(Experiment, String)}.
+     */
+    @Test public void getVariationReturnsVariationStoredInUserProfileInsteadOfBucketing() throws Exception {
+        // get constants
+        final String datafile = noAudienceProjectConfigJsonV3();
+        final ProjectConfig projectConfig = noAudienceProjectConfigV3();
+        final Experiment experiment = projectConfig.getExperiments().get(0);
+        final Variation storedVariation = experiment.getVariations().get(0);
+
+        // mock user profile
+        UserProfile userProfile = mock(UserProfile.class);
+        when(userProfile.lookup(userProfileId, experiment.getId())).thenReturn(storedVariation.getId());
+
+        // mock bucketer
+        final Variation bucketedVariation = experiment.getVariations().get(1);
+        final AtomicInteger bucketValue = new AtomicInteger(BucketerTest.bucketValueForVariationOfExperiment(experiment, bucketedVariation));
+        Bucketer bucketer = BucketerTest.mockBucketAlgorithm(bucketValue);
+
+        // create client
+        Optimizely client = Optimizely.builder(datafile, mockEventHandler)
+                .withBucketing(bucketer)
+                .withConfig(projectConfig)
+                .withUserProfile(userProfile)
+                .build();
+
+        // other users get bucketed into the bucket variation
+        assertEquals(bucketedVariation, client.getVariation(experiment, genericUserId));
+
+        logbackVerifier.expectMessage(Level.INFO,
+                "Returning previously activated variation \"" + storedVariation.getKey() + "\" of experiment \"" + experiment.getKey() + "\""
+                        + " for user \"" + userProfileId + "\" from user profile.");
+
+        // asset stored user profile user gets bucketed to stored variation
+        assertEquals(storedVariation, client.getVariation(experiment, userProfileId));
+
+        verify(userProfile).lookup(userProfileId, experiment.getId());
     }
 
     //======== Helper methods ========//

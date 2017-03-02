@@ -473,32 +473,6 @@ public class BucketerTest {
     }
 
     /**
-     * Verify that {@link Bucketer#bucket(Experiment,String)} returns a variation that is
-     * stored in the provided {@link UserProfile}.
-     */
-    @Test public void bucketUserRestoreActivationWithUserProfile() throws Exception {
-        final AtomicInteger bucketValue = new AtomicInteger();
-        UserProfile userProfile = mock(UserProfile.class);
-        Bucketer algorithm = mockUserProfileAlgorithm(bucketValue, userProfile);
-        bucketValue.set(3000);
-
-        ProjectConfig projectConfig = validProjectConfigV2();
-        List<Experiment> groupExperiments = projectConfig.getGroups().get(0).getExperiments();
-        Experiment groupExperiment = groupExperiments.get(0);
-        final Variation variation = groupExperiment.getVariations().get(0);
-
-        when(userProfile.lookup("blah", groupExperiment.getId())).thenReturn(variation.getId());
-
-        assertThat(algorithm.bucket(groupExperiment, "blah"),  is(variation));
-
-        logbackVerifier.expectMessage(Level.INFO,
-                "Returning previously activated variation \"e2_vtag1\" of experiment \"group_etag2\""
-                                      + " for user \"blah\" from user profile.");
-
-        verify(userProfile).lookup("blah", groupExperiment.getId());
-    }
-
-    /**
      * Verify {@link Bucketer#bucket(Experiment,String)} handles a present {@link UserProfile}
      * returning null when looking up a variation.
      */
@@ -555,5 +529,23 @@ public class BucketerTest {
                 return bucketValue.get();
             }
         };
+    }
+
+    /**
+     * Returns a bucket value that would make the bucketer bucket the user into the specified variation
+     * @param experiment The experiment to bucket the user into.
+     * @param variation The variation to bucket the user into.
+     * @return A number [0,10000) if the variation has valid traffic allocation within the experiment.
+     *      Else returns -1 if invalid.
+     */
+    public static int bucketValueForVariationOfExperiment(Experiment experiment, Variation variation) {
+        if (experiment.getVariations().contains(variation)) {
+            for (TrafficAllocation trafficAllocation : experiment.getTrafficAllocation()) {
+                if (trafficAllocation.getEntityId().equals(variation.getId())) {
+                    return trafficAllocation.getEndOfRange() - 1;
+                }
+            }
+        }
+        return -1;
     }
 }
