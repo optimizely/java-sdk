@@ -38,7 +38,6 @@ import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.internal.ProjectValidationUtils;
 import com.optimizely.ab.notification.NotificationListener;
 
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -323,7 +322,6 @@ public class OptimizelyTestV3 {
      * Verify that {@link Optimizely#activate(String, String, Map)} passes through attributes.
      */
     @Test
-    @SuppressWarnings("unchecked")
     public void activateWithAttributes() throws Exception {
         String datafile = validConfigJsonV3();
         ProjectConfig projectConfig = validProjectConfigV3();
@@ -380,7 +378,6 @@ public class OptimizelyTestV3 {
      * In this case, the activate call should remove the unknown attribute from the given map.
      */
     @Test
-    @SuppressWarnings("unchecked")
     public void activateWithUnknownAttribute() throws Exception {
         String datafile = validConfigJsonV3();
         ProjectConfig projectConfig = validProjectConfigV3();
@@ -442,7 +439,9 @@ public class OptimizelyTestV3 {
      * Verify that {@link Optimizely#activate(String, String, Map)} ignores null attributes.
      */
     @Test
-    @SuppressWarnings("unchecked")
+    @SuppressFBWarnings(
+            value="NP_NONNULL_PARAM_VIOLATION",
+            justification="testing nullness contract violation")
     public void activateWithNullAttributes() throws Exception {
         String datafile = noAudienceProjectConfigJsonV3();
         ProjectConfig projectConfig = noAudienceProjectConfigV3();
@@ -497,7 +496,6 @@ public class OptimizelyTestV3 {
      * Verify that {@link Optimizely#activate(String, String, Map)} gracefully handles null attribute values.
      */
     @Test
-    @SuppressWarnings("unchecked")
     public void activateWithNullAttributeValues() throws Exception {
         String datafile = noAudienceProjectConfigJsonV3();
         ProjectConfig projectConfig = noAudienceProjectConfigV3();
@@ -880,7 +878,6 @@ public class OptimizelyTestV3 {
      * Verify that {@link Optimizely#track(String, String)} passes through attributes.
      */
     @Test
-    @SuppressWarnings("unchecked")
     public void trackEventWithAttributes() throws Exception {
         String datafile = validConfigJsonV3();
         ProjectConfig projectConfig = validProjectConfigV3();
@@ -932,7 +929,9 @@ public class OptimizelyTestV3 {
      * Verify that {@link Optimizely#track(String, String)} ignores null attributes.
      */
     @Test
-    @SuppressWarnings("unchecked")
+    @SuppressFBWarnings(
+            value="NP_NONNULL_PARAM_VIOLATION",
+            justification="testing nullness contract violation")
     public void trackEventWithNullAttributes() throws Exception {
         String datafile = noAudienceProjectConfigJsonV3();
         ProjectConfig projectConfig = noAudienceProjectConfigV3();
@@ -986,7 +985,6 @@ public class OptimizelyTestV3 {
      * Verify that {@link Optimizely#track(String, String)} gracefully handles null attribute values.
      */
     @Test
-    @SuppressWarnings("unchecked")
     public void trackEventWithNullAttributesValues() throws Exception {
         String datafile = noAudienceProjectConfigJsonV3();
         ProjectConfig projectConfig = noAudienceProjectConfigV3();
@@ -1039,7 +1037,6 @@ public class OptimizelyTestV3 {
      * In this case, the track event call should remove the unknown attribute from the given map.
      */
     @Test
-    @SuppressWarnings("unchecked")
     public void trackEventWithUnknownAttribute() throws Exception {
         String datafile = validConfigJsonV3();
         ProjectConfig projectConfig = validProjectConfigV3();
