@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely and contributors
+ *    Copyright 2016-2017, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -497,10 +497,11 @@ public class OptimizelyTestV3 {
      */
     @Test
     public void activateWithNullAttributeValues() throws Exception {
-        String datafile = noAudienceProjectConfigJsonV3();
-        ProjectConfig projectConfig = noAudienceProjectConfigV3();
+        String datafile = validConfigJsonV3();
+        ProjectConfig projectConfig = validProjectConfigV3();
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+        Attribute attribute = projectConfig.getAttributes().get(0);
 
         // setup a mock event builder to return expected impression params
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
@@ -525,7 +526,7 @@ public class OptimizelyTestV3 {
 
         // activate the experiment
         Map<String, String> attributes = new HashMap<String, String>();
-        attributes.put("test", null);
+        attributes.put(attribute.getKey(), null);
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), "userId", attributes);
 
         // verify that the bucketing algorithm was called correctly
@@ -537,6 +538,9 @@ public class OptimizelyTestV3 {
         verify(mockEventBuilder).createImpressionEvent(eq(projectConfig), eq(activatedExperiment),
                 eq(bucketedVariation), eq("userId"), attributeCaptor.capture(),
                 isNull(String.class));
+
+        Map<String, String> actualValue = attributeCaptor.getValue();
+        assertThat(actualValue, hasEntry(attribute.getKey(), null));
 
         // verify that dispatchEvent was called with the correct LogEvent object
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
@@ -985,9 +989,9 @@ public class OptimizelyTestV3 {
      * Verify that {@link Optimizely#track(String, String)} gracefully handles null attribute values.
      */
     @Test
-    public void trackEventWithNullAttributesValues() throws Exception {
-        String datafile = noAudienceProjectConfigJsonV3();
-        ProjectConfig projectConfig = noAudienceProjectConfigV3();
+    public void trackEventWithNullAttributeValues() throws Exception {
+        String datafile = validConfigJsonV3();
+        ProjectConfig projectConfig = validProjectConfigV3();
         EventType eventType = projectConfig.getEventTypes().get(0);
 
         // setup a mock event builder to return expected conversion params
