@@ -257,36 +257,6 @@ public class BucketerTest {
     }
 
     /**
-     * Verify that {@link Bucketer#bucket(Experiment, String)} returns null when an invalid variation key is found
-     * in the forced variations mapping.
-     */
-    @Test
-    public void bucketInvalidVariationKeyForcedVariation() throws Exception {
-        final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
-
-        List<Variation> variations = Collections.singletonList(
-            new Variation("1", "var1")
-        );
-
-        List<TrafficAllocation> trafficAllocations = Collections.singletonList(
-            new TrafficAllocation("1", 1000)
-        );
-
-        Map<String, String> userIdToVariationKeyMap = Collections.singletonMap("testUser1", "invalidVarKey");
-
-        Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", Collections.<String>emptyList(),
-                                               variations, userIdToVariationKeyMap, trafficAllocations);
-
-        logbackVerifier.expectMessage(
-                Level.ERROR,
-                "Variation \"invalidVarKey\" is not in the datafile. Not activating user \"testUser1\".");
-
-        bucketValue.set(0);
-        assertNull(algorithm.bucket(experiment, "testUser1"));
-    }
-
-    /**
      * Verifies the positive case where a non-empty user id is provided.
      */
     @Test

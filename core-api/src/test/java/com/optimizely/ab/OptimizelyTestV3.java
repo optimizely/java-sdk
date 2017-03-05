@@ -49,18 +49,13 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV3;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV3;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV3;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.*;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV2;
 import static com.optimizely.ab.event.LogEvent.RequestMethod;
 
 import static java.util.Arrays.asList;
@@ -1916,6 +1911,66 @@ public class OptimizelyTestV3 {
         assertEquals(storedVariation, client.getVariation(experiment, userProfileId));
 
         verify(userProfile).lookup(userProfileId, experiment.getId());
+    }
+
+    /**
+     * Verify that {@link Optimizely#getVariation(Experiment, String)} returns null when an invalid variation key is found
+     * in the forced variations mapping.
+     */
+    @Test
+    public void getVariationReturnsNullWhenInvalidVariationKeyIsFoundInForcedVariationsMapping() throws Exception {
+        final String datafile = noAudienceProjectConfigJsonV3();
+        final ProjectConfig projectConfig = noAudienceProjectConfigV3();
+        String userId = "whitelistedUser";
+
+        // modify the configured project config
+        List<Variation> variations = Collections.singletonList(
+                new Variation("1", "var1")
+        );
+
+        List<TrafficAllocation> trafficAllocations = Collections.singletonList(
+                new TrafficAllocation("1", 1000)
+        );
+
+        // create malformed experiment
+        Map<String, String> userIdToVariationKeyMap = Collections.singletonMap(userId, "invalidVarKey");
+        Experiment customExperiment = new Experiment("1234", "exp_key", "Running", "1", Collections.<String>emptyList(),
+                variations, userIdToVariationKeyMap, trafficAllocations);
+
+        // inject malformed experiment into experiments list
+        ArrayList<Experiment> overriddenExperiments = new ArrayList<Experiment>();
+        overriddenExperiments.add(customExperiment);
+        for (Experiment experiment : projectConfig.getExperiments()) {
+            overriddenExperiments.add(experiment);
+        }
+
+        // create a new project config with the messed up experiment
+        final ProjectConfig modifiedProjectConfig = new ProjectConfig(projectConfig.getAccountId(),
+                projectConfig.getProjectId(),
+                projectConfig.getVersion(),
+                projectConfig.getRevision(),
+                projectConfig.getGroups(),
+                overriddenExperiments,
+                projectConfig.getAttributes(),
+                projectConfig.getEventTypes(),
+                projectConfig.getAudiences(),
+                projectConfig.getAnonymizeIP(),
+                projectConfig.getLiveVariables());
+        final AtomicInteger bucketValue = new AtomicInteger();
+        Bucketer bucketer = BucketerTest.mockBucketAlgorithm(bucketValue);
+
+
+        Optimizely client = Optimizely.builder(datafile, mockEventHandler)
+                .withBucketing(bucketer)
+                .withConfig(modifiedProjectConfig)
+                .build();
+
+        logbackVerifier.expectMessage(
+                Level.ERROR,
+                "Variation \"invalidVarKey\" is not in the datafile. Not activating user \"" + userId + "\".");
+
+        bucketValue.set(0);
+        assertNull(client.getVariation(customExperiment, userId));
     }
 
     //======== Helper methods ========//
