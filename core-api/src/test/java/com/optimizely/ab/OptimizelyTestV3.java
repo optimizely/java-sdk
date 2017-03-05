@@ -1980,8 +1980,8 @@ public class OptimizelyTestV3 {
      */
     @Test
     public void getVariationMakesForcedVariationOverrideExperimentBucketing() throws Exception {
-        final String datafile = noAudienceProjectConfigJsonV2();
-        final ProjectConfig projectConfig = noAudienceProjectConfigV2();
+        final String datafile = noAudienceProjectConfigJsonV3();
+        final ProjectConfig projectConfig = noAudienceProjectConfigV3();
         final String userId = "testUser1";
         final String correctVariationKey = "vtag1";
         final String incorrectVariationKey = "vtag2";
@@ -2010,8 +2010,8 @@ public class OptimizelyTestV3 {
      * returning null when looking up a variation.
      */
     @Test public void getVariationBucketsWhenNullReturnedFromUserProfileLookup() throws Exception {
-        final String datafile = noAudienceProjectConfigJsonV2();
-        final ProjectConfig projectConfig = noAudienceProjectConfigV2();
+        final String datafile = noAudienceProjectConfigJsonV3();
+        final ProjectConfig projectConfig = noAudienceProjectConfigV3();
         final String userId = "someUser";
 
         final AtomicInteger bucketValue = new AtomicInteger();
@@ -2036,6 +2036,46 @@ public class OptimizelyTestV3 {
         logbackVerifier.expectMessage(Level.INFO, "No previously activated variation of experiment " +
                 "\"" + experiment.getKey() + "\" for user \"" +userId + "\" found in user profile.");
         verify(userProfile).lookup(userId, experiment.getId());
+    }
+
+    /**
+     * Verify that {@link Optimizely#getVariation(Experiment,String)} saves a variation of an experiment for a user
+     * when a {@link UserProfile} is present.
+     */
+    @Test public void getVariationSavesActivationWithUserProfile() throws Exception {
+        final String datafile = noAudienceProjectConfigJsonV3();
+        final ProjectConfig projectConfig = noAudienceProjectConfigV3();
+        final String userId = "someUser";
+
+        final AtomicInteger bucketValue = new AtomicInteger();
+        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue);
+        UserProfile userProfile = mock(UserProfile.class);
+
+        Optimizely client = Optimizely.builder(datafile, mockEventHandler)
+                .withBucketing(bucketer)
+                .withConfig(projectConfig)
+                .withUserProfile(userProfile)
+                .build();
+
+        bucketValue.set(3000);
+
+        final Experiment experiment = projectConfig.getExperiments().get(0);
+        final Variation variation = experiment.getVariations().get(0);
+
+        when(userProfile.lookup(userId, experiment.getId())).thenReturn(null);
+        when(userProfile.save(userId, experiment.getId(), variation.getId())).thenReturn(true);
+
+        assertThat(client.getVariation(experiment, userId),  is(variation));
+
+        logbackVerifier.expectMessage(Level.INFO, "No previously activated variation of experiment " +
+                "\"" + experiment.getKey() + "\" for user \"" +userId + "\" found in user profile.");
+        verify(userProfile).lookup(userId, experiment.getId());
+
+        logbackVerifier.expectMessage(Level.INFO,
+                String.format("Saved variation \"%s\" of experiment \"%s\" for user \"" + userId + "\".", variation.getId(),
+                        experiment.getId()));
+
+        verify(userProfile).save(userId, experiment.getId(), variation.getId());
     }
 
     //======== Helper methods ========//

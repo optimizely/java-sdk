@@ -371,32 +371,6 @@ public class BucketerTest {
     }
 
     /**
-     * Verify that {@link Bucketer#bucket(Experiment,String)} saves a variation of an experiment for a user
-     * when a {@link UserProfile} is present.
-     */
-    @Test public void bucketUserSaveActivationWithUserProfile() throws Exception {
-        final AtomicInteger bucketValue = new AtomicInteger();
-        UserProfile userProfile = mock(UserProfile.class);
-        Bucketer algorithm = mockUserProfileAlgorithm(bucketValue, userProfile);
-        bucketValue.set(3000);
-
-        ProjectConfig projectConfig = validProjectConfigV2();
-        List<Experiment> groupExperiments = projectConfig.getGroups().get(0).getExperiments();
-        Experiment groupExperiment = groupExperiments.get(0);
-        final Variation variation = groupExperiment.getVariations().get(0);
-
-        when(userProfile.save("blah", groupExperiment.getId(), variation.getId())).thenReturn(true);
-
-        assertThat(algorithm.bucket(groupExperiment, "blah"),  is(variation));
-
-        logbackVerifier.expectMessage(Level.INFO,
-                String.format("Saved variation \"%s\" of experiment \"%s\" for user \"blah\".", variation.getId(),
-                              groupExperiment.getId()));
-
-        verify(userProfile).save("blah", groupExperiment.getId(), variation.getId());
-    }
-
-    /**
      * Verify that {@link Bucketer#bucket(Experiment,String)} logs correctly
      * when a {@link UserProfile} is present and fails to save an activation.
      */
