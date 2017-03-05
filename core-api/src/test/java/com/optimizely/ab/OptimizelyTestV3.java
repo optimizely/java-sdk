@@ -18,17 +18,10 @@ package com.optimizely.ab;
 
 import ch.qos.logback.classic.Level;
 import com.google.common.collect.ImmutableMap;
-
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.BucketerTest;
 import com.optimizely.ab.bucketing.UserProfile;
-import com.optimizely.ab.config.Attribute;
-import com.optimizely.ab.config.EventType;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.LiveVariableUsageInstance;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.TrafficAllocation;
-import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
@@ -52,12 +45,11 @@ import org.mockito.junit.MockitoRule;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import static com.optimizely.ab.config.ProjectConfigTestUtils.*;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV2;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV3;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV3;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV3;
 import static com.optimizely.ab.event.LogEvent.RequestMethod;
-
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -65,17 +57,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNull;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for the top-level {@link Optimizely} class.

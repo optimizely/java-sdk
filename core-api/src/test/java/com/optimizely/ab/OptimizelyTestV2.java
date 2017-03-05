@@ -45,12 +45,11 @@ import org.mockito.junit.MockitoRule;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import static com.optimizely.ab.config.ProjectConfigTestUtils.*;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV3;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV2;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV2;
 import static com.optimizely.ab.event.LogEvent.RequestMethod;
-
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -62,11 +61,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNull;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for the top-level {@link Optimizely} class.
