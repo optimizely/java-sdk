@@ -370,32 +370,6 @@ public class BucketerTest {
         assertNull(algorithm.bucket(groupExperiment, "blah"));
     }
 
-    /**
-     * Verify that {@link Bucketer#bucket(Experiment,String)} logs correctly
-     * when a {@link UserProfile} is present and fails to save an activation.
-     */
-    @Test public void bucketUserSaveActivationFailWithUserProfile() throws Exception {
-        final AtomicInteger bucketValue = new AtomicInteger();
-        UserProfile userProfile = mock(UserProfile.class);
-        Bucketer algorithm = mockUserProfileAlgorithm(bucketValue, userProfile);
-        bucketValue.set(3000);
-
-        ProjectConfig projectConfig = validProjectConfigV2();
-        List<Experiment> groupExperiments = projectConfig.getGroups().get(0).getExperiments();
-        Experiment groupExperiment = groupExperiments.get(0);
-        final Variation variation = groupExperiment.getVariations().get(0);
-
-        when(userProfile.save("blah", groupExperiment.getId(), variation.getId())).thenReturn(false);
-
-        assertThat(algorithm.bucket(groupExperiment, "blah"),  is(variation));
-
-        logbackVerifier.expectMessage(Level.WARN,
-                String.format("Failed to save variation \"%s\" of experiment \"%s\" for user \"blah\".",
-                              variation.getId(), groupExperiment.getId()));
-
-        verify(userProfile).save("blah", groupExperiment.getId(), variation.getId());
-    }
-
     //======== Helper methods ========//
 
     /**
@@ -405,23 +379,6 @@ public class BucketerTest {
      */
     public static Bucketer mockBucketAlgorithm(final AtomicInteger bucketValue) {
         return new Bucketer(validProjectConfigV2()) {
-            @Override
-            int generateBucketValue(int hashCode) {
-                return bucketValue.get();
-            }
-        };
-    }
-
-    /**
-     * Sets up a mock algorithm that returns an expected bucket value.
-     *
-     * Includes a composed {@link UserProfile} mock instance
-     *
-     * @param bucketValue the expected bucket value holder
-     * @return the mock bucket algorithm
-     */
-    private Bucketer mockUserProfileAlgorithm(final AtomicInteger bucketValue, final UserProfile userProfile) {
-        return new Bucketer(validProjectConfigV2(), userProfile) {
             @Override
             int generateBucketValue(int hashCode) {
                 return bucketValue.get();

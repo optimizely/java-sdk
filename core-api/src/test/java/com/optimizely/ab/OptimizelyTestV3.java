@@ -2078,6 +2078,42 @@ public class OptimizelyTestV3 {
         verify(userProfile).save(userId, experiment.getId(), variation.getId());
     }
 
+    /**
+     * Verify that {@link Optimizely#getVariation(Experiment,String)} logs correctly
+     * when a {@link UserProfile} is present but fails to save an activation.
+     */
+    @Test public void getVariationLogsCorrectlyWhenUserProfileFailsToSave() throws Exception {
+        final String datafile = noAudienceProjectConfigJsonV3();
+        final ProjectConfig projectConfig = noAudienceProjectConfigV3();
+        final String userId = "someUser";
+
+        final AtomicInteger bucketValue = new AtomicInteger();
+        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue);
+        UserProfile userProfile = mock(UserProfile.class);
+
+        Optimizely client = Optimizely.builder(datafile, mockEventHandler)
+                .withBucketing(bucketer)
+                .withConfig(projectConfig)
+                .withUserProfile(userProfile)
+                .build();
+
+        bucketValue.set(3000);
+
+        final Experiment experiment = projectConfig.getExperiments().get(0);
+        final Variation variation = experiment.getVariations().get(0);
+
+        when(userProfile.lookup(userId, experiment.getId())).thenReturn(null);
+        when(userProfile.save(userId, experiment.getId(), variation.getId())).thenReturn(false);
+
+        assertThat(client.getVariation(experiment, userId),  is(variation));
+
+        logbackVerifier.expectMessage(Level.WARN,
+                String.format("Failed to save variation \"%s\" of experiment \"%s\" for user \"" + userId + "\".", variation.getId(),
+                        experiment.getId()));
+
+        verify(userProfile).save(userId, experiment.getId(), variation.getId());
+    }
+
     //======== Helper methods ========//
 
     private Experiment createUnknownExperiment() {
