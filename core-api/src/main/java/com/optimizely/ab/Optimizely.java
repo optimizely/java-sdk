@@ -186,11 +186,6 @@ public class Optimizely {
         // attributes.
         attributes = filterAttributes(projectConfig, attributes);
 
-        if (!ProjectValidationUtils.validatePreconditions(projectConfig, experiment, userId, attributes)) {
-            logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
-            return null;
-        }
-
         // bucket the user to the given experiment and dispatch an impression event
         Variation variation = this.getVariation(projectConfig, experiment, attributes, userId);
         if (variation == null) {
