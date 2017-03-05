@@ -32,7 +32,6 @@ import com.optimizely.ab.event.internal.EventBuilderV2;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.internal.ProjectValidationUtils;
 import com.optimizely.ab.notification.NotificationListener;
-import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
 import org.junit.Test;
