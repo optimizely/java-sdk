@@ -61,6 +61,7 @@ import static com.optimizely.ab.event.LogEvent.RequestMethod;
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.junit.Assert.*;
@@ -2002,6 +2003,39 @@ public class OptimizelyTestV3 {
         // assert correct bucketing
         logbackVerifier.expectMessage(Level.INFO, "User \"" + userId + "\" is forced in variation \"" + correctVariationKey + "\".");
         assertEquals(correctVariationKey, client.getVariation(experiment, userId).getKey());
+    }
+
+    /**
+     * Verify {@link Optimizely#getVariation(Experiment,String)} handles a present {@link UserProfile}
+     * returning null when looking up a variation.
+     */
+    @Test public void getVariationBucketsWhenNullReturnedFromUserProfileLookup() throws Exception {
+        final String datafile = noAudienceProjectConfigJsonV2();
+        final ProjectConfig projectConfig = noAudienceProjectConfigV2();
+        final String userId = "someUser";
+
+        final AtomicInteger bucketValue = new AtomicInteger();
+        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue);
+        UserProfile userProfile = mock(UserProfile.class);
+
+        Optimizely client = Optimizely.builder(datafile, mockEventHandler)
+                .withBucketing(bucketer)
+                .withConfig(projectConfig)
+                .withUserProfile(userProfile)
+                .build();
+
+        bucketValue.set(3000);
+
+        Experiment experiment = projectConfig.getExperiments().get(0);
+        final Variation variation = experiment.getVariations().get(0);
+
+        when(userProfile.lookup(userId, experiment.getId())).thenReturn(null);
+
+        assertThat(client.getVariation(experiment, userId),  is(variation));
+
+        logbackVerifier.expectMessage(Level.INFO, "No previously activated variation of experiment " +
+                "\"" + experiment.getKey() + "\" for user \"" +userId + "\" found in user profile.");
+        verify(userProfile).lookup(userId, experiment.getId());
     }
 
     //======== Helper methods ========//

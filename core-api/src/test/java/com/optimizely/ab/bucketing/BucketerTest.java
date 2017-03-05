@@ -422,32 +422,6 @@ public class BucketerTest {
         verify(userProfile).save("blah", groupExperiment.getId(), variation.getId());
     }
 
-    /**
-     * Verify {@link Bucketer#bucket(Experiment,String)} handles a present {@link UserProfile}
-     * returning null when looking up a variation.
-     */
-    @Test public void bucketUserRestoreActivationNullWithUserProfile() throws Exception {
-        final AtomicInteger bucketValue = new AtomicInteger();
-        UserProfile userProfile = mock(UserProfile.class);
-        Bucketer algorithm = mockUserProfileAlgorithm(bucketValue, userProfile);
-        bucketValue.set(3000);
-
-        ProjectConfig projectConfig = validProjectConfigV2();
-        List<Experiment> groupExperiments = projectConfig.getGroups().get(0).getExperiments();
-        Experiment groupExperiment = groupExperiments.get(0);
-        final Variation variation = groupExperiment.getVariations().get(0);
-
-        when(userProfile.lookup("blah", groupExperiment.getId())).thenReturn(null);
-
-        assertThat(algorithm.bucket(groupExperiment, "blah"),  is(variation));
-
-        logbackVerifier.expectMessage(Level.INFO, "No previously activated variation of experiment " +
-                                      "\"group_etag2\" for user \"blah\" found in user profile.");
-        verify(userProfile).lookup("blah", groupExperiment.getId());
-    }
-
-
-
     //======== Helper methods ========//
 
     /**
