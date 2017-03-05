@@ -20,6 +20,7 @@ import ch.qos.logback.classic.Level;
 import com.google.common.collect.ImmutableMap;
 
 import com.optimizely.ab.bucketing.Bucketer;
+import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
@@ -144,23 +145,26 @@ public class OptimizelyTestV1 {
     }
 
     /**
-     * Verify that bucketer initialization happens after building the Optimizely object
+     * Verify that initialization of Optimizely cleans user profiles
      * @throws Exception
      */
     @Test
-    public void initializationOccursForBucketerWhenBuildingOptly() throws Exception {
+    public void initializationCleansUserProfile() throws Exception {
         String datafile = validConfigJsonV1();
         ProjectConfig projectConfig = validProjectConfigV1();
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
+        UserProfile mockUserProfile = mock(UserProfile.class);
 
-        Optimizely client = Optimizely.builder(datafile, mockEventHandler)
-            .withBucketing(mockBucketer)
-            .withEventBuilder(mockEventBuilder)
-            .withConfig(projectConfig)
-            .withErrorHandler(mockErrorHandler)
-            .build();
+        Optimizely.builder(datafile, mockEventHandler)
+                .withBucketing(mockBucketer)
+                .withEventBuilder(mockEventBuilder)
+                .withConfig(projectConfig)
+                .withErrorHandler(mockErrorHandler)
+                .withUserProfile(mockUserProfile)
+                .build();
 
-        verify(client).initialize();
+        // verify that getAllRecords was called. the only usage of this is in clean User Profiles
+        verify(mockUserProfile).getAllRecords();
     }
 
     /**

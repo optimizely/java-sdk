@@ -32,8 +32,8 @@ import com.optimizely.ab.event.internal.EventBuilderV2;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.internal.ProjectValidationUtils;
 import com.optimizely.ab.notification.NotificationListener;
-
-import org.junit.BeforeClass;
+import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -145,21 +145,24 @@ public class OptimizelyTestV3 {
     }
 
     /**
-     * Verify that bucketer initialization happens after building the Optimizely object
+     * Verify that initialization of Optimizely cleans user profiles
      * @throws Exception
      */
     @Test
-    public void initializationOccursForBucketerWhenBuildingOptly() throws Exception {
+    public void initializationCleansUserProfile() throws Exception {
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
+        UserProfile mockUserProfile = mock(UserProfile.class);
 
-        Optimizely client = Optimizely.builder(validDatafile, mockEventHandler)
+        Optimizely.builder(validDatafile, mockEventHandler)
                 .withBucketing(mockBucketer)
                 .withEventBuilder(mockEventBuilder)
                 .withConfig(validProjectConfig)
                 .withErrorHandler(mockErrorHandler)
+                .withUserProfile(mockUserProfile)
                 .build();
 
-        verify(client).initialize();
+        // verify that getAllRecords was called. the only usage of this is in clean User Profiles
+        verify(mockUserProfile).getAllRecords();
     }
 
     /**
