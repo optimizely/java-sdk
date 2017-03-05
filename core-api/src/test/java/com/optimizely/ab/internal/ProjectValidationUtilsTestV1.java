@@ -18,25 +18,36 @@ package com.optimizely.ab.internal;
 
 import ch.qos.logback.classic.Level;
 
+import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 
+import com.optimizely.ab.event.EventHandler;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import javafx.event.EventDispatcher;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 import java.util.Collections;
 import java.util.Map;
 
+import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV1;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV1;
 import static com.optimizely.ab.internal.ProjectValidationUtils.validatePreconditions;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class ProjectValidationUtilsTestV1 {
 
     @Rule
+    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
+    public MockitoRule rule = MockitoJUnit.rule();
+
+    @Rule
     public LogbackVerifier logbackVerifier = new LogbackVerifier();
+    @Mock EventHandler mockEventHandler;
 
     /**
      * Verify that {@link ProjectValidationUtils#validatePreconditions(ProjectConfig, Experiment, String, Map)} gives
@@ -57,12 +68,15 @@ public class ProjectValidationUtilsTestV1 {
      */
     @Test
     public void validatePreconditionsExperimentStatusPrecedesForcedVariation() throws Exception {
+        String datafile = validConfigJsonV1();
         ProjectConfig projectConfig = validProjectConfigV1();
         Experiment experiment = projectConfig.getExperiments().get(1);
 
+        Optimizely client = Optimizely.builder(datafile, mockEventHandler).build();
+        assertNotNull(client);
+
         logbackVerifier.expectMessage(Level.INFO, "Experiment \"etag2\" is not running.");
         // testUser3 has a corresponding forced variation, but experiment status should be checked first
-        assertFalse(
-                validatePreconditions(projectConfig, experiment, "testUser3", Collections.<String, String>emptyMap()));
+        assertNull(client.getVariation(experiment, "testUser3"));
     }
 }
