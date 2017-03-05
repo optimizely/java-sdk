@@ -137,11 +137,6 @@ public class Optimizely {
                                         @Nonnull Map<String, String> attributes,
                                         @CheckForNull String sessionId) throws UnknownExperimentException {
 
-        if (!validateUserId(userId)) {
-            logger.info("Not activating user for experiment \"{}\".", experimentKey);
-            return null;
-        }
-
         ProjectConfig currentConfig = getProjectConfig();
 
         Experiment experiment = getExperimentOrThrow(currentConfig, experimentKey);
@@ -463,15 +458,12 @@ public class Optimizely {
                                             @Nonnull String userId,
                                             @Nonnull Map<String, String> attributes) {
 
-        if (!validateUserId(userId)) {
-            return null;
-        }
-
         ProjectConfig currentConfig = getProjectConfig();
 
         Experiment experiment = getExperimentOrThrow(currentConfig, experimentKey);
         if (experiment == null) {
             // if we're unable to retrieve the associated experiment, return null
+            logger.info("Experiment \"{}\" is not in the datafile.", userId, experimentKey);
             return null;
         }
 
@@ -482,6 +474,11 @@ public class Optimizely {
                                             @Nonnull Experiment experiment,
                                             @Nonnull Map<String, String> attributes,
                                             @Nonnull String userId) {
+        if (!validateUserId(userId)) {
+            logger.info("Not activating user for experiment \"{}\".", experiment.getKey());
+            return null;
+        }
+
         // ---------- Check that the experiment is Active -----------
         if (!experiment.isActive()) {
             logger.info("Experiment \"{}\" is not running.", experiment.getKey(), userId);
