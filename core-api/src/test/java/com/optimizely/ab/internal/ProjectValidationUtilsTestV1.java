@@ -24,7 +24,6 @@ import com.optimizely.ab.config.ProjectConfig;
 
 import com.optimizely.ab.event.EventHandler;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import javafx.event.EventDispatcher;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
