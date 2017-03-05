@@ -312,26 +312,6 @@ public class BucketerTest {
     }
 
     /**
-     * Verify that {@link Bucketer#bucket(Experiment, String)} gives higher priority to forced bucketing than to
-     * experiment bucketing.
-     */
-    @Test
-    public void bucketUserToForcedVariationOverridesExperimentBucketing() throws Exception {
-        final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
-        bucketValue.set(2000);
-
-        ProjectConfig projectConfig = validProjectConfigV2();
-        List<Experiment> groupExperiments = projectConfig.getGroups().get(0).getExperiments();
-        Experiment groupExperiment = groupExperiments.get(1);
-
-        // normally, without forced bucketing this user would be bucketed to variation e1_vtag1, but instead is forced
-        // into e1_vtag2.
-        logbackVerifier.expectMessage(Level.INFO, "User \"testUser2\" is forced in variation \"e1_vtag2\".");
-        assertThat(algorithm.bucket(groupExperiment, "testUser2"), is(groupExperiment.getVariations().get(1)));
-    }
-
-    /**
      * Verify that {@link Bucketer#bucket(Experiment, String)} doesn't return a variation when the user is bucketed to
      * the traffic space of a deleted experiment within a random group.
      */

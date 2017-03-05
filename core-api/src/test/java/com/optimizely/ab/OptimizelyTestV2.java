@@ -56,6 +56,7 @@ import static com.optimizely.ab.event.LogEvent.RequestMethod;
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.junit.Assert.*;
@@ -1621,6 +1622,37 @@ public class OptimizelyTestV2 {
 
         bucketValue.set(0);
         assertNull(client.getVariation(customExperiment, userId));
+    }
+
+    /**
+     * Verify that {@link Optimizely#getVariation(Experiment, String)} gives higher priority to forced bucketing than to
+     * experiment bucketing.
+     */
+    @Test
+    public void getVariationMakesForcedVariationOverrideExperimentBucketing() throws Exception {
+        final String datafile = noAudienceProjectConfigJsonV2();
+        final ProjectConfig projectConfig = noAudienceProjectConfigV2();
+        final String userId = "testUser1";
+        final String correctVariationKey = "vtag1";
+        final String incorrectVariationKey = "vtag2";
+        final String experimentKey = "etag1";
+
+        final AtomicInteger bucketValue = new AtomicInteger();
+        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue);
+
+        Optimizely client = Optimizely.builder(datafile, mockEventHandler)
+                .withBucketing(bucketer)
+                .withConfig(projectConfig)
+                .build();
+
+        // set bucketer value
+        Experiment experiment = projectConfig.getExperimentKeyMapping().get(experimentKey);
+        Variation incorrectVariation = experiment.getVariationKeyToVariationMap().get(incorrectVariationKey);
+        bucketValue.set(BucketerTest.bucketValueForVariationOfExperiment(experiment, incorrectVariation));
+
+        // assert correct bucketing
+        logbackVerifier.expectMessage(Level.INFO, "User \"" + userId + "\" is forced in variation \"" + correctVariationKey + "\".");
+        assertEquals(correctVariationKey, client.getVariation(experiment, userId).getKey());
     }
 
     //======== Helper methods ========//
