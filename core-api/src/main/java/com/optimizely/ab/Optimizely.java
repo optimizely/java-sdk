@@ -519,6 +519,9 @@ public class Optimizely {
                         experimentKey, userId);
             }
         }
+        else {
+            logger.info("The User Profile module is null.");
+        }
 
         // ---------- Check Pre Conditions ----------
         if (!ProjectValidationUtils.validatePreconditions(projectConfig, experiment, userId, attributes)) {
