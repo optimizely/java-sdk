@@ -225,34 +225,7 @@ public class BucketerTest {
         assertNull(algorithm.bucket(experiment, "blah"));
     }
 
-    /**
-     * Verify that {@link Bucketer#bucket(Experiment, String)} returns the specified forced variation for user.
-     */
-    @Test
-    public void bucketUserInForcedVariation() throws Exception {
-        final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
 
-        List<Variation> variations = Collections.singletonList(
-            new Variation("1", "var1")
-        );
-
-        List<TrafficAllocation> trafficAllocations = Collections.singletonList(
-            new TrafficAllocation("1", 1000)
-        );
-
-        Map<String, String> userIdToVariationKeyMap = Collections.singletonMap("testUser1", "var1");
-
-        Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", Collections.<String>emptyList(),
-                                               variations, userIdToVariationKeyMap, trafficAllocations, "");
-
-        logbackVerifier.expectMessage(Level.INFO, "User \"testUser1\" is forced in variation \"var1\".");
-
-        // user is assigned bucket value of 1001 which is out of the traffic allocation range, but the user should
-        // still be forced into var1 because of the forcedVariation mapping.
-        bucketValue.set(1001);
-        assertThat(algorithm.bucket(experiment, "testUser1").getKey(), is("var1"));
-    }
 
     /**
      * Verify that {@link Bucketer#bucket(Experiment, String)} returns the proper variation when the user doesn't
@@ -558,7 +531,7 @@ public class BucketerTest {
      * @param bucketValue the expected bucket value holder
      * @return the mock bucket algorithm
      */
-    private Bucketer mockBucketAlgorithm(final AtomicInteger bucketValue) {
+    public static Bucketer mockBucketAlgorithm(final AtomicInteger bucketValue) {
         return new Bucketer(validProjectConfigV2()) {
             @Override
             int generateBucketValue(int hashCode) {

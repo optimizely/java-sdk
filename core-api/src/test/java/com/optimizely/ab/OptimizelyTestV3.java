@@ -20,6 +20,7 @@ import ch.qos.logback.classic.Level;
 import com.google.common.collect.ImmutableMap;
 
 import com.optimizely.ab.bucketing.Bucketer;
+import com.optimizely.ab.bucketing.BucketerTest;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
@@ -51,6 +52,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -166,14 +168,12 @@ public class OptimizelyTestV3 {
      */
     @Test
     public void initializationOccursForBucketerWhenBuildingOptly() throws Exception {
-        String validDatafile = validConfigJsonV3();
-        ProjectConfig validProjectConfig = validProjectConfigV3();
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
 
         Optimizely client = Optimizely.builder(validDatafile, mockEventHandler)
                 .withBucketing(mockBucketer)
                 .withEventBuilder(mockEventBuilder)
-                .withConfig(projectConfig)
+                .withConfig(validProjectConfig)
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
@@ -1637,17 +1637,22 @@ public class OptimizelyTestV3 {
      * over audience evaluation.
      */
     @Test
-    public void getVariationForcedVariationPrecedesAudienceEval() throws Exception {
-        String validDatafile = validConfigJsonV3();
-        ProjectConfig validProjectConfig = validProjectConfigV3();
+    public void getVariationForcedVariationTrumpsAudienceEvaluation() throws Exception {
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation expectedVariation = experiment.getVariations().get(0);
+        final AtomicInteger bucketValue = new AtomicInteger(8999);
+        Bucketer bucketer = BucketerTest.mockBucketAlgorithm(bucketValue);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
             .withConfig(validProjectConfig)
+            .withBucketing(bucketer)
             .build();
 
+        // user Excluded without audiences and whitelisting
+        assertNull(optimizely.getVariation(experiment.getKey(), genericUserId));
+
         logbackVerifier.expectMessage(Level.INFO, "User \"testUser1\" is forced in variation \"vtag1\".");
+
         // no attributes provided for a experiment that has an audience
         assertThat(optimizely.getVariation(experiment.getKey(), "testUser1"), is(expectedVariation));
     }
