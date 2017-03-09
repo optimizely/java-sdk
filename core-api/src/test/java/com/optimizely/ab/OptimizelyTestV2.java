@@ -18,7 +18,6 @@ package com.optimizely.ab;
 
 import ch.qos.logback.classic.Level;
 import com.google.common.collect.ImmutableMap;
-
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.BucketerTest;
 import com.optimizely.ab.bucketing.UserProfile;
@@ -32,7 +31,7 @@ import com.optimizely.ab.event.internal.EventBuilder;
 import com.optimizely.ab.event.internal.EventBuilderV2;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.internal.ProjectValidationUtils;
-
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,10 +44,7 @@ import org.mockito.junit.MockitoRule;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV2;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.*;
 import static com.optimizely.ab.event.LogEvent.RequestMethod;
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
