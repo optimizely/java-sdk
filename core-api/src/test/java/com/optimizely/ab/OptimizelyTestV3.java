@@ -99,7 +99,7 @@ public class OptimizelyTestV3 {
     @Mock Bucketer mockBucketer;
     @Mock ErrorHandler mockErrorHandler;
 
-    private final String genericUserId = "genericUserId";
+    private static final String genericUserId = "genericUserId";
     private static String validDatafile;
     private static String noAudienceDatafile;
     private static ProjectConfig validProjectConfig;
