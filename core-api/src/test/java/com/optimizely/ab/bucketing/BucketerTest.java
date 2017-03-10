@@ -70,7 +70,7 @@ public class BucketerTest {
     @Test
     @Category(ExhaustiveTest.class)
     public void generateBucketValueDistribution() throws Exception {
-        Assume.assumeTrue(System.getenv("CI").equals("true"));
+        Assume.assumeTrue(Boolean.valueOf(System.getenv("CI")));
         long lowerHalfCount = 0;
         long totalCount = 0;
         int outOfRangeCount = 0;
@@ -87,7 +87,7 @@ public class BucketerTest {
                 outOfRangeCount++;
             }
         }
-
+        assertTrue(false);
         // verify that all values are in the expected range and that 50% of the values are in the lower half
         assertThat(outOfRangeCount, is(0));
         assertThat(Math.round(((double)lowerHalfCount/totalCount) * 100), is(50L));
