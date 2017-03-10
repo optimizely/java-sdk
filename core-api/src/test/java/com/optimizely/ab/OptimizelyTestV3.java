@@ -1104,21 +1104,22 @@ public class OptimizelyTestV3 {
 
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createConversionEvent(eq(projectConfig), eq(mockBucketer), eq("userId"),
-                eq(eventType.getId()), eq(eventType.getKey()),
-                anyMapOf(String.class, String.class), anyMapOf(String.class, Object.class)))
-                .thenReturn(logEventToDispatch);
-
-        logbackVerifier.expectMessage(Level.INFO, "Tracking event \"clicked_cart\" for user \"userId\".");
-        logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
-                testParams + " and payload \"\"");
 
         Map<String, Object> eventTags = new HashMap<String, Object>();
         eventTags.put("int_param", 123);
         eventTags.put("string_param", "123");
         eventTags.put("boolean_param", false);
         eventTags.put("float_param", 12.3f);
+
+        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+        when(mockEventBuilder.createConversionEvent(eq(projectConfig), eq(mockBucketer), eq("userId"),
+                eq(eventType.getId()), eq(eventType.getKey()),
+                anyMapOf(String.class, String.class), eq(eventTags)))
+                .thenReturn(logEventToDispatch);
+
+        logbackVerifier.expectMessage(Level.INFO, "Tracking event \"clicked_cart\" for user \"userId\".");
+        logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
+                testParams + " and payload \"\"");
 
         // call track
         optimizely.track(eventType.getKey(), "userId", Collections.<String, String>emptyMap(), eventTags);
