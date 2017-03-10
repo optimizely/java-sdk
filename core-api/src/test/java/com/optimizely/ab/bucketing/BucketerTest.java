@@ -24,6 +24,7 @@ import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.internal.LogbackVerifier;
 
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,6 +41,7 @@ import ch.qos.logback.classic.Level;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
+import static com.sun.media.jfxmediaimpl.HostUtils.isLinux;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNull;
@@ -79,6 +81,7 @@ public class BucketerTest {
     @Test
     @Category(ExhaustiveTest.class)
     public void generateBucketValueDistribution() throws Exception {
+        Assume.assumeTrue(isLinux());
         long lowerHalfCount = 0;
         long totalCount = 0;
         int outOfRangeCount = 0;
