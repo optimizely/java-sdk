@@ -17,11 +17,10 @@
 package com.optimizely.ab.internal;
 
 import ch.qos.logback.classic.Level;
-
 import com.optimizely.ab.Optimizely;
+import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
-
 import com.optimizely.ab.event.EventHandler;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
@@ -49,7 +48,7 @@ public class ProjectValidationUtilsTestV1 {
     @Mock EventHandler mockEventHandler;
 
     /**
-     * Verify that {@link ProjectValidationUtils#validatePreconditions(ProjectConfig, Experiment, String, Map)} gives
+     * Verify that {@link ProjectValidationUtils#validatePreconditions(ProjectConfig, UserProfile, Experiment, String, Map)} gives
      * precedence to forced variation bucketing over audience evaluation.
      */
     @Test
@@ -58,11 +57,11 @@ public class ProjectValidationUtilsTestV1 {
         Experiment experiment = projectConfig.getExperiments().get(0);
 
         assertTrue(
-                validatePreconditions(projectConfig, experiment, "testUser1", Collections.<String, String>emptyMap()));
+                validatePreconditions(projectConfig, null, experiment, "testUser1", Collections.<String, String>emptyMap()));
     }
 
     /**
-     * Verify that {@link ProjectValidationUtils#validatePreconditions(ProjectConfig, Experiment, String, Map)} gives
+     * Verify that {@link ProjectValidationUtils#validatePreconditions(ProjectConfig, UserProfile, Experiment, String, Map)} gives
      * precedence to experiment status over forced variation bucketing.
      */
     @Test

@@ -288,7 +288,7 @@ public class Optimizely {
         attributes = filterAttributes(currentConfig, attributes);
 
         // create the conversion event request parameters, then dispatch
-        LogEvent conversionEvent = eventBuilder.createConversionEvent(currentConfig, bucketer, userId,
+        LogEvent conversionEvent = eventBuilder.createConversionEvent(currentConfig, bucketer, userProfile, userId,
                                                                       eventType.getId(), eventType.getKey(), attributes,
                                                                       eventValue, sessionId);
 
@@ -524,7 +524,7 @@ public class Optimizely {
         }
 
         // ---------- Check Pre Conditions ----------
-        if (!ProjectValidationUtils.validatePreconditions(projectConfig, experiment, userId, attributes)) {
+        if (!ProjectValidationUtils.validatePreconditions(projectConfig, userProfile, experiment, userId, attributes)) {
             return null;
         }
 

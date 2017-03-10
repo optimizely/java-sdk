@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.internal;
 
+import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.Condition;
@@ -40,10 +41,18 @@ public final class ProjectValidationUtils {
      * @param attributes the attributes of the user
      * @return whether the pre-conditions are satisfied
      */
-    public static boolean validatePreconditions(ProjectConfig projectConfig, Experiment experiment, String userId,
+    public static boolean validatePreconditions(ProjectConfig projectConfig, UserProfile userProfile, Experiment experiment, String userId,
                                                 Map<String, String> attributes) {
 
+        if (!experiment.isActive()) {
+            return false;
+        }
+
         if (experiment.getUserIdToVariationKeyMap().containsKey(userId)) {
+            return true;
+        }
+
+        if (userProfile != null && userProfile.lookup(userId, experiment.getId()) != null) {
             return true;
         }
 
