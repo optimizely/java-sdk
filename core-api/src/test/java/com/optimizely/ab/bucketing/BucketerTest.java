@@ -48,7 +48,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-
 /**
  * Tests for {@link Bucketer}.
  */
@@ -96,7 +95,7 @@ public class BucketerTest {
                 outOfRangeCount++;
             }
         }
-        
+
         // verify that all values are in the expected range and that 50% of the values are in the lower half
         assertThat(outOfRangeCount, is(0));
         assertThat(Math.round(((double)lowerHalfCount/totalCount) * 100), is(50L));
