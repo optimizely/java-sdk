@@ -41,11 +41,16 @@ import com.optimizely.ab.internal.ReservedEventKey;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.closeTo;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -245,7 +250,7 @@ public class EventBuilderV2Test {
         assertThat(conversion.getEventEntityId(), is(eventType.getId()));
         assertThat(conversion.getEventName(), is(eventType.getKey()));
         assertThat(conversion.getEventMetrics(), is(Collections.<EventMetric>emptyList()));
-        assertThat(conversion.getEventFeatures(), is(expectedEventFeatures));
+        assertTrue(conversion.getEventFeatures().equals(expectedEventFeatures));
         assertFalse(conversion.getIsGlobalHoldback());
         assertThat(conversion.getAnonymizeIP(), is(projectConfig.getAnonymizeIP()));
         assertThat(conversion.getClientEngine(), is(ClientEngine.JAVA_SDK.getClientEngineValue()));

@@ -76,7 +76,7 @@ subprojects {
         }
 
         testLogging {
-            showStandardStreams = true
+            showStandardStreams = false
         }
     }
 
