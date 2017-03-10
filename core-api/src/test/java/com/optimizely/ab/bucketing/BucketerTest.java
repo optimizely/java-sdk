@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.bucketing;
 
+import ch.qos.logback.classic.Level;
 import com.optimizely.ab.bucketing.internal.MurmurHash3;
 import com.optimizely.ab.categories.ExhaustiveTest;
 import com.optimizely.ab.config.Experiment;
@@ -23,33 +24,21 @@ import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.internal.LogbackVerifier;
-
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import ch.qos.logback.classic.Level;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
-import static com.sun.media.jfxmediaimpl.HostUtils.isLinux;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for {@link Bucketer}.
@@ -81,7 +70,7 @@ public class BucketerTest {
     @Test
     @Category(ExhaustiveTest.class)
     public void generateBucketValueDistribution() throws Exception {
-        Assume.assumeTrue(isLinux());
+        Assume.assumeTrue(System.getProperty("os.name").contains("Linux"));
         long lowerHalfCount = 0;
         long totalCount = 0;
         int outOfRangeCount = 0;
