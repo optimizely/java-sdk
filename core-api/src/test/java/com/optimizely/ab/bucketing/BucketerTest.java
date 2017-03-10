@@ -70,10 +70,7 @@ public class BucketerTest {
     @Test
     @Category(ExhaustiveTest.class)
     public void generateBucketValueDistribution() throws Exception {
-        System.out.println("starting generateBucketValueDistribution");
-        System.out.println("CI Value is " + System.getenv("CI"));
         Assume.assumeTrue(Boolean.valueOf(System.getenv("CI")));
-        assertTrue(false);
         long lowerHalfCount = 0;
         long totalCount = 0;
         int outOfRangeCount = 0;
