@@ -70,7 +70,7 @@ public class BucketerTest {
     @Test
     @Category(ExhaustiveTest.class)
     public void generateBucketValueDistribution() throws Exception {
-        Assume.assumeTrue(System.getProperty("os.name").contains("Linux"));
+        Assume.assumeTrue(System.getenv("CI").equals("true"));
         long lowerHalfCount = 0;
         long totalCount = 0;
         int outOfRangeCount = 0;
