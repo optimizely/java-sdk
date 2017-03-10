@@ -5,7 +5,6 @@ jdk:
   - oraclejdk8
 install: true
 script:
-    - "echo $CI"
     - "./gradlew clean"
     - "./gradlew exhaustiveTest"
     - "if [[ -n $TRAVIS_TAG ]]; then
