@@ -636,7 +636,7 @@ public class OptimizelyTestV3 {
             .build();
 
         logbackVerifier.expectMessage(Level.ERROR, "Non-empty user ID required");
-        logbackVerifier.expectMessage(Level.INFO, "Not activating user for experiment \"" + experimentKey + "\".");
+        logbackVerifier.expectMessage(Level.INFO, "Not activating user \"\" for experiment \"" + experimentKey + "\".");
         assertNull(optimizely.activate(experimentKey, ""));
     }
 
@@ -1784,9 +1784,7 @@ public class OptimizelyTestV3 {
      */
     @Test public void getVariationReturnsVariationStoredInUserProfileInsteadOfBucketing() throws Exception {
         // get constants
-        final String datafile = noAudienceProjectConfigJsonV3();
-        final ProjectConfig projectConfig = noAudienceProjectConfigV3();
-        final Experiment experiment = projectConfig.getExperiments().get(0);
+        final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
         final Variation storedVariation = experiment.getVariations().get(0);
 
         // mock user profile
@@ -1796,12 +1794,12 @@ public class OptimizelyTestV3 {
         // mock bucketer
         final Variation bucketedVariation = experiment.getVariations().get(1);
         final AtomicInteger bucketValue = new AtomicInteger(BucketerTest.bucketValueForVariationOfExperiment(experiment, bucketedVariation));
-        Bucketer bucketer = BucketerTest.mockBucketAlgorithm(bucketValue);
+        Bucketer bucketer = BucketerTest.mockBucketAlgorithm(bucketValue, noAudienceProjectConfig, userProfile);
 
         // create client
-        Optimizely client = Optimizely.builder(datafile, mockEventHandler)
+        Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
                 .withBucketing(bucketer)
-                .withConfig(projectConfig)
+                .withConfig(noAudienceProjectConfig)
                 .withUserProfile(userProfile)
                 .build();
 
@@ -1815,7 +1813,7 @@ public class OptimizelyTestV3 {
         // asset stored user profile user gets bucketed to stored variation
         assertEquals(storedVariation, client.getVariation(experiment, userProfileId));
 
-        verify(userProfile).lookup(userProfileId, experiment.getId());
+        verify(userProfile, times(2)).lookup(userProfileId, experiment.getId());
     }
 
     /**
@@ -1824,8 +1822,6 @@ public class OptimizelyTestV3 {
      */
     @Test
     public void getVariationReturnsNullWhenInvalidVariationKeyIsFoundInForcedVariationsMapping() throws Exception {
-        final String datafile = noAudienceProjectConfigJsonV3();
-        final ProjectConfig projectConfig = noAudienceProjectConfigV3();
         String userId = "whitelistedUser";
 
         // modify the configured project config
@@ -1845,27 +1841,27 @@ public class OptimizelyTestV3 {
         // inject malformed experiment into experiments list
         ArrayList<Experiment> overriddenExperiments = new ArrayList<Experiment>();
         overriddenExperiments.add(customExperiment);
-        for (Experiment experiment : projectConfig.getExperiments()) {
+        for (Experiment experiment : noAudienceProjectConfig.getExperiments()) {
             overriddenExperiments.add(experiment);
         }
 
         // create a new project config with the messed up experiment
-        final ProjectConfig modifiedProjectConfig = new ProjectConfig(projectConfig.getAccountId(),
-                projectConfig.getProjectId(),
-                projectConfig.getVersion(),
-                projectConfig.getRevision(),
-                projectConfig.getGroups(),
+        final ProjectConfig modifiedProjectConfig = new ProjectConfig(noAudienceProjectConfig.getAccountId(),
+                noAudienceProjectConfig.getProjectId(),
+                noAudienceProjectConfig.getVersion(),
+                noAudienceProjectConfig.getRevision(),
+                noAudienceProjectConfig.getGroups(),
                 overriddenExperiments,
-                projectConfig.getAttributes(),
-                projectConfig.getEventTypes(),
-                projectConfig.getAudiences(),
-                projectConfig.getAnonymizeIP(),
-                projectConfig.getLiveVariables());
+                noAudienceProjectConfig.getAttributes(),
+                noAudienceProjectConfig.getEventTypes(),
+                noAudienceProjectConfig.getAudiences(),
+                noAudienceProjectConfig.getAnonymizeIP(),
+                noAudienceProjectConfig.getLiveVariables());
         final AtomicInteger bucketValue = new AtomicInteger();
         Bucketer bucketer = BucketerTest.mockBucketAlgorithm(bucketValue);
 
 
-        Optimizely client = Optimizely.builder(datafile, mockEventHandler)
+        Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
                 .withBucketing(bucketer)
                 .withConfig(modifiedProjectConfig)
                 .build();
@@ -1884,8 +1880,6 @@ public class OptimizelyTestV3 {
      */
     @Test
     public void getVariationMakesForcedVariationOverrideExperimentBucketing() throws Exception {
-        final String datafile = noAudienceProjectConfigJsonV3();
-        final ProjectConfig projectConfig = noAudienceProjectConfigV3();
         final String userId = "testUser1";
         final String correctVariationKey = "vtag1";
         final String incorrectVariationKey = "vtag2";
@@ -1894,13 +1888,13 @@ public class OptimizelyTestV3 {
         final AtomicInteger bucketValue = new AtomicInteger();
         Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue);
 
-        Optimizely client = Optimizely.builder(datafile, mockEventHandler)
+        Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
                 .withBucketing(bucketer)
-                .withConfig(projectConfig)
+                .withConfig(noAudienceProjectConfig)
                 .build();
 
         // set bucketer value
-        Experiment experiment = projectConfig.getExperimentKeyMapping().get(experimentKey);
+        Experiment experiment = noAudienceProjectConfig.getExperimentKeyMapping().get(experimentKey);
         Variation incorrectVariation = experiment.getVariationKeyToVariationMap().get(incorrectVariationKey);
         bucketValue.set(BucketerTest.bucketValueForVariationOfExperiment(experiment, incorrectVariation));
 
@@ -1914,23 +1908,21 @@ public class OptimizelyTestV3 {
      * returning null when looking up a variation.
      */
     @Test public void getVariationBucketsWhenNullReturnedFromUserProfileLookup() throws Exception {
-        final String datafile = noAudienceProjectConfigJsonV3();
-        final ProjectConfig projectConfig = noAudienceProjectConfigV3();
         final String userId = "someUser";
 
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue);
         UserProfile userProfile = mock(UserProfile.class);
+        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue, noAudienceProjectConfig, userProfile);
 
-        Optimizely client = Optimizely.builder(datafile, mockEventHandler)
+        Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
                 .withBucketing(bucketer)
-                .withConfig(projectConfig)
+                .withConfig(noAudienceProjectConfig)
                 .withUserProfile(userProfile)
                 .build();
 
         bucketValue.set(3000);
 
-        Experiment experiment = projectConfig.getExperiments().get(0);
+        Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
         final Variation variation = experiment.getVariations().get(0);
 
         when(userProfile.lookup(userId, experiment.getId())).thenReturn(null);
@@ -1947,23 +1939,21 @@ public class OptimizelyTestV3 {
      * when a {@link UserProfile} is present.
      */
     @Test public void getVariationSavesActivationWithUserProfile() throws Exception {
-        final String datafile = noAudienceProjectConfigJsonV3();
-        final ProjectConfig projectConfig = noAudienceProjectConfigV3();
         final String userId = "someUser";
 
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue);
         UserProfile userProfile = mock(UserProfile.class);
+        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue, noAudienceProjectConfig, userProfile);
 
-        Optimizely client = Optimizely.builder(datafile, mockEventHandler)
+        Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
                 .withBucketing(bucketer)
-                .withConfig(projectConfig)
+                .withConfig(noAudienceProjectConfig)
                 .withUserProfile(userProfile)
                 .build();
 
         bucketValue.set(3000);
 
-        final Experiment experiment = projectConfig.getExperiments().get(0);
+        final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
         final Variation variation = experiment.getVariations().get(0);
 
         when(userProfile.lookup(userId, experiment.getId())).thenReturn(null);
@@ -1987,23 +1977,21 @@ public class OptimizelyTestV3 {
      * when a {@link UserProfile} is present but fails to save an activation.
      */
     @Test public void getVariationLogsCorrectlyWhenUserProfileFailsToSave() throws Exception {
-        final String datafile = noAudienceProjectConfigJsonV3();
-        final ProjectConfig projectConfig = noAudienceProjectConfigV3();
         final String userId = "someUser";
 
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue);
         UserProfile userProfile = mock(UserProfile.class);
+        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue, noAudienceProjectConfig, userProfile);
 
-        Optimizely client = Optimizely.builder(datafile, mockEventHandler)
+        Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
                 .withBucketing(bucketer)
-                .withConfig(projectConfig)
+                .withConfig(noAudienceProjectConfig)
                 .withUserProfile(userProfile)
                 .build();
 
         bucketValue.set(3000);
 
-        final Experiment experiment = projectConfig.getExperiments().get(0);
+        final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
         final Variation variation = experiment.getVariations().get(0);
 
         when(userProfile.lookup(userId, experiment.getId())).thenReturn(null);

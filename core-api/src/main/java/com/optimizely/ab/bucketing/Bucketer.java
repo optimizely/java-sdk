@@ -26,12 +26,11 @@ import com.optimizely.ab.config.Variation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Default Optimizely bucketing algorithm that evenly distributes users using the Murmur3 hash of some provided
@@ -46,6 +45,7 @@ import javax.annotation.concurrent.Immutable;
 public class Bucketer {
 
     private final ProjectConfig projectConfig;
+    private final UserProfile userProfile;
 
     private static final Logger logger = LoggerFactory.getLogger(Bucketer.class);
 
@@ -63,6 +63,7 @@ public class Bucketer {
 
     public Bucketer(ProjectConfig projectConfig, @Nullable UserProfile userProfile) {
         this.projectConfig = projectConfig;
+        this.userProfile = userProfile;
     }
 
     private String bucketToEntity(int bucketValue, List<TrafficAllocation> trafficAllocations) {
@@ -135,8 +136,50 @@ public class Bucketer {
     public @Nullable Variation bucket(@Nonnull Experiment experiment,
                                       @Nonnull String userId) {
 
+        // ---------- Check for Whitelisting ----------
+        // if a user has a forced variation mapping, return the respective variation
+        Map<String, String> userIdToVariationKeyMap = experiment.getUserIdToVariationKeyMap();
+        if (userIdToVariationKeyMap.containsKey(userId)) {
+            String forcedVariationKey = userIdToVariationKeyMap.get(userId);
+            Variation forcedVariation = experiment.getVariationKeyToVariationMap().get(forcedVariationKey);
+            if (forcedVariation != null) {
+                logger.info("User \"{}\" is forced in variation \"{}\".", userId, forcedVariationKey);
+            } else {
+                logger.error("Variation \"{}\" is not in the datafile. Not activating user \"{}\".", forcedVariationKey,
+                        userId);
+            }
 
+            return forcedVariation;
+        }
 
+        // ---------- Check User Profile for Sticky Bucketing ----------
+        // If a user profile instance is present then check it for a saved variation
+        String experimentId = experiment.getId();
+        String experimentKey = experiment.getKey();
+        if (userProfile != null) {
+            String variationId = userProfile.lookup(userId, experimentId);
+            if (variationId != null) {
+                Variation savedVariation = projectConfig
+                        .getExperimentIdMapping()
+                        .get(experimentId)
+                        .getVariationIdToVariationMap()
+                        .get(variationId);
+                logger.info("Returning previously activated variation \"{}\" of experiment \"{}\" "
+                                + "for user \"{}\" from user profile.",
+                        savedVariation.getKey(), experimentKey, userId);
+                // A variation is stored for this combined bucket id
+                return savedVariation;
+            } else {
+                logger.info("No previously activated variation of experiment \"{}\" "
+                                + "for user \"{}\" found in user profile.",
+                        experimentKey, userId);
+            }
+        }
+        else {
+            logger.info("The User Profile module is null.");
+        }
+
+        // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group
         if (!groupId.isEmpty()) {
@@ -151,12 +194,12 @@ public class Bucketer {
                 // don't perform further bucketing within the experiment
                 if (!bucketedExperiment.getId().equals(experiment.getId())) {
                     logger.info("User \"{}\" is not in experiment \"{}\" of group {}.", userId, experiment.getKey(),
-                                experimentGroup.getId());
+                            experimentGroup.getId());
                     return null;
                 }
 
                 logger.info("User \"{}\" is in experiment \"{}\" of group {}.", userId, experiment.getKey(),
-                            experimentGroup.getId());
+                        experimentGroup.getId());
             }
         }
 

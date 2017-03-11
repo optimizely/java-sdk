@@ -634,7 +634,7 @@ public class OptimizelyTestV2 {
                 .build();
 
         logbackVerifier.expectMessage(Level.ERROR, "Non-empty user ID required");
-        logbackVerifier.expectMessage(Level.INFO, "Not activating user for experiment \"" + experimentKey + "\".");
+        logbackVerifier.expectMessage(Level.INFO, "Not activating user \"\" for experiment \"" + experimentKey + "\".");
         assertNull(optimizely.activate(experimentKey, ""));
     }
 
@@ -1524,7 +1524,7 @@ public class OptimizelyTestV2 {
         // mock bucketer
         final Variation bucketedVariation = experiment.getVariations().get(1);
         final AtomicInteger bucketValue = new AtomicInteger(BucketerTest.bucketValueForVariationOfExperiment(experiment, bucketedVariation));
-        Bucketer bucketer = BucketerTest.mockBucketAlgorithm(bucketValue);
+        Bucketer bucketer = BucketerTest.mockBucketAlgorithm(bucketValue, noAudienceProjectConfig, userProfile);
 
         // create client
         Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
@@ -1543,7 +1543,7 @@ public class OptimizelyTestV2 {
         // asset stored user profile user gets bucketed to stored variation
         assertEquals(storedVariation, client.getVariation(experiment, userProfileId));
 
-        verify(userProfile).lookup(userProfileId, experiment.getId());
+        verify(userProfile, times(2)).lookup(userProfileId, experiment.getId());
     }
 
     /**
@@ -1641,8 +1641,8 @@ public class OptimizelyTestV2 {
         final String userId = "someUser";
 
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue);
         UserProfile userProfile = mock(UserProfile.class);
+        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue, noAudienceProjectConfig, userProfile);
 
         Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
                 .withBucketing(bucketer)
@@ -1672,8 +1672,8 @@ public class OptimizelyTestV2 {
         final String userId = "someUser";
 
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue);
         UserProfile userProfile = mock(UserProfile.class);
+        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue, noAudienceProjectConfig, userProfile);
 
         Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
                 .withBucketing(bucketer)
@@ -1710,8 +1710,8 @@ public class OptimizelyTestV2 {
         final String userId = "someUser";
 
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue);
         UserProfile userProfile = mock(UserProfile.class);
+        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue, noAudienceProjectConfig, userProfile);
 
         Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
                 .withBucketing(bucketer)

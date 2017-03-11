@@ -469,68 +469,14 @@ public class Optimizely {
                                             @Nonnull Experiment experiment,
                                             @Nonnull Map<String, String> attributes,
                                             @Nonnull String userId) {
-        if (!validateUserId(userId)) {
-            logger.info("Not activating user for experiment \"{}\".", experiment.getKey());
-            return null;
-        }
-
-        // ---------- Check that the experiment is Active -----------
-        if (!experiment.isActive()) {
-            logger.info("Experiment \"{}\" is not running.", experiment.getKey(), userId);
-            return null;
-        }
-
-        // ---------- Check for Whitelisting ----------
-        // if a user has a forced variation mapping, return the respective variation
-        Map<String, String> userIdToVariationKeyMap = experiment.getUserIdToVariationKeyMap();
-        if (userIdToVariationKeyMap.containsKey(userId)) {
-            String forcedVariationKey = userIdToVariationKeyMap.get(userId);
-            Variation forcedVariation = experiment.getVariationKeyToVariationMap().get(forcedVariationKey);
-            if (forcedVariation != null) {
-                logger.info("User \"{}\" is forced in variation \"{}\".", userId, forcedVariationKey);
-            } else {
-                logger.error("Variation \"{}\" is not in the datafile. Not activating user \"{}\".", forcedVariationKey,
-                        userId);
-            }
-
-            return forcedVariation;
-        }
-
-        // ---------- Check User Profile for Sticky Bucketing ----------
-        // If a user profile instance is present then check it for a saved variation
-        String experimentId = experiment.getId();
-        String experimentKey = experiment.getKey();
-        if (userProfile != null) {
-            String variationId = userProfile.lookup(userId, experimentId);
-            if (variationId != null) {
-                Variation savedVariation = projectConfig
-                        .getExperimentIdMapping()
-                        .get(experimentId)
-                        .getVariationIdToVariationMap()
-                        .get(variationId);
-                logger.info("Returning previously activated variation \"{}\" of experiment \"{}\" "
-                                + "for user \"{}\" from user profile.",
-                        savedVariation.getKey(), experimentKey, userId);
-                // A variation is stored for this combined bucket id
-                return savedVariation;
-            } else {
-                logger.info("No previously activated variation of experiment \"{}\" "
-                                + "for user \"{}\" found in user profile.",
-                        experimentKey, userId);
-            }
-        }
-        else {
-            logger.info("The User Profile module is null.");
-        }
-
         // ---------- Check Pre Conditions ----------
         if (!ProjectValidationUtils.validatePreconditions(projectConfig, userProfile, experiment, userId, attributes)) {
             return null;
         }
 
-        // ---------- Bucket User ----------
         Variation bucketedVariation = bucketer.bucket(experiment, userId);
 
+        String experimentId = experiment.getId();
         // ---------- Save Variation to User Profile ----------
         // If a user profile is present give it a variation to store
         if (userProfile != null && bucketedVariation != null) {
