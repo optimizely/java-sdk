@@ -230,7 +230,7 @@ public class EventBuilderV2Test {
 
         // verify payload information
         assertThat(conversion.getVisitorId(), is(userId));
-//        assertThat((double)conversion.getTimestamp(), closeTo((double)System.currentTimeMillis(), 60.0));
+        assertThat((double)conversion.getTimestamp(), closeTo((double)System.currentTimeMillis(), 60.0));
         assertThat(conversion.getProjectId(), is(projectConfig.getProjectId()));
         assertThat(conversion.getAccountId(), is(projectConfig.getAccountId()));
 
