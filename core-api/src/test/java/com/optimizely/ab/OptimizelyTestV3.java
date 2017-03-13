@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.BucketerTest;
 import com.optimizely.ab.bucketing.UserProfile;
+import com.optimizely.ab.bucketing.UserProfileSimple;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
@@ -146,6 +147,7 @@ public class OptimizelyTestV3 {
      * Verify that initialization of Optimizely cleans user profiles
      * @throws Exception
      */
+    @SuppressFBWarnings
     @Test
     public void initializationCleansUserProfile() throws Exception {
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
@@ -1783,6 +1785,7 @@ public class OptimizelyTestV3 {
      * Verify that {@link Optimizely#getVariation(String, String)} returns a variation that is
      * stored in the provided {@link UserProfile} instead of calling {@link Bucketer#bucket(Experiment, String)}.
      */
+    @SuppressFBWarnings
     @Test public void getVariationReturnsVariationStoredInUserProfileInsteadOfBucketing() throws Exception {
         // get constants
         final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
@@ -1908,6 +1911,7 @@ public class OptimizelyTestV3 {
      * Verify {@link Optimizely#getVariation(Experiment,String)} handles a present {@link UserProfile}
      * returning null when looking up a variation.
      */
+    @SuppressFBWarnings
     @Test public void getVariationBucketsWhenNullReturnedFromUserProfileLookup() throws Exception {
         final String userId = "someUser";
 
@@ -1939,6 +1943,7 @@ public class OptimizelyTestV3 {
      * Verify that {@link Optimizely#getVariation(Experiment,String)} saves a variation of an experiment for a user
      * when a {@link UserProfile} is present.
      */
+    @SuppressFBWarnings
     @Test public void getVariationSavesActivationWithUserProfile() throws Exception {
         final String userId = "someUser";
 
@@ -2007,6 +2012,7 @@ public class OptimizelyTestV3 {
         verify(userProfile).save(userId, experiment.getId(), variation.getId());
     }
 
+
     /**
      * Makes sure we log a warning to users if their client is built without user profile.
      * @throws ConfigParseException
@@ -2016,6 +2022,33 @@ public class OptimizelyTestV3 {
 
         logbackVerifier.expectMessage(Level.WARN,
                 "User Profile is null");
+    }
+
+    /**
+     * Check that the user profile is cleaned of variations that have been removed from the datafile.
+     * @throws ConfigParseException
+     */
+    @SuppressFBWarnings
+    @Test public void userProfileIsCleanedOnClientInitialization() throws ConfigParseException {
+        Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
+        Variation variation = experiment.getVariations().get(0);
+
+        final AtomicInteger bucketValue = new AtomicInteger(BucketerTest.bucketValueForVariationOfExperiment(experiment, variation));
+        UserProfileSimple userProfile = spy(UserProfileSimple.class);
+        userProfile.save(userProfileId, experiment.getId(), "variationId");
+        Bucketer bucketer = BucketerTest.mockBucketAlgorithm(bucketValue, noAudienceProjectConfig, userProfile);
+
+        Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
+                .withBucketing(bucketer)
+                .withUserProfile(userProfile)
+                .build();
+
+        verify(userProfile).getAllRecords();
+        verify(userProfile).remove(userProfileId, experiment.getId());
+        assertNull(userProfile.lookup(userProfileId, experiment.getId()));
+
+        // check user gets bucketed as new user
+        assertEquals(variation, client.getVariation(experiment, userProfileId));
     }
 
     //======== Helper methods ========//

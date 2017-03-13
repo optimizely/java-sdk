@@ -130,6 +130,7 @@ public class OptimizelyTestV1 {
      * Verify that initialization of Optimizely cleans user profiles
      * @throws Exception
      */
+    @SuppressFBWarnings
     @Test
     public void initializationCleansUserProfile() throws Exception {
         String datafile = validConfigJsonV1();

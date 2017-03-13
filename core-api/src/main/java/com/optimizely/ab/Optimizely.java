@@ -531,9 +531,14 @@ public class Optimizely {
                 for (Map.Entry<String,Map<String,String>> record : records.entrySet()) {
                     for (String experimentId : record.getValue().keySet()) {
                         Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
-                        if (experiment == null || !experiment.isActive()) {
-                            userProfile.remove(record.getKey(), experimentId);
+                        if (experiment != null && experiment.isActive()) {
+                            String variationId = record.getValue().get(experimentId);
+                            Variation variation = experiment.getVariationIdToVariationMap().get(variationId);
+                            if (variation != null) {
+                                continue;
+                            }
                         }
+                        userProfile.remove(record.getKey(), experimentId);
                     }
                 }
             }
