@@ -22,6 +22,7 @@ import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.BucketerTest;
 import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.config.*;
+import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
@@ -2004,6 +2005,17 @@ public class OptimizelyTestV3 {
                         experiment.getId()));
 
         verify(userProfile).save(userId, experiment.getId(), variation.getId());
+    }
+
+    /**
+     * Makes sure we log a warning to users if their client is built without user profile.
+     * @throws ConfigParseException
+     */
+    @Test public void builderLogsWhenUserProfileIsNull() throws ConfigParseException {
+        Optimizely.builder(validDatafile, mockEventHandler).build();
+
+        logbackVerifier.expectMessage(Level.WARN,
+                "User Profile is null");
     }
 
     //======== Helper methods ========//

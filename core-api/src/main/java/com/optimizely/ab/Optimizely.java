@@ -786,6 +786,10 @@ public class Optimizely {
                 projectConfig = Optimizely.getProjectConfig(datafile);
             }
 
+            if (userProfile == null) {
+                logger.warn("User Profile is null");
+            }
+
             // use the default bucketer and event builder, if no overrides were provided
             if (bucketer == null) {
                 bucketer = new Bucketer(projectConfig, userProfile);
