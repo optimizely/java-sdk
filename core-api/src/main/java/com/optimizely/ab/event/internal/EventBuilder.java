@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely and contributors
+ *    Copyright 2016-2017, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,24 +27,16 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import java.util.Collections;
 import java.util.Map;
 
 public abstract class EventBuilder {
-
-    public LogEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
-                                          @Nonnull Experiment activatedExperiment,
-                                          @Nonnull Variation variation,
-                                          @Nonnull String userId,
-                                          @Nonnull Map<String, String> attributes) {
-        return createImpressionEvent(projectConfig, activatedExperiment, variation, userId, attributes, null);
-    }
 
     public abstract LogEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
                                                    @Nonnull Experiment activatedExperiment,
                                                    @Nonnull Variation variation,
                                                    @Nonnull String userId,
-                                                   @Nonnull Map<String, String> attributes,
-                                                   @CheckForNull String sessionId);
+                                                   @Nonnull Map<String, String> attributes);
 
     public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
                                           @Nonnull Bucketer bucketer,
@@ -53,19 +45,7 @@ public abstract class EventBuilder {
                                           @Nonnull String eventId,
                                           @Nonnull String eventName,
                                           @Nonnull Map<String, String> attributes) {
-        return createConversionEvent(projectConfig, bucketer, userProfile, userId, eventId, eventName, attributes, null, null);
-    }
-
-    public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
-                                          @Nonnull Bucketer bucketer,
-                                          @Nullable UserProfile userProfile,
-                                          @Nonnull String userId,
-                                          @Nonnull String eventId,
-                                          @Nonnull String eventName,
-                                          @Nonnull Map<String, String> attributes,
-                                          long eventValue) {
-        return createConversionEvent(projectConfig, bucketer, userProfile, userId, eventId, eventName, attributes, (Long)eventValue,
-                                     null);
+        return createConversionEvent(projectConfig, bucketer, userProfile, userId, eventId, eventName, attributes, Collections.<String, String>emptyMap());
     }
 
     public abstract LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
@@ -75,6 +55,5 @@ public abstract class EventBuilder {
                                                    @Nonnull String eventId,
                                                    @Nonnull String eventName,
                                                    @Nonnull Map<String, String> attributes,
-                                                   @CheckForNull Long eventValue,
-                                                   @CheckForNull String sessionId);
+                                                   @Nonnull Map<String, ?> eventTags);
 }
