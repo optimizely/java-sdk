@@ -489,19 +489,20 @@ public class Optimizely {
             return;
         }
         Map<String, Map<String,String>> records = userProfile.getAllRecords();
-        if (records != null) {
-            for (Map.Entry<String,Map<String,String>> record : records.entrySet()) {
-                for (String experimentId : record.getValue().keySet()) {
-                    Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
-                    if (experiment != null && experiment.isActive()) {
-                        String variationId = record.getValue().get(experimentId);
-                        Variation variation = experiment.getVariationIdToVariationMap().get(variationId);
-                        if (variation != null) {
-                            continue;
-                        }
+        if (records == null) {
+            return;
+        }
+        for (Map.Entry<String,Map<String,String>> record : records.entrySet()) {
+            for (String experimentId : record.getValue().keySet()) {
+                Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
+                if (experiment != null && experiment.isActive()) {
+                    String variationId = record.getValue().get(experimentId);
+                    Variation variation = experiment.getVariationIdToVariationMap().get(variationId);
+                    if (variation != null) {
+                        continue;
                     }
-                    userProfile.remove(record.getKey(), experimentId);
                 }
+                userProfile.remove(record.getKey(), experimentId);
             }
         }
     }
