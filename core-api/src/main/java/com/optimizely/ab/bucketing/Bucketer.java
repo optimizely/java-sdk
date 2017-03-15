@@ -200,7 +200,23 @@ public class Bucketer {
             }
         }
 
-        return bucketToVariation(experiment, userId);
+        Variation bucketedVariation = bucketToVariation(experiment, userId);
+
+        // ---------- Save Variation to User Profile ----------
+        // If a user profile is present give it a variation to store
+        if (userProfile != null && bucketedVariation != null) {
+            String bucketedVariationId = bucketedVariation.getId();
+            boolean saved = userProfile.save(userId, experimentId, bucketedVariationId);
+            if (saved) {
+                logger.info("Saved variation \"{}\" of experiment \"{}\" for user \"{}\".",
+                        bucketedVariationId, experimentId, userId);
+            } else {
+                logger.warn("Failed to save variation \"{}\" of experiment \"{}\" for user \"{}\".",
+                        bucketedVariationId, experimentId, userId);
+            }
+        }
+
+        return bucketedVariation;
     }
 
     //======== Helper methods ========//

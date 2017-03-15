@@ -432,24 +432,7 @@ public class Optimizely {
             return null;
         }
 
-        Variation bucketedVariation = bucketer.bucket(experiment, userId);
-
-        String experimentId = experiment.getId();
-        // ---------- Save Variation to User Profile ----------
-        // If a user profile is present give it a variation to store
-        if (userProfile != null && bucketedVariation != null) {
-            String bucketedVariationId = bucketedVariation.getId();
-            boolean saved = userProfile.save(userId, experimentId, bucketedVariationId);
-            if (saved) {
-                logger.info("Saved variation \"{}\" of experiment \"{}\" for user \"{}\".",
-                        bucketedVariationId, experimentId, userId);
-            } else {
-                logger.warn("Failed to save variation \"{}\" of experiment \"{}\" for user \"{}\".",
-                        bucketedVariationId, experimentId, userId);
-            }
-        }
-
-        return bucketedVariation;
+        return bucketer.bucket(experiment, userId);
     }
 
     /**
