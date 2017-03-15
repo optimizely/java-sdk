@@ -1,8 +1,3 @@
-package com.optimizely.ab.bucketing;
-
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  *
  *    Copyright 2016-2017, Optimizely and contributors
@@ -18,6 +13,14 @@ import java.util.Map;
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
+ */
+package com.optimizely.ab.bucketing;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * A simple example of an implementation of the {@link UserProfile} interface.
  */
 public class UserProfileSimple implements UserProfile {
 
