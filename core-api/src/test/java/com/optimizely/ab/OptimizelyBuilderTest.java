@@ -194,7 +194,7 @@ public class OptimizelyBuilderTest {
     }
 
     /**
-     * Verify {@link Optimizely#cleanUserProfiles()} handles a null {@link UserProfile}.
+     * Verify {@link com.optimizely.ab.bucketing.UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} handles a null {@link UserProfile}.
      */
     @Test
     public void nullUserProfileWhenCleaning() throws Exception {
@@ -207,7 +207,7 @@ public class OptimizelyBuilderTest {
     }
 
     /**
-     * Verify {@link Optimizely#cleanUserProfiles()} handles a null returned from
+     * Verify {@link com.optimizely.ab.bucketing.UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} handles a null returned from
      * {@link UserProfile#getAllRecords()}.
      */
     @Test
@@ -226,7 +226,7 @@ public class OptimizelyBuilderTest {
     }
 
     /**
-     * Verify {@link Optimizely#cleanUserProfiles()} removes experiments
+     * Verify {@link com.optimizely.ab.bucketing.UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} removes experiments
      * that are no longer in the {@link ProjectConfig}.
      */
     @Test
@@ -252,7 +252,7 @@ public class OptimizelyBuilderTest {
     }
 
     /**
-     * Verify {@link Optimizely#cleanUserProfiles()} removes experiments
+     * Verify {@link com.optimizely.ab.bucketing.UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} removes experiments
      * that are paused in the {@link ProjectConfig}.
      */
     @Test

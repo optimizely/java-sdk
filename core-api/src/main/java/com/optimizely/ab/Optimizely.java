@@ -19,6 +19,7 @@ package com.optimizely.ab;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.UserProfile;
+import com.optimizely.ab.bucketing.UserProfileUtils;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
@@ -112,7 +113,7 @@ public class Optimizely {
 
     // Do work here that should be done once per Optimizely lifecycle
     @VisibleForTesting void initialize() {
-        this.cleanUserProfiles();
+        UserProfileUtils.cleanUserProfiles(userProfile, projectConfig);
     }
 
     //======== activate calls ========//
@@ -461,32 +462,6 @@ public class Optimizely {
         return userProfile;
     }
 
-    /**
-     * Removes experiments that are no longer in the datafile as well as inactive experiments
-     * from the {@link UserProfile} implementation.
-     */
-    private void cleanUserProfiles() {
-        if (userProfile == null) {
-            return;
-        }
-        Map<String, Map<String,String>> records = userProfile.getAllRecords();
-        if (records == null) {
-            return;
-        }
-        for (Map.Entry<String,Map<String,String>> record : records.entrySet()) {
-            for (String experimentId : record.getValue().keySet()) {
-                Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
-                if (experiment != null && experiment.isActive()) {
-                    String variationId = record.getValue().get(experimentId);
-                    Variation variation = experiment.getVariationIdToVariationMap().get(variationId);
-                    if (variation != null) {
-                        continue;
-                    }
-                }
-                userProfile.remove(record.getKey(), experimentId);
-            }
-        }
-    }
 
     //======== Notification listeners ========//
 
