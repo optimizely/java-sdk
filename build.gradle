@@ -10,8 +10,6 @@ buildscript {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
         classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:latest.release'
     }
-    apply plugin: 'idea'
-
 }
 
 plugins {
@@ -21,6 +19,7 @@ plugins {
 
 allprojects {
     group = 'com.optimizely.ab'
+    apply plugin: 'idea'
 }
 
 apply from: 'gradle/license.gradle'

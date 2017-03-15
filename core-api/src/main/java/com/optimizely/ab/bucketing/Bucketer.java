@@ -136,7 +136,7 @@ public class Bucketer {
     public @Nullable Variation bucket(@Nonnull Experiment experiment,
                                       @Nonnull String userId) {
 
-        // ---------- Check for Whitelisting ----------
+        // ---------- Check whitelist ----------
         // if a user has a forced variation mapping, return the respective variation
         Map<String, String> userIdToVariationKeyMap = experiment.getUserIdToVariationKeyMap();
         if (userIdToVariationKeyMap.containsKey(userId)) {
@@ -174,9 +174,6 @@ public class Bucketer {
                                 + "for user \"{}\" found in user profile.",
                         experimentKey, userId);
             }
-        }
-        else {
-            logger.info("The User Profile module is null.");
         }
 
         // ---------- Bucket User ----------

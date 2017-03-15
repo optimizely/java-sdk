@@ -418,7 +418,6 @@ public class Optimizely {
         Experiment experiment = getExperimentOrThrow(currentConfig, experimentKey);
         if (experiment == null) {
             // if we're unable to retrieve the associated experiment, return null
-            logger.info("Experiment \"{}\" is not in the datafile.", userId, experimentKey);
             return null;
         }
 
@@ -429,7 +428,6 @@ public class Optimizely {
                                             @Nonnull Experiment experiment,
                                             @Nonnull Map<String, String> attributes,
                                             @Nonnull String userId) {
-        // ---------- Check Pre Conditions ----------
         if (!ProjectValidationUtils.validatePreconditions(projectConfig, userProfile, experiment, userId, attributes)) {
             return null;
         }
@@ -754,7 +752,6 @@ public class Optimizely {
             }
 
             if (userProfile == null) {
-                logger.warn("User Profile is null");
             }
 
             // use the default bucketer and event builder, if no overrides were provided
