@@ -2143,18 +2143,6 @@ public class OptimizelyTestV3 {
         verify(userProfile).save(userId, experiment.getId(), variation.getId());
     }
 
-
-    /**
-     * Makes sure we log a warning to users if their client is built without user profile.
-     * @throws ConfigParseException
-     */
-    @Test public void builderLogsWhenUserProfileIsNull() throws ConfigParseException {
-        Optimizely.builder(validDatafile, mockEventHandler).build();
-
-        logbackVerifier.expectMessage(Level.WARN,
-                "User Profile is null");
-    }
-
     /**
      * Check that the user profile is cleaned of variations that have been removed from the datafile.
      * @throws ConfigParseException
