@@ -21,6 +21,7 @@ import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
 
 public class UserProfileUtils {
@@ -31,15 +32,18 @@ public class UserProfileUtils {
      * @param userProfile The user profile instance to clean.
      * @param projectConfig The project config to clean against.
      */
-    public static void cleanUserProfiles(UserProfile userProfile, ProjectConfig projectConfig) {
+    public static void cleanUserProfiles(UserProfile userProfile, @Nonnull ProjectConfig projectConfig) {
 
         if (userProfile == null) {
             return;
         }
+
+        // don't bother cleaning if there are no stored records
         Map<String, Map<String,String>> records = userProfile.getAllRecords();
         if (records == null) {
             return;
         }
+
         for (Map.Entry<String,Map<String,String>> record : records.entrySet()) {
             for (String experimentId : record.getValue().keySet()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);

@@ -17,7 +17,6 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.bucketing.UserProfile;
-import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.ProjectConfigTestUtils;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
@@ -26,8 +25,7 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventBuilderV2;
 import com.optimizely.ab.event.internal.payload.Event.ClientEngine;
-
-import com.optimizely.ab.internal.UserProfileUtils;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -35,24 +33,16 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV1;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV1;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV3;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV1;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link Optimizely#builder(String, EventHandler)}.
@@ -189,88 +179,5 @@ public class OptimizelyBuilderTest {
     public void builderThrowsConfigParseExceptionForInvalidDatafile() throws Exception {
         thrown.expect(ConfigParseException.class);
         Optimizely.builder("{invalidDatafile}", mockEventHandler).build();
-    }
-
-    /**
-     * Verify {@link UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} handles a null {@link UserProfile}.
-     */
-    @Test
-    public void nullUserProfileWhenCleaning() throws Exception {
-        try {
-            Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-                .build();
-        } catch (NullPointerException e) {
-            fail();
-        }
-    }
-
-    /**
-     * Verify {@link UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} handles a null returned from
-     * {@link UserProfile#getAllRecords()}.
-     */
-    @Test
-    public void nullUserProfiles() throws Exception {
-        // make mock User Profile
-        UserProfile userProfile = mock(UserProfile.class);
-        when(userProfile.getAllRecords()).thenReturn(null);
-
-        try {
-            Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-                    .withUserProfile(userProfile)
-                    .build();
-        } catch (NullPointerException e) {
-            fail();
-        }
-    }
-
-    /**
-     * Verify {@link UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} removes experiments
-     * that are no longer in the {@link ProjectConfig}.
-     */
-    @Test
-    public void cleanRemovesRecordsOfExperimentsThatNoLongerExist() throws Exception {
-        // make mock User Profile
-        UserProfile userProfile = mock(UserProfile.class);
-
-        String userId = "userId";
-        String experimentId = "experimentId";
-        String variationId = "variationId";
-        Map<String,Map<String,String>> records = new HashMap();
-        Map<String,String> activation = new HashMap();
-        activation.put(experimentId, variationId);
-        records.put(userId,  activation);
-        when(userProfile.getAllRecords()).thenReturn(records);
-
-        // make Optimizely Client
-        Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-                .withUserProfile(userProfile)
-                .build();
-
-        verify(userProfile).remove(userId, experimentId);
-    }
-
-    /**
-     * Verify {@link UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} removes experiments
-     * that are paused in the {@link ProjectConfig}.
-     */
-    @Test
-    public void cleanRemovesRecordsOfExperimentsThatAreNotRunning() throws Exception {
-        // make mock User Profile
-        UserProfile userProfile = mock(UserProfile.class);
-        String userId = "userId";
-        String experimentId = "etag2";
-        String variationId = "variationId";
-        Map<String,Map<String,String>> records = new HashMap();
-        Map<String,String> activation = new HashMap();
-        activation.put(experimentId, variationId);
-        records.put(userId,  activation);
-        when(userProfile.getAllRecords()).thenReturn(records);
-
-        // make Optimizely Client
-        Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-                .withUserProfile(userProfile)
-                .build();
-
-        verify(userProfile).remove(userId, experimentId);
     }
 }
