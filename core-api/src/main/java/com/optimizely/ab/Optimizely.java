@@ -414,6 +414,10 @@ public class Optimizely {
                                             @Nonnull String userId,
                                             @Nonnull Map<String, String> attributes) {
 
+        if (!validateUserId(userId)) {
+            return null;
+        }
+
         ProjectConfig currentConfig = getProjectConfig();
 
         Experiment experiment = getExperimentOrThrow(currentConfig, experimentKey);
@@ -429,6 +433,7 @@ public class Optimizely {
                                             @Nonnull Experiment experiment,
                                             @Nonnull Map<String, String> attributes,
                                             @Nonnull String userId) {
+
         if (!ProjectValidationUtils.validatePreconditions(projectConfig, userProfile, experiment, userId, attributes)) {
             return null;
         }
@@ -707,9 +712,6 @@ public class Optimizely {
         public Optimizely build() throws ConfigParseException {
             if (projectConfig == null) {
                 projectConfig = Optimizely.getProjectConfig(datafile);
-            }
-
-            if (userProfile == null) {
             }
 
             // use the default bucketer and event builder, if no overrides were provided
