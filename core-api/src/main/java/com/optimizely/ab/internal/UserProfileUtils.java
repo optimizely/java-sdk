@@ -14,8 +14,9 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.bucketing;
+package com.optimizely.ab.internal;
 
+import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;

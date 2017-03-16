@@ -16,7 +16,6 @@
  */
 package com.optimizely.ab;
 
-import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.ProjectConfigTestUtils;
@@ -28,6 +27,7 @@ import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventBuilderV2;
 import com.optimizely.ab.event.internal.payload.Event.ClientEngine;
 
+import com.optimizely.ab.internal.UserProfileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -37,10 +37,8 @@ import org.mockito.junit.MockitoRule;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV1;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV1;
@@ -194,7 +192,7 @@ public class OptimizelyBuilderTest {
     }
 
     /**
-     * Verify {@link com.optimizely.ab.bucketing.UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} handles a null {@link UserProfile}.
+     * Verify {@link UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} handles a null {@link UserProfile}.
      */
     @Test
     public void nullUserProfileWhenCleaning() throws Exception {
@@ -207,7 +205,7 @@ public class OptimizelyBuilderTest {
     }
 
     /**
-     * Verify {@link com.optimizely.ab.bucketing.UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} handles a null returned from
+     * Verify {@link UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} handles a null returned from
      * {@link UserProfile#getAllRecords()}.
      */
     @Test
@@ -226,7 +224,7 @@ public class OptimizelyBuilderTest {
     }
 
     /**
-     * Verify {@link com.optimizely.ab.bucketing.UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} removes experiments
+     * Verify {@link UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} removes experiments
      * that are no longer in the {@link ProjectConfig}.
      */
     @Test
@@ -252,7 +250,7 @@ public class OptimizelyBuilderTest {
     }
 
     /**
-     * Verify {@link com.optimizely.ab.bucketing.UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} removes experiments
+     * Verify {@link UserProfileUtils#cleanUserProfiles(UserProfile, ProjectConfig)} removes experiments
      * that are paused in the {@link ProjectConfig}.
      */
     @Test

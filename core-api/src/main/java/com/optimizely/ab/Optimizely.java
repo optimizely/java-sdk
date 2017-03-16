@@ -19,7 +19,7 @@ package com.optimizely.ab;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.UserProfile;
-import com.optimizely.ab.bucketing.UserProfileUtils;
+import com.optimizely.ab.internal.UserProfileUtils;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
