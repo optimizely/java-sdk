@@ -73,6 +73,7 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -820,7 +821,7 @@ public class OptimizelyTestV2 {
 
         // verify that the bucketing algorithm was called only on experiments corresponding to the specified goal.
         for (Experiment experiment : allExperiments) {
-            if (ProjectValidationUtils.validatePreconditions(noAudienceProjectConfig,  null,experiment, "userId", emptyAttributes) &&
+            if (ProjectValidationUtils.validatePreconditions(noAudienceProjectConfig,  null, experiment, "userId", emptyAttributes) &&
                     experimentIds.contains(experiment.getId())) {
                 verify(mockBucketer).bucket(experiment, "userId");
             } else {
@@ -894,7 +895,7 @@ public class OptimizelyTestV2 {
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createConversionEvent(eq(validProjectConfig), eq(mockBucketer), any(UserProfile.class), eq("userId"),
+        when(mockEventBuilder.createConversionEvent(eq(validProjectConfig), eq(mockBucketer), isNull(UserProfile.class), eq("userId"),
                                                     eq(eventType.getId()), eq(eventType.getKey()),
                                                     anyMapOf(String.class, String.class), eq(Collections.<String, Object>emptyMap())))
             .thenReturn(logEventToDispatch);
@@ -910,7 +911,7 @@ public class OptimizelyTestV2 {
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
 
         // verify that the event builder was called with the expected attributes
-        verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig), eq(mockBucketer), any(UserProfile.class), eq("userId"),
+        verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig), eq(mockBucketer), isNull(UserProfile.class), eq("userId"),
                                                        eq(eventType.getId()), eq(eventType.getKey()),
                                                        attributeCaptor.capture(), eq(Collections.<String, Object>emptyMap()));
 
@@ -943,7 +944,7 @@ public class OptimizelyTestV2 {
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createConversionEvent(eq(noAudienceProjectConfig), eq(mockBucketer), any(UserProfile.class), eq("userId"),
+        when(mockEventBuilder.createConversionEvent(eq(noAudienceProjectConfig), eq(mockBucketer), isNull(UserProfile.class), eq("userId"),
                 eq(eventType.getId()), eq(eventType.getKey()),
                 eq(Collections.<String, String>emptyMap()), eq(Collections.<String, Object>emptyMap())))
                 .thenReturn(logEventToDispatch);
@@ -962,7 +963,7 @@ public class OptimizelyTestV2 {
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
 
         // verify that the event builder was called with the expected attributes
-        verify(mockEventBuilder).createConversionEvent(eq(noAudienceProjectConfig), eq(mockBucketer), any(UserProfile.class), eq("userId"),
+        verify(mockEventBuilder).createConversionEvent(eq(noAudienceProjectConfig), eq(mockBucketer), isNull(UserProfile.class), eq("userId"),
                 eq(eventType.getId()), eq(eventType.getKey()),
                 attributeCaptor.capture(), eq(Collections.<String, Object>emptyMap()));
 
@@ -992,7 +993,7 @@ public class OptimizelyTestV2 {
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createConversionEvent(eq(validProjectConfig), eq(mockBucketer), any(UserProfile.class), eq("userId"),
+        when(mockEventBuilder.createConversionEvent(eq(validProjectConfig), eq(mockBucketer), isNull(UserProfile.class), eq("userId"),
                 eq(eventType.getId()), eq(eventType.getKey()),
                 anyMapOf(String.class, String.class), eq(Collections.<String, Object>emptyMap())))
                 .thenReturn(logEventToDispatch);
@@ -1010,7 +1011,7 @@ public class OptimizelyTestV2 {
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
 
         // verify that the event builder was called with the expected attributes
-        verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig), eq(mockBucketer), any(UserProfile.class), eq("userId"),
+        verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig), eq(mockBucketer), isNull(UserProfile.class), eq("userId"),
                 eq(eventType.getId()), eq(eventType.getKey()),
                 attributeCaptor.capture(), eq(Collections.<String, Object>emptyMap()));
 
@@ -1041,7 +1042,7 @@ public class OptimizelyTestV2 {
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createConversionEvent(eq(validProjectConfig), eq(mockBucketer), any(UserProfile.class), eq("userId"),
+        when(mockEventBuilder.createConversionEvent(eq(validProjectConfig), eq(mockBucketer), isNull(UserProfile.class), eq("userId"),
                                                     eq(eventType.getId()), eq(eventType.getKey()),
                                                     anyMapOf(String.class, String.class), eq(Collections.<String, Object>emptyMap())))
             .thenReturn(logEventToDispatch);
@@ -1058,7 +1059,7 @@ public class OptimizelyTestV2 {
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
 
         // verify that the event builder was called with the expected attributes
-        verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig), eq(mockBucketer), any(UserProfile.class), eq("userId"),
+        verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig), eq(mockBucketer), isNull(UserProfile.class), eq("userId"),
                                                        eq(eventType.getId()), eq(eventType.getKey()),
                                                        attributeCaptor.capture(), eq(Collections.<String, Object>emptyMap()));
 
@@ -1091,7 +1092,7 @@ public class OptimizelyTestV2 {
         Map<String, Object> eventTags = new HashMap<String, Object>();
         eventTags.put(ReservedEventKey.REVENUE.toString(), revenue);
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createConversionEvent(eq(validProjectConfig), eq(mockBucketer), any(UserProfile.class), eq("userId"),
+        when(mockEventBuilder.createConversionEvent(eq(validProjectConfig), eq(mockBucketer), isNull(UserProfile.class), eq("userId"),
                                                     eq(eventType.getId()), eq(eventType.getKey()),
                                                     eq(Collections.<String, String>emptyMap()), eq(eventTags)))
             .thenReturn(logEventToDispatch);
@@ -1103,7 +1104,7 @@ public class OptimizelyTestV2 {
         ArgumentCaptor<Map> eventTagCaptor = ArgumentCaptor.forClass(Map.class);
 
         // verify that the event builder was called with the expected revenue
-        verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig), eq(mockBucketer), any(UserProfile.class), eq("userId"),
+        verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig), eq(mockBucketer), isNull(UserProfile.class), eq("userId"),
                                                        eq(eventType.getId()), eq(eventType.getKey()),
                                                        eq(Collections.<String, String>emptyMap()),
                                                        eventTagCaptor.capture());
@@ -1139,7 +1140,7 @@ public class OptimizelyTestV2 {
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventBuilder.createConversionEvent(eq(projectConfig),
                                                     eq(mockBucketer),
-                                                    any(UserProfile.class),
+                                                    isNull(UserProfile.class),
                                                     eq("userId"),
                                                     eq(eventType.getId()),
                                                     eq(eventType.getKey()),
@@ -1166,7 +1167,7 @@ public class OptimizelyTestV2 {
         // verify that the event builder was called with the expected attributes
         verify(mockEventBuilder).createConversionEvent(eq(projectConfig),
                                                         eq(mockBucketer),
-                                                        any(UserProfile.class),
+                                                        isNull(UserProfile.class),
                                                         eq("userId"),
                                                         eq(eventType.getId()),
                                                         eq(eventType.getKey()),
@@ -1210,7 +1211,7 @@ public class OptimizelyTestV2 {
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventBuilder.createConversionEvent(eq(projectConfig),
                                                     eq(mockBucketer),
-                                                    any(UserProfile.class),
+                                                    isNull(UserProfile.class),
                                                     eq("userId"),
                                                     eq(eventType.getId()),
                                                     eq(eventType.getKey()),
@@ -1228,7 +1229,7 @@ public class OptimizelyTestV2 {
         // verify that the event builder was called with the expected attributes
         verify(mockEventBuilder).createConversionEvent(eq(projectConfig),
                                                         eq(mockBucketer),
-                                                        any(UserProfile.class),
+                                                        isNull(UserProfile.class),
                                                         eq("userId"),
                                                         eq(eventType.getId()),
                                                         eq(eventType.getKey()),
