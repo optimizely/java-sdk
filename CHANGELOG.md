@@ -1,3 +1,11 @@
+## 1.6.0
+
+March 17, 2017
+
+- Add event tags to `track` API and include in the event payload
+- Fix bug where null attribute map was returned
+- Fix bug with null or empty string datafile
+
 ## 1.5.0
 
 February 16, 2017
