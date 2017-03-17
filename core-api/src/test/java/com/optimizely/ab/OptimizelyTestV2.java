@@ -1130,14 +1130,14 @@ public class OptimizelyTestV2 {
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventBuilder.createConversionEvent(eq(projectConfig),
-                                                    eq(mockBucketer),
-                                                    isNull(UserProfile.class),
-                                                    eq("userId"),
-                                                    eq(eventType.getId()),
-                                                    eq(eventType.getKey()),
-                                                    anyMapOf(String.class, String.class),
-                                                    anyMapOf(String.class, Object.class)))
-                                                    .thenReturn(logEventToDispatch);
+                eq(mockBucketer),
+                isNull(UserProfile.class),
+                eq("userId"),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                anyMapOf(String.class, String.class),
+                anyMapOf(String.class, Object.class)))
+                .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"clicked_cart\" for user \"userId\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
@@ -1157,13 +1157,13 @@ public class OptimizelyTestV2 {
 
         // verify that the event builder was called with the expected attributes
         verify(mockEventBuilder).createConversionEvent(eq(projectConfig),
-                                                        eq(mockBucketer),
-                                                        isNull(UserProfile.class),
-                                                        eq("userId"),
-                                                        eq(eventType.getId()),
-                                                        eq(eventType.getKey()),
-                                                        eq(Collections.<String, String>emptyMap()),
-                                                        eventTagCaptor.capture());
+                eq(mockBucketer),
+                isNull(UserProfile.class),
+                eq("userId"),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                eq(Collections.<String, String>emptyMap()),
+                eventTagCaptor.capture());
 
         Map<String, ?> actualValue = eventTagCaptor.getValue();
         assertThat(actualValue, hasEntry("int_param", eventTags.get("int_param")));
@@ -1201,14 +1201,14 @@ public class OptimizelyTestV2 {
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventBuilder.createConversionEvent(eq(projectConfig),
-                                                    eq(mockBucketer),
-                                                    isNull(UserProfile.class),
-                                                    eq("userId"),
-                                                    eq(eventType.getId()),
-                                                    eq(eventType.getKey()),
-                                                    eq(Collections.<String, String>emptyMap()),
-                                                    eq(Collections.<String, String>emptyMap())))
-                                                    .thenReturn(logEventToDispatch);
+                eq(mockBucketer),
+                isNull(UserProfile.class),
+                eq("userId"),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                eq(Collections.<String, String>emptyMap()),
+                eq(Collections.<String, String>emptyMap())))
+                .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"clicked_cart\" for user \"userId\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
@@ -1219,13 +1219,13 @@ public class OptimizelyTestV2 {
 
         // verify that the event builder was called with the expected attributes
         verify(mockEventBuilder).createConversionEvent(eq(projectConfig),
-                                                        eq(mockBucketer),
-                                                        isNull(UserProfile.class),
-                                                        eq("userId"),
-                                                        eq(eventType.getId()),
-                                                        eq(eventType.getKey()),
-                                                        eq(Collections.<String, String>emptyMap()),
-                                                        eq(Collections.<String, String>emptyMap()));
+                eq(mockBucketer),
+                isNull(UserProfile.class),
+                eq("userId"),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                eq(Collections.<String, String>emptyMap()),
+                eq(Collections.<String, String>emptyMap()));
 
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
     }
