@@ -17,7 +17,6 @@
 package com.optimizely.ab.bucketing;
 
 import ch.qos.logback.classic.Level;
-import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.bucketing.internal.MurmurHash3;
 import com.optimizely.ab.categories.ExhaustiveTest;
 import com.optimizely.ab.config.Experiment;
@@ -51,7 +50,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -398,7 +396,7 @@ public class BucketerTest {
      * stored in the provided {@link UserProfile} instead of calling {@link Bucketer#bucket(Experiment, String)}.
      */
     @SuppressFBWarnings
-    @Test public void getVariationReturnsVariationStoredInUserProfileInsteadOfBucketing() throws Exception {
+    @Test public void bucketReturnsVariationStoredInUserProfileInsteadOfBucketing() throws Exception {
         // get constants
         final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
         final Variation storedVariation = experiment.getVariations().get(0);
@@ -426,11 +424,11 @@ public class BucketerTest {
     }
 
     /**
-     * Verify {@link Optimizely#getVariation(Experiment,String)} handles a present {@link UserProfile}
+     * Verify {@link Bucketer#bucket(Experiment,String)} handles a present {@link UserProfile}
      * returning null when looking up a variation.
      */
     @SuppressFBWarnings
-    @Test public void getVariationBucketsWhenNullReturnedFromUserProfileLookup() throws Exception {
+    @Test public void bucketContinuesWhenNullReturnedFromUserProfileLookup() throws Exception {
         final String userId = "someUser";
 
         final AtomicInteger bucketValue = new AtomicInteger();
@@ -452,11 +450,11 @@ public class BucketerTest {
     }
 
     /**
-     * Verify that {@link Optimizely#getVariation(Experiment,String)} saves a variation of an experiment for a user
+     * Verify that {@link Bucketer#bucket(Experiment,String)} saves a variation of an experiment for a user
      * when a {@link UserProfile} is present.
      */
     @SuppressFBWarnings
-    @Test public void getVariationSavesActivationWithUserProfile() throws Exception {
+    @Test public void bucketSavesActivationWithUserProfile() throws Exception {
         final String userId = "someUser";
 
         final AtomicInteger bucketValue = new AtomicInteger();
@@ -485,10 +483,10 @@ public class BucketerTest {
     }
 
     /**
-     * Verify that {@link Optimizely#getVariation(Experiment,String)} logs correctly
+     * Verify that {@link Bucketer#bucket(Experiment,String)} logs correctly
      * when a {@link UserProfile} is present but fails to save an activation.
      */
-    @Test public void getVariationLogsCorrectlyWhenUserProfileFailsToSave() throws Exception {
+    @Test public void bucketLogsCorrectlyWhenUserProfileFailsToSave() throws Exception {
         final String userId = "someUser";
 
         final AtomicInteger bucketValue = new AtomicInteger();
@@ -514,11 +512,11 @@ public class BucketerTest {
 
     //========= white list tests ========/
     /**
-     * Verify that {@link Optimizely#getVariation(Experiment, String)} returns null when an invalid variation key is found
+     * Verify that {@link Bucketer#bucket(Experiment, String)} returns null when an invalid variation key is found
      * in the forced variations mapping.
      */
     @Test
-    public void getVariationReturnsNullWhenInvalidVariationKeyIsFoundInForcedVariationsMapping() throws Exception {
+    public void bucketReturnsNullWhenInvalidVariationKeyIsFoundInForcedVariationsMapping() throws Exception {
         String userId = "whitelistedUser";
 
         // modify the configured project config
@@ -566,11 +564,11 @@ public class BucketerTest {
     }
 
     /**
-     * Verify that {@link Optimizely#getVariation(Experiment, String)} gives higher priority to forced bucketing than to
+     * Verify that {@link Bucketer#bucket(Experiment, String)} gives higher priority to forced bucketing than to
      * experiment bucketing.
      */
     @Test
-    public void getVariationMakesForcedVariationOverrideExperimentBucketing() throws Exception {
+    public void bucketMakesForcedVariationOverrideExperimentBucketing() throws Exception {
         final String userId = "testUser1";
         final String correctVariationKey = "vtag1";
         final String incorrectVariationKey = "vtag2";
@@ -595,7 +593,7 @@ public class BucketerTest {
      * @param bucketValue the expected bucket value holder
      * @return the mock bucket algorithm
      */
-    public static Bucketer mockBucketAlgorithm(final AtomicInteger bucketValue) {
+    private static Bucketer mockBucketAlgorithm(final AtomicInteger bucketValue) {
         return new Bucketer(validProjectConfigV2()) {
             @Override
             int generateBucketValue(int hashCode) {
@@ -613,7 +611,7 @@ public class BucketerTest {
      * @param userProfile the userProfile to be used by the bucketer
      * @return the mock bucket algorithm
      */
-    public static Bucketer mockBucketAlgorithm(final AtomicInteger bucketValue, final ProjectConfig projectConfig, final UserProfile userProfile) {
+    private static Bucketer mockBucketAlgorithm(final AtomicInteger bucketValue, final ProjectConfig projectConfig, final UserProfile userProfile) {
         return new Bucketer(projectConfig, userProfile) {
             @Override
             int generateBucketValue(int hashCode) {
@@ -629,7 +627,7 @@ public class BucketerTest {
      * @return A number [0,10000) if the variation has valid traffic allocation within the experiment.
      *      Else returns -1 if invalid.
      */
-    public static int bucketValueForVariationOfExperiment(Experiment experiment, Variation variation) {
+    private static int bucketValueForVariationOfExperiment(Experiment experiment, Variation variation) {
         if (experiment.getVariations().contains(variation)) {
             for (TrafficAllocation trafficAllocation : experiment.getTrafficAllocation()) {
                 if (trafficAllocation.getEntityId().equals(variation.getId())) {

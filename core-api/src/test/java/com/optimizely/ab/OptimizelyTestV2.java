@@ -19,16 +19,13 @@ package com.optimizely.ab;
 import ch.qos.logback.classic.Level;
 import com.google.common.collect.ImmutableMap;
 import com.optimizely.ab.bucketing.Bucketer;
-import com.optimizely.ab.bucketing.BucketerTest;
 import com.optimizely.ab.bucketing.UserProfile;
-import com.optimizely.ab.bucketing.UserProfileSimple;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
@@ -49,12 +46,10 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV2;
@@ -67,7 +62,6 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
@@ -77,8 +71,6 @@ import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -102,7 +94,6 @@ public class OptimizelyTestV2 {
     @Mock ErrorHandler mockErrorHandler;
 
     private static final String genericUserId = "genericUserId";
-    private static final String userProfileId = "userProfileId";
     private static String validDatafile;
     private static String noAudienceDatafile;
     private static ProjectConfig validProjectConfig;
@@ -1536,12 +1527,9 @@ public class OptimizelyTestV2 {
     public void getVariationForcedVariationPrecedesAudienceEval() throws Exception {
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation expectedVariation = experiment.getVariations().get(0);
-        final AtomicInteger bucketValue = new AtomicInteger(8999);
-        Bucketer bucketer = BucketerTest.mockBucketAlgorithm(bucketValue);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
             .withConfig(validProjectConfig)
-            .withBucketing(bucketer)
             .build();
 
         // user Excluded without audiences and whitelisting
@@ -1569,33 +1557,6 @@ public class OptimizelyTestV2 {
         logbackVerifier.expectMessage(Level.INFO, "Experiment \"etag2\" is not running.");
         // testUser3 has a corresponding forced variation, but experiment status should be checked first
         assertNull(optimizely.getVariation(experiment.getKey(), "testUser3"));
-    }
-
-    /**
-     * Check that the user profile is cleaned of variations that have been removed from the datafile.
-     * @throws ConfigParseException
-     */
-    @SuppressFBWarnings
-    @Test public void userProfileIsCleanedOnClientInitialization() throws ConfigParseException {
-        Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
-        Variation variation = experiment.getVariations().get(0);
-
-        final AtomicInteger bucketValue = new AtomicInteger(BucketerTest.bucketValueForVariationOfExperiment(experiment, variation));
-        UserProfileSimple userProfile = spy(UserProfileSimple.class);
-        userProfile.save(userProfileId, experiment.getId(), "variationId");
-        Bucketer bucketer = BucketerTest.mockBucketAlgorithm(bucketValue, noAudienceProjectConfig, userProfile);
-
-        Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
-                                        .withBucketing(bucketer)
-                                        .withUserProfile(userProfile)
-                                        .build();
-
-        verify(userProfile).getAllRecords();
-        verify(userProfile).remove(userProfileId, experiment.getId());
-        assertNull(userProfile.lookup(userProfileId, experiment.getId()));
-
-        // check user gets bucketed as new user
-        assertEquals(variation, client.getVariation(experiment, userProfileId));
     }
 
     //======== Helper methods ========//
