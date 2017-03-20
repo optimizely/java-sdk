@@ -35,7 +35,9 @@ import java.util.Map;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
 import static com.optimizely.ab.internal.ProjectValidationUtils.validatePreconditions;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class ProjectValidationUtilsTestV2 {
 
@@ -76,6 +78,6 @@ public class ProjectValidationUtilsTestV2 {
 
         logbackVerifier.expectMessage(Level.INFO, "Experiment \"etag2\" is not running.");
         // testUser3 has a corresponding forced variation, but experiment status should be checked first
-        assertNull(client.getVariation(experiment, "testUser3"));
+        assertFalse(ProjectValidationUtils.validatePreconditions(validProjectConfigV2(), null, experiment, "testUser3", null));
     }
 }
