@@ -20,7 +20,6 @@ import ch.qos.logback.classic.Level;
 import com.google.common.collect.ImmutableMap;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.UserProfile;
-import com.optimizely.ab.bucketing.UserProfileSimple;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
@@ -71,7 +70,6 @@ import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -141,33 +139,6 @@ public class OptimizelyTestV1 {
 
         // verify that dispatchEvent was called with the correct LogEvent object
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
-    }
-
-    /**
-     * Verify that initialization of Optimizely cleans user profiles
-     * @throws Exception
-     */
-    @Test
-    public void initializationCleansUserProfile() throws Exception {
-        String datafile = validConfigJsonV1();
-        ProjectConfig projectConfig = validProjectConfigV1();
-        EventBuilder mockEventBuilder = mock(EventBuilder.class);
-        UserProfile mockUserProfile = spy(UserProfileSimple.class);
-        String userId = "userId";
-        String experimentId = "experimentId";
-        String variationId = "variationId";
-        mockUserProfile.save(userId, experimentId, variationId);
-
-        Optimizely.builder(datafile, mockEventHandler)
-                .withBucketing(mockBucketer)
-                .withEventBuilder(mockEventBuilder)
-                .withConfig(projectConfig)
-                .withErrorHandler(mockErrorHandler)
-                .withUserProfile(mockUserProfile)
-                .build();
-
-        verify(mockUserProfile).remove(userId, experimentId);
-        assertNull(mockUserProfile.lookup(userId, experimentId));
     }
 
     /**

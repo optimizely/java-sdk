@@ -17,7 +17,6 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.bucketing.UserProfile;
-import com.optimizely.ab.bucketing.UserProfileSimple;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.ProjectConfigTestUtils;
@@ -37,6 +36,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import java.util.Collections;
+
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV1;
@@ -49,8 +50,8 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link Optimizely#builder(String, EventHandler)}.
@@ -208,8 +209,8 @@ public class OptimizelyBuilderTest {
     @Test public void userProfileIsCleanedOnClientInitialization() throws ConfigParseException {
         Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
 
-        UserProfileSimple userProfile = spy(UserProfileSimple.class);
-        userProfile.save(userProfileId, experiment.getId(), "variationId");
+        UserProfile userProfile = mock(UserProfile.class);
+        when(userProfile.getAllRecords()).thenReturn(Collections.singletonMap(userProfileId, Collections.singletonMap(experiment.getId(), "variationId")));
 
         Optimizely.builder(noAudienceDatafile, mockEventHandler)
             .withConfig(noAudienceProjectConfig)

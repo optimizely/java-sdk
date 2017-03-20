@@ -17,19 +17,21 @@
 package com.optimizely.ab.internal;
 
 import com.optimizely.ab.bucketing.UserProfile;
-import com.optimizely.ab.bucketing.UserProfileSimple;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Test;
 
+import java.util.Collections;
+
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class UserProfileUtilsTest {
 
@@ -51,8 +53,8 @@ public class UserProfileUtilsTest {
     @SuppressFBWarnings
     @Test
     public void nullUserProfiles() throws Exception {
-        // make simple User Profile
-        UserProfile userProfile = spy(UserProfileSimple.class);
+        // mock User Profile
+        UserProfile userProfile = mock(UserProfile.class);
 
         UserProfileUtils.cleanUserProfiles(userProfile, validProjectConfigV2());
         verify(userProfile).getAllRecords();
@@ -64,13 +66,13 @@ public class UserProfileUtilsTest {
      */
     @Test
     public void cleanRemovesRecordsOfExperimentsThatNoLongerExist() throws Exception {
-        // spy on a simple user profile
-        UserProfile userProfile = spy(UserProfileSimple.class);
+        // mock user profile
+        UserProfile userProfile = mock(UserProfile.class);
 
         String experimentId = "experimentId";
         String variationId = "variationId";
 
-        userProfile.save(userId, experimentId, variationId);
+        when(userProfile.getAllRecords()).thenReturn(Collections.singletonMap(userId, Collections.singletonMap(experimentId, variationId)));
 
         // clean user profile
         UserProfileUtils.cleanUserProfiles(userProfile, validProjectConfigV2());
@@ -85,8 +87,8 @@ public class UserProfileUtilsTest {
      */
     @Test
     public void cleanRemovesRecordsOfExperimentsWhereTheVariationNoLongerExists() {
-        // spy on a simple user profile
-        UserProfile userProfile = spy(UserProfileSimple.class);
+        // mock user profile
+        UserProfile userProfile = mock(UserProfile.class);
 
         String experimentId = null;
         String variationId = "someOldVariationId";
@@ -103,14 +105,12 @@ public class UserProfileUtilsTest {
             assertNotEquals(variationId, variation.getId());
         }
 
-        userProfile.save(userId, experimentId, variationId);
+        when(userProfile.getAllRecords()).thenReturn(Collections.singletonMap(userId, Collections.singletonMap(experimentId, variationId)));
 
         // clean user profile
         UserProfileUtils.cleanUserProfiles(userProfile, validProjectConfigV2());
 
         verify(userProfile).remove(userId, experimentId);
-        assertNull(userProfile.lookup(userId, experimentId));
-
     }
 
     /**
@@ -120,7 +120,7 @@ public class UserProfileUtilsTest {
     @Test
     public void cleanRemovesRecordsOfExperimentsThatAreNotActive() throws Exception {
         // make mock User Profile
-        UserProfile userProfile = spy(UserProfileSimple.class);
+        UserProfile userProfile = mock(UserProfile.class);
 
         String experimentId = null;
         String variationId = null;
@@ -135,12 +135,11 @@ public class UserProfileUtilsTest {
         assertNotNull(experimentId);
         assertNotNull(variationId);
 
-        userProfile.save(userId, experimentId, variationId);
+        when(userProfile.getAllRecords()).thenReturn(Collections.singletonMap(userId, Collections.singletonMap(experimentId, variationId)));
 
         // clean user profile
         UserProfileUtils.cleanUserProfiles(userProfile, validProjectConfigV2());
 
         verify(userProfile).remove(userId, experimentId);
-        assertNull(userProfile.lookup(userId, experimentId));
     }
 }
