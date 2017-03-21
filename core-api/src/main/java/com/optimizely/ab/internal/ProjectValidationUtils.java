@@ -23,6 +23,7 @@ import com.optimizely.ab.config.audience.Condition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
 
@@ -41,9 +42,10 @@ public final class ProjectValidationUtils {
      * @param attributes the attributes of the user
      * @return whether the pre-conditions are satisfied
      */
-    public static boolean validatePreconditions(ProjectConfig projectConfig, UserProfile userProfile, Experiment experiment, String userId,
+    public static boolean validatePreconditions(ProjectConfig projectConfig, UserProfile userProfile,
+                                                Experiment experiment, @Nonnull String userId,
                                                 Map<String, String> attributes) {
-        if (userId == null || userId.isEmpty()) {
+        if (userId.isEmpty()) {
             logger.error("Non-empty user ID required");
             return false;
         }

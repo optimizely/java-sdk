@@ -210,7 +210,9 @@ public class OptimizelyBuilderTest {
         Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
 
         UserProfile userProfile = mock(UserProfile.class);
-        when(userProfile.getAllRecords()).thenReturn(Collections.singletonMap(userProfileId, Collections.singletonMap(experiment.getId(), "variationId")));
+        when(userProfile.getAllRecords()).thenReturn(Collections.singletonMap(userProfileId,
+                Collections.singletonMap(experiment.getId(),
+                        "variationId")));
 
         Optimizely.builder(noAudienceDatafile, mockEventHandler)
             .withConfig(noAudienceProjectConfig)

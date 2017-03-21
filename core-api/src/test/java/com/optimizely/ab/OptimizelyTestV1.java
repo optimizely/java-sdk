@@ -532,7 +532,7 @@ public class OptimizelyTestV1 {
             .build();
 
         logbackVerifier.expectMessage(Level.ERROR, "Non-empty user ID required");
-        logbackVerifier.expectMessage(Level.INFO, "Not activating user \"\" for experiment \"" + experimentKey + "\".");
+        logbackVerifier.expectMessage(Level.INFO, "Not activating user for experiment \"" + experimentKey + "\".");
         assertNull(optimizely.activate(experimentKey, ""));
     }
 

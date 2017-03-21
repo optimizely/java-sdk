@@ -110,8 +110,6 @@ public class Bucketer {
         String experimentKey = experiment.getKey();
         String combinedBucketId = userId + experimentId;
 
-
-
         List<TrafficAllocation> trafficAllocations = experiment.getTrafficAllocation();
 
         int hashCode = MurmurHash3.murmurhash3_x86_32(combinedBucketId, 0, combinedBucketId.length(), MURMUR_HASH_SEED);

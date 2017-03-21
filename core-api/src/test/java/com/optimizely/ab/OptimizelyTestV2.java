@@ -154,28 +154,6 @@ public class OptimizelyTestV2 {
     }
 
     /**
-     * Verify that initialization of Optimizely cleans user profiles
-     * @throws Exception
-     */
-    @SuppressFBWarnings
-    @Test
-    public void initializationCleansUserProfile() throws Exception {
-        EventBuilder mockEventBuilder = mock(EventBuilder.class);
-        UserProfile mockUserProfile = mock(UserProfile.class);
-
-        Optimizely.builder(validDatafile, mockEventHandler)
-                .withBucketing(mockBucketer)
-                .withEventBuilder(mockEventBuilder)
-                .withConfig(validProjectConfig)
-                .withErrorHandler(mockErrorHandler)
-                .withUserProfile(mockUserProfile)
-                .build();
-
-        // verify that getAllRecords was called. the only usage of this is in clean User Profiles
-        verify(mockUserProfile).getAllRecords();
-    }
-
-    /**
      * Verify that the {@link Optimizely#activate(Experiment, String, Map)} DOES NOT dispatch an impression event
      * when the user isn't bucketed to a variation.
      */
@@ -641,7 +619,7 @@ public class OptimizelyTestV2 {
                 .build();
 
         logbackVerifier.expectMessage(Level.ERROR, "Non-empty user ID required");
-        logbackVerifier.expectMessage(Level.INFO, "Not activating user \"\" for experiment \"" + experimentKey + "\".");
+        logbackVerifier.expectMessage(Level.INFO, "Not activating user for experiment \"" + experimentKey + "\".");
         assertNull(optimizely.activate(experimentKey, ""));
     }
 
@@ -1137,7 +1115,7 @@ public class OptimizelyTestV2 {
                 eq(eventType.getKey()),
                 anyMapOf(String.class, String.class),
                 anyMapOf(String.class, Object.class)))
-                .thenReturn(logEventToDispatch);
+            .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"clicked_cart\" for user \"userId\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
@@ -1208,7 +1186,7 @@ public class OptimizelyTestV2 {
                 eq(eventType.getKey()),
                 eq(Collections.<String, String>emptyMap()),
                 eq(Collections.<String, String>emptyMap())))
-                .thenReturn(logEventToDispatch);
+            .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"clicked_cart\" for user \"userId\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
@@ -1532,7 +1510,7 @@ public class OptimizelyTestV2 {
             .withConfig(validProjectConfig)
             .build();
 
-        // user Excluded without audiences and whitelisting
+        // user excluded without audiences and whitelisting
         assertNull(optimizely.getVariation(experiment.getKey(), genericUserId));
 
         logbackVerifier.expectMessage(Level.INFO, "User \"testUser1\" is forced in variation \"vtag1\".");

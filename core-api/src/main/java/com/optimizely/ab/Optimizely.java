@@ -95,7 +95,7 @@ public class Optimizely {
     @VisibleForTesting final EventHandler eventHandler;
     @VisibleForTesting final ErrorHandler errorHandler;
     @VisibleForTesting final NotificationBroadcaster notificationBroadcaster = new NotificationBroadcaster();
-    @VisibleForTesting @Nullable private final UserProfile userProfile;
+    @Nullable private final UserProfile userProfile;
 
     private Optimizely(@Nonnull ProjectConfig projectConfig,
                        @Nonnull Bucketer bucketer,
@@ -126,6 +126,11 @@ public class Optimizely {
     public @Nullable Variation activate(@Nonnull String experimentKey,
                                         @Nonnull String userId,
                                         @Nonnull Map<String, String> attributes) throws UnknownExperimentException {
+
+        if (!validateUserId(userId)) {
+            logger.info("Not activating user for experiment \"{}\".", experimentKey);
+            return null;
+        }
 
         ProjectConfig currentConfig = getProjectConfig();
 
@@ -162,7 +167,7 @@ public class Optimizely {
         attributes = filterAttributes(projectConfig, attributes);
 
         // bucket the user to the given experiment and dispatch an impression event
-        Variation variation = this.getVariation(projectConfig, experiment, attributes, userId);
+        Variation variation = getVariation(projectConfig, experiment, attributes, userId);
         if (variation == null) {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
