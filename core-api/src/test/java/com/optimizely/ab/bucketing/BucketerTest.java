@@ -256,7 +256,7 @@ public class BucketerTest {
         final String experimentKey = "etag1";
 
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue, noAudienceProjectConfig, null);
+        Bucketer bucketer = BucketerTest.mockBucketAlgorithm(bucketValue, noAudienceProjectConfig, null);
 
         // set bucketer value
         Experiment experiment = noAudienceProjectConfig.getExperimentKeyMapping().get(experimentKey);

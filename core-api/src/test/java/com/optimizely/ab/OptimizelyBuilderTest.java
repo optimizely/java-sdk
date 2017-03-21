@@ -60,7 +60,7 @@ import static org.mockito.Mockito.when;
 public class OptimizelyBuilderTest {
 
 
-    private static final String userProfileId = "userProfileId";
+    private static final String userId = "userId";
     private static String noAudienceDatafile;
     private static ProjectConfig noAudienceProjectConfig;
 
@@ -210,7 +210,7 @@ public class OptimizelyBuilderTest {
         Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
 
         UserProfile userProfile = mock(UserProfile.class);
-        when(userProfile.getAllRecords()).thenReturn(Collections.singletonMap(userProfileId,
+        when(userProfile.getAllRecords()).thenReturn(Collections.singletonMap(userId,
                 Collections.singletonMap(experiment.getId(),
                         "variationId")));
 
@@ -220,6 +220,6 @@ public class OptimizelyBuilderTest {
             .build();
 
         verify(userProfile).getAllRecords();
-        verify(userProfile).remove(userProfileId, experiment.getId());
+        verify(userProfile).remove(userId, experiment.getId());
     }
 }

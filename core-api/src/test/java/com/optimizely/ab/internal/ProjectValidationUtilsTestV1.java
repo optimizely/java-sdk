@@ -72,8 +72,8 @@ public class ProjectValidationUtilsTestV1 {
     public void validatePreconditionsForcedVariationPrecedesAudienceEval() throws Exception {
         Experiment experiment = projectConfig.getExperiments().get(0);
 
-        assertTrue(validatePreconditions(projectConfig, null, experiment,
-                "testUser1", Collections.<String, String>emptyMap()));
+        assertTrue(
+                validatePreconditions(projectConfig, null, experiment, "testUser1", Collections.<String, String>emptyMap()));
     }
 
     /**

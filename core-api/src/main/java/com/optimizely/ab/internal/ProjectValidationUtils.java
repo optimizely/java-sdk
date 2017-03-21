@@ -45,10 +45,6 @@ public final class ProjectValidationUtils {
     public static boolean validatePreconditions(ProjectConfig projectConfig, UserProfile userProfile,
                                                 Experiment experiment, @Nonnull String userId,
                                                 Map<String, String> attributes) {
-        if (userId.isEmpty()) {
-            logger.error("Non-empty user ID required");
-            return false;
-        }
 
         if (!experiment.isActive()) {
             logger.info("Experiment \"{}\" is not running.", experiment.getKey(), userId);
