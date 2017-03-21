@@ -556,7 +556,7 @@ public final class ProjectConfigTestUtils {
      * Verify that the provided live variable definitions are equivalent.
      */
     private static void verifyLiveVariables(List<LiveVariable> actual, List<LiveVariable> expected) {
-        // if using V1 or V2, live variables will be null
+        // if using V2, live variables will be null
         if (expected == null) {
             assertNull(actual);
         } else {
@@ -580,7 +580,7 @@ public final class ProjectConfigTestUtils {
      */
     private static void verifyLiveVariableInstances(List<LiveVariableUsageInstance> actual,
                                                     List<LiveVariableUsageInstance> expected) {
-        // if using V1 or V2, live variable instances will be null
+        // if using V2, live variable instances will be null
         if (expected == null) {
             assertNull(actual);
         } else {

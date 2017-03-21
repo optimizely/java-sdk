@@ -67,7 +67,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
 
             List<Attribute> attributes;
             if (version.equals(ProjectConfig.Version.V1.toString())) {
-                attributes = parseAttributes((JSONArray)rootObject.get("dimensions"));
+                throw new ConfigParseException("The Java SDK no longer supports datafile version 1. If you wish to use a Classic Custom Project, please use Java SDK version 1.6 or below.");
             } else {
                 attributes = parseAttributes((JSONArray)rootObject.get("attributes"));
             }

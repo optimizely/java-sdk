@@ -36,7 +36,6 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventBuilder;
-import com.optimizely.ab.event.internal.EventBuilderV1;
 import com.optimizely.ab.event.internal.EventBuilderV2;
 import com.optimizely.ab.event.internal.payload.Event.ClientEngine;
 import com.optimizely.ab.internal.EventTagUtils;
@@ -45,6 +44,7 @@ import com.optimizely.ab.internal.ReservedEventKey;
 import com.optimizely.ab.notification.NotificationListener;
 import com.optimizely.ab.notification.NotificationBroadcaster;
 
+import jdk.nashorn.internal.runtime.regexp.joni.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -464,7 +464,14 @@ public class Optimizely {
             throw new ConfigParseException("Unable to parse empty datafile.");
         }
 
-        return DefaultConfigParser.getInstance().parseProjectConfig(datafile);
+        ProjectConfig projectConfig = DefaultConfigParser.getInstance().parseProjectConfig(datafile);
+
+        if (projectConfig.getVersion().equals("1")) {
+            throw new ConfigParseException("This version of the Java SDK does not support version 1 datafiles. " +
+                    "Please use a version 2 or 3 datafile with this SDK.");
+        }
+
+        return projectConfig;
     }
 
     @Nullable
@@ -733,11 +740,7 @@ public class Optimizely {
             }
 
             if (eventBuilder == null) {
-                if (projectConfig.getVersion().equals(ProjectConfig.Version.V1.toString())) {
-                    eventBuilder = new EventBuilderV1();
-                } else {
-                    eventBuilder = new EventBuilderV2(clientEngine, clientVersion);
-                }
+                eventBuilder = new EventBuilderV2(clientEngine, clientVersion);
             }
 
             if (errorHandler == null) {
