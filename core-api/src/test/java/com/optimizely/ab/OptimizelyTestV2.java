@@ -864,9 +864,13 @@ public class OptimizelyTestV2 {
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createConversionEvent(eq(validProjectConfig), eq(mockBucketer), isNull(UserProfile.class), eq("userId"),
-                                                    eq(eventType.getId()), eq(eventType.getKey()),
-                                                    anyMapOf(String.class, String.class), eq(Collections.<String, Object>emptyMap())))
+        when(mockEventBuilder.createConversionEvent(eq(validProjectConfig),
+                anyMapOf(Experiment.class, Variation.class),
+                eq("userId"),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                anyMapOf(String.class, String.class), 
+                eq(Collections.<String, Object>emptyMap())))
             .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"clicked_cart\" for user \"userId\".");
@@ -880,9 +884,13 @@ public class OptimizelyTestV2 {
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
 
         // verify that the event builder was called with the expected attributes
-        verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig), eq(mockBucketer), isNull(UserProfile.class), eq("userId"),
-                                                       eq(eventType.getId()), eq(eventType.getKey()),
-                                                       attributeCaptor.capture(), eq(Collections.<String, Object>emptyMap()));
+        verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig),
+                anyMapOf(Experiment.class, Variation.class),
+                eq("userId"),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                attributeCaptor.capture(),
+                eq(Collections.<String, Object>emptyMap()));
 
         Map<String, String> actualValue = attributeCaptor.getValue();
         assertThat(actualValue, hasEntry(attribute.getKey(), "attributeValue"));
