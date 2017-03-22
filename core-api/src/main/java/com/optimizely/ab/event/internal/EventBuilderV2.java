@@ -231,8 +231,10 @@ public class EventBuilderV2 extends EventBuilder {
     private List<LayerState>createLayerStates(ProjectConfig projectConfig, Map<Experiment, Variation> experimentVariationMap) {
         List<LayerState> layerStates = new ArrayList<LayerState>();
 
-        for (Experiment experiment : experimentVariationMap.keySet()) {
-            Decision decision = new Decision(experimentVariationMap.get(experiment).getId(),
+        for (Map.Entry<Experiment, Variation> entry : experimentVariationMap.entrySet()) {
+            Experiment experiment = entry.getKey();
+            Variation variation = entry.getValue();
+            Decision decision = new Decision(variation.getId(),
                     false,
                     experiment.getId());
             layerStates.add(new LayerState(experiment.getLayerId(),

@@ -174,6 +174,20 @@ public class ProjectConfig {
         return Collections.emptyList();
     }
 
+    public List<Experiment>getExperimentsForGoal(String goalKey) {
+        EventType goal;
+        if ((goal = eventNameMapping.get(goalKey)) != null) {
+            List<String> experimentIds = goal.getExperimentIds();
+            List<Experiment> experiments = new ArrayList<Experiment>();
+            for (String experimentId : experimentIds) {
+                experiments.add(experimentIdMapping.get(experimentId));
+            }
+            return experiments;
+        }
+
+        return Collections.emptyList();
+    }
+
     public List<Attribute> getAttributes() {
         return attributes;
     }

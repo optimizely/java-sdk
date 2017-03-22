@@ -251,7 +251,7 @@ public class Optimizely {
         }
 
         // create the experimentVariationMap
-        List<Experiment> allExperiments = projectConfig.getExperiments();
+        List<Experiment> allExperiments = projectConfig.getExperimentsForGoal(eventName);
         Map<Experiment, Variation>experimentVariationMap = new HashMap<Experiment, Variation>(allExperiments.size());
         for (Experiment experiment : allExperiments) {
             Variation variation = getVariation(currentConfig, experiment, attributes, userId);
