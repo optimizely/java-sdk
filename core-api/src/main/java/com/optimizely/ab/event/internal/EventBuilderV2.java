@@ -105,6 +105,18 @@ public class EventBuilderV2 extends EventBuilder {
         return new LogEvent(RequestMethod.POST, IMPRESSION_ENDPOINT, Collections.<String, String>emptyMap(), payload);
     }
 
+    public LogEvent createConversionEvent(@Nonnull Map<Experiment, Variation> layerStates,
+                                                   @Nonnull String userId,
+                                                   @Nonnull String eventId,
+                                                   @Nonnull String eventName,
+                                                   @Nonnull Map<String, String> attributes,
+                                                   @Nonnull Map<String, ?> eventTags) {
+
+        Conversion conversionPayload = new Conversion();
+        conversionPayload.setVisitorId(userId);
+        return null;
+    }
+
     public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
                                           @Nonnull Bucketer bucketer,
                                           @Nullable UserProfile userProfile,

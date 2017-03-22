@@ -38,6 +38,14 @@ public abstract class EventBuilder {
                                                    @Nonnull String userId,
                                                    @Nonnull Map<String, String> attributes);
 
+    public abstract LogEvent createConversionEvent(@Nonnull Map<Experiment, Variation> layerStates,
+                                                   @Nonnull String userId,
+                                                   @Nonnull String eventId,
+                                                   @Nonnull String eventName,
+                                                   @Nonnull Map<String, String> attributes,
+                                                   @Nonnull Map<String, ?> eventTags);
+
+    @Deprecated
     public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
                                           @Nonnull Bucketer bucketer,
                                           @Nullable UserProfile userProfile,
@@ -48,6 +56,7 @@ public abstract class EventBuilder {
         return createConversionEvent(projectConfig, bucketer, userProfile, userId, eventId, eventName, attributes, Collections.<String, String>emptyMap());
     }
 
+    @Deprecated
     public abstract LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
                                                    @Nonnull Bucketer bucketer,
                                                    @Nullable UserProfile userProfile,
