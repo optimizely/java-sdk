@@ -250,11 +250,25 @@ public class Optimizely {
             eventValue = EventTagUtils.getRevenueValue(eventTags);
         }
 
-        // create the conversion event request parameters, then dispatch
-        LogEvent conversionEvent = eventBuilder.createConversionEvent(currentConfig, bucketer, userProfile, userId,
-                                                                      eventType.getId(), eventType.getKey(), attributes,
-                                                                      eventTags);
+        // create the experimentVariationMap
+        List<Experiment> allExperiments = projectConfig.getExperiments();
+        Map<Experiment, Variation>experimentVariationMap = new HashMap<Experiment, Variation>(allExperiments.size());
+        for (Experiment experiment : allExperiments) {
+            Variation variation = getVariation(currentConfig, experiment, attributes, userId);
+            if (variation != null) {
+                experimentVariationMap.put(experiment, variation);
+            }
+        }
 
+        // create the conversion event request parameters, then dispatch
+        LogEvent conversionEvent = eventBuilder.createConversionEvent(projectConfig,
+                experimentVariationMap,
+                userId,
+                eventType.getId(),
+                eventType.getKey(),
+                attributes,
+                eventTags);
+        
         if (conversionEvent == null) {
             logger.info("There are no valid experiments for event \"{}\" to track.", eventName);
             logger.info("Not tracking event \"{}\" for user \"{}\".", eventName, userId);

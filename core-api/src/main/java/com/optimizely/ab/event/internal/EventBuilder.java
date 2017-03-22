@@ -38,7 +38,8 @@ public abstract class EventBuilder {
                                                    @Nonnull String userId,
                                                    @Nonnull Map<String, String> attributes);
 
-    public abstract LogEvent createConversionEvent(@Nonnull Map<Experiment, Variation> layerStates,
+    public abstract LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
+                                                   @Nonnull Map<Experiment, Variation> experimentVariationMap,
                                                    @Nonnull String userId,
                                                    @Nonnull String eventId,
                                                    @Nonnull String eventName,

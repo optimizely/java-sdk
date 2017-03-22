@@ -26,8 +26,8 @@ import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.Conversion;
 import com.optimizely.ab.event.internal.payload.Decision;
-import com.optimizely.ab.event.internal.payload.EventMetric;
 import com.optimizely.ab.event.internal.payload.Event.ClientEngine;
+import com.optimizely.ab.event.internal.payload.EventMetric;
 import com.optimizely.ab.event.internal.payload.Feature;
 import com.optimizely.ab.event.internal.payload.Impression;
 import com.optimizely.ab.event.internal.payload.LayerState;
@@ -35,14 +35,11 @@ import com.optimizely.ab.event.internal.serializer.DefaultJsonSerializer;
 import com.optimizely.ab.event.internal.serializer.Serializer;
 import com.optimizely.ab.internal.EventTagUtils;
 import com.optimizely.ab.internal.ProjectValidationUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -105,16 +102,44 @@ public class EventBuilderV2 extends EventBuilder {
         return new LogEvent(RequestMethod.POST, IMPRESSION_ENDPOINT, Collections.<String, String>emptyMap(), payload);
     }
 
-    public LogEvent createConversionEvent(@Nonnull Map<Experiment, Variation> layerStates,
-                                                   @Nonnull String userId,
-                                                   @Nonnull String eventId,
-                                                   @Nonnull String eventName,
-                                                   @Nonnull Map<String, String> attributes,
-                                                   @Nonnull Map<String, ?> eventTags) {
+    public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
+                                          @Nonnull Map<Experiment, Variation> experimentVariationMap,
+                                          @Nonnull String userId,
+                                          @Nonnull String eventId,
+                                          @Nonnull String eventName,
+                                          @Nonnull Map<String, String> attributes,
+                                          @Nonnull Map<String, ?> eventTags) {
+
+        if (experimentVariationMap.isEmpty()) {
+            return null;
+        }
+        List<LayerState> layerStates = createLayerStates(projectConfig, experimentVariationMap);
+
+        Long eventValue = EventTagUtils.getRevenueValue(eventTags);
+        List<EventMetric> eventMetrics = Collections.emptyList();
+        if (eventValue != null) {
+            eventMetrics = Collections.singletonList(new EventMetric(EventMetric.REVENUE_METRIC_TYPE, eventValue));
+        }
 
         Conversion conversionPayload = new Conversion();
+        conversionPayload.setAccountId(projectConfig.getAccountId());
+        conversionPayload.setAnonymizeIP(projectConfig.getAnonymizeIP());
+        conversionPayload.setClientEngine(clientEngine);
+        conversionPayload.setClientVersion(clientVersion);
+        conversionPayload.setEventEntityId(eventId);
+        conversionPayload.setEventFeatures(createEventFeatures(eventTags));
+        conversionPayload.setEventName(eventName);
+        conversionPayload.setEventMetrics(eventMetrics);
+        conversionPayload.setIsGlobalHoldback(false);
+        conversionPayload.setLayerStates(layerStates);
+        conversionPayload.setProjectId(projectConfig.getProjectId());
+        conversionPayload.setRevision(projectConfig.getRevision());
+        conversionPayload.setTimestamp(System.currentTimeMillis());
+        conversionPayload.setUserFeatures(createUserFeatures(attributes, projectConfig));
         conversionPayload.setVisitorId(userId);
-        return null;
+
+        String payload = this.serializer.serialize(conversionPayload);
+        return new LogEvent(RequestMethod.POST, CONVERSION_ENDPOINT, Collections.<String, String>emptyMap(), payload);
     }
 
     public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
@@ -203,6 +228,22 @@ public class EventBuilderV2 extends EventBuilder {
         return features;
     }
 
+    private List<LayerState>createLayerStates(ProjectConfig projectConfig, Map<Experiment, Variation> experimentVariationMap) {
+        List<LayerState> layerStates = new ArrayList<LayerState>();
+
+        for (Experiment experiment : experimentVariationMap.keySet()) {
+            Decision decision = new Decision(experimentVariationMap.get(experiment).getId(),
+                    false,
+                    experiment.getId());
+            layerStates.add(new LayerState(experiment.getLayerId(),
+                    projectConfig.getRevision(),
+                    decision,
+                    true));
+        }
+
+        return layerStates;
+    }
+
     /**
      * Helper method to create {@link LayerState} objects for all experiments mapped to an event.
      * <p>
@@ -225,6 +266,7 @@ public class EventBuilderV2 extends EventBuilder {
      * @param eventKey the goal that the bucket map will be filtered by
      * @param attributes the user's attributes
      */
+    @Deprecated
     private List<LayerState> createLayerStates(ProjectConfig projectConfig, Bucketer bucketer, UserProfile userProfile, String userId,
                                                String eventKey, Map<String, String> attributes) {
         List<Experiment> allExperiments = projectConfig.getExperiments();
