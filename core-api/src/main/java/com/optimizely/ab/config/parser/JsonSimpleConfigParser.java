@@ -17,35 +17,33 @@
 package com.optimizely.ab.config.parser;
 
 import com.optimizely.ab.config.Attribute;
+import com.optimizely.ab.config.EventType;
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.Experiment.ExperimentStatus;
+import com.optimizely.ab.config.Group;
+import com.optimizely.ab.config.LiveVariable;
+import com.optimizely.ab.config.LiveVariable.VariableStatus;
+import com.optimizely.ab.config.LiveVariable.VariableType;
+import com.optimizely.ab.config.LiveVariableUsageInstance;
+import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.TrafficAllocation;
+import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
-import com.optimizely.ab.config.EventType;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.Experiment.ExperimentStatus;
-import com.optimizely.ab.config.Group;
-import com.optimizely.ab.config.LiveVariable;
-import com.optimizely.ab.config.LiveVariableUsageInstance;
-import com.optimizely.ab.config.LiveVariable.VariableStatus;
-import com.optimizely.ab.config.LiveVariable.VariableType;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.TrafficAllocation;
-import com.optimizely.ab.config.Variation;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.Nonnull;
 
 /**
  * {@code json-simple}-based config parser implementation.

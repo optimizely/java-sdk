@@ -18,7 +18,6 @@ package com.optimizely.ab.config;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-
 import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
@@ -26,15 +25,14 @@ import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;

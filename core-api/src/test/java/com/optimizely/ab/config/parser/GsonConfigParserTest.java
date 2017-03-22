@@ -17,15 +17,14 @@
 package com.optimizely.ab.config.parser;
 
 import com.optimizely.ab.config.ProjectConfig;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV3;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.verifyProjectConfig;
 

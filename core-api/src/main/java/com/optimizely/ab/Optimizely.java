@@ -19,7 +19,6 @@ package com.optimizely.ab;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.UserProfile;
-import com.optimizely.ab.internal.UserProfileUtils;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
@@ -41,23 +40,21 @@ import com.optimizely.ab.event.internal.payload.Event.ClientEngine;
 import com.optimizely.ab.internal.EventTagUtils;
 import com.optimizely.ab.internal.ProjectValidationUtils;
 import com.optimizely.ab.internal.ReservedEventKey;
-import com.optimizely.ab.notification.NotificationListener;
+import com.optimizely.ab.internal.UserProfileUtils;
 import com.optimizely.ab.notification.NotificationBroadcaster;
-
-import jdk.nashorn.internal.runtime.regexp.joni.Config;
+import com.optimizely.ab.notification.NotificationListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Top-level container class for Optimizely functionality.

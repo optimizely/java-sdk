@@ -22,14 +22,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
-
 import com.optimizely.ab.config.Attribute;
-import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Group;
 import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.audience.Audience;
 
 import java.lang.reflect.Type;
 import java.util.List;
