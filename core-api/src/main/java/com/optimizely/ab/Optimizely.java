@@ -255,7 +255,7 @@ public class Optimizely {
         Map<Experiment, Variation>experimentVariationMap = new HashMap<Experiment, Variation>(allExperiments.size());
         for (Experiment experiment : allExperiments) {
             Variation variation = getVariation(currentConfig, experiment, attributes, userId);
-            if (variation != null) {
+            if (variation != null && experiment.isRunning()) {
                 experimentVariationMap.put(experiment, variation);
             }
         }
