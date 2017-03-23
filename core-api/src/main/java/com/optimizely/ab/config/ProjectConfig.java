@@ -165,7 +165,7 @@ public class ProjectConfig {
         return experiments;
     }
 
-    public List<String> getExperimentIdsForGoal(String goalKey) {
+    public List<String> getExperimentIdsForGoal(String goalKey) { // TODO: Josh. W delete this method
         EventType goal;
         if ((goal = eventNameMapping.get(goalKey)) != null) {
             return goal.getExperimentIds();
@@ -174,10 +174,10 @@ public class ProjectConfig {
         return Collections.emptyList();
     }
 
-    public List<Experiment>getExperimentsForGoal(String goalKey) {
-        EventType goal;
-        if ((goal = eventNameMapping.get(goalKey)) != null) {
-            List<String> experimentIds = goal.getExperimentIds();
+    public List<Experiment>getExperimentsForEventKey(String eventKey) {
+        EventType event = eventNameMapping.get(eventKey);
+        if (event != null) {
+            List<String> experimentIds = event.getExperimentIds();
             List<Experiment> experiments = new ArrayList<Experiment>();
             for (String experimentId : experimentIds) {
                 experiments.add(experimentIdMapping.get(experimentId));

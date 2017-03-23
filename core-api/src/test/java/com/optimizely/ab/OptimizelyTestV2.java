@@ -885,7 +885,7 @@ public class OptimizelyTestV2 {
 
         // verify that the event builder was called with the expected attributes
         verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig),
-                anyMapOf(Experiment.class, Variation.class),
+                anyMapOf(Experiment.class, Variation.class), // TODO: Josh W. check actual value
                 eq("userId"),
                 eq(eventType.getId()),
                 eq(eventType.getKey()),

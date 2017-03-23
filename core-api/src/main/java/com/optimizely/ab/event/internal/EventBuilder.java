@@ -46,6 +46,7 @@ public abstract class EventBuilder {
                                                    @Nonnull Map<String, String> attributes,
                                                    @Nonnull Map<String, ?> eventTags);
 
+    // TODO: Josh W. delete this API
     @Deprecated
     public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
                                           @Nonnull Bucketer bucketer,
@@ -57,6 +58,7 @@ public abstract class EventBuilder {
         return createConversionEvent(projectConfig, bucketer, userProfile, userId, eventId, eventName, attributes, Collections.<String, String>emptyMap());
     }
 
+    // TODO: Josh W. delete this API
     @Deprecated
     public abstract LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
                                                    @Nonnull Bucketer bucketer,

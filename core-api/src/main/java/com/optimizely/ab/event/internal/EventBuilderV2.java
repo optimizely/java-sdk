@@ -142,6 +142,7 @@ public class EventBuilderV2 extends EventBuilder {
         return new LogEvent(RequestMethod.POST, CONVERSION_ENDPOINT, Collections.<String, String>emptyMap(), payload);
     }
 
+    // TODO: Josh W. Delete this method
     public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
                                           @Nonnull Bucketer bucketer,
                                           @Nullable UserProfile userProfile,
