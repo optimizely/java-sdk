@@ -182,25 +182,6 @@ public class EventBuilderV2 extends EventBuilder {
         }
         return features;
     }
-
-    private List<LayerState>createLayerStates(ProjectConfig projectConfig, Map<Experiment, Variation> experimentVariationMap) {
-        List<LayerState> layerStates = new ArrayList<LayerState>();
-
-        for (Map.Entry<Experiment, Variation> entry : experimentVariationMap.entrySet()) {
-            Experiment experiment = entry.getKey();
-            Variation variation = entry.getValue();
-            Decision decision = new Decision(variation.getId(),
-                    false,
-                    experiment.getId());
-            layerStates.add(new LayerState(experiment.getLayerId(),
-                    projectConfig.getRevision(),
-                    decision,
-                    true));
-        }
-
-        return layerStates;
-    }
-
     /**
      * Helper method to create {@link LayerState} objects for all experiments mapped to an event.
      * <p>
@@ -218,34 +199,23 @@ public class EventBuilderV2 extends EventBuilder {
      * no good reason.
      *
      * @param projectConfig the current project config
-     * @param bucketer the bucketing algorithm to use
-     * @param userId the user's id for the impression event
-     * @param eventKey the goal that the bucket map will be filtered by
-     * @param attributes the user's attributes
+     * @param experimentVariationMap the mapping of experiments associated with this event
+     *                               and the variations the user was bucketed into for that experiment
+     *
      */
-    @Deprecated
-    private List<LayerState> createLayerStates(ProjectConfig projectConfig, Bucketer bucketer, UserProfile userProfile, String userId,
-                                               String eventKey, Map<String, String> attributes) {
-        List<Experiment> allExperiments = projectConfig.getExperiments();
-        List<String> experimentIds = projectConfig.getExperimentIdsForGoal(eventKey);
+    private List<LayerState>createLayerStates(ProjectConfig projectConfig, Map<Experiment, Variation> experimentVariationMap) {
         List<LayerState> layerStates = new ArrayList<LayerState>();
 
-        for (Experiment experiment : allExperiments) {
-            if (experimentIds.contains(experiment.getId()) &&
-                    ProjectValidationUtils.validatePreconditions(projectConfig, userProfile, experiment, userId, attributes)) {
-                if (experiment.isRunning()) {
-                    Variation bucketedVariation = bucketer.bucket(experiment, userId);
-                    if (bucketedVariation != null) {
-                        Decision decision = new Decision(bucketedVariation.getId(), false, experiment.getId());
-                        layerStates.add(
-                                new LayerState(experiment.getLayerId(), projectConfig.getRevision(), decision, true));
-                    }
-                } else {
-                    logger.info(
-                        "Not tracking event \"{}\" for experiment \"{}\" because experiment has status \"Launched\".",
-                        eventKey, experiment.getKey());
-                }
-            }
+        for (Map.Entry<Experiment, Variation> entry : experimentVariationMap.entrySet()) {
+            Experiment experiment = entry.getKey();
+            Variation variation = entry.getValue();
+            Decision decision = new Decision(variation.getId(),
+                    false,
+                    experiment.getId());
+            layerStates.add(new LayerState(experiment.getLayerId(),
+                    projectConfig.getRevision(),
+                    decision,
+                    true));
         }
 
         return layerStates;
