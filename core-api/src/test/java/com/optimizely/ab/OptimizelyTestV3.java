@@ -750,8 +750,6 @@ public class OptimizelyTestV3 {
             .withErrorHandler(mockErrorHandler)
             .build();
 
-        List<String> experimentIds = noAudienceProjectConfig.getExperimentIdsForGoal(eventType.getKey());
-
         // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
         // call the bucket function.
         for (Experiment experiment : allExperiments) {
@@ -765,9 +763,10 @@ public class OptimizelyTestV3 {
         optimizely.track(eventType.getKey(), "userId");
 
         // verify that the bucketing algorithm was called only on experiments corresponding to the specified goal.
+        List<Experiment> experimentsForEvent = noAudienceProjectConfig.getExperimentsForEventKey(eventType.getKey());
         for (Experiment experiment : allExperiments) {
             if (ProjectValidationUtils.validatePreconditions(noAudienceProjectConfig, null, experiment, "userId", emptyAttributes) &&
-                    experimentIds.contains(experiment.getId())) {
+                    experimentsForEvent.contains(experiment)) {
                 verify(mockBucketer).bucket(experiment, "userId");
             } else {
                 verify(mockBucketer, never()).bucket(experiment, "userId");

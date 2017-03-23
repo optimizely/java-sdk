@@ -165,15 +165,6 @@ public class ProjectConfig {
         return experiments;
     }
 
-    public List<String> getExperimentIdsForGoal(String goalKey) { // TODO: Josh. W delete this method
-        EventType goal;
-        if ((goal = eventNameMapping.get(goalKey)) != null) {
-            return goal.getExperimentIds();
-        }
-
-        return Collections.emptyList();
-    }
-
     public List<Experiment>getExperimentsForEventKey(String eventKey) {
         EventType event = eventNameMapping.get(eventKey);
         if (event != null) {
