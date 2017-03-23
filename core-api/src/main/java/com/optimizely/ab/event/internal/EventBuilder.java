@@ -45,27 +45,4 @@ public abstract class EventBuilder {
                                                    @Nonnull String eventName,
                                                    @Nonnull Map<String, String> attributes,
                                                    @Nonnull Map<String, ?> eventTags);
-
-    // TODO: Josh W. delete this API
-    @Deprecated
-    public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
-                                          @Nonnull Bucketer bucketer,
-                                          @Nullable UserProfile userProfile,
-                                          @Nonnull String userId,
-                                          @Nonnull String eventId,
-                                          @Nonnull String eventName,
-                                          @Nonnull Map<String, String> attributes) {
-        return createConversionEvent(projectConfig, bucketer, userProfile, userId, eventId, eventName, attributes, Collections.<String, String>emptyMap());
-    }
-
-    // TODO: Josh W. delete this API
-    @Deprecated
-    public abstract LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
-                                                   @Nonnull Bucketer bucketer,
-                                                   @Nullable UserProfile userProfile,
-                                                   @Nonnull String userId,
-                                                   @Nonnull String eventId,
-                                                   @Nonnull String eventName,
-                                                   @Nonnull Map<String, String> attributes,
-                                                   @Nonnull Map<String, ?> eventTags);
 }

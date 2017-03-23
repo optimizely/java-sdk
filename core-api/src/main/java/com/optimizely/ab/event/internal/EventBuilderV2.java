@@ -142,52 +142,6 @@ public class EventBuilderV2 extends EventBuilder {
         return new LogEvent(RequestMethod.POST, CONVERSION_ENDPOINT, Collections.<String, String>emptyMap(), payload);
     }
 
-    // TODO: Josh W. Delete this method
-    public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
-                                          @Nonnull Bucketer bucketer,
-                                          @Nullable UserProfile userProfile,
-                                          @Nonnull String userId,
-                                          @Nonnull String eventId,
-                                          @Nonnull String eventName,
-                                          @Nonnull Map<String, String> attributes,
-                                          @Nonnull Map<String, ?> eventTags) {
-
-        Conversion conversionPayload = new Conversion();
-        conversionPayload.setVisitorId(userId);
-        conversionPayload.setTimestamp(System.currentTimeMillis());
-        conversionPayload.setProjectId(projectConfig.getProjectId());
-        conversionPayload.setAccountId(projectConfig.getAccountId());
-        conversionPayload.setUserFeatures(createUserFeatures(attributes, projectConfig));
-
-        List<LayerState> layerStates = createLayerStates(projectConfig, bucketer, userProfile, userId, eventName, attributes);
-        if (layerStates.isEmpty()) {
-            return null;
-        }
-        conversionPayload.setLayerStates(layerStates);
-
-        conversionPayload.setEventEntityId(eventId);
-        conversionPayload.setEventName(eventName);
-
-        Long eventValue = EventTagUtils.getRevenueValue(eventTags);
-        if (eventValue != null) {
-            conversionPayload.setEventMetrics(
-                    Collections.singletonList(new EventMetric(EventMetric.REVENUE_METRIC_TYPE, eventValue)));
-        } else {
-            conversionPayload.setEventMetrics(Collections.<EventMetric>emptyList());
-        }
-
-        conversionPayload.setEventFeatures(Collections.<Feature>emptyList());
-        conversionPayload.setIsGlobalHoldback(false);
-        conversionPayload.setAnonymizeIP(projectConfig.getAnonymizeIP());
-        conversionPayload.setClientEngine(clientEngine);
-        conversionPayload.setClientVersion(clientVersion);
-        conversionPayload.setRevision(projectConfig.getRevision());
-        conversionPayload.setEventFeatures(createEventFeatures(eventTags));
-
-        String payload = this.serializer.serialize(conversionPayload);
-        return new LogEvent(RequestMethod.POST, CONVERSION_ENDPOINT, Collections.<String, String>emptyMap(), payload);
-    }
-
     /**
      * Helper method to generate {@link Feature} objects from the given {@code {attributeKey -> value}} mapping.
      *
