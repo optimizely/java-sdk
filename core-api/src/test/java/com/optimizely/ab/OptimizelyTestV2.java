@@ -866,7 +866,8 @@ public class OptimizelyTestV2 {
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createConversionEvent(eq(validProjectConfig),
+        when(mockEventBuilder.createConversionEvent(
+                eq(validProjectConfig),
                 anyMapOf(Experiment.class, Variation.class),
                 eq(genericUserId),
                 eq(eventType.getId()),
@@ -887,13 +888,15 @@ public class OptimizelyTestV2 {
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
 
         // verify that the event builder was called with the expected attributes
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(validProjectConfig,
+        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
+                validProjectConfig,
                 mockBucketer,
                 null,
                 eventType.getKey(),
                 genericUserId,
                 attributes);
-        verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig),
+        verify(mockEventBuilder).createConversionEvent(
+                eq(validProjectConfig),
                 eq(experimentVariationMap),
                 eq(genericUserId),
                 eq(eventType.getId()),
@@ -929,14 +932,16 @@ public class OptimizelyTestV2 {
 
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(validProjectConfig,
+        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
+                validProjectConfig,
                 mockBucketer,
                 null,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createConversionEvent(eq(noAudienceProjectConfig),
+        when(mockEventBuilder.createConversionEvent(
+                eq(noAudienceProjectConfig),
                     eq(experimentVariationMap),
                     eq("userId"),
                     eq(eventType.getId()),
@@ -959,7 +964,8 @@ public class OptimizelyTestV2 {
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
 
         // verify that the event builder was called with the expected attributes
-        verify(mockEventBuilder).createConversionEvent(eq(noAudienceProjectConfig),
+        verify(mockEventBuilder).createConversionEvent(
+                eq(noAudienceProjectConfig),
                 eq(experimentVariationMap),
                 eq("userId"),
                 eq(eventType.getId()),
@@ -992,15 +998,17 @@ public class OptimizelyTestV2 {
 
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(validProjectConfig,
+        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
+                validProjectConfig,
                 mockBucketer,
                 null,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createConversionEvent(eq(validProjectConfig),
-                eq(experimentVariationMap),
+        when(mockEventBuilder.createConversionEvent(
+                    eq(validProjectConfig),
+                    eq(experimentVariationMap),
                     eq(genericUserId),
                     eq(eventType.getId()),
                     eq(eventType.getKey()),
@@ -1021,7 +1029,8 @@ public class OptimizelyTestV2 {
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
 
         // verify that the event builder was called with the expected attributes
-        verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig),
+        verify(mockEventBuilder).createConversionEvent(
+                eq(validProjectConfig),
                 eq(experimentVariationMap),
                 eq(genericUserId),
                 eq(eventType.getId()),
@@ -1055,14 +1064,16 @@ public class OptimizelyTestV2 {
 
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(validProjectConfig,
+        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
+                validProjectConfig,
                 mockBucketer,
                 null,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createConversionEvent(eq(validProjectConfig),
+        when(mockEventBuilder.createConversionEvent(
+                eq(validProjectConfig),
                 eq(experimentVariationMap),
                 eq(genericUserId),
                 eq(eventType.getId()),
@@ -1083,7 +1094,8 @@ public class OptimizelyTestV2 {
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
 
         // verify that the event builder was called with the expected attributes
-        verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig),
+        verify(mockEventBuilder).createConversionEvent(eq(
+                validProjectConfig),
                 eq(experimentVariationMap),
                 eq(genericUserId),
                 eq(eventType.getId()),
@@ -1117,7 +1129,8 @@ public class OptimizelyTestV2 {
 
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(validProjectConfig,
+        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
+                validProjectConfig,
                 mockBucketer,
                 null,
                 eventType.getKey(),
@@ -1126,7 +1139,8 @@ public class OptimizelyTestV2 {
         Map<String, Object> eventTags = new HashMap<String, Object>();
         eventTags.put(ReservedEventKey.REVENUE.toString(), revenue);
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createConversionEvent(eq(validProjectConfig),
+        when(mockEventBuilder.createConversionEvent(eq(
+                validProjectConfig),
                 eq(experimentVariationMap),
                 eq(genericUserId),
                 eq(eventType.getId()),
@@ -1142,7 +1156,8 @@ public class OptimizelyTestV2 {
         ArgumentCaptor<Map> eventTagCaptor = ArgumentCaptor.forClass(Map.class);
 
         // verify that the event builder was called with the expected revenue
-        verify(mockEventBuilder).createConversionEvent(eq(validProjectConfig),
+        verify(mockEventBuilder).createConversionEvent(
+                eq(validProjectConfig),
                 eq(experimentVariationMap),
                 eq(genericUserId),
                 eq(eventType.getId()),
@@ -1178,14 +1193,16 @@ public class OptimizelyTestV2 {
 
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(validProjectConfig,
+        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
+                validProjectConfig,
                 mockBucketer,
                 null,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createConversionEvent(eq(projectConfig),
+        when(mockEventBuilder.createConversionEvent(
+                eq(projectConfig),
                 eq(experimentVariationMap),
                 eq(genericUserId),
                 eq(eventType.getId()),
@@ -1211,7 +1228,8 @@ public class OptimizelyTestV2 {
         ArgumentCaptor<Map> eventTagCaptor = ArgumentCaptor.forClass(Map.class);
 
         // verify that the event builder was called with the expected attributes
-        verify(mockEventBuilder).createConversionEvent(eq(projectConfig),
+        verify(mockEventBuilder).createConversionEvent(
+                eq(projectConfig),
                 eq(experimentVariationMap),
                 eq(genericUserId),
                 eq(eventType.getId()),
@@ -1253,14 +1271,16 @@ public class OptimizelyTestV2 {
 
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(validProjectConfig,
+        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
+                validProjectConfig,
                 mockBucketer,
                 null,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createConversionEvent(eq(projectConfig),
+        when(mockEventBuilder.createConversionEvent(
+                eq(projectConfig),
                 eq(experimentVariationMap),
                 eq(genericUserId),
                 eq(eventType.getId()),
@@ -1277,7 +1297,8 @@ public class OptimizelyTestV2 {
         optimizely.track(eventType.getKey(), genericUserId, Collections.<String, String>emptyMap(), null);
 
         // verify that the event builder was called with the expected attributes
-        verify(mockEventBuilder).createConversionEvent(eq(projectConfig),
+        verify(mockEventBuilder).createConversionEvent(
+                eq(projectConfig),
                 eq(experimentVariationMap),
                 eq(genericUserId),
                 eq(eventType.getId()),

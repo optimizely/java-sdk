@@ -16,18 +16,12 @@
  */
 package com.optimizely.ab.event.internal;
 
-import com.optimizely.ab.bucketing.Bucketer;
-import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import java.util.Collections;
 import java.util.Map;
 
 public abstract class EventBuilder {

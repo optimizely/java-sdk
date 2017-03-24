@@ -17,16 +17,14 @@
 package com.optimizely.ab.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
 
+import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.concurrent.Immutable;
 
 /**
  * Represents the Optimizely Project configuration.
@@ -173,7 +171,7 @@ public class ProjectConfig {
             for (String experimentId : experimentIds) {
                 experiments.add(experimentIdMapping.get(experimentId));
             }
-            
+
             return experiments;
         }
 

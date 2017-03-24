@@ -17,8 +17,6 @@
 package com.optimizely.ab.event.internal;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
-import com.optimizely.ab.bucketing.Bucketer;
-import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
@@ -34,12 +32,10 @@ import com.optimizely.ab.event.internal.payload.LayerState;
 import com.optimizely.ab.event.internal.serializer.DefaultJsonSerializer;
 import com.optimizely.ab.event.internal.serializer.Serializer;
 import com.optimizely.ab.internal.EventTagUtils;
-import com.optimizely.ab.internal.ProjectValidationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
