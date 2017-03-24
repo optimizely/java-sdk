@@ -113,6 +113,7 @@ public class EventBuilderV2 extends EventBuilder {
         if (experimentVariationMap.isEmpty()) {
             return null;
         }
+
         List<LayerState> layerStates = createLayerStates(projectConfig, experimentVariationMap);
 
         Long eventValue = EventTagUtils.getRevenueValue(eventTags);
@@ -203,13 +204,14 @@ public class EventBuilderV2 extends EventBuilder {
      *                               and the variations the user was bucketed into for that experiment
      *
      */
-    private List<LayerState>createLayerStates(ProjectConfig projectConfig, Map<Experiment, Variation> experimentVariationMap) {
+    private List<LayerState> createLayerStates(ProjectConfig projectConfig, Map<Experiment, Variation> experimentVariationMap) {
         List<LayerState> layerStates = new ArrayList<LayerState>();
 
         for (Map.Entry<Experiment, Variation> entry : experimentVariationMap.entrySet()) {
             Experiment experiment = entry.getKey();
             Variation variation = entry.getValue();
-            Decision decision = new Decision(variation.getId(),
+            Decision decision = new Decision(
+                    variation.getId(),
                     false,
                     experiment.getId());
             layerStates.add(new LayerState(experiment.getLayerId(),

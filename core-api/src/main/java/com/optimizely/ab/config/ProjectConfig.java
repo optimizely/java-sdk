@@ -165,14 +165,15 @@ public class ProjectConfig {
         return experiments;
     }
 
-    public List<Experiment>getExperimentsForEventKey(String eventKey) {
+    public List<Experiment> getExperimentsForEventKey(String eventKey) {
         EventType event = eventNameMapping.get(eventKey);
         if (event != null) {
             List<String> experimentIds = event.getExperimentIds();
-            List<Experiment> experiments = new ArrayList<Experiment>();
+            List<Experiment> experiments = new ArrayList<Experiment>(experimentIds.size());
             for (String experimentId : experimentIds) {
                 experiments.add(experimentIdMapping.get(experimentId));
             }
+            
             return experiments;
         }
 

@@ -251,9 +251,9 @@ public class Optimizely {
         }
 
         // create the experimentVariationMap
-        List<Experiment> allExperiments = projectConfig.getExperimentsForEventKey(eventName);
-        Map<Experiment, Variation>experimentVariationMap = new HashMap<Experiment, Variation>(allExperiments.size());
-        for (Experiment experiment : allExperiments) {
+        List<Experiment> experimentsForEvent = projectConfig.getExperimentsForEventKey(eventName);
+        Map<Experiment, Variation> experimentVariationMap = new HashMap<Experiment, Variation>(experimentsForEvent.size());
+        for (Experiment experiment : experimentsForEvent) {
             Variation variation = getVariation(currentConfig, experiment, attributes, userId);
             if (variation != null && experiment.isRunning()) {
                 experimentVariationMap.put(experiment, variation);
@@ -261,7 +261,8 @@ public class Optimizely {
         }
 
         // create the conversion event request parameters, then dispatch
-        LogEvent conversionEvent = eventBuilder.createConversionEvent(projectConfig,
+        LogEvent conversionEvent = eventBuilder.createConversionEvent(
+                projectConfig,
                 experimentVariationMap,
                 userId,
                 eventType.getId(),
