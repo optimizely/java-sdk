@@ -39,6 +39,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -550,7 +551,10 @@ public class EventBuilderV2Test {
                                                                           UserProfile userProfile,
                                                                           String eventName,
                                                                           String userId,
-                                                                          Map<String, String> attributes) {
+                                                                          @Nullable Map<String, String> attributes) {
+        if (attributes == null) {
+            attributes = Collections.emptyMap();
+        }
         List<Experiment> eventExperiments = projectConfig.getExperimentsForEventKey(eventName);
         Map<Experiment, Variation> experimentVariationMap = new HashMap<Experiment, Variation>(eventExperiments.size());
         for (Experiment experiment : eventExperiments) {
