@@ -32,11 +32,9 @@ import com.optimizely.ab.event.internal.payload.EventMetric;
 import com.optimizely.ab.event.internal.payload.Feature;
 import com.optimizely.ab.event.internal.payload.Impression;
 import com.optimizely.ab.event.internal.payload.LayerState;
-import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.internal.ProjectValidationUtils;
 import com.optimizely.ab.internal.ReservedEventKey;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
@@ -47,8 +45,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.closeTo;
@@ -506,44 +502,6 @@ public class EventBuilderV2Test {
         assertThat(conversion.getClientEngine(), is(ClientEngine.ANDROID_TV_SDK.getClientEngineValue()));
         assertThat(conversion.getClientVersion(), is(clientVersion));
     }
-
-    // TODO: Josh W. move this test to OptimizelyTestv2/3 class
-//    /**
-//     * Verify that {@link EventBuilderV2} doesn't add experiments with a "Launched" status to the bucket map
-//     */
-//    @Test
-//    public void createConversionEventForEventUsingLaunchedExperiment() throws Exception {
-//        EventBuilderV2 builder = new EventBuilderV2();
-//        EventType eventType = noAudienceProjectConfig.getEventTypes().get(3);
-//
-//        Bucketer mockBucketAlgorithm = mock(Bucketer.class);
-//        for (Experiment experiment : noAudienceProjectConfig.getExperiments()) {
-//            when(mockBucketAlgorithm.bucket(experiment, userId))
-//                    .thenReturn(experiment.getVariations().get(0));
-//        }
-//
-//        logbackVerifier.expectMessage(Level.INFO,
-//                "Not tracking event \"launched_exp_event\" for experiment \"etag3\" because experiment has status " +
-//                        "\"Launched\".");
-//
-//        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(validProjectConfig,
-//                mockBucketAlgorithm,
-//                null,
-//                eventType.getKey(),
-//                userId,
-//                null);
-//        LogEvent conversionEvent = builder.createConversionEvent(noAudienceProjectConfig,
-//                experimentVariationMap,
-//                userId,
-//                eventType.getId(),
-//                eventType.getKey(),
-//                Collections.<String, String>emptyMap(),
-//                Collections.<String, Object>emptyMap());
-//
-//        // only 1 experiment uses the event and it has a "Launched" status so the bucket map is empty and the returned
-//        // event will be null
-//        assertNull(conversionEvent);
-//    }
 
     //========== helper methods =========//
     public static Map<Experiment, Variation> createExperimentVariationMap(ProjectConfig projectConfig,

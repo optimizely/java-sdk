@@ -19,8 +19,6 @@ package com.optimizely.ab;
 import ch.qos.logback.classic.Level;
 import com.google.common.collect.ImmutableMap;
 import com.optimizely.ab.bucketing.Bucketer;
-import com.optimizely.ab.bucketing.BucketerTest;
-import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
@@ -68,8 +66,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMapOf;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -1307,6 +1305,92 @@ public class OptimizelyTestV2 {
                 eq(Collections.<String, String>emptyMap()));
 
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
+    }
+
+    /**
+     * Verify that {@link Optimizely#track(String, String, Map)}
+     * doesn't dispatch events when the event links only to launched experiments
+     */
+    @Test
+    public void trackDoesNotSendEventWhenExperimentsAreLaunchedOnly() throws Exception {
+        EventType eventType = noAudienceProjectConfig.getEventNameMapping().get("launched_exp_event");
+        Bucketer mockBucketAlgorithm = mock(Bucketer.class);
+        for (Experiment experiment : noAudienceProjectConfig.getExperiments()) {
+            Variation variation = experiment.getVariations().get(0);
+            when(mockBucketAlgorithm.bucket(
+                    eq(experiment),
+                    eq(genericUserId)))
+                .thenReturn(variation);
+        }
+
+        Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
+                .withConfig(noAudienceProjectConfig)
+                .withBucketing(mockBucketAlgorithm)
+                .build();
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "There are no valid experiments for event \"" + eventType.getKey() + "\" to track."
+        );
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "Not tracking event \"" + eventType.getKey() + "\" for user \"" + genericUserId + "\"."
+        );
+
+        // only 1 experiment uses the event and it has a "Launched" status so experimentsForEvent map is empty
+        // and the returned event will be null
+        // this means we will never call the dispatcher
+        client.track(eventType.getKey(), genericUserId, Collections.<String, String>emptyMap());
+        // bucket should never be called since experiments are launched so we never get variation for them
+        verify(mockBucketAlgorithm, never()).bucket(
+                any(Experiment.class),
+                anyString());
+        verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
+    }
+
+    /**
+     * Verify that {@link Optimizely#track(String, String, Map)}
+     * dispatches log events when the tracked event links to both launched and running experiments.
+     */
+    @Test
+    public void trackDispatchesWhenEventHasLaunchedAndRunningExperiments() throws Exception {
+        EventBuilder mockEventBuilder = mock(EventBuilder.class);
+        EventType eventType = noAudienceProjectConfig.getEventNameMapping().get("event_with_launched_and_running_experiment");
+        Bucketer mockBucketAlgorithm = mock(Bucketer.class);
+        for (Experiment experiment : noAudienceProjectConfig.getExperiments()) {
+            when(mockBucketAlgorithm.bucket(experiment, genericUserId))
+                    .thenReturn(experiment.getVariations().get(0));
+        }
+
+        Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
+                .withConfig(noAudienceProjectConfig)
+                .withBucketing(mockBucketAlgorithm)
+                .withEventBuilder(mockEventBuilder)
+                .build();
+
+        Map<String, String> testParams = new HashMap<String, String>();
+        testParams.put("test", "params");
+        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(noAudienceProjectConfig,
+                mockBucketAlgorithm,
+                null,
+                eventType.getKey(),
+                genericUserId,
+                null);
+        LogEvent conversionEvent = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+        when(mockEventBuilder.createConversionEvent(
+                eq(noAudienceProjectConfig),
+                eq(experimentVariationMap),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                eq(Collections.<String, String>emptyMap()),
+                eq(Collections.<String, Object>emptyMap())
+        )).thenReturn(conversionEvent);
+
+        // only 1 experiment uses the event and it has a "Launched" status so experimentsForEvent map is empty
+        // and the returned event will be null
+        client.track(eventType.getKey(), genericUserId, Collections.<String, String>emptyMap());
+        verify(client.eventHandler).dispatchEvent(eq(conversionEvent));
     }
 
     /**
