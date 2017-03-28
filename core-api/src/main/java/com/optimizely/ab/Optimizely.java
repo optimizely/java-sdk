@@ -259,6 +259,10 @@ public class Optimizely {
                 if (variation != null) {
                     experimentVariationMap.put(experiment, variation);
                 }
+            } else {
+                logger.info(
+                        "Not tracking event \"{}\" for experiment \"{}\" because experiment has status \"Launched\".",
+                        eventType.getKey(), experiment.getKey());
             }
         }
 
@@ -432,6 +436,9 @@ public class Optimizely {
     public @Nullable Variation getVariation(@Nonnull String experimentKey,
                                             @Nonnull String userId,
                                             @Nonnull Map<String, String> attributes) {
+        if (!validateUserId(userId)) {
+            return null;
+        }
 
         ProjectConfig currentConfig = getProjectConfig();
 
@@ -448,9 +455,6 @@ public class Optimizely {
                                             @Nonnull Experiment experiment,
                                             @Nonnull Map<String, String> attributes,
                                             @Nonnull String userId) {
-        if (!validateUserId(userId)) {
-            return null;
-        }
 
         // determine whether all the given attributes are present in the project config. If not, filter out the unknown
         // attributes.

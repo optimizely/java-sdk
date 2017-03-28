@@ -1365,6 +1365,15 @@ public class OptimizelyTestV2 {
                 .withBucketing(mockBucketAlgorithm)
                 .build();
 
+        List<Experiment> eventExperiments = noAudienceProjectConfig.getExperimentsForEventKey(eventType.getKey());
+        for (Experiment experiment : eventExperiments) {
+            logbackVerifier.expectMessage(
+                    Level.INFO,
+                    "Not tracking event \"" + eventType.getKey() + "\" for experiment \"" + experiment.getKey() +
+                            "\" because experiment has status \"Launched\"."
+            );
+        }
+
         logbackVerifier.expectMessage(
                 Level.INFO,
                 "There are no valid experiments for event \"" + eventType.getKey() + "\" to track."
@@ -1423,6 +1432,17 @@ public class OptimizelyTestV2 {
                 eq(Collections.<String, String>emptyMap()),
                 eq(Collections.<String, Object>emptyMap())
         )).thenReturn(conversionEvent);
+
+        List<Experiment> eventExperiments = noAudienceProjectConfig.getExperimentsForEventKey(eventType.getKey());
+        for (Experiment experiment : eventExperiments) {
+            if (experiment.isLaunched()) {
+                logbackVerifier.expectMessage(
+                        Level.INFO,
+                        "Not tracking event \"" + eventType.getKey() + "\" for experiment \"" + experiment.getKey() +
+                                "\" because experiment has status \"Launched\"."
+                );
+            }
+        }
 
         // The event has 1 launched experiment and 1 running experiment.
         // It should send a track event with the running experiment
