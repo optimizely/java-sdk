@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import java.util.List;
 
 /**
@@ -63,26 +64,6 @@ public class Variation implements IdKeyMapped {
 
     public boolean is(String otherKey) {
         return key.equals(otherKey);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Variation variation = (Variation) o;
-
-        if (!id.equals(variation.id)) return false;
-        if (!key.equals(variation.key)) return false;
-        return liveVariableUsageInstances != null ? liveVariableUsageInstances.equals(variation.liveVariableUsageInstances) : variation.liveVariableUsageInstances == null;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = id.hashCode();
-        result = 31 * result + key.hashCode();
-        result = 31 * result + (liveVariableUsageInstances != null ? liveVariableUsageInstances.hashCode() : 0);
-        return result;
     }
 
     @Override

@@ -20,12 +20,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Represents the Optimizely Experiment configuration.
@@ -34,7 +35,7 @@ import java.util.Map;
  */
 @Immutable
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Experiment implements IdKeyMapped  {
+public class Experiment implements IdKeyMapped {
 
     private final String id;
     private final String key;
@@ -157,42 +158,6 @@ public class Experiment implements IdKeyMapped  {
 
     public boolean isLaunched() {
         return status.equals(ExperimentStatus.LAUNCHED.toString());
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Experiment that = (Experiment) o;
-
-        if (!id.equals(that.id)) return false;
-        if (!key.equals(that.key)) return false;
-        if (!status.equals(that.status)) return false;
-        if (!layerId.equals(that.layerId)) return false;
-        if (!groupId.equals(that.groupId)) return false;
-        if (!audienceIds.equals(that.audienceIds)) return false;
-        if (!variations.equals(that.variations)) return false;
-        if (!trafficAllocation.equals(that.trafficAllocation)) return false;
-        if (!variationKeyToVariationMap.equals(that.variationKeyToVariationMap)) return false;
-        if (!variationIdToVariationMap.equals(that.variationIdToVariationMap)) return false;
-        return userIdToVariationKeyMap.equals(that.userIdToVariationKeyMap);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = id.hashCode();
-        result = 31 * result + key.hashCode();
-        result = 31 * result + status.hashCode();
-        result = 31 * result + layerId.hashCode();
-        result = 31 * result + groupId.hashCode();
-        result = 31 * result + audienceIds.hashCode();
-        result = 31 * result + variations.hashCode();
-        result = 31 * result + trafficAllocation.hashCode();
-        result = 31 * result + variationKeyToVariationMap.hashCode();
-        result = 31 * result + variationIdToVariationMap.hashCode();
-        result = 31 * result + userIdToVariationKeyMap.hashCode();
-        return result;
     }
 
     @Override

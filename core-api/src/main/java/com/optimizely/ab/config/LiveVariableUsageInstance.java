@@ -51,8 +51,7 @@ public class LiveVariableUsageInstance {
 
         LiveVariableUsageInstance that = (LiveVariableUsageInstance) o;
 
-        if (!id.equals(that.id)) return false;
-        return value.equals(that.value);
+        return id.equals(that.id) && value.equals(that.value);
     }
 
     @Override
