@@ -352,8 +352,6 @@ public class EventBuilderV2Test {
         EventType eventType = validProjectConfig.getEventTypes().get(0);
         String userId = "testUser1";
 
-        List<Experiment> eventExperiments = validProjectConfig.getExperimentsForEventKey(eventType.getKey());
-
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         for (Experiment experiment : validProjectConfig.getExperiments()) {
             when(mockBucketAlgorithm.bucket(experiment, userId))
