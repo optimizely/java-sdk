@@ -191,7 +191,8 @@ public final class ProjectConfigTestUtils {
                 new EventType("098", "Total Revenue", singleExperimentId),
                 new EventType("099", "clicked_purchase", multipleExperimentIds),
                 new EventType("100", "launched_exp_event", singletonList("119")),
-                new EventType("101", "event_with_launched_and_running_experiments", Arrays.asList("119", "223")));
+                new EventType("101", "event_with_launched_and_running_experiments", Arrays.asList("119", "223"))
+        );
 
         return new ProjectConfig("789", "1234", "2", "42", Collections.<Group>emptyList(), experiments, attributes,
                                  events, Collections.<Audience>emptyList());
