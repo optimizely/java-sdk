@@ -190,7 +190,7 @@ public final class ProjectConfigTestUtils {
                                         new EventType("098", "Total Revenue", singleExperimentId),
                                         new EventType("099", "clicked_purchase", multipleExperimentIds),
                                         new EventType("100", "launched_exp_event", singletonList("119")),
-                                        new EventType("101", "event_with_launched_and_running_experiment",
+                                        new EventType("101", "event_with_launched_and_running_experiments",
                                                 Arrays.asList("119", "223")));
 
         return new ProjectConfig("789", "1234", "2", "42", Collections.<Group>emptyList(), experiments, attributes,
@@ -334,22 +334,22 @@ public final class ProjectConfigTestUtils {
         userIdToVariationKeyMap.put("testUser2", "vtag2");
 
         List<Experiment> experiments = asList(
-            new Experiment("223", "etag1", "Running", "1",
-                           Collections.<String>emptyList(),
-                           asList(new Variation("276", "vtag1", Collections.<LiveVariableUsageInstance>emptyList()),
-                                  new Variation("277", "vtag2", Collections.<LiveVariableUsageInstance>emptyList())),
-                           userIdToVariationKeyMap,
-                           asList(new TrafficAllocation("276", 3500),
-                                  new TrafficAllocation("277", 9000)),
-                           ""),
-            new Experiment("118", "etag2", "Not started", "2",
-                           Collections.<String>emptyList(),
-                           asList(new Variation("278", "vtag3", Collections.<LiveVariableUsageInstance>emptyList()),
-                                  new Variation("279", "vtag4", Collections.<LiveVariableUsageInstance>emptyList())),
-                           Collections.<String, String>emptyMap(),
-                           asList(new TrafficAllocation("278", 4500),
-                                  new TrafficAllocation("279", 9000)),
-                           ""),
+                new Experiment("223", "etag1", "Running", "1",
+                        Collections.<String>emptyList(),
+                        asList(new Variation("276", "vtag1", Collections.<LiveVariableUsageInstance>emptyList()),
+                                new Variation("277", "vtag2", Collections.<LiveVariableUsageInstance>emptyList())),
+                        userIdToVariationKeyMap,
+                        asList(new TrafficAllocation("276", 3500),
+                                new TrafficAllocation("277", 9000)),
+                        ""),
+                new Experiment("118", "etag2", "Not started", "2",
+                        Collections.<String>emptyList(),
+                        asList(new Variation("278", "vtag3", Collections.<LiveVariableUsageInstance>emptyList()),
+                                new Variation("279", "vtag4", Collections.<LiveVariableUsageInstance>emptyList())),
+                        Collections.<String, String>emptyMap(),
+                        asList(new TrafficAllocation("278", 4500),
+                                new TrafficAllocation("279", 9000)),
+                        ""),
                 new Experiment("119", "etag3", "Launched", "3",
                         Collections.<String>emptyList(),
                         asList(new Variation("280", "vtag5"),
@@ -369,8 +369,8 @@ public final class ProjectConfigTestUtils {
                 new EventType("098", "Total Revenue", singleExperimentId),
                 new EventType("099", "clicked_purchase", multipleExperimentIds),
                 new EventType("100", "launched_exp_event", singletonList("119")),
-                new EventType("101", "event_with_launched_and_running_experiment",
-                        (List<String>) Arrays.asList("119", "223"))
+                new EventType("101", "event_with_launched_and_running_experiments",
+                        Arrays.asList("119", "223"))
         );
 
         return new ProjectConfig("789", "1234", "3", "42", Collections.<Group>emptyList(), experiments, attributes,

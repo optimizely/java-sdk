@@ -179,6 +179,7 @@ public class EventBuilderV2 extends EventBuilder {
         }
         return features;
     }
+
     /**
      * Helper method to create {@link LayerState} objects for all experiments mapped to an event.
      * <p>
@@ -206,14 +207,8 @@ public class EventBuilderV2 extends EventBuilder {
         for (Map.Entry<Experiment, Variation> entry : experimentVariationMap.entrySet()) {
             Experiment experiment = entry.getKey();
             Variation variation = entry.getValue();
-            Decision decision = new Decision(
-                    variation.getId(),
-                    false,
-                    experiment.getId());
-            layerStates.add(new LayerState(experiment.getLayerId(),
-                    projectConfig.getRevision(),
-                    decision,
-                    true));
+            Decision decision = new Decision(variation.getId(), false, experiment.getId());
+            layerStates.add(new LayerState(experiment.getLayerId(), projectConfig.getRevision(), decision, true));
         }
 
         return layerStates;

@@ -119,7 +119,7 @@
     },
     {
       "id": "101",
-      "key": "event_with_launched_and_running_experiment",
+      "key": "event_with_launched_and_running_experiments",
       "experimentIds": [
         "119",
         "223"
