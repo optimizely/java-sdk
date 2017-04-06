@@ -131,6 +131,12 @@ public class Bucketer {
         return null;
     }
 
+    /**
+     * Assign a variation of an experiment to a user based on has value from murmurhash3.
+     * @param experiment The Experiment in which the user is to be bucketed.
+     * @param userId User Identifier
+     * @return Variation the user is bucketed into or null.
+     */
     public @Nullable Variation bucket(@Nonnull Experiment experiment,
                                       @Nonnull String userId) {
         String experimentId = experiment.getId();
@@ -203,6 +209,13 @@ public class Bucketer {
         return null;
     }
 
+    /**
+     * Get the variation that has been stored for the user in the UserProfile implementation.
+     * @param experiment Experiment in which the user was bucketed.
+     * @param userId User Identifier
+     * @return null if the UserProfile implementation is null or the user was not previously bucketed.
+     *      else return the Variation the user was previously bucketed into.
+     */
     public @Nullable Variation getStoredVariation(@Nonnull Experiment experiment, @Nonnull String userId) {
         // ---------- Check User Profile for Sticky Bucketing ----------
         // If a user profile instance is present then check it for a saved variation
