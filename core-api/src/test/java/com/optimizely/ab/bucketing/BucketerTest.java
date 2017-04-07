@@ -245,30 +245,6 @@ public class BucketerTest {
 
     //========= white list tests ========/
     /**
-     * Verify that {@link Bucketer#bucket(Experiment, String)} gives higher priority to forced bucketing than to
-     * experiment bucketing.
-     */
-    @Test
-    public void bucketGivesPriorityToForcedBucketing() throws Exception {
-        final String userId = "testUser1";
-        final String correctVariationKey = "vtag1";
-        final String incorrectVariationKey = "vtag2";
-        final String experimentKey = "etag1";
-
-        final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer bucketer = BucketerTest.mockBucketAlgorithm(bucketValue, noAudienceProjectConfig, null);
-
-        // set bucketer value
-        Experiment experiment = noAudienceProjectConfig.getExperimentKeyMapping().get(experimentKey);
-        Variation incorrectVariation = experiment.getVariationKeyToVariationMap().get(incorrectVariationKey);
-        bucketValue.set(BucketerTest.bucketValueForVariationOfExperiment(experiment, incorrectVariation));
-
-        // assert correct bucketing
-        logbackVerifier.expectMessage(Level.INFO, "User \"" + userId + "\" is forced in variation \"" + correctVariationKey + "\".");
-        assertEquals(correctVariationKey, bucketer.bucket(experiment, userId).getKey());
-    }
-
-    /**
      * Verify that {@link Bucketer#bucket(Experiment, String)} returns null when an invalid variation key is found
      * in the forced variations mapping.
      */

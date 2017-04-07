@@ -74,6 +74,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -1849,21 +1850,27 @@ public class OptimizelyTestV3 {
      * over audience evaluation.
      */
     @Test
-    public void getVariationForcedVariationPrecedesAudienceEvaluation() throws Exception {
+    public void getVariationForcedVariationPrecedesAudienceEval() throws Exception {
+        Bucketer bucketer = spy(new Bucketer(validProjectConfig));
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation expectedVariation = experiment.getVariations().get(0);
+        String whitelistedUserId = "testUser1";
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
-            .withConfig(validProjectConfig)
-            .build();
+                .withBucketing(bucketer)
+                .withConfig(validProjectConfig)
+                .build();
 
         // user excluded without audiences and whitelisting
         assertNull(optimizely.getVariation(experiment.getKey(), genericUserId));
 
-        logbackVerifier.expectMessage(Level.INFO, "User \"testUser1\" is forced in variation \"vtag1\".");
+        logbackVerifier.expectMessage(Level.INFO, "User \"" + whitelistedUserId + "\" is forced in variation \"vtag1\".");
 
         // no attributes provided for a experiment that has an audience
-        assertThat(optimizely.getVariation(experiment.getKey(), "testUser1"), is(expectedVariation));
+        assertThat(optimizely.getVariation(experiment.getKey(), whitelistedUserId), is(expectedVariation));
+
+        verify(bucketer).getForcedVariation(experiment, whitelistedUserId);
+        verify(bucketer, never()).getStoredVariation(experiment, whitelistedUserId);
     }
 
     /**
