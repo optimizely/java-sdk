@@ -350,17 +350,6 @@ public class BucketerTest {
         assertThat(algorithm.bucket(experiment, "testUser2").getKey(), is("var2"));
     }
 
-    /**
-     * Verifies the positive case where a non-empty user id is provided.
-     */
-    @Test
-    public void checkPreconditionsForValidUserId() throws Exception {
-        ProjectConfig projectConfig = validProjectConfigV2();
-        Bucketer algorithm = new Bucketer(projectConfig);
-        Experiment experiment = projectConfig.getExperiments().get(0);
-        algorithm.bucket(experiment, "1234");
-    }
-
     //========== Tests for Grouped experiments ==========//
     /**
      * Verify that {@link Bucketer#bucket(Experiment, String)} returns the proper variation when a user is
