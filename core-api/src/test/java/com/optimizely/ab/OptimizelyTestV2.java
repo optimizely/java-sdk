@@ -1451,6 +1451,30 @@ public class OptimizelyTestV2 {
         verify(client.eventHandler).dispatchEvent(eq(conversionEvent));
     }
 
+
+
+    /**
+     * Verify that an event is not dispatched if a user doesn't satisfy audience conditions for an experiment.
+     */
+    @Test
+    public void trackDoesNotSendEventWhenUserDoesNotSatisfyAudiences() throws Exception {
+        Attribute attribute = validProjectConfig.getAttributes().get(0);
+        EventType eventType = validProjectConfig.getEventTypes().get(2);
+
+        // the audience for the experiments is "NOT firefox" so this user shouldn't satisfy audience conditions
+        Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "firefox");
+
+        Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build();
+
+        logbackVerifier.expectMessage(Level.INFO, "There are no valid experiments for event \"" + eventType.getKey()
+                + "\" to track.");
+
+        client.track(eventType.getKey(), genericUserId, attributeMap);
+        verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
+    }
+
     //======== getVariation tests ========//
 
     /**
