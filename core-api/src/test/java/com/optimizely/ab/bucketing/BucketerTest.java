@@ -61,17 +61,18 @@ public class BucketerTest {
 
     private static final String genericUserId = "genericUserId";
     private static final String userProfileId = "userProfileId";
-    private static String validDatafile;
-    private static String noAudienceDatafile;
+    private static final String whitelistedUserId = "testUser1";
     private static ProjectConfig validProjectConfig;
     private static ProjectConfig noAudienceProjectConfig;
+    private static Experiment whitelistedExperiment;
+    private static Variation whitelistedVariation;
 
     @BeforeClass
     public static void setUp() throws Exception {
-        validDatafile = validConfigJsonV3();
-        noAudienceDatafile = noAudienceProjectConfigJsonV3();
         validProjectConfig = validProjectConfigV3();
         noAudienceProjectConfig = noAudienceProjectConfigV3();
+        whitelistedExperiment = validProjectConfig.getExperimentIdMapping().get("223");
+        whitelistedVariation = whitelistedExperiment.getVariationKeyToVariationMap().get("vtag1");
     }
 
     @Rule
@@ -244,12 +245,25 @@ public class BucketerTest {
     }
 
     //========= white list tests ========/
+
     /**
-     * Verify that {@link Bucketer#bucket(Experiment, String)} returns null when an invalid variation key is found
-     * in the forced variations mapping.
+     * Test {@link Bucketer#getForcedVariation(Experiment, String)} correctly returns a whitelisted variation.
      */
     @Test
-    public void bucketInvalidVariationKeyForcedVariation() throws Exception {
+    public void getForcedVariationReturnsForcedVariation() {
+        Bucketer bucketer = new Bucketer(validProjectConfig);
+
+        logbackVerifier.expectMessage(Level.INFO, "User \"" + whitelistedUserId + "\" is forced in variation \""
+         + whitelistedVariation.getKey() + "\".");
+        assertEquals(whitelistedVariation, bucketer.getForcedVariation(whitelistedExperiment, whitelistedUserId));
+    }
+
+    /**
+     * Verify that {@link Bucketer#getForcedVariation(Experiment, String)} returns null
+     * when an invalid variation key is found in the forced variations mapping.
+     */
+    @Test
+    public void getForcedVariationWithInvalidVariation() throws Exception {
         String userId = "testUser1";
         String invalidVariationKey = "invalidVarKey";
 
@@ -274,56 +288,17 @@ public class BucketerTest {
                 "Variation \"" + invalidVariationKey + "\" is not in the datafile. Not activating user \"" + userId + "\".");
 
         bucketValue.set(0);
-        assertNull(algorithm.bucket(experiment, userId));
+        assertNull(algorithm.getForcedVariation(experiment, userId));
     }
 
     /**
-     * Verify that {@link Bucketer#bucket(Experiment, String)} gives higher priority to forced bucketing than to
-     * experiment bucketing.
+     * Verify that {@link Bucketer#getForcedVariation(Experiment, String)} returns null when user is not whitelisted.
      */
     @Test
-    public void bucketUserToForcedVariationOverridesExperimentBucketing() throws Exception {
-        final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
-        bucketValue.set(2000);
+    public void getForcedVariationReturnsNullWhenUserIsNotWhitelisted() throws Exception {
+        Bucketer bucketer = new Bucketer(validProjectConfig);
 
-        ProjectConfig projectConfig = validProjectConfigV2();
-        List<Experiment> groupExperiments = projectConfig.getGroups().get(0).getExperiments();
-        Experiment groupExperiment = groupExperiments.get(1);
-
-        // normally, without forced bucketing this user would be bucketed to variation e1_vtag1, but instead is forced
-        // into e1_vtag2.
-        logbackVerifier.expectMessage(Level.INFO, "User \"testUser2\" is forced in variation \"e1_vtag2\".");
-        assertThat(algorithm.bucket(groupExperiment, "testUser2"), is(groupExperiment.getVariations().get(1)));
-    }
-
-    /**
-     * Verify that {@link Bucketer#bucket(Experiment, String)} returns the proper variation when the user doesn't
-     * have a forced variation mapping.
-     */
-    @Test
-    public void bucketUserNotInForcedVariation() throws Exception {
-        final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
-
-        List<String> audienceIds = Collections.emptyList();
-
-        List<Variation> variations = Arrays.asList(
-            new Variation("1", "var1"),
-            new Variation("2", "var2")
-        );
-
-        List<TrafficAllocation> trafficAllocations = Arrays.asList(
-            new TrafficAllocation("1", 1000),
-            new TrafficAllocation("2", 2000)
-        );
-
-        Map<String, String> userIdToVariationKeyMap = Collections.singletonMap("testUser1", "var1");
-
-        Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", audienceIds, variations,
-                                               userIdToVariationKeyMap, trafficAllocations, "");
-        bucketValue.set(1500);
-        assertThat(algorithm.bucket(experiment, "testUser2").getKey(), is("var2"));
+        assertNull(bucketer.getForcedVariation(whitelistedExperiment, genericUserId));
     }
 
     //========== Tests for Grouped experiments ==========//
