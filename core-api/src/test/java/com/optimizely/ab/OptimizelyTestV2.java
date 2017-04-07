@@ -19,12 +19,14 @@ package com.optimizely.ab;
 import ch.qos.logback.classic.Level;
 import com.google.common.collect.ImmutableMap;
 import com.optimizely.ab.bucketing.Bucketer;
+import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
@@ -62,6 +64,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
@@ -1627,6 +1630,32 @@ public class OptimizelyTestV2 {
 
         verify(mockBucketer).bucket(experiment, "userId");
         assertThat(actualVariation, is(bucketedVariation));
+    }
+
+    /**
+     * Verify that {@link Optimizely#getVariation(Experiment, String, Map)}
+     * gives precedence to user profile over audience evaluation.
+     */
+    @Test
+    public void getVariationEvaluatesUserProfileBeforeAudienceTargeting() throws ConfigParseException {
+        Experiment experiment = validProjectConfig.getExperiments().get(0);
+        Variation storedVariation = experiment.getVariations().get(0);
+        String userProfileUserId = "userProfileId";
+
+        UserProfile mockedUserProfile = mock(UserProfile.class);
+        when(mockedUserProfile.lookup(userProfileUserId, experiment.getId())).thenReturn(storedVariation.getId());
+
+        Optimizely client = Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .withUserProfile(mockedUserProfile)
+                .build();
+        assertNotNull(client);
+
+        // ensure that normal users still get excluded from the experiment when they fail audience evaluation
+        assertNull(client.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap()));
+
+        // ensure that a user with a saved user profile, sees the same variation regardless of audience evaluation
+        assertEquals(storedVariation, client.getVariation(experiment, userProfileUserId, Collections.<String, String>emptyMap()));
     }
 
     /**
