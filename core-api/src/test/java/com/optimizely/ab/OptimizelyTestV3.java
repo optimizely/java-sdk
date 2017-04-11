@@ -1814,6 +1814,10 @@ public class OptimizelyTestV3 {
         // ensure that normal users still get excluded from the experiment when they fail audience evaluation
         assertNull(client.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap()));
 
+        logbackVerifier.expectMessage(Level.INFO,
+                "User \"" + genericUserId + "\" does not meet conditions to be in experiment \""
+                        + experiment.getKey() + "\".");
+
         // ensure that a user with a saved user profile, sees the same variation regardless of audience evaluation
         assertEquals(storedVariation, client.getVariation(experiment, userProfileUserId, Collections.<String, String>emptyMap()));
     }

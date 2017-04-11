@@ -464,7 +464,7 @@ public class Optimizely {
             return null;
         }
 
-        Variation variation = null;
+        Variation variation;
 
         // check for whitelisting
         variation = bucketer.getForcedVariation(experiment, userId);
@@ -472,7 +472,7 @@ public class Optimizely {
             return variation;
         }
 
-        // check for user profile
+        // check if user exists in user profile
         variation = bucketer.getStoredVariation(experiment, userId);
         if (variation != null) {
             return variation;

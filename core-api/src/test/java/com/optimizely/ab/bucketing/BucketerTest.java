@@ -430,6 +430,27 @@ public class BucketerTest {
     }
 
     /**
+     * Verify that {@link Bucketer#getStoredVariation(Experiment, String)} returns null and logs properly
+     * when there is no stored variation for that user in that @{link Experiment} in the {@link UserProfile}.
+     */
+    @Test
+    public void getStoredVariationLogsWhenLookupReturnsNull() {
+        final String userId = "someUser";
+
+        final AtomicInteger bucketValue = new AtomicInteger();
+        UserProfile userProfile = mock(UserProfile.class);
+        Bucketer bucketer= BucketerTest.mockBucketAlgorithm(bucketValue, noAudienceProjectConfig, userProfile);
+        final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
+
+        when(userProfile.lookup(userId, experiment.getId())).thenReturn(null);
+
+        logbackVerifier.expectMessage(Level.INFO, "No previously activated variation of experiment " +
+                "\"" + experiment.getKey() + "\" for user \"" +userId + "\" found in user profile.");
+
+        assertNull(bucketer.getStoredVariation(experiment, userId));
+    }
+
+    /**
      * Verify that {@link Bucketer#bucket(Experiment,String)} saves a variation of an experiment for a user
      * when a {@link UserProfile} is present.
      */
@@ -450,7 +471,6 @@ public class BucketerTest {
         when(userProfile.save(userId, experiment.getId(), variation.getId())).thenReturn(true);
 
         assertThat(bucketer.bucket(experiment, userId),  is(variation));
-
         logbackVerifier.expectMessage(Level.INFO,
                 String.format("Saved variation \"%s\" of experiment \"%s\" for user \"" + userId + "\".", variation.getId(),
                         experiment.getId()));

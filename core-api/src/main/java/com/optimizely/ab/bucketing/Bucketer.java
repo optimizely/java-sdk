@@ -132,7 +132,7 @@ public class Bucketer {
     }
 
     /**
-     * Assign a variation of an experiment to a user based on has value from murmurhash3.
+     * Assign a {@link Variation} of an {@link Experiment} to a user based on hashed value from murmurhash3.
      * @param experiment The Experiment in which the user is to be bucketed.
      * @param userId User Identifier
      * @return Variation the user is bucketed into or null.
@@ -186,10 +186,10 @@ public class Bucketer {
 
     /**
      * Get the variation the user has been whitelisted into.
-     * @param experiment Experiment in which user is to be bucketed.
+     * @param experiment {@link Experiment} in which user is to be bucketed.
      * @param userId User Identifier
      * @return null if the user is not whitelisted into any variation
-     *      Variation the user is bucketed into if the user has a specified whitelisted variation.
+     *      {@link Variation} the user is bucketed into if the user has a specified whitelisted variation.
      */
     public @Nullable Variation getForcedVariation(@Nonnull Experiment experiment, @Nonnull String userId) {
         // if a user has a forced variation mapping, return the respective variation
@@ -206,15 +206,16 @@ public class Bucketer {
 
             return forcedVariation;
         }
+
         return null;
     }
 
     /**
-     * Get the variation that has been stored for the user in the UserProfile implementation.
-     * @param experiment Experiment in which the user was bucketed.
+     * Get the {@link Variation} that has been stored for the user in the {@link UserProfile} implementation.
+     * @param experiment {@link Experiment} in which the user was bucketed.
      * @param userId User Identifier
-     * @return null if the UserProfile implementation is null or the user was not previously bucketed.
-     *      else return the Variation the user was previously bucketed into.
+     * @return null if the {@link UserProfile} implementation is null or the user was not previously bucketed.
+     *      else return the {@link Variation} the user was previously bucketed into.
      */
     public @Nullable Variation getStoredVariation(@Nonnull Experiment experiment, @Nonnull String userId) {
         // ---------- Check User Profile for Sticky Bucketing ----------
@@ -240,8 +241,10 @@ public class Bucketer {
                         experimentKey, userId);
             }
         }
+
         return null;
     }
+
     //======== Helper methods ========//
 
     /**
