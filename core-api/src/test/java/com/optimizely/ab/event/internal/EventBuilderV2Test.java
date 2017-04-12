@@ -465,6 +465,29 @@ public class EventBuilderV2Test {
         assertThat(conversion.getClientVersion(), is(clientVersion));
     }
 
+    /**
+     * Verify that supplying an empty Experiment Variation map to
+     * {@link EventBuilderV2#createConversionEvent(ProjectConfig, Map, String, String, String, Map, Map)}
+     * returns a null {@link LogEvent}.
+     */
+    @Test
+    public void createConversionEventReturnsNullWhenExperimentVariationMapIsEmpty() {
+        EventType eventType = validProjectConfig.getEventTypes().get(0);
+        EventBuilderV2 builder = new EventBuilderV2();
+
+        LogEvent conversionEvent = builder.createConversionEvent(
+                validProjectConfig,
+                Collections.<Experiment, Variation>emptyMap(),
+                userId,
+                eventType.getId(),
+                eventType.getKey(),
+                Collections.<String, String>emptyMap(),
+                Collections.<String, String>emptyMap()
+        );
+
+        assertNull(conversionEvent);
+    }
+
     //========== helper methods =========//
     public static Map<Experiment, Variation> createExperimentVariationMap(ProjectConfig projectConfig,
                                                                           Bucketer bucketer,

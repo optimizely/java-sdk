@@ -1467,7 +1467,7 @@ public class OptimizelyTestV2 {
         // the audience for the experiments is "NOT firefox" so this user shouldn't satisfy audience conditions
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "firefox");
 
-        Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
+        Optimizely client = Optimizely.builder(validDatafile, mockEventHandler)
                 .withConfig(validProjectConfig)
                 .build();
 
@@ -1744,10 +1744,10 @@ public class OptimizelyTestV2 {
 
     /**
      * Verify that {@link Optimizely#getVariation(String, String, Map)} gives precedence to forced variation bucketing
-     * over audience evaluation.
+     * over user profile and audience evaluation for murmurhash3 bucketing.
      */
     @Test
-    public void getVariationForcedVariationPrecedesAudienceEval() throws Exception {
+    public void getVariationForcedVariationPrecedesUserProfileAndAudienceEval() throws Exception {
         Bucketer bucketer = spy(new Bucketer(validProjectConfig));
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation expectedVariation = experiment.getVariations().get(0);
@@ -1768,6 +1768,7 @@ public class OptimizelyTestV2 {
 
         verify(bucketer).getForcedVariation(experiment, whitelistedUserId);
         verify(bucketer, never()).getStoredVariation(experiment, whitelistedUserId);
+        verify(bucketer, never()).bucket(experiment, whitelistedUserId);
     }
 
     /**
