@@ -30,7 +30,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Default Optimizely bucketing algorithm that evenly distributes users using the Murmur3 hash of some provided

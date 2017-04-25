@@ -26,6 +26,16 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
 
+/**
+ * Default Optimizely decision service that determines which variation of an experiment the user will be allocated to.
+ *
+ * The decision service contains all logic around how a user decision is made. This includes all of the following:
+ *   1. Checking experiment status
+ *   2. Checking whitelisting
+ *   3. Checking sticky bucketing
+ *   4. Checking audience targeting
+ *   5. Using Murmurhash3 to bucket the user.
+ */
 public class DecisionService {
 
     private final Bucketer bucketer;
@@ -33,16 +43,32 @@ public class DecisionService {
     private final Logger logger;
     private final UserProfile userProfile;
 
+    /**
+     * Initialize a decision service for the Optimizely client.
+     *
+     * @param bucketer Base bucketer to allocate new users to an experiment.
+     * @param logger Used to log messages.
+     * @param projectConfig Optimizely Project Config representing the datafile.
+     * @param userProfile UserProfile implementation for storing decisions.
+     */
     public DecisionService(@Nonnull Bucketer bucketer,
-                    @Nonnull Logger logger,
-                    @Nonnull ProjectConfig projectConfig,
-                    @Nonnull UserProfile userProfile) {
+                           @Nonnull Logger logger,
+                           @Nonnull ProjectConfig projectConfig,
+                           @Nonnull UserProfile userProfile) {
         this.bucketer = bucketer;
         this.logger = logger;
         this.projectConfig = projectConfig;
         this.userProfile = userProfile;
     }
 
+    /**
+     * Get a {@link Variation} of an {@link Experiment} for a user to be allocated into.
+     *
+     * @param experiment The Experiment the user will be bucketed into.
+     * @param userId The userId of the user.
+     * @param filteredAttributes The user's attributes. This should be filtered to just attributes in the Datafile.
+     * @return The {@link Variation} the user is allocated into.
+     */
     public @Nullable Variation getVariation(@Nonnull Experiment experiment,
                                             @Nonnull String userId,
                                             @Nonnull Map<String, String> filteredAttributes) {
@@ -133,5 +159,4 @@ public class DecisionService {
 
         return null;
     }
-
 }
