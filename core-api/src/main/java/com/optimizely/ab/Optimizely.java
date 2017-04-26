@@ -104,14 +104,13 @@ public class Optimizely {
 
     private Optimizely(@Nonnull ProjectConfig projectConfig,
                        @Nonnull Bucketer bucketer,
-                       @Nonnull DecisionService decisionService,
                        @Nonnull EventHandler eventHandler,
                        @Nonnull EventBuilder eventBuilder,
                        @Nonnull ErrorHandler errorHandler,
                        @Nullable UserProfile userProfile) {
         this.projectConfig = projectConfig;
         this.bucketer = bucketer;
-        this.decisionService = decisionService;
+        this.decisionService = new DecisionService(bucketer, logger, projectConfig, userProfile);
         this.eventHandler = eventHandler;
         this.eventBuilder = eventBuilder;
         this.errorHandler = errorHandler;
@@ -723,11 +722,6 @@ public class Optimizely {
             this.eventHandler = eventHandler;
         }
 
-        public Builder withDecisionService(DecisionService decisionService) {
-            this.decisionService = decisionService;
-            return this;
-        }
-
         public Builder withErrorHandler(ErrorHandler errorHandler) {
             this.errorHandler = errorHandler;
             return this;
@@ -794,7 +788,7 @@ public class Optimizely {
                 errorHandler = new NoOpErrorHandler();
             }
 
-            Optimizely optimizely = new Optimizely(projectConfig, bucketer, decisionService, eventHandler, eventBuilder, errorHandler, userProfile);
+            Optimizely optimizely = new Optimizely(projectConfig, bucketer, eventHandler, eventBuilder, errorHandler, userProfile);
             optimizely.initialize();
             return optimizely;
         }

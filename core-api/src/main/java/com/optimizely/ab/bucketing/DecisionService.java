@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2017, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ public class DecisionService {
     public DecisionService(@Nonnull Bucketer bucketer,
                            @Nonnull Logger logger,
                            @Nonnull ProjectConfig projectConfig,
-                           @Nonnull UserProfile userProfile) {
+                           @Nullable UserProfile userProfile) {
         this.bucketer = bucketer;
         this.logger = logger;
         this.projectConfig = projectConfig;
