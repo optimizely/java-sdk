@@ -22,6 +22,7 @@ import com.optimizely.ab.config.audience.Condition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +38,7 @@ public final class ExperimentUtils {
      * @param experiment the experiment we are validating pre-conditions for
      * @return whether the pre-conditions are satisfied
      */
-    public static boolean isExperimentActive(Experiment experiment) {
+    public static boolean isExperimentActive(@Nonnull Experiment experiment) {
 
         if (!experiment.isActive()) {
             logger.info("Experiment \"{}\" is not running.", experiment.getKey());
@@ -55,8 +56,9 @@ public final class ExperimentUtils {
      * @param attributes the attributes of the user
      * @return whether the user meets the criteria for the experiment
      */
-    public static boolean isUserInExperiment(ProjectConfig projectConfig, Experiment experiment,
-                                              Map<String, String> attributes) {
+    public static boolean isUserInExperiment(@Nonnull ProjectConfig projectConfig,
+                                             @Nonnull Experiment experiment,
+                                             @Nonnull Map<String, String> attributes) {
         List<String> experimentAudienceIds = experiment.getAudienceIds();
 
         // if there are no audiences, ALL users should be part of the experiment
