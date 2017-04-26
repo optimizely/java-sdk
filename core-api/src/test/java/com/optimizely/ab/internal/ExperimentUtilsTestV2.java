@@ -18,7 +18,6 @@ package com.optimizely.ab.internal;
 
 import ch.qos.logback.classic.Level;
 import com.optimizely.ab.Optimizely;
-import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.event.EventHandler;
@@ -31,17 +30,15 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
-import static com.optimizely.ab.internal.ProjectValidationUtils.validatePreconditions;
+import static com.optimizely.ab.internal.ExperimentUtils.isExperimentActive;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class ProjectValidationUtilsTestV2 {
+public class ExperimentUtilsTestV2 {
 
     @Rule
     @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
@@ -63,20 +60,20 @@ public class ProjectValidationUtilsTestV2 {
 
     /**
      * Verify that
-     * {@link ProjectValidationUtils#validatePreconditions(ProjectConfig, UserProfile, Experiment, String, Map)} gives
+     * {@link ExperimentUtils#isExperimentActive(Experiment)} gives
      * precedence to forced variation bucketing over audience evaluation.
      */
     @Test
     public void validatePreconditionsForcedVariationPrecedesAudienceEval() throws Exception {
         Experiment experiment = projectConfig.getExperiments().get(0);
 
-        assertTrue(validatePreconditions(projectConfig, null,
-                experiment, "testUser1", Collections.<String, String>emptyMap()));
+        assertTrue(isExperimentActive(
+                experiment));
     }
 
     /**
      * Verify that
-     * {@link ProjectValidationUtils#validatePreconditions(ProjectConfig, UserProfile, Experiment, String, Map)} gives
+     * {@link ExperimentUtils#isExperimentActive(Experiment)} gives
      * precedence to experiment status over forced variation bucketing.
      */
     @Test
@@ -88,8 +85,8 @@ public class ProjectValidationUtilsTestV2 {
 
         logbackVerifier.expectMessage(Level.INFO, "Experiment \"etag2\" is not running.");
         // testUser3 has a corresponding forced variation, but experiment status should be checked first
-        assertFalse(ProjectValidationUtils.validatePreconditions(projectConfig, null,
-                experiment, "testUser3", null));
+        assertFalse(ExperimentUtils.isExperimentActive(
+                experiment));
     }
 
 }
