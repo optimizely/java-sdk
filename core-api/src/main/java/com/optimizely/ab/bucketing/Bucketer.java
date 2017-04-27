@@ -44,7 +44,6 @@ import java.util.List;
 public class Bucketer {
 
     private final ProjectConfig projectConfig;
-    private final UserProfile userProfile;
 
     private static final Logger logger = LoggerFactory.getLogger(Bucketer.class);
 
@@ -57,12 +56,7 @@ public class Bucketer {
     static final int MAX_TRAFFIC_VALUE = 10000;
 
     public Bucketer(ProjectConfig projectConfig) {
-        this(projectConfig, null);
-    }
-
-    public Bucketer(ProjectConfig projectConfig, @Nullable UserProfile userProfile) {
         this.projectConfig = projectConfig;
-        this.userProfile = userProfile;
     }
 
     private String bucketToEntity(int bucketValue, List<TrafficAllocation> trafficAllocations) {
@@ -138,8 +132,6 @@ public class Bucketer {
      */
     public @Nullable Variation bucket(@Nonnull Experiment experiment,
                                       @Nonnull String userId) {
-        String experimentId = experiment.getId();
-
         // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group
@@ -164,23 +156,7 @@ public class Bucketer {
             }
         }
 
-        Variation bucketedVariation = bucketToVariation(experiment, userId);
-
-        // ---------- Save Variation to User Profile ----------
-        // If a user profile is present give it a variation to store
-        if (userProfile != null && bucketedVariation != null) {
-            String bucketedVariationId = bucketedVariation.getId();
-            boolean saved = userProfile.save(userId, experimentId, bucketedVariationId);
-            if (saved) {
-                logger.info("Saved variation \"{}\" of experiment \"{}\" for user \"{}\".",
-                        bucketedVariationId, experimentId, userId);
-            } else {
-                logger.warn("Failed to save variation \"{}\" of experiment \"{}\" for user \"{}\".",
-                        bucketedVariationId, experimentId, userId);
-            }
-        }
-
-        return bucketedVariation;
+        return bucketToVariation(experiment, userId);
     }
 
 

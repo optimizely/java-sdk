@@ -765,7 +765,7 @@ public class Optimizely {
 
             // use the default bucketer and event builder, if no overrides were provided
             if (bucketer == null) {
-                bucketer = new Bucketer(projectConfig, userProfile);
+                bucketer = new Bucketer(projectConfig);
             }
 
             if (clientEngine == null) {

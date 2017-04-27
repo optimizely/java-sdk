@@ -19,7 +19,7 @@ package com.optimizely.ab.bucketing;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.internal.ProjectValidationUtils;
+import com.optimizely.ab.internal.ExperimentUtils;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
@@ -73,7 +73,7 @@ public class DecisionService {
                                             @Nonnull String userId,
                                             @Nonnull Map<String, String> filteredAttributes) {
 
-        if (!ProjectValidationUtils.validatePreconditions(projectConfig, userProfile, experiment, userId, filteredAttributes)) {
+        if (!ExperimentUtils.isExperimentActive(experiment)) {
             return null;
         }
 
@@ -91,8 +91,14 @@ public class DecisionService {
             return variation;
         }
 
-        if (ProjectValidationUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
-            return bucketer.bucket(experiment, userId);
+        if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
+            Variation bucketedVariation = bucketer.bucket(experiment, userId);
+
+            if (bucketedVariation != null) {
+                storeVariation(experiment, bucketedVariation, userId);
+            }
+
+            return bucketedVariation;
         }
         logger.info("User \"{}\" does not meet conditions to be in experiment \"{}\".", userId, experiment.getKey());
 
@@ -106,7 +112,7 @@ public class DecisionService {
      * @return null if the user is not whitelisted into any variation
      *      {@link Variation} the user is bucketed into if the user has a specified whitelisted variation.
      */
-    public @Nullable Variation getWhitelistedVariation(@Nonnull Experiment experiment, @Nonnull String userId) {
+    @Nullable Variation getWhitelistedVariation(@Nonnull Experiment experiment, @Nonnull String userId) {
         // if a user has a forced variation mapping, return the respective variation
         Map<String, String> userIdToVariationKeyMap = experiment.getUserIdToVariationKeyMap();
         if (userIdToVariationKeyMap.containsKey(userId)) {
@@ -132,7 +138,7 @@ public class DecisionService {
      * @return null if the {@link UserProfile} implementation is null or the user was not previously bucketed.
      *      else return the {@link Variation} the user was previously bucketed into.
      */
-    private @Nullable Variation getStoredVariation(@Nonnull Experiment experiment, @Nonnull String userId) {
+    @Nullable Variation getStoredVariation(@Nonnull Experiment experiment, @Nonnull String userId) {
         // ---------- Check User Profile for Sticky Bucketing ----------
         // If a user profile instance is present then check it for a saved variation
         String experimentId = experiment.getId();
@@ -158,5 +164,29 @@ public class DecisionService {
         }
 
         return null;
+    }
+
+    /**
+     * Store a {@link Variation} of an {@link Experiment} for a user in the {@link UserProfile}.
+     *
+     * @param experiment The experiment the user was buck
+     * @param variation The Variation to store.
+     * @param userId The ID of the user.
+     */
+    void storeVariation(@Nonnull Experiment experiment, @Nonnull Variation variation, @Nonnull String userId) {
+        String experimentId = experiment.getId();
+        // ---------- Save Variation to User Profile ----------
+        // If a user profile is present give it a variation to store
+        if (userProfile != null) {
+            String bucketedVariationId = variation.getId();
+            boolean saved = userProfile.save(userId, experimentId, bucketedVariationId);
+            if (saved) {
+                logger.info("Saved variation \"{}\" of experiment \"{}\" for user \"{}\".",
+                        bucketedVariationId, experimentId, userId);
+            } else {
+                logger.warn("Failed to save variation \"{}\" of experiment \"{}\" for user \"{}\".",
+                        bucketedVariationId, experimentId, userId);
+            }
+        }
     }
 }
