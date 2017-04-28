@@ -70,7 +70,6 @@ public class DecisionServiceTest {
 
     //========= getVariation tests =========/
 
-
     /**
      * Verify that {@link DecisionService#getVariation(Experiment, String, Map)} gives precedence to forced variation bucketing
      * over audience evaluation.
@@ -253,5 +252,4 @@ public class DecisionServiceTest {
 
         verify(userProfile).save(userProfileId, experiment.getId(), variation.getId());
     }
-
 }

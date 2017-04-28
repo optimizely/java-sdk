@@ -86,31 +86,22 @@ public class Optimizely {
 
     private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
 
-    @VisibleForTesting
-    final Bucketer bucketer;
-    final DecisionService decisionService;
-    @VisibleForTesting
-    final EventBuilder eventBuilder;
-    @VisibleForTesting
-    final ProjectConfig projectConfig;
-    @VisibleForTesting
-    final EventHandler eventHandler;
-    @VisibleForTesting
-    final ErrorHandler errorHandler;
-    @VisibleForTesting
-    final NotificationBroadcaster notificationBroadcaster = new NotificationBroadcaster();
-    @Nullable
-    private final UserProfile userProfile;
+    @VisibleForTesting final DecisionService decisionService;
+    @VisibleForTesting final EventBuilder eventBuilder;
+    @VisibleForTesting final ProjectConfig projectConfig;
+    @VisibleForTesting final EventHandler eventHandler;
+    @VisibleForTesting final ErrorHandler errorHandler;
+    @VisibleForTesting final NotificationBroadcaster notificationBroadcaster = new NotificationBroadcaster();
+    @Nullable private final UserProfile userProfile;
 
     private Optimizely(@Nonnull ProjectConfig projectConfig,
-                       @Nonnull Bucketer bucketer,
+                       @Nonnull DecisionService decisionService,
                        @Nonnull EventHandler eventHandler,
                        @Nonnull EventBuilder eventBuilder,
                        @Nonnull ErrorHandler errorHandler,
                        @Nullable UserProfile userProfile) {
         this.projectConfig = projectConfig;
-        this.bucketer = bucketer;
-        this.decisionService = new DecisionService(bucketer, logger, projectConfig, userProfile);
+        this.decisionService = decisionService;
         this.eventHandler = eventHandler;
         this.eventBuilder = eventBuilder;
         this.errorHandler = errorHandler;
@@ -705,8 +696,8 @@ public class Optimizely {
      */
     public static class Builder {
 
-        private Bucketer bucketer;
         private String datafile;
+        private Bucketer bucketer;
         private DecisionService decisionService;
         private ErrorHandler errorHandler;
         private EventHandler eventHandler;
@@ -720,6 +711,16 @@ public class Optimizely {
                        @Nonnull EventHandler eventHandler) {
             this.datafile = datafile;
             this.eventHandler = eventHandler;
+        }
+
+        protected Builder withBucketing(Bucketer bucketer) {
+            this.bucketer = bucketer;
+            return this;
+        }
+
+        protected Builder withDecisionService(DecisionService decisionService) {
+            this.decisionService = decisionService;
+            return this;
         }
 
         public Builder withErrorHandler(ErrorHandler errorHandler) {
@@ -742,11 +743,6 @@ public class Optimizely {
             return this;
         }
 
-        protected Builder withBucketing(Bucketer bucketer) {
-            this.bucketer = bucketer;
-            return this;
-        }
-
         protected Builder withEventBuilder(EventBuilder eventBuilder) {
             this.eventBuilder = eventBuilder;
             return this;
@@ -763,7 +759,6 @@ public class Optimizely {
                 projectConfig = Optimizely.getProjectConfig(datafile);
             }
 
-            // use the default bucketer and event builder, if no overrides were provided
             if (bucketer == null) {
                 bucketer = new Bucketer(projectConfig);
             }
@@ -788,7 +783,7 @@ public class Optimizely {
                 errorHandler = new NoOpErrorHandler();
             }
 
-            Optimizely optimizely = new Optimizely(projectConfig, bucketer, eventHandler, eventBuilder, errorHandler, userProfile);
+            Optimizely optimizely = new Optimizely(projectConfig, decisionService, eventHandler, eventBuilder, errorHandler, userProfile);
             optimizely.initialize();
             return optimizely;
         }
