@@ -85,7 +85,7 @@ import static org.mockito.Mockito.when;
 /**
  * Tests for the top-level {@link Optimizely} class.
  */
-public class OptimizelyTestV3 {
+public class OptimizelyTest {
 
     @Rule
     @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
@@ -2185,12 +2185,12 @@ public class OptimizelyTestV3 {
                 mockBucketer,
                 null,
                 eventType.getKey(),
-                OptimizelyTestV3.genericUserId,
+                OptimizelyTest.genericUserId,
                 attributes);
         when(mockEventBuilder.createConversionEvent(
                 eq(validProjectConfig),
                 eq(experimentVariationMap),
-                eq(OptimizelyTestV3.genericUserId),
+                eq(OptimizelyTest.genericUserId),
                 eq(eventType.getId()),
                 eq(eventKey),
                 eq(attributes),
