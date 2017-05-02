@@ -178,7 +178,11 @@ public class Optimizely {
         }
 
         if (experiment.isRunning()) {
-            LogEvent impressionEvent = eventBuilder.createImpressionEvent(projectConfig, experiment, variation, userId,
+            LogEvent impressionEvent = eventBuilder.createImpressionEvent(
+                    projectConfig,
+                    experiment,
+                    variation,
+                    userId,
                     filteredAttributes);
             logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
             logger.debug(
@@ -772,7 +776,7 @@ public class Optimizely {
             }
 
             if (decisionService == null) {
-                decisionService = new DecisionService(bucketer, logger, projectConfig, userProfile);
+                decisionService = new DecisionService(bucketer, projectConfig, userProfile);
             }
 
             if (eventBuilder == null) {

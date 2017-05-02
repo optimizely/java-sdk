@@ -21,13 +21,14 @@ import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.internal.ExperimentUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
- * Default Optimizely decision service that determines which variation of an experiment the user will be allocated to.
+ * Optimizely's decision service that determines which variation of an experiment the user will be allocated to.
  *
  * The decision service contains all logic around how a user decision is made. This includes all of the following:
  *   1. Checking experiment status
@@ -40,23 +41,19 @@ public class DecisionService {
 
     private final Bucketer bucketer;
     private final ProjectConfig projectConfig;
-    private final Logger logger;
     private final UserProfile userProfile;
+    private static final Logger logger = LoggerFactory.getLogger(DecisionService.class);
 
     /**
      * Initialize a decision service for the Optimizely client.
-     *
-     * @param bucketer Base bucketer to allocate new users to an experiment.
-     * @param logger Used to log messages.
+     *  @param bucketer Base bucketer to allocate new users to an experiment.
      * @param projectConfig Optimizely Project Config representing the datafile.
      * @param userProfile UserProfile implementation for storing decisions.
      */
     public DecisionService(@Nonnull Bucketer bucketer,
-                           @Nonnull Logger logger,
                            @Nonnull ProjectConfig projectConfig,
                            @Nullable UserProfile userProfile) {
         this.bucketer = bucketer;
-        this.logger = logger;
         this.projectConfig = projectConfig;
         this.userProfile = userProfile;
     }

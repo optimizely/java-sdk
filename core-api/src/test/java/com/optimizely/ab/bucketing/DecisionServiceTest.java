@@ -77,7 +77,7 @@ public class DecisionServiceTest {
     @Test
     public void getVariationForcedVariationPrecedesAudienceEval() throws Exception {
         Bucketer bucketer = spy(new Bucketer(validProjectConfig));
-        DecisionService decisionService = spy(new DecisionService(bucketer, logger, validProjectConfig, null));
+        DecisionService decisionService = spy(new DecisionService(bucketer, validProjectConfig, null));
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation expectedVariation = experiment.getVariations().get(0);
 
@@ -101,7 +101,7 @@ public class DecisionServiceTest {
     @Test
     public void getForcedVariationReturnsForcedVariation() {
         Bucketer bucketer = new Bucketer(validProjectConfig);
-        DecisionService decisionService = new DecisionService(bucketer, logger, validProjectConfig, null);
+        DecisionService decisionService = new DecisionService(bucketer, validProjectConfig, null);
 
         logbackVerifier.expectMessage(Level.INFO, "User \"" + whitelistedUserId + "\" is forced in variation \""
                 + whitelistedVariation.getKey() + "\".");
@@ -118,7 +118,7 @@ public class DecisionServiceTest {
         String invalidVariationKey = "invalidVarKey";
 
         Bucketer bucketer = new Bucketer(validProjectConfig);
-        DecisionService decisionService = new DecisionService(bucketer, logger, validProjectConfig, null);
+        DecisionService decisionService = new DecisionService(bucketer, validProjectConfig, null);
 
         List<Variation> variations = Collections.singletonList(
                 new Variation("1", "var1")
@@ -146,7 +146,7 @@ public class DecisionServiceTest {
     @Test
     public void getForcedVariationReturnsNullWhenUserIsNotWhitelisted() throws Exception {
         Bucketer bucketer = new Bucketer(validProjectConfig);
-        DecisionService decisionService = new DecisionService(bucketer, logger, validProjectConfig, null);
+        DecisionService decisionService = new DecisionService(bucketer, validProjectConfig, null);
 
         assertNull(decisionService.getWhitelistedVariation(whitelistedExperiment, genericUserId));
     }
@@ -167,7 +167,7 @@ public class DecisionServiceTest {
         when(userProfile.lookup(userProfileId, experiment.getId())).thenReturn(storedVariation.getId());
 
         Bucketer bucketer = new Bucketer(noAudienceProjectConfig);
-        DecisionService decisionService = new DecisionService(bucketer, logger, noAudienceProjectConfig, userProfile);
+        DecisionService decisionService = new DecisionService(bucketer, noAudienceProjectConfig, userProfile);
 
         logbackVerifier.expectMessage(Level.INFO,
                 "Returning previously activated variation \"" + storedVariation.getKey() + "\" of experiment \"" + experiment.getKey() + "\""
@@ -189,7 +189,7 @@ public class DecisionServiceTest {
 
         UserProfile userProfile = mock(UserProfile.class);
         Bucketer bucketer = new Bucketer(noAudienceProjectConfig);
-        DecisionService decisionService = new DecisionService(bucketer, logger, noAudienceProjectConfig, userProfile);
+        DecisionService decisionService = new DecisionService(bucketer, noAudienceProjectConfig, userProfile);
         final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
 
         when(userProfile.lookup(userId, experiment.getId())).thenReturn(null);
@@ -216,7 +216,7 @@ public class DecisionServiceTest {
         Bucketer mockBucketer = mock(Bucketer.class);
         when(mockBucketer.bucket(experiment, genericUserId)).thenReturn(variation);
 
-        DecisionService decisionService = new DecisionService(mockBucketer, logger, noAudienceProjectConfig, userProfile);
+        DecisionService decisionService = new DecisionService(mockBucketer, noAudienceProjectConfig, userProfile);
 
 
 
@@ -238,7 +238,7 @@ public class DecisionServiceTest {
 
         UserProfile userProfile = mock(UserProfile.class);
         Bucketer bucketer = new Bucketer(noAudienceProjectConfig);
-        DecisionService decisionService = new DecisionService(bucketer, logger, noAudienceProjectConfig, userProfile);
+        DecisionService decisionService = new DecisionService(bucketer, noAudienceProjectConfig, userProfile);
         final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
         final Variation variation = experiment.getVariations().get(0);
 
