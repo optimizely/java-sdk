@@ -1669,7 +1669,6 @@ public class OptimizelyTest {
 
         assertTrue(optimizely.getVariableBoolean("etag1_variable", "userId",
                 Collections.singletonMap("browser_type", "chrome"), true));
-
     }
 
     /**
@@ -2039,7 +2038,6 @@ public class OptimizelyTest {
      */
     @Test
     public void addNotificationListener() throws Exception {
-
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
@@ -2083,8 +2081,7 @@ public class OptimizelyTest {
         if (datafileVersion >= 3) {
             verify(listener, times(2))
                     .onExperimentActivated(activatedExperiment, genericUserId, attributes, actualVariation);
-        }
-        else {
+        } else {
             verify(listener, times(1))
                     .onExperimentActivated(activatedExperiment, genericUserId, attributes, actualVariation);
         }
