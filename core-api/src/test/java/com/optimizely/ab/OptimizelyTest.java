@@ -102,18 +102,18 @@ public class OptimizelyTest {
     public static Collection<Object[]> data() throws IOException {
         return Arrays.asList(new Object[][] {
                 {
-                    2,
-                    validConfigJsonV2(),
-                    noAudienceProjectConfigJsonV2(),
-                    validProjectConfigV2(),
-                    noAudienceProjectConfigV2()
+                        2,
+                        validConfigJsonV2(),
+                        noAudienceProjectConfigJsonV2(),
+                        validProjectConfigV2(),
+                        noAudienceProjectConfigV2()
                 },
                 {
-                    3,
-                    validConfigJsonV3(),
-                    noAudienceProjectConfigJsonV3(),
-                    validProjectConfigV3(),
-                    noAudienceProjectConfigV3()
+                        3,
+                        validConfigJsonV3(),
+                        noAudienceProjectConfigJsonV3(),
+                        validProjectConfigV3(),
+                        noAudienceProjectConfigV3()
                 }
         });
     }
@@ -1554,6 +1554,8 @@ public class OptimizelyTest {
     @Test
     public void getVariableStringActivateExperimentTrue() throws Exception {
 
+        assumeTrue(datafileVersion >= 3);
+
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
 
@@ -1569,22 +1571,11 @@ public class OptimizelyTest {
         String variableKey = "string_variable";
         Map<String, String> attributes = Collections.singletonMap("browser_type", "chrome");
 
-        if (datafileVersion >= 3) {
-            assertThat(optimizely.getVariableString(variableKey, genericUserId,
-                    attributes, true),
-                    is("string_var_vtag1"));
+        assertThat(optimizely.getVariableString(variableKey, genericUserId,
+                attributes, true),
+                is("string_var_vtag1"));
 
-            verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
-        }
-        else {
-            try {
-                optimizely.getVariableString(variableKey, genericUserId, attributes, true);
-            }
-            catch (Exception exception) {
-                assertNotNull(exception);
-                assertEquals(UnknownLiveVariableException.class, exception.getClass());
-            }
-        }
+        verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
     }
 
     /**
@@ -1594,6 +1585,8 @@ public class OptimizelyTest {
      */
     @Test
     public void getVariableStringActivateExperimentFalse() throws Exception {
+
+        assumeTrue(datafileVersion >= 3);
 
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
@@ -1607,22 +1600,10 @@ public class OptimizelyTest {
                 .withErrorHandler(new RaiseExceptionErrorHandler())
                 .build();
 
-        if (datafileVersion >= 3) {
-            assertThat(optimizely.getVariableString("string_variable", "userId",
-                    Collections.singletonMap("browser_type", "chrome"), false),
-                    is("string_var_vtag1"));
-            verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
-        }
-        else {
-            try {
-                optimizely.getVariableString("string_variable", "userId",
-                        Collections.singletonMap("browser_type", "chrome"), false);
-            }
-            catch (Exception exception) {
-                assertNotNull(exception);
-                assertEquals(UnknownLiveVariableException.class, exception.getClass());
-            }
-        }
+        assertThat(optimizely.getVariableString("string_variable", "userId",
+                Collections.singletonMap("browser_type", "chrome"), false),
+                is("string_var_vtag1"));
+        verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
     }
 
     /**
@@ -1632,25 +1613,15 @@ public class OptimizelyTest {
     @Test
     public void getVariableStringReturnsDefaultValueNoExperimentsUsingLiveVariable() throws Exception {
 
+        assumeTrue(datafileVersion >= 3);
+
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
                 .withConfig(validProjectConfig)
                 .build();
 
-        if (datafileVersion >= 3) {
-            logbackVerifier.expectMessage(Level.WARN, "No experiment is using variable \"unused_string_variable\".");
-            assertThat(optimizely.getVariableString("unused_string_variable",
-                    "userId", true), is("unused_variable"));
-        }
-        else {
-            try {
-                optimizely.getVariableString("unused_string_variable",
-                        "userId", true);
-            }
-            catch (Exception exception) {
-                assertNotNull(exception);
-                assertEquals(UnknownLiveVariableException.class, exception.getClass());
-            }
-        }
+        logbackVerifier.expectMessage(Level.WARN, "No experiment is using variable \"unused_string_variable\".");
+        assertThat(optimizely.getVariableString("unused_string_variable",
+                "userId", true), is("unused_variable"));
     }
 
     /**
@@ -1659,6 +1630,8 @@ public class OptimizelyTest {
      */
     @Test
     public void getVariableStringReturnsDefaultValueUserNotInVariation() throws Exception {
+
+        assumeTrue(datafileVersion >= 3);
 
         // user isn't bucketed into a variation in any experiment
         when(mockBucketer.bucket(any(Experiment.class), any(String.class)))
@@ -1669,21 +1642,9 @@ public class OptimizelyTest {
                 .withBucketing(mockBucketer)
                 .build();
 
-        if (datafileVersion >= 3) {
-            assertThat(optimizely.getVariableString("string_variable", "userId",
-                    Collections.singletonMap("browser_type", "chrome"), true),
-                    is("string_live_variable"));
-        }
-        else {
-            try {
-                optimizely.getVariableString("string_variable", "userId",
-                        Collections.singletonMap("browser_type", "chrome"), true);
-            }
-            catch (Exception exception) {
-                assertNotNull(exception);
-                assertEquals(UnknownLiveVariableException.class, exception.getClass());
-            }
-        }
+        assertThat(optimizely.getVariableString("string_variable", "userId",
+                Collections.singletonMap("browser_type", "chrome"), true),
+                is("string_live_variable"));
     }
 
     /**
@@ -1693,6 +1654,8 @@ public class OptimizelyTest {
     @Test
     public void getVariableBoolean() throws Exception {
 
+        assumeTrue(datafileVersion >= 3);
+
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
 
@@ -1704,20 +1667,9 @@ public class OptimizelyTest {
                 .withBucketing(mockBucketer)
                 .build();
 
-        if (datafileVersion >= 3) {
-            assertTrue(optimizely.getVariableBoolean("etag1_variable", "userId",
-                    Collections.singletonMap("browser_type", "chrome"), true));
-        }
-        else {
-            try {
-                optimizely.getVariableBoolean("etag1_variable", "userId",
-                        Collections.singletonMap("browser_type", "chrome"), true);
-            }
-            catch (Exception exception) {
-                assertNotNull(exception);
-                assertEquals(UnknownLiveVariableException.class, exception.getClass());
-            }
-        }
+        assertTrue(optimizely.getVariableBoolean("etag1_variable", "userId",
+                Collections.singletonMap("browser_type", "chrome"), true));
+
     }
 
     /**
@@ -1727,6 +1679,8 @@ public class OptimizelyTest {
     @Test
     public void getVariableDouble() throws Exception {
 
+        assumeTrue(datafileVersion >= 3);
+
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
 
@@ -1738,22 +1692,10 @@ public class OptimizelyTest {
                 .withBucketing(mockBucketer)
                 .build();
 
-        if (datafileVersion >= 3) {
-            assertThat(optimizely.getVariableDouble("double_variable", "userId",
-                    Collections.singletonMap("browser_type", "chrome"), true),
-                    is(5.3));
-            verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
-        }
-        else {
-            try {
-                optimizely.getVariableDouble("double_variable", "userId",
-                        Collections.singletonMap("browser_type", "chrome"), true);
-            }
-            catch (Exception exception) {
-                assertNotNull(exception);
-                assertEquals(UnknownLiveVariableException.class, exception.getClass());
-            }
-        }
+        assertThat(optimizely.getVariableDouble("double_variable", "userId",
+                Collections.singletonMap("browser_type", "chrome"), true),
+                is(5.3));
+        verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
     }
 
     /**
@@ -1763,6 +1705,8 @@ public class OptimizelyTest {
     @Test
     public void getVariableInteger() throws Exception {
 
+        assumeTrue(datafileVersion >= 3);
+
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
 
@@ -1774,22 +1718,10 @@ public class OptimizelyTest {
                 .withBucketing(mockBucketer)
                 .build();
 
-        if (datafileVersion >= 3) {
-            assertThat(optimizely.getVariableInteger("integer_variable", "userId",
-                    Collections.singletonMap("browser_type", "chrome"), true),
-                    is(10));
-            verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
-        }
-        else {
-            try {
-                optimizely.getVariableInteger("integer_variable", "userId",
-                        Collections.singletonMap("browser_type", "chrome"), true);
-            }
-            catch (Exception exception) {
-                assertNotNull(exception);
-                assertEquals(UnknownLiveVariableException.class, exception.getClass());
-            }
-        }
+        assertThat(optimizely.getVariableInteger("integer_variable", "userId",
+                Collections.singletonMap("browser_type", "chrome"), true),
+                is(10));
+        verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
     }
 
     //======== getVariation tests ========//
@@ -2154,7 +2086,7 @@ public class OptimizelyTest {
         }
         else {
             verify(listener, times(1))
-                .onExperimentActivated(activatedExperiment, genericUserId, attributes, actualVariation);
+                    .onExperimentActivated(activatedExperiment, genericUserId, attributes, actualVariation);
         }
 
         // Check if listener is notified after an event is tracked
