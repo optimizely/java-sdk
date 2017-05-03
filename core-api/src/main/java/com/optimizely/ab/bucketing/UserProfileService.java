@@ -25,10 +25,19 @@ import java.util.Map;
  */
 public interface UserProfileService {
 
-    Map<String, Object> lookupProfile(String userId);
+    /**
+     * Fetch the user profile map for the user ID.
+     *
+     * @param userId The ID of the user whose profile will be retrieved.
+     * @return a Map representing the user's profile.
+     */
+    Map<String, Object> lookup(String userId);
 
-    boolean saveProfile(String userId, Map<String, Object> userProfile);
-
-    boolean removeProfile(String userId);
-
+    /**
+     * Save the user profile Map sent to this method.
+     *
+     * @param userProfile The Map representing the user's profile.
+     * @return Whether the save was successful.
+     */
+    boolean save(Map<String, Object> userProfile);
 }
