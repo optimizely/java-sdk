@@ -37,7 +37,7 @@ public interface UserProfileService {
      * Save the user profile Map sent to this method.
      *
      * @param userProfile The Map representing the user's profile.
-     * @return Whether the save was successful.
+     * @throws Exception Can throw an exception if the user profile was not saved properly.
      */
-    boolean save(Map<String, Object> userProfile);
+    void save(Map<String, Object> userProfile) throws Exception;
 }
