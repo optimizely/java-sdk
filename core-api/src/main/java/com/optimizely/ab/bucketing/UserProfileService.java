@@ -30,8 +30,9 @@ public interface UserProfileService {
      *
      * @param userId The ID of the user whose profile will be retrieved.
      * @return a Map representing the user's profile.
+     * @throws Exception 
      */
-    Map<String, Object> lookup(String userId);
+    Map<String, Object> lookup(String userId) throws Exception;
 
     /**
      * Save the user profile Map sent to this method.
