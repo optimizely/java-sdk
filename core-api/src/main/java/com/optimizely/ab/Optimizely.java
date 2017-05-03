@@ -20,6 +20,7 @@ import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.UserProfile;
+import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
@@ -93,19 +94,22 @@ public class Optimizely {
     @VisibleForTesting final ErrorHandler errorHandler;
     @VisibleForTesting final NotificationBroadcaster notificationBroadcaster = new NotificationBroadcaster();
     @Nullable private final UserProfile userProfile;
+    @Nullable private final UserProfileService userProfileService;
 
     private Optimizely(@Nonnull ProjectConfig projectConfig,
                        @Nonnull DecisionService decisionService,
                        @Nonnull EventHandler eventHandler,
                        @Nonnull EventBuilder eventBuilder,
                        @Nonnull ErrorHandler errorHandler,
-                       @Nullable UserProfile userProfile) {
+                       @Nullable UserProfile userProfile,
+                       @Nullable UserProfileService userProfileService) {
         this.projectConfig = projectConfig;
         this.decisionService = decisionService;
         this.eventHandler = eventHandler;
         this.eventBuilder = eventBuilder;
         this.errorHandler = errorHandler;
         this.userProfile = userProfile;
+        this.userProfileService = userProfileService;
     }
 
     // Do work here that should be done once per Optimizely lifecycle
@@ -710,6 +714,7 @@ public class Optimizely {
         private String clientVersion;
         private ProjectConfig projectConfig;
         private UserProfile userProfile;
+        private UserProfileService userProfileService;
 
         public Builder(@Nonnull String datafile,
                        @Nonnull EventHandler eventHandler) {
@@ -734,6 +739,11 @@ public class Optimizely {
 
         public Builder withUserProfile(UserProfile userProfile) {
             this.userProfile = userProfile;
+            return this;
+        }
+
+        public Builder withUserProfileService(UserProfileService userProfileService) {
+            this.userProfileService = userProfileService;
             return this;
         }
 
@@ -787,7 +797,7 @@ public class Optimizely {
                 errorHandler = new NoOpErrorHandler();
             }
 
-            Optimizely optimizely = new Optimizely(projectConfig, decisionService, eventHandler, eventBuilder, errorHandler, userProfile);
+            Optimizely optimizely = new Optimizely(projectConfig, decisionService, eventHandler, eventBuilder, errorHandler, userProfile, userProfileService);
             optimizely.initialize();
             return optimizely;
         }
