@@ -786,7 +786,7 @@ public class Optimizely {
             }
 
             if (decisionService == null) {
-                decisionService = new DecisionService(bucketer, projectConfig, userProfile);
+                decisionService = new DecisionService(bucketer, errorHandler, projectConfig, userProfile, userProfileService);
             }
 
             if (eventBuilder == null) {

@@ -16,9 +16,11 @@
  */
 package com.optimizely.ab.bucketing;
 
+import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ExperimentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,22 +42,30 @@ import java.util.Map;
 public class DecisionService {
 
     private final Bucketer bucketer;
+    private final ErrorHandler errorHandler;
     private final ProjectConfig projectConfig;
     private final UserProfile userProfile;
+    private final UserProfileService userProfileService;
     private static final Logger logger = LoggerFactory.getLogger(DecisionService.class);
 
     /**
      * Initialize a decision service for the Optimizely client.
-     *  @param bucketer Base bucketer to allocate new users to an experiment.
+     * @param bucketer Base bucketer to allocate new users to an experiment.
+     * @param errorHandler The error handler of the Optimizely client.
      * @param projectConfig Optimizely Project Config representing the datafile.
      * @param userProfile UserProfile implementation for storing decisions.
+     * @param userProfileService UserProfileService implementation for storing user info.
      */
     public DecisionService(@Nonnull Bucketer bucketer,
+                           @Nonnull ErrorHandler errorHandler,
                            @Nonnull ProjectConfig projectConfig,
-                           @Nullable UserProfile userProfile) {
+                           @Nullable UserProfile userProfile,
+                           @Nullable UserProfileService userProfileService) {
         this.bucketer = bucketer;
+        this.errorHandler = errorHandler;
         this.projectConfig = projectConfig;
         this.userProfile = userProfile;
+        this.userProfileService = userProfileService;
     }
 
     /**
@@ -80,6 +90,14 @@ public class DecisionService {
         variation = getWhitelistedVariation(experiment, userId);
         if (variation != null) {
             return variation;
+        }
+
+        // fetch the user profile map from the user profile service
+        try {
+            Map<String, Object> userInfo = userProfileService.lookup(userId);
+        } catch (Exception exception) {
+            logger.error(exception.getMessage());
+            errorHandler.handleError((OptimizelyRuntimeException) exception);
         }
 
         // check if user exists in user profile
@@ -168,13 +186,15 @@ public class DecisionService {
      *
      * @param experiment The experiment the user was buck
      * @param variation The Variation to store.
-     * @param userId The ID of the user.
+     * @param userInfo The Map<String, Object> of the user information to save.
      */
-    void storeVariation(@Nonnull Experiment experiment, @Nonnull Variation variation, @Nonnull String userId) {
+    void storeVariation(@Nonnull Experiment experiment,
+                        @Nonnull Variation variation,
+                        @Nonnull Map<String, Object> userInfo) {
         String experimentId = experiment.getId();
-        // ---------- Save Variation to User Profile ----------
+        // ---------- Save Variation to User Profile Service ----------
         // If a user profile is present give it a variation to store
-        if (userProfile != null) {
+        if (userProfileService != null) {
             String bucketedVariationId = variation.getId();
             boolean saved = userProfile.save(userId, experimentId, bucketedVariationId);
             if (saved) {
