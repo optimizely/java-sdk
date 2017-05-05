@@ -29,18 +29,13 @@ public interface UserProfileService {
      * The returned Map<String, Object> of the user profile will have the following structure.
      * {
      *     userIdKey : String userId
-     *     decisionsKey : Map<String, Map<String, String>> decisions {
-     *          String layerId : Map<String, String> layerInfo {
-     *              experimentIdKey : String experimentId,
-     *              variationIdKey : String variationId
-     *          }
+     *     decisionsKey : Map<String, String> decisions {
+     *          String experimentId : String variationId
      *     }
      * }
      */
     String userIdKey = "user_id";
     String decisionsKey = "decisions";
-    String experimentIdKey = "experiment_id";
-    String variationIdKey = "variation_id";
 
     /**
      * Fetch the user profile map for the user ID.
