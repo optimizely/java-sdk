@@ -93,8 +93,9 @@ public class DecisionService {
         }
 
         // fetch the user profile map from the user profile service
+        Map<String, Object> userInfo = null;
         try {
-            Map<String, Object> userInfo = userProfileService.lookup(userId);
+            userInfo = userProfileService.lookup(userId);
         } catch (Exception exception) {
             logger.error(exception.getMessage());
             errorHandler.handleError((OptimizelyRuntimeException) exception);
@@ -109,8 +110,8 @@ public class DecisionService {
         if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
             Variation bucketedVariation = bucketer.bucket(experiment, userId);
 
-            if (bucketedVariation != null) {
-                storeVariation(experiment, bucketedVariation, userId);
+            if ((bucketedVariation != null) && (userInfo != null)) {
+                storeVariation(experiment, bucketedVariation, userInfo);
             }
 
             return bucketedVariation;
@@ -191,18 +192,24 @@ public class DecisionService {
     void storeVariation(@Nonnull Experiment experiment,
                         @Nonnull Variation variation,
                         @Nonnull Map<String, Object> userInfo) {
-        String experimentId = experiment.getId();
-        // ---------- Save Variation to User Profile Service ----------
-        // If a user profile is present give it a variation to store
+        // only save if the user has implemented a user profile service
         if (userProfileService != null) {
-            String bucketedVariationId = variation.getId();
-            boolean saved = userProfile.save(userId, experimentId, bucketedVariationId);
-            if (saved) {
+            String experimentId = experiment.getId();
+            String variationId = variation.getId();
+            String userId = (String) userInfo.get(UserProfileService.userIdKey);
+            @SuppressWarnings("unchecked")
+            Map<String, String> decisions = (Map<String, String>) userInfo.get(UserProfileService.decisionsKey);
+            decisions.put(experimentId, variationId);
+            userInfo.put(UserProfileService.decisionsKey, decisions);
+
+            try {
+                userProfileService.save(userInfo);
                 logger.info("Saved variation \"{}\" of experiment \"{}\" for user \"{}\".",
-                        bucketedVariationId, experimentId, userId);
-            } else {
+                    variationId, experimentId, userId);
+            } catch (Exception exception) {
                 logger.warn("Failed to save variation \"{}\" of experiment \"{}\" for user \"{}\".",
-                        bucketedVariationId, experimentId, userId);
+                        variationId, experimentId, userId);
+                errorHandler.handleError((OptimizelyRuntimeException) exception);
             }
         }
     }
