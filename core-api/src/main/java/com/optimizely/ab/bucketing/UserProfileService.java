@@ -26,10 +26,10 @@ import java.util.Map;
 public interface UserProfileService {
 
     /**
-     * The returned Map<String, Object> of the user profile will have the following structure.
+     * The returned {@code Map<String, Object>} of the user profile will have the following structure.
      * {
      *     userIdKey : String userId
-     *     decisionsKey : Map<String, String> decisions {
+     *     decisionsKey : {@code Map<String, String>} decisions {
      *          String experimentId : String variationId
      *     }
      * }
@@ -42,7 +42,7 @@ public interface UserProfileService {
      *
      * @param userId The ID of the user whose profile will be retrieved.
      * @return a Map representing the user's profile.
-     * @throws Exception 
+     * @throws Exception Passes on whatever exceptions the implementation may throw.
      */
     Map<String, Object> lookup(String userId) throws Exception;
 
