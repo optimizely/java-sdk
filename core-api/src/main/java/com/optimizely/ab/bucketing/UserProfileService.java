@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.bucketing;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -24,6 +25,48 @@ import java.util.Map;
  * Override with your own implementation for storing and retrieving the user profile.
  */
 public interface UserProfileService {
+
+    /**
+     * A class representing a user's profile.
+     */
+    class UserProfile {
+
+        /** A user's ID. */
+        public final String userId;
+        /** The bucketing decisions of the user. */
+        public final Map<String, String> decisions;
+
+        /**
+         * Construct a User Profile instance from explicit components.
+         * @param userId The ID of the user.
+         * @param decisions The bucketing decisions of the user.
+         */
+        public UserProfile(String userId, Map<String, String> decisions) {
+            this.userId = userId;
+            this.decisions = decisions;
+        }
+
+        /**
+         * Construct a User Profile instance from a Map.
+         * @param userProfileMap A {@code Map<String, Object>} containing the properties of the user profile.
+         */
+        @SuppressWarnings("unchecked")
+        public UserProfile(Map<String, Object> userProfileMap) {
+            this.userId = (String) userProfileMap.get(userIdKey);
+            this.decisions = (Map<String, String>) userProfileMap.get(decisionsKey);
+        }
+
+        /**
+         * Convert a User Profile instance to a Map.
+         * @return A map representation of the user profile instance.
+         */
+        Map<String, Object> toMap() {
+            Map<String, Object> userProfileMap = new HashMap<String, Object>(2);
+            userProfileMap.put(userIdKey, userId);
+            userProfileMap.put(decisionsKey, decisions);
+            return userProfileMap;
+        }
+    }
 
     /** The key for the user ID. Returns a String.*/
     String userIdKey = "user_id";
