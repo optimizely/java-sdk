@@ -93,9 +93,9 @@ public class DecisionService {
         }
 
         // fetch the user profile map from the user profile service
-        Map<String, Object> userInfo = null;
+        UserProfileService.UserProfile userInfo = null;
         try {
-            userInfo = userProfileService.lookup(userId);
+            userInfo = new UserProfileService.UserProfile(userProfileService.lookup(userId));
         } catch (Exception exception) {
             logger.error(exception.getMessage());
             errorHandler.handleError((OptimizelyRuntimeException) exception);
@@ -111,7 +111,7 @@ public class DecisionService {
             Variation bucketedVariation = bucketer.bucket(experiment, userId);
 
             if ((bucketedVariation != null) && (userInfo != null)) {
-                storeVariation(experiment, bucketedVariation, userInfo);
+                storeVariation(experiment, bucketedVariation, userInfo.toMap());
             }
 
             return bucketedVariation;
