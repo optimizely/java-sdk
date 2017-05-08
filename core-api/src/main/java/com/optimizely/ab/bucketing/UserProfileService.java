@@ -52,8 +52,7 @@ public interface UserProfileService {
          */
         @SuppressWarnings("unchecked")
         public UserProfile(Map<String, Object> userProfileMap) {
-            this.userId = (String) userProfileMap.get(userIdKey);
-            this.decisions = (Map<String, String>) userProfileMap.get(decisionsKey);
+            this((String) userProfileMap.get(userIdKey), (Map<String, String>) userProfileMap.get(decisionsKey));
         }
 
         /**
