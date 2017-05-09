@@ -190,26 +190,4 @@ public class OptimizelyBuilderTest {
         thrown.expect(ConfigParseException.class);
         Optimizely.builder("{invalidDatafile}", mockEventHandler).build();
     }
-
-    /**
-     * Check that the user profile is cleaned of variations that have been removed from the datafile.
-     * @throws ConfigParseException
-     */
-    @SuppressFBWarnings
-    @Test public void userProfileIsCleanedOnClientInitialization() throws ConfigParseException {
-        Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
-
-        UserProfile userProfile = mock(UserProfile.class);
-        when(userProfile.getAllRecords()).thenReturn(Collections.singletonMap(userId,
-                Collections.singletonMap(experiment.getId(),
-                        "variationId")));
-
-        Optimizely.builder(noAudienceDatafile, mockEventHandler)
-            .withConfig(noAudienceProjectConfig)
-            .withUserProfile(userProfile)
-            .build();
-
-        verify(userProfile).getAllRecords();
-        verify(userProfile).remove(userId, experiment.getId());
-    }
 }
