@@ -28,6 +28,8 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +43,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -53,7 +57,12 @@ public class DecisionServiceTest {
     private static final String genericUserId = "genericUserId";
     private static final String whitelistedUserId = "testUser1";
     private static final String userProfileId = "userProfileId";
-    private static @Mock ErrorHandler mockErrorHandler;
+
+    @Rule
+    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
+    public MockitoRule rule = MockitoJUnit.rule();
+
+    @Mock ErrorHandler mockErrorHandler;
 
     private static ProjectConfig noAudienceProjectConfig;
     private static ProjectConfig validProjectConfig;
@@ -93,7 +102,7 @@ public class DecisionServiceTest {
         assertThat(decisionService.getVariation(experiment, whitelistedUserId, Collections.<String, String>emptyMap()), is(expectedVariation));
 
         verify(decisionService).getWhitelistedVariation(experiment, whitelistedUserId);
-        verify(decisionService, never()).getStoredVariation(experiment, whitelistedUserId);
+        verify(decisionService, never()).getStoredVariation(eq(experiment), any(UserProfileService.UserProfile.class));
     }
 
     //========= white list tests ==========/
@@ -157,8 +166,8 @@ public class DecisionServiceTest {
     //======== User Profile tests =========//
 
     /**
-     * Verify that {@link DecisionService#getStoredVariation(Experiment, String)} returns a variation that is
-     * stored in the provided {@link UserProfile}.
+     * Verify that {@link DecisionService#getStoredVariation(Experiment, UserProfileService.UserProfile)} returns a variation that is
+     * stored in the provided {@link UserProfileService.UserProfile}.
      */
     @SuppressFBWarnings
     @Test
@@ -166,41 +175,49 @@ public class DecisionServiceTest {
         final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
         final Variation storedVariation = experiment.getVariations().get(0);
 
-        UserProfile userProfile = mock(UserProfile.class);
-        when(userProfile.lookup(userProfileId, experiment.getId())).thenReturn(storedVariation.getId());
+        UserProfileService.UserProfile userProfile = new UserProfileService.UserProfile(userProfileId,
+                Collections.singletonMap(experiment.getId(), storedVariation.getId()));
+        UserProfileService userProfileService = mock(UserProfileService.class);
+        when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
         Bucketer bucketer = new Bucketer(noAudienceProjectConfig);
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, noAudienceProjectConfig, null, null);
+        DecisionService decisionService = new DecisionService(bucketer,
+                mockErrorHandler,
+                noAudienceProjectConfig,
+                null,
+                userProfileService);
 
         logbackVerifier.expectMessage(Level.INFO,
                 "Returning previously activated variation \"" + storedVariation.getKey() + "\" of experiment \"" + experiment.getKey() + "\""
                         + " for user \"" + userProfileId + "\" from user profile.");
 
         // ensure user with an entry in the user profile is bucketed into the corresponding stored variation
-        assertEquals(storedVariation, decisionService.getStoredVariation(experiment, userProfileId));
+        assertEquals(storedVariation,
+                decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap()));
 
-        verify(userProfile).lookup(userProfileId, experiment.getId());
+        verify(userProfileService).lookup(userProfileId);
     }
 
     /**
-     * Verify that {@link DecisionService#getStoredVariation(Experiment, String)} returns null and logs properly
-     * when there is no stored variation for that user in that @{link Experiment} in the {@link UserProfile}.
+     * Verify that {@link DecisionService#getStoredVariation(Experiment, UserProfileService.UserProfile)} returns null and logs properly
+     * when there is no stored variation for that user in that {@link Experiment} in the {@link UserProfileService}.
      */
     @Test
-    public void getStoredVariationLogsWhenLookupReturnsNull() {
-        final String userId = "someUser";
-
-        UserProfile userProfile = mock(UserProfile.class);
-        Bucketer bucketer = new Bucketer(noAudienceProjectConfig);
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, noAudienceProjectConfig, null, null);
+    public void getStoredVariationLogsWhenLookupReturnsNull() throws Exception {
         final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
 
-        when(userProfile.lookup(userId, experiment.getId())).thenReturn(null);
+        Bucketer bucketer = new Bucketer(noAudienceProjectConfig);
+        UserProfileService userProfileService = mock(UserProfileService.class);
+        UserProfileService.UserProfile userProfile = new UserProfileService.UserProfile(userProfileId, Collections.<String, String>emptyMap());
+        when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
+
+        DecisionService decisionService = new DecisionService(bucketer,
+                mockErrorHandler, noAudienceProjectConfig, null, userProfileService);
 
         logbackVerifier.expectMessage(Level.INFO, "No previously activated variation of experiment " +
-                "\"" + experiment.getKey() + "\" for user \"" +userId + "\" found in user profile.");
+                "\"" + experiment.getKey() + "\" for user \"" + userProfileId + "\" found in user profile.");
 
-        assertNull(decisionService.getStoredVariation(experiment, userId));
+        assertNull(decisionService.getStoredVariation(experiment, userProfile));
     }
 
     /**
@@ -213,20 +230,25 @@ public class DecisionServiceTest {
         final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
         final Variation variation = experiment.getVariations().get(0);
 
-        UserProfile userProfile = mock(UserProfile.class);
-        when(userProfile.save(genericUserId, experiment.getId(), variation.getId())).thenReturn(true);
+        UserProfileService userProfileService = mock(UserProfileService.class);
+        UserProfileService.UserProfile originalUserProfile = new UserProfileService.UserProfile(userProfileId,
+                Collections.<String, String>emptyMap());
+        when(userProfileService.lookup(userProfileId)).thenReturn(originalUserProfile.toMap());
+        UserProfileService.UserProfile expectedUserProfile = new UserProfileService.UserProfile(userProfileId,
+                Collections.singletonMap(experiment.getId(), variation.getId()));
 
         Bucketer mockBucketer = mock(Bucketer.class);
-        when(mockBucketer.bucket(experiment, genericUserId)).thenReturn(variation);
+        when(mockBucketer.bucket(experiment, userProfileId)).thenReturn(variation);
 
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, noAudienceProjectConfig, null, null);
+        DecisionService decisionService = new DecisionService(mockBucketer,
+                mockErrorHandler, noAudienceProjectConfig, null, userProfileService);
 
-        assertThat(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap()),  is(variation));
+        assertThat(decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap()),  is(variation));
         logbackVerifier.expectMessage(Level.INFO,
-                String.format("Saved variation \"%s\" of experiment \"%s\" for user \"" + genericUserId + "\".", variation.getId(),
+                String.format("Saved variation \"%s\" of experiment \"%s\" for user \"" + userProfileId + "\".", variation.getId(),
                         experiment.getId()));
 
-        verify(userProfile).save(genericUserId, experiment.getId(), variation.getId());
+        verify(userProfileService).save(eq(expectedUserProfile.toMap()));
     }
 
 //    /**

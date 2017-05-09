@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.bucketing;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,9 +43,14 @@ public interface UserProfileService {
          * @param userId The ID of the user.
          * @param decisions The bucketing decisions of the user.
          */
-        public UserProfile(String userId, Map<String, String> decisions) {
+        public UserProfile(@Nonnull String userId, @Nullable Map<String, String> decisions) {
             this.userId = userId;
-            this.decisions = decisions;
+            if (decisions == null || decisions.isEmpty()) {
+                this.decisions = new HashMap<String, String>();
+            }
+            else {
+                this.decisions = decisions;
+            }
         }
 
         /**
@@ -51,7 +58,7 @@ public interface UserProfileService {
          * @param userProfileMap A {@code Map<String, Object>} containing the properties of the user profile.
          */
         @SuppressWarnings("unchecked")
-        public UserProfile(Map<String, Object> userProfileMap) {
+        public UserProfile(@Nonnull Map<String, Object> userProfileMap) {
             this((String) userProfileMap.get(userIdKey), (Map<String, String>) userProfileMap.get(decisionsKey));
         }
 

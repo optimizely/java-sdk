@@ -94,15 +94,20 @@ public class DecisionService {
 
         // fetch the user profile map from the user profile service
         UserProfileService.UserProfile userProfile = null;
-        try {
-            userProfile = new UserProfileService.UserProfile(userProfileService.lookup(userId));
-        } catch (Exception exception) {
-            logger.error(exception.getMessage());
-            errorHandler.handleError((OptimizelyRuntimeException) exception);
+        if (userProfileService != null) {
+            try {
+                Map<String, Object> userProfileMap = userProfileService.lookup(userId);
+                if (userProfileMap != null) userProfile = new UserProfileService.UserProfile(userProfileMap);
+            } catch (Exception exception) {
+                logger.error(exception.getMessage());
+                errorHandler.handleError((OptimizelyRuntimeException) exception);
+            }
         }
 
         // check if user exists in user profile
-        variation = getStoredVariation(experiment, userId);
+        if (userProfile != null) {
+            variation = getStoredVariation(experiment, userProfile);
+        }
         if (variation != null) {
             return variation;
         }
@@ -110,7 +115,7 @@ public class DecisionService {
         if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
             Variation bucketedVariation = bucketer.bucket(experiment, userId);
 
-            if ((bucketedVariation != null) && (userProfile != null)) {
+            if ((bucketedVariation != null) && (userProfileService != null)) {
                 storeVariation(experiment, bucketedVariation, userProfile);
             }
 
@@ -150,36 +155,34 @@ public class DecisionService {
     /**
      * Get the {@link Variation} that has been stored for the user in the {@link UserProfile} implementation.
      * @param experiment {@link Experiment} in which the user was bucketed.
-     * @param userId User Identifier
+     * @param userProfile {@link UserProfileService.UserProfile} of the user.
      * @return null if the {@link UserProfile} implementation is null or the user was not previously bucketed.
      *      else return the {@link Variation} the user was previously bucketed into.
      */
-    @Nullable Variation getStoredVariation(@Nonnull Experiment experiment, @Nonnull String userId) {
+    @Nullable Variation getStoredVariation(@Nonnull Experiment experiment,
+                                           @Nonnull UserProfileService.UserProfile userProfile) {
         // ---------- Check User Profile for Sticky Bucketing ----------
         // If a user profile instance is present then check it for a saved variation
         String experimentId = experiment.getId();
         String experimentKey = experiment.getKey();
-        if (userProfile != null) {
-            String variationId = userProfile.lookup(userId, experimentId);
-            if (variationId != null) {
-                Variation savedVariation = projectConfig
-                        .getExperimentIdMapping()
-                        .get(experimentId)
-                        .getVariationIdToVariationMap()
-                        .get(variationId);
-                logger.info("Returning previously activated variation \"{}\" of experiment \"{}\" "
-                                + "for user \"{}\" from user profile.",
-                        savedVariation.getKey(), experimentKey, userId);
-                // A variation is stored for this combined bucket id
-                return savedVariation;
-            } else {
-                logger.info("No previously activated variation of experiment \"{}\" "
-                                + "for user \"{}\" found in user profile.",
-                        experimentKey, userId);
-            }
+        String variationId = userProfile.decisions.get(experimentId);
+        if (variationId != null) {
+            Variation savedVariation = projectConfig
+                    .getExperimentIdMapping()
+                    .get(experimentId)
+                    .getVariationIdToVariationMap()
+                    .get(variationId);
+            logger.info("Returning previously activated variation \"{}\" of experiment \"{}\" "
+                            + "for user \"{}\" from user profile.",
+                    savedVariation.getKey(), experimentKey, userProfile.userId);
+            // A variation is stored for this combined bucket id
+            return savedVariation;
+        } else {
+            logger.info("No previously activated variation of experiment \"{}\" "
+                            + "for user \"{}\" found in user profile.",
+                    experimentKey, userProfile.userId);
+            return null;
         }
-
-        return null;
     }
 
     /**
