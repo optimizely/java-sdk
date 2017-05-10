@@ -36,17 +36,17 @@ public interface UserProfileService {
         /** A user's ID. */
         public final String userId;
         /** The bucketing decisions of the user. */
-        public final Map<String, String> decisions;
+        public final Map<String, Map<String, String>> decisions;
 
         /**
          * Construct a User Profile instance from explicit components.
          * @param userId The ID of the user.
          * @param decisions The bucketing decisions of the user.
          */
-        public UserProfile(@Nonnull String userId, @Nullable Map<String, String> decisions) {
+        public UserProfile(@Nonnull String userId, @Nullable Map<String, Map<String, String>> decisions) {
             this.userId = userId;
             if (decisions == null || decisions.isEmpty()) {
-                this.decisions = new HashMap<String, String>();
+                this.decisions = new HashMap<String, Map<String, String>>();
             }
             else {
                 this.decisions = decisions;
@@ -59,7 +59,7 @@ public interface UserProfileService {
          */
         @SuppressWarnings("unchecked")
         public UserProfile(@Nonnull Map<String, Object> userProfileMap) {
-            this((String) userProfileMap.get(userIdKey), (Map<String, String>) userProfileMap.get(decisionsKey));
+            this((String) userProfileMap.get(userIdKey), (Map<String, Map<String, String>>) userProfileMap.get(decisionsKey));
         }
 
         /**
@@ -76,8 +76,10 @@ public interface UserProfileService {
 
     /** The key for the user ID. Returns a String.*/
     String userIdKey = "user_id";
-    /** The key for the decisions Map. Returns a {@code Map<String, String>}.*/
+    /** The key for the decisions Map. Returns a {@code Map<String, Map<String, String>>}.*/
     String decisionsKey = "decisions";
+    /** The key for the variation Id within a decision Map. */
+    String variationIdKey = "variation_id";
 
     /**
      * Fetch the user profile map for the user ID.
@@ -87,8 +89,10 @@ public interface UserProfileService {
      * The returned {@code Map<String, Object>} of the user profile will have the following structure.
      * {
      *     userIdKey : String userId,
-     *     decisionsKey : {@code Map<String, String>} decisions {
-     *          String experimentId : String variationId
+     *     decisionsKey : {@code Map<String, Map<String, String>>} decisions {
+     *          String experimentId : {@code Map<String, String>} decision {
+     *              variationIdKey : String variationId
+     *          }
      *     }
      * }
      * @throws Exception Passes on whatever exceptions the implementation may throw.
