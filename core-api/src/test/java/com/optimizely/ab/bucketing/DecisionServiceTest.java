@@ -105,6 +105,36 @@ public class DecisionServiceTest {
         verify(decisionService, never()).getStoredVariation(eq(experiment), any(UserProfileService.UserProfile.class));
     }
 
+
+    /**
+     * Verify that {@link DecisionService#getVariation(Experiment, String, Map)}
+     * gives precedence to user profile over audience evaluation.
+     */
+    @Test
+    public void getVariationEvaluatesUserProfileBeforeAudienceTargeting() throws Exception {
+        Experiment experiment = validProjectConfig.getExperiments().get(0);
+        Variation storedVariation = experiment.getVariations().get(0);
+        Bucketer bucketer = spy(new Bucketer(validProjectConfig));
+        UserProfileService.UserProfile userProfile = new UserProfileService.UserProfile(userProfileId,
+                Collections.singletonMap(experiment.getId(), storedVariation.getId()));
+        UserProfileService userProfileService = mock(UserProfileService.class);
+        when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
+
+        DecisionService decisionService = spy(new DecisionService(bucketer,
+                mockErrorHandler, validProjectConfig, null, userProfileService));
+
+        // ensure that normal users still get excluded from the experiment when they fail audience evaluation
+        assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap()));
+
+        logbackVerifier.expectMessage(Level.INFO,
+                "User \"" + genericUserId + "\" does not meet conditions to be in experiment \""
+                        + experiment.getKey() + "\".");
+
+        // ensure that a user with a saved user profile, sees the same variation regardless of audience evaluation
+        assertEquals(storedVariation,
+                decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap()));
+    }
+
     //========= white list tests ==========/
 
     /**
