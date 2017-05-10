@@ -184,7 +184,7 @@ public class DecisionService {
             else {
                 logger.info("User \"{}\" had variation with ID \"{}\" for experiment \"{}\", but no matching variation " +
                         "was found for that user. We will re-bucket the user.",
-                        userProfile.userId, experimentKey, variationId);
+                        userProfile.userId, variationId, experimentKey);
                 return null;
             }
         } else {

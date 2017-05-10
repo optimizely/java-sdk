@@ -30,10 +30,9 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +54,6 @@ import static org.mockito.Mockito.when;
 
 public class DecisionServiceTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(DecisionServiceTest.class);
     private static final String genericUserId = "genericUserId";
     private static final String whitelistedUserId = "testUser1";
     private static final String userProfileId = "userProfileId";
@@ -253,6 +251,37 @@ public class DecisionServiceTest {
                 "\"" + experiment.getKey() + "\" for user \"" + userProfileId + "\" found in user profile.");
 
         assertNull(decisionService.getStoredVariation(experiment, userProfile));
+    }
+
+    /**
+     * Verify that {@link DecisionService#getStoredVariation(Experiment, UserProfileService.UserProfile)} returns null
+     * when a {@link UserProfileService.UserProfile} is present, contains a decision for the experiment in question,
+     * but the variation ID for that decision does not exist in the datafile.
+     */
+    @Test
+    public void getStoredVariationReturnsNullWhenVariationIsNoLongerInConfig() throws Exception {
+        final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
+        final String storedVariationId = "missingVariation";
+        final Map<String, String> storedDecision = new HashMap<String, String>();
+        storedDecision.put(UserProfileService.variationIdKey, storedVariationId);
+        final Map<String, Map<String, String>> storedDecisions = new HashMap<String, Map<String, String>>();
+        storedDecisions.put(experiment.getId(), storedDecision);
+        final UserProfileService.UserProfile storedUserProfile = new UserProfileService.UserProfile(userProfileId,
+                storedDecisions);
+
+        Bucketer bucketer = mock(Bucketer.class);
+        UserProfileService userProfileService = mock(UserProfileService.class);
+        when(userProfileService.lookup(userProfileId)).thenReturn(storedUserProfile.toMap());
+
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, noAudienceProjectConfig,
+                null, userProfileService);
+
+        logbackVerifier.expectMessage(Level.INFO,
+                "User \"" + userProfileId + "\" had variation with ID \"" + storedVariationId + "\" for " +
+                        "experiment \"" + experiment.getKey() + "\", but no matching variation " +
+                        "was found for that user. We will re-bucket the user.");
+
+        assertNull(decisionService.getStoredVariation(experiment, storedUserProfile));
     }
 
     /**
