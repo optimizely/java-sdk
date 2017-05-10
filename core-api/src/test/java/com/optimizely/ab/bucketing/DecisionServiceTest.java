@@ -89,7 +89,7 @@ public class DecisionServiceTest {
     @Test
     public void getVariationForcedVariationPrecedesAudienceEval() throws Exception {
         Bucketer bucketer = spy(new Bucketer(validProjectConfig));
-        DecisionService decisionService = spy(new DecisionService(bucketer, mockErrorHandler, validProjectConfig, null, null));
+        DecisionService decisionService = spy(new DecisionService(bucketer, mockErrorHandler, validProjectConfig, null));
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation expectedVariation = experiment.getVariations().get(0);
 
@@ -122,7 +122,7 @@ public class DecisionServiceTest {
         when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
         DecisionService decisionService = spy(new DecisionService(bucketer,
-                mockErrorHandler, validProjectConfig, null, userProfileService));
+                mockErrorHandler, validProjectConfig, userProfileService));
 
         // ensure that normal users still get excluded from the experiment when they fail audience evaluation
         assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap()));
@@ -144,7 +144,7 @@ public class DecisionServiceTest {
     @Test
     public void getForcedVariationReturnsForcedVariation() {
         Bucketer bucketer = new Bucketer(validProjectConfig);
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, validProjectConfig, null, null);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, validProjectConfig, null);
 
         logbackVerifier.expectMessage(Level.INFO, "User \"" + whitelistedUserId + "\" is forced in variation \""
                 + whitelistedVariation.getKey() + "\".");
@@ -161,7 +161,7 @@ public class DecisionServiceTest {
         String invalidVariationKey = "invalidVarKey";
 
         Bucketer bucketer = new Bucketer(validProjectConfig);
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, validProjectConfig, null, null);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, validProjectConfig, null);
 
         List<Variation> variations = Collections.singletonList(
                 new Variation("1", "var1")
@@ -189,7 +189,7 @@ public class DecisionServiceTest {
     @Test
     public void getForcedVariationReturnsNullWhenUserIsNotWhitelisted() throws Exception {
         Bucketer bucketer = new Bucketer(validProjectConfig);
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, validProjectConfig, null, null);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, validProjectConfig, null);
 
         assertNull(decisionService.getWhitelistedVariation(whitelistedExperiment, genericUserId));
     }
@@ -216,7 +216,6 @@ public class DecisionServiceTest {
         DecisionService decisionService = new DecisionService(bucketer,
                 mockErrorHandler,
                 noAudienceProjectConfig,
-                null,
                 userProfileService);
 
         logbackVerifier.expectMessage(Level.INFO,
@@ -245,7 +244,7 @@ public class DecisionServiceTest {
         when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
         DecisionService decisionService = new DecisionService(bucketer,
-                mockErrorHandler, noAudienceProjectConfig, null, userProfileService);
+                mockErrorHandler, noAudienceProjectConfig, userProfileService);
 
         logbackVerifier.expectMessage(Level.INFO, "No previously activated variation of experiment " +
                 "\"" + experiment.getKey() + "\" for user \"" + userProfileId + "\" found in user profile.");
@@ -274,7 +273,7 @@ public class DecisionServiceTest {
         when(userProfileService.lookup(userProfileId)).thenReturn(storedUserProfile.toMap());
 
         DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, noAudienceProjectConfig,
-                null, userProfileService);
+                userProfileService);
 
         logbackVerifier.expectMessage(Level.INFO,
                 "User \"" + userProfileId + "\" had variation with ID \"" + storedVariationId + "\" for " +
@@ -286,7 +285,7 @@ public class DecisionServiceTest {
 
     /**
      * Verify that {@link DecisionService#getVariation(Experiment, String, Map)}
-     * saves a {@link Variation}of an {@link Experiment} for a user when a {@link UserProfile} is present.
+     * saves a {@link Variation}of an {@link Experiment} for a user when a {@link UserProfileService} is present.
      */
     @SuppressFBWarnings
     @Test
@@ -306,7 +305,7 @@ public class DecisionServiceTest {
         when(mockBucketer.bucket(experiment, userProfileId)).thenReturn(variation);
 
         DecisionService decisionService = new DecisionService(mockBucketer,
-                mockErrorHandler, noAudienceProjectConfig, null, userProfileService);
+                mockErrorHandler, noAudienceProjectConfig, userProfileService);
 
         assertThat(decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap()),  is(variation));
         logbackVerifier.expectMessage(Level.INFO,
@@ -335,7 +334,7 @@ public class DecisionServiceTest {
                 Collections.<String, Map<String, String>>emptyMap());
 
         DecisionService decisionService = new DecisionService(bucketer,
-                mockErrorHandler, noAudienceProjectConfig, null, userProfileService);
+                mockErrorHandler, noAudienceProjectConfig, userProfileService);
 
 
         decisionService.storeVariation(experiment, variation, saveUserProfile);

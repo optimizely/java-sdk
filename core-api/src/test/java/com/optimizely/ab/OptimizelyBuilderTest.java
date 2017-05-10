@@ -16,8 +16,7 @@
  */
 package com.optimizely.ab;
 
-import com.optimizely.ab.bucketing.UserProfile;
-import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.ProjectConfigTestUtils;
 import com.optimizely.ab.config.parser.ConfigParseException;
@@ -36,8 +35,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import java.util.Collections;
-
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
@@ -48,8 +45,6 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link Optimizely#builder(String, EventHandler)}.
@@ -120,13 +115,13 @@ public class OptimizelyBuilderTest {
     }
 
     @Test
-    public void withUserProfile() throws Exception {
-        UserProfile userProfile = mock(UserProfile.class);
+    public void withUserProfileService() throws Exception {
+        UserProfileService userProfileService = mock(UserProfileService.class);
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-            .withUserProfile(userProfile)
+            .withUserProfileService(userProfileService)
             .build();
 
-        assertThat(optimizelyClient.getUserProfile(), is(userProfile));
+        assertThat(optimizelyClient.getUserProfileService(), is(userProfileService));
     }
 
     @Test

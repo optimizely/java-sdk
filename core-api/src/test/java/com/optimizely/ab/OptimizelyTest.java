@@ -904,7 +904,6 @@ public class OptimizelyTest {
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockBucketer,
-                null,
                 eventType.getKey(),
                 genericUserId,
                 attributes);
@@ -970,7 +969,6 @@ public class OptimizelyTest {
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 noAudienceProjectConfig,
                 mockBucketer,
-                null,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
@@ -1036,7 +1034,6 @@ public class OptimizelyTest {
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 noAudienceProjectConfig,
                 mockBucketer,
-                null,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
@@ -1102,7 +1099,6 @@ public class OptimizelyTest {
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockBucketer,
-                null,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
@@ -1169,7 +1165,6 @@ public class OptimizelyTest {
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockBucketer,
-                null,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
@@ -1235,7 +1230,6 @@ public class OptimizelyTest {
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockBucketer,
-                null,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
@@ -1306,7 +1300,6 @@ public class OptimizelyTest {
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockBucketer,
-                null,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
@@ -1454,7 +1447,6 @@ public class OptimizelyTest {
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 noAudienceProjectConfig,
                 mockBucketAlgorithm,
-                null,
                 eventType.getKey(),
                 genericUserId,
                 null);
@@ -2029,7 +2021,6 @@ public class OptimizelyTest {
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockBucketer,
-                null,
                 eventType.getKey(),
                 genericUserId,
                 attributes);
@@ -2105,7 +2096,6 @@ public class OptimizelyTest {
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockBucketer,
-                null,
                 eventType.getKey(),
                 genericUserId,
                 attributes);
@@ -2180,7 +2170,6 @@ public class OptimizelyTest {
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockBucketer,
-                null,
                 eventType.getKey(),
                 OptimizelyTest.genericUserId,
                 attributes);

@@ -45,7 +45,6 @@ public class DecisionService {
     private final Bucketer bucketer;
     private final ErrorHandler errorHandler;
     private final ProjectConfig projectConfig;
-    private final UserProfile userProfile;
     private final UserProfileService userProfileService;
     private static final Logger logger = LoggerFactory.getLogger(DecisionService.class);
 
@@ -54,18 +53,15 @@ public class DecisionService {
      * @param bucketer Base bucketer to allocate new users to an experiment.
      * @param errorHandler The error handler of the Optimizely client.
      * @param projectConfig Optimizely Project Config representing the datafile.
-     * @param userProfile UserProfile implementation for storing decisions.
      * @param userProfileService UserProfileService implementation for storing user info.
      */
     public DecisionService(@Nonnull Bucketer bucketer,
                            @Nonnull ErrorHandler errorHandler,
                            @Nonnull ProjectConfig projectConfig,
-                           @Nullable UserProfile userProfile,
                            @Nullable UserProfileService userProfileService) {
         this.bucketer = bucketer;
         this.errorHandler = errorHandler;
         this.projectConfig = projectConfig;
-        this.userProfile = userProfile;
         this.userProfileService = userProfileService;
     }
 
@@ -154,10 +150,10 @@ public class DecisionService {
     }
 
     /**
-     * Get the {@link Variation} that has been stored for the user in the {@link UserProfile} implementation.
+     * Get the {@link Variation} that has been stored for the user in the {@link UserProfileService} implementation.
      * @param experiment {@link Experiment} in which the user was bucketed.
      * @param userProfile {@link UserProfileService.UserProfile} of the user.
-     * @return null if the {@link UserProfile} implementation is null or the user was not previously bucketed.
+     * @return null if the {@link UserProfileService} implementation is null or the user was not previously bucketed.
      *      else return the {@link Variation} the user was previously bucketed into.
      */
     @Nullable Variation getStoredVariation(@Nonnull Experiment experiment,
