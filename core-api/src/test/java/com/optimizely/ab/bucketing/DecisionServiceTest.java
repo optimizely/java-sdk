@@ -44,7 +44,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -281,27 +283,33 @@ public class DecisionServiceTest {
         verify(userProfileService).save(eq(expectedUserProfile.toMap()));
     }
 
-//    /**
-//     * Verify that {@link Bucketer#bucket(Experiment,String)} logs correctly
-//     * when a {@link UserProfile} is present but fails to save an activation.
-//     */
-//    @Test
-//    public void bucketLogsCorrectlyWhenUserProfileFailsToSave() throws Exception {
-//
-//        UserProfile userProfile = mock(UserProfile.class);
-//        Bucketer bucketer = new Bucketer(noAudienceProjectConfig);
-//        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, noAudienceProjectConfig, null, null);
-//        final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
-//        final Variation variation = experiment.getVariations().get(0);
-//
-//        when(userProfile.save(userProfileId, experiment.getId(), variation.getId())).thenReturn(false);
-//
-////        decisionService.storeVariation(experiment, variation, userProfile);
-//
-//        logbackVerifier.expectMessage(Level.WARN,
-//                String.format("Failed to save variation \"%s\" of experiment \"%s\" for user \"" + userProfileId + "\".", variation.getId(),
-//                        experiment.getId()));
-//
-//        verify(userProfile).save(userProfileId, experiment.getId(), variation.getId());
-//    }
+    /**
+     * Verify that {@link DecisionService#getVariation(Experiment, String, Map)} logs correctly
+     * when a {@link UserProfileService} is present but fails to save an activation.
+     */
+    @Test
+    public void bucketLogsCorrectlyWhenUserProfileFailsToSave() throws Exception {
+        final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
+        final Variation variation = experiment.getVariations().get(0);
+        Bucketer bucketer = new Bucketer(noAudienceProjectConfig);
+        UserProfileService userProfileService = mock(UserProfileService.class);
+        doThrow(new Exception()).when(userProfileService).save(anyMapOf(String.class, Object.class));
+
+        UserProfileService.UserProfile expectedUserProfile = new UserProfileService.UserProfile(userProfileId,
+                Collections.singletonMap(experiment.getId(), variation.getId()));
+        UserProfileService.UserProfile saveUserProfile = new UserProfileService.UserProfile(userProfileId,
+                Collections.<String, String>emptyMap());
+
+        DecisionService decisionService = new DecisionService(bucketer,
+                mockErrorHandler, noAudienceProjectConfig, null, userProfileService);
+
+
+        decisionService.storeVariation(experiment, variation, saveUserProfile);
+
+        logbackVerifier.expectMessage(Level.WARN,
+                String.format("Failed to save variation \"%s\" of experiment \"%s\" for user \"" + userProfileId + "\".", variation.getId(),
+                        experiment.getId()));
+
+        verify(userProfileService).save(eq(expectedUserProfile.toMap()));
+    }
 }

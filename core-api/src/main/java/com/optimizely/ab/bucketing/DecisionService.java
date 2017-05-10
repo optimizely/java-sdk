@@ -100,7 +100,7 @@ public class DecisionService {
                 if (userProfileMap != null) userProfile = new UserProfileService.UserProfile(userProfileMap);
             } catch (Exception exception) {
                 logger.error(exception.getMessage());
-                errorHandler.handleError((OptimizelyRuntimeException) exception);
+                errorHandler.handleError(new OptimizelyRuntimeException(exception));
             }
         }
 
@@ -208,7 +208,7 @@ public class DecisionService {
             } catch (Exception exception) {
                 logger.warn("Failed to save variation \"{}\" of experiment \"{}\" for user \"{}\".",
                         variationId, experimentId, userProfile.userId);
-                errorHandler.handleError((OptimizelyRuntimeException) exception);
+                errorHandler.handleError(new OptimizelyRuntimeException(exception));
             }
         }
     }
