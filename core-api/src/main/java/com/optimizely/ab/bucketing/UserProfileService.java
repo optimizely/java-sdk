@@ -34,9 +34,9 @@ public interface UserProfileService {
     class UserProfile {
 
         /** A user's ID. */
-        public final String userId;
+        @Nonnull public final String userId;
         /** The bucketing decisions of the user. */
-        public final Map<String, Map<String, String>> decisions;
+        @Nonnull public final Map<String, Map<String, String>> decisions;
 
         /**
          * Construct a User Profile instance from explicit components.

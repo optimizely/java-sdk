@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -165,18 +166,27 @@ public class DecisionService {
         // If a user profile instance is present then check it for a saved variation
         String experimentId = experiment.getId();
         String experimentKey = experiment.getKey();
-        String variationId = userProfile.decisions.get(experimentId);
-        if (variationId != null) {
+        Map<String, String> decision = userProfile.decisions.get(experimentId);
+        if (decision != null) {
+            String variationId = decision.get(UserProfileService.variationIdKey);
             Variation savedVariation = projectConfig
                     .getExperimentIdMapping()
                     .get(experimentId)
                     .getVariationIdToVariationMap()
                     .get(variationId);
-            logger.info("Returning previously activated variation \"{}\" of experiment \"{}\" "
-                            + "for user \"{}\" from user profile.",
-                    savedVariation.getKey(), experimentKey, userProfile.userId);
-            // A variation is stored for this combined bucket id
-            return savedVariation;
+            if (savedVariation != null) {
+                logger.info("Returning previously activated variation \"{}\" of experiment \"{}\" "
+                                + "for user \"{}\" from user profile.",
+                        savedVariation.getKey(), experimentKey, userProfile.userId);
+                // A variation is stored for this combined bucket id
+                return savedVariation;
+            }
+            else {
+                logger.info("User \"{}\" had variation with ID \"{}\" for experiment \"{}\", but no matching variation " +
+                        "was found for that user. We will re-bucket the user.",
+                        userProfile.userId, experimentKey, variationId);
+                return null;
+            }
         } else {
             logger.info("No previously activated variation of experiment \"{}\" "
                             + "for user \"{}\" found in user profile.",
@@ -199,7 +209,15 @@ public class DecisionService {
         if (userProfileService != null) {
             String experimentId = experiment.getId();
             String variationId = variation.getId();
-            userProfile.decisions.put(experimentId, variationId);
+            Map<String, String> decision;
+            if (userProfile.decisions.containsKey(experimentId)) {
+                decision = userProfile.decisions.get(experimentId);
+            }
+            else {
+                decision = new HashMap<String, String>();
+            }
+            decision.put(UserProfileService.variationIdKey, variationId);
+            userProfile.decisions.put(experimentId, decision);
 
             try {
                 userProfileService.save(userProfile.toMap());
