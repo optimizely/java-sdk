@@ -21,12 +21,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
 
+import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.concurrent.Immutable;
 
 /**
  * Represents the Optimizely Project configuration.
@@ -40,7 +39,8 @@ public class ProjectConfig {
     public enum Version {
         V1 ("1"),
         V2 ("2"),
-        V3 ("3");
+        V3 ("3"),
+        V4 ("4");
 
         private final String version;
 

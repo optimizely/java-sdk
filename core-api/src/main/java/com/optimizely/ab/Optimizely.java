@@ -19,13 +19,7 @@ package com.optimizely.ab;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.UserProfile;
-import com.optimizely.ab.config.Attribute;
-import com.optimizely.ab.config.EventType;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.LiveVariable;
-import com.optimizely.ab.config.LiveVariableUsageInstance;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.config.parser.DefaultConfigParser;
 import com.optimizely.ab.error.ErrorHandler;
@@ -33,30 +27,21 @@ import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
-import com.optimizely.ab.event.internal.BuildVersionInfo;
-import com.optimizely.ab.event.internal.EventBuilder;
-import com.optimizely.ab.event.internal.EventBuilderV1;
-import com.optimizely.ab.event.internal.EventBuilderV2;
+import com.optimizely.ab.event.internal.*;
 import com.optimizely.ab.event.internal.payload.Event.ClientEngine;
 import com.optimizely.ab.internal.EventTagUtils;
 import com.optimizely.ab.internal.ProjectValidationUtils;
 import com.optimizely.ab.internal.ReservedEventKey;
-import com.optimizely.ab.notification.NotificationListener;
 import com.optimizely.ab.notification.NotificationBroadcaster;
-
+import com.optimizely.ab.notification.NotificationListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
+import java.util.*;
 
 /**
  * Top-level container class for Optimizely functionality.
@@ -650,7 +635,7 @@ public class Optimizely {
     /**
      * {@link Optimizely} instance builder.
      * <p>
-     * <b>NOTE</b>, the default value for {@link #eventHandler} is a {@link NoOpErrorHandler} instance, meaning that the
+     * <b>NOTE</b>, the default value for {@link #errorHandler} is a {@link NoOpErrorHandler} instance, meaning that the
      * created {@link Optimizely} object will <b>NOT</b> throw exceptions unless otherwise specified.
      *
      * @see #builder(String, EventHandler)
@@ -698,7 +683,8 @@ public class Optimizely {
             return this;
         }
 
-        protected Builder withEventBuilder(EventBuilder eventBuilder) {
+        // TODO Change back to protected once version of ProjectConfig is incremented
+        public Builder withEventBuilder(EventBuilder eventBuilder) {
             this.eventBuilder = eventBuilder;
             return this;
         }
@@ -728,11 +714,7 @@ public class Optimizely {
             }
 
             if (eventBuilder == null) {
-                if (projectConfig.getVersion().equals(ProjectConfig.Version.V1.toString())) {
-                    eventBuilder = new EventBuilderV1();
-                } else {
-                    eventBuilder = new EventBuilderV2(clientEngine, clientVersion);
-                }
+                selectEventBuilder();
             }
 
             if (errorHandler == null) {
@@ -742,6 +724,29 @@ public class Optimizely {
             Optimizely optimizely = new Optimizely(projectConfig, bucketer, eventHandler, eventBuilder, errorHandler);
             optimizely.initialize();
             return optimizely;
+        }
+
+        private void selectEventBuilder() {
+            ProjectConfig.Version version = ProjectConfig.Version.V2;
+            try {
+                // The version in the datafile is one {1,2,3,...} adding V + makes it match enum element {V1, V2, V3,...}
+                version = ProjectConfig.Version.valueOf("V" + projectConfig.getVersion());
+            } catch (IllegalArgumentException e) {
+                logger.error("Unable to deserialize project config version", e);
+            }
+
+            switch (version) {
+                case V1:
+                    eventBuilder = new EventBuilderV1();
+                    break;
+                case V2:
+                case V3:
+                    eventBuilder = new EventBuilderV2(clientEngine, clientVersion);
+                    break;
+                case V4:
+                    eventBuilder = new EventBuilderV3(clientEngine, clientVersion);
+                    break;
+            }
         }
     }
 }
