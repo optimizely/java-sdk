@@ -153,7 +153,7 @@ public class EventBuilderV2 extends EventBuilder {
      * @param attributes the {@code {attributeKey -> value}} mapping
      * @param projectConfig the current project config
      */
-    private List<Feature> createUserFeatures(Map<String, String> attributes, ProjectConfig projectConfig) {
+    static List<Feature> createUserFeatures(Map<String, String> attributes, ProjectConfig projectConfig) {
         Map<String, Attribute> attributeKeyMapping = projectConfig.getAttributeKeyMapping();
         List<Feature> features = new ArrayList<Feature>();
 
@@ -210,7 +210,7 @@ public class EventBuilderV2 extends EventBuilder {
      * @param eventKey the goal that the bucket map will be filtered by
      * @param attributes the user's attributes
      */
-    private List<LayerState> createLayerStates(ProjectConfig projectConfig, Bucketer bucketer, String userId,
+    static List<LayerState> createLayerStates(ProjectConfig projectConfig, Bucketer bucketer, String userId,
                                                String eventKey, Map<String, String> attributes) {
         List<Experiment> allExperiments = projectConfig.getExperiments();
         List<String> experimentIds = projectConfig.getExperimentIdsForGoal(eventKey);

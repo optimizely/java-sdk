@@ -18,30 +18,17 @@ package com.optimizely.ab.config;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-
-import com.optimizely.ab.config.audience.AndCondition;
-import com.optimizely.ab.config.audience.Audience;
-import com.optimizely.ab.config.audience.Condition;
-import com.optimizely.ab.config.audience.NotCondition;
-import com.optimizely.ab.config.audience.OrCondition;
-import com.optimizely.ab.config.audience.UserAttribute;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.optimizely.ab.config.audience.*;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 /**
  * Helper class that provides common functionality and resources for testing {@link ProjectConfig}.
@@ -520,6 +507,10 @@ public final class ProjectConfigTestUtils {
         return Resources.toString(Resources.getResource("config/no-audience-project-config-v3.json"), Charsets.UTF_8);
     }
 
+    public static String noAudienceProjectConfigJsonV4() throws IOException {
+        return Resources.toString(Resources.getResource("config/no-audience-project-config-v3.json"), Charsets.UTF_8);
+    }
+
     /**
      * @return the expected {@link ProjectConfig} for the json produced by {@link #validConfigJsonV1()} ()}
      */
@@ -560,6 +551,15 @@ public final class ProjectConfigTestUtils {
      */
     public static ProjectConfig noAudienceProjectConfigV3() {
         return NO_AUDIENCE_PROJECT_CONFIG_V3;
+    }
+
+    /**
+     * @see #noAudienceProjectConfigV3()
+     *
+     * // TODO ProjectConfigV4 only exists locally, it needs to be created on the backend.
+     */
+    public static ProjectConfig noAudienceProjectConfigV4() {
+        return VALID_PROJECT_CONFIG_V3;
     }
 
     /**
