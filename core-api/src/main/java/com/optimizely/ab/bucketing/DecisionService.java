@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -93,8 +92,7 @@ public class DecisionService {
         UserProfileService.UserProfile userProfile = null;
         if (userProfileService != null) {
             try {
-                Map<String, Object> userProfileMap = userProfileService.lookup(userId);
-                if (userProfileMap != null) userProfile = new UserProfileService.UserProfile(userProfileMap);
+                userProfile = userProfileService.lookup(userId);
             } catch (Exception exception) {
                 logger.error(exception.getMessage());
                 errorHandler.handleError(new OptimizelyRuntimeException(exception));
@@ -113,7 +111,7 @@ public class DecisionService {
             Variation bucketedVariation = bucketer.bucket(experiment, userId);
 
             if ((bucketedVariation != null) && (userProfileService != null)) {
-                storeVariation(experiment, bucketedVariation, userProfile);
+                saveVariation(experiment, bucketedVariation, userProfile);
             }
 
             return bucketedVariation;
@@ -162,9 +160,9 @@ public class DecisionService {
         // If a user profile instance is present then check it for a saved variation
         String experimentId = experiment.getId();
         String experimentKey = experiment.getKey();
-        Map<String, String> decision = userProfile.decisions.get(experimentId);
+        UserProfileService.UserProfile.Decision decision = userProfile.experimentBucketMap.get(experimentId);
         if (decision != null) {
-            String variationId = decision.get(UserProfileService.variationIdKey);
+            String variationId = decision.variationId;
             Variation savedVariation = projectConfig
                     .getExperimentIdMapping()
                     .get(experimentId)
@@ -178,8 +176,8 @@ public class DecisionService {
                 return savedVariation;
             }
             else {
-                logger.info("User \"{}\" had variation with ID \"{}\" for experiment \"{}\", but no matching variation " +
-                        "was found for that user. We will re-bucket the user.",
+                logger.info("User \"{}\" was previously bucketed into variation with ID \"{}\" for experiment \"{}\"," +
+                                " but no matching variation was found for that user. We will re-bucket the user.",
                         userProfile.userId, variationId, experimentKey);
                 return null;
             }
@@ -192,31 +190,31 @@ public class DecisionService {
     }
 
     /**
-     * Store a {@link Variation} of an {@link Experiment} for a user in the {@link UserProfileService}.
+     * Save a {@link Variation} of an {@link Experiment} for a user in the {@link UserProfileService}.
      *
      * @param experiment The experiment the user was buck
-     * @param variation The Variation to store.
+     * @param variation The Variation to save.
      * @param userProfile A {@link UserProfileService.UserProfile} instance of the user information.
      */
-    void storeVariation(@Nonnull Experiment experiment,
-                        @Nonnull Variation variation,
-                        @Nonnull UserProfileService.UserProfile userProfile) {
+    void saveVariation(@Nonnull Experiment experiment,
+                       @Nonnull Variation variation,
+                       @Nonnull UserProfileService.UserProfile userProfile) {
         // only save if the user has implemented a user profile service
         if (userProfileService != null) {
             String experimentId = experiment.getId();
             String variationId = variation.getId();
-            Map<String, String> decision;
-            if (userProfile.decisions.containsKey(experimentId)) {
-                decision = userProfile.decisions.get(experimentId);
+            UserProfileService.UserProfile.Decision decision;
+            if (userProfile.experimentBucketMap.containsKey(experimentId)) {
+                decision = userProfile.experimentBucketMap.get(experimentId);
+                decision.variationId = variationId;
             }
             else {
-                decision = new HashMap<String, String>();
+                decision = new UserProfileService.UserProfile.Decision(variationId);
             }
-            decision.put(UserProfileService.variationIdKey, variationId);
-            userProfile.decisions.put(experimentId, decision);
+            userProfile.experimentBucketMap.put(experimentId, decision);
 
             try {
-                userProfileService.save(userProfile.toMap());
+                userProfileService.save(userProfile);
                 logger.info("Saved variation \"{}\" of experiment \"{}\" for user \"{}\".",
                     variationId, experimentId, userProfile.userId);
             } catch (Exception exception) {
