@@ -94,8 +94,14 @@ public class DecisionService {
         if (userProfileService != null) {
             try {
                 Map<String, Object> userProfileMap = userProfileService.lookup(userId);
-                if (UserProfileUtils.isMapAUserProfile(userProfileMap)) {
+                if (userProfileMap == null) {
+                    logger.info("We were unable to get a user profile map from the UserProfileService.");
+                }
+                else if (UserProfileUtils.isMapAUserProfile(userProfileMap)) {
                     userProfile = UserProfileUtils.convertMapToUserProfile(userProfileMap);
+                }
+                else {
+                    logger.warn("The User Profile Service returned an invalid map.");
                 }
             } catch (Exception exception) {
                 logger.error(exception.getMessage());
@@ -118,8 +124,13 @@ public class DecisionService {
         if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
             Variation bucketedVariation = bucketer.bucket(experiment, userId);
 
-            if ((bucketedVariation != null) && (userProfileService != null)) {
-                saveVariation(experiment, bucketedVariation, userProfile);
+            if ((bucketedVariation != null)) {
+                if (userProfileService != null) {
+                    saveVariation(experiment, bucketedVariation, userProfile);
+                }
+                else {
+                    logger.info("This decision will not be saved since the UserProfileService is null.");
+                }
             }
 
             return bucketedVariation;

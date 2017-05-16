@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.bucketing;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,10 +33,7 @@ public class UserProfileUtils {
      * @return True if the map can be converted into a {@link UserProfile}.
      *          False if the map cannot be converted.
      */
-    static boolean isMapAUserProfile(Map<String, Object> map) {
-        if (map == null) {
-            return false;
-        }
+    static boolean isMapAUserProfile(@Nonnull Map<String, Object> map) {
         // The Map must contain a value for the user ID
         if (!map.containsKey(UserProfileService.userIdKey)) {
             return false;
@@ -73,7 +71,7 @@ public class UserProfileUtils {
      * @param map The map to construct the User Profile from.
      * @return A User Profile instance.
      */
-    static UserProfile convertMapToUserProfile(Map<String, Object> map) {
+    static UserProfile convertMapToUserProfile(@Nonnull Map<String, Object> map) {
         String userId = (String) map.get(UserProfileService.userIdKey);
         Map<String, Map<String, String>> experimentBucketMap = (Map<String, Map<String, String>>) map.get(UserProfileService.experimentBucketMapKey);
         Map<String, Decision> decisions = new HashMap<String, Decision>(experimentBucketMap.size());
