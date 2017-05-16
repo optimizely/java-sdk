@@ -97,7 +97,7 @@ public class DecisionService {
                 if (userProfileMap == null) {
                     logger.info("We were unable to get a user profile map from the UserProfileService.");
                 }
-                else if (UserProfileUtils.isMapAUserProfile(userProfileMap)) {
+                else if (UserProfileUtils.isValidUserProfileMap(userProfileMap)) {
                     userProfile = UserProfileUtils.convertMapToUserProfile(userProfileMap);
                 } else {
                     logger.warn("The User Profile Service returned an invalid map.");
