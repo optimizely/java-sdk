@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -106,6 +107,10 @@ public class DecisionService {
         if (userProfile != null) {
             variation = getStoredVariation(experiment, userProfile);
         }
+        else {
+            userProfile = new UserProfile(userId, new HashMap<String, Decision>());
+        }
+
         if (variation != null) {
             return variation;
         }

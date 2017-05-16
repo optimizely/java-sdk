@@ -27,6 +27,9 @@ import java.util.Map.Entry;
 public class UserProfileUtils {
 
     static boolean isMapAUserProfile(Map<String, Object> map) {
+        if (map == null) {
+            return false;
+        }
         // The Map must contain a value for the user ID
         if (!map.containsKey(UserProfileService.userIdKey)) {
             return false;
@@ -40,7 +43,7 @@ public class UserProfileUtils {
             return false;
         }
         // Try and cast the experimentBucketMap value to a typed map
-        Map<String, Map<String, String>> experimentBucketMap = null;
+        Map<String, Map<String, String>> experimentBucketMap;
         try {
             experimentBucketMap = (Map<String, Map<String, String>>) map.get(UserProfileService.experimentBucketMapKey);
         }

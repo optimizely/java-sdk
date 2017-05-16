@@ -62,7 +62,7 @@ public class DecisionServiceTest {
     @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
     public MockitoRule rule = MockitoJUnit.rule();
 
-    @Mock ErrorHandler mockErrorHandler;
+    @Mock private ErrorHandler mockErrorHandler;
 
     private static ProjectConfig noAudienceProjectConfig;
     private static ProjectConfig validProjectConfig;
@@ -345,5 +345,29 @@ public class DecisionServiceTest {
                         experiment.getId()));
 
         verify(userProfileService).save(eq(expectedUserProfile.toMap()));
+    }
+
+    /**
+     * Verify that a {@link UserProfile} is saved when the user is brand new and did not have anything returned from
+     * {@link UserProfileService#lookup(String)}.
+     */
+    @Test
+    public void getVariationSavesANewUserProfile() throws Exception {
+        final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
+        final Variation variation = experiment.getVariations().get(0);
+        final Decision decision = new Decision(variation.getId());
+        final UserProfile expectedUserProfile = new UserProfile(userProfileId,
+                Collections.singletonMap(experiment.getId(), decision));
+
+        Bucketer bucketer = mock(Bucketer.class);
+        UserProfileService userProfileService = mock(UserProfileService.class);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, noAudienceProjectConfig,
+                userProfileService);
+
+        when(bucketer.bucket(experiment, userProfileId)).thenReturn(variation);
+        when(userProfileService.lookup(userProfileId)).thenReturn(null);
+
+        assertEquals(variation, decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap()));
+        verify(userProfileService).save(expectedUserProfile.toMap());
     }
 }
