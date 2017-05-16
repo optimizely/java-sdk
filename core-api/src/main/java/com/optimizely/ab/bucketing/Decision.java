@@ -20,10 +20,18 @@ import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A class representing a stored decision.
+ */
 public class Decision {
-    @Nonnull
-    public String variationId;
 
+    /** The ID of the {@link com.optimizely.ab.config.Variation} the user was bucketed into. */
+    @Nonnull public String variationId;
+
+    /**
+     * Initialize a Decision object.
+     * @param variationId The ID of the variation the user was bucketed into.
+     */
     public Decision(@Nonnull String variationId) {
         this.variationId = variationId;
     }

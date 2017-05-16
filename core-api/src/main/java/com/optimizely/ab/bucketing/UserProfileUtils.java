@@ -21,11 +21,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * A class validating a {@code Map<String, Object>} can be transformed into a {@link UserProfile}.
+ * A Utils class to help transform maps to {@link UserProfile} instances.
  */
 @SuppressWarnings("unchecked")
 public class UserProfileUtils {
 
+    /**
+     * Validate whether a {@code Map<String, Object>} can be transformed into a {@link UserProfile}.
+     * @param map The map to check.
+     * @return True if the map can be converted into a {@link UserProfile}.
+     *          False if the map cannot be converted.
+     */
     static boolean isMapAUserProfile(Map<String, Object> map) {
         if (map == null) {
             return false;
@@ -62,6 +68,11 @@ public class UserProfileUtils {
         return true;
     }
 
+    /**
+     * Convert a Map to a {@link UserProfile} instance.
+     * @param map The map to construct the User Profile from.
+     * @return A User Profile instance.
+     */
     static UserProfile convertMapToUserProfile(Map<String, Object> map) {
         String userId = (String) map.get(UserProfileService.userIdKey);
         Map<String, Map<String, String>> experimentBucketMap = (Map<String, Map<String, String>>) map.get(UserProfileService.experimentBucketMapKey);
