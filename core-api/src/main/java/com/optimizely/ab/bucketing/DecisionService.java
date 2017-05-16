@@ -125,7 +125,7 @@ public class DecisionService {
         if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
             variation = bucketer.bucket(experiment, userId);
 
-            if ((variation != null)) {
+            if (variation != null) {
                 if (userProfileService != null) {
                     saveVariation(experiment, variation, userProfile);
                 }
