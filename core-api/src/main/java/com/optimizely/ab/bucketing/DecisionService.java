@@ -112,28 +112,29 @@ public class DecisionService {
         // check if user exists in user profile
         if (userProfile != null) {
             variation = getStoredVariation(experiment, userProfile);
+            // return the stored variation if it exists
+            if (variation != null) {
+                return variation;
+            }
         }
+        // if we could not find a user profile, make a new one
         else {
             userProfile = new UserProfile(userId, new HashMap<String, Decision>());
         }
 
-        if (variation != null) {
-            return variation;
-        }
-
         if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
-            Variation bucketedVariation = bucketer.bucket(experiment, userId);
+            variation = bucketer.bucket(experiment, userId);
 
-            if ((bucketedVariation != null)) {
+            if ((variation != null)) {
                 if (userProfileService != null) {
-                    saveVariation(experiment, bucketedVariation, userProfile);
+                    saveVariation(experiment, variation, userProfile);
                 }
                 else {
                     logger.info("This decision will not be saved since the UserProfileService is null.");
                 }
             }
 
-            return bucketedVariation;
+            return variation;
         }
         logger.info("User \"{}\" does not meet conditions to be in experiment \"{}\".", userId, experiment.getKey());
 
