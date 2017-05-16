@@ -99,8 +99,7 @@ public class DecisionService {
                 }
                 else if (UserProfileUtils.isMapAUserProfile(userProfileMap)) {
                     userProfile = UserProfileUtils.convertMapToUserProfile(userProfileMap);
-                }
-                else {
+                } else {
                     logger.warn("The User Profile Service returned an invalid map.");
                 }
             } catch (Exception exception) {
@@ -116,9 +115,7 @@ public class DecisionService {
             if (variation != null) {
                 return variation;
             }
-        }
-        // if we could not find a user profile, make a new one
-        else {
+        } else { // if we could not find a user profile, make a new one
             userProfile = new UserProfile(userId, new HashMap<String, Decision>());
         }
 
@@ -128,8 +125,7 @@ public class DecisionService {
             if (variation != null) {
                 if (userProfileService != null) {
                     saveVariation(experiment, variation, userProfile);
-                }
-                else {
+                } else {
                     logger.info("This decision will not be saved since the UserProfileService is null.");
                 }
             }
@@ -194,8 +190,7 @@ public class DecisionService {
                         savedVariation.getKey(), experimentKey, userProfile.userId);
                 // A variation is stored for this combined bucket id
                 return savedVariation;
-            }
-            else {
+            } else {
                 logger.info("User \"{}\" was previously bucketed into variation with ID \"{}\" for experiment \"{}\"," +
                                 " but no matching variation was found for that user. We will re-bucket the user.",
                         userProfile.userId, variationId, experimentKey);
@@ -227,8 +222,7 @@ public class DecisionService {
             if (userProfile.experimentBucketMap.containsKey(experimentId)) {
                 decision = userProfile.experimentBucketMap.get(experimentId);
                 decision.variationId = variationId;
-            }
-            else {
+            } else {
                 decision = new Decision(variationId);
             }
             userProfile.experimentBucketMap.put(experimentId, decision);
