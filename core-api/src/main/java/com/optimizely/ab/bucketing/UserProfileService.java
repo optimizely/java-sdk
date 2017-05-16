@@ -16,7 +16,6 @@
  */
 package com.optimizely.ab.bucketing;
 
-import javax.annotation.Nonnull;
 import java.util.Map;
 
 /**
@@ -26,76 +25,30 @@ import java.util.Map;
  */
 public interface UserProfileService {
 
-    /**
-     * A class representing a user's profile.
-     */
-    class UserProfile {
-
-        static class Decision {
-            @Nonnull public String variationId;
-
-            public Decision(@Nonnull String variationId) {
-                this.variationId = variationId;
-            }
-
-            @Override
-            public boolean equals(Object o) {
-                if (this == o) return true;
-                if (o == null || getClass() != o.getClass()) return false;
-
-                Decision decision = (Decision) o;
-
-                return variationId.equals(decision.variationId);
-            }
-
-            @Override
-            public int hashCode() {
-                return variationId.hashCode();
-            }
-        }
-
-        /** A user's ID. */
-        @Nonnull public final String userId;
-        /** The bucketing experimentBucketMap of the user. */
-        @Nonnull public final Map<String, Decision> experimentBucketMap;
-
-        /**
-         * Construct a User Profile instance from explicit components.
-         * @param userId The ID of the user.
-         * @param experimentBucketMap The bucketing experimentBucketMap of the user.
-         */
-        public UserProfile(@Nonnull String userId, @Nonnull Map<String, Decision> experimentBucketMap) {
-            this.userId = userId;
-            this.experimentBucketMap = experimentBucketMap;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            UserProfile that = (UserProfile) o;
-
-            if (!userId.equals(that.userId)) return false;
-            return experimentBucketMap.equals(that.experimentBucketMap);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = userId.hashCode();
-            result = 31 * result + experimentBucketMap.hashCode();
-            return result;
-        }
-    }
+    /** The key for the user ID. Returns a String.*/
+    String userIdKey = "user_id";
+    /** The key for the decisions Map. Returns a {@code Map<String, Map<String, String>>}.*/
+    String experimentBucketMapKey = "experiment_bucket_map";
+    /** The key for the variation Id within a decision Map. */
+    String variationIdKey = "variation_id";
 
     /**
      * Fetch the user profile map for the user ID.
      *
      * @param userId The ID of the user whose profile will be retrieved.
-     * @return The associated {@link UserProfile}
+     * @return a Map representing the user's profile.
+     * The returned {@code Map<String, Object>} of the user profile will have the following structure.
+     * {
+     *     userIdKey : String userId,
+     *     decisionsKey : {@code Map<String, Map<String, String>>} decisions {
+     *          String experimentId : {@code Map<String, String>} decision {
+     *              variationIdKey : String variationId
+     *          }
+     *      }
+     *  }
      * @throws Exception Passes on whatever exceptions the implementation may throw.
      */
-    UserProfile lookup(String userId) throws Exception;
+    Map<String, Object> lookup(String userId) throws Exception;
 
     /**
      * Save the user profile Map sent to this method.
@@ -103,5 +56,5 @@ public interface UserProfileService {
      * @param userProfile The Map representing the user's profile.
      * @throws Exception Can throw an exception if the user profile was not saved properly.
      */
-    void save(UserProfile userProfile) throws Exception;
+    void save(Map<String, Object> userProfile) throws Exception;
 }

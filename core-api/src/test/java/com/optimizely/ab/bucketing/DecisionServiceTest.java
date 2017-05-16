@@ -17,8 +17,6 @@
 package com.optimizely.ab.bucketing;
 
 import ch.qos.logback.classic.Level;
-import com.optimizely.ab.bucketing.UserProfileService.UserProfile;
-import com.optimizely.ab.bucketing.UserProfileService.UserProfile.Decision;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.TrafficAllocation;
@@ -45,6 +43,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -120,7 +119,7 @@ public class DecisionServiceTest {
         UserProfile userProfile = new UserProfile(userProfileId,
                 Collections.singletonMap(experiment.getId(), decision));
         UserProfileService userProfileService = mock(UserProfileService.class);
-        when(userProfileService.lookup(userProfileId)).thenReturn(userProfile);
+        when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
         DecisionService decisionService = spy(new DecisionService(bucketer,
                 mockErrorHandler, validProjectConfig, userProfileService));
@@ -211,7 +210,7 @@ public class DecisionServiceTest {
         UserProfile userProfile = new UserProfile(userProfileId,
                 Collections.singletonMap(experiment.getId(), decision));
         UserProfileService userProfileService = mock(UserProfileService.class);
-        when(userProfileService.lookup(userProfileId)).thenReturn(userProfile);
+        when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
         Bucketer bucketer = new Bucketer(noAudienceProjectConfig);
         DecisionService decisionService = new DecisionService(bucketer,
@@ -242,7 +241,7 @@ public class DecisionServiceTest {
         UserProfileService userProfileService = mock(UserProfileService.class);
         UserProfile userProfile = new UserProfile(userProfileId,
                 Collections.<String, Decision>emptyMap());
-        when(userProfileService.lookup(userProfileId)).thenReturn(userProfile);
+        when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
         DecisionService decisionService = new DecisionService(bucketer,
                 mockErrorHandler, noAudienceProjectConfig, userProfileService);
@@ -270,7 +269,7 @@ public class DecisionServiceTest {
 
         Bucketer bucketer = mock(Bucketer.class);
         UserProfileService userProfileService = mock(UserProfileService.class);
-        when(userProfileService.lookup(userProfileId)).thenReturn(storedUserProfile);
+        when(userProfileService.lookup(userProfileId)).thenReturn(storedUserProfile.toMap());
 
         DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, noAudienceProjectConfig,
                 userProfileService);
@@ -297,7 +296,7 @@ public class DecisionServiceTest {
         UserProfileService userProfileService = mock(UserProfileService.class);
         UserProfile originalUserProfile = new UserProfile(userProfileId,
                 new HashMap<String, Decision>());
-        when(userProfileService.lookup(userProfileId)).thenReturn(originalUserProfile);
+        when(userProfileService.lookup(userProfileId)).thenReturn(originalUserProfile.toMap());
         UserProfile expectedUserProfile = new UserProfile(userProfileId,
                 Collections.singletonMap(experiment.getId(), decision));
 
@@ -308,12 +307,11 @@ public class DecisionServiceTest {
                 mockErrorHandler, noAudienceProjectConfig, userProfileService);
 
         assertEquals(variation, decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap()));
-        assertThat(decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap()),  is(variation));
         logbackVerifier.expectMessage(Level.INFO,
                 String.format("Saved variation \"%s\" of experiment \"%s\" for user \"" + userProfileId + "\".", variation.getId(),
                         experiment.getId()));
 
-        verify(userProfileService).save(eq(expectedUserProfile));
+        verify(userProfileService).save(eq(expectedUserProfile.toMap()));
     }
 
     /**
@@ -327,7 +325,7 @@ public class DecisionServiceTest {
         Decision decision = new Decision(variation.getId());
         Bucketer bucketer = new Bucketer(noAudienceProjectConfig);
         UserProfileService userProfileService = mock(UserProfileService.class);
-        doThrow(new Exception()).when(userProfileService).save(any(UserProfile.class));
+        doThrow(new Exception()).when(userProfileService).save(anyMapOf(String.class, Object.class));
 
         Map<String, Decision> experimentBucketMap = new HashMap<String, Decision>();
         experimentBucketMap.put(experiment.getId(), decision);
@@ -346,6 +344,6 @@ public class DecisionServiceTest {
                 String.format("Failed to save variation \"%s\" of experiment \"%s\" for user \"" + userProfileId + "\".", variation.getId(),
                         experiment.getId()));
 
-        verify(userProfileService).save(eq(expectedUserProfile));
+        verify(userProfileService).save(eq(expectedUserProfile.toMap()));
     }
 }
