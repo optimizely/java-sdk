@@ -49,36 +49,6 @@ public class ProjectConfigUtils {
     }
 
     /**
-     * Helper method to create a map from a live variable to all the experiments using it
-     */
-    public static Map<String, List<Experiment>> generateLiveVariableIdToExperimentsMapping(
-            List<Experiment> experiments) {
-
-        Map<String, List<Experiment>> variableIdToExperiments =
-                new HashMap<String, List<Experiment>>();
-        for (Experiment experiment : experiments) {
-            if (!experiment.getVariations().isEmpty()) {
-                // if a live variable is used by an experiment, it will have instances in all variations so we can
-                // short-circuit after getting the live variables for the first variation
-                Variation variation = experiment.getVariations().get(0);
-                if (variation.getLiveVariableUsageInstances() != null) {
-                    for (LiveVariableUsageInstance usageInstance : variation.getLiveVariableUsageInstances()) {
-                        List<Experiment> experimentsUsingVariable = variableIdToExperiments.get(usageInstance.getId());
-                        if (experimentsUsingVariable == null) {
-                            experimentsUsingVariable = new ArrayList<Experiment>();
-                        }
-
-                        experimentsUsingVariable.add(experiment);
-                        variableIdToExperiments.put(usageInstance.getId(), experimentsUsingVariable);
-                    }
-                }
-            }
-        }
-
-        return variableIdToExperiments;
-    }
-
-    /**
      * Helper method to create a map from variation ID to variable ID to {@link LiveVariableUsageInstance}
      */
     public static Map<String, Map<String, LiveVariableUsageInstance>> generateVariationToLiveVariableUsageInstancesMap(
