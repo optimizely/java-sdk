@@ -146,7 +146,7 @@ public final class ProjectConfigTestUtils {
                                                  Collections.<TrafficAllocation>emptyList());
         List<Group> groups = asList(randomPolicyGroup, overlappingPolicyGroup);
 
-        return new ProjectConfig("789", "1234", "2", "42", groups, experiments, attributes, events, audiences);
+        return new ProjectConfigV2("789", "1234", "2", "42", groups, experiments, attributes, events, audiences);
     }
 
     private static final ProjectConfig NO_AUDIENCE_PROJECT_CONFIG_V2 = generateNoAudienceProjectConfigV2();
@@ -194,7 +194,7 @@ public final class ProjectConfigTestUtils {
                 new EventType("101", "event_with_launched_and_running_experiments", Arrays.asList("119", "223"))
         );
 
-        return new ProjectConfig("789", "1234", "2", "42", Collections.<Group>emptyList(), experiments, attributes,
+        return new ProjectConfigV2("789", "1234", "2", "42", Collections.<Group>emptyList(), experiments, attributes,
                                  events, Collections.<Audience>emptyList());
     }
 
@@ -324,7 +324,7 @@ public final class ProjectConfigTestUtils {
                              LiveVariable.VariableType.STRING)
         );
 
-        return new ProjectConfig("789", "1234", "3", "42", groups, experiments, attributes, events, audiences,
+        return new ProjectConfigV3("789", "1234", "3", "42", groups, experiments, attributes, events, audiences,
                                  true, liveVariables);
     }
 
@@ -373,7 +373,7 @@ public final class ProjectConfigTestUtils {
                 new EventType("101", "event_with_launched_and_running_experiments", Arrays.asList("119", "223"))
         );
 
-        return new ProjectConfig("789", "1234", "3", "42", Collections.<Group>emptyList(), experiments, attributes,
+        return new ProjectConfigV3("789", "1234", "3", "42", Collections.<Group>emptyList(), experiments, attributes,
                                  events, Collections.<Audience>emptyList(), true, Collections.<LiveVariable>emptyList());
     }
 

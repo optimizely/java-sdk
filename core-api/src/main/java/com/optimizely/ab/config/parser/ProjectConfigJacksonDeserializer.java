@@ -23,14 +23,15 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-
 import com.optimizely.ab.config.Attribute;
-import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Group;
 import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.ProjectConfigV2;
+import com.optimizely.ab.config.ProjectConfigV3;
+import com.optimizely.ab.config.audience.Audience;
 
 import java.io.IOException;
 import java.util.List;
@@ -66,13 +67,36 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
 
         boolean anonymizeIP = false;
         List<LiveVariable> liveVariables = null;
+        if (version.equals(ProjectConfig.Version.V2.toString())) {
+            return new ProjectConfigV2(accountId,
+                    projectId,
+                    version,
+                    revision,
+                    groups,
+                    experiments,
+                    attributes,
+                    events,
+                    audiences);
+        }
         if (version.equals(ProjectConfig.Version.V3.toString())) {
             liveVariables = mapper.readValue(node.get("variables").toString(),
                                              new TypeReference<List<LiveVariable>>() {});
             anonymizeIP = node.get("anonymizeIP").asBoolean();
-        }
 
-        return new ProjectConfig(accountId, projectId, version, revision, groups, experiments, attributes, events,
-                                 audiences, anonymizeIP, liveVariables);
+            return new ProjectConfigV3(accountId,
+                    projectId,
+                    version,
+                    revision,
+                    groups,
+                    experiments,
+                    attributes,
+                    events,
+                    audiences,
+                    anonymizeIP,
+                    liveVariables);
+        }
+        else {
+            return null;
+        }
     }
 }
