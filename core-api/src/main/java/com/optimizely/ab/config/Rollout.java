@@ -16,53 +16,26 @@
  */
 package com.optimizely.ab.config;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
+import javax.annotation.concurrent.Immutable;
 import java.util.List;
 
-import javax.annotation.concurrent.Immutable;
-
 /**
- * Represents a Optimizely Layer configuration
+ * Represents a Optimizely Rollout configuration
  *
  * @see <a href="http://developers.optimizely.com/server/reference/index.html#json">Project JSON</a>
  */
 @Immutable
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class Layer implements IdMapped {
+public class Rollout extends Layer implements IdMapped {
 
-    protected final String id;
-    protected final String policy;
-    protected final List<Experiment> experiments;
-
-    public static final String SINGLE_EXPERIMENT_POLICY = "single_experiment";
-
-    @JsonCreator
-    public Layer(@JsonProperty("id") String id,
-                 @JsonProperty("policy") String policy,
-                 @JsonProperty("experiments") List<Experiment> experiments) {
-        this.id = id;
-        this.policy = policy;
-        this.experiments = experiments;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getPolicy() {
-        return policy;
-    }
-
-    public List<Experiment> getExperiments() {
-        return experiments;
+    public Rollout(String id,
+                   String policy,
+                   List<Experiment> experiments) {
+        super(id, policy, experiments);
     }
 
     @Override
     public String toString() {
-        return "Layer{" +
+        return "Rollout{" +
                 "id='" + id + '\'' +
                 ", policy='" + policy + '\'' +
                 ", experiments=" + experiments +
