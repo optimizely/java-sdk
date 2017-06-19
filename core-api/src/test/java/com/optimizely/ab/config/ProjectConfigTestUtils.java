@@ -377,8 +377,8 @@ public final class ProjectConfigTestUtils {
                                  events, Collections.<Audience>emptyList(), true, Collections.<LiveVariable>emptyList());
     }
 
-    private static final ProjectConfig VALID_PROJECT_CONFIG_V4 = generateValidProjectCOnfigV4();
-    private static ProjectConfig generateValidProjectCOnfigV4() {
+    private static final ProjectConfig VALID_PROJECT_CONFIG_V4 = generateValidProjectConfigV4();
+    private static ProjectConfig generateValidProjectConfigV4() {
         return null;
     }
 
