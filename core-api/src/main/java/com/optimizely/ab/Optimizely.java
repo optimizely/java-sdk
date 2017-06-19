@@ -412,6 +412,7 @@ public class Optimizely {
 
     /**
      * Determine whether a boolean feature is enabled.
+     * Send an impression event if the user is bucketed into an experiment using the feature.
      *
      * @param featureKey The unique key of the feature.
      * @param userId The ID of the user.
@@ -426,6 +427,7 @@ public class Optimizely {
 
     /**
      * Determine whether a boolean feature is enabled.
+     * Send an impression event if the user is bucketed into an experiment using the feature.
      *
      * @param featureKey The unique key of the feature.
      * @param userId The ID of the user.
@@ -437,30 +439,34 @@ public class Optimizely {
     public @Nullable Boolean isFeatureEnabled(@Nonnull String featureKey,
                                               @Nonnull String userId,
                                               @Nonnull Map<String, String> attributes) {
-        return getFeatureVariableBoolean(featureKey, userId, attributes);
+        return getFeatureVariableBoolean(featureKey, "", userId, attributes);
     }
 
     /**
      * Get the Boolean value of the boolean single variable feature
      * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
      * @param userId The ID of the user.
      * @return The Boolean value of the boolean single variable feature.
      *         Null if the feature could not be found.
      */
     public @Nullable Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
+                                                       @Nonnull String variableKey,
                                                        @Nonnull String userId) {
-        return getFeatureVariableBoolean(featureKey, userId, Collections.<String, String>emptyMap());
+        return getFeatureVariableBoolean(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
     }
 
     /**
      * Get the Boolean value of the boolean single variable feature
      * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
      * @param userId The ID of the user.
      * @param attributes The user's attributes.
      * @return The Boolean value of the boolean single variable feature.
      *         Null if the feature could not be found.
      */
     public @Nullable Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
+                                                       @Nonnull String variableKey,
                                                        @Nonnull String userId,
                                                        @Nonnull Map<String, String> attributes) {
         return null;
@@ -469,24 +475,28 @@ public class Optimizely {
     /**
      * Get the Double value of the double single variable feature.
      * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
      * @param userId The ID of the user.
      * @return The Double value of the double single variable feature.
      *         Null if the feature could not be found.
      */
     public @Nullable Double getFeatureVariableDouble(@Nonnull String featureKey,
+                                                     @Nonnull String variableKey,
                                                      @Nonnull String userId) {
-        return getFeatureVariableDouble(featureKey, userId, Collections.<String, String>emptyMap());
+        return getFeatureVariableDouble(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
     }
 
     /**
      * Get the Double value of the double single variable feature.
      * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
      * @param userId The ID of the user.
      * @param attributes The user's attributes.
      * @return The Double value of the double single variable feature.
      *         Null if the feature could not be found.
      */
     public @Nullable Double getFeatureVariableDouble(@Nonnull String featureKey,
+                                                     @Nonnull String variableKey,
                                                      @Nonnull String userId,
                                                      @Nonnull Map<String, String> attributes) {
         return null;
@@ -495,24 +505,28 @@ public class Optimizely {
     /**
      * Get the Integer value of the integer single variable feature.
      * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
      * @param userId The ID of the user.
      * @return The Integer value of the integer single variable feature.
      *         Null if the feature could not be found.
      */
     public @Nullable Integer getFeatureVariableInteger(@Nonnull String featureKey,
+                                                       @Nonnull String variableKey,
                                                        @Nonnull String userId) {
-        return getFeatureVariableInteger(featureKey, userId, Collections.<String, String>emptyMap());
+        return getFeatureVariableInteger(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
     }
 
     /**
      * Get the Integer value of the integer single variable feature.
      * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
      * @param userId The ID of the user.
      * @param attributes The user's attributes.
      * @return The Integer value of the integer single variable feature.
      *         Null if the feature could not be found.
      */
     public @Nullable Integer getFeatureVariableInteger(@Nonnull String featureKey,
+                                                       @Nonnull String variableKey,
                                                        @Nonnull String userId,
                                                        @Nonnull Map<String, String> attributes) {
         return null;
@@ -521,52 +535,30 @@ public class Optimizely {
     /**
      * Get the String value of the string single variable feature.
      * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
      * @param userId The ID of the user.
      * @return The String value of the string single variable feature.
      *         Null if the feature could not be found.
      */
     public @Nullable String getFeatureVariableString(@Nonnull String featureKey,
+                                                     @Nonnull String variableKey,
                                                      @Nonnull String userId) {
-        return getFeatureVariableString(featureKey, userId, Collections.<String, String>emptyMap());
+        return getFeatureVariableString(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
     }
 
     /**
      * Get the String value of the string single variable feature.
      * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
      * @param userId The ID of the user.
      * @param attributes The user's attributes.
      * @return The String value of the string single variable feature.
      *         Null if the feature could not be found.
      */
     public @Nullable String getFeatureVariableString(@Nonnull String featureKey,
+                                                     @Nonnull String variableKey,
                                                      @Nonnull String userId,
                                                      @Nonnull Map<String, String> attributes) {
-        return null;
-    }
-
-    /**
-     * Get the variable values for all variables in a multi variable feature.
-     * @param featureKey The unique key of the feature.
-     * @param userId The ID of the user.
-     * @return A Map of the variable keys to variable values.
-     *         Null if the feature could not be found.
-     */
-    public @Nullable Map<String, Object> getFeatureVariables(@Nonnull String featureKey,
-                                                             @Nonnull String userId) {
-        return getFeatureVariables(featureKey, userId, Collections.<String, String>emptyMap());
-    }
-
-    /**
-     * Get the variable values for all variables in a multi variable feature.
-     * @param featureKey The unique key of the feature.
-     * @param userId The ID of the user.
-     * @param attributes The user's attributes.
-     * @return A Map of the variable keys to variable values.
-     *         Null if the feature could not be found.
-     */
-    public @Nullable Map<String, Object> getFeatureVariables(@Nonnull String featureKey,
-                                                             @Nonnull String userId,
-                                                             @Nonnull Map<String, String> attributes) {
         return null;
     }
 
