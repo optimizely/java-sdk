@@ -17,7 +17,25 @@
       "key": "house"
     }
   ],
-  "events": [],
+  "events": [
+    {
+      "id": "3785620495",
+      "key": "basic_event",
+      "experimentIds": [
+        "1323241596",
+        "2738374745",
+        "3042640549",
+        "3262035800"
+      ]
+    },
+    {
+      "id": "3195631717",
+      "key": "event_with_paused_experiment",
+      "experimentIds": [
+        "2667098701"
+      ]
+    }
+  ],
   "experiments": [
     {
       "id": "1323241596",
@@ -141,6 +159,29 @@
         "Feorge": "Feorge",
         "Gred": "Gred",
         "George": "George"
+      }
+    },
+    {
+      "id": "2667098701",
+      "key": "paused_experiment",
+      "layerId": "3949273892",
+      "status": "Paused",
+      "variations": [
+        {
+          "id": "391535909",
+          "key": "Control",
+          "variables": []
+        }
+      ],
+      "trafficAllocation": [
+        {
+          "entityId": "391535909",
+          "endOfRange": 10000
+        }
+      ],
+      "audienceIds": [],
+      "forcedVariations": {
+        "Harry Potter": "Control"
       }
     }
   ],
