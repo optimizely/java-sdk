@@ -225,11 +225,11 @@
       "trafficAllocation": [
         {
           "entityId": "2738374745",
-          "endOfRange": 5000
+          "endOfRange": 4000
         },
         {
           "entityId": "3042640549",
-          "endOfRange": 10000
+          "endOfRange": 8000
         }
       ]
     }
