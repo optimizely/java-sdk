@@ -25,7 +25,8 @@
         "1323241596",
         "2738374745",
         "3042640549",
-        "3262035800"
+        "3262035800",
+        "3072915611"
       ]
     },
     {
@@ -33,6 +34,13 @@
       "key": "event_with_paused_experiment",
       "experimentIds": [
         "2667098701"
+      ]
+    },
+    {
+      "id": "1987018666",
+      "key": "event_with_launched_experiments_only",
+      "experimentIds": [
+        "3072915611"
       ]
     }
   ],
@@ -356,6 +364,27 @@
           "defaultValue": "arry"
         }
       ]
+    },
+    {
+      "id": "3072915611",
+      "key": "launched_experiment",
+      "layerId": "3587821424",
+      "status": "Launched",
+      "variations": [
+        {
+          "id": "1647582435",
+          "key": "launch_control",
+          "variables": []
+        }
+      ],
+      "trafficAllocation": [
+        {
+          "entityId": "1647582435",
+          "endOfRange": 8000
+        }
+      ],
+      "audienceIds": [],
+      "forcedVariations": {}
     }
   ],
   "liveVariables": []
