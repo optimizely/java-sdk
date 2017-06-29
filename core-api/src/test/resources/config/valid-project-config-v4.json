@@ -46,9 +46,7 @@
           "endOfRange": 10000
         }
       ],
-      "audienceIds": [
-        "3468206642"
-      ],
+      "audienceIds": [],
       "forcedVariations": {
         "Harry Potter": "A",
         "Tom Riddle": "B"
