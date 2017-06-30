@@ -17,34 +17,34 @@
 package com.optimizely.ab.config.parser;
 
 import com.optimizely.ab.config.Attribute;
+import com.optimizely.ab.config.EventType;
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.Experiment.ExperimentStatus;
+import com.optimizely.ab.config.Group;
+import com.optimizely.ab.config.LiveVariable;
+import com.optimizely.ab.config.LiveVariable.VariableStatus;
+import com.optimizely.ab.config.LiveVariable.VariableType;
+import com.optimizely.ab.config.LiveVariableUsageInstance;
+import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.ProjectConfigV2;
+import com.optimizely.ab.config.ProjectConfigV3;
+import com.optimizely.ab.config.TrafficAllocation;
+import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
-import com.optimizely.ab.config.EventType;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.Experiment.ExperimentStatus;
-import com.optimizely.ab.config.Group;
-import com.optimizely.ab.config.LiveVariable;
-import com.optimizely.ab.config.LiveVariableUsageInstance;
-import com.optimizely.ab.config.LiveVariable.VariableStatus;
-import com.optimizely.ab.config.LiveVariable.VariableType;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.TrafficAllocation;
-import com.optimizely.ab.config.Variation;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.annotation.Nonnull;
 
 /**
  * {@code org.json}-based config parser implementation.
@@ -72,14 +72,37 @@ final class JsonConfigParser implements ConfigParser {
 
             boolean anonymizeIP = false;
             List<LiveVariable> liveVariables = null;
-            if (version.equals(ProjectConfig.Version.V3.toString())) {
+
+            if (version.equals(ProjectConfig.Version.V2.toString())) {
+                return new ProjectConfigV2(accountId,
+                        projectId,
+                        version,
+                        revision,
+                        groups,
+                        experiments,
+                        attributes,
+                        events,
+                        audiences);
+            }
+            else if (version.equals(ProjectConfig.Version.V3.toString())) {
                 liveVariables = parseLiveVariables(rootObject.getJSONArray("variables"));
 
                 anonymizeIP = rootObject.getBoolean("anonymizeIP");
+                return new ProjectConfigV3(accountId,
+                        projectId,
+                        version,
+                        revision,
+                        groups,
+                        experiments,
+                        attributes,
+                        events,
+                        audiences,
+                        anonymizeIP,
+                        liveVariables);
             }
-
-            return new ProjectConfig(accountId, projectId, version, revision, groups, experiments, attributes, events,
-                                     audiences, anonymizeIP, liveVariables);
+            else {
+                return null;
+            }
         } catch (Exception e) {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
         }
@@ -112,12 +135,12 @@ final class JsonConfigParser implements ConfigParser {
             // parse the child objects
             List<Variation> variations = parseVariations(experimentObject.getJSONArray("variations"));
             Map<String, String> userIdToVariationKeyMap =
-                parseForcedVariations(experimentObject.getJSONObject("forcedVariations"));
+                    parseForcedVariations(experimentObject.getJSONObject("forcedVariations"));
             List<TrafficAllocation> trafficAllocations =
-                parseTrafficAllocation(experimentObject.getJSONArray("trafficAllocation"));
+                    parseTrafficAllocation(experimentObject.getJSONArray("trafficAllocation"));
 
             experiments.add(new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
-                                           trafficAllocations, groupId));
+                    trafficAllocations, groupId));
         }
 
         return experiments;
@@ -231,7 +254,7 @@ final class JsonConfigParser implements ConfigParser {
             } else {
                 JSONObject conditionMap = (JSONObject)obj;
                 conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
-                               (String)conditionMap.get("value")));
+                        (String)conditionMap.get("value")));
             }
         }
 
@@ -256,7 +279,7 @@ final class JsonConfigParser implements ConfigParser {
             String policy = groupObject.getString("policy");
             List<Experiment> experiments = parseExperiments(groupObject.getJSONArray("experiments"), id);
             List<TrafficAllocation> trafficAllocations =
-                parseTrafficAllocation(groupObject.getJSONArray("trafficAllocation"));
+                    parseTrafficAllocation(groupObject.getJSONArray("trafficAllocation"));
 
             groups.add(new Group(id, policy, experiments, trafficAllocations));
         }

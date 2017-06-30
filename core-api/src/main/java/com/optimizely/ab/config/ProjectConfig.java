@@ -33,7 +33,7 @@ import java.util.Map;
  */
 @Immutable
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ProjectConfig {
+public abstract class ProjectConfig {
 
     public enum Version {
         V2 ("2"),

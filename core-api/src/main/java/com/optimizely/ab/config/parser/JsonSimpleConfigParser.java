@@ -26,6 +26,8 @@ import com.optimizely.ab.config.LiveVariable.VariableStatus;
 import com.optimizely.ab.config.LiveVariable.VariableType;
 import com.optimizely.ab.config.LiveVariableUsageInstance;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.ProjectConfigV2;
+import com.optimizely.ab.config.ProjectConfigV3;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.AndCondition;
@@ -72,14 +74,37 @@ final class JsonSimpleConfigParser implements ConfigParser {
 
             boolean anonymizeIP = false;
             List<LiveVariable> liveVariables = null;
-            if (version.equals(ProjectConfig.Version.V3.toString())) {
+            if (version.equals(ProjectConfig.Version.V2.toString())) {
+                return new ProjectConfigV2(accountId,
+                        projectId,
+                        version,
+                        revision,
+                        groups,
+                        experiments,
+                        attributes,
+                        events,
+                        audiences);
+            }
+            else if (version.equals(ProjectConfig.Version.V3.toString())) {
                 liveVariables = parseLiveVariables((JSONArray)rootObject.get("variables"));
 
                 anonymizeIP = (Boolean)rootObject.get("anonymizeIP");
-            }
 
-            return new ProjectConfig(accountId, projectId, version, revision, groups, experiments, attributes, events,
-                                     audiences, anonymizeIP, liveVariables);
+                return new ProjectConfigV3(accountId,
+                        projectId,
+                        version,
+                        revision,
+                        groups,
+                        experiments,
+                        attributes,
+                        events,
+                        audiences,
+                        anonymizeIP,
+                        liveVariables);
+            }
+            else {
+                return null;
+            }
         } catch (Exception e) {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
         }
