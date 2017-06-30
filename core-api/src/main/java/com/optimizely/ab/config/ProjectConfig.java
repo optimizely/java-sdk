@@ -65,14 +65,19 @@ public class ProjectConfig {
     private final List<Group> groups;
     private final List<LiveVariable> liveVariables;
 
-    // convenience mappings for efficient lookup
-    private final Map<String, Experiment> experimentKeyMapping;
+    // key to entity mappings
     private final Map<String, Attribute> attributeKeyMapping;
-    private final Map<String, LiveVariable> liveVariableKeyMapping;
     private final Map<String, EventType> eventNameMapping;
+    private final Map<String, Experiment> experimentKeyMapping;
+    private final Map<String, Feature> featureKeyMapping;
+    private final Map<String, LiveVariable> liveVariableKeyMapping;
+
+    // id to entity mappings
     private final Map<String, Audience> audienceIdMapping;
     private final Map<String, Experiment> experimentIdMapping;
     private final Map<String, Group> groupIdMapping;
+
+    // other mappings
     private final Map<String, List<Experiment>> liveVariableIdToExperimentsMapping;
     private final Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping;
 
@@ -90,10 +95,10 @@ public class ProjectConfig {
                          List<Audience> audiences, boolean anonymizeIP, List<LiveVariable> liveVariables) {
         this(
                 accountId,
+                anonymizeIP,
                 projectId,
                 revision,
                 version,
-                anonymizeIP,
                 attributes,
                 audiences,
                 eventType,
@@ -106,10 +111,10 @@ public class ProjectConfig {
 
     // v4 constructor
     public ProjectConfig(String accountId,
+                         boolean anonymizeIP,
                          String projectId,
                          String revision,
                          String version,
-                         boolean anonymizeIP,
                          List<Attribute> attributes,
                          List<Audience> audiences,
                          List<EventType> events,
@@ -133,6 +138,7 @@ public class ProjectConfig {
         else {
             this.features = Collections.unmodifiableList(features);
         }
+
         this.groups = Collections.unmodifiableList(groups);
 
         List<Experiment> allExperiments = new ArrayList<Experiment>();
@@ -141,9 +147,10 @@ public class ProjectConfig {
         this.experiments = Collections.unmodifiableList(allExperiments);
 
         // generate the name mappers
-        this.experimentKeyMapping = ProjectConfigUtils.generateNameMapping(this.experiments);
         this.attributeKeyMapping = ProjectConfigUtils.generateNameMapping(attributes);
         this.eventNameMapping = ProjectConfigUtils.generateNameMapping(this.events);
+        this.experimentKeyMapping = ProjectConfigUtils.generateNameMapping(this.experiments);
+        this.featureKeyMapping = ProjectConfigUtils.generateNameMapping(this.features);
 
         // generate audience id to audience mapping
         this.audienceIdMapping = ProjectConfigUtils.generateIdMapping(audiences);
