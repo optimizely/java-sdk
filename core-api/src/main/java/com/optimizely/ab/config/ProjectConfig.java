@@ -37,7 +37,8 @@ public class ProjectConfig {
 
     public enum Version {
         V2 ("2"),
-        V3 ("3");
+        V3 ("3"),
+        V4 ("4");
 
         private final String version;
 
@@ -56,11 +57,12 @@ public class ProjectConfig {
     private final String revision;
     private final String version;
     private final boolean anonymizeIP;
-    private final List<Group> groups;
-    private final List<Experiment> experiments;
     private final List<Attribute> attributes;
-    private final List<EventType> events;
     private final List<Audience> audiences;
+    private final List<EventType> events;
+    private final List<Experiment> experiments;
+    private final List<Feature> features;
+    private final List<Group> groups;
     private final List<LiveVariable> liveVariables;
 
     // convenience mappings for efficient lookup
@@ -74,6 +76,7 @@ public class ProjectConfig {
     private final Map<String, List<Experiment>> liveVariableIdToExperimentsMapping;
     private final Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping;
 
+    // v2 constructor
     public ProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
                          List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
                          List<Audience> audiences) {
@@ -81,9 +84,39 @@ public class ProjectConfig {
              null);
     }
 
+    // v3 constructor
     public ProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
                          List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
                          List<Audience> audiences, boolean anonymizeIP, List<LiveVariable> liveVariables) {
+        this(
+                accountId,
+                projectId,
+                revision,
+                version,
+                anonymizeIP,
+                attributes,
+                audiences,
+                eventType,
+                experiments,
+                null,
+                groups,
+                liveVariables
+        );
+    }
+
+    // v4 constructor
+    public ProjectConfig(String accountId,
+                         String projectId,
+                         String revision,
+                         String version,
+                         boolean anonymizeIP,
+                         List<Attribute> attributes,
+                         List<Audience> audiences,
+                         List<EventType> events,
+                         List<Experiment> experiments,
+                         List<Feature> features,
+                         List<Group> groups,
+                         List<LiveVariable> liveVariables) {
 
         this.accountId = accountId;
         this.projectId = projectId;
@@ -91,19 +124,26 @@ public class ProjectConfig {
         this.revision = revision;
         this.anonymizeIP = anonymizeIP;
 
+        this.attributes = Collections.unmodifiableList(attributes);
+        this.audiences = Collections.unmodifiableList(audiences);
+        this.events = Collections.unmodifiableList(events);
+        if (features == null) {
+            this.features = Collections.emptyList();
+        }
+        else {
+            this.features = Collections.unmodifiableList(features);
+        }
         this.groups = Collections.unmodifiableList(groups);
+
         List<Experiment> allExperiments = new ArrayList<Experiment>();
         allExperiments.addAll(experiments);
         allExperiments.addAll(aggregateGroupExperiments(groups));
         this.experiments = Collections.unmodifiableList(allExperiments);
-        this.attributes = Collections.unmodifiableList(attributes);
-        this.events = Collections.unmodifiableList(eventType);
-        this.audiences = Collections.unmodifiableList(audiences);
 
         // generate the name mappers
         this.experimentKeyMapping = ProjectConfigUtils.generateNameMapping(this.experiments);
         this.attributeKeyMapping = ProjectConfigUtils.generateNameMapping(attributes);
-        this.eventNameMapping = ProjectConfigUtils.generateNameMapping(events);
+        this.eventNameMapping = ProjectConfigUtils.generateNameMapping(this.events);
 
         // generate audience id to audience mapping
         this.audienceIdMapping = ProjectConfigUtils.generateIdMapping(audiences);
