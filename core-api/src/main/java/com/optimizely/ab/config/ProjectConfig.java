@@ -61,7 +61,7 @@ public class ProjectConfig {
     private final List<Audience> audiences;
     private final List<EventType> events;
     private final List<Experiment> experiments;
-    private final List<Feature> features;
+    private final List<FeatureFlag> featureFlags;
     private final List<Group> groups;
     private final List<LiveVariable> liveVariables;
 
@@ -69,7 +69,7 @@ public class ProjectConfig {
     private final Map<String, Attribute> attributeKeyMapping;
     private final Map<String, EventType> eventNameMapping;
     private final Map<String, Experiment> experimentKeyMapping;
-    private final Map<String, Feature> featureKeyMapping;
+    private final Map<String, FeatureFlag> featureKeyMapping;
     private final Map<String, LiveVariable> liveVariableKeyMapping;
 
     // id to entity mappings
@@ -119,7 +119,7 @@ public class ProjectConfig {
                          List<Audience> audiences,
                          List<EventType> events,
                          List<Experiment> experiments,
-                         List<Feature> features,
+                         List<FeatureFlag> featureFlags,
                          List<Group> groups,
                          List<LiveVariable> liveVariables) {
 
@@ -132,11 +132,11 @@ public class ProjectConfig {
         this.attributes = Collections.unmodifiableList(attributes);
         this.audiences = Collections.unmodifiableList(audiences);
         this.events = Collections.unmodifiableList(events);
-        if (features == null) {
-            this.features = Collections.emptyList();
+        if (featureFlags == null) {
+            this.featureFlags = Collections.emptyList();
         }
         else {
-            this.features = Collections.unmodifiableList(features);
+            this.featureFlags = Collections.unmodifiableList(featureFlags);
         }
 
         this.groups = Collections.unmodifiableList(groups);
@@ -150,7 +150,7 @@ public class ProjectConfig {
         this.attributeKeyMapping = ProjectConfigUtils.generateNameMapping(attributes);
         this.eventNameMapping = ProjectConfigUtils.generateNameMapping(this.events);
         this.experimentKeyMapping = ProjectConfigUtils.generateNameMapping(this.experiments);
-        this.featureKeyMapping = ProjectConfigUtils.generateNameMapping(this.features);
+        this.featureKeyMapping = ProjectConfigUtils.generateNameMapping(this.featureFlags);
 
         // generate audience id to audience mapping
         this.audienceIdMapping = ProjectConfigUtils.generateIdMapping(audiences);

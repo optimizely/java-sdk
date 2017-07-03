@@ -302,7 +302,7 @@
       ]
     }
   ],
-  "features": [
+  "featureFlags": [
     {
       "id": "4195505407",
       "key": "boolean_feature",

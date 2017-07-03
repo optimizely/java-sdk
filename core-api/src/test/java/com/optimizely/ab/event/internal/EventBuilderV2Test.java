@@ -130,7 +130,7 @@ public class EventBuilderV2Test {
 
         Impression impression = gson.fromJson(impressionEvent.getBody(), Impression.class);
 
-        // verify that no Feature is created for "unknownAtrribute" -> "blahValue"
+        // verify that no FeatureFlag is created for "unknownAtrribute" -> "blahValue"
         for (Feature feature : impression.getUserFeatures()) {
             assertNotEquals(feature.getName(), "unknownAttribute");
             assertNotEquals(feature.getValue(), "blahValue");
