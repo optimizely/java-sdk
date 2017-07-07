@@ -22,6 +22,9 @@ import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.FeatureFlag;
+import com.optimizely.ab.config.LiveVariable;
+import com.optimizely.ab.config.LiveVariableUsageInstance;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.parser.ConfigParseException;
@@ -433,7 +436,32 @@ public class Optimizely {
                                                      @Nonnull String variableKey,
                                                      @Nonnull String userId,
                                                      @Nonnull Map<String, String> attributes) {
-        return null;
+        FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
+        if (featureFlag == null) {
+            logger.info("No feature flag was found for key \"" + featureKey + "\".");
+            return null;
+        }
+        LiveVariable variable = featureFlag.getVariableKeyToLiveVariableMap().get(variableKey);
+        if (variable ==  null) {
+            logger.info("No live variable was found for key \"" + variableKey + "\" in feature \"" +
+                    featureKey + "\".");
+            return null;
+        }
+        String variableValue = variable.getDefaultValue();
+
+        if (!featureFlag.getExperimentIds().isEmpty()) {
+            for (String experimentId : featureFlag.getExperimentIds()) {
+                Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
+                Variation variation = decisionService.getVariation(experiment, userId, attributes);
+                if (variation != null ) {
+                    LiveVariableUsageInstance liveVariableUsageInstance =
+                            variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
+                    variableValue = liveVariableUsageInstance.getValue();
+                }
+            }
+        }
+
+        return variableValue;
     }
 
     //======== getVariation calls ========//
