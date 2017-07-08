@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -49,8 +50,13 @@ public class Variation implements IdKeyMapped {
                      @JsonProperty("variables") List<LiveVariableUsageInstance> liveVariableUsageInstances) {
         this.id = id;
         this.key = key;
-        this.liveVariableUsageInstances = liveVariableUsageInstances;
-        this.variableIdToLiveVariableUsageInstanceMap = ProjectConfigUtils.generateIdMapping(liveVariableUsageInstances);
+        if (liveVariableUsageInstances == null) {
+            this.liveVariableUsageInstances = Collections.emptyList();
+        }
+        else {
+            this.liveVariableUsageInstances = liveVariableUsageInstances;
+        }
+        this.variableIdToLiveVariableUsageInstanceMap = ProjectConfigUtils.generateIdMapping(this.liveVariableUsageInstances);
     }
 
     public @Nonnull String getId() {
