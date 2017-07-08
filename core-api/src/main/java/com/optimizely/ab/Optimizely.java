@@ -445,22 +445,25 @@ public class Optimizely {
         if (variable ==  null) {
             logger.info("No live variable was found for key \"" + variableKey + "\" in feature \"" +
                     featureKey + "\".");
+            return null;
         }
-        String variableValue = variable.getDefaultValue();
+        else {
+            String variableValue = variable.getDefaultValue();
 
-        if (!featureFlag.getExperimentIds().isEmpty()) {
-            for (String experimentId : featureFlag.getExperimentIds()) {
-                Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
-                Variation variation = decisionService.getVariation(experiment, userId, attributes);
-                if (variation != null ) {
-                    LiveVariableUsageInstance liveVariableUsageInstance =
-                            variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
-                    variableValue = liveVariableUsageInstance.getValue();
+            if (!featureFlag.getExperimentIds().isEmpty()) {
+                for (String experimentId : featureFlag.getExperimentIds()) {
+                    Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
+                    Variation variation = decisionService.getVariation(experiment, userId, attributes);
+                    if (variation != null) {
+                        LiveVariableUsageInstance liveVariableUsageInstance =
+                                variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
+                        variableValue = liveVariableUsageInstance.getValue();
+                    }
                 }
             }
-        }
 
-        return variableValue;
+            return variableValue;
+        }
     }
 
     //======== getVariation calls ========//
