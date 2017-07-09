@@ -450,7 +450,10 @@ public class Optimizely {
         else {
             String variableValue = variable.getDefaultValue();
 
-            if (!featureFlag.getExperimentIds().isEmpty()) {
+            if (featureFlag.getExperimentIds().isEmpty()) {
+                logger.info("The feature flag \"" + featureFlag.getKey() + "\" is not used in any experiments.");
+            }
+            else {
                 for (String experimentId : featureFlag.getExperimentIds()) {
                     Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
                     Variation variation = decisionService.getVariation(experiment, userId, attributes);

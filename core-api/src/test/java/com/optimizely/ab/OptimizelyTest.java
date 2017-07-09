@@ -76,8 +76,11 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_LAUNCHED_
 import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_PAUSED_EXPERIMENT_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_MULTI_VARIATE_FEATURE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_SINGLE_VARIABLE_STRING_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.MULTIVARIATE_EXPERIMENT_FORCED_VARIATION_USER_ID_GRED;
 import static com.optimizely.ab.config.ValidProjectConfigV4.PAUSED_EXPERIMENT_FORCED_VARIATION_USER_ID_CONTROL;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_STRING_VARIABLE_DEFAULT_VALUE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_STRING_VARIABLE_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIATION_MULTIVARIATE_EXPERIMENT_GRED_KEY;
 import static com.optimizely.ab.event.LogEvent.RequestMethod;
 import static com.optimizely.ab.event.internal.EventBuilderV2Test.createExperimentVariationMap;
@@ -2208,6 +2211,48 @@ public class OptimizelyTest {
                 "No live variable was found for key \"" + invalidVariableKey + "\" in feature \"" +
                 validFeatureKey + "\".",
                 times(2));
+
+        verify(mockDecisionService, never()).getVariation(
+                any(Experiment.class),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        );
+    }
+
+    /**
+     * Test that {@link Optimizely#getFeatureVariableString(String, String, String)} and
+     * {@link Optimizely#getFeatureVariableString(String, String, String, Map)} return the default value
+     * when the feature is not attached to an experiment.
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableStringReturnsDefaultValueWhenFeatureIsNotAttached() throws ConfigParseException {
+        assumeTrue(datafileVersion >= 4);
+
+        String validFeatureKey = FEATURE_SINGLE_VARIABLE_STRING_KEY;
+        String validVariableKey = VARIABLE_STRING_VARIABLE_KEY;
+        String defaultValue = VARIABLE_STRING_VARIABLE_DEFAULT_VALUE;
+        Map<String, String> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withDecisionService(mockDecisionService)
+                .build();
+
+        String valueWithNoMap = optimizely.getFeatureVariableString(validFeatureKey, validVariableKey, genericUserId);
+        assertEquals(defaultValue, valueWithNoMap);
+
+        String valueWithMap = optimizely.getFeatureVariableString(
+                validFeatureKey,
+                validVariableKey,
+                genericUserId,
+                attributes);
+        assertEquals(defaultValue, valueWithMap);
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "The feature flag \"" + validFeatureKey + "\" is not used in any experiments.",
+                times(2)
+        );
 
         verify(mockDecisionService, never()).getVariation(
                 any(Experiment.class),

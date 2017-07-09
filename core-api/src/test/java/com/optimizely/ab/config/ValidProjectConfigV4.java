@@ -129,10 +129,10 @@ public class ValidProjectConfigV4 {
             )
     );
     private static final String         FEATURE_SINGLE_VARIABLE_STRING_ID = "2079378557";
-    private static final String         FEATURE_SINGLE_VARIABLE_STRING_KEY = "string_single_variable_feature";
+    public  static final String         FEATURE_SINGLE_VARIABLE_STRING_KEY = "string_single_variable_feature";
     private static final String         VARIABLE_STRING_VARIABLE_ID = "2077511132";
-    private static final String         VARIABLE_STRING_VARIABLE_KEY = "string_variable";
-    private static final String         VARIABLE_STRING_VARIABLE_DEFAULT_VALUE = "wingardium leviosa";
+    public  static final String         VARIABLE_STRING_VARIABLE_KEY = "string_variable";
+    public  static final String         VARIABLE_STRING_VARIABLE_DEFAULT_VALUE = "wingardium leviosa";
     private static final LiveVariable   VARIABLE_STRING_VARIABLE = new LiveVariable(
             VARIABLE_STRING_VARIABLE_ID,
             VARIABLE_STRING_VARIABLE_KEY,
