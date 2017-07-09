@@ -27,6 +27,7 @@ import com.optimizely.ab.config.LiveVariableUsageInstance;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
@@ -74,6 +75,7 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_BASIC_EXP
 import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_LAUNCHED_EXPERIMENT_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_PAUSED_EXPERIMENT_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_MULTI_VARIATE_FEATURE_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.MULTIVARIATE_EXPERIMENT_FORCED_VARIATION_USER_ID_GRED;
 import static com.optimizely.ab.config.ValidProjectConfigV4.PAUSED_EXPERIMENT_FORCED_VARIATION_USER_ID_CONTROL;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIATION_MULTIVARIATE_EXPERIMENT_GRED_KEY;
@@ -84,14 +86,13 @@ import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.array;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assume.assumeTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -2141,6 +2142,78 @@ public class OptimizelyTest {
         optimizely.track(eventKey, genericUserId, attributes);
         verify(listener, never())
                 .onEventTracked(eventKey, genericUserId, attributes, null, logEventToDispatch);
+    }
+
+    //======== Feature Accessor Tests ========//
+
+    /**
+     * Test that when {@link Optimizely#getFeatureVariableString(String, String, String)} or
+     * {@link Optimizely#getFeatureVariableString(String, String, String, Map)} are called
+     * with a feature key that has no corresponding feature in the datafile, we log a message and return null.
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableStringReturnsNullWhenFeatureNotFound() throws ConfigParseException {
+        assumeTrue(datafileVersion >= 4);
+
+        String invalidFeatureKey = "nonexistent feature key";
+        String invalidVariableKey = "nonexistent variable key";
+        Map<String, String> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withDecisionService(mockDecisionService)
+                .build();
+
+        String value = optimizely.getFeatureVariableString(invalidFeatureKey, invalidVariableKey, genericUserId);
+        assertNull(value);
+
+        value = optimizely.getFeatureVariableString(invalidFeatureKey, invalidVariableKey, genericUserId, attributes);
+        assertNull(value);
+
+        logbackVerifier.expectMessage(Level.INFO,
+                "No feature flag was found for key \"" + invalidFeatureKey + "\".",
+                times(2));
+
+        verify(mockDecisionService, never()).getVariation(
+                any(Experiment.class),
+                anyString(),
+                anyMapOf(String.class, String.class));
+    }
+
+    /**
+     * Test that {@link Optimizely#getFeatureVariableString(String, String, String)} and
+     * {@link Optimizely#getFeatureVariableString(String, String, String, Map)} return null
+     * when the feature key is valid, but no variable could be found for the variable key in the datafile.
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableStringReturnsNullWhenVariableNotFoundInValidFeature() throws ConfigParseException {
+        assumeTrue(datafileVersion >= 4);
+
+        String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+        String invalidVariableKey = "nonexistent variable key";
+        Map<String, String> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withDecisionService(mockDecisionService)
+                .build();
+
+        String value = optimizely.getFeatureVariableString(validFeatureKey, invalidVariableKey, genericUserId);
+        assertNull(value);
+
+        value = optimizely.getFeatureVariableString(validFeatureKey, invalidVariableKey, genericUserId, attributes);
+        assertNull(value);
+
+        logbackVerifier.expectMessage(Level.INFO,
+                "No live variable was found for key \"" + invalidVariableKey + "\" in feature \"" +
+                validFeatureKey + "\".",
+                times(2));
+
+        verify(mockDecisionService, never()).getVariation(
+                any(Experiment.class),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        );
     }
 
     //======== Helper methods ========//
