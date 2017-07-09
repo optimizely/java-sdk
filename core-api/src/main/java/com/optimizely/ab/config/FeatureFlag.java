@@ -84,4 +84,30 @@ public class FeatureFlag implements IdKeyMapped{
                 ", variables=" + variables +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        FeatureFlag that = (FeatureFlag) o;
+
+        if (!id.equals(that.id)) return false;
+        if (!key.equals(that.key)) return false;
+        if (!layerId.equals(that.layerId)) return false;
+        if (!experimentIds.equals(that.experimentIds)) return false;
+        if (!variables.equals(that.variables)) return false;
+        return variableKeyToLiveVariableMap.equals(that.variableKeyToLiveVariableMap);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id.hashCode();
+        result = 31 * result + key.hashCode();
+        result = 31 * result + layerId.hashCode();
+        result = 31 * result + experimentIds.hashCode();
+        result = 31 * result + variables.hashCode();
+        result = 31 * result + variableKeyToLiveVariableMap.hashCode();
+        return result;
+    }
 }
