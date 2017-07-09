@@ -75,6 +75,7 @@ public class FeatureFlag implements IdKeyMapped{
                 ", layerId='" + layerId + '\'' +
                 ", experimentIds=" + experimentIds +
                 ", variables=" + variables +
+                ", variableKeyToLiveVariableMap=" + variableKeyToLiveVariableMap +
                 '}';
     }
 
