@@ -79,6 +79,8 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_MULTI_VARIAT
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_SINGLE_VARIABLE_STRING_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.MULTIVARIATE_EXPERIMENT_FORCED_VARIATION_USER_ID_GRED;
 import static com.optimizely.ab.config.ValidProjectConfigV4.PAUSED_EXPERIMENT_FORCED_VARIATION_USER_ID_CONTROL;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_FIRST_LETTER_DEFAULT_VALUE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_FIRST_LETTER_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_STRING_VARIABLE_DEFAULT_VALUE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_STRING_VARIABLE_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIATION_MULTIVARIATE_EXPERIMENT_GRED_KEY;
@@ -2164,6 +2166,7 @@ public class OptimizelyTest {
         Map<String, String> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
                 .withDecisionService(mockDecisionService)
                 .build();
 
@@ -2198,6 +2201,7 @@ public class OptimizelyTest {
         Map<String, String> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
                 .withDecisionService(mockDecisionService)
                 .build();
 
@@ -2235,6 +2239,7 @@ public class OptimizelyTest {
         Map<String, String> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
                 .withDecisionService(mockDecisionService)
                 .build();
 
@@ -2258,6 +2263,45 @@ public class OptimizelyTest {
                 any(Experiment.class),
                 anyString(),
                 anyMapOf(String.class, String.class)
+        );
+    }
+
+    /**
+     * Test that {@link Optimizely#getFeatureVariableString(String, String, String)} and
+     * {@link Optimizely#getFeatureVariableString(String, String, String, Map)} return the default value
+     * when the feature is attached to a single experiment
+     * and the user is excluded from the experiment due to audience targeting.
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableStringReturnsDefaultValueWhenFeatureIsAttachedToOneExperimentButFailsTargeting() throws ConfigParseException {
+        assumeTrue(datafileVersion >= 4);
+
+        String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+        String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
+        String expectedValue = VARIABLE_FIRST_LETTER_DEFAULT_VALUE;
+        String experimentKeyForFeature = EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY;
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build();
+
+        String valueWithNoMap = optimizely.getFeatureVariableString(validFeatureKey, validVariableKey, genericUserId);
+        assertEquals(expectedValue, valueWithNoMap);
+
+        String valueWithImproperAttributes = optimizely.getFeatureVariableString(
+                validFeatureKey,
+                validVariableKey,
+                genericUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, "Slytherin")
+        );
+        assertEquals(expectedValue, valueWithImproperAttributes);
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "User \"" + genericUserId +
+                        "\" does not meet conditions to be in experiment \"" + experimentKeyForFeature + "\".",
+                times(2)
         );
     }
 
