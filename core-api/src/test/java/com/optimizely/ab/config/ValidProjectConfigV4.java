@@ -152,8 +152,8 @@ public class ValidProjectConfigV4 {
     private static final String         FEATURE_MULTI_VARIATE_FEATURE_ID = "3263342226";
     public  static final String         FEATURE_MULTI_VARIATE_FEATURE_KEY = "multi_variate_feature";
     private static final String         VARIABLE_FIRST_LETTER_ID = "675244127";
-    private static final String         VARIABLE_FIRST_LETTER_KEY = "first_letter";
-    private static final String         VARIABLE_FIRST_LETTER_DEFAULT_VALUE = "H";
+    public  static final String         VARIABLE_FIRST_LETTER_KEY = "first_letter";
+    public  static final String         VARIABLE_FIRST_LETTER_DEFAULT_VALUE = "H";
     private static final LiveVariable   VARIABLE_FIRST_LETTER_VARIABLE = new LiveVariable(
             VARIABLE_FIRST_LETTER_ID,
             VARIABLE_FIRST_LETTER_KEY,
@@ -170,16 +170,6 @@ public class ValidProjectConfigV4 {
             VARIABLE_REST_OF_NAME_DEFAULT_VALUE,
             LiveVariable.VariableStatus.ACTIVE,
             LiveVariable.VariableType.STRING
-    );
-    private static final FeatureFlag FEATURE_FLAG_MULTI_VARIATE_FEATURE = new FeatureFlag(
-            FEATURE_MULTI_VARIATE_FEATURE_ID,
-            FEATURE_MULTI_VARIATE_FEATURE_KEY,
-            "",
-            Collections.<String>emptyList(),
-            ProjectConfigTestUtils.createListOfObjects(
-                    VARIABLE_FIRST_LETTER_VARIABLE,
-                    VARIABLE_REST_OF_NAME_VARIABLE
-            )
     );
 
     // group IDs
@@ -557,6 +547,18 @@ public class ValidProjectConfigV4 {
             EVENT_LAUNCHED_EXPERIMENT_ONLY_KEY,
             Collections.singletonList(
                     EXPERIMENT_LAUNCHED_EXPERIMENT_ID
+            )
+    );
+
+    // finish features
+    private static final FeatureFlag FEATURE_FLAG_MULTI_VARIATE_FEATURE = new FeatureFlag(
+            FEATURE_MULTI_VARIATE_FEATURE_ID,
+            FEATURE_MULTI_VARIATE_FEATURE_KEY,
+            "",
+            Collections.singletonList(EXPERIMENT_MULTIVARIATE_EXPERIMENT_ID),
+            ProjectConfigTestUtils.createListOfObjects(
+                    VARIABLE_FIRST_LETTER_VARIABLE,
+                    VARIABLE_REST_OF_NAME_VARIABLE
             )
     );
 
