@@ -436,29 +436,49 @@ public class Optimizely {
                                                      @Nonnull String variableKey,
                                                      @Nonnull String userId,
                                                      @Nonnull Map<String, String> attributes) {
+        return getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                LiveVariable.VariableType.STRING);
+    }
+
+    private String getFeatureVariableValueForType(@Nonnull String featureKey,
+                                                  @Nonnull String variableKey,
+                                                  @Nonnull String userId,
+                                                  @Nonnull Map<String, String> attributes,
+                                                  @Nonnull LiveVariable.VariableType variableType) {
         FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
         if (featureFlag == null) {
             logger.info("No feature flag was found for key \"" + featureKey + "\".");
             return null;
         }
+
         LiveVariable variable = featureFlag.getVariableKeyToLiveVariableMap().get(variableKey);
         if (variable ==  null) {
-            logger.info("No live variable was found for key \"" + variableKey + "\" in feature \"" +
+            logger.info("No feature variable was found for key \"" + variableKey + "\" in feature \"" +
                     featureKey + "\".");
             return null;
         }
+        else if (!variable.getType().equals(variableType)) {
+            logger.info("The feature variable \"" + variableKey +
+            "\" is actually of " + variable.getType().toString() +
+            " type. Please use the appropriate feature variable accessor.");
+            return null;
+        }
+
         String variableValue = variable.getDefaultValue();
 
-        if (!featureFlag.getExperimentIds().isEmpty()) {
-            for (String experimentId : featureFlag.getExperimentIds()) {
-                Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
-                Variation variation = decisionService.getVariation(experiment, userId, attributes);
-                if (variation != null ) {
-                    LiveVariableUsageInstance liveVariableUsageInstance =
-                            variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
-                    variableValue = liveVariableUsageInstance.getValue();
-                }
-            }
+        Variation variation = decisionService.getVariationForFeature(featureFlag, userId, attributes);
+
+        if (variation != null) {
+            LiveVariableUsageInstance liveVariableUsageInstance =
+                    variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
+            variableValue = liveVariableUsageInstance.getValue();
+        }
+        else {
+            logger.info("user was not bucketed into any variation for the feature");
         }
 
         return variableValue;
