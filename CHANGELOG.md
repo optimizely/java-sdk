@@ -13,6 +13,7 @@ This release will support Android SDK release 1.4.0
 
 - Removed `UserProfile` interface. Replaced with `UserProfileService` interface.
 - Removed support for v1 datafiles.
+- Removed Live Variables API.
 
 ## 2.0.0-alpha
 
