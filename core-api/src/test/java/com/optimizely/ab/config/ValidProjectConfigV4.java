@@ -129,10 +129,10 @@ public class ValidProjectConfigV4 {
             )
     );
     private static final String         FEATURE_SINGLE_VARIABLE_STRING_ID = "2079378557";
-    private static final String         FEATURE_SINGLE_VARIABLE_STRING_KEY = "string_single_variable_feature";
+    public  static final String         FEATURE_SINGLE_VARIABLE_STRING_KEY = "string_single_variable_feature";
     private static final String         VARIABLE_STRING_VARIABLE_ID = "2077511132";
-    private static final String         VARIABLE_STRING_VARIABLE_KEY = "string_variable";
-    private static final String         VARIABLE_STRING_VARIABLE_DEFAULT_VALUE = "wingardium leviosa";
+    public  static final String         VARIABLE_STRING_VARIABLE_KEY = "string_variable";
+    public  static final String         VARIABLE_STRING_VARIABLE_DEFAULT_VALUE = "wingardium leviosa";
     private static final LiveVariable   VARIABLE_STRING_VARIABLE = new LiveVariable(
             VARIABLE_STRING_VARIABLE_ID,
             VARIABLE_STRING_VARIABLE_KEY,
@@ -150,10 +150,10 @@ public class ValidProjectConfigV4 {
             )
     );
     private static final String         FEATURE_MULTI_VARIATE_FEATURE_ID = "3263342226";
-    private static final String         FEATURE_MULTI_VARIATE_FEATURE_KEY = "multi_variate_feature";
+    public  static final String         FEATURE_MULTI_VARIATE_FEATURE_KEY = "multi_variate_feature";
     private static final String         VARIABLE_FIRST_LETTER_ID = "675244127";
-    private static final String         VARIABLE_FIRST_LETTER_KEY = "first_letter";
-    private static final String         VARIABLE_FIRST_LETTER_DEFAULT_VALUE = "H";
+    public  static final String         VARIABLE_FIRST_LETTER_KEY = "first_letter";
+    public  static final String         VARIABLE_FIRST_LETTER_DEFAULT_VALUE = "H";
     private static final LiveVariable   VARIABLE_FIRST_LETTER_VARIABLE = new LiveVariable(
             VARIABLE_FIRST_LETTER_ID,
             VARIABLE_FIRST_LETTER_KEY,
@@ -170,16 +170,6 @@ public class ValidProjectConfigV4 {
             VARIABLE_REST_OF_NAME_DEFAULT_VALUE,
             null,
             LiveVariable.VariableType.STRING
-    );
-    private static final FeatureFlag FEATURE_FLAG_MULTI_VARIATE_FEATURE = new FeatureFlag(
-            FEATURE_MULTI_VARIATE_FEATURE_ID,
-            FEATURE_MULTI_VARIATE_FEATURE_KEY,
-            "",
-            Collections.<String>emptyList(),
-            ProjectConfigTestUtils.createListOfObjects(
-                    VARIABLE_FIRST_LETTER_VARIABLE,
-                    VARIABLE_REST_OF_NAME_VARIABLE
-            )
     );
 
     // group IDs
@@ -560,6 +550,18 @@ public class ValidProjectConfigV4 {
             )
     );
 
+    // finish features
+    private static final FeatureFlag FEATURE_FLAG_MULTI_VARIATE_FEATURE = new FeatureFlag(
+            FEATURE_MULTI_VARIATE_FEATURE_ID,
+            FEATURE_MULTI_VARIATE_FEATURE_KEY,
+            "",
+            Collections.singletonList(EXPERIMENT_MULTIVARIATE_EXPERIMENT_ID),
+            ProjectConfigTestUtils.createListOfObjects(
+                    VARIABLE_FIRST_LETTER_VARIABLE,
+                    VARIABLE_REST_OF_NAME_VARIABLE
+            )
+    );
+
 
     public static ProjectConfig generateValidProjectConfigV4() {
 
@@ -608,7 +610,7 @@ public class ValidProjectConfigV4 {
                 experiments,
                 featureFlags,
                 groups,
-                null
+                Collections.<LiveVariable>emptyList()
         );
     }
 }

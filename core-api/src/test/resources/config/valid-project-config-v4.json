@@ -320,7 +320,8 @@
           "id": "4111654444",
           "key": "double_variable",
           "type": "double",
-          "defaultValue": "14.99"
+          "defaultValue": "14.99",
+          "status": "active"
         }
       ]
     },
@@ -334,7 +335,8 @@
           "id": "593964691",
           "key": "integer_variable",
           "type": "integer",
-          "defaultValue": "7"
+          "defaultValue": "7",
+          "status": "active"
         }
       ]
     },
@@ -348,7 +350,8 @@
           "id": "3974680341",
           "key": "boolean_variable",
           "type": "boolean",
-          "defaultValue": "true"
+          "defaultValue": "true",
+          "status": "active"
         }
       ]
     },
@@ -362,7 +365,8 @@
           "id": "2077511132",
           "key": "string_variable",
           "type": "string",
-          "defaultValue": "wingardium leviosa"
+          "defaultValue": "wingardium leviosa",
+          "status": "active"
         }
       ]
     },
@@ -370,22 +374,24 @@
       "id": "3263342226",
       "key": "multi_variate_feature",
       "layerId": "",
-      "experimentIds": [],
+      "experimentIds": ["3262035800"],
       "variables": [
         {
           "id": "675244127",
           "key": "first_letter",
           "type": "string",
-          "defaultValue": "H"
+          "defaultValue": "H",
+          "status": "active"
         },
         {
           "id": "4052219963",
           "key": "rest_of_name",
           "type": "string",
-          "defaultValue": "arry"
+          "defaultValue": "arry",
+          "status": "active"
         }
       ]
     }
   ],
-  "liveVariables": []
+  "variables": []
 }
