@@ -32,12 +32,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -379,7 +381,7 @@ public final class ProjectConfigTestUtils {
 
     private static final ProjectConfig VALID_PROJECT_CONFIG_V4 = generateValidProjectConfigV4();
     private static ProjectConfig generateValidProjectConfigV4() {
-        return null;
+        return ValidProjectConfigV4.generateValidProjectConfigV4();
     }
 
     private ProjectConfigTestUtils() { }
@@ -398,6 +400,10 @@ public final class ProjectConfigTestUtils {
 
     public static String noAudienceProjectConfigJsonV3() throws IOException {
         return Resources.toString(Resources.getResource("config/no-audience-project-config-v3.json"), Charsets.UTF_8);
+    }
+
+    public static String validConfigJsonV4() throws IOException {
+        return Resources.toString(Resources.getResource("config/valid-project-config-v4.json"), Charsets.UTF_8);
     }
 
     /**
@@ -505,7 +511,9 @@ public final class ProjectConfigTestUtils {
             TrafficAllocation expectedDistribution = expected.get(i);
 
             assertThat(actualDistribution.getEntityId(), is(expectedDistribution.getEntityId()));
-            assertThat(actualDistribution.getEndOfRange(), is(expectedDistribution.getEndOfRange()));
+            assertEquals("expectedDistribution: " + expectedDistribution.toString() +
+                            "is not equal to the actualDistribution: " + actualDistribution.toString(),
+                    expectedDistribution.getEndOfRange(), actualDistribution.getEndOfRange());
         }
     }
 
@@ -617,5 +625,27 @@ public final class ProjectConfigTestUtils {
                 assertThat(actualLiveVariableUsageInstance.getValue(), is(expectedLiveVariableUsageInstance.getValue()));
             }
         }
+    }
+
+    public static <T> List<T> createListOfObjects(T ... elements) {
+        ArrayList<T> list = new ArrayList<T>(elements.length);
+        for (T element : elements) {
+            list.add(element);
+        }
+        return list;
+    }
+
+    public static <K, V> Map<K, V> createMapOfObjects(List<K>keys, List<V>values) {
+        HashMap<K, V> map = new HashMap<K, V>(keys.size());
+        if (keys.size() == values.size()) {
+            Iterator<K> keysIterator = keys.iterator();
+            Iterator<V> valuesIterator = values.iterator();
+            while (keysIterator.hasNext() && valuesIterator.hasNext()) {
+                K key = keysIterator.next();
+                V value = valuesIterator.next();
+                map.put(key, value);
+            }
+        }
+        return map;
     }
 }
