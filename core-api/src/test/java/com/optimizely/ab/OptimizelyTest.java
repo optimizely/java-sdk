@@ -2212,7 +2212,7 @@ public class OptimizelyTest {
         assertNull(value);
 
         logbackVerifier.expectMessage(Level.INFO,
-                "No live variable was found for key \"" + invalidVariableKey + "\" in feature \"" +
+                "No feature variable was found for key \"" + invalidVariableKey + "\" in feature \"" +
                 validFeatureKey + "\".",
                 times(2));
 
@@ -2240,7 +2240,6 @@ public class OptimizelyTest {
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
                 .withConfig(validProjectConfig)
-                .withDecisionService(mockDecisionService)
                 .build();
 
         String valueWithNoMap = optimizely.getFeatureVariableString(validFeatureKey, validVariableKey, genericUserId);
@@ -2257,12 +2256,6 @@ public class OptimizelyTest {
                 Level.INFO,
                 "The feature flag \"" + validFeatureKey + "\" is not used in any experiments.",
                 times(2)
-        );
-
-        verify(mockDecisionService, never()).getVariation(
-                any(Experiment.class),
-                anyString(),
-                anyMapOf(String.class, String.class)
         );
     }
 
