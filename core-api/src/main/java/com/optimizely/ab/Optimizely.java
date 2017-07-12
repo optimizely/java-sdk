@@ -175,6 +175,16 @@ public class Optimizely {
             return null;
         }
 
+        sendImpression(projectConfig, experiment, userId, filteredAttributes, variation);
+
+        return variation;
+    }
+
+    private void sendImpression(@Nonnull ProjectConfig projectConfig,
+                                @Nonnull Experiment experiment,
+                                @Nonnull String userId,
+                                Map<String, String> filteredAttributes,
+                                Variation variation) {
         if (experiment.isRunning()) {
             LogEvent impressionEvent = eventBuilder.createImpressionEvent(
                     projectConfig,
@@ -196,8 +206,6 @@ public class Optimizely {
         } else {
             logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
         }
-
-        return variation;
     }
 
     //======== track calls ========//
@@ -322,9 +330,18 @@ public class Optimizely {
             return null;
         }
 
-        Variation variation = decisionService.getVariationForFeature(featureFlag, userId, attributes);
+        Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
+
+        Variation variation = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
 
         if (variation != null) {
+            Experiment experiment = projectConfig.getExperimentForVariation(variation);
+            sendImpression(
+                    projectConfig,
+                    experiment,
+                    userId,
+                    filteredAttributes,
+                    variation);
             logger.info("Feature flag \"" + featureKey + "\" is enabled for user \"" + userId + "\".");
             return true;
         }
@@ -474,6 +491,7 @@ public class Optimizely {
         if (variable ==  null) {
             logger.info("No feature variable was found for key \"" + variableKey + "\" in feature \"" +
                     featureKey + "\".");
+            return null;
         }
         else if (!variable.getType().equals(variableType)) {
             logger.info("The feature variable \"" + variableKey +

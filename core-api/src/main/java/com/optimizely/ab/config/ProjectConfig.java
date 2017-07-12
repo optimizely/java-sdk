@@ -23,6 +23,7 @@ import com.optimizely.ab.config.audience.Condition;
 import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -80,6 +81,7 @@ public class ProjectConfig {
     // other mappings
     private final Map<String, List<Experiment>> liveVariableIdToExperimentsMapping;
     private final Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping;
+    private final Map<Variation, Experiment> variationExperimentMap;
 
     // v2 constructor
     public ProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
@@ -146,6 +148,14 @@ public class ProjectConfig {
         allExperiments.addAll(aggregateGroupExperiments(groups));
         this.experiments = Collections.unmodifiableList(allExperiments);
 
+        Map<Variation, Experiment> variationExperimentMap = new HashMap<Variation, Experiment>();
+        for (Experiment experiment : this.experiments) {
+            for (Variation variation : experiment.getVariations()) {
+                variationExperimentMap.put(variation, experiment);
+            }
+        }
+        this.variationExperimentMap = Collections.unmodifiableMap(variationExperimentMap);
+
         // generate the name mappers
         this.attributeKeyMapping = ProjectConfigUtils.generateNameMapping(attributes);
         this.eventNameMapping = ProjectConfigUtils.generateNameMapping(this.events);
@@ -170,6 +180,10 @@ public class ProjectConfig {
             this.variationToLiveVariableUsageInstanceMapping =
                     ProjectConfigUtils.generateVariationToLiveVariableUsageInstancesMap(this.experiments);
         }
+    }
+
+    public Experiment getExperimentForVariation(Variation variation) {
+        return this.variationExperimentMap.get(variation);
     }
 
     private List<Experiment> aggregateGroupExperiments(List<Group> groups) {
