@@ -316,7 +316,22 @@ public class Optimizely {
     public @Nullable Boolean isFeatureEnabled(@Nonnull String featureKey,
                                               @Nonnull String userId,
                                               @Nonnull Map<String, String> attributes) {
-        return getFeatureVariableBoolean(featureKey, "", userId, attributes);
+        FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
+        if (featureFlag == null) {
+            logger.info("No feature flag was found for key \"" + featureKey + "\".");
+            return null;
+        }
+
+        Variation variation = decisionService.getVariationForFeature(featureFlag, userId, attributes);
+
+        if (variation != null) {
+            logger.info("Feature flag \"" + featureKey + "\" is enabled for user \"" + userId + "\".");
+            return true;
+        }
+        else {
+            logger.info("Feature flag \"" + featureKey + "\" is not enabled for user \"" + userId + "\".");
+            return false;
+        }
     }
 
     /**
