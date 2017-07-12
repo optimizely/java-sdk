@@ -155,6 +155,9 @@ public class DecisionService {
                 }
             }
         }
+        else {
+            logger.info("The feature flag \"" + featureFlag.getKey() + "\" is not used in any experiments.");
+        }
 
         return null;
     }
