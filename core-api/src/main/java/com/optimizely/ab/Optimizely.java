@@ -335,7 +335,7 @@ public class Optimizely {
         Variation variation = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
 
         if (variation != null) {
-            Experiment experiment = projectConfig.getExperimentForVariation(variation);
+            Experiment experiment = projectConfig.getExperimentForVariationId(variation.getId());
             sendImpression(
                     projectConfig,
                     experiment,
@@ -378,6 +378,16 @@ public class Optimizely {
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
                                                        @Nonnull Map<String, String> attributes) {
+        String value = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                LiveVariable.VariableType.BOOLEAN);
+
+        if (value != null) {
+            return Boolean.parseBoolean(value);
+        }
         return null;
     }
 
@@ -408,6 +418,17 @@ public class Optimizely {
                                                      @Nonnull String variableKey,
                                                      @Nonnull String userId,
                                                      @Nonnull Map<String, String> attributes) {
+        String value = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                LiveVariable.VariableType.DOUBLE
+        );
+
+        if (value != null) {
+            return Double.parseDouble(value);
+        }
         return null;
     }
 
@@ -438,6 +459,17 @@ public class Optimizely {
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
                                                        @Nonnull Map<String, String> attributes) {
+        String value = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                LiveVariable.VariableType.INTEGER
+        );
+
+        if (value != null) {
+            return Integer.parseInt(value);
+        }
         return null;
     }
 
@@ -495,8 +527,9 @@ public class Optimizely {
         }
         else if (!variable.getType().equals(variableType)) {
             logger.info("The feature variable \"" + variableKey +
-            "\" is actually of " + variable.getType().toString() +
-            " type. Please use the appropriate feature variable accessor.");
+                    "\" is actually of " + variable.getType().toString() +
+                    " type. You tried to access it as type \"" + variableType.toString() +
+                    "Please use the appropriate feature variable accessor.");
             return null;
         }
 

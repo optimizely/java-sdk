@@ -81,7 +81,7 @@ public class ProjectConfig {
     // other mappings
     private final Map<String, List<Experiment>> liveVariableIdToExperimentsMapping;
     private final Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping;
-    private final Map<Variation, Experiment> variationExperimentMap;
+    private final Map<String, Experiment> variationIdExperimentMap;
 
     // v2 constructor
     public ProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
@@ -148,13 +148,13 @@ public class ProjectConfig {
         allExperiments.addAll(aggregateGroupExperiments(groups));
         this.experiments = Collections.unmodifiableList(allExperiments);
 
-        Map<Variation, Experiment> variationExperimentMap = new HashMap<Variation, Experiment>();
+        Map<String, Experiment> variationExperimentMap = new HashMap<String, Experiment>();
         for (Experiment experiment : this.experiments) {
             for (Variation variation : experiment.getVariations()) {
-                variationExperimentMap.put(variation, experiment);
+                variationExperimentMap.put(variation.getId(), experiment);
             }
         }
-        this.variationExperimentMap = Collections.unmodifiableMap(variationExperimentMap);
+        this.variationIdExperimentMap = Collections.unmodifiableMap(variationExperimentMap);
 
         // generate the name mappers
         this.attributeKeyMapping = ProjectConfigUtils.generateNameMapping(attributes);
@@ -182,8 +182,8 @@ public class ProjectConfig {
         }
     }
 
-    public Experiment getExperimentForVariation(Variation variation) {
-        return this.variationExperimentMap.get(variation);
+    public Experiment getExperimentForVariationId(String variationId) {
+        return this.variationIdExperimentMap.get(variationId);
     }
 
     private List<Experiment> aggregateGroupExperiments(List<Group> groups) {
