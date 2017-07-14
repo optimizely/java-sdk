@@ -463,8 +463,9 @@ public class Optimizely {
         }
         else if (!variable.getType().equals(variableType)) {
             logger.info("The feature variable \"" + variableKey +
-            "\" is actually of " + variable.getType().toString() +
-            " type. Please use the appropriate feature variable accessor.");
+                    "\" is actually of \"" + variable.getType().toString() +
+                    "\" type. You tried to access it as type \"" + variableType.toString() +
+                    "\". Please use the appropriate feature variable accessor.");
             return null;
         }
 
