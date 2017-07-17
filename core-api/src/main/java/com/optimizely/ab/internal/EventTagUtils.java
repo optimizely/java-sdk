@@ -55,8 +55,8 @@ public final class EventTagUtils {
         Double eventValue = null;
         if (eventTags.containsKey(ReservedEventKey.VALUE.toString())) {
             Object rawValue = eventTags.get(ReservedEventKey.VALUE.toString());
-            if (rawValue instanceof Double) {
-                eventValue = (Double)rawValue;
+            if (rawValue instanceof Number) {
+                eventValue = ((Number) rawValue).doubleValue();
                 logger.info("Parsed numeric metric value \"{}\" from event tags.", eventValue);
             } else {
                 logger.warn("Failed to parse numeric metric value \"{}\" from event tags.", rawValue);
