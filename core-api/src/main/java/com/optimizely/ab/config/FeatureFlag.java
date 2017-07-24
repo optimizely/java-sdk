@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a FeatureFlag definition at the project level
@@ -33,6 +34,7 @@ public class FeatureFlag implements IdKeyMapped{
     private final String layerId;
     private final List<String> experimentIds;
     private final List<LiveVariable> variables;
+    private final Map<String, LiveVariable> variableKeyToLiveVariableMap;
 
     @JsonCreator
     public FeatureFlag(@JsonProperty("id") String id,
@@ -45,6 +47,7 @@ public class FeatureFlag implements IdKeyMapped{
         this.layerId = layerId;
         this.experimentIds = experimentIds;
         this.variables = variables;
+        this.variableKeyToLiveVariableMap = ProjectConfigUtils.generateNameMapping(variables);
     }
 
     public String getId() {
@@ -65,6 +68,10 @@ public class FeatureFlag implements IdKeyMapped{
 
     public List<LiveVariable> getVariables() {
         return variables;
+    }
+
+    public Map<String, LiveVariable> getVariableKeyToLiveVariableMap() {
+        return variableKeyToLiveVariableMap;
     }
 
     @Override
