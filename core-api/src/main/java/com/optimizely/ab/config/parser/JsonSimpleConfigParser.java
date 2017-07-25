@@ -74,14 +74,14 @@ final class JsonSimpleConfigParser implements ConfigParser {
 
             boolean anonymizeIP = false;
             List<LiveVariable> liveVariables = null;
-            if (datafileVersion >= 3) {
+            if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
                 liveVariables = parseLiveVariables((JSONArray)rootObject.get("variables"));
 
                 anonymizeIP = (Boolean)rootObject.get("anonymizeIP");
             }
 
             List<FeatureFlag> featureFlags = null;
-            if (datafileVersion >= 4) {
+            if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
                 featureFlags = parseFeatureFlags((JSONArray) rootObject.get("featureFlags"));
             }
 

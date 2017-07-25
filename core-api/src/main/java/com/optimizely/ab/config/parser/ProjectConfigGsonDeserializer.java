@@ -72,7 +72,7 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
         boolean anonymizeIP = false;
         // live variables should be null if using V2
         List<LiveVariable> liveVariables = null;
-        if (datafileVersion >= 3) {
+        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
             Type liveVariablesType = new TypeToken<List<LiveVariable>>() {}.getType();
             liveVariables = context.deserialize(jsonObject.getAsJsonArray("variables"), liveVariablesType);
 
@@ -80,7 +80,7 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
         }
 
         List<FeatureFlag> featureFlags = null;
-        if (datafileVersion >= 4) {
+        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
             Type featureFlagsType = new TypeToken<List<FeatureFlag>>() {}.getType();
             featureFlags = context.deserialize(jsonObject.getAsJsonArray("featureFlags"), featureFlagsType);
         }
