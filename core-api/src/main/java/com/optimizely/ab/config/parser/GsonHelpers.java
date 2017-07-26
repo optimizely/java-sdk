@@ -135,8 +135,7 @@ final class GsonHelpers {
 
         List<LiveVariable> liveVariables = new ArrayList<LiveVariable>();
         try {
-            Type liveVariableType = new TypeToken<List<LiveVariable>>() {
-            }.getType();
+            Type liveVariableType = new TypeToken<List<LiveVariable>>() {}.getType();
             liveVariables = context.deserialize(featureFlagJson.getAsJsonArray("variables"),
                     liveVariableType);
         }
