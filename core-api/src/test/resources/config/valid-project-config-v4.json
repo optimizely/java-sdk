@@ -320,8 +320,7 @@
           "id": "4111654444",
           "key": "double_variable",
           "type": "double",
-          "defaultValue": "14.99",
-          "status": "active"
+          "defaultValue": "14.99"
         }
       ]
     },
@@ -335,8 +334,7 @@
           "id": "593964691",
           "key": "integer_variable",
           "type": "integer",
-          "defaultValue": "7",
-          "status": "active"
+          "defaultValue": "7"
         }
       ]
     },
@@ -350,8 +348,7 @@
           "id": "3974680341",
           "key": "boolean_variable",
           "type": "boolean",
-          "defaultValue": "true",
-          "status": "active"
+          "defaultValue": "true"
         }
       ]
     },
@@ -365,8 +362,7 @@
           "id": "2077511132",
           "key": "string_variable",
           "type": "string",
-          "defaultValue": "wingardium leviosa",
-          "status": "active"
+          "defaultValue": "wingardium leviosa"
         }
       ]
     },
@@ -380,15 +376,13 @@
           "id": "675244127",
           "key": "first_letter",
           "type": "string",
-          "defaultValue": "H",
-          "status": "active"
+          "defaultValue": "H"
         },
         {
           "id": "4052219963",
           "key": "rest_of_name",
           "type": "string",
-          "defaultValue": "arry",
-          "status": "active"
+          "defaultValue": "arry"
         }
       ]
     }
