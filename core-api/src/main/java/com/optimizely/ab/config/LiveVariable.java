@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.gson.annotations.SerializedName;
 
+import javax.annotation.Nullable;
+
 /**
  * Represents a live variable definition at the project level
  */
@@ -100,7 +102,7 @@ public class LiveVariable implements IdKeyMapped {
     private final String key;
     private final String defaultValue;
     private final VariableType type;
-    private final VariableStatus status;
+    @Nullable private final VariableStatus status;
 
     @JsonCreator
     public LiveVariable(@JsonProperty("id") String id,
@@ -111,16 +113,11 @@ public class LiveVariable implements IdKeyMapped {
         this.id = id;
         this.key = key;
         this.defaultValue = defaultValue;
-        if (status == null) {
-            this.status = VariableStatus.ACTIVE;
-        }
-        else {
-            this.status = status;
-        }
+        this.status = status;
         this.type = type;
     }
 
-    public VariableStatus getStatus() {
+    public @Nullable VariableStatus getStatus() {
         return status;
     }
 

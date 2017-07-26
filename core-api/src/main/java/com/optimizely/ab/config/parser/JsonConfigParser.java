@@ -320,7 +320,10 @@ final class JsonConfigParser implements ConfigParser {
             String key = liveVariableObject.getString("key");
             String defaultValue = liveVariableObject.getString("defaultValue");
             VariableType type = VariableType.fromString(liveVariableObject.getString("type"));
-            VariableStatus status = VariableStatus.fromString(liveVariableObject.getString("status"));
+            VariableStatus status = null;
+            if (liveVariableObject.has("status")) {
+                status = VariableStatus.fromString(liveVariableObject.getString("status"));
+            }
 
             liveVariables.add(new LiveVariable(id, key, defaultValue, status, type));
         }
