@@ -17,6 +17,7 @@
 package com.optimizely.ab.event.internal;
 
 import com.google.gson.Gson;
+import com.google.gson.internal.LazilyParsedNumber;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
@@ -43,12 +44,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.closeTo;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -132,8 +133,8 @@ public class EventBuilderV2Test {
 
         // verify that no Feature is created for "unknownAtrribute" -> "blahValue"
         for (Feature feature : impression.getUserFeatures()) {
-            assertNotEquals(feature.getName(), "unknownAttribute");
-            assertNotEquals(feature.getValue(), "blahValue");
+            assertFalse(feature.getName() == "unknownAttribute");
+            assertFalse(feature.getValue() == "blahValue");
         }
     }
 
@@ -269,11 +270,13 @@ public class EventBuilderV2Test {
     }
 
     /**
-     * Verify that eventValue is properly recorded in a conversion request as an {@link EventMetric}
+     * Verify that "revenue" and "value" are properly recorded in a conversion request as {@link EventMetric} objects.
+     * "revenue" is fixed-point and "value" is floating-point.
      */
     @Test
-    public void createConversionParamsWithRevenue() throws Exception {
-        long revenue = 1234L;
+    public void createConversionParamsWithEventMetrics() throws Exception {
+        Long revenue = 1234L;
+        Double value = 13.37;
 
         // use the "valid" project config and its associated experiment, variation, and attributes
         Attribute attribute = validProjectConfig.getAttributes().get(0);
@@ -290,6 +293,7 @@ public class EventBuilderV2Test {
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
         Map<String, Object> eventTagMap = new HashMap<String, Object>();
         eventTagMap.put(ReservedEventKey.REVENUE.toString(), revenue);
+        eventTagMap.put(ReservedEventKey.VALUE.toString(), value);
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockBucketAlgorithm,
@@ -302,9 +306,11 @@ public class EventBuilderV2Test {
 
         Conversion conversion = gson.fromJson(conversionEvent.getBody(), Conversion.class);
 
-        // we're not going to verify everything, only revenue
-        assertThat(conversion.getEventMetrics(),
-                   is(Collections.singletonList(new EventMetric(EventMetric.REVENUE_METRIC_TYPE, revenue))));
+        List<EventMetric> eventMetrics = Arrays.asList(
+                new EventMetric(EventMetric.REVENUE_METRIC_TYPE, new LazilyParsedNumber(revenue.toString())),
+                new EventMetric(EventMetric.NUMERIC_METRIC_TYPE, new LazilyParsedNumber(value.toString())));
+        // we're not going to verify everything, only the event metrics
+        assertThat(conversion.getEventMetrics(), is(eventMetrics));
     }
 
     /**
