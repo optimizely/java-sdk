@@ -67,14 +67,14 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
 
         boolean anonymizeIP = false;
         List<LiveVariable> liveVariables = null;
-        if (datafileVersion >= 3) {
+        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
             liveVariables = mapper.readValue(node.get("variables").toString(),
                                              new TypeReference<List<LiveVariable>>() {});
             anonymizeIP = node.get("anonymizeIP").asBoolean();
         }
 
         List<FeatureFlag> featureFlags = null;
-        if (datafileVersion >= 4) {
+        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
             featureFlags = mapper.readValue(node.get("featureFlags").toString(),
                    new TypeReference<List<FeatureFlag>>() {});
         }

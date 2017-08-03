@@ -72,14 +72,14 @@ final class JsonConfigParser implements ConfigParser {
 
             boolean anonymizeIP = false;
             List<LiveVariable> liveVariables = null;
-            if (datafileVersion >= 3) {
+            if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
                 liveVariables = parseLiveVariables(rootObject.getJSONArray("variables"));
 
                 anonymizeIP = rootObject.getBoolean("anonymizeIP");
             }
 
             List<FeatureFlag> featureFlags = null;
-            if (datafileVersion >= 4) {
+            if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
                 featureFlags = parseFeatureFlags(rootObject.getJSONArray("featureFlags"));
             }
 
@@ -320,7 +320,10 @@ final class JsonConfigParser implements ConfigParser {
             String key = liveVariableObject.getString("key");
             String defaultValue = liveVariableObject.getString("defaultValue");
             VariableType type = VariableType.fromString(liveVariableObject.getString("type"));
-            VariableStatus status = VariableStatus.fromString(liveVariableObject.getString("status"));
+            VariableStatus status = null;
+            if (liveVariableObject.has("status")) {
+                status = VariableStatus.fromString(liveVariableObject.getString("status"));
+            }
 
             liveVariables.add(new LiveVariable(id, key, defaultValue, status, type));
         }
