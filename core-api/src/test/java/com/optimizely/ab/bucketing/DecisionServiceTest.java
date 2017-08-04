@@ -18,6 +18,7 @@ package com.optimizely.ab.bucketing;
 
 import ch.qos.logback.classic.Level;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
@@ -49,6 +50,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -134,6 +136,38 @@ public class DecisionServiceTest {
         // ensure that a user with a saved user profile, sees the same variation regardless of audience evaluation
         assertEquals(variation,
                 decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap()));
+    }
+
+    //========== get Variation for Feature tests ==========//
+
+    /**
+     * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map)}
+     * returns null when the {@link FeatureFlag} is not used in an experiments.
+     */
+    @Test
+    @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
+    public void getVariationForFeatureReturnsNullWhenFeatureFlagExperimentIdsIsEmpty() {
+        FeatureFlag emptyFeatureFlag = mock(FeatureFlag.class);
+        when(emptyFeatureFlag.getExperimentIds()).thenReturn(Collections.<String>emptyList());
+        String featureKey = "testFeatureFlagKey";
+        when(emptyFeatureFlag.getKey()).thenReturn(featureKey);
+
+        DecisionService decisionService = new DecisionService(
+                mock(Bucketer.class),
+                mockErrorHandler,
+                validProjectConfig,
+                null);
+
+        logbackVerifier.expectMessage(Level.INFO,
+                "The feature flag \"" + featureKey + "\" is not used in any experiments");
+
+        assertNull(decisionService.getVariationForFeature(
+                emptyFeatureFlag,
+                genericUserId,
+                Collections.<String, String>emptyMap()));
+
+        verify(emptyFeatureFlag, times(1)).getExperimentIds();
+        verify(emptyFeatureFlag, times(1)).getKey();
     }
 
     //========= white list tests ==========/
