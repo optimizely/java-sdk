@@ -171,9 +171,22 @@ public class ValidProjectConfigV4 {
             null,
             LiveVariable.VariableType.STRING
     );
+    private static final String         FEATURE_MUTEX_GROUP_FEATURE_ID = "3263342226";
+    public  static final String         FEATURE_MUTEX_GROUP_FEATURE_KEY = "mutex_group_feature";
+    private static final String         VARIABLE_CORRELATING_VARIATION_NAME_ID = "2059187672";
+    private static final String         VARIABLE_CORRELATING_VARIATION_NAME_KEY = "correlating_variation_name";
+    private static final String         VARIABLE_CORRELATING_VARIATION_NAME_DEFAULT_VALUE = "null";
+    private static final LiveVariable   VARIABLE_CORRELATING_VARIATION_NAME_VARIABLE = new LiveVariable(
+            VARIABLE_CORRELATING_VARIATION_NAME_ID,
+            VARIABLE_CORRELATING_VARIATION_NAME_KEY,
+            VARIABLE_CORRELATING_VARIATION_NAME_DEFAULT_VALUE,
+            null,
+            LiveVariable.VariableType.STRING
+    );
 
     // group IDs
     private static final String GROUP_1_ID = "1015968292";
+    private static final String GROUP_2_ID = "2606208781";
 
     // experiments
     private static final String     LAYER_BASIC_EXPERIMENT_ID = "1630555626";
@@ -496,6 +509,68 @@ public class ValidProjectConfigV4 {
                     )
             )
     );
+    private static final String     LAYER_MUTEX_GROUP_EXPERIMENT_1_LAYER_ID = "3755588495";
+    private static final String     EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1_EXPERIMENT_ID = "4138322202";
+    private static final String     EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1_EXPERIMENT_KEY = "mutex_group_2_experiment_1";
+    private static final String     VARIATION_MUTEX_GROUP_EXP_1_VAR_1_ID = "1394671166";
+    private static final String     VARIATION_MUTEX_GROUP_EXP_1_VAR_1_KEY = "mutex_group_2_experiment_1_variation_1";
+    private static final Variation  VARIATION_MUTEX_GROUP_EXP_1_VAR_1 = new Variation(
+            VARIATION_MUTEX_GROUP_EXP_1_VAR_1_ID,
+            VARIATION_MUTEX_GROUP_EXP_1_VAR_1_KEY,
+            Collections.singletonList(
+                    new LiveVariableUsageInstance(
+                            VARIABLE_CORRELATING_VARIATION_NAME_ID,
+                            VARIATION_MUTEX_GROUP_EXP_1_VAR_1_KEY
+                    )
+            )
+    );
+    private static final Experiment EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1 = new Experiment(
+            EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1_EXPERIMENT_ID,
+            EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1_EXPERIMENT_KEY,
+            Experiment.ExperimentStatus.RUNNING.toString(),
+            LAYER_MUTEX_GROUP_EXPERIMENT_1_LAYER_ID,
+            Collections.<String>emptyList(),
+            Collections.singletonList(VARIATION_MUTEX_GROUP_EXP_1_VAR_1),
+            Collections.<String, String>emptyMap(),
+            Collections.singletonList(
+                    new TrafficAllocation(
+                            VARIATION_MUTEX_GROUP_EXP_1_VAR_1_ID,
+                            10000
+                    )
+            ),
+            GROUP_2_ID
+    );
+    private static final String     LAYER_MUTEX_GROUP_EXPERIMENT_2_LAYER_ID = "3818002538";
+    private static final String     EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2_EXPERIMENT_ID = "1786133852";
+    private static final String     EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2_EXPERIMENT_KEY = "mutex_group_2_experiment_2";
+    private static final String     VARIATION_MUTEX_GROUP_EXP_2_VAR_1_ID = "1619235542";
+    private static final String     VARIATION_MUTEX_GROUP_EXP_2_VAR_1_KEY = "mutex_group_2_experiment_2_variation_2";
+    private static final Variation  VARIATION_MUTEX_GROUP_EXP_2_VAR_1 = new Variation(
+            VARIATION_MUTEX_GROUP_EXP_2_VAR_1_ID,
+            VARIATION_MUTEX_GROUP_EXP_2_VAR_1_KEY,
+            Collections.singletonList(
+                    new LiveVariableUsageInstance(
+                            VARIABLE_CORRELATING_VARIATION_NAME_ID,
+                            VARIATION_MUTEX_GROUP_EXP_2_VAR_1_KEY
+                    )
+            )
+    );
+    private static final Experiment EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2 = new Experiment(
+            EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2_EXPERIMENT_ID,
+            EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2_EXPERIMENT_KEY,
+            Experiment.ExperimentStatus.RUNNING.toString(),
+            LAYER_MUTEX_GROUP_EXPERIMENT_2_LAYER_ID,
+            Collections.<String>emptyList(),
+            Collections.singletonList(VARIATION_MUTEX_GROUP_EXP_2_VAR_1),
+            Collections.<String, String>emptyMap(),
+            Collections.singletonList(
+                    new TrafficAllocation(
+                            VARIATION_MUTEX_GROUP_EXP_2_VAR_1_ID,
+                            10000
+                    )
+            ),
+            GROUP_2_ID
+    );
 
     // generate groups
     private static final Group      GROUP_1 = new Group(
@@ -513,6 +588,24 @@ public class ValidProjectConfigV4 {
                     new TrafficAllocation(
                             EXPERIMENT_SECOND_GROUPED_EXPERIMENT_ID,
                             8000
+                    )
+            )
+    );
+    private static final Group      GROUP_2 = new Group(
+            GROUP_2_ID,
+            Group.RANDOM_POLICY,
+            ProjectConfigTestUtils.createListOfObjects(
+                    EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1,
+                    EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2
+            ),
+            ProjectConfigTestUtils.createListOfObjects(
+                    new TrafficAllocation(
+                            EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1_EXPERIMENT_ID,
+                            5000
+                    ),
+                    new TrafficAllocation(
+                            EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2_EXPERIMENT_ID,
+                            10000
                     )
             )
     );
@@ -561,6 +654,18 @@ public class ValidProjectConfigV4 {
                     VARIABLE_REST_OF_NAME_VARIABLE
             )
     );
+    public  static final FeatureFlag FEATURE_FLAG_MUTEX_GROUP_FEATURE = new FeatureFlag(
+            FEATURE_MUTEX_GROUP_FEATURE_ID,
+            FEATURE_MUTEX_GROUP_FEATURE_KEY,
+            "",
+            ProjectConfigTestUtils.createListOfObjects(
+                    EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1_EXPERIMENT_ID,
+                    EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2_EXPERIMENT_ID
+            ),
+            Collections.singletonList(
+                    VARIABLE_CORRELATING_VARIATION_NAME_VARIABLE
+            )
+    );
 
 
     public static ProjectConfig generateValidProjectConfigV4() {
@@ -594,9 +699,11 @@ public class ValidProjectConfigV4 {
         featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_BOOLEAN);
         featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_STRING);
         featureFlags.add(FEATURE_FLAG_MULTI_VARIATE_FEATURE);
+        featureFlags.add(FEATURE_FLAG_MUTEX_GROUP_FEATURE);
 
         List<Group> groups = new ArrayList<Group>();
         groups.add(GROUP_1);
+        groups.add(GROUP_2);
 
         return new ProjectConfig(
                 ACCOUNT_ID,
