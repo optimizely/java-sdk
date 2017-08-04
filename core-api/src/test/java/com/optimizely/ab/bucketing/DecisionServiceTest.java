@@ -21,6 +21,7 @@ import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.TrafficAllocation;
+import com.optimizely.ab.config.ValidProjectConfigV4;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.LogbackVerifier;
@@ -45,7 +46,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMapOf;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -168,6 +171,38 @@ public class DecisionServiceTest {
 
         verify(emptyFeatureFlag, times(1)).getExperimentIds();
         verify(emptyFeatureFlag, times(1)).getKey();
+    }
+
+    /**
+     * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map)}
+     * returns null when the user is not bucketed into any experiments for the {@link FeatureFlag}.
+     */
+    @Test
+    @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
+    public void getVariationForFeatureReturnsNullWhenItGetsNoVariationsForExperiments() {
+        FeatureFlag spyFeatureFlag = spy(ValidProjectConfigV4.FEATURE_FLAG_MULTI_VARIATE_FEATURE);
+
+        DecisionService spyDecisionService = spy(new DecisionService(
+                mock(Bucketer.class),
+                mockErrorHandler,
+                validProjectConfig,
+                null)
+        );
+
+        doReturn(null).when(spyDecisionService).getVariation(
+                any(Experiment.class),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        );
+
+        assertNull(spyDecisionService.getVariationForFeature(
+                spyFeatureFlag,
+                genericUserId,
+                Collections.<String, String>emptyMap()
+        ));
+
+        verify(spyFeatureFlag, times(2)).getExperimentIds();
+        verify(spyFeatureFlag, never()).getKey();
     }
 
     //========= white list tests ==========/

@@ -551,7 +551,7 @@ public class ValidProjectConfigV4 {
     );
 
     // finish features
-    private static final FeatureFlag FEATURE_FLAG_MULTI_VARIATE_FEATURE = new FeatureFlag(
+    public  static final FeatureFlag FEATURE_FLAG_MULTI_VARIATE_FEATURE = new FeatureFlag(
             FEATURE_MULTI_VARIATE_FEATURE_ID,
             FEATURE_MULTI_VARIATE_FEATURE_KEY,
             "",
