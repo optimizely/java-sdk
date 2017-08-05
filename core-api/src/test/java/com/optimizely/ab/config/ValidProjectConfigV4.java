@@ -524,7 +524,7 @@ public class ValidProjectConfigV4 {
                     )
             )
     );
-    private static final Experiment EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1 = new Experiment(
+    public  static final Experiment EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1 = new Experiment(
             EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1_EXPERIMENT_ID,
             EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1_EXPERIMENT_KEY,
             Experiment.ExperimentStatus.RUNNING.toString(),
@@ -545,7 +545,7 @@ public class ValidProjectConfigV4 {
     private static final String     EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2_EXPERIMENT_KEY = "mutex_group_2_experiment_2";
     private static final String     VARIATION_MUTEX_GROUP_EXP_2_VAR_1_ID = "1619235542";
     private static final String     VARIATION_MUTEX_GROUP_EXP_2_VAR_1_KEY = "mutex_group_2_experiment_2_variation_2";
-    private static final Variation  VARIATION_MUTEX_GROUP_EXP_2_VAR_1 = new Variation(
+    public  static final Variation  VARIATION_MUTEX_GROUP_EXP_2_VAR_1 = new Variation(
             VARIATION_MUTEX_GROUP_EXP_2_VAR_1_ID,
             VARIATION_MUTEX_GROUP_EXP_2_VAR_1_KEY,
             Collections.singletonList(
@@ -555,7 +555,7 @@ public class ValidProjectConfigV4 {
                     )
             )
     );
-    private static final Experiment EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2 = new Experiment(
+    public  static final Experiment EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2 = new Experiment(
             EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2_EXPERIMENT_ID,
             EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2_EXPERIMENT_KEY,
             Experiment.ExperimentStatus.RUNNING.toString(),
