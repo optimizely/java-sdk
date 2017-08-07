@@ -444,7 +444,8 @@ public class Optimizely {
                 LiveVariable.VariableType.STRING);
     }
 
-    private String getFeatureVariableValueForType(@Nonnull String featureKey,
+    @VisibleForTesting
+    String getFeatureVariableValueForType(@Nonnull String featureKey,
                                                   @Nonnull String variableKey,
                                                   @Nonnull String userId,
                                                   @Nonnull Map<String, String> attributes,
@@ -479,7 +480,10 @@ public class Optimizely {
             variableValue = liveVariableUsageInstance.getValue();
         }
         else {
-            logger.info("user was not bucketed into any variation for the feature");
+            logger.info("User \"" + userId +
+                    "\" was not bucketed into any variation for feature flag \"" + featureKey +
+                    "\"."
+            );
         }
 
         return variableValue;
