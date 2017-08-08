@@ -2221,7 +2221,7 @@ public class OptimizelyTest {
         assertNull(value);
 
         logbackVerifier.expectMessage(Level.INFO,
-                "No feature variable was found for key \"" + invalidVariableKey + "\" in feature \"" +
+                "No feature variable was found for key \"" + invalidVariableKey + "\" in feature flag \"" +
                 validFeatureKey + "\".");
 
         verify(mockDecisionService, never()).getVariation(
@@ -2260,7 +2260,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
                 Level.INFO,
                 "The feature variable \"" + validVariableKey +
-                        "\" is actually of \"" + LiveVariable.VariableType.STRING.toString() +
+                        "\" is actually of type \"" + LiveVariable.VariableType.STRING.toString() +
                         "\" type. You tried to access it as type \"" + LiveVariable.VariableType.INTEGER.toString() +
                         "\". Please use the appropriate feature variable accessor."
         );
@@ -2329,7 +2329,8 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
                 Level.INFO,
                 "User \"" + genericUserId +
-                        "\" was not bucketed into any variation for feature flag \"" + validFeatureKey + "\"."
+                        "\" was not bucketed into any variation for feature flag \"" + validFeatureKey +
+                        "\". The default value is being returned."
         );
     }
 
