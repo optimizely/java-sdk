@@ -175,6 +175,16 @@ public class Optimizely {
             return null;
         }
 
+        sendImpression(projectConfig, experiment, userId, filteredAttributes, variation);
+
+        return variation;
+    }
+
+    private void sendImpression(@Nonnull ProjectConfig projectConfig,
+                                @Nonnull Experiment experiment,
+                                @Nonnull String userId,
+                                Map<String, String> filteredAttributes,
+                                Variation variation) {
         if (experiment.isRunning()) {
             LogEvent impressionEvent = eventBuilder.createImpressionEvent(
                     projectConfig,
@@ -196,8 +206,6 @@ public class Optimizely {
         } else {
             logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
         }
-
-        return variation;
     }
 
     //======== track calls ========//
