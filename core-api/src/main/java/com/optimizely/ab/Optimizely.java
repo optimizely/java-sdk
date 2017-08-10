@@ -183,8 +183,8 @@ public class Optimizely {
     private void sendImpression(@Nonnull ProjectConfig projectConfig,
                                 @Nonnull Experiment experiment,
                                 @Nonnull String userId,
-                                Map<String, String> filteredAttributes,
-                                Variation variation) {
+                                @Nonnull Map<String, String> filteredAttributes,
+                                @Nonnull Variation variation) {
         if (experiment.isRunning()) {
             LogEvent impressionEvent = eventBuilder.createImpressionEvent(
                     projectConfig,
@@ -324,7 +324,33 @@ public class Optimizely {
     public @Nullable Boolean isFeatureEnabled(@Nonnull String featureKey,
                                               @Nonnull String userId,
                                               @Nonnull Map<String, String> attributes) {
-        return getFeatureVariableBoolean(featureKey, "", userId, attributes);
+        FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
+        if (featureFlag == null) {
+            logger.info("No feature flag was found for key \"" + featureKey + "\".");
+            return null;
+        }
+
+        Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
+
+        Variation variation = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
+
+        if (variation != null) {
+            Experiment experiment = projectConfig.getExperimentForVariationId(variation.getId());
+            if (experiment != null) {
+                sendImpression(
+                        projectConfig,
+                        experiment,
+                        userId,
+                        filteredAttributes,
+                        variation);
+            }
+            logger.info("Feature flag \"" + featureKey + "\" is enabled for user \"" + userId + "\".");
+            return true;
+        }
+        else {
+            logger.info("Feature flag \"" + featureKey + "\" is not enabled for user \"" + userId + "\".");
+            return false;
+        }
     }
 
     /**
