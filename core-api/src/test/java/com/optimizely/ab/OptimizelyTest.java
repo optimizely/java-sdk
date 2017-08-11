@@ -97,6 +97,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assume.assumeTrue;
@@ -2369,6 +2370,41 @@ public class OptimizelyTest {
         );
 
         assertEquals(expectedValue, value);
+    }
+
+    /**
+     * Verify {@link Optimizely#isFeatureEnabled(String, String)} calls into
+     * {@link Optimizely#isFeatureEnabled(String, String, Map)} and they both
+     * return False
+     * when the APIs are called with an feature Key that is not in the datafile.
+     * @throws Exception
+     */
+    @Test
+    public void isFeatureEnabledReturnsFalseWhenFeatureFlagKeyIsInvalid() throws Exception {
+
+        String invalidFeatureKey = "nonexistent feature key";
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .withDecisionService(mockDecisionService)
+                .build());
+
+        assertFalse(spyOptimizely.isFeatureEnabled(invalidFeatureKey, genericUserId));
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "No feature flag was found for key \"" + invalidFeatureKey + "\"."
+        );
+        verify(spyOptimizely, times(1)).isFeatureEnabled(
+                eq(invalidFeatureKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+        verify(mockDecisionService, never()).getVariation(
+                any(Experiment.class),
+                anyString(),
+                anyMapOf(String.class, String.class));
+        verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
     }
 
     //======== Helper methods ========//
