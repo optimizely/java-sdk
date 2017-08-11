@@ -336,7 +336,7 @@ public class Optimizely {
 
         if (variation != null) {
             Experiment experiment = projectConfig.getExperimentForVariationId(variation.getId());
-            if (experiment != null) {
+            if (experiment != null) { // user is in a rollout not an experiment
                 sendImpression(
                         projectConfig,
                         experiment,
