@@ -37,6 +37,7 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.EventBuilder;
 import com.optimizely.ab.event.internal.EventBuilderV2;
+import com.optimizely.ab.event.internal.payload.Feature;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.notification.NotificationListener;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -2438,6 +2439,56 @@ public class OptimizelyTest {
                 Level.INFO,
                 "Feature \"" + validFeatureKey +
                         "\" is not enabled for user \"" + genericUserId + "\"."
+        );
+        verify(spyOptimizely).isFeatureEnabled(
+                eq(validFeatureKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+        verify(mockDecisionService).getVariationForFeature(
+                eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+        verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
+    }
+
+    /**
+     * Verify {@link Optimizely#isFeatureEnabled(String, String)} calls into
+     * {@link Optimizely#isFeatureEnabled(String, String, Map)} and they both
+     * return True
+     * when the user is bucketed into a variation for the feature.
+     * An impression event should not be dispatched since the user was not bucketed into an Experiment.
+     * @throws Exception
+     */
+    @Test
+    public void isFeatureEnabledReturnsTrueButDoesNotSendWhenUserIsBucketedIntoVariationWithoutExperiment() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .withDecisionService(mockDecisionService)
+                .build());
+
+        doReturn(new Variation("variationId", "variationKey")).when(mockDecisionService).getVariationForFeature(
+                eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+
+        assertTrue(spyOptimizely.isFeatureEnabled(validFeatureKey, genericUserId));
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "The user \"" + genericUserId +
+                        "\" is not being experimented on in feature \"" + validFeatureKey + "\"."
+        );
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "Feature \"" + validFeatureKey +
+                        "\" is enabled for user \"" + genericUserId + "\"."
         );
         verify(spyOptimizely).isFeatureEnabled(
                 eq(validFeatureKey),
