@@ -344,11 +344,15 @@ public class Optimizely {
                         filteredAttributes,
                         variation);
             }
-            logger.info("Feature flag \"" + featureKey + "\" is enabled for user \"" + userId + "\".");
+            else {
+                logger.info("The user \"" + userId +
+                        "\" is not being experimented on in feature \"" + featureKey + "\".");
+            }
+            logger.info("Feature \"" + featureKey + "\" is enabled for user \"" + userId + "\".");
             return true;
         }
         else {
-            logger.info("Feature flag \"" + featureKey + "\" is not enabled for user \"" + userId + "\".");
+            logger.info("Feature \"" + featureKey + "\" is not enabled for user \"" + userId + "\".");
             return false;
         }
     }
