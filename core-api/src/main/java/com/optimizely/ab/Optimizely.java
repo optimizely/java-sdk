@@ -301,10 +301,9 @@ public class Optimizely {
      * @param userId The ID of the user.
      * @return True if the feature is enabled.
      *         False if the feature is disabled.
-     *         Will always return True if toggling the feature is disabled.
-     *         Will return Null if the feature is not found.
+     *         False if the feature is not found.
      */
-    public @Nullable Boolean isFeatureEnabled(@Nonnull String featureKey,
+    public @Nonnull Boolean isFeatureEnabled(@Nonnull String featureKey,
                                               @Nonnull String userId) {
         return isFeatureEnabled(featureKey, userId, Collections.<String, String>emptyMap());
     }
@@ -318,16 +317,15 @@ public class Optimizely {
      * @param attributes The user's attributes.
      * @return True if the feature is enabled.
      *         False if the feature is disabled.
-     *         Will always return True if toggling the feature is disabled.
-     *         Will return Null if the feature is not found.
+     *         False if the feature is not found.
      */
-    public @Nullable Boolean isFeatureEnabled(@Nonnull String featureKey,
+    public @Nonnull Boolean isFeatureEnabled(@Nonnull String featureKey,
                                               @Nonnull String userId,
                                               @Nonnull Map<String, String> attributes) {
         FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
         if (featureFlag == null) {
             logger.info("No feature flag was found for key \"" + featureKey + "\".");
-            return null;
+            return false;
         }
 
         Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
