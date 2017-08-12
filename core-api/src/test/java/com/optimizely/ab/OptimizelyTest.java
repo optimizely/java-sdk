@@ -2503,6 +2503,37 @@ public class OptimizelyTest {
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
     }
 
+    /** Integration Test
+     * Verify {@link Optimizely#isFeatureEnabled(String, String, Map)}
+     * returns True
+     * when the user is bucketed into a variation for the feature.
+     * The user is also bucketed into an experiment, so we verify that an event is dispatched.
+     * @throws Exception
+     */
+    @Test
+    public void isFeatureEnabledReturnsTrueAndDispatchesEventWhenUserIsBucketedIntoAnExperiment() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build();
+
+        assertTrue(optimizely.isFeatureEnabled(
+                validFeatureKey,
+                genericUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)
+        ));
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "Feature \"" + validFeatureKey +
+                        "\" is enabled for user \"" + genericUserId + "\"."
+        );
+        verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
+    }
+
     //======== Helper methods ========//
 
     private Experiment createUnknownExperiment() {
