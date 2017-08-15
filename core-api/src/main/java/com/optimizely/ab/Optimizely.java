@@ -383,6 +383,16 @@ public class Optimizely {
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
                                                        @Nonnull Map<String, String> attributes) {
+        String variableValue = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                LiveVariable.VariableType.BOOLEAN
+        );
+        if (variableValue != null) {
+            return Boolean.parseBoolean(variableValue);
+        }
         return null;
     }
 
@@ -413,6 +423,16 @@ public class Optimizely {
                                                      @Nonnull String variableKey,
                                                      @Nonnull String userId,
                                                      @Nonnull Map<String, String> attributes) {
+        String variableValue = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                LiveVariable.VariableType.DOUBLE
+        );
+        if (variableValue != null) {
+            return Double.parseDouble(variableValue);
+        }
         return null;
     }
 
@@ -443,6 +463,16 @@ public class Optimizely {
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
                                                        @Nonnull Map<String, String> attributes) {
+        String variableValue = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                LiveVariable.VariableType.INTEGER
+        );
+        if (variableValue != null) {
+            return Integer.parseInt(variableValue);
+        }
         return null;
     }
 
