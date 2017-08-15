@@ -611,7 +611,11 @@ public class Optimizely {
         ProjectConfig currentConfig = getProjectConfig();
         // if the experiment is not a valid experiment key, don't set it.
         Experiment experiment = currentConfig.getExperimentKeyMapping().get(experimentKey);
-        if (experiment == null || !experiment.isRunning()){
+        if (experiment == null || !experiment.isActive()){
+            return false;
+        }
+
+        if (!validateUserId(userId)) {
             return false;
         }
 

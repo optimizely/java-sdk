@@ -324,10 +324,20 @@ public class OptimizelyTest {
             testUserAttributes.put("browser_type", "chrome");
         }
 
+        Map<String, String> testParams = new HashMap<String, String>();
+        testParams.put("test", "params");
+
+        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+        when(mockEventBuilder.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(forcedVariation),
+                eq("userId"), eq(testUserAttributes)))
+                .thenReturn(logEventToDispatch);
+
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), "userId", testUserAttributes);
 
         assertThat(actualVariation, is(forcedVariation));
+
+        verify(mockEventHandler).dispatchEvent(logEventToDispatch);
 
     }
 
