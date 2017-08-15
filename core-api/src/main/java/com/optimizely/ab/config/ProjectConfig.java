@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Represents the Optimizely Project configuration.
@@ -83,6 +84,11 @@ public class ProjectConfig {
     private final Map<String, List<Experiment>> liveVariableIdToExperimentsMapping;
     private final Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping;
     private final Map<String, Experiment> variationIdToExperimentMapping;
+
+    // forced variations supersede any other mappings.  They are transient and are not persistent or part of
+    // the actual datafile.  This map should not be accessed directly, but, instead through apis at the
+    // Optimizely object level.
+    private transient Map<String, Map<String, String>> forcedVariationMapping = new ConcurrentHashMap<String, Map<String, String>>();
 
     // v2 constructor
     public ProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
@@ -305,6 +311,8 @@ public class ProjectConfig {
         return featureKeyMapping;
     }
 
+    public Map<String, Map<String, String>> getForcedVariationMapping() { return forcedVariationMapping; }
+
     @Override
     public String toString() {
         return "ProjectConfig{" +
@@ -328,6 +336,7 @@ public class ProjectConfig {
                 ", groupIdMapping=" + groupIdMapping +
                 ", liveVariableIdToExperimentsMapping=" + liveVariableIdToExperimentsMapping +
                 ", variationToLiveVariableUsageInstanceMapping=" + variationToLiveVariableUsageInstanceMapping +
+                ", forcedVariationMapping=" + forcedVariationMapping +
                 '}';
     }
 }

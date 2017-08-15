@@ -302,6 +302,41 @@ public class OptimizelyTest {
      * and passes them through {@link EventHandler#dispatchEvent(LogEvent)}.
      */
     @Test
+    public void activateWithExperimentKeyForced() throws Exception {
+        Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
+        Variation forcedVariation = activatedExperiment.getVariations().get(1);
+        EventBuilder mockEventBuilder = mock(EventBuilder.class);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withBucketing(mockBucketer)
+                .withEventBuilder(mockEventBuilder)
+                .withConfig(validProjectConfig)
+                .withErrorHandler(mockErrorHandler)
+                .build();
+
+        optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", forcedVariation.getKey() );
+
+        Map<String, String> testUserAttributes = new HashMap<String, String>();
+        if (datafileVersion == 4) {
+            testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+        }
+        else {
+            testUserAttributes.put("browser_type", "chrome");
+        }
+
+        // activate the experiment
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), "userId", testUserAttributes);
+
+        assertThat(actualVariation, is(forcedVariation));
+
+    }
+
+    /**
+     * Verify that the {@link Optimizely#activate(String, String, Map<String, String>)} call
+     * correctly builds an endpoint url and request params
+     * and passes them through {@link EventHandler#dispatchEvent(LogEvent)}.
+     */
+    @Test
     public void activateWithExperimentKey() throws Exception {
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
