@@ -170,10 +170,8 @@ public class Optimizely {
         Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
 
         // bucket the user to the given experiment and dispatch an impression event
-        Variation variation = getForcedVariation(experiment.getKey(), userId);
-        if (variation == null) {
-            variation = decisionService.getVariation(experiment, userId, filteredAttributes);
-        }
+        Variation variation = decisionService.getVariation(experiment, userId, filteredAttributes);
+
         if (variation == null) {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
@@ -255,10 +253,7 @@ public class Optimizely {
         Map<Experiment, Variation> experimentVariationMap = new HashMap<Experiment, Variation>(experimentsForEvent.size());
         for (Experiment experiment : experimentsForEvent) {
             if (experiment.isRunning()) {
-                Variation variation = getForcedVariation(experiment.getKey(), userId);
-                if (variation == null) {
-                    variation = decisionService.getVariation(experiment, userId, filteredAttributes);
-                }
+                Variation variation =  decisionService.getVariation(experiment, userId, filteredAttributes);
                 if (variation != null) {
                     experimentVariationMap.put(experiment, variation);
                 }
@@ -337,10 +332,7 @@ public class Optimizely {
 
         Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
 
-        Variation variation = getForcedVariation(featureKey, userId);
-        if (variation == null) {
-            variation = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
-        }
+        Variation variation = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
         if (variation != null) {
             Experiment experiment = projectConfig.getExperimentForVariationId(variation.getId());
             if (experiment != null) {
@@ -518,10 +510,7 @@ public class Optimizely {
 
         String variableValue = variable.getDefaultValue();
 
-        Variation variation = getForcedVariation(featureKey, userId);
-        if (variation == null) {
-            variation = decisionService.getVariationForFeature(featureFlag, userId, attributes);
-        }
+        Variation variation  = decisionService.getVariationForFeature(featureFlag, userId, attributes);
         if (variation != null) {
             LiveVariableUsageInstance liveVariableUsageInstance =
                     variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
@@ -553,10 +542,8 @@ public class Optimizely {
 
         Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
 
-        Variation variation = getForcedVariation(experiment.getKey(), userId);
-        if (variation == null) {
-            variation = decisionService.getVariation(experiment, userId, filteredAttributes);
-        }
+        Variation variation =  decisionService.getVariation(experiment, userId, filteredAttributes);
+
         return variation;
     }
 
@@ -585,10 +572,8 @@ public class Optimizely {
 
         Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
 
-        Variation variation = getForcedVariation(experimentKey, userId);
-        if (variation == null) {
-            variation = decisionService.getVariation(experiment, userId, filteredAttributes);
-        }
+        Variation variation =  decisionService.getVariation(experiment, userId, filteredAttributes);
+
         return variation;
     }
 
@@ -596,6 +581,7 @@ public class Optimizely {
      * Force a user into a variation for a given experiment.
      * The forced variation value does not persist across application launches.
      * If the experiment key is not in the project file, this call fails and returns false.
+     * This method just calls into the decision service method of the same signature.
      *
      * @param experimentKey The key for the experiment.
      * @param userId The user ID to be used for bucketing.
@@ -608,35 +594,13 @@ public class Optimizely {
                                       @Nonnull String userId,
                                       @Nullable String variationKey) {
 
-        ProjectConfig currentConfig = getProjectConfig();
-        // if the experiment is not a valid experiment key, don't set it.
-        Experiment experiment = currentConfig.getExperimentKeyMapping().get(experimentKey);
-        if (experiment == null || !experiment.isActive()){
-            return false;
-        }
 
-        if (!validateUserId(userId)) {
-            return false;
-        }
-
-        Map<String, String> experimentToVariation = currentConfig.getForcedVariationMapping().get(userId);
-        if (experimentToVariation == null) {
-            experimentToVariation = new ConcurrentHashMap<String, String>();
-            currentConfig.getForcedVariationMapping().put(userId, experimentToVariation);
-        }
-        if (variationKey == null) {
-            experimentToVariation.remove(experimentKey);
-        }
-        else {
-            experimentToVariation.put(experimentKey, variationKey);
-        }
-
-        return true;
+        return decisionService == null? false : decisionService.setForcedVariation(experimentKey, userId, variationKey);
     }
 
     /**
      * Gets the forced variation for a given user and experiment.
-     *
+     * This method just calls into the decision service method of the same signature.
      * @param experimentKey The key for the experiment.
      * @param userId The user ID to be used for bucketing.
      *
@@ -645,19 +609,7 @@ public class Optimizely {
      */
     public @Nullable Variation getForcedVariation(@Nonnull String experimentKey,
                                         @Nonnull String userId) {
-        ProjectConfig currentConfig = getProjectConfig();
-
-        Map<String, String> experimentToVariation = currentConfig.getForcedVariationMapping().get(userId);
-        if (experimentToVariation != null) {
-            String variationKey = experimentToVariation.get(experimentKey);
-            if (variationKey != null) {
-                Experiment experiment = currentConfig.getExperimentKeyMapping().get(experimentKey);
-                if (experiment != null) {
-                    return experiment.getVariationKeyToVariationMap().get(variationKey);
-                }
-            }
-        }
-        return null;
+        return decisionService == null ? null :decisionService.getForcedVariation(experimentKey, userId);
     }
 
     /**

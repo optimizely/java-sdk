@@ -30,6 +30,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Optimizely's decision service that determines which variation of an experiment the user will be allocated to.
@@ -82,8 +83,14 @@ public class DecisionService {
             return null;
         }
 
+        // look for forced bucketing first.
+        Variation variation = getForcedVariation(experiment.getKey(), userId);
+
         // check for whitelisting
-        Variation variation = getWhitelistedVariation(experiment, userId);
+        if (variation == null) {
+            variation = getWhitelistedVariation(experiment, userId);
+        }
+
         if (variation != null) {
             return variation;
         }
@@ -262,5 +269,79 @@ public class DecisionService {
                 errorHandler.handleError(new OptimizelyRuntimeException(exception));
             }
         }
+    }
+
+    /**
+     * Force a user into a variation for a given experiment.
+     * The forced variation value does not persist across application launches.
+     * If the experiment key is not in the project file, this call fails and returns false.
+     *
+     * @param experimentKey The key for the experiment.
+     * @param userId The user ID to be used for bucketing.
+     * @param variationKey The variation key to force the user into.  If the variation key is null
+     *                     then the forcedVariation for that experiment is removed.
+     *
+     * @return boolean A boolean value that indicates if the set completed successfully.
+     */
+    public boolean setForcedVariation(@Nonnull String experimentKey,
+                                      @Nonnull String userId,
+                                      @Nullable String variationKey) {
+
+        ProjectConfig currentConfig = projectConfig;
+        // if the experiment is not a valid experiment key, don't set it.
+        Experiment experiment = currentConfig.getExperimentKeyMapping().get(experimentKey);
+        if (experiment == null || !experiment.isActive()){
+            return false;
+        }
+
+        // if the variation is not part of the experiment, return false.
+        if (variationKey != null && experiment.getVariationKeyToVariationMap().get(variationKey) == null) {
+            return false;
+        }
+
+        // if the user id is invalid, return false.
+        if (userId == null || userId.trim().isEmpty()) {
+            return false;
+        }
+
+        Map<String, String> experimentToVariation = currentConfig.getForcedVariationMapping().get(userId);
+        if (experimentToVariation == null) {
+            experimentToVariation = new ConcurrentHashMap<String, String>();
+            currentConfig.getForcedVariationMapping().put(userId, experimentToVariation);
+        }
+        if (variationKey == null) {
+            experimentToVariation.remove(experimentKey);
+        }
+        else {
+            experimentToVariation.put(experimentKey, variationKey);
+        }
+
+        return true;
+    }
+
+    /**
+     * Gets the forced variation for a given user and experiment.
+     *
+     * @param experimentKey The key for the experiment.
+     * @param userId The user ID to be used for bucketing.
+     *
+     * @return The variation the user was bucketed into. This value can be null if the
+     * forced variation fails.
+     */
+    public @Nullable Variation getForcedVariation(@Nonnull String experimentKey,
+                                                  @Nonnull String userId) {
+        ProjectConfig currentConfig = projectConfig;
+
+        Map<String, String> experimentToVariation = currentConfig.getForcedVariationMapping().get(userId);
+        if (experimentToVariation != null) {
+            String variationKey = experimentToVariation.get(experimentKey);
+            if (variationKey != null) {
+                Experiment experiment = currentConfig.getExperimentKeyMapping().get(experimentKey);
+                if (experiment != null) {
+                    return experiment.getVariationKeyToVariationMap().get(variationKey);
+                }
+            }
+        }
+        return null;
     }
 }
