@@ -257,7 +257,7 @@ public class Optimizely {
             if (experiment.isRunning()) {
                 Variation variation = getForcedVariation(experiment.getKey(), userId);
                 if (variation == null) {
-                    decisionService.getVariation(experiment, userId, filteredAttributes);
+                    variation = decisionService.getVariation(experiment, userId, filteredAttributes);
                 }
                 if (variation != null) {
                     experimentVariationMap.put(experiment, variation);
@@ -339,7 +339,7 @@ public class Optimizely {
 
         Variation variation = getForcedVariation(featureKey, userId);
         if (variation == null) {
-            decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
+            variation = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
         }
         if (variation != null) {
             Experiment experiment = projectConfig.getExperimentForVariationId(variation.getId());
@@ -520,7 +520,7 @@ public class Optimizely {
 
         Variation variation = getForcedVariation(featureKey, userId);
         if (variation == null) {
-            decisionService.getVariationForFeature(featureFlag, userId, attributes);
+            variation = decisionService.getVariationForFeature(featureFlag, userId, attributes);
         }
         if (variation != null) {
             LiveVariableUsageInstance liveVariableUsageInstance =

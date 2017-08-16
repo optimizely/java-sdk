@@ -339,6 +339,10 @@ public class OptimizelyTest {
 
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
 
+        optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", null );
+
+        assertEquals(optimizely.getForcedVariation(activatedExperiment.getKey(), "userId"), null);
+
     }
 
     /**
