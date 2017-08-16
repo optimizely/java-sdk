@@ -431,7 +431,13 @@ public class Optimizely {
                 LiveVariable.VariableType.DOUBLE
         );
         if (variableValue != null) {
-            return Double.parseDouble(variableValue);
+            try {
+                return Double.parseDouble(variableValue);
+            }
+            catch (NumberFormatException exception) {
+                logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                "\" as Double. " + exception);
+            }
         }
         return null;
     }
@@ -471,7 +477,13 @@ public class Optimizely {
                 LiveVariable.VariableType.INTEGER
         );
         if (variableValue != null) {
-            return Integer.parseInt(variableValue);
+            try {
+                return Integer.parseInt(variableValue);
+            }
+            catch (NumberFormatException exception) {
+                logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                "\" as Integer. " + exception.toString());
+            }
         }
         return null;
     }
