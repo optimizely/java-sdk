@@ -298,13 +298,14 @@ public class OptimizelyTest {
 
     /**
      * Verify that the {@link Optimizely#activate(String, String, Map<String, String>)} call
-     * correctly builds an endpoint url and request params
-     * and passes them through {@link EventHandler#dispatchEvent(LogEvent)}.
+     * uses forced variation to force the user into the second variation.  The mock bucket returns
+     * the first variation. Then remove the forced variation and confirm that the forced variation is null.
      */
     @Test
     public void activateWithExperimentKeyForced() throws Exception {
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Variation forcedVariation = activatedExperiment.getVariations().get(1);
+        Variation bucketedVariation = activatedExperiment.getVariations().get(0);
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
@@ -331,6 +332,9 @@ public class OptimizelyTest {
         when(mockEventBuilder.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(forcedVariation),
                 eq("userId"), eq(testUserAttributes)))
                 .thenReturn(logEventToDispatch);
+
+        when(mockBucketer.bucket(activatedExperiment, "userId"))
+                .thenReturn(bucketedVariation);
 
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), "userId", testUserAttributes);
