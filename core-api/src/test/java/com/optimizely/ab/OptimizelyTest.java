@@ -2862,6 +2862,43 @@ public class OptimizelyTest {
     }
 
     /**
+     * Verify that {@link Optimizely#getFeatureVariableDouble(String, String, String)}
+     * and {@link Optimizely#getFeatureVariableDouble(String, String, String, Map)}
+     * do not throw errors when they are unable to parse the value into an Double.
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableDoubleCatchesExceptionFromParsing() throws ConfigParseException {
+        String featureKey = "featureKey";
+        String variableKey = "variableKey";
+        String unParsableValue = "not_a_double";
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+        doReturn(unParsableValue).when(spyOptimizely).getFeatureVariableValueForType(
+                anyString(),
+                anyString(),
+                anyString(),
+                anyMapOf(String.class, String.class),
+                eq(LiveVariable.VariableType.DOUBLE)
+        );
+
+        assertNull(spyOptimizely.getFeatureVariableDouble(
+                featureKey,
+                variableKey,
+                genericUserId
+        ));
+
+        logbackVerifier.expectMessage(
+                Level.ERROR,
+                "NumberFormatException while trying to parse \"" + unParsableValue +
+                        "\" as Double. "
+        );
+    }
+
+    /**
      * Verify {@link Optimizely#getFeatureVariableInteger(String, String, String)}
      * calls through to {@link Optimizely#getFeatureVariableInteger(String, String, String, Map)}
      * and both return the parsed Integer value from the value returned from
@@ -2916,6 +2953,43 @@ public class OptimizelyTest {
                 genericUserId,
                 attributes
         ));
+    }
+
+    /**
+     * Verify that {@link Optimizely#getFeatureVariableInteger(String, String, String)}
+     * and {@link Optimizely#getFeatureVariableInteger(String, String, String, Map)}
+     * do not throw errors when they are unable to parse the value into an Integer.
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableIntegerCatchesExceptionFromParsing() throws ConfigParseException {
+        String featureKey = "featureKey";
+        String variableKey = "variableKey";
+        String unParsableValue = "not_an_integer";
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+        doReturn(unParsableValue).when(spyOptimizely).getFeatureVariableValueForType(
+                anyString(),
+                anyString(),
+                anyString(),
+                anyMapOf(String.class, String.class),
+                eq(LiveVariable.VariableType.INTEGER)
+        );
+
+        assertNull(spyOptimizely.getFeatureVariableInteger(
+                featureKey,
+                variableKey,
+                genericUserId
+        ));
+
+        logbackVerifier.expectMessage(
+                Level.ERROR,
+                "NumberFormatException while trying to parse \"" + unParsableValue +
+                        "\" as Integer. "
+        );
     }
 
     //======== Helper methods ========//
