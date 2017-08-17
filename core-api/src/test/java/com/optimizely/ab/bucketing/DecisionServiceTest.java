@@ -130,15 +130,15 @@ public class DecisionServiceTest {
         logbackVerifier.expectMessage(Level.INFO, "User \"" + genericUserId + "\" does not meet conditions to be in experiment \"etag1\".");
 
         // set the runtimeForcedVariation
-        decisionService.setForcedVariation(experiment.getKey(), whitelistedUserId, expectedVariation.getKey());
+        validProjectConfig.setForcedVariation(experiment.getKey(), whitelistedUserId, expectedVariation.getKey());
         // no attributes provided for a experiment that has an audience
         assertThat(decisionService.getVariation(experiment, whitelistedUserId, Collections.<String, String>emptyMap()), is(expectedVariation));
 
         //verify(decisionService).getForcedVariation(experiment.getKey(), whitelistedUserId);
         verify(decisionService, never()).getStoredVariation(eq(experiment), any(UserProfile.class));
         assertEquals(decisionService.getWhitelistedVariation(experiment, whitelistedUserId), whitelistVariation);
-        assertEquals(decisionService.setForcedVariation(experiment.getKey(), whitelistedUserId,null), true);
-        assertNull(decisionService.getForcedVariation(experiment.getKey(), whitelistedUserId));
+        assertEquals(validProjectConfig.setForcedVariation(experiment.getKey(), whitelistedUserId,null), true);
+        assertNull(validProjectConfig.getForcedVariation(experiment.getKey(), whitelistedUserId));
     }
 
     /**
@@ -158,13 +158,13 @@ public class DecisionServiceTest {
         logbackVerifier.expectMessage(Level.INFO, "User \"" + genericUserId + "\" does not meet conditions to be in experiment \"etag1\".");
 
         // set the runtimeForcedVariation
-        decisionService.setForcedVariation(experiment.getKey(), genericUserId, expectedVariation.getKey());
+        validProjectConfig.setForcedVariation(experiment.getKey(), genericUserId, expectedVariation.getKey());
         // no attributes provided for a experiment that has an audience
         assertThat(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap()), is(expectedVariation));
 
         verify(decisionService, never()).getStoredVariation(eq(experiment), any(UserProfile.class));
-        assertEquals(decisionService.setForcedVariation(experiment.getKey(), genericUserId,null), true);
-        assertNull(decisionService.getForcedVariation(experiment.getKey(), genericUserId));
+        assertEquals(validProjectConfig.setForcedVariation(experiment.getKey(), genericUserId,null), true);
+        assertNull(validProjectConfig.getForcedVariation(experiment.getKey(), genericUserId));
     }
 
     /**
@@ -197,11 +197,11 @@ public class DecisionServiceTest {
                 decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap()));
 
         Variation forcedVariation = experiment.getVariations().get(1);
-        decisionService.setForcedVariation(experiment.getKey(), userProfileId, forcedVariation.getKey());
+        validProjectConfig.setForcedVariation(experiment.getKey(), userProfileId, forcedVariation.getKey());
         assertEquals(forcedVariation,
                 decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap()));
-        assertEquals(decisionService.setForcedVariation(experiment.getKey(), userProfileId, null), true);
-        assertNull(decisionService.getForcedVariation(experiment.getKey(), userProfileId));
+        assertEquals(validProjectConfig.setForcedVariation(experiment.getKey(), userProfileId, null), true);
+        assertNull(validProjectConfig.getForcedVariation(experiment.getKey(), userProfileId));
 
 
     }

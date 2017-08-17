@@ -595,7 +595,7 @@ public class Optimizely {
                                       @Nullable String variationKey) {
 
 
-        return decisionService == null? false : decisionService.setForcedVariation(experimentKey, userId, variationKey);
+        return projectConfig.setForcedVariation(experimentKey, userId, variationKey);
     }
 
     /**
@@ -609,7 +609,7 @@ public class Optimizely {
      */
     public @Nullable Variation getForcedVariation(@Nonnull String experimentKey,
                                         @Nonnull String userId) {
-        return decisionService == null ? null :decisionService.getForcedVariation(experimentKey, userId);
+        return projectConfig.getForcedVariation(experimentKey, userId);
     }
 
     /**
