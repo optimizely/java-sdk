@@ -171,7 +171,6 @@ public class Optimizely {
 
         // bucket the user to the given experiment and dispatch an impression event
         Variation variation = decisionService.getVariation(experiment, userId, filteredAttributes);
-
         if (variation == null) {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
@@ -253,7 +252,7 @@ public class Optimizely {
         Map<Experiment, Variation> experimentVariationMap = new HashMap<Experiment, Variation>(experimentsForEvent.size());
         for (Experiment experiment : experimentsForEvent) {
             if (experiment.isRunning()) {
-                Variation variation =  decisionService.getVariation(experiment, userId, filteredAttributes);
+                Variation variation = decisionService.getVariation(experiment, userId, filteredAttributes);
                 if (variation != null) {
                     experimentVariationMap.put(experiment, variation);
                 }
@@ -333,6 +332,7 @@ public class Optimizely {
         Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
 
         Variation variation = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
+
         if (variation != null) {
             Experiment experiment = projectConfig.getExperimentForVariationId(variation.getId());
             if (experiment != null) {
@@ -510,7 +510,7 @@ public class Optimizely {
 
         String variableValue = variable.getDefaultValue();
 
-        Variation variation  = decisionService.getVariationForFeature(featureFlag, userId, attributes);
+        Variation variation = decisionService.getVariationForFeature(featureFlag, userId, attributes);
         if (variation != null) {
             LiveVariableUsageInstance liveVariableUsageInstance =
                     variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
@@ -542,9 +542,7 @@ public class Optimizely {
 
         Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
 
-        Variation variation =  decisionService.getVariation(experiment, userId, filteredAttributes);
-
-        return variation;
+        return decisionService.getVariation(experiment, userId, filteredAttributes);
     }
 
     public @Nullable
@@ -572,16 +570,15 @@ public class Optimizely {
 
         Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
 
-        Variation variation =  decisionService.getVariation(experiment, userId, filteredAttributes);
-
-        return variation;
+        return decisionService.getVariation(experiment, userId, filteredAttributes);
     }
 
     /**
      * Force a user into a variation for a given experiment.
      * The forced variation value does not persist across application launches.
      * If the experiment key is not in the project file, this call fails and returns false.
-     * This method just calls into the decision service method of the same signature.
+     * This method just calls into the {@link com.optimizely.ab.config.ProjectConfig#setForcedVariation(String, String, String)}
+     * method of the same signature.
      *
      * @param experimentKey The key for the experiment.
      * @param userId The user ID to be used for bucketing.
@@ -600,7 +597,9 @@ public class Optimizely {
 
     /**
      * Gets the forced variation for a given user and experiment.
-     * This method just calls into the decision service method of the same signature.
+     * This method just calls into the {@link com.optimizely.ab.config.ProjectConfig#getForcedVariation(String, String)}
+     * method of the same signature.
+     *
      * @param experimentKey The key for the experiment.
      * @param userId The user ID to be used for bucketing.
      *

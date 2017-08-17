@@ -86,9 +86,11 @@ public class ProjectConfig {
     private final Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping;
     private final Map<String, Experiment> variationIdToExperimentMapping;
 
-    // forced variations supersede any other mappings.  They are transient and are not persistent or part of
-    // the actual datafile.  This map should not be accessed directly, but, instead through apis at the
-    // Optimizely object level.
+    /* Forced variations supersede any other mappings.  They are transient and are not persistent or part of
+     * the actual datafile. This contains all the forced variations
+     * set by the user by calling setForcedVariation (it is not the same as the
+     * whitelisting forcedVariations data structure in the Experiments class).
+     */
     private transient Map<String, Map<String, String>> forcedVariationMapping = new ConcurrentHashMap<String, Map<String, String>>();
 
     // v2 constructor
@@ -332,7 +334,7 @@ public class ProjectConfig {
 
         // if the experiment is not a valid experiment key, don't set it.
         Experiment experiment = getExperimentKeyMapping().get(experimentKey);
-        if (experiment == null || !experiment.isActive()){
+        if (experiment == null){
             return false;
         }
 
