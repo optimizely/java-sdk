@@ -338,8 +338,9 @@ public class ProjectConfig {
             return false;
         }
 
+        Variation variation = (variationKey == null) ? null : experiment.getVariationKeyToVariationMap().get(variationKey);
         // if the variation is not part of the experiment, return false.
-        if (variationKey != null && experiment.getVariationKeyToVariationMap().get(variationKey) == null) {
+        if (variationKey != null && variation == null) {
             return false;
         }
 
@@ -348,16 +349,26 @@ public class ProjectConfig {
             return false;
         }
 
-        Map<String, String> experimentToVariation = getForcedVariationMapping().get(userId);
+        Map<String, Map<String, String>> userForcedVariationMapping = getForcedVariationMapping();
+        Map<String, String> experimentToVariation = userForcedVariationMapping.get(userId);
         if (experimentToVariation == null) {
             experimentToVariation = new ConcurrentHashMap<String, String>();
-            getForcedVariationMapping().put(userId, experimentToVariation);
+            // sanity check...
+            if (userForcedVariationMapping instanceof ConcurrentHashMap) {
+                Map<String, String> experimentToVariationExists = (Map<String, String>) ((ConcurrentHashMap)userForcedVariationMapping).putIfAbsent(userId, experimentToVariation);
+                if (experimentToVariationExists != null) {
+                    experimentToVariation = experimentToVariationExists;
+                }
+            }
+            else {
+                userForcedVariationMapping.put(userId, experimentToVariation);
+            }
         }
         if (variationKey == null) {
-            experimentToVariation.remove(experimentKey);
+            experimentToVariation.remove(experiment.getId());
         }
         else {
-            experimentToVariation.put(experimentKey, variationKey);
+            experimentToVariation.put(experiment.getId(), variation.getId());
         }
 
         return true;
@@ -377,12 +388,13 @@ public class ProjectConfig {
 
         Map<String, String> experimentToVariation = getForcedVariationMapping().get(userId);
         if (experimentToVariation != null) {
-            String variationKey = experimentToVariation.get(experimentKey);
-            if (variationKey != null) {
-                Experiment experiment = getExperimentKeyMapping().get(experimentKey);
-                if (experiment != null) {
-                    return experiment.getVariationKeyToVariationMap().get(variationKey);
-                }
+            Experiment experiment = getExperimentKeyMapping().get(experimentKey);
+            if (experiment == null)  {
+                return null;
+            }
+            String variationId = experimentToVariation.get(experiment.getId());
+            if (variationId != null) {
+                return experiment.getVariationIdToVariationMap().get(variationId);
             }
         }
         return null;
