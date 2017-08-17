@@ -45,8 +45,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -90,8 +90,8 @@ public class DecisionServiceTest {
     //========= getVariation tests =========/
 
     /**
-     * Verify that {@link DecisionService#getVariation(Experiment, String, Map)} gives precedence to forced variation bucketing
-     * over audience evaluation.
+     * Verify that {@link DecisionService#getVariation(Experiment, String, Map)}
+     * gives precedence to forced variation bucketing over audience evaluation.
      */
     @Test
     public void getVariationWhitelistedPrecedesAudienceEval() throws Exception {
@@ -113,8 +113,8 @@ public class DecisionServiceTest {
     }
 
     /**
-     * Verify that {@link DecisionService#getVariation(Experiment, String, Map)} gives precedence to forced variation bucketing
-     * over audience evaluation.
+     * Verify that {@link DecisionService#getVariation(Experiment, String, Map)}
+     * gives precedence to forced variation bucketing over whitelisting.
      */
     @Test
     public void getForcedVariationBeforeWhitelisting() throws Exception {
@@ -142,8 +142,8 @@ public class DecisionServiceTest {
     }
 
     /**
-     * Verify that {@link DecisionService#getVariation(Experiment, String, Map)} gives precedence to forced variation bucketing
-     * over audience evaluation.
+     * Verify that {@link DecisionService#getVariation(Experiment, String, Map)}
+     * gives precedence to forced variation bucketing over audience evaluation.
      */
     @Test
     public void getVariationForcedPrecedesAudienceEval() throws Exception {
@@ -169,7 +169,7 @@ public class DecisionServiceTest {
 
     /**
      * Verify that {@link DecisionService#getVariation(Experiment, String, Map)}
-     * gives precedence to user profile over audience evaluation.
+     * gives precedence to forced variation bucketing over user profile.
      */
     @Test
     public void getVariationForcedBeforeUserProfile() throws Exception {
@@ -200,7 +200,7 @@ public class DecisionServiceTest {
         validProjectConfig.setForcedVariation(experiment.getKey(), userProfileId, forcedVariation.getKey());
         assertEquals(forcedVariation,
                 decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap()));
-        assertEquals(validProjectConfig.setForcedVariation(experiment.getKey(), userProfileId, null), true);
+        assertTrue(validProjectConfig.setForcedVariation(experiment.getKey(), userProfileId, null));
         assertNull(validProjectConfig.getForcedVariation(experiment.getKey(), userProfileId));
 
 

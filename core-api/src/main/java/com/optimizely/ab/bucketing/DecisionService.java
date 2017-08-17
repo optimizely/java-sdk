@@ -30,7 +30,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Optimizely's decision service that determines which variation of an experiment the user will be allocated to.
@@ -270,5 +269,4 @@ public class DecisionService {
             }
         }
     }
-
 }

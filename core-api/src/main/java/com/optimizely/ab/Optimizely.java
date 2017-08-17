@@ -511,6 +511,7 @@ public class Optimizely {
         String variableValue = variable.getDefaultValue();
 
         Variation variation = decisionService.getVariationForFeature(featureFlag, userId, attributes);
+
         if (variation != null) {
             LiveVariableUsageInstance liveVariableUsageInstance =
                     variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
@@ -570,7 +571,7 @@ public class Optimizely {
 
         Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
 
-        return decisionService.getVariation(experiment, userId, filteredAttributes);
+        return decisionService.getVariation(experiment,userId,filteredAttributes);
     }
 
     /**
