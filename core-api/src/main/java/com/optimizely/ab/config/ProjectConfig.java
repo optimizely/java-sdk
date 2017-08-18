@@ -364,14 +364,15 @@ public class ProjectConfig {
                 userForcedVariationMapping.put(userId, experimentToVariation);
             }
         }
+        boolean retVal = true;
         if (variationKey == null) {
-            experimentToVariation.remove(experiment.getId());
+            retVal = (experimentToVariation.remove(experiment.getId()) != null);
         }
         else {
             experimentToVariation.put(experiment.getId(), variation.getId());
         }
 
-        return true;
+        return retVal;
     }
 
     /**
@@ -385,6 +386,12 @@ public class ProjectConfig {
      */
     public @Nullable Variation getForcedVariation(@Nonnull String experimentKey,
                                                   @Nonnull String userId) {
+
+        // if the user id is invalid, return false.
+        if (userId == null || userId.trim().isEmpty() ||
+                experimentKey == null || experimentKey.isEmpty()) {
+            return null;
+        }
 
         Map<String, String> experimentToVariation = getForcedVariationMapping().get(userId);
         if (experimentToVariation != null) {

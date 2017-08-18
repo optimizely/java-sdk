@@ -53,12 +53,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV3;
@@ -340,6 +335,103 @@ public class OptimizelyTest {
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), "userId", testUserAttributes);
 
         assertThat(actualVariation, is(forcedVariation));
+
+        verify(mockEventHandler).dispatchEvent(logEventToDispatch);
+
+        optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", null );
+
+        assertEquals(optimizely.getForcedVariation(activatedExperiment.getKey(), "userId"), null);
+
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getVariation(String, String, Map<String, String>)} call
+     * uses forced variation to force the user into the second variation.  The mock bucket returns
+     * the first variation. Then remove the forced variation and confirm that the forced variation is null.
+     */
+    @Test
+    public void getVariationWithExperimentKeyForced() throws Exception {
+        Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
+        Variation forcedVariation = activatedExperiment.getVariations().get(1);
+        Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+        EventBuilder mockEventBuilder = mock(EventBuilder.class);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withBucketing(mockBucketer)
+                .withEventBuilder(mockEventBuilder)
+                .withConfig(validProjectConfig)
+                .withErrorHandler(mockErrorHandler)
+                .build();
+
+        optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", forcedVariation.getKey() );
+
+        Map<String, String> testUserAttributes = new HashMap<String, String>();
+        if (datafileVersion == 4) {
+            testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+        }
+        else {
+            testUserAttributes.put("browser_type", "chrome");
+        }
+
+        Map<String, String> testParams = new HashMap<String, String>();
+        testParams.put("test", "params");
+
+        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+        when(mockEventBuilder.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(forcedVariation),
+                eq("userId"), eq(testUserAttributes)))
+                .thenReturn(logEventToDispatch);
+
+        when(mockBucketer.bucket(activatedExperiment, "userId"))
+                .thenReturn(bucketedVariation);
+
+        // activate the experiment
+        Variation actualVariation = optimizely.getVariation(activatedExperiment.getKey(), "userId", testUserAttributes);
+
+        assertThat(actualVariation, is(forcedVariation));
+
+        optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", null );
+
+        assertEquals(optimizely.getForcedVariation(activatedExperiment.getKey(), "userId"), null);
+
+    }
+
+    /**
+     * Verify that the {@link Optimizely#activate(String, String, Map<String, String>)} call
+     * uses forced variation to force the user into the second variation.  The mock bucket returns
+     * the first variation. Then remove the forced variation and confirm that the forced variation is null.
+     */
+    @Test
+    public void isFeatureEnabledWithExperimentKeyForced() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        Experiment activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
+        Variation forcedVariation = activatedExperiment.getVariations().get(1);
+        EventBuilder mockEventBuilder = mock(EventBuilder.class);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withBucketing(mockBucketer)
+                .withEventBuilder(mockEventBuilder)
+                .withConfig(validProjectConfig)
+                .withErrorHandler(mockErrorHandler)
+                .build();
+
+        optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", forcedVariation.getKey() );
+
+        Map<String, String> testUserAttributes = new HashMap<String, String>();
+        if (datafileVersion != 4)  {
+            testUserAttributes.put("browser_type", "chrome");
+        }
+
+        Map<String, String> testParams = new HashMap<String, String>();
+        testParams.put("test", "params");
+
+        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+        when(mockEventBuilder.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(forcedVariation),
+                eq("userId"), eq(testUserAttributes)))
+                .thenReturn(logEventToDispatch);
+
+        // activate the experiment
+        assertTrue(optimizely.isFeatureEnabled(FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(), "userId"));
 
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
 
@@ -965,6 +1057,73 @@ public class OptimizelyTest {
     }
 
     //======== track tests ========//
+
+    /**
+     * Verify that the {@link Optimizely#track(String, String)} call correctly builds a V2 event and passes it
+     * through {@link EventHandler#dispatchEvent(LogEvent)}.
+     */
+    @Test
+    public void trackEventEndToEndForced() throws Exception {
+        EventType eventType;
+        String datafile;
+        ProjectConfig config;
+        if (datafileVersion == 4) {
+            config = validProjectConfig;
+            eventType = validProjectConfig.getEventNameMapping().get(EVENT_BASIC_EVENT_KEY);
+            datafile = validDatafile;
+        }
+        else {
+            config = noAudienceProjectConfig;
+            eventType = noAudienceProjectConfig.getEventTypes().get(0);
+            datafile = noAudienceDatafile;
+        }
+        List<Experiment> allExperiments = new ArrayList<Experiment>();
+        allExperiments.add(config.getExperiments().get(0));
+        EventBuilder eventBuilderV2 = new EventBuilderV2();
+        DecisionService spyDecisionService = spy(new DecisionService(mockBucketer,
+                mockErrorHandler,
+                validProjectConfig,
+                null));
+
+        Optimizely optimizely = Optimizely.builder(datafile, mockEventHandler)
+                .withDecisionService(spyDecisionService)
+                .withEventBuilder(eventBuilderV2)
+                .withConfig(noAudienceProjectConfig)
+                .withErrorHandler(mockErrorHandler)
+                .build();
+
+        // Force to the first variation for all experiments. However, only a subset of the experiments will actually
+        // call get forced.
+        for (Experiment experiment : allExperiments) {
+            optimizely.projectConfig.setForcedVariation(experiment.getKey(), "userId", experiment.getVariations().get(0).getKey());
+        }
+
+        // call track
+        optimizely.track(eventType.getKey(), "userId");
+
+        // verify that the bucketing algorithm was called only on experiments corresponding to the specified goal.
+        List<Experiment> experimentsForEvent = config.getExperimentsForEventKey(eventType.getKey());
+        for (Experiment experiment : allExperiments) {
+            if (experiment.isRunning() && experimentsForEvent.contains(experiment)) {
+                verify(spyDecisionService).getVariation(experiment, "userId",
+                        Collections.<String, String>emptyMap());
+            } else {
+                verify(spyDecisionService, never()).getVariation(experiment, "userId",
+                        Collections.<String, String>emptyMap());
+            }
+        }
+
+        // verify that dispatchEvent was called
+        if (datafileVersion != 4) {
+            verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
+        }
+        else {
+            verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
+        }
+        for (Experiment experiment : allExperiments) {
+            optimizely.projectConfig.setForcedVariation(experiment.getKey(), "userId", null);
+        }
+    }
 
     /**
      * Verify that the {@link Optimizely#track(String, String)} call correctly builds a V2 event and passes it
