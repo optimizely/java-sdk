@@ -423,7 +423,7 @@
     {
       "id": "2079378557",
       "key": "string_single_variable_feature",
-      "rolloutId": "",
+      "rolloutId": "1058508303",
       "experimentIds": [],
       "variables": [
         {
@@ -469,6 +469,38 @@
       ]
     }
   ],
-  "rollouts": [],
+  "rollouts": [
+    {
+      "id": "1058508303", // mmh3.hash("rollout_1")
+      "policy": "rollout",
+      "experiments": [
+        {
+          "id": "1785077004",
+          "key": "rollout_1_everyone_else_rule",
+          "status": "Running",
+          "layerId": "1058508303",
+          "audienceIds": [],
+          "variations": [
+            {
+              "id": "1566407342",
+              "key": "rollout_1_everyone_else_rule_enabled_variation",
+              "variables": [
+                {
+                  "id": "2077511132",
+                  "value": "lumos"
+                }
+              ]
+            }
+          ],
+          "trafficAllocation": [
+            {
+              "entityId": "1566407342",
+              "endOfRange": 5000
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "variables": []
 }
