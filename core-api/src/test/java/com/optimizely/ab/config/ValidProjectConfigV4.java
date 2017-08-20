@@ -23,6 +23,7 @@ import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -705,6 +706,9 @@ public class ValidProjectConfigV4 {
         groups.add(GROUP_1);
         groups.add(GROUP_2);
 
+        // list rollouts
+        List<Rollout> rollouts = new ArrayList<Rollout>();
+
         return new ProjectConfig(
                 ACCOUNT_ID,
                 ANONYMIZE_IP,
@@ -717,7 +721,8 @@ public class ValidProjectConfigV4 {
                 experiments,
                 featureFlags,
                 groups,
-                Collections.<LiveVariable>emptyList()
+                Collections.<LiveVariable>emptyList(),
+                rollouts
         );
     }
 }
