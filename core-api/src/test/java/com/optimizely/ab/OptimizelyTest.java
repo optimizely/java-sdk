@@ -53,7 +53,13 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Collections;
+import java.util.ArrayList;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV3;
@@ -188,7 +194,7 @@ public class OptimizelyTest {
     public void activateEndToEnd() throws Exception {
         Experiment activatedExperiment;
         Map<String, String> testUserAttributes = new HashMap<String, String>();
-        if(datafileVersion == 4) {
+        if(datafileVersion >= 4) {
             activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
             testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
         }
@@ -207,6 +213,7 @@ public class OptimizelyTest {
                 .build();
 
         Map<String, String> testParams = new HashMap<String, String>();
+
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventBuilder.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation, "userId",
@@ -313,7 +320,7 @@ public class OptimizelyTest {
         optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", forcedVariation.getKey() );
 
         Map<String, String> testUserAttributes = new HashMap<String, String>();
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
         }
         else {
@@ -366,7 +373,7 @@ public class OptimizelyTest {
         optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", forcedVariation.getKey() );
 
         Map<String, String> testUserAttributes = new HashMap<String, String>();
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
         }
         else {
@@ -393,6 +400,9 @@ public class OptimizelyTest {
 
         assertEquals(optimizely.getForcedVariation(activatedExperiment.getKey(), "userId"), null);
 
+        actualVariation = optimizely.getVariation(activatedExperiment.getKey(), "userId", testUserAttributes);
+
+        assertThat(actualVariation, is(bucketedVariation));
     }
 
     /**
@@ -418,7 +428,7 @@ public class OptimizelyTest {
         optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", forcedVariation.getKey() );
 
         Map<String, String> testUserAttributes = new HashMap<String, String>();
-        if (datafileVersion != 4)  {
+        if (datafileVersion < 4)  {
             testUserAttributes.put("browser_type", "chrome");
         }
 
@@ -438,6 +448,8 @@ public class OptimizelyTest {
         optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", null );
 
         assertEquals(optimizely.getForcedVariation(activatedExperiment.getKey(), "userId"), null);
+
+        assertFalse(optimizely.isFeatureEnabled(FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(), "userId"));
 
     }
 
@@ -460,7 +472,7 @@ public class OptimizelyTest {
                 .build();
 
         Map<String, String> testUserAttributes = new HashMap<String, String>();
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
         }
         else {
@@ -603,7 +615,7 @@ public class OptimizelyTest {
                 .build();
 
         Map<String, String> testUserAttributes = new HashMap<String, String>();
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
         }
         else {
@@ -1067,13 +1079,13 @@ public class OptimizelyTest {
         EventType eventType;
         String datafile;
         ProjectConfig config;
-        if (datafileVersion == 4) {
-            config = validProjectConfig;
+        if (datafileVersion >= 4) {
+            config = spy(validProjectConfig);
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_BASIC_EVENT_KEY);
             datafile = validDatafile;
         }
         else {
-            config = noAudienceProjectConfig;
+            config = spy(noAudienceProjectConfig);
             eventType = noAudienceProjectConfig.getEventTypes().get(0);
             datafile = noAudienceDatafile;
         }
@@ -1082,7 +1094,7 @@ public class OptimizelyTest {
         EventBuilder eventBuilderV2 = new EventBuilderV2();
         DecisionService spyDecisionService = spy(new DecisionService(mockBucketer,
                 mockErrorHandler,
-                validProjectConfig,
+                config,
                 null));
 
         Optimizely optimizely = Optimizely.builder(datafile, mockEventHandler)
@@ -1092,10 +1104,17 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
+        // Bucket to null for all experiments. However, only a subset of the experiments will actually
+        // call the bucket function.
+        for (Experiment experiment : allExperiments) {
+            when(mockBucketer.bucket(experiment, "userId"))
+                    .thenReturn(null);
+        }
         // Force to the first variation for all experiments. However, only a subset of the experiments will actually
         // call get forced.
         for (Experiment experiment : allExperiments) {
-            optimizely.projectConfig.setForcedVariation(experiment.getKey(), "userId", experiment.getVariations().get(0).getKey());
+            optimizely.projectConfig.setForcedVariation(experiment.getKey(),
+                    "userId", experiment.getVariations().get(0).getKey());
         }
 
         // call track
@@ -1107,6 +1126,7 @@ public class OptimizelyTest {
             if (experiment.isRunning() && experimentsForEvent.contains(experiment)) {
                 verify(spyDecisionService).getVariation(experiment, "userId",
                         Collections.<String, String>emptyMap());
+                verify(config).getForcedVariation(experiment.getKey(), "userId");
             } else {
                 verify(spyDecisionService, never()).getVariation(experiment, "userId",
                         Collections.<String, String>emptyMap());
@@ -1114,15 +1134,14 @@ public class OptimizelyTest {
         }
 
         // verify that dispatchEvent was called
-        if (datafileVersion != 4) {
-            verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
-        }
-        else {
-            verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
-        }
+        verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
+
         for (Experiment experiment : allExperiments) {
+            assertEquals(optimizely.projectConfig.getForcedVariation(experiment.getKey(), "userId"), experiment.getVariations().get(0));
             optimizely.projectConfig.setForcedVariation(experiment.getKey(), "userId", null);
+            assertNull(optimizely.projectConfig.getForcedVariation(experiment.getKey(), "userId"));
         }
+
     }
 
     /**
@@ -1134,13 +1153,13 @@ public class OptimizelyTest {
         EventType eventType;
         String datafile;
         ProjectConfig config;
-        if (datafileVersion == 4) {
-            config = validProjectConfig;
+        if (datafileVersion >= 4) {
+            config = spy(validProjectConfig);
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_BASIC_EVENT_KEY);
             datafile = validDatafile;
         }
         else {
-            config = noAudienceProjectConfig;
+            config = spy(noAudienceProjectConfig);
             eventType = noAudienceProjectConfig.getEventTypes().get(0);
             datafile = noAudienceDatafile;
         }
@@ -1149,7 +1168,7 @@ public class OptimizelyTest {
         EventBuilder eventBuilderV2 = new EventBuilderV2();
         DecisionService spyDecisionService = spy(new DecisionService(mockBucketer,
                 mockErrorHandler,
-                validProjectConfig,
+                config,
                 null));
 
         Optimizely optimizely = Optimizely.builder(datafile, mockEventHandler)
@@ -1175,6 +1194,7 @@ public class OptimizelyTest {
             if (experiment.isRunning() && experimentsForEvent.contains(experiment)) {
                 verify(spyDecisionService).getVariation(experiment, "userId",
                         Collections.<String, String>emptyMap());
+                verify(config).getForcedVariation(experiment.getKey(), "userId");
             } else {
                 verify(spyDecisionService, never()).getVariation(experiment, "userId",
                         Collections.<String, String>emptyMap());
@@ -1233,7 +1253,7 @@ public class OptimizelyTest {
     public void trackEventWithAttributes() throws Exception {
         Attribute attribute = validProjectConfig.getAttributes().get(0);
         EventType eventType;
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_BASIC_EVENT_KEY);
         }
         else {
@@ -1306,7 +1326,7 @@ public class OptimizelyTest {
             justification="testing nullness contract violation")
     public void trackEventWithNullAttributes() throws Exception {
         EventType eventType;
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_BASIC_EVENT_KEY);
         }
         else {
@@ -1378,7 +1398,7 @@ public class OptimizelyTest {
     @Test
     public void trackEventWithNullAttributeValues() throws Exception {
         EventType eventType;
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_BASIC_EVENT_KEY);
         }
         else {
@@ -1450,7 +1470,7 @@ public class OptimizelyTest {
     @SuppressWarnings("unchecked")
     public void trackEventWithUnknownAttribute() throws Exception {
         EventType eventType;
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_BASIC_EVENT_KEY);
         }
         else {
@@ -1521,7 +1541,7 @@ public class OptimizelyTest {
     @Test
     public void trackEventWithEventTags() throws Exception {
         EventType eventType;
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_BASIC_EVENT_KEY);
         }
         else {
@@ -1604,7 +1624,7 @@ public class OptimizelyTest {
             justification="testing nullness contract violation")
     public void trackEventWithNullEventTags() throws Exception {
         EventType eventType;
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_BASIC_EVENT_KEY);
         }
         else {
@@ -1668,7 +1688,7 @@ public class OptimizelyTest {
     @Test
     public void trackEventWithNoValidExperiments() throws Exception {
         EventType eventType;
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_BASIC_EVENT_KEY);
         }
         else {
@@ -1718,7 +1738,7 @@ public class OptimizelyTest {
     @Test
     public void trackDoesNotSendEventWhenExperimentsAreLaunchedOnly() throws Exception {
         EventType eventType;
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_LAUNCHED_EXPERIMENT_ONLY_KEY);
         }
         else {
@@ -1775,7 +1795,7 @@ public class OptimizelyTest {
     public void trackDispatchesWhenEventHasLaunchedAndRunningExperiments() throws Exception {
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
         EventType eventType;
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_BASIC_EVENT_KEY);
         }
         else {
@@ -1975,7 +1995,7 @@ public class OptimizelyTest {
     @Test
     public void getVariationWithAudiencesNoAttributes() throws Exception {
         Experiment experiment;
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             experiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
         }
         else {
@@ -2065,7 +2085,7 @@ public class OptimizelyTest {
         Variation variation = experiment.getVariations().get(0);
 
         Map<String, String> attributes = new HashMap<String, String>();
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             attributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
         }
         else {
@@ -2109,7 +2129,7 @@ public class OptimizelyTest {
     @Test
     public void getVariationExperimentStatusPrecedesForcedVariation() throws Exception {
         Experiment experiment;
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             experiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_PAUSED_EXPERIMENT_KEY);
         }
         else {
@@ -2136,7 +2156,7 @@ public class OptimizelyTest {
     public void addNotificationListener() throws Exception {
         Experiment activatedExperiment;
         EventType eventType;
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_BASIC_EXPERIMENT_KEY);
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_BASIC_EVENT_KEY);
         }
@@ -2286,7 +2306,7 @@ public class OptimizelyTest {
     public void clearNotificationListeners() throws Exception {
         Experiment activatedExperiment;
         Map<String, String> attributes = new HashMap<String, String>();
-        if (datafileVersion == 4) {
+        if (datafileVersion >= 4) {
             activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
             attributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
         }

@@ -578,9 +578,7 @@ public class Optimizely {
      * Force a user into a variation for a given experiment.
      * The forced variation value does not persist across application launches.
      * If the experiment key is not in the project file, this call fails and returns false.
-     * This method just calls into the {@link com.optimizely.ab.config.ProjectConfig#setForcedVariation(String, String, String)}
-     * method of the same signature.
-     *
+     * If the variationKey is not in the experiment, this call fails.
      * @param experimentKey The key for the experiment.
      * @param userId The user ID to be used for bucketing.
      * @param variationKey The variation key to force the user into.  If the variation key is null

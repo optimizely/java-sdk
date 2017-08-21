@@ -30,7 +30,12 @@ import java.util.Map;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+
 
 import org.junit.Before;
 import org.junit.Test;
@@ -309,6 +314,11 @@ public class ProjectConfigTest {
         assertTrue(projectConfig.setForcedVariation("etag1", "testUser2", null));
         assertTrue(projectConfig.setForcedVariation("etag2", "testUser1", null));
         assertTrue(projectConfig.setForcedVariation("etag2", "testUser2", null));
+        assertNull(projectConfig.getForcedVariation("etag1", "testUser1"));
+        assertNull(projectConfig.getForcedVariation("etag1", "testUser2"));
+        assertNull(projectConfig.getForcedVariation("etag2", "testUser1"));
+        assertNull(projectConfig.getForcedVariation("etag2", "testUser2"));
+
 
     }
 
@@ -328,6 +338,11 @@ public class ProjectConfigTest {
         assertTrue(projectConfig.setForcedVariation("etag1", "testUser2", null));
         assertTrue(projectConfig.setForcedVariation("etag1", "testUser3", null));
         assertTrue(projectConfig.setForcedVariation("etag1", "testUser4", null));
+
+        assertNull(projectConfig.getForcedVariation("etag1", "testUser1"));
+        assertNull(projectConfig.getForcedVariation("etag1", "testUser2"));
+        assertNull(projectConfig.getForcedVariation("etag2", "testUser1"));
+        assertNull(projectConfig.getForcedVariation("etag2", "testUser2"));
 
     }
 }

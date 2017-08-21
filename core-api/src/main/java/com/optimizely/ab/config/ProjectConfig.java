@@ -19,6 +19,8 @@ package com.optimizely.ab.config;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -56,6 +58,10 @@ public class ProjectConfig {
         }
     }
 
+    // logger
+    private static final Logger logger = LoggerFactory.getLogger(ProjectConfig.class);
+
+    // ProjectConfig properties
     private final String accountId;
     private final String projectId;
     private final String revision;
@@ -86,12 +92,13 @@ public class ProjectConfig {
     private final Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping;
     private final Map<String, Experiment> variationIdToExperimentMapping;
 
-    /* Forced variations supersede any other mappings.  They are transient and are not persistent or part of
+    /**
+     *  Forced variations supersede any other mappings.  They are transient and are not persistent or part of
      * the actual datafile. This contains all the forced variations
-     * set by the user by calling setForcedVariation (it is not the same as the
+     * set by the user by calling {@link ProjectConfig#setForcedVariation(String, String, String)} (it is not the same as the
      * whitelisting forcedVariations data structure in the Experiments class).
      */
-    private transient Map<String, Map<String, String>> forcedVariationMapping = new ConcurrentHashMap<String, Map<String, String>>();
+    private transient ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping = new ConcurrentHashMap<String, ConcurrentHashMap<String, String>>();
 
     // v2 constructor
     public ProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
@@ -314,7 +321,7 @@ public class ProjectConfig {
         return featureKeyMapping;
     }
 
-    public Map<String, Map<String, String>> getForcedVariationMapping() { return forcedVariationMapping; }
+    public ConcurrentHashMap<String, ConcurrentHashMap<String, String>> getForcedVariationMapping() { return forcedVariationMapping; }
 
     /**
      * Force a user into a variation for a given experiment.
@@ -335,41 +342,62 @@ public class ProjectConfig {
         // if the experiment is not a valid experiment key, don't set it.
         Experiment experiment = getExperimentKeyMapping().get(experimentKey);
         if (experiment == null){
+            logger.error("Experiment {} does not exist in ProjectConfig for project {}", experimentKey, projectId);
             return false;
         }
 
-        Variation variation = (variationKey == null) ? null : experiment.getVariationKeyToVariationMap().get(variationKey);
-        // if the variation is not part of the experiment, return false.
-        if (variationKey != null && variation == null) {
-            return false;
+        Variation variation = null;
+
+        // keep in mind that you can pass in a variationKey that is null if you want to
+        // remove the variation.
+        if (variationKey != null) {
+            variation = experiment.getVariationKeyToVariationMap().get(variationKey);
+            // if the variation is not part of the experiment, return false.
+            if (variation == null) {
+                logger.error("Variation {} does not exist for experiment {}", variationKey, experimentKey);
+                return false;
+            }
         }
 
         // if the user id is invalid, return false.
         if (userId == null || userId.trim().isEmpty()) {
+            logger.error("Invalid userId: either empty or null");
             return false;
         }
 
-        Map<String, Map<String, String>> userForcedVariationMapping = getForcedVariationMapping();
-        Map<String, String> experimentToVariation = userForcedVariationMapping.get(userId);
-        if (experimentToVariation == null) {
-            experimentToVariation = new ConcurrentHashMap<String, String>();
-            // sanity check...
-            if (userForcedVariationMapping instanceof ConcurrentHashMap) {
-                Map<String, String> experimentToVariationExists = (Map<String, String>) ((ConcurrentHashMap)userForcedVariationMapping).putIfAbsent(userId, experimentToVariation);
-                if (experimentToVariationExists != null) {
-                    experimentToVariation = experimentToVariationExists;
+        ConcurrentHashMap<String, String> experimentToVariation;
+        if (!forcedVariationMapping.containsKey(userId)) {
+            forcedVariationMapping.putIfAbsent(userId, new ConcurrentHashMap<String, String>());
+        }
+        experimentToVariation = forcedVariationMapping.get(userId);
+
+        boolean retVal = true;
+        // if it is null remove the variation if it exists.
+        if (variationKey == null) {
+            String removedVariationId = experimentToVariation.remove(experiment.getId());
+            if (removedVariationId != null) {
+                Variation removedVariation = experiment.getVariationIdToVariationMap().get(removedVariationId);
+                if (removedVariation != null) {
+                    logger.info("Removed forced variation {}", removedVariation.getKey());
+                }
+                else {
+                    logger.info("Removed forced variation that did not exist in experiment");
                 }
             }
             else {
-                userForcedVariationMapping.put(userId, experimentToVariation);
+                logger.info("No variation for experiment");
+                retVal = false;
             }
         }
-        boolean retVal = true;
-        if (variationKey == null) {
-            retVal = (experimentToVariation.remove(experiment.getId()) != null);
-        }
         else {
-            experimentToVariation.put(experiment.getId(), variation.getId());
+            String previous = experimentToVariation.put(experiment.getId(), variation.getId());
+            if (previous != null) {
+                Variation previousVariation = experiment.getVariationIdToVariationMap().get(previous);
+                if (previousVariation != null) {
+                    logger.info("forced variation {} replaced forced variation {}",
+                            variation.getKey(), previousVariation.getKey());
+                }
+            }
         }
 
         return retVal;
@@ -388,8 +416,13 @@ public class ProjectConfig {
                                                   @Nonnull String userId) {
 
         // if the user id is invalid, return false.
-        if (userId == null || userId.trim().isEmpty() ||
-                experimentKey == null || experimentKey.isEmpty()) {
+        if (userId == null || userId.trim().isEmpty()) {
+            logger.error("Invalid userId: either null or empty");
+            return null;
+        }
+
+        if (experimentKey == null || experimentKey.isEmpty()) {
+            logger.error("Invalid experiment key");
             return null;
         }
 
@@ -397,11 +430,15 @@ public class ProjectConfig {
         if (experimentToVariation != null) {
             Experiment experiment = getExperimentKeyMapping().get(experimentKey);
             if (experiment == null)  {
+                logger.info("No forced variation for user {} in experiment {} ", userId, experimentKey, projectId);
                 return null;
             }
             String variationId = experimentToVariation.get(experiment.getId());
             if (variationId != null) {
                 return experiment.getVariationIdToVariationMap().get(variationId);
+            }
+            else {
+                logger.info("No forced variation for user {} in experiment {} ", userId, experimentKey, projectId);
             }
         }
         return null;
