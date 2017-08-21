@@ -678,7 +678,7 @@ public class ValidProjectConfigV4 {
             ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_KEY,
             Collections.singletonList(
                     new LiveVariableUsageInstance(
-                            FEATURE_SINGLE_VARIABLE_STRING_ID,
+                            VARIABLE_STRING_VARIABLE_ID,
                             ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_STRING_VALUE
                     )
             )
@@ -692,7 +692,7 @@ public class ValidProjectConfigV4 {
             Collections.singletonList(
                     ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION
             ),
-            Collections.<String, String>emptyMap(),
+            null,
             Collections.singletonList(
                     new TrafficAllocation(
                             ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
@@ -702,7 +702,7 @@ public class ValidProjectConfigV4 {
     );
     private static final Rollout    ROLLOUT_1 = new Rollout(
             ROLLOUT_1_ID,
-            Rollout.RolloutPolicy.ROLLOUT.toString(),
+            Layer.LayerPolicy.ROLLOUT.toString(),
             Collections.singletonList(
                     ROLLOUT_1_EVERYONE_ELSE_RULE
             )
