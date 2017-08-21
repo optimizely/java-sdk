@@ -41,7 +41,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.junit.experimental.theories.suppliers.TestedOn;
 
 /**
  * Tests for {@link ProjectConfig}.
@@ -284,6 +283,7 @@ public class ProjectConfigTest {
     @Test
     public void setForcedVariationNullVariationKey() {
         assertFalse(projectConfig.setForcedVariation("etag1", "testUser1", null));
+        assertNull(projectConfig.getForcedVariation("etag1", "testUser1"));
     }
 
     @Test
