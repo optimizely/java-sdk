@@ -445,9 +445,9 @@ public class OptimizelyTest {
 
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
 
-        optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", null );
+        assertTrue(optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", null ));
 
-        assertEquals(optimizely.getForcedVariation(activatedExperiment.getKey(), "userId"), null);
+        assertNull(optimizely.getForcedVariation(activatedExperiment.getKey(), "userId"));
 
         assertFalse(optimizely.isFeatureEnabled(FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(), "userId"));
 

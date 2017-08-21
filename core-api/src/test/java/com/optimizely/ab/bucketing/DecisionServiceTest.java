@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV3;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV4;
 import static org.hamcrest.CoreMatchers.is;
@@ -46,6 +47,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
@@ -58,6 +60,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 public class DecisionServiceTest {
 
@@ -118,7 +121,7 @@ public class DecisionServiceTest {
      */
     @Test
     public void getForcedVariationBeforeWhitelisting() throws Exception {
-        Bucketer bucketer = spy(new Bucketer(validProjectConfig));
+        Bucketer bucketer = new Bucketer(validProjectConfig);
         DecisionService decisionService = spy(new DecisionService(bucketer, mockErrorHandler, validProjectConfig, null));
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation whitelistVariation = experiment.getVariations().get(0);
@@ -137,8 +140,9 @@ public class DecisionServiceTest {
         //verify(decisionService).getForcedVariation(experiment.getKey(), whitelistedUserId);
         verify(decisionService, never()).getStoredVariation(eq(experiment), any(UserProfile.class));
         assertEquals(decisionService.getWhitelistedVariation(experiment, whitelistedUserId), whitelistVariation);
-        assertEquals(validProjectConfig.setForcedVariation(experiment.getKey(), whitelistedUserId,null), true);
+        assertTrue(validProjectConfig.setForcedVariation(experiment.getKey(), whitelistedUserId,null));
         assertNull(validProjectConfig.getForcedVariation(experiment.getKey(), whitelistedUserId));
+        assertThat(decisionService.getVariation(experiment, whitelistedUserId, Collections.<String, String>emptyMap()), is(whitelistVariation));
     }
 
     /**
@@ -234,6 +238,34 @@ public class DecisionServiceTest {
         // ensure that a user with a saved user profile, sees the same variation regardless of audience evaluation
         assertEquals(variation,
                 decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap()));
+
+    }
+
+    @Test
+    public void getVariationOnNonRunningExperimentWithForcedVariation() {
+        Experiment experiment = validProjectConfig.getExperiments().get(1);
+        assertFalse(experiment.isRunning());
+        Variation variation = experiment.getVariations().get(0);
+        Bucketer bucketer = new Bucketer(validProjectConfig);
+
+        DecisionService decisionService = spy(new DecisionService(bucketer,
+                mockErrorHandler, validProjectConfig, null));
+
+        // ensure that normal users still get excluded from the experiment when they fail audience evaluation
+        assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap()));
+
+        logbackVerifier.expectMessage(Level.INFO,
+                "Experiment \"etag2\" is not running.", times(3));
+
+
+        assertTrue(validProjectConfig.setForcedVariation(experiment.getKey(), "userId", variation.getKey()));
+
+        // ensure that a user with a saved user profile, sees the same variation regardless of audience evaluation
+        assertNull(decisionService.getVariation(experiment, "userId", Collections.<String, String>emptyMap()));
+
+        assertTrue(validProjectConfig.setForcedVariation(experiment.getKey(), "userId", null));
+        assertNull(decisionService.getVariation(experiment, "userId", Collections.<String, String>emptyMap()));
+
 
     }
 
