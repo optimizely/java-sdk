@@ -83,7 +83,7 @@ final class JsonConfigParser implements ConfigParser {
             List<Rollout> rollouts = null;
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
                 featureFlags = parseFeatureFlags(rootObject.getJSONArray("featureFlags"));
-                //TODO: Josh W. parse rollouts
+                rollouts = parseRollouts(rootObject.getJSONArray("rollouts"));
             }
 
             return new ProjectConfig(
@@ -347,5 +347,20 @@ final class JsonConfigParser implements ConfigParser {
         }
 
         return liveVariableUsageInstances;
+    }
+
+    private List<Rollout> parseRollouts(JSONArray rolloutsJson) {
+        List<Rollout> rollouts = new ArrayList<Rollout>(rolloutsJson.length());
+
+        for (Object obj : rolloutsJson) {
+            JSONObject rolloutObject = (JSONObject) obj;
+            String id = rolloutObject.getString("id");
+            String policy = rolloutObject.getString("policy");
+            List<Experiment> experiments = parseExperiments(rolloutObject.getJSONArray("experiments"));
+
+            rollouts.add(new Rollout(id, policy, experiments));
+        }
+
+        return rollouts;
     }
 }
