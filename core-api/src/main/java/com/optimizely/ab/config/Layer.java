@@ -36,8 +36,20 @@ public class Layer implements IdMapped {
     protected final String id;
     protected final String policy;
     protected final List<Experiment> experiments;
+    public enum LayerPolicy {
+        ROLLOUT ("rollout"),
+        SINGLE_EXPERIMENT ("single_experiment");
 
-    public static final String SINGLE_EXPERIMENT_POLICY = "single_experiment";
+        private final String layerPolicy;
+
+        LayerPolicy(String layerPolicy) {
+            this.layerPolicy = layerPolicy;
+        }
+
+        public String toString() {
+            return layerPolicy;
+        }
+    }
 
     @JsonCreator
     public Layer(@JsonProperty("id") String id,
