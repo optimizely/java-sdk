@@ -79,7 +79,8 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
         if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
             featureFlags = mapper.readValue(node.get("featureFlags").toString(),
                    new TypeReference<List<FeatureFlag>>() {});
-            //TODO: Josh W. parse rollouts
+            rollouts = mapper.readValue(node.get("rollouts").toString(),
+                    new TypeReference<List<Rollout>>(){});
         }
 
         return new ProjectConfig(
