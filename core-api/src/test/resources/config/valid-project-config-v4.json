@@ -471,7 +471,7 @@
   ],
   "rollouts": [
     {
-      "id": "1058508303", // mmh3.hash("rollout_1")
+      "id": "1058508303",
       "policy": "rollout",
       "experiments": [
         {

@@ -23,7 +23,6 @@ import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -144,7 +143,7 @@ public class ValidProjectConfigV4 {
     private static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_STRING = new FeatureFlag(
             FEATURE_SINGLE_VARIABLE_STRING_ID,
             FEATURE_SINGLE_VARIABLE_STRING_KEY,
-            "",
+            "1058508303",
             Collections.<String>emptyList(),
             Collections.singletonList(
                     VARIABLE_STRING_VARIABLE
@@ -668,6 +667,46 @@ public class ValidProjectConfigV4 {
             )
     );
 
+    private static final String     ROLLOUT_1_ID = "1058508303";
+    private static final String     ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_ID = "1785077004";
+    private static final String     ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_KEY = "rollout_1_everyone_else_rule";
+    private static final String     ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID = "1566407342";
+    private static final String     ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_KEY = "rollout_1_everyone_else_rule_enabled_variation";
+    private static final String     ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_STRING_VALUE = "lumos";
+    private static final Variation  ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION = new Variation(
+            ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
+            ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_KEY,
+            Collections.singletonList(
+                    new LiveVariableUsageInstance(
+                            FEATURE_SINGLE_VARIABLE_STRING_ID,
+                            ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_STRING_VALUE
+                    )
+            )
+    );
+    private static final Experiment ROLLOUT_1_EVERYONE_ELSE_RULE = new Experiment(
+            ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_ID,
+            ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_KEY,
+            Experiment.ExperimentStatus.RUNNING.toString(),
+            ROLLOUT_1_ID,
+            Collections.<String>emptyList(),
+            Collections.singletonList(
+                    ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION
+            ),
+            Collections.<String, String>emptyMap(),
+            Collections.singletonList(
+                    new TrafficAllocation(
+                            ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
+                            5000
+                    )
+            )
+    );
+    private static final Rollout    ROLLOUT_1 = new Rollout(
+            ROLLOUT_1_ID,
+            Rollout.RolloutPolicy.ROLLOUT.toString(),
+            Collections.singletonList(
+                    ROLLOUT_1_EVERYONE_ELSE_RULE
+            )
+    );
 
     public static ProjectConfig generateValidProjectConfigV4() {
 
@@ -708,6 +747,7 @@ public class ValidProjectConfigV4 {
 
         // list rollouts
         List<Rollout> rollouts = new ArrayList<Rollout>();
+        rollouts.add(ROLLOUT_1);
 
         return new ProjectConfig(
                 ACCOUNT_ID,

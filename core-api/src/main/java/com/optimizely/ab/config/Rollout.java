@@ -27,6 +27,20 @@ import java.util.List;
 @Immutable
 public class Rollout extends Layer implements IdMapped {
 
+    public enum RolloutPolicy {
+        ROLLOUT ("rollout");
+
+        private final String rolloutPolicy;
+
+        RolloutPolicy(String rolloutPolicy) {
+            this.rolloutPolicy = rolloutPolicy;
+        }
+
+        public String toString() {
+            return rolloutPolicy;
+        }
+    }
+
     public Rollout(String id,
                    String policy,
                    List<Experiment> experiments) {
