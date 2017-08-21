@@ -692,7 +692,7 @@ public class ValidProjectConfigV4 {
             Collections.singletonList(
                     ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION
             ),
-            null,
+            Collections.<String, String>emptyMap(),
             Collections.singletonList(
                     new TrafficAllocation(
                             ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,

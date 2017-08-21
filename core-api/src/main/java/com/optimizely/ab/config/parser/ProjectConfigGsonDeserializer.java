@@ -85,7 +85,8 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
         if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
             Type featureFlagsType = new TypeToken<List<FeatureFlag>>() {}.getType();
             featureFlags = context.deserialize(jsonObject.getAsJsonArray("featureFlags"), featureFlagsType);
-            //TODO: Josh W. parse rollouts
+            Type rolloutsType = new TypeToken<List<Rollout>>() {}.getType();
+            rollouts = context.deserialize(jsonObject.get("rollouts").getAsJsonArray(), rolloutsType);
         }
 
         return new ProjectConfig(

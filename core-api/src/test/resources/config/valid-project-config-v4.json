@@ -480,6 +480,7 @@
           "status": "Running",
           "layerId": "1058508303",
           "audienceIds": [],
+          "forcedVariations": {},
           "variations": [
             {
               "id": "1566407342",
