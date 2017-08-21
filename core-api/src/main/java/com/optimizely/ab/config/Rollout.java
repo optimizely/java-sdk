@@ -16,6 +16,9 @@
  */
 package com.optimizely.ab.config;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.annotation.concurrent.Immutable;
 import java.util.List;
 
@@ -27,23 +30,10 @@ import java.util.List;
 @Immutable
 public class Rollout extends Layer implements IdMapped {
 
-    public enum RolloutPolicy {
-        ROLLOUT ("rollout");
-
-        private final String rolloutPolicy;
-
-        RolloutPolicy(String rolloutPolicy) {
-            this.rolloutPolicy = rolloutPolicy;
-        }
-
-        public String toString() {
-            return rolloutPolicy;
-        }
-    }
-
-    public Rollout(String id,
-                   String policy,
-                   List<Experiment> experiments) {
+    @JsonCreator
+    public Rollout(@JsonProperty("id") String id,
+                   @JsonProperty("policy") String policy,
+                   @JsonProperty("experiments") List<Experiment> experiments) {
         super(id, policy, experiments);
     }
 
