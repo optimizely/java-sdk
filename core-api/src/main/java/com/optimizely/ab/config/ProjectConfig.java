@@ -252,6 +252,10 @@ public class ProjectConfig {
         return featureFlags;
     }
 
+    public List<Rollout> getRollouts() {
+        return rollouts;
+    }
+
     public List<Attribute> getAttributes() {
         return attributes;
     }
@@ -321,22 +325,26 @@ public class ProjectConfig {
                 ", projectId='" + projectId + '\'' +
                 ", revision='" + revision + '\'' +
                 ", version='" + version + '\'' +
-                ", anonymizeIP='" + anonymizeIP + '\'' +
-                ", groups=" + groups +
-                ", experiments=" + experiments +
+                ", anonymizeIP=" + anonymizeIP +
                 ", attributes=" + attributes +
-                ", events=" + events +
                 ", audiences=" + audiences +
+                ", events=" + events +
+                ", experiments=" + experiments +
+                ", featureFlags=" + featureFlags +
+                ", groups=" + groups +
                 ", liveVariables=" + liveVariables +
-                ", experimentKeyMapping=" + experimentKeyMapping +
+                ", rollouts=" + rollouts +
                 ", attributeKeyMapping=" + attributeKeyMapping +
-                ", liveVariableKeyMapping=" + liveVariableKeyMapping +
                 ", eventNameMapping=" + eventNameMapping +
+                ", experimentKeyMapping=" + experimentKeyMapping +
+                ", featureKeyMapping=" + featureKeyMapping +
+                ", liveVariableKeyMapping=" + liveVariableKeyMapping +
                 ", audienceIdMapping=" + audienceIdMapping +
                 ", experimentIdMapping=" + experimentIdMapping +
                 ", groupIdMapping=" + groupIdMapping +
                 ", liveVariableIdToExperimentsMapping=" + liveVariableIdToExperimentsMapping +
                 ", variationToLiveVariableUsageInstanceMapping=" + variationToLiveVariableUsageInstanceMapping +
+                ", variationIdToExperimentMapping=" + variationIdToExperimentMapping +
                 '}';
     }
 }
