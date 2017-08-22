@@ -2510,7 +2510,6 @@ public class OptimizelyTest {
     @Test
     public void getFeatureVariableValueForTypeReturnsDefaultValueWhenFeatureIsNotAttached() throws ConfigParseException {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
-
         String validFeatureKey = FEATURE_SINGLE_VARIABLE_STRING_KEY;
         String validVariableKey = VARIABLE_STRING_VARIABLE_KEY;
         String defaultValue = VARIABLE_STRING_VARIABLE_DEFAULT_VALUE;
@@ -2547,7 +2546,8 @@ public class OptimizelyTest {
         String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
         String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
         String expectedValue = VARIABLE_FIRST_LETTER_DEFAULT_VALUE;
-
+        String experimentKeyForFeature = EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY;
+      
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
                 .withConfig(validProjectConfig)
                 .build();

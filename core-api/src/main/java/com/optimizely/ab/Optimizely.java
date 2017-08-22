@@ -335,6 +335,7 @@ public class Optimizely {
 
         if (variation != null) {
             Experiment experiment = projectConfig.getExperimentForVariationId(variation.getId());
+
             if (experiment != null) {
                 // the user is in an experiment for the feature
                 sendImpression(
@@ -384,6 +385,7 @@ public class Optimizely {
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
                                                        @Nonnull Map<String, String> attributes) {
+
         String variableValue = getFeatureVariableValueForType(
                 featureKey,
                 variableKey,
