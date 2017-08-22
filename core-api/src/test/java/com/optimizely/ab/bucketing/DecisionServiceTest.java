@@ -241,6 +241,12 @@ public class DecisionServiceTest {
 
     }
 
+    /**
+     * Verify that {@link DecisionService#getVariation(Experiment, String, Map)}
+     * gives a null variation on a Experiment that is not running. Set the forced variation.
+     * And, test to make sure that after setting forced variation, the getVariation still returns
+     * null.
+     */
     @Test
     public void getVariationOnNonRunningExperimentWithForcedVariation() {
         Experiment experiment = validProjectConfig.getExperiments().get(1);
@@ -251,19 +257,23 @@ public class DecisionServiceTest {
         DecisionService decisionService = spy(new DecisionService(bucketer,
                 mockErrorHandler, validProjectConfig, null));
 
-        // ensure that normal users still get excluded from the experiment when they fail audience evaluation
-        assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap()));
+        // ensure that the not running variation returns null with no forced variation set.
+        assertNull(decisionService.getVariation(experiment, "userId", Collections.<String, String>emptyMap()));
 
+        // we call getVariation 3 times on an experiment that is not running.
         logbackVerifier.expectMessage(Level.INFO,
                 "Experiment \"etag2\" is not running.", times(3));
 
-
+        // set a forced variation on the user that got back null
         assertTrue(validProjectConfig.setForcedVariation(experiment.getKey(), "userId", variation.getKey()));
 
-        // ensure that a user with a saved user profile, sees the same variation regardless of audience evaluation
+        // ensure that a user with a forced variation set
+        // still gets back a null variation if the variation is not running.
         assertNull(decisionService.getVariation(experiment, "userId", Collections.<String, String>emptyMap()));
 
+        // set the forced variation back to null
         assertTrue(validProjectConfig.setForcedVariation(experiment.getKey(), "userId", null));
+        // test one more time that the getVariation returns null for the experiment that is not running.
         assertNull(decisionService.getVariation(experiment, "userId", Collections.<String, String>emptyMap()));
 
 
