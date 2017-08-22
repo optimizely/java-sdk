@@ -85,7 +85,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             List<Rollout> rollouts = null;
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
                 featureFlags = parseFeatureFlags((JSONArray) rootObject.get("featureFlags"));
-                //TODO: Josh W. parse rollouts
+                rollouts = parseRollouts((JSONArray) rootObject.get("rollouts"));
             }
 
             return new ProjectConfig(
@@ -351,6 +351,21 @@ final class JsonSimpleConfigParser implements ConfigParser {
         }
 
         return liveVariableUsageInstances;
+    }
+
+    private List<Rollout> parseRollouts(JSONArray rolloutsJson) {
+        List<Rollout> rollouts = new ArrayList<Rollout>(rolloutsJson.size());
+
+        for (Object obj : rolloutsJson) {
+            JSONObject rolloutObject = (JSONObject) obj;
+            String id = (String) rolloutObject.get("id");
+            String policy = (String) rolloutObject.get("policy");
+            List<Experiment> experiments = parseExperiments((JSONArray) rolloutObject.get("experiments"));
+
+            rollouts.add(new Rollout(id, policy, experiments));
+        }
+
+        return rollouts;
     }
 }
 
