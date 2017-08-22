@@ -384,6 +384,16 @@ public class Optimizely {
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
                                                        @Nonnull Map<String, String> attributes) {
+        String variableValue = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                LiveVariable.VariableType.BOOLEAN
+        );
+        if (variableValue != null) {
+            return Boolean.parseBoolean(variableValue);
+        }
         return null;
     }
 
@@ -414,6 +424,22 @@ public class Optimizely {
                                                      @Nonnull String variableKey,
                                                      @Nonnull String userId,
                                                      @Nonnull Map<String, String> attributes) {
+        String variableValue = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                LiveVariable.VariableType.DOUBLE
+        );
+        if (variableValue != null) {
+            try {
+                return Double.parseDouble(variableValue);
+            }
+            catch (NumberFormatException exception) {
+                logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                "\" as Double. " + exception);
+            }
+        }
         return null;
     }
 
@@ -444,6 +470,22 @@ public class Optimizely {
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
                                                        @Nonnull Map<String, String> attributes) {
+        String variableValue = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                LiveVariable.VariableType.INTEGER
+        );
+        if (variableValue != null) {
+            try {
+                return Integer.parseInt(variableValue);
+            }
+            catch (NumberFormatException exception) {
+                logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                "\" as Integer. " + exception.toString());
+            }
+        }
         return null;
     }
 
