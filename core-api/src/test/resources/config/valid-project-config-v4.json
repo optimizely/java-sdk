@@ -475,7 +475,7 @@
       "experiments": [
         {
           "id": "1785077004",
-          "key": "rollout_1_everyone_else_rule",
+          "key": "1785077004",
           "status": "Running",
           "layerId": "1058508303",
           "audienceIds": [],
@@ -483,7 +483,7 @@
           "variations": [
             {
               "id": "1566407342",
-              "key": "rollout_1_everyone_else_rule_enabled_variation",
+              "key": "1566407342",
               "variables": [
                 {
                   "id": "2077511132",
