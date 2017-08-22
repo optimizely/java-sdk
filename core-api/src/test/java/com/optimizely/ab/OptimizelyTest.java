@@ -23,6 +23,8 @@ import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.FeatureFlag;
+import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.LiveVariableUsageInstance;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.TrafficAllocation;
@@ -35,6 +37,7 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.EventBuilder;
 import com.optimizely.ab.event.internal.EventBuilderV2;
+import com.optimizely.ab.event.internal.payload.Feature;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.notification.NotificationListener;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -75,6 +78,7 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_BASIC_EXP
 import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_LAUNCHED_EXPERIMENT_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_PAUSED_EXPERIMENT_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_MULTI_VARIATE_FEATURE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_MULTI_VARIATE_FEATURE_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_SINGLE_VARIABLE_STRING_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.MULTIVARIATE_EXPERIMENT_FORCED_VARIATION_USER_ID_GRED;
@@ -83,6 +87,7 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_FIRST_LETTE
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_FIRST_LETTER_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_STRING_VARIABLE_DEFAULT_VALUE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_STRING_VARIABLE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIATION_MULTIVARIATE_EXPERIMENT_GRED;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIATION_MULTIVARIATE_EXPERIMENT_GRED_KEY;
 import static com.optimizely.ab.event.LogEvent.RequestMethod;
 import static com.optimizely.ab.event.internal.EventBuilderV2Test.createExperimentVariationMap;
@@ -94,6 +99,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assume.assumeTrue;
@@ -101,6 +107,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -2152,14 +2159,13 @@ public class OptimizelyTest {
     //======== Feature Accessor Tests ========//
 
     /**
-     * Test that when {@link Optimizely#getFeatureVariableString(String, String, String)} or
-     * {@link Optimizely#getFeatureVariableString(String, String, String, Map)} are called
-     * with a feature key that has no corresponding feature in the datafile, we log a message and return null.
+     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}
+     * returns null and logs a message
+     * when it is called with a feature key that has no corresponding feature in the datafile.
      * @throws ConfigParseException
      */
     @Test
-    public void getFeatureVariableStringReturnsNullWhenFeatureNotFound() throws ConfigParseException {
-        assumeTrue(datafileVersion >= 4);
+    public void getFeatureVariableValueForTypeReturnsNullWhenFeatureNotFound() throws ConfigParseException {
 
         String invalidFeatureKey = "nonexistent feature key";
         String invalidVariableKey = "nonexistent variable key";
@@ -2170,7 +2176,12 @@ public class OptimizelyTest {
                 .withDecisionService(mockDecisionService)
                 .build();
 
-        String value = optimizely.getFeatureVariableString(invalidFeatureKey, invalidVariableKey, genericUserId);
+        String value = optimizely.getFeatureVariableValueForType(
+                invalidFeatureKey,
+                invalidVariableKey,
+                genericUserId,
+                Collections.<String, String>emptyMap(),
+                LiveVariable.VariableType.STRING);
         assertNull(value);
 
         value = optimizely.getFeatureVariableString(invalidFeatureKey, invalidVariableKey, genericUserId, attributes);
@@ -2187,34 +2198,34 @@ public class OptimizelyTest {
     }
 
     /**
-     * Test that {@link Optimizely#getFeatureVariableString(String, String, String)} and
-     * {@link Optimizely#getFeatureVariableString(String, String, String, Map)} return null
-     * when the feature key is valid, but no variable could be found for the variable key in the datafile.
+     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}
+     * returns null and logs a message
+     * when the feature key is valid, but no variable could be found for the variable key in the feature.
      * @throws ConfigParseException
      */
     @Test
-    public void getFeatureVariableStringReturnsNullWhenVariableNotFoundInValidFeature() throws ConfigParseException {
-        assumeTrue(datafileVersion >= 4);
+    public void getFeatureVariableValueForTypeReturnsNullWhenVariableNotFoundInValidFeature() throws ConfigParseException {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
         String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
         String invalidVariableKey = "nonexistent variable key";
-        Map<String, String> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
                 .withConfig(validProjectConfig)
                 .withDecisionService(mockDecisionService)
                 .build();
 
-        String value = optimizely.getFeatureVariableString(validFeatureKey, invalidVariableKey, genericUserId);
-        assertNull(value);
-
-        value = optimizely.getFeatureVariableString(validFeatureKey, invalidVariableKey, genericUserId, attributes);
+        String value = optimizely.getFeatureVariableValueForType(
+                validFeatureKey,
+                invalidVariableKey,
+                genericUserId,
+                Collections.<String, String>emptyMap(),
+                LiveVariable.VariableType.STRING);
         assertNull(value);
 
         logbackVerifier.expectMessage(Level.INFO,
-                "No feature variable was found for key \"" + invalidVariableKey + "\" in feature \"" +
-                validFeatureKey + "\".",
-                times(2));
+                "No feature variable was found for key \"" + invalidVariableKey + "\" in feature flag \"" +
+                validFeatureKey + "\".");
 
         verify(mockDecisionService, never()).getVariation(
                 any(Experiment.class),
@@ -2224,15 +2235,49 @@ public class OptimizelyTest {
     }
 
     /**
-     * Test that {@link Optimizely#getFeatureVariableString(String, String, String)} and
-     * {@link Optimizely#getFeatureVariableString(String, String, String, Map)} return the default value
+     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}
+     * returns null when the variable's type does not match the type with which it was attempted to be accessed.
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableValueReturnsNullWhenVariableTypeDoesNotMatch() throws ConfigParseException {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+        String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .withDecisionService(mockDecisionService)
+                .build();
+
+        String value = optimizely.getFeatureVariableValueForType(
+                validFeatureKey,
+                validVariableKey,
+                genericUserId,
+                Collections.<String, String>emptyMap(),
+                LiveVariable.VariableType.INTEGER
+        );
+        assertNull(value);
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "The feature variable \"" + validVariableKey +
+                        "\" is actually of type \"" + LiveVariable.VariableType.STRING.toString() +
+                        "\" type. You tried to access it as type \"" + LiveVariable.VariableType.INTEGER.toString() +
+                        "\". Please use the appropriate feature variable accessor."
+        );
+    }
+
+    /**
+     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}
+     * returns the String default value of a live variable
      * when the feature is not attached to an experiment.
      * @throws ConfigParseException
      */
     @Test
-    public void getFeatureVariableStringReturnsDefaultValueWhenFeatureIsNotAttached() throws ConfigParseException {
-        assumeTrue(datafileVersion >= 4);
-
+    public void getFeatureVariableValueForTypeReturnsDefaultValueWhenFeatureIsNotAttached() throws ConfigParseException {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
         String validFeatureKey = FEATURE_SINGLE_VARIABLE_STRING_KEY;
         String validVariableKey = VARIABLE_STRING_VARIABLE_KEY;
         String defaultValue = VARIABLE_STRING_VARIABLE_DEFAULT_VALUE;
@@ -2242,59 +2287,708 @@ public class OptimizelyTest {
                 .withConfig(validProjectConfig)
                 .build();
 
-        String valueWithNoMap = optimizely.getFeatureVariableString(validFeatureKey, validVariableKey, genericUserId);
-        assertEquals(defaultValue, valueWithNoMap);
-
-        String valueWithMap = optimizely.getFeatureVariableString(
+        String value = optimizely.getFeatureVariableValueForType(
                 validFeatureKey,
                 validVariableKey,
                 genericUserId,
-                attributes);
-        assertEquals(defaultValue, valueWithMap);
+                attributes,
+                LiveVariable.VariableType.STRING);
+        assertEquals(defaultValue, value);
 
         logbackVerifier.expectMessage(
                 Level.INFO,
-                "The feature flag \"" + validFeatureKey + "\" is not used in any experiments.",
-                times(2)
+                "The feature flag \"" + validFeatureKey + "\" is not used in any experiments."
         );
     }
 
     /**
-     * Test that {@link Optimizely#getFeatureVariableString(String, String, String)} and
-     * {@link Optimizely#getFeatureVariableString(String, String, String, Map)} return the default value
-     * when the feature is attached to a single experiment
-     * and the user is excluded from the experiment due to audience targeting.
+     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}
+     * returns the String default value for a live variable
+     * when the feature is attached to an experiment, but the user is excluded from the experiment.
      * @throws ConfigParseException
      */
     @Test
-    public void getFeatureVariableStringReturnsDefaultValueWhenFeatureIsAttachedToOneExperimentButFailsTargeting() throws ConfigParseException {
-        assumeTrue(datafileVersion >= 4);
+    public void getFeatureVariableValueReturnsDefaultValueWhenFeatureIsAttachedToOneExperimentButFailsTargeting() throws ConfigParseException {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
         String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
         String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
         String expectedValue = VARIABLE_FIRST_LETTER_DEFAULT_VALUE;
         String experimentKeyForFeature = EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY;
-
+      
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
                 .withConfig(validProjectConfig)
                 .build();
 
-        String valueWithNoMap = optimizely.getFeatureVariableString(validFeatureKey, validVariableKey, genericUserId);
-        assertEquals(expectedValue, valueWithNoMap);
-
-        String valueWithImproperAttributes = optimizely.getFeatureVariableString(
+        String valueWithImproperAttributes = optimizely.getFeatureVariableValueForType(
                 validFeatureKey,
                 validVariableKey,
                 genericUserId,
-                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, "Slytherin")
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, "Slytherin"),
+                LiveVariable.VariableType.STRING
         );
         assertEquals(expectedValue, valueWithImproperAttributes);
 
         logbackVerifier.expectMessage(
                 Level.INFO,
                 "User \"" + genericUserId +
-                        "\" does not meet conditions to be in experiment \"" + experimentKeyForFeature + "\".",
-                times(2)
+                        "\" was not bucketed into any variation for feature flag \"" + validFeatureKey +
+                        "\". The default value is being returned."
+        );
+    }
+
+    /**
+     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}
+     * returns the variable value of the variation the user is bucketed into
+     * if the variation is not null and the variable has a usage within the variation.
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableValueReturnsVariationValueWhenUserGetsBucketedToVariation() throws ConfigParseException {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+        String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
+        LiveVariable variable = FEATURE_FLAG_MULTI_VARIATE_FEATURE.getVariableKeyToLiveVariableMap().get(validVariableKey);
+        String expectedValue = VARIATION_MULTIVARIATE_EXPERIMENT_GRED.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId()).getValue();
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .withDecisionService(mockDecisionService)
+                .build();
+
+        doReturn(VARIATION_MULTIVARIATE_EXPERIMENT_GRED).when(mockDecisionService).getVariationForFeature(
+                FEATURE_FLAG_MULTI_VARIATE_FEATURE,
+                genericUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)
+        );
+
+        String value = optimizely.getFeatureVariableValueForType(
+                validFeatureKey,
+                validVariableKey,
+                genericUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE),
+                LiveVariable.VariableType.STRING
+        );
+
+        assertEquals(expectedValue, value);
+    }
+
+    /**
+     * Verify {@link Optimizely#isFeatureEnabled(String, String)} calls into
+     * {@link Optimizely#isFeatureEnabled(String, String, Map)} and they both
+     * return False
+     * when the APIs are called with an feature key that is not in the datafile.
+     * @throws Exception
+     */
+    @Test
+    public void isFeatureEnabledReturnsFalseWhenFeatureFlagKeyIsInvalid() throws Exception {
+
+        String invalidFeatureKey = "nonexistent feature key";
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .withDecisionService(mockDecisionService)
+                .build());
+
+        assertFalse(spyOptimizely.isFeatureEnabled(invalidFeatureKey, genericUserId));
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "No feature flag was found for key \"" + invalidFeatureKey + "\"."
+        );
+        verify(spyOptimizely, times(1)).isFeatureEnabled(
+                eq(invalidFeatureKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+        verify(mockDecisionService, never()).getVariation(
+                any(Experiment.class),
+                anyString(),
+                anyMapOf(String.class, String.class));
+        verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
+    }
+
+    /**
+     * Verify {@link Optimizely#isFeatureEnabled(String, String)} calls into
+     * {@link Optimizely#isFeatureEnabled(String, String, Map)} and they both
+     * return False
+     * when the user is not bucketed into any variation for the feature.
+     * @throws Exception
+     */
+    @Test
+    public void isFeatureEnabledReturnsFalseWhenUserIsNotBucketedIntoAnyVariation() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .withDecisionService(mockDecisionService)
+                .build());
+
+        doReturn(null).when(mockDecisionService).getVariationForFeature(
+                any(FeatureFlag.class),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        );
+
+        assertFalse(spyOptimizely.isFeatureEnabled(validFeatureKey, genericUserId));
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "Feature \"" + validFeatureKey +
+                        "\" is not enabled for user \"" + genericUserId + "\"."
+        );
+        verify(spyOptimizely).isFeatureEnabled(
+                eq(validFeatureKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+        verify(mockDecisionService).getVariationForFeature(
+                eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+        verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
+    }
+
+    /**
+     * Verify {@link Optimizely#isFeatureEnabled(String, String)} calls into
+     * {@link Optimizely#isFeatureEnabled(String, String, Map)} and they both
+     * return True
+     * when the user is bucketed into a variation for the feature.
+     * An impression event should not be dispatched since the user was not bucketed into an Experiment.
+     * @throws Exception
+     */
+    @Test
+    public void isFeatureEnabledReturnsTrueButDoesNotSendWhenUserIsBucketedIntoVariationWithoutExperiment() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .withDecisionService(mockDecisionService)
+                .build());
+
+        doReturn(new Variation("variationId", "variationKey")).when(mockDecisionService).getVariationForFeature(
+                eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+
+        assertTrue(spyOptimizely.isFeatureEnabled(validFeatureKey, genericUserId));
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "The user \"" + genericUserId +
+                        "\" is not being experimented on in feature \"" + validFeatureKey + "\"."
+        );
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "Feature \"" + validFeatureKey +
+                        "\" is enabled for user \"" + genericUserId + "\"."
+        );
+        verify(spyOptimizely).isFeatureEnabled(
+                eq(validFeatureKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+        verify(mockDecisionService).getVariationForFeature(
+                eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+        verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
+    }
+
+    /** Integration Test
+     * Verify {@link Optimizely#isFeatureEnabled(String, String, Map)}
+     * returns True
+     * when the user is bucketed into a variation for the feature.
+     * The user is also bucketed into an experiment, so we verify that an event is dispatched.
+     * @throws Exception
+     */
+    @Test
+    public void isFeatureEnabledReturnsTrueAndDispatchesEventWhenUserIsBucketedIntoAnExperiment() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build();
+
+        assertTrue(optimizely.isFeatureEnabled(
+                validFeatureKey,
+                genericUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)
+        ));
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "Feature \"" + validFeatureKey +
+                        "\" is enabled for user \"" + genericUserId + "\"."
+        );
+        verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
+    }
+
+    /**
+     * Verify {@link Optimizely#getFeatureVariableString(String, String, String)}
+     * calls through to {@link Optimizely#getFeatureVariableString(String, String, String, Map<String, String>)}
+     * and returns null
+     * when {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}
+     * returns null
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableStringReturnsNullFromInternal() throws ConfigParseException {
+        String featureKey = "featureKey";
+        String variableKey = "variableKey";
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+        doReturn(null).when(spyOptimizely).getFeatureVariableValueForType(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap()),
+                eq(LiveVariable.VariableType.STRING)
+        );
+
+        assertNull(spyOptimizely.getFeatureVariableString(
+                featureKey,
+                variableKey,
+                genericUserId
+        ));
+
+        verify(spyOptimizely).getFeatureVariableString(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+    }
+
+    /**
+     * Verify {@link Optimizely#getFeatureVariableString(String, String, String)}
+     * calls through to {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
+     * and both return the value returned from
+     * {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}.
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableStringReturnsWhatInternalReturns() throws ConfigParseException {
+        String featureKey = "featureKey";
+        String variableKey = "variableKey";
+        String valueNoAttributes = "valueNoAttributes";
+        String valueWithAttributes = "valueWithAttributes";
+        Map<String, String> attributes = Collections.singletonMap("key", "value");
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+
+        doReturn(valueNoAttributes).when(spyOptimizely).getFeatureVariableValueForType(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap()),
+                eq(LiveVariable.VariableType.STRING)
+        );
+
+        doReturn(valueWithAttributes).when(spyOptimizely).getFeatureVariableValueForType(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(attributes),
+                eq(LiveVariable.VariableType.STRING)
+        );
+
+        assertEquals(valueNoAttributes, spyOptimizely.getFeatureVariableString(
+                featureKey,
+                variableKey,
+                genericUserId
+        ));
+
+        verify(spyOptimizely).getFeatureVariableString(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+
+        assertEquals(valueWithAttributes, spyOptimizely.getFeatureVariableString(
+                featureKey,
+                variableKey,
+                genericUserId,
+                attributes
+        ));
+    }
+
+    /**
+     * Verify {@link Optimizely#getFeatureVariableBoolean(String, String, String)}
+     * calls through to {@link Optimizely#getFeatureVariableBoolean(String, String, String, Map<String, String>)}
+     * and returns null
+     * when {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}
+     * returns null
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableBooleanReturnsNullFromInternal() throws ConfigParseException {
+        String featureKey = "featureKey";
+        String variableKey = "variableKey";
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+        doReturn(null).when(spyOptimizely).getFeatureVariableValueForType(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap()),
+                eq(LiveVariable.VariableType.BOOLEAN)
+        );
+
+        assertNull(spyOptimizely.getFeatureVariableBoolean(
+                featureKey,
+                variableKey,
+                genericUserId
+        ));
+
+        verify(spyOptimizely).getFeatureVariableBoolean(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+    }
+
+    /**
+     * Verify {@link Optimizely#getFeatureVariableBoolean(String, String, String)}
+     * calls through to {@link Optimizely#getFeatureVariableBoolean(String, String, String, Map)}
+     * and both return a Boolean representation of the value returned from
+     * {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}.
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableBooleanReturnsWhatInternalReturns() throws ConfigParseException {
+        String featureKey = "featureKey";
+        String variableKey = "variableKey";
+        Boolean valueNoAttributes = false;
+        Boolean valueWithAttributes = true;
+        Map<String, String> attributes = Collections.singletonMap("key", "value");
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+
+        doReturn(valueNoAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap()),
+                eq(LiveVariable.VariableType.BOOLEAN)
+        );
+
+        doReturn(valueWithAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(attributes),
+                eq(LiveVariable.VariableType.BOOLEAN)
+        );
+
+        assertEquals(valueNoAttributes, spyOptimizely.getFeatureVariableBoolean(
+                featureKey,
+                variableKey,
+                genericUserId
+        ));
+
+        verify(spyOptimizely).getFeatureVariableBoolean(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+
+        assertEquals(valueWithAttributes, spyOptimizely.getFeatureVariableBoolean(
+                featureKey,
+                variableKey,
+                genericUserId,
+                attributes
+        ));
+    }
+
+    /**
+     * Verify {@link Optimizely#getFeatureVariableDouble(String, String, String)}
+     * calls through to {@link Optimizely#getFeatureVariableDouble(String, String, String, Map<String, String>)}
+     * and returns null
+     * when {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}
+     * returns null
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableDoubleReturnsNullFromInternal() throws ConfigParseException {
+        String featureKey = "featureKey";
+        String variableKey = "variableKey";
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+        doReturn(null).when(spyOptimizely).getFeatureVariableValueForType(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap()),
+                eq(LiveVariable.VariableType.DOUBLE)
+        );
+
+        assertNull(spyOptimizely.getFeatureVariableDouble(
+                featureKey,
+                variableKey,
+                genericUserId
+        ));
+
+        verify(spyOptimizely).getFeatureVariableDouble(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+    }
+
+    /**
+     * Verify {@link Optimizely#getFeatureVariableDouble(String, String, String)}
+     * calls through to {@link Optimizely#getFeatureVariableDouble(String, String, String, Map)}
+     * and both return the parsed Double from the value returned from
+     * {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}.
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableDoubleReturnsWhatInternalReturns() throws ConfigParseException {
+        String featureKey = "featureKey";
+        String variableKey = "variableKey";
+        Double valueNoAttributes = 0.1;
+        Double valueWithAttributes = 0.2;
+        Map<String, String> attributes = Collections.singletonMap("key", "value");
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+
+        doReturn(valueNoAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap()),
+                eq(LiveVariable.VariableType.DOUBLE)
+        );
+
+        doReturn(valueWithAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(attributes),
+                eq(LiveVariable.VariableType.DOUBLE)
+        );
+
+        assertEquals(valueNoAttributes, spyOptimizely.getFeatureVariableDouble(
+                featureKey,
+                variableKey,
+                genericUserId
+        ));
+
+        verify(spyOptimizely).getFeatureVariableDouble(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+
+        assertEquals(valueWithAttributes, spyOptimizely.getFeatureVariableDouble(
+                featureKey,
+                variableKey,
+                genericUserId,
+                attributes
+        ));
+    }
+
+    /**
+     * Verify {@link Optimizely#getFeatureVariableInteger(String, String, String)}
+     * calls through to {@link Optimizely#getFeatureVariableInteger(String, String, String, Map<String, String>)}
+     * and returns null
+     * when {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}
+     * returns null
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableIntegerReturnsNullFromInternal() throws ConfigParseException {
+        String featureKey = "featureKey";
+        String variableKey = "variableKey";
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+        doReturn(null).when(spyOptimizely).getFeatureVariableValueForType(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap()),
+                eq(LiveVariable.VariableType.INTEGER)
+        );
+
+        assertNull(spyOptimizely.getFeatureVariableInteger(
+                featureKey,
+                variableKey,
+                genericUserId
+        ));
+
+        verify(spyOptimizely).getFeatureVariableInteger(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+    }
+
+    /**
+     * Verify that {@link Optimizely#getFeatureVariableDouble(String, String, String)}
+     * and {@link Optimizely#getFeatureVariableDouble(String, String, String, Map)}
+     * do not throw errors when they are unable to parse the value into an Double.
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableDoubleCatchesExceptionFromParsing() throws ConfigParseException {
+        String featureKey = "featureKey";
+        String variableKey = "variableKey";
+        String unParsableValue = "not_a_double";
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+        doReturn(unParsableValue).when(spyOptimizely).getFeatureVariableValueForType(
+                anyString(),
+                anyString(),
+                anyString(),
+                anyMapOf(String.class, String.class),
+                eq(LiveVariable.VariableType.DOUBLE)
+        );
+
+        assertNull(spyOptimizely.getFeatureVariableDouble(
+                featureKey,
+                variableKey,
+                genericUserId
+        ));
+
+        logbackVerifier.expectMessage(
+                Level.ERROR,
+                "NumberFormatException while trying to parse \"" + unParsableValue +
+                        "\" as Double. "
+        );
+    }
+
+    /**
+     * Verify {@link Optimizely#getFeatureVariableInteger(String, String, String)}
+     * calls through to {@link Optimizely#getFeatureVariableInteger(String, String, String, Map)}
+     * and both return the parsed Integer value from the value returned from
+     * {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}.
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableIntegerReturnsWhatInternalReturns() throws ConfigParseException {
+        String featureKey = "featureKey";
+        String variableKey = "variableKey";
+        Integer valueNoAttributes = 1;
+        Integer valueWithAttributes = 2;
+        Map<String, String> attributes = Collections.singletonMap("key", "value");
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+
+        doReturn(valueNoAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap()),
+                eq(LiveVariable.VariableType.INTEGER)
+        );
+
+        doReturn(valueWithAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(attributes),
+                eq(LiveVariable.VariableType.INTEGER)
+        );
+
+        assertEquals(valueNoAttributes, spyOptimizely.getFeatureVariableInteger(
+                featureKey,
+                variableKey,
+                genericUserId
+        ));
+
+        verify(spyOptimizely).getFeatureVariableInteger(
+                eq(featureKey),
+                eq(variableKey),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+
+        assertEquals(valueWithAttributes, spyOptimizely.getFeatureVariableInteger(
+                featureKey,
+                variableKey,
+                genericUserId,
+                attributes
+        ));
+    }
+
+    /**
+     * Verify that {@link Optimizely#getFeatureVariableInteger(String, String, String)}
+     * and {@link Optimizely#getFeatureVariableInteger(String, String, String, Map)}
+     * do not throw errors when they are unable to parse the value into an Integer.
+     * @throws ConfigParseException
+     */
+    @Test
+    public void getFeatureVariableIntegerCatchesExceptionFromParsing() throws ConfigParseException {
+        String featureKey = "featureKey";
+        String variableKey = "variableKey";
+        String unParsableValue = "not_an_integer";
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+        doReturn(unParsableValue).when(spyOptimizely).getFeatureVariableValueForType(
+                anyString(),
+                anyString(),
+                anyString(),
+                anyMapOf(String.class, String.class),
+                eq(LiveVariable.VariableType.INTEGER)
+        );
+
+        assertNull(spyOptimizely.getFeatureVariableInteger(
+                featureKey,
+                variableKey,
+                genericUserId
+        ));
+
+        logbackVerifier.expectMessage(
+                Level.ERROR,
+                "NumberFormatException while trying to parse \"" + unParsableValue +
+                        "\" as Integer. "
         );
     }
 

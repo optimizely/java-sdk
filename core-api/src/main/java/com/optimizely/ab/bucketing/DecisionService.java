@@ -154,8 +154,6 @@ public class DecisionService {
                     return variation;
                 }
             }
-            logger.info("The user \"" + userId +
-                    "was did not get bucketed into any variations for feature + \"" + featureFlag.getKey() + "\".");
         }
         else {
             logger.info("The feature flag \"" + featureFlag.getKey() + "\" is not used in any experiments.");

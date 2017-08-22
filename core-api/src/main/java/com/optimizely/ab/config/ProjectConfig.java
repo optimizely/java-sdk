@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,6 +66,7 @@ public class ProjectConfig {
     private final List<FeatureFlag> featureFlags;
     private final List<Group> groups;
     private final List<LiveVariable> liveVariables;
+    private final List<Rollout> rollouts;
 
     // key to entity mappings
     private final Map<String, Attribute> attributeKeyMapping;
@@ -81,7 +83,7 @@ public class ProjectConfig {
     // other mappings
     private final Map<String, List<Experiment>> liveVariableIdToExperimentsMapping;
     private final Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping;
-    private final Map<String, Experiment> variationIdExperimentMap;
+    private final Map<String, Experiment> variationIdToExperimentMapping;
 
     // v2 constructor
     public ProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
@@ -107,7 +109,8 @@ public class ProjectConfig {
                 experiments,
                 null,
                 groups,
-                liveVariables
+                liveVariables,
+                null
         );
     }
 
@@ -123,7 +126,8 @@ public class ProjectConfig {
                          List<Experiment> experiments,
                          List<FeatureFlag> featureFlags,
                          List<Group> groups,
-                         List<LiveVariable> liveVariables) {
+                         List<LiveVariable> liveVariables,
+                         List<Rollout> rollouts) {
 
         this.accountId = accountId;
         this.projectId = projectId;
@@ -140,6 +144,12 @@ public class ProjectConfig {
         else {
             this.featureFlags = Collections.unmodifiableList(featureFlags);
         }
+        if (rollouts == null) {
+            this.rollouts = Collections.emptyList();
+        }
+        else {
+            this.rollouts = Collections.unmodifiableList(rollouts);
+        }
 
         this.groups = Collections.unmodifiableList(groups);
 
@@ -148,13 +158,13 @@ public class ProjectConfig {
         allExperiments.addAll(aggregateGroupExperiments(groups));
         this.experiments = Collections.unmodifiableList(allExperiments);
 
-        Map<String, Experiment> variationExperimentMap = new HashMap<String, Experiment>();
+        Map<String, Experiment> variationIdToExperimentMap = new HashMap<String, Experiment>();
         for (Experiment experiment : this.experiments) {
-            for (Variation variation : experiment.getVariations()) {
-                variationExperimentMap.put(variation.getId(), experiment);
+            for (Variation variation: experiment.getVariations()) {
+                variationIdToExperimentMap.put(variation.getId(), experiment);
             }
         }
-        this.variationIdExperimentMap = Collections.unmodifiableMap(variationExperimentMap);
+        this.variationIdToExperimentMapping = Collections.unmodifiableMap(variationIdToExperimentMap);
 
         // generate the name mappers
         this.attributeKeyMapping = ProjectConfigUtils.generateNameMapping(attributes);
@@ -182,8 +192,8 @@ public class ProjectConfig {
         }
     }
 
-    public Experiment getExperimentForVariationId(String variationId) {
-        return this.variationIdExperimentMap.get(variationId);
+    public @Nullable Experiment getExperimentForVariationId(String variationId) {
+        return this.variationIdToExperimentMapping.get(variationId);
     }
 
     private List<Experiment> aggregateGroupExperiments(List<Group> groups) {
@@ -240,6 +250,10 @@ public class ProjectConfig {
 
     public List<FeatureFlag> getFeatureFlags() {
         return featureFlags;
+    }
+
+    public List<Rollout> getRollouts() {
+        return rollouts;
     }
 
     public List<Attribute> getAttributes() {
@@ -311,22 +325,26 @@ public class ProjectConfig {
                 ", projectId='" + projectId + '\'' +
                 ", revision='" + revision + '\'' +
                 ", version='" + version + '\'' +
-                ", anonymizeIP='" + anonymizeIP + '\'' +
-                ", groups=" + groups +
-                ", experiments=" + experiments +
+                ", anonymizeIP=" + anonymizeIP +
                 ", attributes=" + attributes +
-                ", events=" + events +
                 ", audiences=" + audiences +
+                ", events=" + events +
+                ", experiments=" + experiments +
+                ", featureFlags=" + featureFlags +
+                ", groups=" + groups +
                 ", liveVariables=" + liveVariables +
-                ", experimentKeyMapping=" + experimentKeyMapping +
+                ", rollouts=" + rollouts +
                 ", attributeKeyMapping=" + attributeKeyMapping +
-                ", liveVariableKeyMapping=" + liveVariableKeyMapping +
                 ", eventNameMapping=" + eventNameMapping +
+                ", experimentKeyMapping=" + experimentKeyMapping +
+                ", featureKeyMapping=" + featureKeyMapping +
+                ", liveVariableKeyMapping=" + liveVariableKeyMapping +
                 ", audienceIdMapping=" + audienceIdMapping +
                 ", experimentIdMapping=" + experimentIdMapping +
                 ", groupIdMapping=" + groupIdMapping +
                 ", liveVariableIdToExperimentsMapping=" + liveVariableIdToExperimentsMapping +
                 ", variationToLiveVariableUsageInstanceMapping=" + variationToLiveVariableUsageInstanceMapping +
+                ", variationIdToExperimentMapping=" + variationIdToExperimentMapping +
                 '}';
     }
 }
