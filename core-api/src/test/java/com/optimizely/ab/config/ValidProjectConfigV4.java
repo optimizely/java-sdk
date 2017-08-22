@@ -669,13 +669,11 @@ public class ValidProjectConfigV4 {
 
     private static final String     ROLLOUT_1_ID = "1058508303";
     private static final String     ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_ID = "1785077004";
-    private static final String     ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_KEY = "rollout_1_everyone_else_rule";
     private static final String     ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID = "1566407342";
-    private static final String     ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_KEY = "rollout_1_everyone_else_rule_enabled_variation";
     private static final String     ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_STRING_VALUE = "lumos";
     private static final Variation  ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION = new Variation(
             ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
-            ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_KEY,
+            ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
             Collections.singletonList(
                     new LiveVariableUsageInstance(
                             VARIABLE_STRING_VARIABLE_ID,
@@ -685,7 +683,7 @@ public class ValidProjectConfigV4 {
     );
     private static final Experiment ROLLOUT_1_EVERYONE_ELSE_RULE = new Experiment(
             ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_ID,
-            ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_KEY,
+            ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_ID,
             Experiment.ExperimentStatus.RUNNING.toString(),
             ROLLOUT_1_ID,
             Collections.<String>emptyList(),
