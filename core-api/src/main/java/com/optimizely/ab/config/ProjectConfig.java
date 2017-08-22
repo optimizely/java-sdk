@@ -361,7 +361,7 @@ public class ProjectConfig {
 
         // if the user id is invalid, return false.
         if (userId == null || userId.trim().isEmpty()) {
-            logger.error("Invalid userId: either empty or null");
+            logger.error("User ID is invalid");
             return false;
         }
 
@@ -378,7 +378,7 @@ public class ProjectConfig {
             if (removedVariationId != null) {
                 Variation removedVariation = experiment.getVariationIdToVariationMap().get(removedVariationId);
                 if (removedVariation != null) {
-                    logger.debug("Removed forced variation {}", removedVariation.getKey());
+                    logger.debug("Variation mapped to experiment \"%s\" has been removed for user \"%s\"", experiment.getKey(), userId);
                 }
                 else {
                     logger.debug("Removed forced variation that did not exist in experiment");
@@ -391,6 +391,8 @@ public class ProjectConfig {
         }
         else {
             String previous = experimentToVariation.put(experiment.getId(), variation.getId());
+            logger.debug("Set variation \"%s\" for experiment \"%s\" and user \"%s\" in the forced variation map.",
+                    variation.getKey(), experiment.getKey(), userId);
             if (previous != null) {
                 Variation previousVariation = experiment.getVariationIdToVariationMap().get(previous);
                 if (previousVariation != null) {
@@ -417,12 +419,12 @@ public class ProjectConfig {
 
         // if the user id is invalid, return false.
         if (userId == null || userId.trim().isEmpty()) {
-            logger.error("Invalid userId: either null or empty");
+            logger.error("User ID is invalid");
             return null;
         }
 
         if (experimentKey == null || experimentKey.isEmpty()) {
-            logger.error("Invalid experiment key");
+            logger.error("experiment key is invalid");
             return null;
         }
 
