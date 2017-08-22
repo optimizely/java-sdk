@@ -472,7 +472,6 @@
   "rollouts": [
     {
       "id": "1058508303",
-      "policy": "rollout",
       "experiments": [
         {
           "id": "1785077004",

@@ -702,7 +702,6 @@ public class ValidProjectConfigV4 {
     );
     private static final Rollout    ROLLOUT_1 = new Rollout(
             ROLLOUT_1_ID,
-            Layer.LayerPolicy.ROLLOUT.toString(),
             Collections.singletonList(
                     ROLLOUT_1_EVERYONE_ELSE_RULE
             )

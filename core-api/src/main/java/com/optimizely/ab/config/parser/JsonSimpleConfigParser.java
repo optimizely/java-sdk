@@ -359,10 +359,9 @@ final class JsonSimpleConfigParser implements ConfigParser {
         for (Object obj : rolloutsJson) {
             JSONObject rolloutObject = (JSONObject) obj;
             String id = (String) rolloutObject.get("id");
-            String policy = (String) rolloutObject.get("policy");
             List<Experiment> experiments = parseExperiments((JSONArray) rolloutObject.get("experiments"));
 
-            rollouts.add(new Rollout(id, policy, experiments));
+            rollouts.add(new Rollout(id, experiments));
         }
 
         return rollouts;

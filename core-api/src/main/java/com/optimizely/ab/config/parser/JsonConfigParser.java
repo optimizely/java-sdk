@@ -355,10 +355,9 @@ final class JsonConfigParser implements ConfigParser {
         for (Object obj : rolloutsJson) {
             JSONObject rolloutObject = (JSONObject) obj;
             String id = rolloutObject.getString("id");
-            String policy = rolloutObject.getString("policy");
             List<Experiment> experiments = parseExperiments(rolloutObject.getJSONArray("experiments"));
 
-            rollouts.add(new Rollout(id, policy, experiments));
+            rollouts.add(new Rollout(id, experiments));
         }
 
         return rollouts;

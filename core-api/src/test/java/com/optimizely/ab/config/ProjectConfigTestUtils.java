@@ -630,7 +630,6 @@ public final class ProjectConfigTestUtils {
                 Rollout expectedRollout = expected.get(i);
 
                 assertEquals(expectedRollout.getId(), actualRollout.getId());
-                assertEquals(expectedRollout.getPolicy(), actualRollout.getPolicy());
                 verifyExperiments(actualRollout.getExperiments(), expectedRollout.getExperiments());
             }
         }
