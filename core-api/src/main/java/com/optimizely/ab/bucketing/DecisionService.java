@@ -20,7 +20,9 @@ import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ExperimentUtils;
 import org.slf4j.Logger;
@@ -158,6 +160,42 @@ public class DecisionService {
                 Variation variation = this.getVariation(experiment, userId, filteredAttributes);
                 if (variation != null) {
                     return variation;
+                }
+            }
+        }
+        else {
+            logger.info("The feature flag \"" + featureFlag.getKey() + "\" is not used in any experiments.");
+        }
+
+        // use rollout to get variation for feature
+        if (!featureFlag.getRolloutId().isEmpty()) {
+            Rollout rollout = projectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
+
+            for (Experiment experiment : rollout.getExperiments()) {
+                Audience audience = projectConfig.getAudienceIdMapping().get(experiment.getAudienceIds().get(0));
+                String audienceName = "Everyone Else";
+                if (audience != null) {
+                    audienceName = audience.getName();
+                }
+                if (!experiment.isActive()) {
+                    logger.info("Did not attempt to bucket user into rollout rule for audience \"" +
+                            audienceName + "\" since the rule is not active.");
+                }
+                else if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
+                    logger.info("Attempting to bucket user \"" + userId +
+                            "\" into rollout rule for audience \"" + audienceName +
+                            "\".");
+                    Variation variation = bucketer.bucket(experiment, userId);
+                    if (variation == null) {
+                        logger.info("User \"" + userId +
+                                "\" was excluded due to traffic allocation.");
+                    }
+                    return variation;
+                }
+                else {
+                    logger.info("User \"" + userId +
+                            "\" did not meet the conditions to be in rollout rule for audience \"" + audienceName +
+                            "\".");
                 }
             }
         }
