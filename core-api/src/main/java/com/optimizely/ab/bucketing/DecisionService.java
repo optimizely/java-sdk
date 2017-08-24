@@ -173,17 +173,13 @@ public class DecisionService {
 
             for (Experiment experiment : rollout.getExperiments()) {
                 Audience audience = projectConfig.getAudienceIdMapping().get(experiment.getAudienceIds().get(0));
-                String audienceName = "Everyone Else";
-                if (audience != null) {
-                    audienceName = audience.getName();
-                }
                 if (!experiment.isActive()) {
                     logger.info("Did not attempt to bucket user into rollout rule for audience \"" +
-                            audienceName + "\" since the rule is not active.");
+                            audience.getName() + "\" since the rule is not active.");
                 }
                 else if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
                     logger.info("Attempting to bucket user \"" + userId +
-                            "\" into rollout rule for audience \"" + audienceName +
+                            "\" into rollout rule for audience \"" + audience.getName() +
                             "\".");
                     Variation variation = bucketer.bucket(experiment, userId);
                     if (variation == null) {
@@ -194,7 +190,7 @@ public class DecisionService {
                 }
                 else {
                     logger.info("User \"" + userId +
-                            "\" did not meet the conditions to be in rollout rule for audience \"" + audienceName +
+                            "\" did not meet the conditions to be in rollout rule for audience \"" + audience.getName() +
                             "\".");
                 }
             }
