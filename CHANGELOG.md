@@ -3,7 +3,7 @@
 
 August 29, 2017
 
-This release adds numerics and forced bucketing (in code as opposed to whitelisting via project file).
+This release adds support for numeric metrics and forced bucketing (in code as opposed to whitelisting via project file).
 
 ### New Features
 
