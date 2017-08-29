@@ -184,45 +184,48 @@ public class DecisionService {
                                                         @Nonnull String userId,
                                                         @Nonnull Map<String, String> filteredAttributes) {
         // use rollout to get variation for feature
-        if (!featureFlag.getRolloutId().isEmpty()) {
-            Rollout rollout = projectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
-            int rolloutRulesLength = rollout.getExperiments().size();
-            Variation variation;
-            // for all rules before the everyone else rule
-            for (int i = 0; i < rolloutRulesLength - 1; i++) {
-                Experiment rolloutRule= rollout.getExperiments().get(i);
-                Audience audience = projectConfig.getAudienceIdMapping().get(rolloutRule.getAudienceIds().get(0));
-                if (!rolloutRule.isActive()) {
-                    logger.info("Did not attempt to bucket user into rollout rule for audience \"" +
-                            audience.getName() + "\" since the rule is not active.");
-                }
-                else if (ExperimentUtils.isUserInExperiment(projectConfig, rolloutRule, filteredAttributes)) {
-                    logger.info("Attempting to bucket user \"" + userId +
-                            "\" into rollout rule for audience \"" + audience.getName() +
-                            "\".");
-                    variation = bucketer.bucket(rolloutRule, userId);
-                    if (variation == null) {
-                        logger.info("User \"" + userId +
-                                "\" was excluded due to traffic allocation.");
-                        break;
-                    }
-                    return variation;
-                }
-                else {
-                    logger.info("User \"" + userId +
-                            "\" did not meet the conditions to be in rollout rule for audience \"" + audience.getName() +
-                            "\".");
-                }
+        if (featureFlag.getRolloutId().isEmpty()) {
+            logger.debug("The feature flag \"" + featureFlag.getKey() + "\" is not used in a rollout.");
+            return null;
+        }
+        Rollout rollout = projectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
+        int rolloutRulesLength = rollout.getExperiments().size();
+        Variation variation;
+        // for all rules before the everyone else rule
+        for (int i = 0; i < rolloutRulesLength - 1; i++) {
+            Experiment rolloutRule= rollout.getExperiments().get(i);
+            Audience audience = projectConfig.getAudienceIdMapping().get(rolloutRule.getAudienceIds().get(0));
+            if (!rolloutRule.isActive()) {
+                logger.debug("Did not attempt to bucket user into rollout rule for audience \"" +
+                        audience.getName() + "\" since the rule is not active.");
             }
-            // get last rule which is the everyone else rule
-            Experiment everyoneElseRule = rollout.getExperiments().get(rolloutRulesLength - 1);
-            variation = bucketer.bucket(everyoneElseRule, userId); // ignore audience
-            return variation;
+            else if (ExperimentUtils.isUserInExperiment(projectConfig, rolloutRule, filteredAttributes)) {
+                logger.debug("Attempting to bucket user \"" + userId +
+                        "\" into rollout rule for audience \"" + audience.getName() +
+                        "\".");
+                variation = bucketer.bucket(rolloutRule, userId);
+                if (variation == null) {
+                    logger.debug("User \"" + userId +
+                            "\" was excluded due to traffic allocation.");
+                    break;
+                }
+                return variation;
+            }
+            else {
+                logger.debug("User \"" + userId +
+                        "\" did not meet the conditions to be in rollout rule for audience \"" + audience.getName() +
+                        "\".");
+            }
         }
-        else {
-            logger.info("The feature flag \"" + featureFlag.getKey() + "\" is not used in a rollout.");
+        // get last rule which is the everyone else rule
+        Experiment everyoneElseRule = rollout.getExperiments().get(rolloutRulesLength - 1);
+        variation = bucketer.bucket(everyoneElseRule, userId); // ignore audience
+        if (variation == null) {
+            logger.debug("User \"" + userId +
+                    "\" was excluded from the \"Everyone Else\" rule for feature flag \"" + featureFlag.getKey() +
+                    "\".");
         }
-        return null;
+        return variation;
     }
 
     /**
