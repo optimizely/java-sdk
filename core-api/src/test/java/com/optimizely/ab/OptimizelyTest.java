@@ -81,9 +81,12 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_MULTIVARI
 import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_PAUSED_EXPERIMENT_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_MULTI_VARIATE_FEATURE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_MULTI_VARIATE_FEATURE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_SINGLE_VARIABLE_STRING_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.MULTIVARIATE_EXPERIMENT_FORCED_VARIATION_USER_ID_GRED;
 import static com.optimizely.ab.config.ValidProjectConfigV4.PAUSED_EXPERIMENT_FORCED_VARIATION_USER_ID_CONTROL;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_BOOLEAN_VARIABLE_DEFAULT_VALUE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_BOOLEAN_VARIABLE_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_FIRST_LETTER_DEFAULT_VALUE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_FIRST_LETTER_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_STRING_VARIABLE_DEFAULT_VALUE;
@@ -2504,16 +2507,16 @@ public class OptimizelyTest {
     /**
      * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}
      * returns the String default value of a live variable
-     * when the feature is not attached to an experiment.
+     * when the feature is not attached to an experiment or a rollout.
      * @throws ConfigParseException
      */
     @Test
-    public void getFeatureVariableValueForTypeReturnsDefaultValueWhenFeatureIsNotAttached() throws ConfigParseException {
+    public void getFeatureVariableValueForTypeReturnsDefaultValueWhenFeatureIsNotAttachedToExperimentOrRollout() throws ConfigParseException {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
-        String validFeatureKey = FEATURE_SINGLE_VARIABLE_STRING_KEY;
-        String validVariableKey = VARIABLE_STRING_VARIABLE_KEY;
-        String defaultValue = VARIABLE_STRING_VARIABLE_DEFAULT_VALUE;
+        String validFeatureKey = FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY;
+        String validVariableKey = VARIABLE_BOOLEAN_VARIABLE_KEY;
+        String defaultValue = VARIABLE_BOOLEAN_VARIABLE_DEFAULT_VALUE;
         Map<String, String> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
@@ -2525,19 +2528,29 @@ public class OptimizelyTest {
                 validVariableKey,
                 genericUserId,
                 attributes,
-                LiveVariable.VariableType.STRING);
+                LiveVariable.VariableType.BOOLEAN);
         assertEquals(defaultValue, value);
 
         logbackVerifier.expectMessage(
                 Level.INFO,
                 "The feature flag \"" + validFeatureKey + "\" is not used in any experiments."
         );
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "The feature flag \"" + validFeatureKey + "\" is not used in a rollout."
+        );
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "User \"" + genericUserId + "\" was not bucketed into any variation for feature flag \"" +
+                        validFeatureKey + "\". The default value for \"" +
+                        validVariableKey + "\" is being returned."
+        );
     }
 
     /**
      * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}
      * returns the String default value for a live variable
-     * when the feature is attached to an experiment, but the user is excluded from the experiment.
+     * when the feature is attached to an experiment and no rollout, but the user is excluded from the experiment.
      * @throws ConfigParseException
      */
     @Test
@@ -2547,6 +2560,8 @@ public class OptimizelyTest {
         String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
         String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
         String expectedValue = VARIABLE_FIRST_LETTER_DEFAULT_VALUE;
+        FeatureFlag featureFlag = FEATURE_FLAG_MULTI_VARIATE_FEATURE;
+        Experiment experiment = validProjectConfig.getExperimentIdMapping().get(featureFlag.getExperimentIds().get(0));
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
                 .withConfig(validProjectConfig)
@@ -2563,9 +2578,18 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(
                 Level.INFO,
+                "User \"" + genericUserId + "\" does not meet conditions to be in experiment \"" +
+                        experiment.getKey() + "\"."
+        );
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "The feature flag \"" + validFeatureKey + "\" is not used in a rollout."
+        );
+        logbackVerifier.expectMessage(
+                Level.INFO,
                 "User \"" + genericUserId +
                         "\" was not bucketed into any variation for feature flag \"" + validFeatureKey +
-                        "\". The default value is being returned."
+                        "\". The default value for \"" + validVariableKey + "\" is being returned."
         );
     }
 

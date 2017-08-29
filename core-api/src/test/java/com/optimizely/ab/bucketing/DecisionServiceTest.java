@@ -283,7 +283,7 @@ public class DecisionServiceTest {
 
     /**
      * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map)}
-     * returns null when the {@link FeatureFlag} is not used in an experiments.
+     * returns null when the {@link FeatureFlag} is not used in an experiments or rollouts.
      */
     @Test
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
@@ -292,6 +292,7 @@ public class DecisionServiceTest {
         when(emptyFeatureFlag.getExperimentIds()).thenReturn(Collections.<String>emptyList());
         String featureKey = "testFeatureFlagKey";
         when(emptyFeatureFlag.getKey()).thenReturn(featureKey);
+        when(emptyFeatureFlag.getRolloutId()).thenReturn("");
 
         DecisionService decisionService = new DecisionService(
                 mock(Bucketer.class),
@@ -300,7 +301,9 @@ public class DecisionServiceTest {
                 null);
 
         logbackVerifier.expectMessage(Level.INFO,
-                "The feature flag \"" + featureKey + "\" is not used in any experiments");
+                "The feature flag \"" + featureKey + "\" is not used in any experiments.");
+        logbackVerifier.expectMessage(Level.INFO,
+                "The feature flag \"" + featureKey + "\" is not used in a rollout.");
 
         assertNull(decisionService.getVariationForFeature(
                 emptyFeatureFlag,
@@ -308,16 +311,17 @@ public class DecisionServiceTest {
                 Collections.<String, String>emptyMap()));
 
         verify(emptyFeatureFlag, times(1)).getExperimentIds();
-        verify(emptyFeatureFlag, times(1)).getKey();
+        verify(emptyFeatureFlag, times(1)).getRolloutId();
+        verify(emptyFeatureFlag, times(2)).getKey();
     }
 
     /**
      * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map)}
-     * returns null when the user is not bucketed into any experiments for the {@link FeatureFlag}.
+     * returns null when the user is not bucketed into any experiments or rollouts for the {@link FeatureFlag}.
      */
     @Test
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
-    public void getVariationForFeatureReturnsNullWhenItGetsNoVariationsForExperiments() {
+    public void getVariationForFeatureReturnsNullWhenItGetsNoVariationsForExperimentsAndRollouts() {
         FeatureFlag spyFeatureFlag = spy(ValidProjectConfigV4.FEATURE_FLAG_MULTI_VARIATE_FEATURE);
 
         DecisionService spyDecisionService = spy(new DecisionService(
@@ -327,12 +331,20 @@ public class DecisionServiceTest {
                 null)
         );
 
+        // do not bucket to any experiments
         doReturn(null).when(spyDecisionService).getVariation(
                 any(Experiment.class),
                 anyString(),
                 anyMapOf(String.class, String.class)
         );
+        // do not bucket to any rollouts
+        doReturn(null).when(spyDecisionService).getVariationForFeatureInRollout(
+                any(FeatureFlag.class),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        );
 
+        // try to get a variation back from the decision service for the feature flag
         assertNull(spyDecisionService.getVariationForFeature(
                 spyFeatureFlag,
                 genericUserId,

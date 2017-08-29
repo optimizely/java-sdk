@@ -185,7 +185,7 @@ public class DecisionService {
                                                         @Nonnull Map<String, String> filteredAttributes) {
         // use rollout to get variation for feature
         if (featureFlag.getRolloutId().isEmpty()) {
-            logger.debug("The feature flag \"" + featureFlag.getKey() + "\" is not used in a rollout.");
+            logger.info("The feature flag \"" + featureFlag.getKey() + "\" is not used in a rollout.");
             return null;
         }
         Rollout rollout = projectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());

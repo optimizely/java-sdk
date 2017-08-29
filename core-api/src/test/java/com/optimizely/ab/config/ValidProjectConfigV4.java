@@ -108,10 +108,10 @@ public class ValidProjectConfigV4 {
             )
     );
     private static final String         FEATURE_SINGLE_VARIABLE_BOOLEAN_ID = "2591051011";
-    private static final String         FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY = "boolean_single_variable_feature";
+    public  static final String         FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY = "boolean_single_variable_feature";
     private static final String         VARIABLE_BOOLEAN_VARIABLE_ID = "3974680341";
-    private static final String         VARIABLE_BOOLEAN_VARIABLE_KEY = "boolean_variable";
-    private static final String         VARIABLE_BOOLEAN_VARIABLE_DEFAULT_VALUE = "true";
+    public  static final String         VARIABLE_BOOLEAN_VARIABLE_KEY = "boolean_variable";
+    public  static final String         VARIABLE_BOOLEAN_VARIABLE_DEFAULT_VALUE = "true";
     private static final LiveVariable   VARIABLE_BOOLEAN_VARIABLE = new LiveVariable(
             VARIABLE_BOOLEAN_VARIABLE_ID,
             VARIABLE_BOOLEAN_VARIABLE_KEY,
@@ -140,10 +140,47 @@ public class ValidProjectConfigV4 {
             null,
             LiveVariable.VariableType.STRING
     );
+    private static final String     ROLLOUT_1_ID = "1058508303";
+    private static final String     ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_ID = "1785077004";
+    private static final String     ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID = "1566407342";
+    private static final String     ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_STRING_VALUE = "lumos";
+    private static final Variation  ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION = new Variation(
+            ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
+            ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
+            Collections.singletonList(
+                    new LiveVariableUsageInstance(
+                            VARIABLE_STRING_VARIABLE_ID,
+                            ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_STRING_VALUE
+                    )
+            )
+    );
+    private static final Experiment ROLLOUT_1_EVERYONE_ELSE_RULE = new Experiment(
+            ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_ID,
+            ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_ID,
+            Experiment.ExperimentStatus.RUNNING.toString(),
+            ROLLOUT_1_ID,
+            Collections.<String>emptyList(),
+            Collections.singletonList(
+                    ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION
+            ),
+            Collections.<String, String>emptyMap(),
+            Collections.singletonList(
+                    new TrafficAllocation(
+                            ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
+                            5000
+                    )
+            )
+    );
+    private static final Rollout    ROLLOUT_1 = new Rollout(
+            ROLLOUT_1_ID,
+            Collections.singletonList(
+                    ROLLOUT_1_EVERYONE_ELSE_RULE
+            )
+    );
     private static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_STRING = new FeatureFlag(
             FEATURE_SINGLE_VARIABLE_STRING_ID,
             FEATURE_SINGLE_VARIABLE_STRING_KEY,
-            "1058508303",
+            ROLLOUT_1_ID,
             Collections.<String>emptyList(),
             Collections.singletonList(
                     VARIABLE_STRING_VARIABLE
@@ -667,43 +704,6 @@ public class ValidProjectConfigV4 {
             )
     );
 
-    private static final String     ROLLOUT_1_ID = "1058508303";
-    private static final String     ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_ID = "1785077004";
-    private static final String     ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID = "1566407342";
-    private static final String     ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_STRING_VALUE = "lumos";
-    private static final Variation  ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION = new Variation(
-            ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
-            ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
-            Collections.singletonList(
-                    new LiveVariableUsageInstance(
-                            VARIABLE_STRING_VARIABLE_ID,
-                            ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_STRING_VALUE
-                    )
-            )
-    );
-    private static final Experiment ROLLOUT_1_EVERYONE_ELSE_RULE = new Experiment(
-            ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_ID,
-            ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_ID,
-            Experiment.ExperimentStatus.RUNNING.toString(),
-            ROLLOUT_1_ID,
-            Collections.<String>emptyList(),
-            Collections.singletonList(
-                    ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION
-            ),
-            Collections.<String, String>emptyMap(),
-            Collections.singletonList(
-                    new TrafficAllocation(
-                            ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
-                            5000
-                    )
-            )
-    );
-    private static final Rollout    ROLLOUT_1 = new Rollout(
-            ROLLOUT_1_ID,
-            Collections.singletonList(
-                    ROLLOUT_1_EVERYONE_ELSE_RULE
-            )
-    );
 
     public static ProjectConfig generateValidProjectConfigV4() {
 
