@@ -189,6 +189,12 @@ public class DecisionService {
             return null;
         }
         Rollout rollout = projectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
+        if (rollout == null) {
+            logger.error("The rollout with id \"" + featureFlag.getRolloutId() +
+                    "\" was not able to be found in the datafile for feature flag \"" + featureFlag.getKey() +
+                    "\".");
+            return null;
+        }
         int rolloutRulesLength = rollout.getExperiments().size();
         Variation variation;
         // for all rules before the everyone else rule

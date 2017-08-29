@@ -43,6 +43,10 @@ import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectC
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV4;
+import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_HOUSE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_GRYFFINDOR_VALUE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_SINGLE_VARIABLE_STRING;
+import static com.optimizely.ab.config.ValidProjectConfigV4.ROLLOUT_1;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -53,6 +57,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -76,6 +81,7 @@ public class DecisionServiceTest {
     @Mock private ErrorHandler mockErrorHandler;
 
     private static ProjectConfig noAudienceProjectConfig;
+    private static ProjectConfig v4ProjectConfig;
     private static ProjectConfig validProjectConfig;
     private static Experiment whitelistedExperiment;
     private static Variation whitelistedVariation;
@@ -83,6 +89,7 @@ public class DecisionServiceTest {
     @BeforeClass
     public static void setUp() throws Exception {
         validProjectConfig = validProjectConfigV3();
+        v4ProjectConfig = validProjectConfigV4();
         noAudienceProjectConfig = noAudienceProjectConfigV3();
         whitelistedExperiment = validProjectConfig.getExperimentIdMapping().get("223");
         whitelistedVariation = whitelistedExperiment.getVariationKeyToVariationMap().get("vtag1");
@@ -428,6 +435,35 @@ public class DecisionServiceTest {
         );
     }
 
+    /**
+     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map)}
+     * return null when a user is excluded from every rule of a rollout due to traffic allocation.
+     */
+    @Test
+    public void getVariationForFeatureInRolloutReturnsNullWhenUserIsExcludedFromAllTraffic() {
+        Bucketer mockBucketer = mock(Bucketer.class);
+        when(mockBucketer.bucket(any(Experiment.class), anyString())).thenReturn(null);
+
+        DecisionService decisionService = new DecisionService(
+                mockBucketer,
+                mockErrorHandler,
+                v4ProjectConfig,
+                null
+        );
+
+        assertNull(decisionService.getVariationForFeatureInRollout(
+                FEATURE_FLAG_SINGLE_VARIABLE_STRING,
+                genericUserId,
+                Collections.singletonMap(
+                        ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE
+                )
+        ));
+
+        // with fall back bucketing, the user has at most 2 chances to get bucketed with traffic allocation
+        // one chance with the audience rollout rule
+        // one chance with the everyone else rule
+        verify(mockBucketer, atMost(2)).bucket(any(Experiment.class), anyString());
+    }
 
     //========= white list tests ==========/
 

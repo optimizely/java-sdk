@@ -171,13 +171,13 @@ public class ValidProjectConfigV4 {
                     )
             )
     );
-    private static final Rollout    ROLLOUT_1 = new Rollout(
+    public  static final Rollout    ROLLOUT_1 = new Rollout(
             ROLLOUT_1_ID,
             Collections.singletonList(
                     ROLLOUT_1_EVERYONE_ELSE_RULE
             )
     );
-    private static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_STRING = new FeatureFlag(
+    public  static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_STRING = new FeatureFlag(
             FEATURE_SINGLE_VARIABLE_STRING_ID,
             FEATURE_SINGLE_VARIABLE_STRING_KEY,
             ROLLOUT_1_ID,
