@@ -20,6 +20,7 @@ import ch.qos.logback.classic.Level;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.ValidProjectConfigV4;
 import com.optimizely.ab.config.Variation;
@@ -393,6 +394,40 @@ public class DecisionServiceTest {
         verify(spyFeatureFlag, times(2)).getExperimentIds();
         verify(spyFeatureFlag, never()).getKey();
     }
+
+    //========== getVariationForFeatureInRollout tests ==========//
+
+    /**
+     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map)}
+     * returns null when trying to bucket a user into a {@link FeatureFlag}
+     * that does not have a {@link Rollout} attached.
+     */
+    @Test
+    public void getVariationForFeatureInRolloutReturnsNullWhenFeatureIsNotAttachedToRollout() {
+        FeatureFlag mockFeatureFlag = mock(FeatureFlag.class);
+        when(mockFeatureFlag.getRolloutId()).thenReturn("");
+        String featureKey = "featureKey";
+        when(mockFeatureFlag.getKey()).thenReturn(featureKey);
+
+        DecisionService decisionService = new DecisionService(
+                mock(Bucketer.class),
+                mockErrorHandler,
+                validProjectConfig,
+                null
+        );
+
+        assertNull(decisionService.getVariationForFeatureInRollout(
+                mockFeatureFlag,
+                genericUserId,
+                Collections.<String, String>emptyMap()
+        ));
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "The feature flag \"" + featureKey + "\" is not used in a rollout."
+        );
+    }
+
 
     //========= white list tests ==========/
 
