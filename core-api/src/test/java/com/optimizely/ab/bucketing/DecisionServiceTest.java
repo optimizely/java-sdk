@@ -611,6 +611,44 @@ public class DecisionServiceTest {
         verify(mockBucketer, times(2)).bucket(any(Experiment.class), anyString());
     }
 
+    /**
+     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map)}
+     * returns the variation of "English Citizens" rule
+     * when the user fails targeting for previous rules, but passes targeting and traffic for Rule 3.
+     */
+    @Test
+    public void getVariationForFeatureInRolloutReturnsVariationWhenUserFailsTargetingInPreviousRulesButPassesRule3() {
+        Bucketer mockBucketer = mock(Bucketer.class);
+        Rollout rollout = ROLLOUT_2;
+        Experiment englishCitizensRule = rollout.getExperiments().get(2);
+        Variation englishCitizenVariation = englishCitizensRule.getVariations().get(0);
+        Experiment everyoneElseRule = rollout.getExperiments().get(rollout.getExperiments().size() - 1);
+        Variation everyoneElseVariation = everyoneElseRule.getVariations().get(0);
+        when(mockBucketer.bucket(any(Experiment.class), anyString())).thenReturn(null);
+        when(mockBucketer.bucket(eq(everyoneElseRule), anyString())).thenReturn(everyoneElseVariation);
+        when(mockBucketer.bucket(eq(englishCitizensRule), anyString())).thenReturn(englishCitizenVariation);
+
+        DecisionService decisionService = new DecisionService(
+                mockBucketer,
+                mockErrorHandler,
+                v4ProjectConfig,
+                null
+        );
+
+        assertEquals(englishCitizenVariation,
+                decisionService.getVariationForFeatureInRollout(
+                        FEATURE_FLAG_MULTI_VARIATE_FEATURE,
+                        genericUserId,
+                        Collections.singletonMap(
+                                ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE
+                        )
+                )
+        );
+
+        // verify user is only bucketed once for everyone else rule
+        verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString());
+    }
+
         //========= white list tests ==========/
 
     /**
