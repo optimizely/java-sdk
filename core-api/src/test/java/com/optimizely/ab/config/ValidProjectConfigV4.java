@@ -54,6 +54,18 @@ public class ValidProjectConfigV4 {
                                     CUSTOM_DIMENSION_TYPE,
                                     AUDIENCE_GRYFFINDOR_VALUE)))))))
     );
+    private static final String     AUDIENCE_SLYTHERIN_ID = "3988293898";
+    private static final String     AUDIENCE_SLYTHERIN_KEY = "Slytherins";
+    public  static final String     AUDIENCE_SLYTHERIN_VALUE = "Slytherin";
+    private static final Audience   AUDIENCE_SLYTHERIN = new Audience(
+            AUDIENCE_SLYTHERIN_ID,
+            AUDIENCE_SLYTHERIN_KEY,
+            new AndCondition(Collections.<Condition>singletonList(
+                    new OrCondition(Collections.<Condition>singletonList(
+                            new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_HOUSE_KEY,
+                                    CUSTOM_DIMENSION_TYPE,
+                                    AUDIENCE_SLYTHERIN_VALUE)))))))
+    );
 
     // features
     private static final String     FEATURE_BOOLEAN_FEATURE_ID = "4195505407";
@@ -66,25 +78,16 @@ public class ValidProjectConfigV4 {
             Collections.<LiveVariable>emptyList()
     );
     private static final String         FEATURE_SINGLE_VARIABLE_DOUBLE_ID = "3926744821";
-    private static final String         FEATURE_SINGLE_VARIABLE_DOUBLE_KEY = "double_single_variable_feature";
+    public  static final String         FEATURE_SINGLE_VARIABLE_DOUBLE_KEY = "double_single_variable_feature";
     private static final String         VARIABLE_DOUBLE_VARIABLE_ID = "4111654444";
-    private static final String         VARIABLE_DOUBLE_VARIABLE_KEY = "double_variable";
-    private static final String         VARIABLE_DOUBLE_DEFAULT_VALUE = "14.99";
+    public  static final String         VARIABLE_DOUBLE_VARIABLE_KEY = "double_variable";
+    public  static final String         VARIABLE_DOUBLE_DEFAULT_VALUE = "14.99";
     private static final LiveVariable   VARIABLE_DOUBLE_VARIABLE = new LiveVariable(
             VARIABLE_DOUBLE_VARIABLE_ID,
             VARIABLE_DOUBLE_VARIABLE_KEY,
             VARIABLE_DOUBLE_DEFAULT_VALUE,
             null,
             LiveVariable.VariableType.DOUBLE
-    );
-    private static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_DOUBLE = new FeatureFlag(
-            FEATURE_SINGLE_VARIABLE_DOUBLE_ID,
-            FEATURE_SINGLE_VARIABLE_DOUBLE_KEY,
-            "",
-            Collections.<String>emptyList(),
-            Collections.singletonList(
-                    VARIABLE_DOUBLE_VARIABLE
-            )
     );
     private static final String         FEATURE_SINGLE_VARIABLE_INTEGER_ID = "3281420120";
     private static final String         FEATURE_SINGLE_VARIABLE_INTEGER_KEY = "integer_single_variable_feature";
@@ -494,6 +497,57 @@ public class ValidProjectConfigV4 {
                     )
             )
     );
+
+    private static final String     LAYER_DOUBLE_FEATURE_EXPERIMENT_ID = "1278722008";
+    private static final String     EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT_ID = "2201520193";
+    public  static final String     EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT_KEY = "double_single_variable_feature_experiment";
+    private static final String     VARIATION_DOUBLE_FEATURE_PI_VARIATION_ID = "1505457580";
+    private static final String     VARIATION_DOUBLE_FEATURE_PI_VARIATION_KEY = "pi_variation";
+    private static final Variation  VARIATION_DOUBLE_FEATURE_PI_VARIATION = new Variation(
+            VARIATION_DOUBLE_FEATURE_PI_VARIATION_ID,
+            VARIATION_DOUBLE_FEATURE_PI_VARIATION_KEY,
+            Collections.singletonList(
+                    new LiveVariableUsageInstance(
+                            VARIABLE_DOUBLE_VARIABLE_ID,
+                            "3.14"
+                    )
+            )
+    );
+    private static final String     VARIATION_DOUBLE_FEATURE_EULER_VARIATION_ID = "119616179";
+    private static final String     VARIATION_DOUBLE_FEATURE_EULER_VARIATION_KEY = "euler_variation";
+    private static final Variation  VARIATION_DOUBLE_FEATURE_EULER_VARIATION = new Variation(
+            VARIATION_DOUBLE_FEATURE_EULER_VARIATION_ID,
+            VARIATION_DOUBLE_FEATURE_EULER_VARIATION_KEY,
+            Collections.singletonList(
+                    new LiveVariableUsageInstance(
+                            VARIABLE_DOUBLE_VARIABLE_ID,
+                            "2.718"
+                    )
+            )
+    );
+    private static final Experiment EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT = new Experiment(
+            EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT_ID,
+            EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT_KEY,
+            Experiment.ExperimentStatus.RUNNING.toString(),
+            LAYER_DOUBLE_FEATURE_EXPERIMENT_ID,
+            Collections.singletonList(AUDIENCE_SLYTHERIN_ID),
+            ProjectConfigTestUtils.createListOfObjects(
+                    VARIATION_DOUBLE_FEATURE_PI_VARIATION,
+                    VARIATION_DOUBLE_FEATURE_EULER_VARIATION
+            ),
+            Collections.<String, String>emptyMap(),
+            ProjectConfigTestUtils.createListOfObjects(
+                    new TrafficAllocation(
+                            VARIATION_DOUBLE_FEATURE_PI_VARIATION_ID,
+                            4000
+                    ),
+                    new TrafficAllocation(
+                            VARIATION_DOUBLE_FEATURE_EULER_VARIATION_ID,
+                            8000
+                    )
+            )
+    );
+
     private static final String     LAYER_PAUSED_EXPERIMENT_ID = "3949273892";
     private static final String     EXPERIMENT_PAUSED_EXPERIMENT_ID = "2667098701";
     public  static final String     EXPERIMENT_PAUSED_EXPERIMENT_KEY = "paused_experiment";
@@ -680,11 +734,113 @@ public class ValidProjectConfigV4 {
             )
     );
 
+    // rollouts
+    private static final String     ROLLOUT_2_ID = "813411034";
+    private static final Experiment ROLLOUT_2_RULE_1 = new Experiment(
+            "3421010877",
+            "3421010877",
+            Experiment.ExperimentStatus.RUNNING.toString(),
+            ROLLOUT_2_ID,
+            Collections.singletonList(AUDIENCE_GRYFFINDOR_ID),
+            Collections.singletonList(
+                    new Variation(
+                            "521740985",
+                            "521740985",
+                            ProjectConfigTestUtils.createListOfObjects(
+                                    new LiveVariableUsageInstance(
+                                            "675244127",
+                                            "G"
+                                    ),
+                                    new LiveVariableUsageInstance(
+                                            "4052219963",
+                                            "odric"
+                                    )
+                            )
+                    )
+            ),
+            Collections.<String, String>emptyMap(),
+            Collections.singletonList(
+                    new TrafficAllocation(
+                            "521740985",
+                            5000
+                    )
+            )
+    );
+    private static final Experiment ROLLOUT_2_RULE_2 = new Experiment(
+            "600050626",
+            "600050626",
+            Experiment.ExperimentStatus.RUNNING.toString(),
+            ROLLOUT_2_ID,
+            Collections.singletonList(AUDIENCE_SLYTHERIN_ID),
+            Collections.singletonList(
+                    new Variation(
+                            "180042646",
+                            "180042646",
+                            ProjectConfigTestUtils.createListOfObjects(
+                                    new LiveVariableUsageInstance(
+                                            "675244127",
+                                            "S"
+                                    ),
+                                    new LiveVariableUsageInstance(
+                                            "4052219963",
+                                            "alazar"
+                                    )
+                            )
+                    )
+            ),
+            Collections.<String, String>emptyMap(),
+            Collections.singletonList(
+                    new TrafficAllocation(
+                            "180042646",
+                            5000
+                    )
+            )
+
+    );
+    private static final Experiment ROLLOUT_2_EVERYONE_ELSE_RULE = new Experiment(
+            "828245624",
+            "828245624",
+            Experiment.ExperimentStatus.RUNNING.toString(),
+            ROLLOUT_2_ID,
+            Collections.<String>emptyList(),
+            Collections.singletonList(
+                    new Variation(
+                            "3137445031",
+                            "3137445031",
+                            ProjectConfigTestUtils.createListOfObjects(
+                                    new LiveVariableUsageInstance(
+                                            "675244127",
+                                            "M"
+                                    ),
+                                    new LiveVariableUsageInstance(
+                                            "4052219963",
+                                            "uggle"
+                                    )
+                            )
+                    )
+            ),
+            Collections.<String, String>emptyMap(),
+            Collections.singletonList(
+                    new TrafficAllocation(
+                            "3137445031",
+                            5000
+                    )
+            )
+    );
+    public  static final Rollout    ROLLOUT_2 = new Rollout(
+            ROLLOUT_2_ID,
+            ProjectConfigTestUtils.createListOfObjects(
+                    ROLLOUT_2_RULE_1,
+                    ROLLOUT_2_RULE_2,
+                    ROLLOUT_2_EVERYONE_ELSE_RULE
+            )
+    );
+
     // finish features
     public  static final FeatureFlag FEATURE_FLAG_MULTI_VARIATE_FEATURE = new FeatureFlag(
             FEATURE_MULTI_VARIATE_FEATURE_ID,
             FEATURE_MULTI_VARIATE_FEATURE_KEY,
-            "",
+            ROLLOUT_2_ID,
             Collections.singletonList(EXPERIMENT_MULTIVARIATE_EXPERIMENT_ID),
             ProjectConfigTestUtils.createListOfObjects(
                     VARIABLE_FIRST_LETTER_VARIABLE,
@@ -703,6 +859,17 @@ public class ValidProjectConfigV4 {
                     VARIABLE_CORRELATING_VARIATION_NAME_VARIABLE
             )
     );
+    public  static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_DOUBLE = new FeatureFlag(
+            FEATURE_SINGLE_VARIABLE_DOUBLE_ID,
+            FEATURE_SINGLE_VARIABLE_DOUBLE_KEY,
+            "",
+            Collections.singletonList(
+                    EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT_ID
+            ),
+            Collections.singletonList(
+                    VARIABLE_DOUBLE_VARIABLE
+            )
+    );
 
 
     public static ProjectConfig generateValidProjectConfigV4() {
@@ -714,6 +881,7 @@ public class ValidProjectConfigV4 {
         // list audiences
         List<Audience> audiences = new ArrayList<Audience>();
         audiences.add(AUDIENCE_GRYFFINDOR);
+        audiences.add(AUDIENCE_SLYTHERIN);
 
         // list events
         List<EventType> events = new ArrayList<EventType>();
@@ -725,6 +893,7 @@ public class ValidProjectConfigV4 {
         List<Experiment> experiments = new ArrayList<Experiment>();
         experiments.add(EXPERIMENT_BASIC_EXPERIMENT);
         experiments.add(EXPERIMENT_MULTIVARIATE_EXPERIMENT);
+        experiments.add(EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT);
         experiments.add(EXPERIMENT_PAUSED_EXPERIMENT);
         experiments.add(EXPERIMENT_LAUNCHED_EXPERIMENT);
 
@@ -745,6 +914,7 @@ public class ValidProjectConfigV4 {
         // list rollouts
         List<Rollout> rollouts = new ArrayList<Rollout>();
         rollouts.add(ROLLOUT_1);
+        rollouts.add(ROLLOUT_2);
 
         return new ProjectConfig(
                 ACCOUNT_ID,

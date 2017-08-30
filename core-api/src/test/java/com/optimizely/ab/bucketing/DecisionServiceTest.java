@@ -465,6 +465,33 @@ public class DecisionServiceTest {
         verify(mockBucketer, atMost(2)).bucket(any(Experiment.class), anyString());
     }
 
+    /**
+     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map)}
+     * returns null when a user is excluded from every rule of a rollout due to targeting
+     * and also fails traffic allocation in the everyone else rollout.
+     */
+    @Test
+    public void getVariationForFeatureInRolloutReturnsNullWhenUserFailsAllAudiencesAndTraffic() {
+        Bucketer mockBucketer = mock(Bucketer.class);
+        when(mockBucketer.bucket(any(Experiment.class), anyString())).thenReturn(null);
+
+        DecisionService decisionService = new DecisionService(
+                mockBucketer,
+                mockErrorHandler,
+                v4ProjectConfig,
+                null
+        );
+
+        assertNull(decisionService.getVariationForFeatureInRollout(
+                FEATURE_FLAG_SINGLE_VARIABLE_STRING,
+                genericUserId,
+                Collections.<String, String>emptyMap()
+        ));
+
+        // user is only bucketed once for the everyone else rule
+        verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString());
+    }
+
     //========= white list tests ==========/
 
     /**

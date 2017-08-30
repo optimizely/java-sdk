@@ -80,13 +80,17 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_LAUNCHED_
 import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_PAUSED_EXPERIMENT_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_MULTI_VARIATE_FEATURE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_SINGLE_VARIABLE_DOUBLE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_MULTI_VARIATE_FEATURE_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_SINGLE_VARIABLE_DOUBLE_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_SINGLE_VARIABLE_STRING_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.MULTIVARIATE_EXPERIMENT_FORCED_VARIATION_USER_ID_GRED;
 import static com.optimizely.ab.config.ValidProjectConfigV4.PAUSED_EXPERIMENT_FORCED_VARIATION_USER_ID_CONTROL;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_BOOLEAN_VARIABLE_DEFAULT_VALUE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_BOOLEAN_VARIABLE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_DOUBLE_DEFAULT_VALUE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_DOUBLE_VARIABLE_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_FIRST_LETTER_DEFAULT_VALUE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_FIRST_LETTER_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_STRING_VARIABLE_DEFAULT_VALUE;
@@ -2557,10 +2561,10 @@ public class OptimizelyTest {
     public void getFeatureVariableValueReturnsDefaultValueWhenFeatureIsAttachedToOneExperimentButFailsTargeting() throws ConfigParseException {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
-        String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
-        String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
-        String expectedValue = VARIABLE_FIRST_LETTER_DEFAULT_VALUE;
-        FeatureFlag featureFlag = FEATURE_FLAG_MULTI_VARIATE_FEATURE;
+        String validFeatureKey = FEATURE_SINGLE_VARIABLE_DOUBLE_KEY;
+        String validVariableKey = VARIABLE_DOUBLE_VARIABLE_KEY;
+        String expectedValue = VARIABLE_DOUBLE_DEFAULT_VALUE;
+        FeatureFlag featureFlag = FEATURE_FLAG_SINGLE_VARIABLE_DOUBLE;
         Experiment experiment = validProjectConfig.getExperimentIdMapping().get(featureFlag.getExperimentIds().get(0));
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
@@ -2571,8 +2575,8 @@ public class OptimizelyTest {
                 validFeatureKey,
                 validVariableKey,
                 genericUserId,
-                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, "Slytherin"),
-                LiveVariable.VariableType.STRING
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, "Ravenclaw"),
+                LiveVariable.VariableType.DOUBLE
         );
         assertEquals(expectedValue, valueWithImproperAttributes);
 
