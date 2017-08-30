@@ -812,7 +812,36 @@ public class ValidProjectConfigV4 {
                             5000
                     )
             )
-
+    );
+    private static final Experiment ROLLOUT_2_RULE_3 = new Experiment(
+            "2637642575",
+            "2637642575",
+            Experiment.ExperimentStatus.RUNNING.toString(),
+            ROLLOUT_2_ID,
+            Collections.singletonList(AUDIENCE_ENGLISH_CITIZENS_ID),
+            Collections.singletonList(
+                    new Variation(
+                            "2346257680",
+                            "2346257680",
+                            ProjectConfigTestUtils.createListOfObjects(
+                                    new LiveVariableUsageInstance(
+                                            "675244127",
+                                            "D"
+                                    ),
+                                    new LiveVariableUsageInstance(
+                                            "4052219963",
+                                            "udley"
+                                    )
+                            )
+                    )
+            ),
+            Collections.<String, String>emptyMap(),
+            Collections.singletonList(
+                    new TrafficAllocation(
+                            "2346257680",
+                            5000
+                    )
+            )
     );
     private static final Experiment ROLLOUT_2_EVERYONE_ELSE_RULE = new Experiment(
             "828245624",
@@ -849,6 +878,7 @@ public class ValidProjectConfigV4 {
             ProjectConfigTestUtils.createListOfObjects(
                     ROLLOUT_2_RULE_1,
                     ROLLOUT_2_RULE_2,
+                    ROLLOUT_2_RULE_3,
                     ROLLOUT_2_EVERYONE_ELSE_RULE
             )
     );

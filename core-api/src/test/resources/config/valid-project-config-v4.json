@@ -619,6 +619,36 @@
           ]
         },
         {
+          "id": "2637642575",
+          "key": "2637642575",
+          "status": "Running",
+          "layerId": "813411034",
+          "audienceIds": ["4194404272"],
+          "forcedVariations": {},
+          "variations": [
+            {
+              "id": "2346257680",
+              "key": "2346257680",
+              "variables": [
+                {
+                  "id": "675244127",
+                  "value": "D"
+                },
+                {
+                  "id": "4052219963",
+                  "value": "udley"
+                }
+              ]
+            }
+          ],
+          "trafficAllocation": [
+            {
+              "entityId": "2346257680",
+              "endOfRange": 5000
+            }
+          ]
+        },
+        {
           "id": "828245624",
           "key": "828245624",
           "status": "Running",
