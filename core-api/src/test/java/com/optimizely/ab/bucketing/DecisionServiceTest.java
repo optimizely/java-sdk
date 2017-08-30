@@ -20,6 +20,7 @@ import ch.qos.logback.classic.Level;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.ProjectConfigTestUtils;
 import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.ValidProjectConfigV4;
@@ -44,6 +45,8 @@ import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV4;
 import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_HOUSE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_NATIONALITY_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_ENGLISH_CITIZENS_VALUE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_GRYFFINDOR_VALUE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_MULTI_VARIATE_FEATURE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_SINGLE_VARIABLE_STRING;
@@ -562,7 +565,53 @@ public class DecisionServiceTest {
         verify(mockBucketer, times(2)).bucket(any(Experiment.class), anyString());
     }
 
-    //========= white list tests ==========/
+    /**
+     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map)}
+     * returns the variation of "Everyone Else" rule
+     * when the user passes targeting for a rule, but was failed the traffic allocation for that rule,
+     * and is bucketed successfully into the "Everyone Else" rule.
+     * Fallback bucketing should not evaluate any other audiences.
+     *  Even though the user would satisfy a later rollout rule, they are never evaluated for it or bucketed into it.
+     */
+    @Test
+    public void getVariationForFeatureInRolloutReturnsVariationWhenUserFailsTrafficInRuleButWouldPassForAnotherRuleAndPassesInEveryoneElse() {
+        Bucketer mockBucketer = mock(Bucketer.class);
+        Rollout rollout = ROLLOUT_2;
+        Experiment englishCitizensRule = rollout.getExperiments().get(2);
+        Variation englishCitizenVariation = englishCitizensRule.getVariations().get(0);
+        Experiment everyoneElseRule = rollout.getExperiments().get(rollout.getExperiments().size() - 1);
+        Variation expectedVariation = everyoneElseRule.getVariations().get(0);
+        when(mockBucketer.bucket(any(Experiment.class), anyString())).thenReturn(null);
+        when(mockBucketer.bucket(eq(everyoneElseRule), anyString())).thenReturn(expectedVariation);
+        when(mockBucketer.bucket(eq(englishCitizensRule), anyString())).thenReturn(englishCitizenVariation);
+
+        DecisionService decisionService = new DecisionService(
+                mockBucketer,
+                mockErrorHandler,
+                v4ProjectConfig,
+                null
+        );
+
+        assertEquals(expectedVariation,
+                decisionService.getVariationForFeatureInRollout(
+                        FEATURE_FLAG_MULTI_VARIATE_FEATURE,
+                        genericUserId,
+                        ProjectConfigTestUtils.createMapOfObjects(
+                                ProjectConfigTestUtils.createListOfObjects(
+                                        ATTRIBUTE_HOUSE_KEY, ATTRIBUTE_NATIONALITY_KEY
+                                ),
+                                ProjectConfigTestUtils.createListOfObjects(
+                                        AUDIENCE_GRYFFINDOR_VALUE, AUDIENCE_ENGLISH_CITIZENS_VALUE
+                                )
+                        )
+                )
+        );
+
+        // verify user is only bucketed once for everyone else rule
+        verify(mockBucketer, times(2)).bucket(any(Experiment.class), anyString());
+    }
+
+        //========= white list tests ==========/
 
     /**
      * Test {@link DecisionService#getWhitelistedVariation(Experiment, String)} correctly returns a whitelisted variation.
