@@ -71,6 +71,19 @@ public class ValidProjectConfigV4 {
                                     AUDIENCE_SLYTHERIN_VALUE)))))))
     );
 
+    private static final String     AUDIENCE_ENGLISH_CITIZENS_ID = "4194404272";
+    private static final String     AUDIENCE_ENGLISH_CITIZENS_KEY = "english_citizens";
+    public  static final String     AUDIENCE_ENGLISH_CITIZENS_VALUE = "English";
+    private static final Audience   AUDIENCE_ENGLISH_CITIZENS = new Audience(
+            AUDIENCE_ENGLISH_CITIZENS_ID,
+            AUDIENCE_ENGLISH_CITIZENS_KEY,
+            new AndCondition(Collections.<Condition>singletonList(
+                    new OrCondition(Collections.<Condition>singletonList(
+                            new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_NATIONALITY_KEY,
+                                    CUSTOM_DIMENSION_TYPE,
+                                    AUDIENCE_ENGLISH_CITIZENS_VALUE)))))))
+    );
+
     // features
     private static final String     FEATURE_BOOLEAN_FEATURE_ID = "4195505407";
     private static final String     FEATURE_BOOLEAN_FEATURE_KEY = "boolean_feature";
@@ -887,6 +900,7 @@ public class ValidProjectConfigV4 {
         List<Audience> audiences = new ArrayList<Audience>();
         audiences.add(AUDIENCE_GRYFFINDOR);
         audiences.add(AUDIENCE_SLYTHERIN);
+        audiences.add(AUDIENCE_ENGLISH_CITIZENS);
 
         // list events
         List<EventType> events = new ArrayList<EventType>();

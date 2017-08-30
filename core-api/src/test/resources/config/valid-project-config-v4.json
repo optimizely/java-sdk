@@ -14,6 +14,11 @@
       "id": "3988293898",
       "name": "Slytherins",
       "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"house\", \"type\": \"custom_dimension\", \"value\":\"Slytherin\"}]]]"
+    },
+    {
+      "id": "4194404272",
+      "name": "english_citizens",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"nationality\", \"type\": \"custom_dimension\", \"value\":\"English\"}]]]"
     }
   ],
   "attributes": [
