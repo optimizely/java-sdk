@@ -526,6 +526,42 @@ public class DecisionServiceTest {
         verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString());
     }
 
+    /**
+     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map)}
+     * returns the variation of "Everyone Else" rule
+     * when the user passes targeting for a rule, but was failed the traffic allocation for that rule,
+     * and is bucketed successfully into the "Everyone Else" rule.
+     */
+    @Test
+    public void getVariationForFeatureInRolloutReturnsVariationWhenUserFailsTrafficInRuleAndPassesInEveryoneElse() {
+        Bucketer mockBucketer = mock(Bucketer.class);
+        Rollout rollout = ROLLOUT_2;
+        Experiment everyoneElseRule = rollout.getExperiments().get(rollout.getExperiments().size() - 1);
+        Variation expectedVariation = everyoneElseRule.getVariations().get(0);
+        when(mockBucketer.bucket(any(Experiment.class), anyString())).thenReturn(null);
+        when(mockBucketer.bucket(eq(everyoneElseRule), anyString())).thenReturn(expectedVariation);
+
+        DecisionService decisionService = new DecisionService(
+                mockBucketer,
+                mockErrorHandler,
+                v4ProjectConfig,
+                null
+        );
+
+        assertEquals(expectedVariation,
+                decisionService.getVariationForFeatureInRollout(
+                        FEATURE_FLAG_MULTI_VARIATE_FEATURE,
+                        genericUserId,
+                        Collections.singletonMap(
+                                ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE
+                        )
+                )
+        );
+
+        // verify user is only bucketed once for everyone else rule
+        verify(mockBucketer, times(2)).bucket(any(Experiment.class), anyString());
+    }
+
     //========= white list tests ==========/
 
     /**
