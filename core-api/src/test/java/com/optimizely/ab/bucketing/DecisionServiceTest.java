@@ -49,12 +49,11 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_NATIONALIT
 import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_ENGLISH_CITIZENS_VALUE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_GRYFFINDOR_VALUE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_MULTI_VARIATE_FEATURE;
-import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_SINGLE_VARIABLE_STRING;
-import static com.optimizely.ab.config.ValidProjectConfigV4.ROLLOUT_1;
 import static com.optimizely.ab.config.ValidProjectConfigV4.ROLLOUT_2;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
@@ -374,7 +373,7 @@ public class DecisionServiceTest {
      */
     @Test
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
-    public void getVariationForFeatureReturnsVariationReturnedFromGetVarition() {
+    public void getVariationForFeatureReturnsVariationReturnedFromGetVariation() {
         FeatureFlag spyFeatureFlag = spy(ValidProjectConfigV4.FEATURE_FLAG_MUTEX_GROUP_FEATURE);
 
         DecisionService spyDecisionService = spy(new DecisionService(
@@ -405,6 +404,69 @@ public class DecisionServiceTest {
 
         verify(spyFeatureFlag, times(2)).getExperimentIds();
         verify(spyFeatureFlag, never()).getKey();
+    }
+
+    /**
+     * Verify that when getting a {@link Variation} for a {@link FeatureFlag} in
+     * {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map)},
+     * check first if the user is bucketed to an {@link Experiment}
+     * then check if the user is not bucketed to an experiment,
+     * check for a {@link Rollout}.
+     */
+    @Test
+    public void getVariationForFeatureReturnsVariationFromExperimentBeforeRollout() {
+        FeatureFlag featureFlag = FEATURE_FLAG_MULTI_VARIATE_FEATURE;
+        Experiment featureExperiment = v4ProjectConfig.getExperimentIdMapping().get(featureFlag.getExperimentIds().get(0));
+        assertNotNull(featureExperiment);
+        Rollout featureRollout = v4ProjectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
+        Variation experimentVariation = featureExperiment.getVariations().get(0);
+        Variation rolloutVariation = featureRollout.getExperiments().get(0).getVariations().get(0);
+
+        DecisionService decisionService = spy(new DecisionService(
+                mock(Bucketer.class),
+                mockErrorHandler,
+                v4ProjectConfig,
+                null
+                )
+        );
+
+        // return variation for experiment
+        doReturn(experimentVariation)
+                .when(decisionService).getVariation(
+                eq(featureExperiment),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        );
+
+        // return variation for rollout
+        doReturn(rolloutVariation)
+                .when(decisionService).getVariationForFeatureInRollout(
+                eq(featureFlag),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        );
+
+        // make sure we get the right variation back
+        assertEquals(experimentVariation,
+                decisionService.getVariationForFeature(featureFlag,
+                        genericUserId,
+                        Collections.<String, String>emptyMap()
+                )
+        );
+
+        // make sure we do not even check for rollout bucketing
+        verify(decisionService, never()).getVariationForFeatureInRollout(
+                any(FeatureFlag.class),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        );
+
+        // make sure we ask for experiment bucketing once
+        verify(decisionService, times(1)).getVariation(
+                any(Experiment.class),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        );
     }
 
     //========== getVariationForFeatureInRollout tests ==========//
