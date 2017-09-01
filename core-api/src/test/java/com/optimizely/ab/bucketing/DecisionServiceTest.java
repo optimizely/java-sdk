@@ -469,7 +469,69 @@ public class DecisionServiceTest {
         );
     }
 
-    //========== getVariationForFeatureInRollout tests ==========//
+    /**
+     * Verify that when getting a {@link Variation} for a {@link FeatureFlag} in
+     * {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map)},
+     * check first if the user is bucketed to an {@link Rollout}
+     * if the user is not bucketed to an experiment.
+     */
+    @Test
+    public void getVariationForFeatureReturnsVariationFromRolloutWhenExperimentFails() {
+        FeatureFlag featureFlag = FEATURE_FLAG_MULTI_VARIATE_FEATURE;
+        Experiment featureExperiment = v4ProjectConfig.getExperimentIdMapping().get(featureFlag.getExperimentIds().get(0));
+        assertNotNull(featureExperiment);
+        Rollout featureRollout = v4ProjectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
+        Variation experimentVariation = featureExperiment.getVariations().get(0);
+        Variation rolloutVariation = featureRollout.getExperiments().get(0).getVariations().get(0);
+
+        DecisionService decisionService = spy(new DecisionService(
+                        mock(Bucketer.class),
+                        mockErrorHandler,
+                        v4ProjectConfig,
+                        null
+                )
+        );
+
+        // return variation for experiment
+        doReturn(null)
+                .when(decisionService).getVariation(
+                eq(featureExperiment),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        );
+
+        // return variation for rollout
+        doReturn(rolloutVariation)
+                .when(decisionService).getVariationForFeatureInRollout(
+                eq(featureFlag),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        );
+
+        // make sure we get the right variation back
+        assertEquals(rolloutVariation,
+                decisionService.getVariationForFeature(featureFlag,
+                        genericUserId,
+                        Collections.<String, String>emptyMap()
+                )
+        );
+
+        // make sure we do not even check for rollout bucketing
+        verify(decisionService,times(1)).getVariationForFeatureInRollout(
+                any(FeatureFlag.class),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        );
+
+        // make sure we ask for experiment bucketing once
+        verify(decisionService, times(1)).getVariation(
+                any(Experiment.class),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        );
+    }
+
+        //========== getVariationForFeatureInRollout tests ==========//
 
     /**
      * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map)}
