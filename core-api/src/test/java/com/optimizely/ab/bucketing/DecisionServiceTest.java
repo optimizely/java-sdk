@@ -49,6 +49,7 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_NATIONALIT
 import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_ENGLISH_CITIZENS_VALUE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_GRYFFINDOR_VALUE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_MULTI_VARIATE_FEATURE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_MULTI_VARIATE_FEATURE_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.ROLLOUT_2;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -316,6 +317,9 @@ public class DecisionServiceTest {
                 "The feature flag \"" + featureKey + "\" is not used in any experiments.");
         logbackVerifier.expectMessage(Level.INFO,
                 "The feature flag \"" + featureKey + "\" is not used in a rollout.");
+        logbackVerifier.expectMessage(Level.INFO,
+                "The user \"" + genericUserId + "\" was not bucketed into a rollout for feature flag \"" +
+                        featureKey + "\".");
 
         assertNull(decisionService.getVariationForFeature(
                 emptyFeatureFlag,
@@ -324,7 +328,7 @@ public class DecisionServiceTest {
 
         verify(emptyFeatureFlag, times(1)).getExperimentIds();
         verify(emptyFeatureFlag, times(1)).getRolloutId();
-        verify(emptyFeatureFlag, times(2)).getKey();
+        verify(emptyFeatureFlag, times(3)).getKey();
     }
 
     /**
@@ -363,8 +367,12 @@ public class DecisionServiceTest {
                 Collections.<String, String>emptyMap()
         ));
 
+        logbackVerifier.expectMessage(Level.INFO,
+                "The user \"" + genericUserId + "\" was not bucketed into a rollout for feature flag \"" +
+                        FEATURE_MULTI_VARIATE_FEATURE_KEY + "\".");
+
         verify(spyFeatureFlag, times(2)).getExperimentIds();
-        verify(spyFeatureFlag, never()).getKey();
+        verify(spyFeatureFlag, times(1)).getKey();
     }
 
     /**

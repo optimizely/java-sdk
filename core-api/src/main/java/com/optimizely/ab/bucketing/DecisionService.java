@@ -167,7 +167,12 @@ public class DecisionService {
             logger.info("The feature flag \"" + featureFlag.getKey() + "\" is not used in any experiments.");
         }
 
-        return getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes);
+        Variation variation = getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes);
+        if (variation == null) {
+            logger.info("The user \"" + userId + "\" was not bucketed into a rollout for feature flag \"" +
+            featureFlag.getKey() + "\".");
+        }
+        return variation;
     }
 
     /**
