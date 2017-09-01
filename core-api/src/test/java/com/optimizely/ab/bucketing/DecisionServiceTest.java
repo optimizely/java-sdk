@@ -419,6 +419,7 @@ public class DecisionServiceTest {
         Experiment featureExperiment = v4ProjectConfig.getExperimentIdMapping().get(featureFlag.getExperimentIds().get(0));
         assertNotNull(featureExperiment);
         Rollout featureRollout = v4ProjectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
+        Variation experimentVariation = featureExperiment.getVariations().get(0);
         Variation rolloutVariation = featureRollout.getExperiments().get(0).getVariations().get(0);
 
         DecisionService decisionService = spy(new DecisionService(
@@ -480,7 +481,6 @@ public class DecisionServiceTest {
         Experiment featureExperiment = v4ProjectConfig.getExperimentIdMapping().get(featureFlag.getExperimentIds().get(0));
         assertNotNull(featureExperiment);
         Rollout featureRollout = v4ProjectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
-        Variation experimentVariation = featureExperiment.getVariations().get(0);
         Variation rolloutVariation = featureRollout.getExperiments().get(0).getVariations().get(0);
 
         DecisionService decisionService = spy(new DecisionService(
