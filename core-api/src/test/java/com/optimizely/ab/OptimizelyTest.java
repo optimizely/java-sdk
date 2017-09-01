@@ -2546,7 +2546,8 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
                 Level.INFO,
                 "User \"" + genericUserId + "\" was not bucketed into any variation for feature flag \"" +
-                        validFeatureKey + "\". The default value for \"" +
+                        validFeatureKey + "\". The default value \"" +
+                        defaultValue + "\" for \"" +
                         validVariableKey + "\" is being returned."
         );
     }
@@ -2593,7 +2594,8 @@ public class OptimizelyTest {
                 Level.INFO,
                 "User \"" + genericUserId +
                         "\" was not bucketed into any variation for feature flag \"" + validFeatureKey +
-                        "\". The default value for \"" + validVariableKey + "\" is being returned."
+                        "\". The default value \"" + expectedValue +
+                        "\" for \"" + validVariableKey + "\" is being returned."
         );
     }
 
