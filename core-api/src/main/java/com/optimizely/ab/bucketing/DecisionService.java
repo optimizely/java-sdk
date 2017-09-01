@@ -172,6 +172,10 @@ public class DecisionService {
             logger.info("The user \"" + userId + "\" was not bucketed into a rollout for feature flag \"" +
             featureFlag.getKey() + "\".");
         }
+        else {
+            logger.info("The user \"" + userId + "\" was bucketed into a rollout for feature flag \"" +
+                    featureFlag.getKey() + "\".");
+        }
         return variation;
     }
 

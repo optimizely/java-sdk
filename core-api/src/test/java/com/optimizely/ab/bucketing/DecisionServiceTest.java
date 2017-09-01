@@ -534,6 +534,12 @@ public class DecisionServiceTest {
                 anyString(),
                 anyMapOf(String.class, String.class)
         );
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "The user \"" + genericUserId + "\" was bucketed into a rollout for feature flag \"" +
+                        featureFlag.getKey() + "\"."
+        );
     }
 
         //========== getVariationForFeatureInRollout tests ==========//
