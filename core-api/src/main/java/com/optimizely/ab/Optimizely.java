@@ -562,7 +562,7 @@ public class Optimizely {
         else {
             logger.info("User \"" + userId +
                     "\" was not bucketed into any variation for feature flag \"" + featureKey +
-                    "\". The default value is being returned."
+                    "\". The default value for \"" + variableKey + "\" is being returned."
             );
         }
 
