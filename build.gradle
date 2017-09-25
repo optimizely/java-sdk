@@ -4,6 +4,7 @@ buildscript {
         maven {
             url "https://oss.sonatype.org/content/repositories/snapshots/"
         }
+        mavenCentral()
     }
 
     dependencies {
@@ -12,7 +13,7 @@ buildscript {
 }
 
 plugins {
-    id 'nebula.optional-base' version '3.0.3'
+    id 'nebula.optional-base' version '3.2.0'
     id 'me.champeau.gradle.jmh' version '0.3.1'
 }
 
@@ -37,7 +38,6 @@ subprojects {
     apply plugin: 'jacoco'
     apply plugin: 'maven-publish'
     apply plugin: 'me.champeau.gradle.jmh'
-    apply plugin: 'nebula.provided-base'
     apply plugin: 'nebula.optional-base'
 
     sourceCompatibility = 1.6
@@ -172,7 +172,3 @@ task ship() {
     dependsOn(':core-api:ship', ':core-httpclient-impl:ship')
 }
 
-// todo: remove this wrapper version once we're publishing to jcenter/maven central
-task wrapper(type: Wrapper) {
-    distributionUrl = gradleWrapperUrl
-}
