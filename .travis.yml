@@ -4,9 +4,9 @@ sudo: required
 addons:
   apt:
     packages:
-      - openjdk-7-jdk
-      - openjdk-8-jdk
-      - oraclejdk-8-jdk
+      - openjdk-7-jre
+      - openjdk-8-jre
+      - oracle-java8-installer
 jdk:
   - openjdk7
   - openjdk8
