@@ -1,6 +1,10 @@
 language: java
 dist: trusty
 sudo: required
+addons:
+  apt:
+    packages:
+      - openjdk-7-jdk
 jdk:
   - openjdk7
   - openjdk8
