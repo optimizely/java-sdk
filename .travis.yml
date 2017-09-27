@@ -1,5 +1,5 @@
 language: java
-dist: trusty
+dist: precise
 sudo: required
 addons:
   apt:
@@ -12,8 +12,8 @@ jdk:
   - oraclejdk9
 install: true
 script:
-    - "./gradlew clean"
-    - "./gradlew exhaustiveTest"
+    - "./gradle clean"
+    - "./gradle exhaustiveTest"
     - "if [[ -n $TRAVIS_TAG ]]; then
           ./gradlew ship;
       else
