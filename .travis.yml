@@ -14,8 +14,8 @@ jdk:
   - oraclejdk9
 install: true
 script:
-    - "./gradle clean"
-    - "./gradle exhaustiveTest"
+    - "gradle clean"
+    - "gradle exhaustiveTest"
     - "if [[ -n $TRAVIS_TAG ]]; then
           ./gradlew ship;
       else
