@@ -5,6 +5,8 @@ addons:
   apt:
     packages:
       - openjdk-7-jdk
+      - openjdk-8-jdk
+      - oraclejdk-8-jdk
 jdk:
   - openjdk7
   - openjdk8
