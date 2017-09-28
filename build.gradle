@@ -107,6 +107,11 @@ subprojects {
         // logging dependencies (logback)
         testCompile group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
         testCompile group: 'ch.qos.logback', name: 'logback-core', version: logbackVersion
+
+        testCompile group: 'com.google.code.gson', name: 'gson', version: gsonVersion
+        testCompile group: 'org.json', name: 'json', version: jsonVersion
+        testCompile group: 'com.googlecode.json-simple', name: 'json-simple', version: jsonSimpleVersion
+        testCompile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
     }
 
     publishing {
