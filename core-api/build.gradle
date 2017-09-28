@@ -6,10 +6,10 @@ dependencies {
     compile group: 'com.google.code.findbugs', name: 'jsr305', version: findbugsVersion
 
     // an assortment of json parsers
-    compile group: 'com.google.code.gson', name: 'gson', version: gsonVersion, optional
-    compile group: 'org.json', name: 'json', version: jsonVersion, optional
-    compile group: 'com.googlecode.json-simple', name: 'json-simple', version: jsonSimpleVersion, optional
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion, optional
+    compileOnly group: 'com.google.code.gson', name: 'gson', version: gsonVersion, optional
+    compileOnly group: 'org.json', name: 'json', version: jsonVersion, optional
+    compileOnly group: 'com.googlecode.json-simple', name: 'json-simple', version: jsonSimpleVersion, optional
+    compileOnly group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion, optional
 }
 
 task generateVersionFile {
