@@ -17,34 +17,34 @@
 package com.optimizely.ab.config.parser;
 
 import com.optimizely.ab.config.Attribute;
+import com.optimizely.ab.config.EventType;
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.Experiment.ExperimentStatus;
+import com.optimizely.ab.config.FeatureFlag;
+import com.optimizely.ab.config.Group;
+import com.optimizely.ab.config.LiveVariable;
+import com.optimizely.ab.config.LiveVariable.VariableStatus;
+import com.optimizely.ab.config.LiveVariable.VariableType;
+import com.optimizely.ab.config.LiveVariableUsageInstance;
+import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.Rollout;
+import com.optimizely.ab.config.TrafficAllocation;
+import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
-import com.optimizely.ab.config.EventType;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.Experiment.ExperimentStatus;
-import com.optimizely.ab.config.Group;
-import com.optimizely.ab.config.LiveVariable;
-import com.optimizely.ab.config.LiveVariableUsageInstance;
-import com.optimizely.ab.config.LiveVariable.VariableStatus;
-import com.optimizely.ab.config.LiveVariable.VariableType;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.TrafficAllocation;
-import com.optimizely.ab.config.Variation;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.annotation.Nonnull;
 
 /**
  * {@code org.json}-based config parser implementation.
@@ -60,15 +60,12 @@ final class JsonConfigParser implements ConfigParser {
             String projectId = rootObject.getString("projectId");
             String revision = rootObject.getString("revision");
             String version = rootObject.getString("version");
+            int datafileVersion = Integer.parseInt(version);
 
             List<Experiment> experiments = parseExperiments(rootObject.getJSONArray("experiments"));
 
             List<Attribute> attributes;
-            if (version.equals(ProjectConfig.Version.V1.toString())) {
-                attributes = parseAttributes(rootObject.getJSONArray("dimensions"));
-            } else {
-                attributes = parseAttributes(rootObject.getJSONArray("attributes"));
-            }
+            attributes = parseAttributes(rootObject.getJSONArray("attributes"));
 
             List<EventType> events = parseEvents(rootObject.getJSONArray("events"));
             List<Audience> audiences = parseAudiences(rootObject.getJSONArray("audiences"));
@@ -76,14 +73,34 @@ final class JsonConfigParser implements ConfigParser {
 
             boolean anonymizeIP = false;
             List<LiveVariable> liveVariables = null;
-            if (version.equals(ProjectConfig.Version.V3.toString())) {
+            if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
                 liveVariables = parseLiveVariables(rootObject.getJSONArray("variables"));
 
                 anonymizeIP = rootObject.getBoolean("anonymizeIP");
             }
 
-            return new ProjectConfig(accountId, projectId, version, revision, groups, experiments, attributes, events,
-                                     audiences, anonymizeIP, liveVariables);
+            List<FeatureFlag> featureFlags = null;
+            List<Rollout> rollouts = null;
+            if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
+                featureFlags = parseFeatureFlags(rootObject.getJSONArray("featureFlags"));
+                rollouts = parseRollouts(rootObject.getJSONArray("rollouts"));
+            }
+
+            return new ProjectConfig(
+                    accountId,
+                    anonymizeIP,
+                    projectId,
+                    revision,
+                    version,
+                    attributes,
+                    audiences,
+                    events,
+                    experiments,
+                    featureFlags,
+                    groups,
+                    liveVariables,
+                    rollouts
+            );
         } catch (Exception e) {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
         }
@@ -125,6 +142,41 @@ final class JsonConfigParser implements ConfigParser {
         }
 
         return experiments;
+    }
+
+    private List<String> parseExperimentIds(JSONArray experimentIdsJson) {
+        ArrayList<String> experimentIds = new ArrayList<String>(experimentIdsJson.length());
+
+        for (Object experimentIdObj : experimentIdsJson) {
+            experimentIds.add((String) experimentIdObj);
+        }
+
+        return experimentIds;
+    }
+
+    private List<FeatureFlag> parseFeatureFlags(JSONArray featureFlagJson) {
+        List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>(featureFlagJson.length());
+
+        for (Object obj : featureFlagJson) {
+            JSONObject featureFlagObject = (JSONObject) obj;
+            String id = featureFlagObject.getString("id");
+            String key = featureFlagObject.getString("key");
+            String layerId = featureFlagObject.getString("rolloutId");
+
+            List<String> experimentIds = parseExperimentIds(featureFlagObject.getJSONArray("experimentIds"));
+
+            List<LiveVariable> variables = parseLiveVariables(featureFlagObject.getJSONArray("variables"));
+
+            featureFlags.add(new FeatureFlag(
+                    id,
+                    key,
+                    layerId,
+                    experimentIds,
+                    variables
+            ));
+        }
+
+        return featureFlags;
     }
 
     private List<Variation> parseVariations(JSONArray variationJson) {
@@ -191,12 +243,7 @@ final class JsonConfigParser implements ConfigParser {
 
         for (Object obj : eventJson) {
             JSONObject eventObject = (JSONObject)obj;
-            JSONArray experimentIdsJson = eventObject.getJSONArray("experimentIds");
-            List<String> experimentIds = new ArrayList<String>(experimentIdsJson.length());
-
-            for (Object experimentIdObj : experimentIdsJson) {
-                experimentIds.add((String)experimentIdObj);
-            }
+            List<String> experimentIds = parseExperimentIds(eventObject.getJSONArray("experimentIds"));
 
             String id = eventObject.getString("id");
             String key = eventObject.getString("key");
@@ -277,7 +324,10 @@ final class JsonConfigParser implements ConfigParser {
             String key = liveVariableObject.getString("key");
             String defaultValue = liveVariableObject.getString("defaultValue");
             VariableType type = VariableType.fromString(liveVariableObject.getString("type"));
-            VariableStatus status = VariableStatus.fromString(liveVariableObject.getString("status"));
+            VariableStatus status = null;
+            if (liveVariableObject.has("status")) {
+                status = VariableStatus.fromString(liveVariableObject.getString("status"));
+            }
 
             liveVariables.add(new LiveVariable(id, key, defaultValue, status, type));
         }
@@ -297,5 +347,19 @@ final class JsonConfigParser implements ConfigParser {
         }
 
         return liveVariableUsageInstances;
+    }
+
+    private List<Rollout> parseRollouts(JSONArray rolloutsJson) {
+        List<Rollout> rollouts = new ArrayList<Rollout>(rolloutsJson.length());
+
+        for (Object obj : rolloutsJson) {
+            JSONObject rolloutObject = (JSONObject) obj;
+            String id = rolloutObject.getString("id");
+            List<Experiment> experiments = parseExperiments(rolloutObject.getJSONArray("experiments"));
+
+            rollouts.add(new Rollout(id, experiments));
+        }
+
+        return rollouts;
     }
 }

@@ -22,6 +22,7 @@ import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.LiveVariableUsageInstance;
 import com.optimizely.ab.config.ProjectConfig;
@@ -38,7 +39,6 @@ import com.optimizely.ab.event.internal.EventBuilder;
 import com.optimizely.ab.event.internal.EventBuilderV2;
 import com.optimizely.ab.event.internal.payload.Event.ClientEngine;
 import com.optimizely.ab.internal.EventTagUtils;
-import com.optimizely.ab.internal.ReservedEventKey;
 import com.optimizely.ab.notification.NotificationBroadcaster;
 import com.optimizely.ab.notification.NotificationListener;
 import org.slf4j.Logger;
@@ -175,6 +175,16 @@ public class Optimizely {
             return null;
         }
 
+        sendImpression(projectConfig, experiment, userId, filteredAttributes, variation);
+
+        return variation;
+    }
+
+    private void sendImpression(@Nonnull ProjectConfig projectConfig,
+                                @Nonnull Experiment experiment,
+                                @Nonnull String userId,
+                                @Nonnull Map<String, String> filteredAttributes,
+                                @Nonnull Variation variation) {
         if (experiment.isRunning()) {
             LogEvent impressionEvent = eventBuilder.createImpressionEvent(
                     projectConfig,
@@ -196,8 +206,6 @@ public class Optimizely {
         } else {
             logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
         }
-
-        return variation;
     }
 
     //======== track calls ========//
@@ -211,26 +219,6 @@ public class Optimizely {
                       @Nonnull String userId,
                       @Nonnull Map<String, String> attributes) throws UnknownEventTypeException {
         track(eventName, userId, attributes, Collections.<String, String>emptyMap());
-    }
-
-    /**
-     * @deprecated see {@link #track(String, String, Map)} and pass in the revenue value as an event tag instead.
-     */
-    public void track(@Nonnull String eventName,
-                      @Nonnull String userId,
-                      long eventValue) throws UnknownEventTypeException {
-        track(eventName, userId, Collections.<String, String>emptyMap(), Collections.singletonMap(
-                ReservedEventKey.REVENUE.toString(), eventValue));
-    }
-
-    /**
-     * @deprecated see {@link #track(String, String, Map, long)} and pass in the revenue value as an event tag instead.
-     */
-    public void track(@Nonnull String eventName,
-                      @Nonnull String userId,
-                      @Nonnull Map<String, String> attributes,
-                      long eventValue) throws UnknownEventTypeException {
-        track(eventName, userId, attributes, Collections.singletonMap(ReservedEventKey.REVENUE.toString(), eventValue));
     }
 
     public void track(@Nonnull String eventName,
@@ -303,129 +291,282 @@ public class Optimizely {
                 conversionEvent);
     }
 
-    //======== live variable getters ========//
+    //======== FeatureFlag APIs ========//
 
-    public @Nullable
-    String getVariableString(@Nonnull String variableKey,
-                             @Nonnull String userId,
-                             boolean activateExperiment) throws UnknownLiveVariableException {
-        return getVariableString(variableKey, userId, Collections.<String, String>emptyMap(), activateExperiment);
+    /**
+     * Determine whether a boolean feature is enabled.
+     * Send an impression event if the user is bucketed into an experiment using the feature.
+     *
+     * @param featureKey The unique key of the feature.
+     * @param userId The ID of the user.
+     * @return True if the feature is enabled.
+     *         False if the feature is disabled.
+     *         False if the feature is not found.
+     */
+    public @Nonnull Boolean isFeatureEnabled(@Nonnull String featureKey,
+                                              @Nonnull String userId) {
+        return isFeatureEnabled(featureKey, userId, Collections.<String, String>emptyMap());
     }
 
-    public @Nullable
-    String getVariableString(@Nonnull String variableKey,
-                             @Nonnull String userId,
-                             @Nonnull Map<String, String> attributes,
-                             boolean activateExperiment)
-            throws UnknownLiveVariableException {
+    /**
+     * Determine whether a boolean feature is enabled.
+     * Send an impression event if the user is bucketed into an experiment using the feature.
+     *
+     * @param featureKey The unique key of the feature.
+     * @param userId The ID of the user.
+     * @param attributes The user's attributes.
+     * @return True if the feature is enabled.
+     *         False if the feature is disabled.
+     *         False if the feature is not found.
+     */
+    public @Nonnull Boolean isFeatureEnabled(@Nonnull String featureKey,
+                                              @Nonnull String userId,
+                                              @Nonnull Map<String, String> attributes) {
+        FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
+        if (featureFlag == null) {
+            logger.info("No feature flag was found for key \"" + featureKey + "\".");
+            return false;
+        }
 
-        LiveVariable variable = getLiveVariableOrThrow(projectConfig, variableKey);
-        if (variable == null) {
+        Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
+
+        Variation variation = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
+
+        if (variation != null) {
+            Experiment experiment = projectConfig.getExperimentForVariationId(variation.getId());
+            if (experiment != null) {
+                // the user is in an experiment for the feature
+                sendImpression(
+                        projectConfig,
+                        experiment,
+                        userId,
+                        filteredAttributes,
+                        variation);
+            }
+            else {
+                logger.info("The user \"" + userId +
+                        "\" is not being experimented on in feature \"" + featureKey + "\".");
+            }
+            logger.info("Feature \"" + featureKey + "\" is enabled for user \"" + userId + "\".");
+            return true;
+        }
+        else {
+            logger.info("Feature \"" + featureKey + "\" is not enabled for user \"" + userId + "\".");
+            return false;
+        }
+    }
+
+    /**
+     * Get the Boolean value of the specified variable in the feature.
+     * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
+     * @param userId The ID of the user.
+     * @return The Boolean value of the boolean single variable feature.
+     *         Null if the feature could not be found.
+     */
+    public @Nullable Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
+                                                       @Nonnull String variableKey,
+                                                       @Nonnull String userId) {
+        return getFeatureVariableBoolean(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
+    }
+
+    /**
+     * Get the Boolean value of the specified variable in the feature.
+     * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
+     * @param userId The ID of the user.
+     * @param attributes The user's attributes.
+     * @return The Boolean value of the boolean single variable feature.
+     *         Null if the feature or variable could not be found.
+     */
+    public @Nullable Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
+                                                       @Nonnull String variableKey,
+                                                       @Nonnull String userId,
+                                                       @Nonnull Map<String, String> attributes) {
+        String variableValue = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                LiveVariable.VariableType.BOOLEAN
+        );
+        if (variableValue != null) {
+            return Boolean.parseBoolean(variableValue);
+        }
+        return null;
+    }
+
+    /**
+     * Get the Double value of the specified variable in the feature.
+     * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
+     * @param userId The ID of the user.
+     * @return The Double value of the double single variable feature.
+     *         Null if the feature or variable could not be found.
+     */
+    public @Nullable Double getFeatureVariableDouble(@Nonnull String featureKey,
+                                                     @Nonnull String variableKey,
+                                                     @Nonnull String userId) {
+        return getFeatureVariableDouble(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
+    }
+
+    /**
+     * Get the Double value of the specified variable in the feature.
+     * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
+     * @param userId The ID of the user.
+     * @param attributes The user's attributes.
+     * @return The Double value of the double single variable feature.
+     *         Null if the feature or variable could not be found.
+     */
+    public @Nullable Double getFeatureVariableDouble(@Nonnull String featureKey,
+                                                     @Nonnull String variableKey,
+                                                     @Nonnull String userId,
+                                                     @Nonnull Map<String, String> attributes) {
+        String variableValue = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                LiveVariable.VariableType.DOUBLE
+        );
+        if (variableValue != null) {
+            try {
+                return Double.parseDouble(variableValue);
+            }
+            catch (NumberFormatException exception) {
+                logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                "\" as Double. " + exception);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the Integer value of the specified variable in the feature.
+     * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
+     * @param userId The ID of the user.
+     * @return The Integer value of the integer single variable feature.
+     *         Null if the feature or variable could not be found.
+     */
+    public @Nullable Integer getFeatureVariableInteger(@Nonnull String featureKey,
+                                                       @Nonnull String variableKey,
+                                                       @Nonnull String userId) {
+        return getFeatureVariableInteger(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
+    }
+
+    /**
+     * Get the Integer value of the specified variable in the feature.
+     * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
+     * @param userId The ID of the user.
+     * @param attributes The user's attributes.
+     * @return The Integer value of the integer single variable feature.
+     *         Null if the feature or variable could not be found.
+     */
+    public @Nullable Integer getFeatureVariableInteger(@Nonnull String featureKey,
+                                                       @Nonnull String variableKey,
+                                                       @Nonnull String userId,
+                                                       @Nonnull Map<String, String> attributes) {
+        String variableValue = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                LiveVariable.VariableType.INTEGER
+        );
+        if (variableValue != null) {
+            try {
+                return Integer.parseInt(variableValue);
+            }
+            catch (NumberFormatException exception) {
+                logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                "\" as Integer. " + exception.toString());
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the String value of the specified variable in the feature.
+     * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
+     * @param userId The ID of the user.
+     * @return The String value of the string single variable feature.
+     *         Null if the feature or variable could not be found.
+     */
+    public @Nullable String getFeatureVariableString(@Nonnull String featureKey,
+                                                     @Nonnull String variableKey,
+                                                     @Nonnull String userId) {
+        return getFeatureVariableString(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
+    }
+
+    /**
+     * Get the String value of the specified variable in the feature.
+     * @param featureKey The unique key of the feature.
+     * @param variableKey The unique key of the variable.
+     * @param userId The ID of the user.
+     * @param attributes The user's attributes.
+     * @return The String value of the string single variable feature.
+     *         Null if the feature or variable could not be found.
+     */
+    public @Nullable String getFeatureVariableString(@Nonnull String featureKey,
+                                                     @Nonnull String variableKey,
+                                                     @Nonnull String userId,
+                                                     @Nonnull Map<String, String> attributes) {
+        return getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                LiveVariable.VariableType.STRING);
+    }
+
+    @VisibleForTesting
+    String getFeatureVariableValueForType(@Nonnull String featureKey,
+                                                  @Nonnull String variableKey,
+                                                  @Nonnull String userId,
+                                                  @Nonnull Map<String, String> attributes,
+                                                  @Nonnull LiveVariable.VariableType variableType) {
+        FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
+        if (featureFlag == null) {
+            logger.info("No feature flag was found for key \"" + featureKey + "\".");
             return null;
         }
 
-        List<Experiment> experimentsUsingLiveVariable =
-                projectConfig.getLiveVariableIdToExperimentsMapping().get(variable.getId());
-        Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping =
-                projectConfig.getVariationToLiveVariableUsageInstanceMapping();
-
-        if (experimentsUsingLiveVariable == null) {
-            logger.warn("No experiment is using variable \"{}\".", variable.getKey());
-            return variable.getDefaultValue();
+        LiveVariable variable = featureFlag.getVariableKeyToLiveVariableMap().get(variableKey);
+        if (variable ==  null) {
+            logger.info("No feature variable was found for key \"" + variableKey + "\" in feature flag \"" +
+                    featureKey + "\".");
+            return null;
+        }
+        else if (!variable.getType().equals(variableType)) {
+            logger.info("The feature variable \"" + variableKey +
+                    "\" is actually of type \"" + variable.getType().toString() +
+                    "\" type. You tried to access it as type \"" + variableType.toString() +
+                    "\". Please use the appropriate feature variable accessor.");
+            return null;
         }
 
-        for (Experiment experiment : experimentsUsingLiveVariable) {
-            Variation variation;
-            if (activateExperiment) {
-                variation = activate(experiment, userId, attributes);
-            } else {
-                variation = getVariation(experiment, userId, attributes);
-            }
+        String variableValue = variable.getDefaultValue();
 
-            if (variation != null) {
-                LiveVariableUsageInstance usageInstance =
-                        variationToLiveVariableUsageInstanceMapping.get(variation.getId()).get(variable.getId());
-                return usageInstance.getValue();
-            }
+        Variation variation = decisionService.getVariationForFeature(featureFlag, userId, attributes);
+
+        if (variation != null) {
+            LiveVariableUsageInstance liveVariableUsageInstance =
+                    variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
+            variableValue = liveVariableUsageInstance.getValue();
+        }
+        else {
+            logger.info("User \"" + userId +
+                    "\" was not bucketed into any variation for feature flag \"" + featureKey +
+                    "\". The default value \"" + variableValue +
+                    "\" for \"" + variableKey + "\" is being returned."
+            );
         }
 
-        return variable.getDefaultValue();
-    }
-
-    public @Nullable
-    Boolean getVariableBoolean(@Nonnull String variableKey,
-                               @Nonnull String userId,
-                               boolean activateExperiment) throws UnknownLiveVariableException {
-        return getVariableBoolean(variableKey, userId, Collections.<String, String>emptyMap(), activateExperiment);
-    }
-
-    public @Nullable
-    Boolean getVariableBoolean(@Nonnull String variableKey,
-                               @Nonnull String userId,
-                               @Nonnull Map<String, String> attributes,
-                               boolean activateExperiment)
-            throws UnknownLiveVariableException {
-
-        String variableValueString = getVariableString(variableKey, userId, attributes, activateExperiment);
-        if (variableValueString != null) {
-            return Boolean.parseBoolean(variableValueString);
-        }
-
-        return null;
-    }
-
-    public @Nullable
-    Integer getVariableInteger(@Nonnull String variableKey,
-                               @Nonnull String userId,
-                               boolean activateExperiment) throws UnknownLiveVariableException {
-        return getVariableInteger(variableKey, userId, Collections.<String, String>emptyMap(), activateExperiment);
-    }
-
-    public @Nullable
-    Integer getVariableInteger(@Nonnull String variableKey,
-                               @Nonnull String userId,
-                               @Nonnull Map<String, String> attributes,
-                               boolean activateExperiment)
-            throws UnknownLiveVariableException {
-
-        String variableValueString = getVariableString(variableKey, userId, attributes, activateExperiment);
-        if (variableValueString != null) {
-            try {
-                return Integer.parseInt(variableValueString);
-            } catch (NumberFormatException e) {
-                logger.error("Variable value \"{}\" for live variable \"{}\" is not an integer.", variableValueString,
-                        variableKey);
-            }
-        }
-
-        return null;
-    }
-
-    public @Nullable
-    Double getVariableDouble(@Nonnull String variableKey,
-                             @Nonnull String userId,
-                             boolean activateExperiment) throws UnknownLiveVariableException {
-        return getVariableDouble(variableKey, userId, Collections.<String, String>emptyMap(), activateExperiment);
-    }
-
-    public @Nullable
-    Double getVariableDouble(@Nonnull String variableKey,
-                             @Nonnull String userId,
-                             @Nonnull Map<String, String> attributes,
-                             boolean activateExperiment)
-            throws UnknownLiveVariableException {
-
-        String variableValueString = getVariableString(variableKey, userId, attributes, activateExperiment);
-        if (variableValueString != null) {
-            try {
-                return Double.parseDouble(variableValueString);
-            } catch (NumberFormatException e) {
-                logger.error("Variable value \"{}\" for live variable \"{}\" is not a double.", variableValueString,
-                        variableKey);
-            }
-        }
-
-        return null;
+        return variableValue;
     }
 
     //======== getVariation calls ========//
@@ -473,6 +614,42 @@ public class Optimizely {
         Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
 
         return decisionService.getVariation(experiment,userId,filteredAttributes);
+    }
+
+    /**
+     * Force a user into a variation for a given experiment.
+     * The forced variation value does not persist across application launches.
+     * If the experiment key is not in the project file, this call fails and returns false.
+     * If the variationKey is not in the experiment, this call fails.
+     * @param experimentKey The key for the experiment.
+     * @param userId The user ID to be used for bucketing.
+     * @param variationKey The variation key to force the user into.  If the variation key is null
+     *                     then the forcedVariation for that experiment is removed.
+     *
+     * @return boolean A boolean value that indicates if the set completed successfully.
+     */
+    public boolean setForcedVariation(@Nonnull String experimentKey,
+                                      @Nonnull String userId,
+                                      @Nullable String variationKey) {
+
+
+        return projectConfig.setForcedVariation(experimentKey, userId, variationKey);
+    }
+
+    /**
+     * Gets the forced variation for a given user and experiment.
+     * This method just calls into the {@link com.optimizely.ab.config.ProjectConfig#getForcedVariation(String, String)}
+     * method of the same signature.
+     *
+     * @param experimentKey The key for the experiment.
+     * @param userId The user ID to be used for bucketing.
+     *
+     * @return The variation the user was bucketed into. This value can be null if the
+     * forced variation fails.
+     */
+    public @Nullable Variation getForcedVariation(@Nonnull String experimentKey,
+                                        @Nonnull String userId) {
+        return projectConfig.getForcedVariation(experimentKey, userId);
     }
 
     /**
@@ -593,36 +770,6 @@ public class Optimizely {
         }
 
         return eventType;
-    }
-
-    /**
-     * Helper method to retrieve the {@link LiveVariable} for the given variable key.
-     * If {@link RaiseExceptionErrorHandler} is provided, either a live variable is returned, or an exception is
-     * thrown.
-     * If {@link NoOpErrorHandler} is used, either a live variable or {@code null} is returned.
-     *
-     * @param projectConfig the current project config
-     * @param variableKey the key for the live variable being retrieved from the current project config
-     * @return the live variable to retrieve for the given variable key
-     *
-     * @throws UnknownLiveVariableException if there are no event types in the current project config with the given
-     * name
-     */
-    private LiveVariable getLiveVariableOrThrow(ProjectConfig projectConfig, String variableKey)
-        throws UnknownLiveVariableException {
-
-        LiveVariable liveVariable = projectConfig
-            .getLiveVariableKeyMapping()
-            .get(variableKey);
-
-        if (liveVariable == null) {
-            String unknownLiveVariableKeyError =
-                    String.format("Live variable \"%s\" is not in the datafile.", variableKey);
-            logger.error(unknownLiveVariableKeyError);
-            errorHandler.handleError(new UnknownLiveVariableException(unknownLiveVariableKeyError));
-        }
-
-        return liveVariable;
     }
 
     /**

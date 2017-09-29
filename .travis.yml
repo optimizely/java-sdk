@@ -1,8 +1,9 @@
 language: java
+dist: trusty
 jdk:
-  - openjdk7
-  - oraclejdk7
+  - openjdk8
   - oraclejdk8
+  - oraclejdk9
 install: true
 script:
     - "./gradlew clean"
@@ -20,4 +21,4 @@ cache:
 branches:
   only:
   - master
-  - /^\d+\.\d+\.\d+(-SNAPSHOT|-alpha)?$/ # trigger builds on tags which are semantically versioned to ship the SDK.
+  - /^\d+\.\d+\.\d+(-SNAPSHOT|-alpha|-beta)?$/ # trigger builds on tags which are semantically versioned to ship the SDK.

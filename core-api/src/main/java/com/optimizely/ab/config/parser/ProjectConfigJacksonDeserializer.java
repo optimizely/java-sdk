@@ -23,14 +23,15 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-
 import com.optimizely.ab.config.Attribute;
-import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.Group;
 import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.Rollout;
+import com.optimizely.ab.config.audience.Audience;
 
 import java.io.IOException;
 import java.util.List;
@@ -51,17 +52,14 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
         String projectId = node.get("projectId").textValue();
         String revision = node.get("revision").textValue();
         String version = node.get("version").textValue();
+        int datafileVersion = Integer.parseInt(version);
 
         List<Group> groups = mapper.readValue(node.get("groups").toString(), new TypeReference<List<Group>>() {});
         List<Experiment> experiments = mapper.readValue(node.get("experiments").toString(),
                                                         new TypeReference<List<Experiment>>() {});
 
         List<Attribute> attributes;
-        if (version.equals(ProjectConfig.Version.V1.toString())) {
-            attributes = mapper.readValue(node.get("dimensions").toString(), new TypeReference<List<Attribute>>() {});
-        } else {
-            attributes = mapper.readValue(node.get("attributes").toString(), new TypeReference<List<Attribute>>() {});
-        }
+        attributes = mapper.readValue(node.get("attributes").toString(), new TypeReference<List<Attribute>>() {});
 
         List<EventType> events = mapper.readValue(node.get("events").toString(),
                                                   new TypeReference<List<EventType>>() {});
@@ -70,13 +68,35 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
 
         boolean anonymizeIP = false;
         List<LiveVariable> liveVariables = null;
-        if (version.equals(ProjectConfig.Version.V3.toString())) {
+        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
             liveVariables = mapper.readValue(node.get("variables").toString(),
                                              new TypeReference<List<LiveVariable>>() {});
             anonymizeIP = node.get("anonymizeIP").asBoolean();
         }
 
-        return new ProjectConfig(accountId, projectId, version, revision, groups, experiments, attributes, events,
-                                 audiences, anonymizeIP, liveVariables);
+        List<FeatureFlag> featureFlags = null;
+        List<Rollout> rollouts = null;
+        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
+            featureFlags = mapper.readValue(node.get("featureFlags").toString(),
+                   new TypeReference<List<FeatureFlag>>() {});
+            rollouts = mapper.readValue(node.get("rollouts").toString(),
+                    new TypeReference<List<Rollout>>(){});
+        }
+
+        return new ProjectConfig(
+                accountId,
+                anonymizeIP,
+                projectId,
+                revision,
+                version,
+                attributes,
+                audiences,
+                events,
+                experiments,
+                featureFlags,
+                groups,
+                liveVariables,
+                rollouts
+        );
     }
 }

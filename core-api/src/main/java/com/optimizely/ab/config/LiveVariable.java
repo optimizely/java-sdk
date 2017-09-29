@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.gson.annotations.SerializedName;
 
+import javax.annotation.Nullable;
+
 /**
  * Represents a live variable definition at the project level
  */
@@ -100,7 +102,7 @@ public class LiveVariable implements IdKeyMapped {
     private final String key;
     private final String defaultValue;
     private final VariableType type;
-    private final VariableStatus status;
+    @Nullable private final VariableStatus status;
 
     @JsonCreator
     public LiveVariable(@JsonProperty("id") String id,
@@ -115,7 +117,7 @@ public class LiveVariable implements IdKeyMapped {
         this.type = type;
     }
 
-    public VariableStatus getStatus() {
+    public @Nullable VariableStatus getStatus() {
         return status;
     }
 
@@ -144,5 +146,29 @@ public class LiveVariable implements IdKeyMapped {
                 ", type=" + type +
                 ", status=" + status +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        LiveVariable variable = (LiveVariable) o;
+
+        if (!id.equals(variable.id)) return false;
+        if (!key.equals(variable.key)) return false;
+        if (!defaultValue.equals(variable.defaultValue)) return false;
+        if (type != variable.type) return false;
+        return status == variable.status;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id.hashCode();
+        result = 31 * result + key.hashCode();
+        result = 31 * result + defaultValue.hashCode();
+        result = 31 * result + type.hashCode();
+        result = 31 * result + status.hashCode();
+        return result;
     }
 }

@@ -1,4 +1,63 @@
-## 2.0.0
+# Optimizely Java X SDK Changelog
+## 2.0.0 Beta
+September 29, 2017
+
+This release is a beta release supporting feature flags and rollouts.
+
+### New Features
+#### Feature Flag Accessors
+You can now use feature flags in the Java SDK. You can experiment on features and rollout features through the Optimizely UI.
+
+- `isFeatureEnabled`
+- `getFeatureVariableBoolean`
+- `getFeatureVariableDouble`
+- `getFeatureVariableInteger`
+- `getFeatureVariableString`
+
+### Breaking Changes
+
+- Remove Live Variables accessors
+  - `getVariableString`
+  - `getVariableBoolean`
+  - `getVariableInteger`
+  - `getVariableDouble`
+- Remove track with revenue as a parameter. Pass the revenue value as an event tag instead
+  - `track(String, String, long)`
+  - `track(String, String, Map<String, String>, long)`
+- We will no longer run all unit tests in travis-ci against Java 7. 
+  We will still continue to set `sourceCompatibility` and `targetCompatibility` to 1.6 so that we build for Java 6.
+
+## 1.8.0
+
+August 29, 2017
+
+This release adds support for numeric metrics and forced bucketing (in code as opposed to whitelisting via project file).
+
+### New Features
+
+- Added `setForcedVariation` and `getForcedVariation`
+- Added any numeric metric to event metrics.
+
+### Breaking Changes
+
+- Nothing breaking from 1.7.0
+
+## 1.7.0
+
+July 12, 2017
+
+This release will support Android SDK release 1.4.0
+
+### New Features
+
+- Added `UserProfileService` interface to allow for sticky bucketing
+
+### Breaking Changes
+
+- Removed `UserProfile` interface. Replaced with `UserProfileService` interface.
+- Removed support for v1 datafiles.
+
+## 2.0.0-alpha
 
 May 19, 2017
 

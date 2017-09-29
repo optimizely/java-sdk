@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2017, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,44 +20,42 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import javax.annotation.concurrent.Immutable;
+import java.util.List;
+
 /**
- * Represents the value of a live variable for a variation
+ * Represents a Optimizely Rollout configuration
+ *
+ * @see <a href="http://developers.optimizely.com/server/reference/index.html#json">Project JSON</a>
  */
+@Immutable
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class LiveVariableUsageInstance implements IdMapped {
+public class Rollout implements IdMapped {
 
     private final String id;
-    private final String value;
+    private final List<Experiment> experiments;
 
     @JsonCreator
-    public LiveVariableUsageInstance(@JsonProperty("id") String id,
-                                     @JsonProperty("value") String value) {
+    public Rollout(@JsonProperty("id") String id,
+                   @JsonProperty("experiments") List<Experiment> experiments) {
         this.id = id;
-        this.value = value;
+        this.experiments = experiments;
     }
 
+    @Override
     public String getId() {
         return id;
     }
 
-    public String getValue() {
-        return value;
+    public List<Experiment> getExperiments() {
+        return experiments;
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        LiveVariableUsageInstance that = (LiveVariableUsageInstance) o;
-
-        return id.equals(that.id) && value.equals(that.value);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = id.hashCode();
-        result = 31 * result + value.hashCode();
-        return result;
+    public String toString() {
+        return "Rollout{" +
+                "id='" + id + '\'' +
+                ", experiments=" + experiments +
+                '}';
     }
 }
