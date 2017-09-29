@@ -24,6 +24,7 @@ You can now use feature flags in the Java SDK. You can experiment on features an
 - Remove track with revenue as a parameter. Pass the revenue value as an event tag instead
   - `track(String, String, long)`
   - `track(String, String, Map<String, String>, long)`
+- We will no longer check that the SDK is compatible with Java 6. 
 
 ## 1.8.0
 
