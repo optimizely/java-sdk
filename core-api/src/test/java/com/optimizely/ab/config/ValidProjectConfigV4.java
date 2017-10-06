@@ -107,9 +107,9 @@ public class ValidProjectConfigV4 {
             LiveVariable.VariableType.DOUBLE
     );
     private static final String         FEATURE_SINGLE_VARIABLE_INTEGER_ID = "3281420120";
-    private static final String         FEATURE_SINGLE_VARIABLE_INTEGER_KEY = "integer_single_variable_feature";
+    public  static final String         FEATURE_SINGLE_VARIABLE_INTEGER_KEY = "integer_single_variable_feature";
     private static final String         VARIABLE_INTEGER_VARIABLE_ID = "593964691";
-    private static final String         VARIABLE_INTEGER_VARIABLE_KEY = "integer_variable";
+    public  static final String         VARIABLE_INTEGER_VARIABLE_KEY = "integer_variable";
     private static final String         VARIABLE_INTEGER_DEFAULT_VALUE = "7";
     private static final LiveVariable   VARIABLE_INTEGER_VARIABLE = new LiveVariable(
             VARIABLE_INTEGER_VARIABLE_ID,
@@ -940,7 +940,7 @@ public class ValidProjectConfigV4 {
                     VARIABLE_DOUBLE_VARIABLE
             )
     );
-    private static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_INTEGER = new FeatureFlag(
+    public  static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_INTEGER = new FeatureFlag(
             FEATURE_SINGLE_VARIABLE_INTEGER_ID,
             FEATURE_SINGLE_VARIABLE_INTEGER_KEY,
             ROLLOUT_3_ID,
