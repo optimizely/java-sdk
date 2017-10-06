@@ -118,15 +118,6 @@ public class ValidProjectConfigV4 {
             null,
             LiveVariable.VariableType.INTEGER
     );
-    private static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_INTEGER = new FeatureFlag(
-            FEATURE_SINGLE_VARIABLE_INTEGER_ID,
-            FEATURE_SINGLE_VARIABLE_INTEGER_KEY,
-            "",
-            Collections.<String>emptyList(),
-            Collections.singletonList(
-                    VARIABLE_INTEGER_VARIABLE
-            )
-    );
     private static final String         FEATURE_SINGLE_VARIABLE_BOOLEAN_ID = "2591051011";
     public  static final String         FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY = "boolean_single_variable_feature";
     private static final String         VARIABLE_BOOLEAN_VARIABLE_ID = "3974680341";
@@ -206,6 +197,38 @@ public class ValidProjectConfigV4 {
                     VARIABLE_STRING_VARIABLE
             )
     );
+    private static final String     ROLLOUT_3_ID = "2048875663";
+    private static final String     ROLLOUT_3_EVERYONE_ELSE_EXPERIMENT_ID = "3794675122";
+    private static final String     ROLLOUT_3_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID = "589640735";
+    private static final Variation  ROLLOUT_3_EVERYONE_ELSE_RULE_ENABLED_VARIATION = new Variation(
+            ROLLOUT_3_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
+            ROLLOUT_3_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
+            Collections.<LiveVariableUsageInstance>emptyList()
+    );
+    private static final Experiment ROLLOUT_3_EVERYONE_ELSE_RULE = new Experiment(
+            ROLLOUT_3_EVERYONE_ELSE_EXPERIMENT_ID,
+            ROLLOUT_3_EVERYONE_ELSE_EXPERIMENT_ID,
+            Experiment.ExperimentStatus.RUNNING.toString(),
+            ROLLOUT_3_ID,
+            Collections.<String>emptyList(),
+            Collections.singletonList(
+                    ROLLOUT_3_EVERYONE_ELSE_RULE_ENABLED_VARIATION
+            ),
+            Collections.<String, String>emptyMap(),
+            Collections.singletonList(
+                    new TrafficAllocation(
+                            ROLLOUT_3_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
+                            10000
+                    )
+            )
+    );
+    public  static final Rollout    ROLLOUT_3 = new Rollout(
+            ROLLOUT_3_ID,
+            Collections.singletonList(
+                    ROLLOUT_3_EVERYONE_ELSE_RULE
+            )
+    );
+
     private static final String         FEATURE_MULTI_VARIATE_FEATURE_ID = "3263342226";
     public  static final String         FEATURE_MULTI_VARIATE_FEATURE_KEY = "multi_variate_feature";
     private static final String         VARIABLE_FIRST_LETTER_ID = "675244127";
@@ -917,7 +940,15 @@ public class ValidProjectConfigV4 {
                     VARIABLE_DOUBLE_VARIABLE
             )
     );
-
+    private static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_INTEGER = new FeatureFlag(
+            FEATURE_SINGLE_VARIABLE_INTEGER_ID,
+            FEATURE_SINGLE_VARIABLE_INTEGER_KEY,
+            ROLLOUT_3_ID,
+            Collections.<String>emptyList(),
+            Collections.singletonList(
+                    VARIABLE_INTEGER_VARIABLE
+            )
+    );
 
     public static ProjectConfig generateValidProjectConfigV4() {
 
@@ -964,6 +995,7 @@ public class ValidProjectConfigV4 {
         List<Rollout> rollouts = new ArrayList<Rollout>();
         rollouts.add(ROLLOUT_1);
         rollouts.add(ROLLOUT_2);
+        rollouts.add(ROLLOUT_3);
 
         return new ProjectConfig(
                 ACCOUNT_ID,
