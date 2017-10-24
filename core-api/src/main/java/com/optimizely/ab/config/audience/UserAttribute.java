@@ -16,6 +16,10 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.Optimizely;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 import java.util.Map;
@@ -25,6 +29,7 @@ import java.util.Map;
  */
 @Immutable
 public class UserAttribute implements Condition {
+    private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
 
     private final String name;
     private final String type;
@@ -51,8 +56,8 @@ public class UserAttribute implements Condition {
     public boolean evaluate(Map<String, String> attributes) {
         String userAttributeValue = attributes.get(name);
 
-        System.out.println("user value is " + userAttributeValue);
-        System.out.println("expected value is " + value);
+        logger.info("user value is " + userAttributeValue);
+        logger.info("expected value is " + value);
         return value == userAttributeValue;
     }
 
