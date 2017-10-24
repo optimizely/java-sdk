@@ -51,6 +51,8 @@ public class UserAttribute implements Condition {
     public boolean evaluate(Map<String, String> attributes) {
         String userAttributeValue = attributes.get(name);
 
+        System.out.println("user value is " + userAttributeValue);
+        System.out.println("expected value is " + value);
         return value == userAttributeValue;
     }
 
