@@ -51,7 +51,7 @@ public class UserAttribute implements Condition {
     public boolean evaluate(Map<String, String> attributes) {
         String userAttributeValue = attributes.get(name);
 
-        return value.equals(userAttributeValue);
+        return value == userAttributeValue;
     }
 
     @Override
