@@ -29,7 +29,7 @@ import java.util.Map;
  */
 @Immutable
 public class UserAttribute implements Condition {
-    private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserAttribute.class);
 
     private final String name;
     private final String type;
