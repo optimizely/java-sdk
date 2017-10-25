@@ -744,7 +744,7 @@ public class ValidProjectConfigV4 {
             EXPERIEMNT_WITH_MALFORMED_AUDIENCE_KEY,
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_EXPERIMENT_WITH_MALFORMED_AUDIENCE_ID,
-            Collections.<String>emptyList(),
+            Collections.singletonList(AUDIENCE_WITH_MISSING_VALUE_ID),
             Collections.singletonList(VARIATION_EXPERIMENT_WITH_MALFORMED_AUDIENCE),
             Collections.<String, String>emptyMap(),
             Collections.singletonList(
