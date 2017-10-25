@@ -21,7 +21,6 @@ import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
-import org.mockito.internal.matchers.Null;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -730,7 +729,7 @@ public class ValidProjectConfigV4 {
     );
 
     private static final String     EXPERIMENT_WITH_MALFORMED_AUDIENCE_ID = "748215081";
-    public  static final String     EXPERIEMNT_WITH_MALFORMED_AUDIENCE_KEY = "experiment_with_malformed_audience";
+    public  static final String     EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY = "experiment_with_malformed_audience";
     private static final String     LAYER_EXPERIMENT_WITH_MALFORMED_AUDIENCE_ID = "1238149537";
     private static final String     VARIATION_EXPERIMENT_WITH_MALFORMED_AUDIENCE_ID = "535538389";
     public  static final String     VARIATION_EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY = "var1";
@@ -741,7 +740,7 @@ public class ValidProjectConfigV4 {
     );
     private static final Experiment EXPERIMENT_WITH_MALFORMED_AUDIENCE = new Experiment(
             EXPERIMENT_WITH_MALFORMED_AUDIENCE_ID,
-            EXPERIEMNT_WITH_MALFORMED_AUDIENCE_KEY,
+            EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY,
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_EXPERIMENT_WITH_MALFORMED_AUDIENCE_ID,
             Collections.singletonList(AUDIENCE_WITH_MISSING_VALUE_ID),
