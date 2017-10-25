@@ -16,11 +16,6 @@
  */
 package com.optimizely.ab.config.audience;
 
-import com.optimizely.ab.Optimizely;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 import java.util.Map;
 
@@ -29,13 +24,12 @@ import java.util.Map;
  */
 @Immutable
 public class UserAttribute implements Condition {
-    private static final Logger logger = LoggerFactory.getLogger(UserAttribute.class);
 
     private final String name;
     private final String type;
     private final String value;
 
-    public UserAttribute(@Nonnull String name, @Nonnull String type, @Nonnull String value) {
+    public UserAttribute(String name, String type, String value) {
         this.name = name;
         this.type = type;
         this.value = value;
@@ -56,8 +50,6 @@ public class UserAttribute implements Condition {
     public boolean evaluate(Map<String, String> attributes) {
         String userAttributeValue = attributes.get(name);
 
-        logger.info("user value is " + userAttributeValue);
-        logger.info("expected value is " + value);
         return value == userAttributeValue;
     }
 
@@ -70,23 +62,22 @@ public class UserAttribute implements Condition {
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof UserAttribute))
-            return false;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        UserAttribute otherConditionObj = (UserAttribute)other;
+        UserAttribute that = (UserAttribute) o;
 
-        return name.equals(otherConditionObj.getName()) && type.equals(otherConditionObj.getType())
-            && value.equals(otherConditionObj.getValue());
+        if (!name.equals(that.name)) return false;
+        if (!type.equals(that.type)) return false;
+        return value != null ? value.equals(that.value) : that.value == null;
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + name.hashCode();
-        result = prime * result + type.hashCode();
-        result = prime * result + value.hashCode();
+        int result = name.hashCode();
+        result = 31 * result + type.hashCode();
+        result = 31 * result + (value != null ? value.hashCode() : 0);
         return result;
     }
 }
