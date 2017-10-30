@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config.audience;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.Map;
 
@@ -29,7 +31,7 @@ public class UserAttribute implements Condition {
     private final String type;
     private final String value;
 
-    public UserAttribute(String name, String type, String value) {
+    public UserAttribute(@Nonnull String name, @Nonnull String type, @Nullable String value) {
         this.name = name;
         this.type = type;
         this.value = value;
@@ -50,7 +52,17 @@ public class UserAttribute implements Condition {
     public boolean evaluate(Map<String, String> attributes) {
         String userAttributeValue = attributes.get(name);
 
-        return value == userAttributeValue;
+        if (value != null) { // if there is a value in the condition
+            // check user attribute value is equal
+            return value.equals(userAttributeValue);
+        }
+        else if (userAttributeValue != null) { // if the datafile value is null but user has a value for this attribute
+            // return false since null != nonnull
+            return false;
+        }
+        else { // both are null
+            return true;
+        }
     }
 
     @Override
