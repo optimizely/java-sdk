@@ -29,6 +29,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +51,10 @@ import javax.annotation.CheckForNull;
  */
 public class AsyncEventHandler implements EventHandler, Closeable {
 
+    public static int MAX_TOTAL_CONNECTIONS = 200;
+    public static int MAX_PER_ROUTE = 20;
+    public static int VALIDATE_AFTER_INACTIVITY_MILL = 5000;
+
     private static final Logger logger = LoggerFactory.getLogger(AsyncEventHandler.class);
     private static final ProjectConfigResponseHandler EVENT_RESPONSE_HANDLER = new ProjectConfigResponseHandler();
 
@@ -65,6 +70,7 @@ public class AsyncEventHandler implements EventHandler, Closeable {
         this.logEventQueue = new ArrayBlockingQueue<LogEvent>(queueCapacity);
         this.httpClient = HttpClients.custom()
             .setDefaultRequestConfig(HttpClientUtils.DEFAULT_REQUEST_CONFIG)
+                .setConnectionManager(poolingHttpClientConnectionManager())
             .disableCookieManagement()
             .build();
 
@@ -76,6 +82,16 @@ public class AsyncEventHandler implements EventHandler, Closeable {
             EventDispatchWorker worker = new EventDispatchWorker();
             workerExecutor.submit(worker);
         }
+    }
+
+    private PoolingHttpClientConnectionManager poolingHttpClientConnectionManager()
+    {
+        PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager();
+        poolingHttpClientConnectionManager.setMaxTotal(AsyncEventHandler.MAX_TOTAL_CONNECTIONS);  // these are the recommended settings for
+        // http protocol.  https://hc.apache.org/httpcomponents-client-ga/tutorial/html/connmgmt.html
+        poolingHttpClientConnectionManager.setDefaultMaxPerRoute(AsyncEventHandler.MAX_PER_ROUTE);
+        poolingHttpClientConnectionManager.setValidateAfterInactivity(AsyncEventHandler.VALIDATE_AFTER_INACTIVITY_MILL);
+        return poolingHttpClientConnectionManager;
     }
 
     @Override

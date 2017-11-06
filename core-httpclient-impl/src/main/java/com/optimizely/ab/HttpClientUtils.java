@@ -35,3 +35,4 @@ public final class HttpClientUtils {
         .setSocketTimeout(SOCKET_TIMEOUT_MS)
         .build();
 }
+
