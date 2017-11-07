@@ -16,13 +16,13 @@
  */
 package com.optimizely.ab.internal;
 
-import com.optimizely.ab.config.audience.Audience;
-import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Experiment.ExperimentStatus;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.Condition;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
