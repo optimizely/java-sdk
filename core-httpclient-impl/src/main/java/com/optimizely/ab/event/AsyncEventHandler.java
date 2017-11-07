@@ -51,8 +51,13 @@ import javax.annotation.CheckForNull;
  */
 public class AsyncEventHandler implements EventHandler, Closeable {
 
+    // The following static values are public so that they can be tweaked if necessary.
+    // These are the recommended settings for http protocol.  https://hc.apache.org/httpcomponents-client-ga/tutorial/html/connmgmt.html
+    // The maximum number of connections allowed across all routes.
     public static int MAX_TOTAL_CONNECTIONS = 200;
+    // The maximum number of connections allowed for a route
     public static int MAX_PER_ROUTE = 20;
+    // Defines period of inactivity in milliseconds after which persistent connections must be re-validated prior to being leased to the consumer.
     public static int VALIDATE_AFTER_INACTIVITY_MILL = 5000;
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncEventHandler.class);
@@ -87,8 +92,7 @@ public class AsyncEventHandler implements EventHandler, Closeable {
     private PoolingHttpClientConnectionManager poolingHttpClientConnectionManager()
     {
         PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager();
-        poolingHttpClientConnectionManager.setMaxTotal(AsyncEventHandler.MAX_TOTAL_CONNECTIONS);  // these are the recommended settings for
-        // http protocol.  https://hc.apache.org/httpcomponents-client-ga/tutorial/html/connmgmt.html
+        poolingHttpClientConnectionManager.setMaxTotal(AsyncEventHandler.MAX_TOTAL_CONNECTIONS);
         poolingHttpClientConnectionManager.setDefaultMaxPerRoute(AsyncEventHandler.MAX_PER_ROUTE);
         poolingHttpClientConnectionManager.setValidateAfterInactivity(AsyncEventHandler.VALIDATE_AFTER_INACTIVITY_MILL);
         return poolingHttpClientConnectionManager;
