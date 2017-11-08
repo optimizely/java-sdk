@@ -36,7 +36,7 @@ import java.util.List;
  * identifier.
  * <p>
  * The user identifier <i>must</i> be provided in the first data argument passed to
- * {@link #bucket(Experiment, String)} and <i>must</i> be non-null and non-empty.
+ * {@link #bucket(Experiment, String, String)} and <i>must</i> be non-null and non-empty.
  *
  * @see <a href="https://en.wikipedia.org/wiki/MurmurHash">MurmurHash</a>
  */
@@ -76,13 +76,14 @@ public class Bucketer {
     }
 
     private Experiment bucketToExperiment(@Nonnull Group group,
+                                          @Nonnull String bucketId,
                                           @Nonnull String userId) {
         // "salt" the bucket id using the group id
-        String bucketId = userId + group.getId();
+        String bucketKey = bucketId + group.getId();
 
         List<TrafficAllocation> trafficAllocations = group.getTrafficAllocation();
 
-        int hashCode = MurmurHash3.murmurhash3_x86_32(bucketId, 0, bucketId.length(), MURMUR_HASH_SEED);
+        int hashCode = MurmurHash3.murmurhash3_x86_32(bucketKey, 0, bucketKey.length(), MURMUR_HASH_SEED);
         int bucketValue = generateBucketValue(hashCode);
         logger.debug("Assigned bucket {} to user \"{}\" during experiment bucketing.", bucketValue, userId);
 
@@ -97,11 +98,12 @@ public class Bucketer {
     }
 
     private Variation bucketToVariation(@Nonnull Experiment experiment,
+                                        @Nonnull String bucketId,
                                         @Nonnull String userId) {
         // "salt" the bucket id using the experiment id
         String experimentId = experiment.getId();
         String experimentKey = experiment.getKey();
-        String combinedBucketId = userId + experimentId;
+        String combinedBucketId = bucketId + experimentId;
 
         List<TrafficAllocation> trafficAllocations = experiment.getTrafficAllocation();
 
@@ -127,10 +129,12 @@ public class Bucketer {
     /**
      * Assign a {@link Variation} of an {@link Experiment} to a user based on hashed value from murmurhash3.
      * @param experiment The Experiment in which the user is to be bucketed.
+     * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
      * @param userId User Identifier
      * @return Variation the user is bucketed into or null.
      */
     public @Nullable Variation bucket(@Nonnull Experiment experiment,
+                                      @Nonnull String bucketingId,
                                       @Nonnull String userId) {
         // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
@@ -139,7 +143,7 @@ public class Bucketer {
             Group experimentGroup = projectConfig.getGroupIdMapping().get(groupId);
             // bucket to an experiment only if group entities are to be mutually exclusive
             if (experimentGroup.getPolicy().equals(Group.RANDOM_POLICY)) {
-                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, userId);
+                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId, userId);
                 if (bucketedExperiment == null) {
                     return null;
                 }
@@ -156,7 +160,7 @@ public class Bucketer {
             }
         }
 
-        return bucketToVariation(experiment, userId);
+        return bucketToVariation(experiment, bucketingId, userId);
     }
 
 
