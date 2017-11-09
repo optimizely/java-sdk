@@ -239,7 +239,7 @@ public class EventBuilderV2Test {
         // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
         // call the bucket function.
         for (Experiment experiment : allExperiments) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
+            when(mockBucketAlgorithm.bucket(experiment, userId, userId))
                     .thenReturn(experiment.getVariations().get(0));
         }
         DecisionService decisionService = new DecisionService(
@@ -330,7 +330,7 @@ public class EventBuilderV2Test {
 
         // Bucket to the first variation for all experiments.
         for (Experiment experiment : validProjectConfig.getExperiments()) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
+            when(mockBucketAlgorithm.bucket(experiment, userId, userId))
                     .thenReturn(experiment.getVariations().get(0));
         }
         DecisionService decisionService = new DecisionService(
@@ -455,7 +455,7 @@ public class EventBuilderV2Test {
                 Collections.<String, Object>emptyMap());
 
         for (Experiment experiment : validProjectConfig.getExperiments()) {
-            verify(bucketer, never()).bucket(experiment, whitelistedUserId);
+            verify(bucketer, never()).bucket(experiment, whitelistedUserId, whitelistedUserId);
         }
 
         assertNull(conversionEvent);
@@ -473,7 +473,7 @@ public class EventBuilderV2Test {
 
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         for (Experiment experiment : validProjectConfig.getExperiments()) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
+            when(mockBucketAlgorithm.bucket(experiment, userId, userId))
                     .thenReturn(experiment.getVariations().get(0));
         }
         DecisionService decisionService = new DecisionService(
@@ -520,7 +520,7 @@ public class EventBuilderV2Test {
 
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         for (Experiment experiment : projectConfig.getExperiments()) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
+            when(mockBucketAlgorithm.bucket(experiment, userId, userId))
                     .thenReturn(experiment.getVariations().get(0));
         }
 
