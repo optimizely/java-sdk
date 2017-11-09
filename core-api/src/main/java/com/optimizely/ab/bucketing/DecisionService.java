@@ -1,19 +1,18 @@
-/**
- *
- *    Copyright 2017, Optimizely and contributors
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
+/****************************************************************************
+ * Copyright 2017, Optimizely, Inc. and contributors                        *
+ *                                                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");          *
+ * you may not use this file except in compliance with the License.         *
+ * You may obtain a copy of the License at                                  *
+ *                                                                          *
+ *    http://www.apache.org/licenses/LICENSE-2.0                            *
+ *                                                                          *
+ * Unless required by applicable law or agreed to in writing, software      *
+ * distributed under the License is distributed on an "AS IS" BASIS,        *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ * See the License for the specific language governing permissions and      *
+ * limitations under the License.                                           *
+ ***************************************************************************/
 package com.optimizely.ab.bucketing;
 
 import com.optimizely.ab.OptimizelyRuntimeException;
@@ -164,17 +163,17 @@ public class DecisionService {
             }
         }
         else {
-            logger.info("The feature flag \"" + featureFlag.getKey() + "\" is not used in any experiments.");
+            logger.info("The feature flag \"{}\" is not used in any experiments.", featureFlag.getKey());
         }
 
         Variation variation = getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes);
         if (variation == null) {
-            logger.info("The user \"" + userId + "\" was not bucketed into a rollout for feature flag \"" +
-            featureFlag.getKey() + "\".");
+            logger.info("The user \"{}\" was not bucketed into a rollout for feature flag \"{}\".",
+                    userId, featureFlag.getKey());
         }
         else {
-            logger.info("The user \"" + userId + "\" was bucketed into a rollout for feature flag \"" +
-                    featureFlag.getKey() + "\".");
+            logger.info("The user \"{}\" was bucketed into a rollout for feature flag \"{}\".",
+                    userId, featureFlag.getKey());
         }
         return variation;
     }
@@ -194,14 +193,13 @@ public class DecisionService {
                                                         @Nonnull Map<String, String> filteredAttributes) {
         // use rollout to get variation for feature
         if (featureFlag.getRolloutId().isEmpty()) {
-            logger.info("The feature flag \"" + featureFlag.getKey() + "\" is not used in a rollout.");
+            logger.info("The feature flag \"{}\" is not used in a rollout.", featureFlag.getKey());
             return null;
         }
         Rollout rollout = projectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
         if (rollout == null) {
-            logger.error("The rollout with id \"" + featureFlag.getRolloutId() +
-                    "\" was not found in the datafile for feature flag \"" + featureFlag.getKey() +
-                    "\".");
+            logger.error("The rollout with id \"{}\" was not found in the datafile for feature flag \"{}\".",
+                    featureFlag.getRolloutId(), featureFlag.getKey());
             return null;
         }
         int rolloutRulesLength = rollout.getExperiments().size();
@@ -211,30 +209,26 @@ public class DecisionService {
             Experiment rolloutRule= rollout.getExperiments().get(i);
             Audience audience = projectConfig.getAudienceIdMapping().get(rolloutRule.getAudienceIds().get(0));
             if (ExperimentUtils.isUserInExperiment(projectConfig, rolloutRule, filteredAttributes)) {
-                logger.debug("Attempting to bucket user \"" + userId +
-                        "\" into rollout rule for audience \"" + audience.getName() +
-                        "\".");
+                logger.debug("Attempting to bucket user \"{}\" into rollout rule for audience \"{}\".",
+                        userId, audience.getName());
                 variation = bucketer.bucket(rolloutRule, userId);
                 if (variation == null) {
-                    logger.debug("User \"" + userId +
-                            "\" was excluded due to traffic allocation.");
+                    logger.debug("User \"{}\" was excluded due to traffic allocation.", userId);
                     break;
                 }
                 return variation;
             }
             else {
-                logger.debug("User \"" + userId +
-                        "\" did not meet the conditions to be in rollout rule for audience \"" + audience.getName() +
-                        "\".");
+                logger.debug("User \"{}\" did not meet the conditions to be in rollout rule for audience \"{}\".",
+                        userId, audience.getName());
             }
         }
         // get last rule which is the everyone else rule
         Experiment everyoneElseRule = rollout.getExperiments().get(rolloutRulesLength - 1);
         variation = bucketer.bucket(everyoneElseRule, userId); // ignore audience
         if (variation == null) {
-            logger.debug("User \"" + userId +
-                    "\" was excluded from the \"Everyone Else\" rule for feature flag \"" + featureFlag.getKey() +
-                    "\".");
+            logger.debug("User \"{}\" was excluded from the \"Everyone Else\" rule for feature flag \"{}\".",
+                    userId, featureFlag.getKey());
         }
         return variation;
     }
@@ -287,14 +281,14 @@ public class DecisionService {
                     .getVariationIdToVariationMap()
                     .get(variationId);
             if (savedVariation != null) {
-                logger.info("Returning previously activated variation \"{}\" of experiment \"{}\" "
-                                + "for user \"{}\" from user profile.",
+                logger.info("Returning previously activated variation \"{}\" of experiment \"{}\" " +
+                                "for user \"{}\" from user profile.",
                         savedVariation.getKey(), experimentKey, userProfile.userId);
                 // A variation is stored for this combined bucket id
                 return savedVariation;
             } else {
-                logger.info("User \"{}\" was previously bucketed into variation with ID \"{}\" for experiment \"{}\"," +
-                                " but no matching variation was found for that user. We will re-bucket the user.",
+                logger.info("User \"{}\" was previously bucketed into variation with ID \"{}\" for experiment \"{}\", " +
+                                "but no matching variation was found for that user. We will re-bucket the user.",
                         userProfile.userId, variationId, experimentKey);
                 return null;
             }
