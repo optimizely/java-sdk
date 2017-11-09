@@ -324,7 +324,7 @@ public class Optimizely {
                                               @Nonnull Map<String, String> attributes) {
         FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
         if (featureFlag == null) {
-            logger.info("No feature flag was found for key \"" + featureKey + "\".");
+            logger.info("No feature flag was found for key \"{}\".", featureKey);
             return false;
         }
 
@@ -344,14 +344,14 @@ public class Optimizely {
                         variation);
             }
             else {
-                logger.info("The user \"" + userId +
-                        "\" is not being experimented on in feature \"" + featureKey + "\".");
+                logger.info("The user \"{}\" is not being experimented on in feature \"{}\".",
+                        userId, featureKey);
             }
-            logger.info("Feature \"" + featureKey + "\" is enabled for user \"" + userId + "\".");
+            logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
             return true;
         }
         else {
-            logger.info("Feature \"" + featureKey + "\" is not enabled for user \"" + userId + "\".");
+            logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
             return false;
         }
     }
@@ -435,8 +435,8 @@ public class Optimizely {
                 return Double.parseDouble(variableValue);
             }
             catch (NumberFormatException exception) {
-                logger.error("NumberFormatException while trying to parse \"" + variableValue +
-                "\" as Double. " + exception);
+                logger.error("NumberFormatException while trying to parse \"{}\" as Double.",
+                        variableValue, exception);
             }
         }
         return null;
@@ -531,21 +531,20 @@ public class Optimizely {
                                                   @Nonnull LiveVariable.VariableType variableType) {
         FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
         if (featureFlag == null) {
-            logger.info("No feature flag was found for key \"" + featureKey + "\".");
+            logger.info("No feature flag was found for key \"{}\".", featureKey);
             return null;
         }
 
         LiveVariable variable = featureFlag.getVariableKeyToLiveVariableMap().get(variableKey);
         if (variable ==  null) {
-            logger.info("No feature variable was found for key \"" + variableKey + "\" in feature flag \"" +
-                    featureKey + "\".");
+            logger.info("No feature variable was found for key \"{}\" in feature flag \"{}\".",
+                    variableKey, featureKey);
             return null;
         }
         else if (!variable.getType().equals(variableType)) {
-            logger.info("The feature variable \"" + variableKey +
-                    "\" is actually of type \"" + variable.getType().toString() +
-                    "\" type. You tried to access it as type \"" + variableType.toString() +
-                    "\". Please use the appropriate feature variable accessor.");
+            logger.info("The feature variable \"{}\" is actually of type \"{}\". " +
+                            "You tried to access it as type \"{}\". Please use the appropriate feature variable accessor.",
+                    variableKey, variable.getType().toString(), variableType.toString());
             return null;
         }
 
@@ -564,10 +563,9 @@ public class Optimizely {
             }
         }
         else {
-            logger.info("User \"" + userId +
-                    "\" was not bucketed into any variation for feature flag \"" + featureKey +
-                    "\". The default value \"" + variableValue +
-                    "\" for \"" + variableKey + "\" is being returned."
+            logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
+                            "The default value \"{}\" for \"{}\" is being returned.",
+                    userId, featureKey, variableValue, variableKey
             );
         }
 

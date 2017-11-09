@@ -294,7 +294,7 @@ public class DecisionServiceTest {
 
     /**
      * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map)}
-     * returns null when the {@link FeatureFlag} is not used in an experiments or rollouts.
+     * returns null when the {@link FeatureFlag} is not used in any experiments or rollouts.
      */
     @Test
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
