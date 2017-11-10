@@ -319,10 +319,12 @@ public class DecisionServiceTest {
                 "The user \"" + genericUserId + "\" was not bucketed into a rollout for feature flag \"" +
                         featureKey + "\".");
 
-        assertNull(decisionService.getVariationForFeature(
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
                 emptyFeatureFlag,
                 genericUserId,
-                Collections.<String, String>emptyMap()));
+                Collections.<String, String>emptyMap());
+        assertNull(featureDecision.variation);
+        assertNull(featureDecision.decisionSource);
 
         verify(emptyFeatureFlag, times(1)).getExperimentIds();
         verify(emptyFeatureFlag, times(1)).getRolloutId();
@@ -359,11 +361,13 @@ public class DecisionServiceTest {
         );
 
         // try to get a variation back from the decision service for the feature flag
-        assertNull(spyDecisionService.getVariationForFeature(
+        FeatureDecision featureDecision = spyDecisionService.getVariationForFeature(
                 spyFeatureFlag,
                 genericUserId,
                 Collections.<String, String>emptyMap()
-        ));
+        );
+        assertNull(featureDecision.variation);
+        assertNull(featureDecision.decisionSource);
 
         logbackVerifier.expectMessage(Level.INFO,
                 "The user \"" + genericUserId + "\" was not bucketed into a rollout for feature flag \"" +
@@ -401,12 +405,13 @@ public class DecisionServiceTest {
                 anyMapOf(String.class, String.class)
         );
 
-        assertEquals(ValidProjectConfigV4.VARIATION_MUTEX_GROUP_EXP_2_VAR_1,
-                spyDecisionService.getVariationForFeature(
-                        spyFeatureFlag,
-                        genericUserId,
-                        Collections.<String, String>emptyMap()
-                ));
+        FeatureDecision featureDecision = spyDecisionService.getVariationForFeature(
+                spyFeatureFlag,
+                genericUserId,
+                Collections.<String, String>emptyMap()
+        );
+        assertEquals(ValidProjectConfigV4.VARIATION_MUTEX_GROUP_EXP_2_VAR_1, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.EXPERIMENT, featureDecision.decisionSource);
 
         verify(spyFeatureFlag, times(2)).getExperimentIds();
         verify(spyFeatureFlag, never()).getKey();
@@ -453,12 +458,13 @@ public class DecisionServiceTest {
         );
 
         // make sure we get the right variation back
-        assertEquals(experimentVariation,
-                decisionService.getVariationForFeature(featureFlag,
-                        genericUserId,
-                        Collections.<String, String>emptyMap()
-                )
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+                featureFlag,
+                genericUserId,
+                Collections.<String, String>emptyMap()
         );
+        assertEquals(experimentVariation, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.EXPERIMENT, featureDecision.decisionSource);
 
         // make sure we do not even check for rollout bucketing
         verify(decisionService, never()).getVariationForFeatureInRollout(
@@ -514,12 +520,13 @@ public class DecisionServiceTest {
         );
 
         // make sure we get the right variation back
-        assertEquals(rolloutVariation,
-                decisionService.getVariationForFeature(featureFlag,
-                        genericUserId,
-                        Collections.<String, String>emptyMap()
-                )
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+                featureFlag,
+                genericUserId,
+                Collections.<String, String>emptyMap()
         );
+        assertEquals(rolloutVariation, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
 
         // make sure we do not even check for rollout bucketing
         verify(decisionService,times(1)).getVariationForFeatureInRollout(

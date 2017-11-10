@@ -18,6 +18,7 @@ package com.optimizely.ab;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
+import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
@@ -330,27 +331,24 @@ public class Optimizely {
 
         Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
 
-        Variation variation = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
-
-        if (variation != null) {
-            Experiment experiment = projectConfig.getExperimentForVariationId(variation.getId());
-            if (experiment != null) {
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
+        if (featureDecision.variation != null) {
+            if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
                 // the user is in an experiment for the feature
+                Experiment experiment = projectConfig.getExperimentForVariationId(featureDecision.variation.getId());
                 sendImpression(
                         projectConfig,
                         experiment,
                         userId,
                         filteredAttributes,
-                        variation);
-            }
-            else {
-                logger.info("The user \"{}\" is not being experimented on in feature \"{}\".",
+                        featureDecision.variation);
+            } else {
+                logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
                         userId, featureKey);
             }
             logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
             return true;
-        }
-        else {
+        } else {
             logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
             return false;
         }
@@ -433,10 +431,9 @@ public class Optimizely {
         if (variableValue != null) {
             try {
                 return Double.parseDouble(variableValue);
-            }
-            catch (NumberFormatException exception) {
-                logger.error("NumberFormatException while trying to parse \"{}\" as Double.",
-                        variableValue, exception);
+            } catch (NumberFormatException exception) {
+                logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                        "\" as Double. " + exception);
             }
         }
         return null;
@@ -479,10 +476,9 @@ public class Optimizely {
         if (variableValue != null) {
             try {
                 return Integer.parseInt(variableValue);
-            }
-            catch (NumberFormatException exception) {
+            } catch (NumberFormatException exception) {
                 logger.error("NumberFormatException while trying to parse \"" + variableValue +
-                "\" as Integer. " + exception.toString());
+                        "\" as Integer. " + exception.toString());
             }
         }
         return null;
@@ -536,33 +532,30 @@ public class Optimizely {
         }
 
         LiveVariable variable = featureFlag.getVariableKeyToLiveVariableMap().get(variableKey);
-        if (variable ==  null) {
+        if (variable == null) {
             logger.info("No feature variable was found for key \"{}\" in feature flag \"{}\".",
                     variableKey, featureKey);
             return null;
-        }
-        else if (!variable.getType().equals(variableType)) {
-            logger.info("The feature variable \"{}\" is actually of type \"{}\". " +
-                            "You tried to access it as type \"{}\". Please use the appropriate feature variable accessor.",
-                    variableKey, variable.getType().toString(), variableType.toString());
+        } else if (!variable.getType().equals(variableType)) {
+            logger.info("The feature variable \"" + variableKey +
+                    "\" is actually of type \"" + variable.getType().toString() +
+                    "\" type. You tried to access it as type \"" + variableType.toString() +
+                    "\". Please use the appropriate feature variable accessor.");
             return null;
         }
 
         String variableValue = variable.getDefaultValue();
 
-        Variation variation = decisionService.getVariationForFeature(featureFlag, userId, attributes);
-
-        if (variation != null) {
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, attributes);
+        if (featureDecision.variation != null) {
             LiveVariableUsageInstance liveVariableUsageInstance =
-                    variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
+                    featureDecision.variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
             if (liveVariableUsageInstance != null) {
                 variableValue = liveVariableUsageInstance.getValue();
-            }
-            else {
+            } else {
                 variableValue = variable.getDefaultValue();
             }
-        }
-        else {
+        } else {
             logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
                             "The default value \"{}\" for \"{}\" is being returned.",
                     userId, featureKey, variableValue, variableKey

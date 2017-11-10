@@ -20,6 +20,7 @@ import ch.qos.logback.classic.Level;
 import com.google.common.collect.ImmutableMap;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
+import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
@@ -2617,7 +2618,8 @@ public class OptimizelyTest {
                 .withDecisionService(mockDecisionService)
                 .build();
 
-        doReturn(VARIATION_MULTIVARIATE_EXPERIMENT_GRED).when(mockDecisionService).getVariationForFeature(
+        FeatureDecision featureDecision = new FeatureDecision(VARIATION_MULTIVARIATE_EXPERIMENT_GRED, FeatureDecision.DecisionSource.EXPERIMENT);
+        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
                 FEATURE_FLAG_MULTI_VARIATE_FEATURE,
                 genericUserId,
                 Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)
@@ -2717,7 +2719,8 @@ public class OptimizelyTest {
                 .withDecisionService(mockDecisionService)
                 .build());
 
-        doReturn(null).when(mockDecisionService).getVariationForFeature(
+        FeatureDecision featureDecision = new FeatureDecision(null, null);
+        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
                 any(FeatureFlag.class),
                 anyString(),
                 anyMapOf(String.class, String.class)
@@ -2746,8 +2749,7 @@ public class OptimizelyTest {
     /**
      * Verify {@link Optimizely#isFeatureEnabled(String, String)} calls into
      * {@link Optimizely#isFeatureEnabled(String, String, Map)} and they both
-     * return True
-     * when the user is bucketed into a variation for the feature.
+     * return True when the user is bucketed into a variation for the feature.
      * An impression event should not be dispatched since the user was not bucketed into an Experiment.
      * @throws Exception
      */
@@ -2762,7 +2764,8 @@ public class OptimizelyTest {
                 .withDecisionService(mockDecisionService)
                 .build());
 
-        doReturn(new Variation("variationId", "variationKey")).when(mockDecisionService).getVariationForFeature(
+        FeatureDecision featureDecision = new FeatureDecision(new Variation("variationId", "variationKey"), FeatureDecision.DecisionSource.ROLLOUT);
+        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
                 eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
                 eq(genericUserId),
                 eq(Collections.<String, String>emptyMap())
@@ -2773,7 +2776,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
                 Level.INFO,
                 "The user \"" + genericUserId +
-                        "\" is not being experimented on in feature \"" + validFeatureKey + "\"."
+                        "\" is not included in an experiment for feature \"" + validFeatureKey + "\"."
         );
         logbackVerifier.expectMessage(
                 Level.INFO,

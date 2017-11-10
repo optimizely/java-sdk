@@ -147,18 +147,17 @@ public class DecisionService {
      * @param featureFlag The feature flag the user wants to access.
      * @param userId User Identifier
      * @param filteredAttributes A map of filtered attributes.
-     * @return null if the user is not bucketed into any variation
-     *      {@link Variation} the user is bucketed into if the user is successfully bucketed.
+     * @return {@link FeatureDecision}
      */
-    public @Nullable Variation getVariationForFeature(@Nonnull FeatureFlag featureFlag,
-                                                      @Nonnull String userId,
-                                                      @Nonnull Map<String, String> filteredAttributes) {
+    public @Nonnull FeatureDecision getVariationForFeature(@Nonnull FeatureFlag featureFlag,
+                                                           @Nonnull String userId,
+                                                           @Nonnull Map<String, String> filteredAttributes) {
         if (!featureFlag.getExperimentIds().isEmpty()) {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
                 Variation variation = this.getVariation(experiment, userId, filteredAttributes);
                 if (variation != null) {
-                    return variation;
+                    return new FeatureDecision(variation, FeatureDecision.DecisionSource.EXPERIMENT);
                 }
             }
         }
@@ -170,12 +169,13 @@ public class DecisionService {
         if (variation == null) {
             logger.info("The user \"{}\" was not bucketed into a rollout for feature flag \"{}\".",
                     userId, featureFlag.getKey());
+            return new FeatureDecision(null, null);
         }
         else {
             logger.info("The user \"{}\" was bucketed into a rollout for feature flag \"{}\".",
                     userId, featureFlag.getKey());
         }
-        return variation;
+        return new FeatureDecision(variation, FeatureDecision.DecisionSource.ROLLOUT);
     }
 
     /**
