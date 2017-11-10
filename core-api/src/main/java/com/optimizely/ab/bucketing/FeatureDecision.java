@@ -15,15 +15,19 @@
  ***************************************************************************/
 package com.optimizely.ab.bucketing;
 
+import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 
 import javax.annotation.Nullable;
 
 public class FeatureDecision {
-    /** The {@link com.optimizely.ab.config.Variation} the user was bucketed into. */
+    /** The {@link Experiment} the Feature is associated with. */
+    @Nullable public Experiment experiment;
+
+    /** The {@link Variation} the user was bucketed into. */
     @Nullable public Variation variation;
 
-    /** The source of the {@link com.optimizely.ab.config.Variation}. */
+    /** The source of the {@link Variation}. */
     @Nullable public DecisionSource decisionSource;
 
     public enum DecisionSource {
@@ -33,10 +37,13 @@ public class FeatureDecision {
 
     /**
      * Initialize a FeatureDecision object.
-     * @param variation The ID of the variation the user was bucketed into.
+     * @param experiment The {@link Experiment} the Feature is associated with.
+     * @param variation The {@link Variation} the user was bucketed into.
      * @param decisionSource The source of the variation.
      */
-    public FeatureDecision(@Nullable Variation variation, @Nullable DecisionSource decisionSource) {
+    public FeatureDecision(@Nullable Experiment experiment, @Nullable Variation variation,
+                           @Nullable DecisionSource decisionSource) {
+        this.experiment = experiment;
         this.variation = variation;
         this.decisionSource = decisionSource;
     }

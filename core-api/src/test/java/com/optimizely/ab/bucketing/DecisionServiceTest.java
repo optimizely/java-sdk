@@ -356,7 +356,7 @@ public class DecisionServiceTest {
                 anyMapOf(String.class, String.class)
         );
         // do not bucket to any rollouts
-        doReturn(new FeatureDecision(null, null)).when(spyDecisionService).getVariationForFeatureInRollout(
+        doReturn(new FeatureDecision(null, null, null)).when(spyDecisionService).getVariationForFeatureInRollout(
                 any(FeatureFlag.class),
                 anyString(),
                 anyMapOf(String.class, String.class)
@@ -433,7 +433,8 @@ public class DecisionServiceTest {
         assertNotNull(featureExperiment);
         Rollout featureRollout = v4ProjectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
         Variation experimentVariation = featureExperiment.getVariations().get(0);
-        Variation rolloutVariation = featureRollout.getExperiments().get(0).getVariations().get(0);
+        Experiment rolloutExperiment = featureRollout.getExperiments().get(0);
+        Variation rolloutVariation = rolloutExperiment.getVariations().get(0);
 
         DecisionService decisionService = spy(new DecisionService(
                         mock(Bucketer.class),
@@ -452,7 +453,7 @@ public class DecisionServiceTest {
         );
 
         // return variation for rollout
-        doReturn(new FeatureDecision(rolloutVariation, FeatureDecision.DecisionSource.ROLLOUT))
+        doReturn(new FeatureDecision(rolloutExperiment, rolloutVariation, FeatureDecision.DecisionSource.ROLLOUT))
                 .when(decisionService).getVariationForFeatureInRollout(
                 eq(featureFlag),
                 anyString(),
@@ -495,7 +496,8 @@ public class DecisionServiceTest {
         Experiment featureExperiment = v4ProjectConfig.getExperimentIdMapping().get(featureFlag.getExperimentIds().get(0));
         assertNotNull(featureExperiment);
         Rollout featureRollout = v4ProjectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
-        Variation rolloutVariation = featureRollout.getExperiments().get(0).getVariations().get(0);
+        Experiment rolloutExperiment = featureRollout.getExperiments().get(0);
+        Variation rolloutVariation = rolloutExperiment.getVariations().get(0);
 
         DecisionService decisionService = spy(new DecisionService(
                         mock(Bucketer.class),
@@ -514,7 +516,7 @@ public class DecisionServiceTest {
         );
 
         // return variation for rollout
-        doReturn(new FeatureDecision(rolloutVariation, FeatureDecision.DecisionSource.ROLLOUT))
+        doReturn(new FeatureDecision(rolloutExperiment, rolloutVariation, FeatureDecision.DecisionSource.ROLLOUT))
                 .when(decisionService).getVariationForFeatureInRollout(
                 eq(featureFlag),
                 anyString(),

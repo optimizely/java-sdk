@@ -159,7 +159,8 @@ public class DecisionService {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
                 Variation variation = this.getVariation(experiment, userId, filteredAttributes);
                 if (variation != null) {
-                    return new FeatureDecision(variation, FeatureDecision.DecisionSource.EXPERIMENT);
+                    return new FeatureDecision(experiment, variation,
+                            FeatureDecision.DecisionSource.EXPERIMENT);
                 }
             }
         } else {
@@ -192,13 +193,13 @@ public class DecisionService {
         // use rollout to get variation for feature
         if (featureFlag.getRolloutId().isEmpty()) {
             logger.info("The feature flag \"{}\" is not used in a rollout.", featureFlag.getKey());
-            return new FeatureDecision(null, null);
+            return new FeatureDecision(null, null, null);
         }
         Rollout rollout = projectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
         if (rollout == null) {
             logger.error("The rollout with id \"{}\" was not found in the datafile for feature flag \"{}\".",
                     featureFlag.getRolloutId(), featureFlag.getKey());
-            return new FeatureDecision(null, null);
+            return new FeatureDecision(null, null, null);
         }
 
         // for all rules before the everyone else rule
@@ -215,7 +216,8 @@ public class DecisionService {
                     logger.debug("User \"{}\" was excluded due to traffic allocation.", userId);
                     break;
                 }
-                return new FeatureDecision(variation, FeatureDecision.DecisionSource.ROLLOUT);
+                return new FeatureDecision(rolloutRule, variation,
+                        FeatureDecision.DecisionSource.ROLLOUT);
             } else {
                 logger.debug("User \"{}\" did not meet the conditions to be in rollout rule for audience \"{}\".",
                         userId, audience.getName());
@@ -228,9 +230,10 @@ public class DecisionService {
         if (variation == null) {
             logger.debug("User \"{}\" was excluded from the \"Everyone Else\" rule for feature flag \"{}\".",
                     userId, featureFlag.getKey());
-            return new FeatureDecision(null, null);
+            return new FeatureDecision(null, null, null);
         }
-        return new FeatureDecision(variation, FeatureDecision.DecisionSource.ROLLOUT);
+        return new FeatureDecision(everyoneElseRule, variation,
+                FeatureDecision.DecisionSource.ROLLOUT);
     }
 
     /**
