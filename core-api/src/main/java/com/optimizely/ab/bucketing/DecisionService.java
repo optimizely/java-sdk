@@ -24,13 +24,15 @@ import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ExperimentUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Optimizely's decision service that determines which variation of an experiment the user will be allocated to.
@@ -160,22 +162,19 @@ public class DecisionService {
                     return new FeatureDecision(variation, FeatureDecision.DecisionSource.EXPERIMENT);
                 }
             }
-        }
-        else {
+        } else {
             logger.info("The feature flag \"{}\" is not used in any experiments.", featureFlag.getKey());
         }
 
-        Variation variation = getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes);
-        if (variation == null) {
+        FeatureDecision featureDecision = getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes);
+        if (featureDecision.variation == null) {
             logger.info("The user \"{}\" was not bucketed into a rollout for feature flag \"{}\".",
                     userId, featureFlag.getKey());
-            return new FeatureDecision(null, null);
-        }
-        else {
+        } else {
             logger.info("The user \"{}\" was bucketed into a rollout for feature flag \"{}\".",
                     userId, featureFlag.getKey());
         }
-        return new FeatureDecision(variation, FeatureDecision.DecisionSource.ROLLOUT);
+        return featureDecision;
     }
 
     /**
@@ -185,28 +184,28 @@ public class DecisionService {
      * @param featureFlag The feature flag the user wants to access.
      * @param userId User Identifier
      * @param filteredAttributes A map of filtered attributes.
-     * @return null if the user is not bucketed into the rollout or if the feature flag was not attached to a rollout.
-     *      {@link Variation} the user is bucketed into fi the user is successfully bucketed.
+     * @return {@link FeatureDecision}
      */
-    @Nullable Variation getVariationForFeatureInRollout(@Nonnull FeatureFlag featureFlag,
-                                                        @Nonnull String userId,
-                                                        @Nonnull Map<String, String> filteredAttributes) {
+    @Nonnull FeatureDecision getVariationForFeatureInRollout(@Nonnull FeatureFlag featureFlag,
+                                                             @Nonnull String userId,
+                                                             @Nonnull Map<String, String> filteredAttributes) {
         // use rollout to get variation for feature
         if (featureFlag.getRolloutId().isEmpty()) {
             logger.info("The feature flag \"{}\" is not used in a rollout.", featureFlag.getKey());
-            return null;
+            return new FeatureDecision(null, null);
         }
         Rollout rollout = projectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
         if (rollout == null) {
             logger.error("The rollout with id \"{}\" was not found in the datafile for feature flag \"{}\".",
                     featureFlag.getRolloutId(), featureFlag.getKey());
-            return null;
+            return new FeatureDecision(null, null);
         }
+
+        // for all rules before the everyone else rule
         int rolloutRulesLength = rollout.getExperiments().size();
         Variation variation;
-        // for all rules before the everyone else rule
         for (int i = 0; i < rolloutRulesLength - 1; i++) {
-            Experiment rolloutRule= rollout.getExperiments().get(i);
+            Experiment rolloutRule = rollout.getExperiments().get(i);
             Audience audience = projectConfig.getAudienceIdMapping().get(rolloutRule.getAudienceIds().get(0));
             if (ExperimentUtils.isUserInExperiment(projectConfig, rolloutRule, filteredAttributes)) {
                 logger.debug("Attempting to bucket user \"{}\" into rollout rule for audience \"{}\".",
@@ -216,21 +215,22 @@ public class DecisionService {
                     logger.debug("User \"{}\" was excluded due to traffic allocation.", userId);
                     break;
                 }
-                return variation;
-            }
-            else {
+                return new FeatureDecision(variation, FeatureDecision.DecisionSource.ROLLOUT);
+            } else {
                 logger.debug("User \"{}\" did not meet the conditions to be in rollout rule for audience \"{}\".",
                         userId, audience.getName());
             }
         }
+
         // get last rule which is the everyone else rule
         Experiment everyoneElseRule = rollout.getExperiments().get(rolloutRulesLength - 1);
         variation = bucketer.bucket(everyoneElseRule, userId); // ignore audience
         if (variation == null) {
             logger.debug("User \"{}\" was excluded from the \"Everyone Else\" rule for feature flag \"{}\".",
                     userId, featureFlag.getKey());
+            return new FeatureDecision(null, null);
         }
-        return variation;
+        return new FeatureDecision(variation, FeatureDecision.DecisionSource.ROLLOUT);
     }
 
     /**
@@ -249,13 +249,11 @@ public class DecisionService {
             if (forcedVariation != null) {
                 logger.info("User \"{}\" is forced in variation \"{}\".", userId, forcedVariationKey);
             } else {
-                logger.error("Variation \"{}\" is not in the datafile. Not activating user \"{}\".", forcedVariationKey,
-                        userId);
+                logger.error("Variation \"{}\" is not in the datafile. Not activating user \"{}\".",
+                        forcedVariationKey, userId);
             }
-
             return forcedVariation;
         }
-
         return null;
     }
 
@@ -293,8 +291,8 @@ public class DecisionService {
                 return null;
             }
         } else {
-            logger.info("No previously activated variation of experiment \"{}\" "
-                            + "for user \"{}\" found in user profile.",
+            logger.info("No previously activated variation of experiment \"{}\" " +
+                            "for user \"{}\" found in user profile.",
                     experimentKey, userProfile.userId);
             return null;
         }
