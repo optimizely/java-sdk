@@ -336,11 +336,9 @@ public class Optimizely {
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
         if (featureDecision.variation != null) {
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
-                // the user is in an experiment for the feature
-                Experiment experiment = projectConfig.getExperimentForVariationId(featureDecision.variation.getId());
                 sendImpression(
                         projectConfig,
-                        experiment,
+                        featureDecision.experiment,
                         userId,
                         filteredAttributes,
                         featureDecision.variation);
