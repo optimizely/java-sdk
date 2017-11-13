@@ -45,7 +45,7 @@ import java.util.Map;
  */
 public class DecisionService {
 
-    public static final String BUCKETING_ATTRIBUTE = "optimizely_bucketing_id";
+    public static final String BUCKETING_ATTRIBUTE = "$opt_bucketing_id";
     private final Bucketer bucketer;
     private final ErrorHandler errorHandler;
     private final ProjectConfig projectConfig;
