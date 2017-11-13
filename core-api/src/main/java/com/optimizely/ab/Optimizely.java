@@ -797,7 +797,8 @@ public class Optimizely {
 
         Map<String, Attribute> attributeKeyMapping = projectConfig.getAttributeKeyMapping();
         for (Map.Entry<String, String> attribute : attributes.entrySet()) {
-            if (!attributeKeyMapping.containsKey(attribute.getKey())) {
+            if (!attributeKeyMapping.containsKey(attribute.getKey()) &&
+                    attribute.getKey() != com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE) {
                 if (unknownAttributes == null) {
                     unknownAttributes = new ArrayList<String>();
                 }

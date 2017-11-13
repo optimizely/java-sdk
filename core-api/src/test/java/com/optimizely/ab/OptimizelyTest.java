@@ -3284,6 +3284,35 @@ public class OptimizelyTest {
         );
     }
 
+    /**
+     * Verify that {@link Optimizely#getVariation(String, String)} returns a variation when given an experiment
+     * with no audiences and no user attributes.
+     */
+    @Test
+    public void getVariationBucketingIdAttribute() throws Exception {
+        Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
+        Variation bucketedVariation = experiment.getVariations().get(0);
+
+        Map<String, String> testUserAttributes = new HashMap<String, String>();
+        testUserAttributes.put("browser_type", "chrome");
+        testUserAttributes.put(DecisionService.BUCKETING_ATTRIBUTE, "blah");
+
+
+        when(mockBucketer.bucket(experiment, "blah", "userId")).thenReturn(bucketedVariation);
+
+        Optimizely optimizely = Optimizely.builder(noAudienceDatafile, mockEventHandler)
+                .withConfig(noAudienceProjectConfig)
+                .withBucketing(mockBucketer)
+                .withErrorHandler(mockErrorHandler)
+                .build();
+
+        Variation actualVariation = optimizely.getVariation(experiment.getKey(), "userId", testUserAttributes);
+
+        verify(mockBucketer).bucket(experiment, "blah", "userId");
+
+        assertThat(actualVariation, is(bucketedVariation));
+    }
+
     //======== Helper methods ========//
 
     private Experiment createUnknownExperiment() {

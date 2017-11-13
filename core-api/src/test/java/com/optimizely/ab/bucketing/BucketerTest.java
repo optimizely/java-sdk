@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -324,6 +325,42 @@ public class BucketerTest {
         assertNull(algorithm.bucket(groupExperiment, "blah", "blah"));
     }
 
+    @Test
+    public void testBucketWithBucketingId() {
+        final AtomicInteger bucketValue = new AtomicInteger();
+        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
+        bucketValue.set(0);
+
+        ProjectConfig projectConfig = validProjectConfigV2();
+        List<Experiment> groupExperiments = projectConfig.getGroups().get(1).getExperiments();
+        Experiment groupExperiment = groupExperiments.get(0);
+        Variation expectedVariation = groupExperiment.getVariations().get(0);
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "User \"blah\" with bucketingId \"blah\" is in variation \"e1_vtag1\" of experiment \"overlapping_etag1\".");
+        assertThat(algorithm.bucket(groupExperiment, "blah", "blah"), is(expectedVariation));
+
+    }
+
+    @Test
+    public void testBucketWithNullBucketingId() {
+        final AtomicInteger bucketValue = new AtomicInteger();
+        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
+        bucketValue.set(0);
+
+        ProjectConfig projectConfig = validProjectConfigV2();
+        List<Experiment> groupExperiments = projectConfig.getGroups().get(1).getExperiments();
+        Experiment groupExperiment = groupExperiments.get(0);
+        Variation expectedVariation = groupExperiment.getVariations().get(0);
+
+        try {
+            algorithm.bucket(groupExperiment, null, "blah");
+        }
+        catch (IllegalArgumentException e) {
+            assertNotNull(e);
+        }
+    }
 
     //======== Helper methods ========//
 
