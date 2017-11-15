@@ -207,6 +207,7 @@ public class OptimizelyTest {
             activatedExperiment = validProjectConfig.getExperiments().get(0);
             testUserAttributes.put("browser_type", "chrome");
         }
+        testUserAttributes.put(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE, "bucketingId");
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
 
@@ -225,7 +226,7 @@ public class OptimizelyTest {
                 testUserAttributes))
                 .thenReturn(logEventToDispatch);
 
-        when(mockBucketer.bucket(activatedExperiment, "userId", "userId"))
+        when(mockBucketer.bucket(activatedExperiment, "bucketingId", "userId"))
                 .thenReturn(bucketedVariation);
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
@@ -237,7 +238,7 @@ public class OptimizelyTest {
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), "userId", testUserAttributes);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(activatedExperiment, "userId", "userId");
+        verify(mockBucketer).bucket(activatedExperiment, "bucketingId", "userId");
         assertThat(actualVariation, is(bucketedVariation));
 
         // verify that dispatchEvent was called with the correct LogEvent object
@@ -260,8 +261,10 @@ public class OptimizelyTest {
 
         Map<String, String> testUserAttributes = new HashMap<String, String>();
         testUserAttributes.put("browser_type", "chrome");
+        testUserAttributes.put(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
+                "bucketingId");
 
-        when(mockBucketer.bucket(activatedExperiment, "userId", "userId"))
+        when(mockBucketer.bucket(activatedExperiment, "bucketingId", "userId"))
                 .thenReturn(null);
 
         logbackVerifier.expectMessage(Level.INFO, "Not activating user \"userId\" for experiment \"" +
@@ -271,7 +274,7 @@ public class OptimizelyTest {
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), "userId", testUserAttributes);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(activatedExperiment, "userId", "userId");
+        verify(mockBucketer).bucket(activatedExperiment, "bucketingId", "userId");
         assertNull(actualVariation);
 
         // verify that dispatchEvent was NOT called
@@ -332,6 +335,9 @@ public class OptimizelyTest {
             testUserAttributes.put("browser_type", "chrome");
         }
 
+        testUserAttributes.put(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
+                "bucketingId");
+
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
 
@@ -340,7 +346,7 @@ public class OptimizelyTest {
                 eq("userId"), eq(testUserAttributes)))
                 .thenReturn(logEventToDispatch);
 
-        when(mockBucketer.bucket(activatedExperiment, "userId", "userId"))
+        when(mockBucketer.bucket(activatedExperiment, "bucketingId", "userId"))
                 .thenReturn(bucketedVariation);
 
         // activate the experiment
@@ -385,6 +391,9 @@ public class OptimizelyTest {
             testUserAttributes.put("browser_type", "chrome");
         }
 
+        testUserAttributes.put(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
+                "bucketingId");
+
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
 
@@ -393,7 +402,7 @@ public class OptimizelyTest {
                 eq("userId"), eq(testUserAttributes)))
                 .thenReturn(logEventToDispatch);
 
-        when(mockBucketer.bucket(activatedExperiment, "userId", "userId"))
+        when(mockBucketer.bucket(activatedExperiment, "bucketingId", "userId"))
                 .thenReturn(bucketedVariation);
 
         // activate the experiment

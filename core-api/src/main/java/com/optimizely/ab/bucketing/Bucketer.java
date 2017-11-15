@@ -109,7 +109,7 @@ public class Bucketer {
 
         int hashCode = MurmurHash3.murmurhash3_x86_32(combinedBucketId, 0, combinedBucketId.length(), MURMUR_HASH_SEED);
         int bucketValue = generateBucketValue(hashCode);
-        logger.debug("Assigned bucket {} to user \"{}\" with bucketingId \"{}\" during variation bucketing.", bucketValue, userId, bucketingId);
+        logger.debug("Assigned bucket {} to user \"{}\" with bucketingId \"{}\" when bucketing to a variation.", bucketValue, userId, bucketingId);
 
         String bucketedVariationId = bucketToEntity(bucketValue, trafficAllocations);
         if (bucketedVariationId != null) {

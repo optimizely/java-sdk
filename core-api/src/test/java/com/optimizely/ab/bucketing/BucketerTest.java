@@ -203,14 +203,14 @@ public class BucketerTest {
         final AtomicInteger bucketValue = new AtomicInteger();
         Bucketer algorithm = mockBucketAlgorithm(bucketValue);
 
-        logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 0 to user \"user1\" with bucketingId \"blah\" during variation bucketing.");
+        logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 0 to user \"user1\" with bucketingId \"blah\" when bucketing to a variation.");
         logbackVerifier.expectMessage(Level.INFO, "User \"user1\" with bucketingId \"blah\" is in variation \"var1\" of experiment \"exp_key\".");
 
         // verify bucketing to the first variation
         bucketValue.set(0);
         assertThat(algorithm.bucket(experiment, "blah", "user1"), is(variations.get(0)));
 
-        logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 1000 to user \"user1\" with bucketingId \"blah\" during variation bucketing.");
+        logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 1000 to user \"user1\" with bucketingId \"blah\" when bucketing to a variation.");
         logbackVerifier.expectMessage(Level.INFO, "User \"user1\" with bucketingId \"blah\" is not in any variation of experiment \"exp_key\".");
 
         // verify bucketing to no variation (null)
@@ -237,7 +237,7 @@ public class BucketerTest {
         logbackVerifier.expectMessage(Level.DEBUG,
                 "Assigned bucket 3000 to user \"user1\" with bucketingId \"blah\" during experiment bucketing.");
         logbackVerifier.expectMessage(Level.INFO, "User \"user1\" with bucketingId \"blah\" is in experiment \"group_etag2\" of group 42.");
-        logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 3000 to user \"user1\" with bucketingId \"blah\" during variation bucketing.");
+        logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 3000 to user \"user1\" with bucketingId \"blah\" when bucketing to a variation.");
         logbackVerifier.expectMessage(Level.INFO,
                 "User \"user1\" with bucketingId \"blah\" is in variation \"e2_vtag1\" of experiment \"group_etag2\".");
         assertThat(algorithm.bucket(groupExperiment, "blah", "user1"), is(groupExperiment.getVariations().get(0)));
