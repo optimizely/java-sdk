@@ -187,6 +187,9 @@ public class BucketerTest {
      */
     @Test
     public void bucketToControl() throws Exception {
+        String bucketingId = "blah";
+        String userId = "user1";
+
         List<String> audienceIds = Collections.emptyList();
 
         List<Variation> variations = Collections.singletonList(
@@ -203,19 +206,19 @@ public class BucketerTest {
         final AtomicInteger bucketValue = new AtomicInteger();
         Bucketer algorithm = mockBucketAlgorithm(bucketValue);
 
-        logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 0 to user \"user1\" with bucketingId \"blah\" when bucketing to a variation.");
-        logbackVerifier.expectMessage(Level.INFO, "User \"user1\" with bucketingId \"blah\" is in variation \"var1\" of experiment \"exp_key\".");
+        logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 0 to user \"" + userId + "\" with bucketingId \"" + bucketingId + "\" when bucketing to a variation.");
+        logbackVerifier.expectMessage(Level.INFO, "User \"" + userId + "\" with bucketingId \"" + bucketingId + "\" is in variation \"var1\" of experiment \"exp_key\".");
 
         // verify bucketing to the first variation
         bucketValue.set(0);
-        assertThat(algorithm.bucket(experiment, "blah", "user1"), is(variations.get(0)));
+        assertThat(algorithm.bucket(experiment, bucketingId, userId), is(variations.get(0)));
 
-        logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 1000 to user \"user1\" with bucketingId \"blah\" when bucketing to a variation.");
-        logbackVerifier.expectMessage(Level.INFO, "User \"user1\" with bucketingId \"blah\" is not in any variation of experiment \"exp_key\".");
+        logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 1000 to user \"" + userId + "\" with bucketingId \"" + bucketingId + "\" when bucketing to a variation.");
+        logbackVerifier.expectMessage(Level.INFO, "User \"" + userId + "\" with bucketingId \"" + bucketingId + "\" is not in any variation of experiment \"exp_key\".");
 
         // verify bucketing to no variation (null)
         bucketValue.set(1000);
-        assertNull(algorithm.bucket(experiment, "blah", "user1"));
+        assertNull(algorithm.bucket(experiment, bucketingId, userId));
     }
 
 
@@ -272,14 +275,15 @@ public class BucketerTest {
     @Test
     public void bucketUserToDeletedExperimentSpace() throws Exception {
         final AtomicInteger bucketValue = new AtomicInteger();
+        final int bucketIntVal = 9000;
         Bucketer algorithm = mockBucketAlgorithm(bucketValue);
-        bucketValue.set(9000);
+        bucketValue.set(bucketIntVal);
 
         ProjectConfig projectConfig = validProjectConfigV2();
         List<Experiment> groupExperiments = projectConfig.getGroups().get(0).getExperiments();
         Experiment groupExperiment = groupExperiments.get(1);
 
-        logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 9000 to user \"user1234\" with bucketingId \"blah\" during experiment bucketing.");
+        logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket " + bucketIntVal + " to user \"user1234\" with bucketingId \"blah\" during experiment bucketing.");
         logbackVerifier.expectMessage(Level.INFO, "User \"user1234\" with bucketingId \"blah\" is not in any experiment of group 42.");
         assertNull(algorithm.bucket(groupExperiment, "blah", "user1234"));
     }
@@ -330,6 +334,8 @@ public class BucketerTest {
         final AtomicInteger bucketValue = new AtomicInteger();
         Bucketer algorithm = mockBucketAlgorithm(bucketValue);
         bucketValue.set(0);
+        String bucketingId = "blah";
+        String userId = "blahUser";
 
         ProjectConfig projectConfig = validProjectConfigV2();
         List<Experiment> groupExperiments = projectConfig.getGroups().get(1).getExperiments();
@@ -338,8 +344,8 @@ public class BucketerTest {
 
         logbackVerifier.expectMessage(
                 Level.INFO,
-                "User \"blah\" with bucketingId \"blah\" is in variation \"e1_vtag1\" of experiment \"overlapping_etag1\".");
-        assertThat(algorithm.bucket(groupExperiment, "blah", "blah"), is(expectedVariation));
+                "User \"" + userId + "\" with bucketingId \"" + bucketingId + "\" is in variation \"e1_vtag1\" of experiment \"overlapping_etag1\".");
+        assertThat(algorithm.bucket(groupExperiment, bucketingId, userId), is(expectedVariation));
 
     }
 
