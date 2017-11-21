@@ -239,7 +239,7 @@ public class EventBuilderV2Test {
         // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
         // call the bucket function.
         for (Experiment experiment : allExperiments) {
-            when(mockBucketAlgorithm.bucket(experiment, userId, userId))
+            when(mockBucketAlgorithm.bucket(experiment, userId))
                     .thenReturn(experiment.getVariations().get(0));
         }
         DecisionService decisionService = new DecisionService(
@@ -330,7 +330,7 @@ public class EventBuilderV2Test {
 
         // Bucket to the first variation for all experiments.
         for (Experiment experiment : validProjectConfig.getExperiments()) {
-            when(mockBucketAlgorithm.bucket(experiment, userId, userId))
+            when(mockBucketAlgorithm.bucket(experiment, userId))
                     .thenReturn(experiment.getVariations().get(0));
         }
         DecisionService decisionService = new DecisionService(
@@ -455,7 +455,7 @@ public class EventBuilderV2Test {
                 Collections.<String, Object>emptyMap());
 
         for (Experiment experiment : validProjectConfig.getExperiments()) {
-            verify(bucketer, never()).bucket(experiment, whitelistedUserId, whitelistedUserId);
+            verify(bucketer, never()).bucket(experiment, whitelistedUserId);
         }
 
         assertNull(conversionEvent);
@@ -473,7 +473,7 @@ public class EventBuilderV2Test {
 
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         for (Experiment experiment : validProjectConfig.getExperiments()) {
-            when(mockBucketAlgorithm.bucket(experiment, userId, userId))
+            when(mockBucketAlgorithm.bucket(experiment, userId))
                     .thenReturn(experiment.getVariations().get(0));
         }
         DecisionService decisionService = new DecisionService(
@@ -520,7 +520,7 @@ public class EventBuilderV2Test {
 
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         for (Experiment experiment : projectConfig.getExperiments()) {
-            when(mockBucketAlgorithm.bucket(experiment, userId, userId))
+            when(mockBucketAlgorithm.bucket(experiment, userId))
                     .thenReturn(experiment.getVariations().get(0));
         }
 
@@ -628,6 +628,7 @@ public class EventBuilderV2Test {
         Attribute attribute = validProjectConfig.getAttributes().get(0);
         EventType eventType = validProjectConfig.getEventTypes().get(0);
         String userId = "userId";
+        String bucketingId = "bucketingId";
 
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
 
@@ -637,7 +638,7 @@ public class EventBuilderV2Test {
         // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
         // call the bucket function.
         for (Experiment experiment : allExperiments) {
-            when(mockBucketAlgorithm.bucket(experiment, "variation", userId))
+            when(mockBucketAlgorithm.bucket(experiment, bucketingId))
                     .thenReturn(experiment.getVariations().get(0));
         }
         DecisionService decisionService = new DecisionService(
@@ -649,7 +650,7 @@ public class EventBuilderV2Test {
 
         Map<String, String> attributeMap = new java.util.HashMap<String, String>();
         attributeMap.put(attribute.getKey(), AUDIENCE_GRYFFINDOR_VALUE);
-        attributeMap.put(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE, "variation");
+        attributeMap.put(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE, bucketingId);
 
         Map<String, Object> eventTagMap = new HashMap<String, Object>();
         eventTagMap.put("boolean_param", false);
@@ -695,7 +696,7 @@ public class EventBuilderV2Test {
         Feature feature1 = new Feature(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
                 com.optimizely.ab.event.internal.EventBuilderV2.ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE,
                 Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
-                "variation", true);
+                bucketingId, true);
         List<Feature> expectedUserFeatures = new ArrayList<Feature>();
         expectedUserFeatures.add(feature);
         expectedUserFeatures.add(feature1);

@@ -131,7 +131,7 @@ public class DecisionService {
             if (filteredAttributes.containsKey(BUCKETING_ATTRIBUTE)) {
                 bucketingId = filteredAttributes.get(BUCKETING_ATTRIBUTE);
             }
-            variation = bucketer.bucket(experiment, bucketingId, userId);
+            variation = bucketer.bucket(experiment, bucketingId);
 
             if (variation != null) {
                 if (userProfileService != null) {
@@ -223,7 +223,7 @@ public class DecisionService {
                 logger.debug("Attempting to bucket user \"" + userId +
                         "\" into rollout rule for audience \"" + audience.getName() +
                         "\".");
-                variation = bucketer.bucket(rolloutRule, bucketingId, userId);
+                variation = bucketer.bucket(rolloutRule, bucketingId);
                 if (variation == null) {
                     logger.debug("User \"" + userId +
                             "\" was excluded due to traffic allocation.");
@@ -239,7 +239,7 @@ public class DecisionService {
         }
         // get last rule which is the everyone else rule
         Experiment everyoneElseRule = rollout.getExperiments().get(rolloutRulesLength - 1);
-        variation = bucketer.bucket(everyoneElseRule, bucketingId, userId); // ignore audience
+        variation = bucketer.bucket(everyoneElseRule, bucketingId); // ignore audience
         if (variation == null) {
             logger.debug("User \"" + userId +
                     "\" was excluded from the \"Everyone Else\" rule for feature flag \"" + featureFlag.getKey() +

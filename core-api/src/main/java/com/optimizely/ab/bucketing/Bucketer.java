@@ -36,7 +36,7 @@ import java.util.List;
  * identifier.
  * <p>
  * The user identifier <i>must</i> be provided in the first data argument passed to
- * {@link #bucket(Experiment, String, String)} and <i>must</i> be non-null and non-empty.
+ * {@link #bucket(Experiment, String)} and <i>must</i> be non-null and non-empty.
  *
  * @see <a href="https://en.wikipedia.org/wiki/MurmurHash">MurmurHash</a>
  */
@@ -76,8 +76,7 @@ public class Bucketer {
     }
 
     private Experiment bucketToExperiment(@Nonnull Group group,
-                                          @Nonnull String bucketingId,
-                                          @Nonnull String userId) {
+                                          @Nonnull String bucketingId) {
         // "salt" the bucket id using the group id
         String bucketKey = bucketingId + group.getId();
 
@@ -85,7 +84,7 @@ public class Bucketer {
 
         int hashCode = MurmurHash3.murmurhash3_x86_32(bucketKey, 0, bucketKey.length(), MURMUR_HASH_SEED);
         int bucketValue = generateBucketValue(hashCode);
-        logger.debug("Assigned bucket {} to user \"{}\" with bucketingId \"{}\" during experiment bucketing.", bucketValue, userId, bucketingId);
+        logger.debug("Assigned bucket {} to user with bucketingId \"{}\" during experiment bucketing.", bucketValue, bucketingId);
 
         String bucketedExperimentId = bucketToEntity(bucketValue, trafficAllocations);
         if (bucketedExperimentId != null) {
@@ -93,13 +92,11 @@ public class Bucketer {
         }
 
         // user was not bucketed to an experiment in the group
-        logger.info("User \"{}\" with bucketingId \"{}\" is not in any experiment of group {}.", userId, bucketingId, group.getId());
         return null;
     }
 
     private Variation bucketToVariation(@Nonnull Experiment experiment,
-                                        @Nonnull String bucketingId,
-                                        @Nonnull String userId) {
+                                        @Nonnull String bucketingId) {
         // "salt" the bucket id using the experiment id
         String experimentId = experiment.getId();
         String experimentKey = experiment.getKey();
@@ -109,20 +106,20 @@ public class Bucketer {
 
         int hashCode = MurmurHash3.murmurhash3_x86_32(combinedBucketId, 0, combinedBucketId.length(), MURMUR_HASH_SEED);
         int bucketValue = generateBucketValue(hashCode);
-        logger.debug("Assigned bucket {} to user \"{}\" with bucketingId \"{}\" when bucketing to a variation.", bucketValue, userId, bucketingId);
+        logger.debug("Assigned bucket {} to user with bucketingId \"{}\" when bucketing to a variation.", bucketValue, bucketingId);
 
         String bucketedVariationId = bucketToEntity(bucketValue, trafficAllocations);
         if (bucketedVariationId != null) {
             Variation bucketedVariation = experiment.getVariationIdToVariationMap().get(bucketedVariationId);
             String variationKey = bucketedVariation.getKey();
-            logger.info("User \"{}\" with bucketingId \"{}\" is in variation \"{}\" of experiment \"{}\".", userId, bucketingId, variationKey,
-                        experimentKey);
+            logger.info("User with bucketingId \"{}\" is in variation \"{}\" of experiment \"{}\".", bucketingId, variationKey,
+                    experimentKey);
 
             return bucketedVariation;
         }
 
         // user was not bucketed to a variation
-        logger.info("User \"{}\" with bucketingId \"{}\" is not in any variation of experiment \"{}\".", userId, bucketingId, experimentKey);
+        logger.info("User with bucketingId \"{}\" is not in any variation of experiment \"{}\".", bucketingId, experimentKey);
         return null;
     }
 
@@ -130,12 +127,10 @@ public class Bucketer {
      * Assign a {@link Variation} of an {@link Experiment} to a user based on hashed value from murmurhash3.
      * @param experiment The Experiment in which the user is to be bucketed.
      * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
-     * @param userId User Identifier
      * @return Variation the user is bucketed into or null.
      */
     public @Nullable Variation bucket(@Nonnull Experiment experiment,
-                                      @Nonnull String bucketingId,
-                                      @Nonnull String userId) {
+                                      @Nonnull String bucketingId) {
         // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group
@@ -143,24 +138,28 @@ public class Bucketer {
             Group experimentGroup = projectConfig.getGroupIdMapping().get(groupId);
             // bucket to an experiment only if group entities are to be mutually exclusive
             if (experimentGroup.getPolicy().equals(Group.RANDOM_POLICY)) {
-                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId, userId);
+                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId);
                 if (bucketedExperiment == null) {
+                    logger.info("User with bucketingId \"{}\" is not in any experiment of group {}.", bucketingId, experimentGroup.getId());
                     return null;
+                }
+                else {
+
                 }
                 // if the experiment a user is bucketed in within a group isn't the same as the experiment provided,
                 // don't perform further bucketing within the experiment
                 if (!bucketedExperiment.getId().equals(experiment.getId())) {
-                    logger.info("User \"{}\" with bucketingId \"{}\" is not in experiment \"{}\" of group {}.", userId, bucketingId, experiment.getKey(),
+                    logger.info("User with bucketingId \"{}\" is not in experiment \"{}\" of group {}.", bucketingId, experiment.getKey(),
                             experimentGroup.getId());
                     return null;
                 }
 
-                logger.info("User \"{}\" with bucketingId \"{}\" is in experiment \"{}\" of group {}.", userId, bucketingId, experiment.getKey(),
+                logger.info("User with bucketingId \"{}\" is in experiment \"{}\" of group {}.", bucketingId, experiment.getKey(),
                         experimentGroup.getId());
             }
         }
 
-        return bucketToVariation(experiment, bucketingId, userId);
+        return bucketToVariation(experiment, bucketingId);
     }
 
 
