@@ -100,6 +100,7 @@ public class DecisionService {
 
         // fetch the user profile map from the user profile service
         UserProfile userProfile = null;
+        
         if (userProfileService != null) {
             try {
                 Map<String, Object> userProfileMap = userProfileService.lookup(userId);
