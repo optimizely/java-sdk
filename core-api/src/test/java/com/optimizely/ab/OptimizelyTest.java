@@ -171,9 +171,9 @@ public class OptimizelyTest {
     @Mock ErrorHandler mockErrorHandler;
 
     private static final String genericUserId = "genericUserId";
-    private final String testUserId = "userId";
-    private final String testBucketingId = "bucketingId";
-    private final String testBucketingIdKey = DecisionService.BUCKETING_ATTRIBUTE;
+    private static final String testUserId = "userId";
+    private static final String testBucketingId = "bucketingId";
+    private static final String testBucketingIdKey = DecisionService.BUCKETING_ATTRIBUTE;
 
     private int datafileVersion;
     private String validDatafile;

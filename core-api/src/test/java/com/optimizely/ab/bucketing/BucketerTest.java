@@ -350,6 +350,7 @@ public class BucketerTest {
     }
 
     @Test
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     public void testBucketWithNullBucketingId() {
         final AtomicInteger bucketValue = new AtomicInteger();
         Bucketer algorithm = mockBucketAlgorithm(bucketValue);
@@ -358,7 +359,6 @@ public class BucketerTest {
         ProjectConfig projectConfig = validProjectConfigV2();
         List<Experiment> groupExperiments = projectConfig.getGroups().get(1).getExperiments();
         Experiment groupExperiment = groupExperiments.get(0);
-        Variation expectedVariation = groupExperiment.getVariations().get(0);
 
         try {
             algorithm.bucket(groupExperiment, null);
