@@ -1,22 +1,20 @@
-/**
- *
- *    Copyright 2017, Optimizely and contributors
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
+/****************************************************************************
+ * Copyright 2017, Optimizely, Inc. and contributors                        *
+ *                                                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");          *
+ * you may not use this file except in compliance with the License.         *
+ * You may obtain a copy of the License at                                  *
+ *                                                                          *
+ *    http://www.apache.org/licenses/LICENSE-2.0                            *
+ *                                                                          *
+ * Unless required by applicable law or agreed to in writing, software      *
+ * distributed under the License is distributed on an "AS IS" BASIS,        *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ * See the License for the specific language governing permissions and      *
+ * limitations under the License.                                           *
+ ***************************************************************************/
 package com.optimizely.ab.bucketing;
 
-import ch.qos.logback.classic.Level;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.ProjectConfig;
@@ -27,7 +25,7 @@ import com.optimizely.ab.config.ValidProjectConfigV4;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.LogbackVerifier;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,7 +38,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ch.qos.logback.classic.Level;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV3;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV4;
 import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_HOUSE_KEY;
@@ -81,7 +83,8 @@ public class DecisionServiceTest {
     @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
     public MockitoRule rule = MockitoJUnit.rule();
 
-    @Mock private ErrorHandler mockErrorHandler;
+    @Mock
+    private ErrorHandler mockErrorHandler;
 
     private static ProjectConfig noAudienceProjectConfig;
     private static ProjectConfig v4ProjectConfig;
@@ -151,7 +154,7 @@ public class DecisionServiceTest {
         //verify(decisionService).getForcedVariation(experiment.getKey(), whitelistedUserId);
         verify(decisionService, never()).getStoredVariation(eq(experiment), any(UserProfile.class));
         assertEquals(decisionService.getWhitelistedVariation(experiment, whitelistedUserId), whitelistVariation);
-        assertTrue(validProjectConfig.setForcedVariation(experiment.getKey(), whitelistedUserId,null));
+        assertTrue(validProjectConfig.setForcedVariation(experiment.getKey(), whitelistedUserId, null));
         assertNull(validProjectConfig.getForcedVariation(experiment.getKey(), whitelistedUserId));
         assertThat(decisionService.getVariation(experiment, whitelistedUserId, Collections.<String, String>emptyMap()), is(whitelistVariation));
     }
@@ -178,7 +181,7 @@ public class DecisionServiceTest {
         assertThat(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap()), is(expectedVariation));
 
         verify(decisionService, never()).getStoredVariation(eq(experiment), any(UserProfile.class));
-        assertEquals(validProjectConfig.setForcedVariation(experiment.getKey(), genericUserId,null), true);
+        assertEquals(validProjectConfig.setForcedVariation(experiment.getKey(), genericUserId, null), true);
         assertNull(validProjectConfig.getForcedVariation(experiment.getKey(), genericUserId));
     }
 
@@ -294,7 +297,7 @@ public class DecisionServiceTest {
 
     /**
      * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map)}
-     * returns null when the {@link FeatureFlag} is not used in an experiments or rollouts.
+     * returns null when the {@link FeatureFlag} is not used in any experiments or rollouts.
      */
     @Test
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
@@ -319,10 +322,12 @@ public class DecisionServiceTest {
                 "The user \"" + genericUserId + "\" was not bucketed into a rollout for feature flag \"" +
                         featureKey + "\".");
 
-        assertNull(decisionService.getVariationForFeature(
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
                 emptyFeatureFlag,
                 genericUserId,
-                Collections.<String, String>emptyMap()));
+                Collections.<String, String>emptyMap());
+        assertNull(featureDecision.variation);
+        assertNull(featureDecision.decisionSource);
 
         verify(emptyFeatureFlag, times(1)).getExperimentIds();
         verify(emptyFeatureFlag, times(1)).getRolloutId();
@@ -352,18 +357,20 @@ public class DecisionServiceTest {
                 anyMapOf(String.class, String.class)
         );
         // do not bucket to any rollouts
-        doReturn(null).when(spyDecisionService).getVariationForFeatureInRollout(
+        doReturn(new FeatureDecision(null, null, null)).when(spyDecisionService).getVariationForFeatureInRollout(
                 any(FeatureFlag.class),
                 anyString(),
                 anyMapOf(String.class, String.class)
         );
 
         // try to get a variation back from the decision service for the feature flag
-        assertNull(spyDecisionService.getVariationForFeature(
+        FeatureDecision featureDecision = spyDecisionService.getVariationForFeature(
                 spyFeatureFlag,
                 genericUserId,
                 Collections.<String, String>emptyMap()
-        ));
+        );
+        assertNull(featureDecision.variation);
+        assertNull(featureDecision.decisionSource);
 
         logbackVerifier.expectMessage(Level.INFO,
                 "The user \"" + genericUserId + "\" was not bucketed into a rollout for feature flag \"" +
@@ -401,12 +408,13 @@ public class DecisionServiceTest {
                 anyMapOf(String.class, String.class)
         );
 
-        assertEquals(ValidProjectConfigV4.VARIATION_MUTEX_GROUP_EXP_2_VAR_1,
-                spyDecisionService.getVariationForFeature(
-                        spyFeatureFlag,
-                        genericUserId,
-                        Collections.<String, String>emptyMap()
-                ));
+        FeatureDecision featureDecision = spyDecisionService.getVariationForFeature(
+                spyFeatureFlag,
+                genericUserId,
+                Collections.<String, String>emptyMap()
+        );
+        assertEquals(ValidProjectConfigV4.VARIATION_MUTEX_GROUP_EXP_2_VAR_1, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.EXPERIMENT, featureDecision.decisionSource);
 
         verify(spyFeatureFlag, times(2)).getExperimentIds();
         verify(spyFeatureFlag, never()).getKey();
@@ -426,13 +434,14 @@ public class DecisionServiceTest {
         assertNotNull(featureExperiment);
         Rollout featureRollout = v4ProjectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
         Variation experimentVariation = featureExperiment.getVariations().get(0);
-        Variation rolloutVariation = featureRollout.getExperiments().get(0).getVariations().get(0);
+        Experiment rolloutExperiment = featureRollout.getExperiments().get(0);
+        Variation rolloutVariation = rolloutExperiment.getVariations().get(0);
 
         DecisionService decisionService = spy(new DecisionService(
-                mock(Bucketer.class),
-                mockErrorHandler,
-                v4ProjectConfig,
-                null
+                        mock(Bucketer.class),
+                        mockErrorHandler,
+                        v4ProjectConfig,
+                        null
                 )
         );
 
@@ -445,7 +454,7 @@ public class DecisionServiceTest {
         );
 
         // return variation for rollout
-        doReturn(rolloutVariation)
+        doReturn(new FeatureDecision(rolloutExperiment, rolloutVariation, FeatureDecision.DecisionSource.ROLLOUT))
                 .when(decisionService).getVariationForFeatureInRollout(
                 eq(featureFlag),
                 anyString(),
@@ -453,12 +462,13 @@ public class DecisionServiceTest {
         );
 
         // make sure we get the right variation back
-        assertEquals(experimentVariation,
-                decisionService.getVariationForFeature(featureFlag,
-                        genericUserId,
-                        Collections.<String, String>emptyMap()
-                )
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+                featureFlag,
+                genericUserId,
+                Collections.<String, String>emptyMap()
         );
+        assertEquals(experimentVariation, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.EXPERIMENT, featureDecision.decisionSource);
 
         // make sure we do not even check for rollout bucketing
         verify(decisionService, never()).getVariationForFeatureInRollout(
@@ -487,7 +497,8 @@ public class DecisionServiceTest {
         Experiment featureExperiment = v4ProjectConfig.getExperimentIdMapping().get(featureFlag.getExperimentIds().get(0));
         assertNotNull(featureExperiment);
         Rollout featureRollout = v4ProjectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
-        Variation rolloutVariation = featureRollout.getExperiments().get(0).getVariations().get(0);
+        Experiment rolloutExperiment = featureRollout.getExperiments().get(0);
+        Variation rolloutVariation = rolloutExperiment.getVariations().get(0);
 
         DecisionService decisionService = spy(new DecisionService(
                         mock(Bucketer.class),
@@ -506,7 +517,7 @@ public class DecisionServiceTest {
         );
 
         // return variation for rollout
-        doReturn(rolloutVariation)
+        doReturn(new FeatureDecision(rolloutExperiment, rolloutVariation, FeatureDecision.DecisionSource.ROLLOUT))
                 .when(decisionService).getVariationForFeatureInRollout(
                 eq(featureFlag),
                 anyString(),
@@ -514,15 +525,16 @@ public class DecisionServiceTest {
         );
 
         // make sure we get the right variation back
-        assertEquals(rolloutVariation,
-                decisionService.getVariationForFeature(featureFlag,
-                        genericUserId,
-                        Collections.<String, String>emptyMap()
-                )
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+                featureFlag,
+                genericUserId,
+                Collections.<String, String>emptyMap()
         );
+        assertEquals(rolloutVariation, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
 
         // make sure we do not even check for rollout bucketing
-        verify(decisionService,times(1)).getVariationForFeatureInRollout(
+        verify(decisionService, times(1)).getVariationForFeatureInRollout(
                 any(FeatureFlag.class),
                 anyString(),
                 anyMapOf(String.class, String.class)
@@ -542,7 +554,7 @@ public class DecisionServiceTest {
         );
     }
 
-        //========== getVariationForFeatureInRollout tests ==========//
+    //========== getVariationForFeatureInRollout tests ==========//
 
     /**
      * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map)}
@@ -563,11 +575,13 @@ public class DecisionServiceTest {
                 null
         );
 
-        assertNull(decisionService.getVariationForFeatureInRollout(
+        FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
                 mockFeatureFlag,
                 genericUserId,
                 Collections.<String, String>emptyMap()
-        ));
+        );
+        assertNull(featureDecision.variation);
+        assertNull(featureDecision.decisionSource);
 
         logbackVerifier.expectMessage(
                 Level.INFO,
@@ -591,13 +605,15 @@ public class DecisionServiceTest {
                 null
         );
 
-        assertNull(decisionService.getVariationForFeatureInRollout(
+        FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
                 FEATURE_FLAG_MULTI_VARIATE_FEATURE,
                 genericUserId,
                 Collections.singletonMap(
                         ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE
                 )
-        ));
+        );
+        assertNull(featureDecision.variation);
+        assertNull(featureDecision.decisionSource);
 
         // with fall back bucketing, the user has at most 2 chances to get bucketed with traffic allocation
         // one chance with the audience rollout rule
@@ -622,11 +638,13 @@ public class DecisionServiceTest {
                 null
         );
 
-        assertNull(decisionService.getVariationForFeatureInRollout(
+        FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
                 FEATURE_FLAG_MULTI_VARIATE_FEATURE,
                 genericUserId,
                 Collections.<String, String>emptyMap()
-        ));
+        );
+        assertNull(featureDecision.variation);
+        assertNull(featureDecision.decisionSource);
 
         // user is only bucketed once for the everyone else rule
         verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString());
@@ -652,13 +670,13 @@ public class DecisionServiceTest {
                 null
         );
 
-        assertEquals(expectedVariation,
-                decisionService.getVariationForFeatureInRollout(
-                        FEATURE_FLAG_MULTI_VARIATE_FEATURE,
-                        genericUserId,
-                        Collections.<String, String>emptyMap()
-                )
+        FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
+                FEATURE_FLAG_MULTI_VARIATE_FEATURE,
+                genericUserId,
+                Collections.<String, String>emptyMap()
         );
+        assertEquals(expectedVariation, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
 
         // verify user is only bucketed once for everyone else rule
         verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString());
@@ -686,15 +704,15 @@ public class DecisionServiceTest {
                 null
         );
 
-        assertEquals(expectedVariation,
-                decisionService.getVariationForFeatureInRollout(
-                        FEATURE_FLAG_MULTI_VARIATE_FEATURE,
-                        genericUserId,
-                        Collections.singletonMap(
-                                ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE
-                        )
+        FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
+                FEATURE_FLAG_MULTI_VARIATE_FEATURE,
+                genericUserId,
+                Collections.singletonMap(
+                        ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE
                 )
         );
+        assertEquals(expectedVariation, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
 
         // verify user is only bucketed once for everyone else rule
         verify(mockBucketer, times(2)).bucket(any(Experiment.class), anyString());
@@ -727,20 +745,20 @@ public class DecisionServiceTest {
                 null
         );
 
-        assertEquals(expectedVariation,
-                decisionService.getVariationForFeatureInRollout(
-                        FEATURE_FLAG_MULTI_VARIATE_FEATURE,
-                        genericUserId,
-                        ProjectConfigTestUtils.createMapOfObjects(
-                                ProjectConfigTestUtils.createListOfObjects(
-                                        ATTRIBUTE_HOUSE_KEY, ATTRIBUTE_NATIONALITY_KEY
-                                ),
-                                ProjectConfigTestUtils.createListOfObjects(
-                                        AUDIENCE_GRYFFINDOR_VALUE, AUDIENCE_ENGLISH_CITIZENS_VALUE
-                                )
+        FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
+                FEATURE_FLAG_MULTI_VARIATE_FEATURE,
+                genericUserId,
+                ProjectConfigTestUtils.createMapOfObjects(
+                        ProjectConfigTestUtils.createListOfObjects(
+                                ATTRIBUTE_HOUSE_KEY, ATTRIBUTE_NATIONALITY_KEY
+                        ),
+                        ProjectConfigTestUtils.createListOfObjects(
+                                AUDIENCE_GRYFFINDOR_VALUE, AUDIENCE_ENGLISH_CITIZENS_VALUE
                         )
                 )
         );
+        assertEquals(expectedVariation, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
 
         // verify user is only bucketed once for everyone else rule
         verify(mockBucketer, times(2)).bucket(any(Experiment.class), anyString());
@@ -770,21 +788,21 @@ public class DecisionServiceTest {
                 null
         );
 
-        assertEquals(englishCitizenVariation,
-                decisionService.getVariationForFeatureInRollout(
-                        FEATURE_FLAG_MULTI_VARIATE_FEATURE,
-                        genericUserId,
-                        Collections.singletonMap(
-                                ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE
-                        )
+        FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
+                FEATURE_FLAG_MULTI_VARIATE_FEATURE,
+                genericUserId,
+                Collections.singletonMap(
+                        ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE
                 )
         );
+        assertEquals(englishCitizenVariation, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
 
         // verify user is only bucketed once for everyone else rule
         verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString());
     }
 
-        //========= white list tests ==========/
+    //========= white list tests ==========/
 
     /**
      * Test {@link DecisionService#getWhitelistedVariation(Experiment, String)} correctly returns a whitelisted variation.
@@ -1018,4 +1036,21 @@ public class DecisionServiceTest {
         assertEquals(variation, decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap()));
         verify(userProfileService).save(expectedUserProfile.toMap());
     }
+
+    @Test
+    public void getVariationBucketingId() throws Exception {
+        Bucketer bucketer = mock(Bucketer.class);
+        DecisionService decisionService = spy(new DecisionService(bucketer, mockErrorHandler, validProjectConfig, null));
+        Experiment experiment = validProjectConfig.getExperiments().get(0);
+        Variation expectedVariation = experiment.getVariations().get(0);
+
+        when(bucketer.bucket(experiment, "bucketId")).thenReturn(expectedVariation);
+
+        Map<String, String> attr = new HashMap<String, String>();
+        attr.put(DecisionService.BUCKETING_ATTRIBUTE, "bucketId");
+        // user excluded without audiences and whitelisting
+        assertThat(decisionService.getVariation(experiment, genericUserId, attr), is(expectedVariation));
+
+    }
+
 }
