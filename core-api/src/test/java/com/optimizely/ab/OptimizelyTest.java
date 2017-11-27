@@ -20,6 +20,7 @@ import ch.qos.logback.classic.Level;
 import com.google.common.collect.ImmutableMap;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
+import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
@@ -130,9 +131,14 @@ public class OptimizelyTest {
 
     @Mock EventHandler mockEventHandler;
     @Mock Bucketer mockBucketer;
+    @Mock DecisionService mockDecisionService;
     @Mock ErrorHandler mockErrorHandler;
 
     private static final String genericUserId = "genericUserId";
+    private static final String testUserId = "userId";
+    private static final String testBucketingId = "bucketingId";
+    private static final String testBucketingIdKey = DecisionService.BUCKETING_ATTRIBUTE;
+
     private int datafileVersion;
     private String validDatafile;
     private String noAudienceDatafile;
@@ -159,7 +165,14 @@ public class OptimizelyTest {
      */
     @Test
     public void activateEndToEnd() throws Exception {
-        Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
+        Experiment activatedExperiment;
+        Map<String, String> testUserAttributes = new HashMap<String, String>();
+        String bucketingKey = testBucketingIdKey;
+        String userId = testUserId;
+        String bucketingId = testBucketingId;
+        activatedExperiment = validProjectConfig.getExperiments().get(0);
+        testUserAttributes.put("browser_type", "chrome");
+        testUserAttributes.put(bucketingKey, bucketingId);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
 
@@ -170,18 +183,15 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testUserAttributes = new HashMap<String, String>();
-        testUserAttributes.put("browser_type", "chrome");
-
         Map<String, String> testParams = new HashMap<String, String>();
 
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
-        when(mockEventBuilder.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation, "userId",
+        when(mockEventBuilder.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation, testUserId,
                 testUserAttributes))
                 .thenReturn(logEventToDispatch);
 
-        when(mockBucketer.bucket(activatedExperiment, "userId"))
+        when(mockBucketer.bucket(activatedExperiment, bucketingId))
                 .thenReturn(bucketedVariation);
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"etag1\".");
@@ -189,10 +199,10 @@ public class OptimizelyTest {
                 testParams + " and payload \"\"");
 
         // activate the experiment
-        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), "userId", testUserAttributes);
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, testUserAttributes);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(activatedExperiment, "userId");
+        verify(mockBucketer).bucket(activatedExperiment, bucketingId);
         assertThat(actualVariation, is(bucketedVariation));
 
         // verify that dispatchEvent was called with the correct LogEvent object
@@ -215,17 +225,19 @@ public class OptimizelyTest {
 
         Map<String, String> testUserAttributes = new HashMap<String, String>();
         testUserAttributes.put("browser_type", "chrome");
+        testUserAttributes.put(testBucketingIdKey,
+                testBucketingId);
 
-        when(mockBucketer.bucket(activatedExperiment, "userId"))
+        when(mockBucketer.bucket(activatedExperiment, testBucketingId))
                 .thenReturn(null);
 
         logbackVerifier.expectMessage(Level.INFO, "Not activating user \"userId\" for experiment \"etag1\".");
 
         // activate the experiment
-        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), "userId", testUserAttributes);
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, testUserAttributes);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(activatedExperiment, "userId");
+        verify(mockBucketer).bucket(activatedExperiment, testBucketingId);
         assertNull(actualVariation);
 
         // verify that dispatchEvent was NOT called
@@ -251,10 +263,10 @@ public class OptimizelyTest {
                 .withErrorHandler(new RaiseExceptionErrorHandler())
                 .build();
 
-        when(mockBucketer.bucket(unknownExperiment, "userId"))
+        when(mockBucketer.bucket(unknownExperiment, testUserId))
                 .thenReturn(bucketedVariation);
 
-        optimizely.activate(unknownExperiment, "userId");
+        optimizely.activate(unknownExperiment, testUserId);
     }
 
     /**
@@ -276,7 +288,7 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", forcedVariation.getKey() );
+        optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, forcedVariation.getKey() );
 
         Map<String, String> testUserAttributes = new HashMap<String, String>();
         if (datafileVersion >= 4) {
@@ -286,27 +298,30 @@ public class OptimizelyTest {
             testUserAttributes.put("browser_type", "chrome");
         }
 
+        testUserAttributes.put(testBucketingIdKey,
+                testBucketingId);
+
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
 
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventBuilder.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(forcedVariation),
-                eq("userId"), eq(testUserAttributes)))
+                eq(testUserId), eq(testUserAttributes)))
                 .thenReturn(logEventToDispatch);
 
-        when(mockBucketer.bucket(activatedExperiment, "userId"))
+        when(mockBucketer.bucket(activatedExperiment, testBucketingId))
                 .thenReturn(bucketedVariation);
 
         // activate the experiment
-        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), "userId", testUserAttributes);
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, testUserAttributes);
 
         assertThat(actualVariation, is(forcedVariation));
 
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
 
-        optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", null );
+        optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, null );
 
-        assertEquals(optimizely.getForcedVariation(activatedExperiment.getKey(), "userId"), null);
+        assertEquals(optimizely.getForcedVariation(activatedExperiment.getKey(), testUserId), null);
 
     }
 
@@ -329,32 +344,35 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", forcedVariation.getKey() );
+        optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, forcedVariation.getKey() );
 
         Map<String, String> testUserAttributes = new HashMap<String, String>();
         testUserAttributes.put("browser_type", "chrome");
+
+        testUserAttributes.put(testBucketingIdKey,
+                testBucketingId);
 
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
 
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventBuilder.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(forcedVariation),
-                eq("userId"), eq(testUserAttributes)))
+                eq(testUserId), eq(testUserAttributes)))
                 .thenReturn(logEventToDispatch);
 
-        when(mockBucketer.bucket(activatedExperiment, "userId"))
+        when(mockBucketer.bucket(activatedExperiment, testBucketingId))
                 .thenReturn(bucketedVariation);
 
         // activate the experiment
-        Variation actualVariation = optimizely.getVariation(activatedExperiment.getKey(), "userId", testUserAttributes);
+        Variation actualVariation = optimizely.getVariation(activatedExperiment.getKey(), testUserId, testUserAttributes);
 
         assertThat(actualVariation, is(forcedVariation));
 
-        optimizely.setForcedVariation(activatedExperiment.getKey(), "userId", null );
+        optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, null );
 
-        assertEquals(optimizely.getForcedVariation(activatedExperiment.getKey(), "userId"), null);
+        assertEquals(optimizely.getForcedVariation(activatedExperiment.getKey(), testUserId), null);
 
-        actualVariation = optimizely.getVariation(activatedExperiment.getKey(), "userId", testUserAttributes);
+        actualVariation = optimizely.getVariation(activatedExperiment.getKey(), testUserId, testUserAttributes);
 
         assertThat(actualVariation, is(bucketedVariation));
     }
@@ -368,6 +386,7 @@ public class OptimizelyTest {
     public void activateWithExperimentKey() throws Exception {
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+        Variation userIdBucketVariation = activatedExperiment.getVariations().get(1);
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
@@ -380,21 +399,27 @@ public class OptimizelyTest {
         Map<String, String> testUserAttributes = new HashMap<String, String>();
         testUserAttributes.put("browser_type", "chrome");
 
+        testUserAttributes.put(testBucketingIdKey, testBucketingId);
+
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventBuilder.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
-                eq("userId"), eq(testUserAttributes)))
+                eq(testUserId), eq(testUserAttributes)))
                 .thenReturn(logEventToDispatch);
 
-        when(mockBucketer.bucket(activatedExperiment, "userId"))
+        when(mockBucketer.bucket(activatedExperiment, testUserId))
+                .thenReturn(userIdBucketVariation);
+
+        when(mockBucketer.bucket(activatedExperiment, testBucketingId))
                 .thenReturn(bucketedVariation);
 
+
         // activate the experiment
-        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), "userId", testUserAttributes);
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, testUserAttributes);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(activatedExperiment, "userId");
+        verify(mockBucketer).bucket(activatedExperiment, testBucketingId);
         assertThat(actualVariation, is(bucketedVariation));
 
         // verify that dispatchEvent was called with the correct LogEvent object
@@ -418,7 +443,7 @@ public class OptimizelyTest {
                 "Not activating user \"userId\" for experiment \"unknown_experiment\".");
 
         // since we use a NoOpErrorHandler, we should fail and return null
-        Variation actualVariation = optimizely.activate(unknownExperiment.getKey(), "userId");
+        Variation actualVariation = optimizely.activate(unknownExperiment.getKey(), testUserId);
 
         // verify that null is returned, as no project config was available
         assertNull(actualVariation);
@@ -440,7 +465,7 @@ public class OptimizelyTest {
                 .build();
 
         // since we use a RaiseExceptionErrorHandler, we should throw an error
-        optimizely.activate(unknownExperiment.getKey(), "userId");
+        optimizely.activate(unknownExperiment.getKey(), testUserId);
     }
 
     /**
@@ -451,6 +476,7 @@ public class OptimizelyTest {
     public void activateWithAttributes() throws Exception {
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+        Variation userIdBucketedVariation = activatedExperiment.getVariations().get(1);
         Attribute attribute = validProjectConfig.getAttributes().get(0);
 
         // setup a mock event builder to return expected impression params
@@ -467,24 +493,31 @@ public class OptimizelyTest {
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventBuilder.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
-                eq("userId"), anyMapOf(String.class, String.class)))
+                eq(testUserId), anyMapOf(String.class, String.class)))
                 .thenReturn(logEventToDispatch);
 
-        when(mockBucketer.bucket(activatedExperiment, "userId"))
+        when(mockBucketer.bucket(activatedExperiment, testUserId))
+                .thenReturn(userIdBucketedVariation);
+
+        when(mockBucketer.bucket(activatedExperiment, testBucketingId))
                 .thenReturn(bucketedVariation);
 
+        Map<String, String> attr = new HashMap<String,String>();
+        attr.put(attribute.getKey(), "attributeValue");
+        attr.put(testBucketingIdKey, testBucketingId);
+
         // activate the experiment
-        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), "userId",
-                ImmutableMap.of(attribute.getKey(), "attributeValue"));
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId,
+                attr);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(activatedExperiment, "userId");
+        verify(mockBucketer).bucket(activatedExperiment, testBucketingId);
         assertThat(actualVariation, is(bucketedVariation));
 
         // setup the attribute map captor (so we can verify its content)
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
         verify(mockEventBuilder).createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment),
-                eq(bucketedVariation), eq("userId"), attributeCaptor.capture());
+                eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
 
         Map<String, String> actualValue = attributeCaptor.getValue();
         assertThat(actualValue, hasEntry(attribute.getKey(), "attributeValue"));
@@ -523,10 +556,10 @@ public class OptimizelyTest {
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventBuilder.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
-                eq("userId"), anyMapOf(String.class, String.class)))
+                eq(testUserId), anyMapOf(String.class, String.class)))
                 .thenReturn(logEventToDispatch);
 
-        when(mockBucketer.bucket(activatedExperiment, "userId"))
+        when(mockBucketer.bucket(activatedExperiment, testUserId))
                 .thenReturn(bucketedVariation);
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"etag1\".");
@@ -536,7 +569,7 @@ public class OptimizelyTest {
 
         // Use an immutable map to also check that we're not attempting to change the provided attribute map
         Variation actualVariation =
-                optimizely.activate(activatedExperiment.getKey(), "userId", testUserAttributes);
+                optimizely.activate(activatedExperiment.getKey(), testUserId, testUserAttributes);
 
         assertThat(actualVariation, is(bucketedVariation));
 
@@ -545,7 +578,7 @@ public class OptimizelyTest {
 
         // verify that the event builder was called with the expected attributes
         verify(mockEventBuilder).createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment),
-                eq(bucketedVariation), eq("userId"), attributeCaptor.capture());
+                eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
 
         Map<String, String> actualValue = attributeCaptor.getValue();
         assertThat(actualValue, not(hasKey("unknownAttribute")));
@@ -579,26 +612,26 @@ public class OptimizelyTest {
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventBuilder.createImpressionEvent(eq(noAudienceProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
-                eq("userId"), eq(Collections.<String, String>emptyMap())))
+                eq(testUserId), eq(Collections.<String, String>emptyMap())))
                 .thenReturn(logEventToDispatch);
 
-        when(mockBucketer.bucket(activatedExperiment, "userId"))
+        when(mockBucketer.bucket(activatedExperiment, testUserId))
                 .thenReturn(bucketedVariation);
 
         // activate the experiment
         Map<String, String> attributes = null;
-        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), "userId", attributes);
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, attributes);
 
         logbackVerifier.expectMessage(Level.WARN, "Attributes is null when non-null was expected. Defaulting to an empty attributes map.");
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(activatedExperiment, "userId");
+        verify(mockBucketer).bucket(activatedExperiment, testUserId);
         assertThat(actualVariation, is(bucketedVariation));
 
         // setup the attribute map captor (so we can verify its content)
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
         verify(mockEventBuilder).createImpressionEvent(eq(noAudienceProjectConfig), eq(activatedExperiment),
-                eq(bucketedVariation), eq("userId"), attributeCaptor.capture());
+                eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
 
         Map<String, String> actualValue = attributeCaptor.getValue();
         assertThat(actualValue, is(Collections.<String, String>emptyMap()));
@@ -630,25 +663,25 @@ public class OptimizelyTest {
         testParams.put("test", "params");
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventBuilder.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
-                eq("userId"), anyMapOf(String.class, String.class)))
+                eq(testUserId), anyMapOf(String.class, String.class)))
                 .thenReturn(logEventToDispatch);
 
-        when(mockBucketer.bucket(activatedExperiment, "userId"))
+        when(mockBucketer.bucket(activatedExperiment, testUserId))
                 .thenReturn(bucketedVariation);
 
         // activate the experiment
         Map<String, String> attributes = new HashMap<String, String>();
         attributes.put(attribute.getKey(), null);
-        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), "userId", attributes);
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, attributes);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(activatedExperiment, "userId");
+        verify(mockBucketer).bucket(activatedExperiment, testUserId);
         assertThat(actualVariation, is(bucketedVariation));
 
         // setup the attribute map captor (so we can verify its content)
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
         verify(mockEventBuilder).createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment),
-                eq(bucketedVariation), eq("userId"), attributeCaptor.capture());
+                eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
 
         Map<String, String> actualValue = attributeCaptor.getValue();
         assertThat(actualValue, hasEntry(attribute.getKey(), null));
@@ -672,7 +705,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.INFO, "Experiment \"etag2\" is not running.");
         logbackVerifier.expectMessage(Level.INFO, "Not activating user \"userId\" for experiment \"etag2\".");
 
-        Variation variation = optimizely.activate(draftExperiment.getKey(), "userId");
+        Variation variation = optimizely.activate(draftExperiment.getKey(), testUserId);
 
         // verify that null is returned, as the experiment isn't running
         assertNull(variation);
@@ -693,7 +726,7 @@ public class OptimizelyTest {
         Map<String, String> testUserAttributes = new HashMap<String, String>();
         testUserAttributes.put("browser_type", "chrome");
 
-        Variation actualVariation = optimizely.activate(experimentToCheck.getKey(), "userId", testUserAttributes);
+        Variation actualVariation = optimizely.activate(experimentToCheck.getKey(), testUserId, testUserAttributes);
         assertNotNull(actualVariation);
     }
 
@@ -716,7 +749,7 @@ public class OptimizelyTest {
                 "User \"userId\" does not meet conditions to be in experiment \"etag1\".");
         logbackVerifier.expectMessage(Level.INFO, "Not activating user \"userId\" for experiment \"etag1\".");
 
-        Variation actualVariation = optimizely.activate(experimentToCheck.getKey(), "userId", testUserAttributes);
+        Variation actualVariation = optimizely.activate(experimentToCheck.getKey(), testUserId, testUserAttributes);
         assertNull(actualVariation);
     }
 
@@ -732,7 +765,7 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        assertNotNull(optimizely.activate(experimentToCheck.getKey(), "userId"));
+        assertNotNull(optimizely.activate(experimentToCheck.getKey(), testUserId));
     }
 
     /**
@@ -750,7 +783,7 @@ public class OptimizelyTest {
                 "User \"userId\" does not meet conditions to be in experiment \"etag1\".");
         logbackVerifier.expectMessage(Level.INFO, "Not activating user \"userId\" for experiment \"etag1\".");
 
-        assertNull(optimizely.activate(experiment.getKey(), "userId"));
+        assertNull(optimizely.activate(experiment.getKey(), testUserId));
     }
 
     /**
@@ -870,7 +903,7 @@ public class OptimizelyTest {
                 .build();
 
         logbackVerifier.expectMessage(Level.ERROR, "Unexpected exception in event dispatcher");
-        optimizely.activate(experiment.getKey(), "userId");
+        optimizely.activate(experiment.getKey(), testUserId);
     }
 
     /**
@@ -888,12 +921,12 @@ public class OptimizelyTest {
 
         Variation expectedVariation = launchedExperiment.getVariations().get(0);
 
-        when(mockBucketer.bucket(launchedExperiment, "userId"))
+        when(mockBucketer.bucket(launchedExperiment, testUserId))
                 .thenReturn(launchedExperiment.getVariations().get(0));
 
         logbackVerifier.expectMessage(Level.INFO,
                 "Experiment has \"Launched\" status so not dispatching event during activation.");
-        Variation variation = optimizely.activate(launchedExperiment.getKey(), "userId");
+        Variation variation = optimizely.activate(launchedExperiment.getKey(), testUserId);
 
         assertNotNull(variation);
         assertThat(variation.getKey(), is(expectedVariation.getKey()));
@@ -934,28 +967,28 @@ public class OptimizelyTest {
         // Bucket to null for all experiments. However, only a subset of the experiments will actually
         // call the bucket function.
         for (Experiment experiment : allExperiments) {
-            when(mockBucketer.bucket(experiment, "userId"))
+            when(mockBucketer.bucket(experiment, testUserId))
                     .thenReturn(null);
         }
         // Force to the first variation for all experiments. However, only a subset of the experiments will actually
         // call get forced.
         for (Experiment experiment : allExperiments) {
             optimizely.projectConfig.setForcedVariation(experiment.getKey(),
-                    "userId", experiment.getVariations().get(0).getKey());
+                    testUserId, experiment.getVariations().get(0).getKey());
         }
 
         // call track
-        optimizely.track(eventType.getKey(), "userId");
+        optimizely.track(eventType.getKey(), testUserId);
 
         // verify that the bucketing algorithm was called only on experiments corresponding to the specified goal.
         List<Experiment> experimentsForEvent = config.getExperimentsForEventKey(eventType.getKey());
         for (Experiment experiment : allExperiments) {
             if (experiment.isRunning() && experimentsForEvent.contains(experiment)) {
-                verify(spyDecisionService).getVariation(experiment, "userId",
+                verify(spyDecisionService).getVariation(experiment, testUserId,
                         Collections.<String, String>emptyMap());
-                verify(config).getForcedVariation(experiment.getKey(), "userId");
+                verify(config).getForcedVariation(experiment.getKey(), testUserId);
             } else {
-                verify(spyDecisionService, never()).getVariation(experiment, "userId",
+                verify(spyDecisionService, never()).getVariation(experiment, testUserId,
                         Collections.<String, String>emptyMap());
             }
         }
@@ -964,9 +997,9 @@ public class OptimizelyTest {
         verify(mockEventHandler).dispatchEvent(any(LogEvent.class));
 
         for (Experiment experiment : allExperiments) {
-            assertEquals(optimizely.projectConfig.getForcedVariation(experiment.getKey(), "userId"), experiment.getVariations().get(0));
-            optimizely.projectConfig.setForcedVariation(experiment.getKey(), "userId", null);
-            assertNull(optimizely.projectConfig.getForcedVariation(experiment.getKey(), "userId"));
+            assertEquals(optimizely.projectConfig.getForcedVariation(experiment.getKey(), testUserId), experiment.getVariations().get(0));
+            optimizely.projectConfig.setForcedVariation(experiment.getKey(), testUserId, null);
+            assertNull(optimizely.projectConfig.getForcedVariation(experiment.getKey(), testUserId));
         }
 
     }
@@ -979,34 +1012,40 @@ public class OptimizelyTest {
     public void trackEventEndToEnd() throws Exception {
         List<Experiment> allExperiments = noAudienceProjectConfig.getExperiments();
         EventType eventType = noAudienceProjectConfig.getEventTypes().get(0);
-
+        ProjectConfig config = spy(noAudienceProjectConfig);
+        DecisionService spyDecisionService = spy(new DecisionService(mockBucketer,
+                mockErrorHandler,
+                config,
+                null));
         EventBuilder eventBuilderV2 = new EventBuilderV2();
 
         Optimizely optimizely = Optimizely.builder(noAudienceDatafile, mockEventHandler)
-                .withBucketing(mockBucketer)
                 .withEventBuilder(eventBuilderV2)
-                .withConfig(noAudienceProjectConfig)
+                .withDecisionService(spyDecisionService)
+                .withConfig(config)
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
         // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
         // call the bucket function.
         for (Experiment experiment : allExperiments) {
-            when(mockBucketer.bucket(experiment, "userId"))
+            when(mockBucketer.bucket(experiment, testUserId))
                     .thenReturn(experiment.getVariations().get(0));
         }
 
         // call track
-        optimizely.track(eventType.getKey(), "userId");
+        optimizely.track(eventType.getKey(), testUserId);
 
         // verify that the bucketing algorithm was called only on experiments corresponding to the specified goal.
-        List<Experiment> experimentsForEvent = noAudienceProjectConfig.getExperimentsForEventKey(eventType.getKey());
+        List<Experiment> experimentsForEvent = config.getExperimentsForEventKey(eventType.getKey());
         for (Experiment experiment : allExperiments) {
-            if (ExperimentUtils.isExperimentActive(experiment) &&
-                    experimentsForEvent.contains(experiment)) {
-                verify(mockBucketer).bucket(experiment, "userId");
+            if (experiment.isRunning() && experimentsForEvent.contains(experiment)) {
+                verify(spyDecisionService).getVariation(experiment, testUserId,
+                        Collections.<String, String>emptyMap());
+                verify(config).getForcedVariation(experiment.getKey(), testUserId);
             } else {
-                verify(mockBucketer, never()).bucket(experiment, "userId");
+                verify(spyDecisionService, never()).getVariation(experiment, testUserId,
+                        Collections.<String, String>emptyMap());
             }
         }
 
@@ -1029,7 +1068,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.ERROR, "Event \"unknown_event_type\" is not in the datafile.");
         logbackVerifier.expectMessage(Level.INFO, "Not tracking event \"unknown_event_type\" for user \"userId\".");
-        optimizely.track(unknownEventType.getKey(), "userId");
+        optimizely.track(unknownEventType.getKey(), testUserId);
 
         // verify that we did NOT dispatch an event
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
@@ -1051,7 +1090,7 @@ public class OptimizelyTest {
                 .build();
 
         // since we use a RaiseExceptionErrorHandler, we should throw an error
-        optimizely.track(unknownEventType.getKey(), "userId");
+        optimizely.track(unknownEventType.getKey(), testUserId);
     }
 
     /**
@@ -1076,9 +1115,10 @@ public class OptimizelyTest {
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
         Map<String, String> attributes = ImmutableMap.of(attribute.getKey(), "attributeValue");
+
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
-                mockBucketer,
+                mockDecisionService,
                 eventType.getKey(),
                 genericUserId,
                 attributes);
@@ -1143,7 +1183,7 @@ public class OptimizelyTest {
         testParams.put("test", "params");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 noAudienceProjectConfig,
-                mockBucketer,
+                mockDecisionService,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
@@ -1196,9 +1236,17 @@ public class OptimizelyTest {
 
         // setup a mock event builder to return expected conversion params
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
+        DecisionService decisionService = new DecisionService(
+                mockBucketer,
+                mock(ErrorHandler.class),
+                validProjectConfig,
+                mock(UserProfileService.class)
+        );
+
 
         Optimizely optimizely = Optimizely.builder(noAudienceDatafile, mockEventHandler)
                 .withBucketing(mockBucketer)
+                .withDecisionService(decisionService)
                 .withEventBuilder(mockEventBuilder)
                 .withConfig(noAudienceProjectConfig)
                 .withErrorHandler(mockErrorHandler)
@@ -1208,7 +1256,7 @@ public class OptimizelyTest {
         testParams.put("test", "params");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 noAudienceProjectConfig,
-                mockBucketer,
+                decisionService,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
@@ -1261,9 +1309,16 @@ public class OptimizelyTest {
 
         // setup a mock event builder to return expected conversion params
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
+        DecisionService decisionService = new DecisionService(
+                mockBucketer,
+                mock(ErrorHandler.class),
+                validProjectConfig,
+                mock(UserProfileService.class)
+        );
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
                 .withBucketing(mockBucketer)
+                .withDecisionService(decisionService)
                 .withEventBuilder(mockEventBuilder)
                 .withConfig(validProjectConfig)
                 .withErrorHandler(new RaiseExceptionErrorHandler())
@@ -1273,7 +1328,7 @@ public class OptimizelyTest {
         testParams.put("test", "params");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
-                mockBucketer,
+                decisionService,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
@@ -1326,6 +1381,13 @@ public class OptimizelyTest {
         // setup a mock event builder to return expected conversion params
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
 
+        DecisionService decisionService = new DecisionService(
+                mockBucketer,
+                mock(ErrorHandler.class),
+                validProjectConfig,
+                mock(UserProfileService.class)
+        );
+
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
                 .withBucketing(mockBucketer)
                 .withEventBuilder(mockEventBuilder)
@@ -1339,7 +1401,7 @@ public class OptimizelyTest {
         eventTags.put(ReservedEventKey.REVENUE.toString(), revenue);
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
-                mockBucketer,
+                decisionService,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
@@ -1404,7 +1466,7 @@ public class OptimizelyTest {
         eventTags.put("float_param", 12.3f);
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
-                mockBucketer,
+                mockDecisionService,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
@@ -1474,7 +1536,7 @@ public class OptimizelyTest {
         testParams.put("test", "params");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
-                mockBucketer,
+                mockDecisionService,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
@@ -1516,15 +1578,19 @@ public class OptimizelyTest {
     @Test
     public void trackEventWithNoValidExperiments() throws Exception {
 
+        EventType eventType;
+        eventType = validProjectConfig.getEventNameMapping().get("clicked_purchase");
+
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
 
         Map<String, String> attributes = new HashMap<String, String>();
         attributes.put("browser_type", "firefox");
 
         logbackVerifier.expectMessage(Level.INFO,
-                "There are no valid experiments for event \"clicked_purchase\" to track.");
-        logbackVerifier.expectMessage(Level.INFO, "Not tracking event \"clicked_purchase\" for user \"userId\".");
-        optimizely.track("clicked_purchase", "userId", attributes);
+                "There are no valid experiments for event \"" + eventType.getKey() + "\" to track.");
+        logbackVerifier.expectMessage(Level.INFO, "Not tracking event \"" + eventType.getKey() +
+                "\" for user \"userId\".");
+        optimizely.track(eventType.getKey(), testUserId, attributes);
 
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
     }
@@ -1544,7 +1610,7 @@ public class OptimizelyTest {
                 .build();
 
         logbackVerifier.expectMessage(Level.ERROR, "Unexpected exception in event dispatcher");
-        optimizely.track(eventType.getKey(), "userId");
+        optimizely.track(eventType.getKey(), testUserId);
     }
 
     /**
@@ -1605,13 +1671,14 @@ public class OptimizelyTest {
     public void trackDispatchesWhenEventHasLaunchedAndRunningExperiments() throws Exception {
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
         EventType eventType = noAudienceProjectConfig.getEventNameMapping().get("event_with_launched_and_running_experiments");
+
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
-        for (Experiment experiment : noAudienceProjectConfig.getExperiments()) {
+        for (Experiment experiment : validProjectConfig.getExperiments()) {
             when(mockBucketAlgorithm.bucket(experiment, genericUserId))
                     .thenReturn(experiment.getVariations().get(0));
         }
 
-        Optimizely client = Optimizely.builder(noAudienceDatafile, mockEventHandler)
+        Optimizely client = Optimizely.builder(validDatafile, mockEventHandler)
                 .withConfig(noAudienceProjectConfig)
                 .withBucketing(mockBucketAlgorithm)
                 .withEventBuilder(mockEventBuilder)
@@ -1621,14 +1688,18 @@ public class OptimizelyTest {
         testParams.put("test", "params");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 noAudienceProjectConfig,
-                mockBucketAlgorithm,
+                client.decisionService,
                 eventType.getKey(),
                 genericUserId,
-                null);
+                Collections.<String, String>emptyMap());
+
+        // Create an Argument Captor to ensure we are creating a correct experiment variation map
+        ArgumentCaptor<Map> experimentVariationMapCaptor = ArgumentCaptor.forClass(Map.class);
+
         LogEvent conversionEvent = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventBuilder.createConversionEvent(
                 eq(noAudienceProjectConfig),
-                eq(experimentVariationMap),
+                experimentVariationMapCaptor.capture(),
                 eq(genericUserId),
                 eq(eventType.getId()),
                 eq(eventType.getKey()),
@@ -1651,6 +1722,10 @@ public class OptimizelyTest {
         // It should send a track event with the running experiment
         client.track(eventType.getKey(), genericUserId, Collections.<String, String>emptyMap());
         verify(client.eventHandler).dispatchEvent(eq(conversionEvent));
+
+        // Check the argument captor got the correct arguments
+        Map<Experiment, Variation> actualExperimentVariationMap = experimentVariationMapCaptor.getValue();
+        assertEquals(experimentVariationMap, actualExperimentVariationMap);
     }
 
     /**
@@ -1903,17 +1978,17 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        when(mockBucketer.bucket(activatedExperiment, "userId")).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(activatedExperiment, testUserId)).thenReturn(bucketedVariation);
 
         Map<String, String> testUserAttributes = new HashMap<String, String>();
         testUserAttributes.put("browser_type", "chrome");
 
         // activate the experiment
-        Variation actualVariation = optimizely.getVariation(activatedExperiment.getKey(), "userId",
+        Variation actualVariation = optimizely.getVariation(activatedExperiment.getKey(), testUserId,
                 testUserAttributes);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(activatedExperiment, "userId");
+        verify(mockBucketer).bucket(activatedExperiment, testUserId);
         assertThat(actualVariation, is(bucketedVariation));
 
         // verify that we didn't attempt to dispatch an event
@@ -1935,13 +2010,13 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        when(mockBucketer.bucket(activatedExperiment, "userId")).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(activatedExperiment, testUserId)).thenReturn(bucketedVariation);
 
         // activate the experiment
-        Variation actualVariation = optimizely.getVariation(activatedExperiment.getKey(), "userId");
+        Variation actualVariation = optimizely.getVariation(activatedExperiment.getKey(), testUserId);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(activatedExperiment, "userId");
+        verify(mockBucketer).bucket(activatedExperiment, testUserId);
         assertThat(actualVariation, is(bucketedVariation));
 
         // verify that we didn't attempt to dispatch an event
@@ -1963,7 +2038,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.ERROR, "Experiment \"unknown_experiment\" is not in the datafile");
 
         // since we use a NoOpErrorHandler, we should fail and return null
-        Variation actualVariation = optimizely.getVariation(unknownExperiment.getKey(), "userId");
+        Variation actualVariation = optimizely.getVariation(unknownExperiment.getKey(), testUserId);
 
         // verify that null is returned, as no project config was available
         assertNull(actualVariation);
@@ -1978,7 +2053,7 @@ public class OptimizelyTest {
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = experiment.getVariations().get(0);
 
-        when(mockBucketer.bucket(experiment, "userId")).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(experiment, testUserId)).thenReturn(bucketedVariation);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
                 .withConfig(validProjectConfig)
@@ -1989,9 +2064,9 @@ public class OptimizelyTest {
         Map<String, String> testUserAttributes = new HashMap<String, String>();
         testUserAttributes.put("browser_type", "chrome");
 
-        Variation actualVariation = optimizely.getVariation(experiment.getKey(), "userId", testUserAttributes);
+        Variation actualVariation = optimizely.getVariation(experiment.getKey(), testUserId, testUserAttributes);
 
-        verify(mockBucketer).bucket(experiment, "userId");
+        verify(mockBucketer).bucket(experiment, testUserId);
         assertThat(actualVariation, is(bucketedVariation));
     }
 
@@ -2010,7 +2085,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.INFO,
                 "User \"userId\" does not meet conditions to be in experiment \"etag1\".");
 
-        Variation actualVariation = optimizely.getVariation(experiment.getKey(), "userId");
+        Variation actualVariation = optimizely.getVariation(experiment.getKey(), testUserId);
         assertNull(actualVariation);
     }
 
@@ -2023,7 +2098,7 @@ public class OptimizelyTest {
         Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = experiment.getVariations().get(0);
 
-        when(mockBucketer.bucket(experiment, "userId")).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(experiment, testUserId)).thenReturn(bucketedVariation);
 
         Optimizely optimizely = Optimizely.builder(noAudienceDatafile, mockEventHandler)
                 .withConfig(noAudienceProjectConfig)
@@ -2031,9 +2106,9 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Variation actualVariation = optimizely.getVariation(experiment.getKey(), "userId");
+        Variation actualVariation = optimizely.getVariation(experiment.getKey(), testUserId);
 
-        verify(mockBucketer).bucket(experiment, "userId");
+        verify(mockBucketer).bucket(experiment, testUserId);
         assertThat(actualVariation, is(bucketedVariation));
     }
 
@@ -2053,7 +2128,7 @@ public class OptimizelyTest {
                 .build();
 
         // since we use a RaiseExceptionErrorHandler, we should throw an error
-        optimizely.getVariation(unknownExperiment.getKey(), "userId");
+        optimizely.getVariation(unknownExperiment.getKey(), testUserId);
     }
 
     /**
@@ -2146,7 +2221,7 @@ public class OptimizelyTest {
         EventBuilder mockEventBuilder = mock(EventBuilder.class);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
-                .withBucketing(mockBucketer)
+                .withDecisionService(mockDecisionService)
                 .withEventBuilder(mockEventBuilder)
                 .withConfig(validProjectConfig)
                 .withErrorHandler(mockErrorHandler)
@@ -2156,17 +2231,18 @@ public class OptimizelyTest {
 
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
+
         LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+
         when(mockEventBuilder.createImpressionEvent(validProjectConfig, activatedExperiment,
                 bucketedVariation, genericUserId, attributes))
                 .thenReturn(logEventToDispatch);
 
-        when(mockBucketer.bucket(activatedExperiment, genericUserId))
+        when(mockDecisionService.getVariation(
+                eq(activatedExperiment),
+                eq(genericUserId),
+                eq(attributes)))
                 .thenReturn(bucketedVariation);
-
-        when(mockEventBuilder.createImpressionEvent(validProjectConfig, activatedExperiment,
-                bucketedVariation, genericUserId, attributes))
-                .thenReturn(logEventToDispatch);
 
         // Add listener
         NotificationListener listener = mock(NotificationListener.class);
@@ -2195,7 +2271,7 @@ public class OptimizelyTest {
 
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
-                mockBucketer,
+                mockDecisionService,
                 eventType.getKey(),
                 genericUserId,
                 attributes);
@@ -2270,7 +2346,7 @@ public class OptimizelyTest {
 
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
-                mockBucketer,
+                mockDecisionService,
                 eventType.getKey(),
                 genericUserId,
                 attributes);
@@ -2344,7 +2420,7 @@ public class OptimizelyTest {
 
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
-                mockBucketer,
+                mockDecisionService,
                 eventType.getKey(),
                 OptimizelyTest.genericUserId,
                 attributes);
@@ -2361,6 +2437,38 @@ public class OptimizelyTest {
         optimizely.track(eventKey, genericUserId, attributes);
         verify(listener, never())
                 .onEventTracked(eventKey, genericUserId, attributes, null, logEventToDispatch);
+    }
+
+
+    /**
+     * Verify that {@link Optimizely#getVariation(String, String)} returns a variation when given an experiment
+     * with no audiences and no user attributes.
+     */
+    @Test
+    public void getVariationBucketingIdAttribute() throws Exception {
+        Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
+        Variation bucketedVariation = experiment.getVariations().get(0);
+        String bucketingKey = testBucketingIdKey;
+        String bucketingId = "blah";
+        String userId = testUserId;
+        Map<String, String> testUserAttributes = new HashMap<String, String>();
+        testUserAttributes.put("browser_type", "chrome");
+        testUserAttributes.put(bucketingKey, bucketingId);
+
+
+        when(mockBucketer.bucket(experiment, bucketingId)).thenReturn(bucketedVariation);
+
+        Optimizely optimizely = Optimizely.builder(noAudienceDatafile, mockEventHandler)
+                .withConfig(noAudienceProjectConfig)
+                .withBucketing(mockBucketer)
+                .withErrorHandler(mockErrorHandler)
+                .build();
+
+        Variation actualVariation = optimizely.getVariation(experiment.getKey(), userId, testUserAttributes);
+
+        verify(mockBucketer).bucket(experiment, bucketingId);
+
+        assertThat(actualVariation, is(bucketedVariation));
     }
 
     //======== Helper methods ========//

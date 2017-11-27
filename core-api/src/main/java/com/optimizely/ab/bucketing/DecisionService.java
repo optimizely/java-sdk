@@ -42,6 +42,7 @@ import java.util.Map;
  */
 public class DecisionService {
 
+    public static final String BUCKETING_ATTRIBUTE = "$opt_bucketing_id";
     private final Bucketer bucketer;
     private final ErrorHandler errorHandler;
     private final ProjectConfig projectConfig;
@@ -95,6 +96,7 @@ public class DecisionService {
 
         // fetch the user profile map from the user profile service
         UserProfile userProfile = null;
+        
         if (userProfileService != null) {
             try {
                 Map<String, Object> userProfileMap = userProfileService.lookup(userId);
@@ -123,7 +125,11 @@ public class DecisionService {
         }
 
         if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
-            variation = bucketer.bucket(experiment, userId);
+            String bucketingId = userId;
+            if (filteredAttributes.containsKey(BUCKETING_ATTRIBUTE)) {
+                bucketingId = filteredAttributes.get(BUCKETING_ATTRIBUTE);
+            }
+            variation = bucketer.bucket(experiment, bucketingId);
 
             if (variation != null) {
                 if (userProfileService != null) {
