@@ -1,4 +1,51 @@
 # Optimizely Java X SDK Changelog
+
+## 1.8.1
+December 12, 2017
+
+This is a patch release for 1.8.0. It contains two bug fixes mentioned below.
+
+### Bug Fixes
+SDK returns NullPointerException when activating with unknown attribute.
+
+Pooled connection times out if it is idle for a long time (AsyncEventHandler's HttpClient uses PoolingHttpClientConnectionManager setting a validate interval). 
+
+## 2.0.0 Beta 2
+October 5, 2017
+
+This release is a second beta release supporting feature flags and rollouts. It includes all the same new features and breaking changes as the last beta release.
+
+### Bug Fixes
+Fall back to default feature variable value when there is no variable usage in the variation a user is bucketed into. For more information see [PR #149](https://github.com/optimizely/java-sdk/pull/149).
+
+## 2.0.0 Beta
+September 29, 2017
+
+This release is a beta release supporting feature flags and rollouts.
+
+### New Features
+#### Feature Flag Accessors
+You can now use feature flags in the Java SDK. You can experiment on features and rollout features through the Optimizely UI.
+
+- `isFeatureEnabled`
+- `getFeatureVariableBoolean`
+- `getFeatureVariableDouble`
+- `getFeatureVariableInteger`
+- `getFeatureVariableString`
+
+### Breaking Changes
+
+- Remove Live Variables accessors
+  - `getVariableString`
+  - `getVariableBoolean`
+  - `getVariableInteger`
+  - `getVariableDouble`
+- Remove track with revenue as a parameter. Pass the revenue value as an event tag instead
+  - `track(String, String, long)`
+  - `track(String, String, Map<String, String>, long)`
+- We will no longer run all unit tests in travis-ci against Java 7. 
+  We will still continue to set `sourceCompatibility` and `targetCompatibility` to 1.6 so that we build for Java 6.
+
 ## 1.8.0
 
 August 29, 2017
