@@ -37,6 +37,8 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.EventBuilder;
 import com.optimizely.ab.event.internal.EventBuilderV2;
 import com.optimizely.ab.internal.LogbackVerifier;
+import com.optimizely.ab.notification.ActivateNotification;
+import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.notification.NotificationListener;
 
 import org.junit.Rule;
@@ -61,6 +63,8 @@ import java.util.Map;
 
 import ch.qos.logback.classic.Level;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import javax.annotation.Nonnull;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV3;
@@ -523,6 +527,68 @@ public class OptimizelyTest {
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, testUserAttributes);
 
+        // verify that the bucketing algorithm was called correctly
+        verify(mockBucketer).bucket(activatedExperiment, testBucketingId);
+        assertThat(actualVariation, is(bucketedVariation));
+
+        // verify that dispatchEvent was called with the correct LogEvent object
+        verify(mockEventHandler).dispatchEvent(logEventToDispatch);
+    }
+
+    /**
+     * Verify that the {@link Optimizely#activate(String, String, Map<String, String>)} call
+     * correctly builds an endpoint url and request params
+     * and passes them through {@link EventHandler#dispatchEvent(LogEvent)}.
+     */
+    @Test
+    public void activateWithListener() throws Exception {
+        final Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
+        final Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+        EventBuilder mockEventBuilder = mock(EventBuilder.class);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withBucketing(mockBucketer)
+                .withEventBuilder(mockEventBuilder)
+                .withConfig(validProjectConfig)
+                .withErrorHandler(mockErrorHandler)
+                .build();
+
+        ActivateNotification activateNotification = new ActivateNotification() {
+            @Override
+            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+                assertEquals(experiment.getKey(), activatedExperiment.getKey());
+                assertEquals(bucketedVariation.getKey(), variation.getKey());
+                assertEquals(userId, testUserId);
+            }
+        };
+
+        int notificationId = optimizely.notificationCenter.addNotification(NotificationCenter.NotificationType.Activate, activateNotification);
+
+        Map<String, String> testUserAttributes = new HashMap<String, String>();
+        if (datafileVersion >= 4) {
+            testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+        }
+        else {
+            testUserAttributes.put("browser_type", "chrome");
+        }
+
+        testUserAttributes.put(testBucketingIdKey, testBucketingId);
+
+        Map<String, String> testParams = new HashMap<String, String>();
+        testParams.put("test", "params");
+        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+        when(mockEventBuilder.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
+                eq(testUserId), eq(testUserAttributes)))
+                .thenReturn(logEventToDispatch);
+
+        when(mockBucketer.bucket(activatedExperiment, testBucketingId))
+                .thenReturn(bucketedVariation);
+
+
+        // activate the experiment
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, testUserAttributes);
+
+        optimizely.notificationCenter.removeNotifiation(notificationId);
         // verify that the bucketing algorithm was called correctly
         verify(mockBucketer).bucket(activatedExperiment, testBucketingId);
         assertThat(actualVariation, is(bucketedVariation));

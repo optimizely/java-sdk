@@ -3,7 +3,6 @@ package com.optimizely.ab.notification;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
-import sun.rmi.runtime.Log;
 
 import java.util.Map;
 
@@ -11,7 +10,7 @@ import java.util.Map;
 public abstract class ActivateNotification implements Notification {
 
     @Override
-    public void notify(Object... args) {
+    public final void notify(Object... args) {
         assert(args[0] instanceof Experiment);
         Experiment experiment = (Experiment) args[0];
         assert(args[1] instanceof String);
@@ -27,7 +26,7 @@ public abstract class ActivateNotification implements Notification {
     }
 
     // Notice the argument list for decision
-    abstract void onActivate(@javax.annotation.Nonnull Experiment experiment,
+    public abstract void onActivate(@javax.annotation.Nonnull Experiment experiment,
                              @javax.annotation.Nonnull String userId,
                              @javax.annotation.Nonnull Map<String, String> attributes,
                              @javax.annotation.Nonnull Variation variation,

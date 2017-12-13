@@ -7,7 +7,8 @@ import com.optimizely.ab.event.LogEvent;
 
 public abstract class TrackNotification implements Notification {
 
-    public void notify(Object... args) {
+    @Override
+    public final void notify(Object... args) {
         assert(args[0] instanceof String);
         String eventKey = (String) args[0];
         assert(args[1] instanceof String);
@@ -23,7 +24,7 @@ public abstract class TrackNotification implements Notification {
     }
 
     // Notice the argument list for decision
-    abstract void onTrack(@Nonnull String eventKey,
+    public abstract void onTrack(@Nonnull String eventKey,
                           @Nonnull String userId,
                           @Nonnull Map<String, String> attributes,
                           @Nonnull Map<String, ?>  eventTags,

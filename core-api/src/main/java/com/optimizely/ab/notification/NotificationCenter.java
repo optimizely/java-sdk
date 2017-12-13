@@ -14,7 +14,7 @@ public class NotificationCenter {
     // the notification id is incremented and is assigned as the callback id, it can then be used to remove the notification.
     private int notificationID = 1;
     // use tuple if available.
-    private class NotificationHolder
+    private static class NotificationHolder
     {
         int notificationId;
         Notification notification;
