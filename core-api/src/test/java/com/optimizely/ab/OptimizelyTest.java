@@ -553,18 +553,7 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        ActivateNotification activateNotification = new ActivateNotification() {
-            @Override
-            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
-                assertEquals(experiment.getKey(), activatedExperiment.getKey());
-                assertEquals(bucketedVariation.getKey(), variation.getKey());
-                assertEquals(userId, testUserId);
-            }
-        };
-
-        int notificationId = optimizely.notificationCenter.addNotification(NotificationCenter.NotificationType.Activate, activateNotification);
-
-        Map<String, String> testUserAttributes = new HashMap<String, String>();
+        final Map<String, String> testUserAttributes = new HashMap<String, String>();
         if (datafileVersion >= 4) {
             testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
         }
@@ -573,6 +562,23 @@ public class OptimizelyTest {
         }
 
         testUserAttributes.put(testBucketingIdKey, testBucketingId);
+
+        ActivateNotification activateNotification = new ActivateNotification() {
+            @Override
+            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+                assertEquals(experiment.getKey(), activatedExperiment.getKey());
+                assertEquals(bucketedVariation.getKey(), variation.getKey());
+                assertEquals(userId, testUserId);
+                for (Map.Entry<String, String> entry : attributes.entrySet()) {
+                    assertEquals(testUserAttributes.get(entry.getKey()), entry.getValue());
+                }
+
+                assertEquals(event.getRequestMethod(), RequestMethod.GET);
+            }
+
+        };
+
+        int notificationId = optimizely.notificationCenter.addNotification(NotificationCenter.NotificationType.Activate, activateNotification);
 
         Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
