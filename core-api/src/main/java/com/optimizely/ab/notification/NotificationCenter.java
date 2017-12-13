@@ -52,7 +52,7 @@ public class NotificationCenter {
     }
 
     // remove notification by id
-   public boolean removeNotifiation(int notificationID) {
+   public boolean removeNotification(int notificationID) {
         ArrayList<NotificationType> types = new ArrayList<NotificationType>();
         types.add(NotificationType.Activate);
         types.add(NotificationType.Track);

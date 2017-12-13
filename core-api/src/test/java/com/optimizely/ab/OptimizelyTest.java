@@ -522,8 +522,7 @@ public class OptimizelyTest {
 
         when(mockBucketer.bucket(activatedExperiment, testBucketingId))
                 .thenReturn(bucketedVariation);
-
-
+        
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, testUserAttributes);
 
@@ -594,7 +593,7 @@ public class OptimizelyTest {
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, testUserAttributes);
 
-        optimizely.notificationCenter.removeNotifiation(notificationId);
+        optimizely.notificationCenter.removeNotification(notificationId);
         // verify that the bucketing algorithm was called correctly
         verify(mockBucketer).bucket(activatedExperiment, testBucketingId);
         assertThat(actualVariation, is(bucketedVariation));
@@ -804,6 +803,73 @@ public class OptimizelyTest {
         // activate the experiment
         Map<String, String> attributes = null;
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, attributes);
+
+        logbackVerifier.expectMessage(Level.WARN, "Attributes is null when non-null was expected. Defaulting to an empty attributes map.");
+
+        // verify that the bucketing algorithm was called correctly
+        verify(mockBucketer).bucket(activatedExperiment, testUserId);
+        assertThat(actualVariation, is(bucketedVariation));
+
+        // setup the attribute map captor (so we can verify its content)
+        ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockEventBuilder).createImpressionEvent(eq(noAudienceProjectConfig), eq(activatedExperiment),
+                eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
+
+        Map<String, String> actualValue = attributeCaptor.getValue();
+        assertThat(actualValue, is(Collections.<String, String>emptyMap()));
+
+        // verify that dispatchEvent was called with the correct LogEvent object
+        verify(mockEventHandler).dispatchEvent(logEventToDispatch);
+    }
+
+    @Test
+    @SuppressFBWarnings(
+            value="NP_NONNULL_PARAM_VIOLATION",
+            justification="testing nullness contract violation")
+    public void activateWithListenerNullAttributes() throws Exception {
+        final Experiment activatedExperiment = noAudienceProjectConfig.getExperiments().get(0);
+        final Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+
+        // setup a mock event builder to return expected impression params
+        EventBuilder mockEventBuilder = mock(EventBuilder.class);
+
+        Optimizely optimizely = Optimizely.builder(noAudienceDatafile, mockEventHandler)
+                .withBucketing(mockBucketer)
+                .withEventBuilder(mockEventBuilder)
+                .withConfig(noAudienceProjectConfig)
+                .withErrorHandler(mockErrorHandler)
+                .build();
+
+        Map<String, String> testParams = new HashMap<String, String>();
+        testParams.put("test", "params");
+        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+        when(mockEventBuilder.createImpressionEvent(eq(noAudienceProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
+                eq(testUserId), eq(Collections.<String, String>emptyMap())))
+                .thenReturn(logEventToDispatch);
+
+        when(mockBucketer.bucket(activatedExperiment, testUserId))
+                .thenReturn(bucketedVariation);
+
+        ActivateNotification activateNotification = new ActivateNotification() {
+            @Override
+            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+                assertEquals(experiment.getKey(), activatedExperiment.getKey());
+                assertEquals(bucketedVariation.getKey(), variation.getKey());
+                assertEquals(userId, testUserId);
+                assertTrue(attributes.isEmpty());
+
+                assertEquals(event.getRequestMethod(), RequestMethod.GET);
+            }
+
+        };
+
+        int notificationId = optimizely.notificationCenter.addNotification(NotificationCenter.NotificationType.Activate, activateNotification);
+
+        // activate the experiment
+        Map<String, String> attributes = null;
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, attributes);
+
+        optimizely.notificationCenter.removeNotification(notificationId);
 
         logbackVerifier.expectMessage(Level.WARN, "Attributes is null when non-null was expected. Defaulting to an empty attributes map.");
 
