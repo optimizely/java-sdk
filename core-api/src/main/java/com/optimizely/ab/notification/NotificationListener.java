@@ -34,6 +34,7 @@ import javax.annotation.Nonnull;
  * methods are added to the interface in the SDK. An abstract classes allows consumers to override
  * just the methods they need.
  */
+@Deprecated
 public abstract class NotificationListener {
 
     /**
