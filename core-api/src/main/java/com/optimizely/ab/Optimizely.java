@@ -299,7 +299,7 @@ public class Optimizely {
         notificationBroadcaster.broadcastEventTracked(eventName, userId, filteredAttributes, eventValue,
                 conversionEvent);
         notificationCenter.sendNotifications(NotificationCenter.NotificationType.Track, eventName, userId,
-                filteredAttributes, eventValue, conversionEvent);
+                filteredAttributes, eventTags, conversionEvent);
     }
 
     //======== FeatureFlag APIs ========//

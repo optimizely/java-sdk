@@ -70,7 +70,7 @@ public class NotificationCenter {
     }
 
     // clean out all notifications.
-    public void cleanAllNotifications() {
+    public void clearAllNotifications() {
         ArrayList<NotificationType> types = new ArrayList<NotificationType>();
         types.add(NotificationType.Activate);
         types.add(NotificationType.Track);
