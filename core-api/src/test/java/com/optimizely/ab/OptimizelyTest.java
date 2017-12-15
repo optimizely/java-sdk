@@ -2567,8 +2567,10 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify that {@link Optimizely#addNotificationListener(NotificationListener)} properly calls
-     * through to {@link com.optimizely.ab.notification.NotificationBroadcaster} and the listener is
+     * Verify that {@link com.optimizely.ab.notification.NotificationCenter#addNotification(
+     * com.optimizely.ab.notification.NotificationCenter.NotificationType,
+     * com.optimizely.ab.notification.Notification)} properly used
+     *  and the listener is
      * added and notified when an experiment is activated.
      */
     @Test
@@ -2647,9 +2649,8 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify that {@link Optimizely#removeNotificationListener(NotificationListener)} properly
-     * calls through to {@link com.optimizely.ab.notification.NotificationBroadcaster} and the
-     * listener is removed and no longer notified when an experiment is activated.
+     * Verify that {@link com.optimizely.ab.notification.NotificationCenter} properly
+     * calls and the listener is removed and no longer notified when an experiment is activated.
      */
     @Test
     public void removeNotificationListenerNotificationCenter() throws Exception {
@@ -2726,8 +2727,8 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify that {@link Optimizely#clearNotificationListeners()} properly calls through to
-     * {@link com.optimizely.ab.notification.NotificationBroadcaster} and all listeners are removed
+     * Verify that {@link com.optimizely.ab.notification.NotificationCenter}
+     * clearAllListerners removes all listeners
      * and no longer notified when an experiment is activated.
      */
     @Test
@@ -2820,6 +2821,11 @@ public class OptimizelyTest {
                 .onTrack(eventKey, genericUserId, attributes, Collections.EMPTY_MAP, logEventToDispatch);
     }
 
+    /**
+     * Add notificaiton listener for track {@link com.optimizely.ab.notification.NotificationCenter}.  Verify called and
+     * remove.
+     * @throws Exception
+     */
     @Test
     @SuppressWarnings("unchecked")
     public void trackEventWithListenerAttributes() throws Exception {
@@ -2904,7 +2910,7 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify that {@link Optimizely#track(String, String)} ignores null attributes.
+     * Track with listener and verify that {@link Optimizely#track(String, String)} ignores null attributes.
      */
     @Test
     @SuppressFBWarnings(
