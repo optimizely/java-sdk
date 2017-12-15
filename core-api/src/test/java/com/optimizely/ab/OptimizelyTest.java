@@ -2249,7 +2249,7 @@ public class OptimizelyTest {
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, testUserAttributes);
 
-        optimizely.notificationCenter.removeNotification(notificationId);
+        assertTrue(optimizely.notificationCenter.removeNotification(notificationId));
         // verify that the bucketing algorithm was called correctly
         verify(mockBucketer).bucket(activatedExperiment, testBucketingId);
         assertThat(actualVariation, is(bucketedVariation));
@@ -2685,11 +2685,11 @@ public class OptimizelyTest {
         // Add and remove listener
         ActivateNotification activateNotification = mock(ActivateNotification.class);
         int notificationId = optimizely.notificationCenter.addNotification(NotificationCenter.NotificationType.Activate, activateNotification);
-        optimizely.notificationCenter.removeNotification(notificationId);
+        assertTrue(optimizely.notificationCenter.removeNotification(notificationId));
 
         TrackNotification trackNotification = mock(TrackNotification.class);
         notificationId = optimizely.notificationCenter.addNotification(NotificationCenter.NotificationType.Track, trackNotification);
-        optimizely.notificationCenter.removeNotification(notificationId);
+        assertTrue(optimizely.notificationCenter.removeNotification(notificationId));
 
         // Check if listener is notified after an experiment is activated
         Variation actualVariation = optimizely.activate(activatedExperiment, genericUserId, attributes);
@@ -2916,7 +2916,7 @@ public class OptimizelyTest {
     @SuppressFBWarnings(
             value="NP_NONNULL_PARAM_VIOLATION",
             justification="testing nullness contract violation")
-    public void trackEventWitListenerhNullAttributes() throws Exception {
+    public void trackEventWithListenerNullAttributes() throws Exception {
         final EventType eventType;
         if (datafileVersion >= 4) {
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_BASIC_EVENT_KEY);

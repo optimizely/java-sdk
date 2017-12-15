@@ -123,7 +123,7 @@ public class NotificationCenter {
         }
 
         logger.warn("Notification listener with id {} not found", notificationID);
-       
+
         return false;
     }
 

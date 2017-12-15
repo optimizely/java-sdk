@@ -696,6 +696,7 @@ public class Optimizely {
      *
      * @param listener listener to add
      */
+    @Deprecated
     public void addNotificationListener(@Nonnull NotificationListener listener) {
         notificationBroadcaster.addListener(listener);
     }
@@ -705,6 +706,7 @@ public class Optimizely {
      *
      * @param listener listener to remove
      */
+    @Deprecated
     public void removeNotificationListener(@Nonnull NotificationListener listener) {
         notificationBroadcaster.removeListener(listener);
     }
@@ -712,6 +714,7 @@ public class Optimizely {
     /**
      * Remove all {@link NotificationListener}.
      */
+    @Deprecated
     public void clearNotificationListeners() {
         notificationBroadcaster.clearListeners();
     }
