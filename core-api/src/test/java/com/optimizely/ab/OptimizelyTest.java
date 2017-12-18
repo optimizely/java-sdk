@@ -2569,7 +2569,7 @@ public class OptimizelyTest {
     /**
      * Verify that {@link com.optimizely.ab.notification.NotificationCenter#addNotification(
      * com.optimizely.ab.notification.NotificationCenter.NotificationType,
-     * com.optimizely.ab.notification.Notification)} properly used
+     * com.optimizely.ab.notification.NotificationListener)} properly used
      *  and the listener is
      * added and notified when an experiment is activated.
      */

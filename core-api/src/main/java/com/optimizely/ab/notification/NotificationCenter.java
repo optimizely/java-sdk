@@ -17,10 +17,12 @@
 package com.optimizely.ab.notification;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  * This class handles impression and conversion notifications. It replaces NotificationBroadcaster and is intended to be
@@ -50,15 +52,15 @@ public class NotificationCenter {
     // the notification id is incremented and is assigned as the callback id, it can then be used to remove the notification.
     private int notificationID = 1;
 
-    final private Logger logger;
+    final private static Logger logger = LoggerFactory.getLogger(NotificationCenter.class);
 
     // notification holder holds the id as well as the notification.
     private static class NotificationHolder
     {
         int notificationId;
-        Notification notification;
+        NotificationListener notification;
 
-        NotificationHolder(int id, Notification notification) {
+        NotificationHolder(int id, NotificationListener notification) {
             notificationId = id;
             this.notification = notification;
         }
@@ -66,10 +68,8 @@ public class NotificationCenter {
 
     /**
      * Instantiate a new NotificationCenter
-     * @param logger pass in logger to use.
      */
-    public NotificationCenter(Logger logger) {
-        this.logger = logger;
+    public NotificationCenter() {
         notifications.put(NotificationType.Activate, new ArrayList<NotificationHolder>());
         notifications.put(NotificationType.Track, new ArrayList<NotificationHolder>());
     }
@@ -86,7 +86,7 @@ public class NotificationCenter {
      * @param notification - Notification to add.
      * @return the notification id used to remove the notification.  It is greater than 0 on success.
      */
-    public int addNotification(NotificationType notificationType, Notification notification) {
+    public int addNotification(NotificationType notificationType, NotificationListener notification) {
 
         Class clazz = notificationType.notificationClass;
         if (clazz == null || !clazz.isInstance(notification)) {

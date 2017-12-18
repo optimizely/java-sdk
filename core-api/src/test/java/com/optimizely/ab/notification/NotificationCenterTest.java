@@ -16,15 +16,13 @@ public class NotificationCenterTest {
     private NotificationCenter notificationCenter;
     private ActivateNotification activateNotification;
     private TrackNotification trackNotification;
-    private Logger logger;
 
     @Rule
     public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
     @Before
     public void initialize() {
-        logger = LoggerFactory.getLogger("NotificationCenterTest");
-        notificationCenter = new NotificationCenter(logger);
+        notificationCenter = new NotificationCenter();
         activateNotification = mock(ActivateNotification.class);
         trackNotification = mock(TrackNotification.class);
     }

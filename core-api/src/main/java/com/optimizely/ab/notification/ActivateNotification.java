@@ -24,7 +24,7 @@ import com.optimizely.ab.event.LogEvent;
 import java.util.Map;
 
 
-public abstract class ActivateNotification implements Notification {
+public abstract class ActivateNotification extends NotificationListener {
 
     /**
      * Base notify called with var args.  This method parses the parameters and calls the abstract method.

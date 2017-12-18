@@ -94,7 +94,7 @@ public class Optimizely {
     @VisibleForTesting final EventHandler eventHandler;
     @VisibleForTesting final ErrorHandler errorHandler;
     @VisibleForTesting final NotificationBroadcaster notificationBroadcaster = new NotificationBroadcaster();
-    public final NotificationCenter notificationCenter = new NotificationCenter(logger);
+    public final NotificationCenter notificationCenter = new NotificationCenter();
 
     @Nullable private final UserProfileService userProfileService;
 
