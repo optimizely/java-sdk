@@ -40,6 +40,7 @@ import com.optimizely.ab.event.internal.payload.Event.ClientEngine;
 import com.optimizely.ab.internal.EventTagUtils;
 import com.optimizely.ab.internal.ReservedEventKey;
 import com.optimizely.ab.notification.NotificationBroadcaster;
+import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.notification.NotificationListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,6 +92,8 @@ public class Optimizely {
     @VisibleForTesting final EventHandler eventHandler;
     @VisibleForTesting final ErrorHandler errorHandler;
     @VisibleForTesting final NotificationBroadcaster notificationBroadcaster = new NotificationBroadcaster();
+    public final NotificationCenter notificationCenter = new NotificationCenter();
+
     @Nullable private final UserProfileService userProfileService;
 
     private Optimizely(@Nonnull ProjectConfig projectConfig,
@@ -194,6 +197,9 @@ public class Optimizely {
             }
 
             notificationBroadcaster.broadcastExperimentActivated(experiment, userId, filteredAttributes, variation);
+
+            notificationCenter.sendNotifications(NotificationCenter.NotificationType.Activate, experiment, userId,
+                    filteredAttributes, variation, impressionEvent);
         } else {
             logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
         }
@@ -302,6 +308,8 @@ public class Optimizely {
 
         notificationBroadcaster.broadcastEventTracked(eventName, userId, filteredAttributes, eventValue,
                 conversionEvent);
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.Track, eventName, userId,
+                filteredAttributes, eventTags, conversionEvent);
     }
 
     //======== live variable getters ========//
@@ -552,6 +560,7 @@ public class Optimizely {
      *
      * @param listener listener to add
      */
+    @Deprecated
     public void addNotificationListener(@Nonnull NotificationListener listener) {
         notificationBroadcaster.addListener(listener);
     }
@@ -561,6 +570,7 @@ public class Optimizely {
      *
      * @param listener listener to remove
      */
+    @Deprecated
     public void removeNotificationListener(@Nonnull NotificationListener listener) {
         notificationBroadcaster.removeListener(listener);
     }
@@ -568,6 +578,7 @@ public class Optimizely {
     /**
      * Remove all {@link NotificationListener}.
      */
+    @Deprecated
     public void clearNotificationListeners() {
         notificationBroadcaster.clearListeners();
     }
