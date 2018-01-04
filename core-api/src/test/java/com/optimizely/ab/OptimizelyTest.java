@@ -15,6 +15,7 @@
  ***************************************************************************/
 package com.optimizely.ab;
 
+import ch.qos.logback.classic.Level;
 import com.google.common.collect.ImmutableMap;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
@@ -40,8 +41,8 @@ import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.notification.ActivateNotification;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.notification.NotificationListener;
-
 import com.optimizely.ab.notification.TrackNotification;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -53,6 +54,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,11 +63,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import ch.qos.logback.classic.Level;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import javax.annotation.Nonnull;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV3;
@@ -121,6 +118,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -3269,6 +3267,39 @@ public class OptimizelyTest {
         );
 
         assertEquals(expectedValue, value);
+    }
+
+    /**
+     * Verify {@link Optimizely#isFeatureEnabled(String, String)} calls into
+     * {@link Optimizely#isFeatureEnabled(String, String, Map)} and they both
+     * return False
+     * when the APIs are called with a null value for the feature key parameter.
+     * @throws Exception
+     */
+    @Test
+    public void isFeatureEnabledReturnsFalseWhenFeatureKeyIsNull() throws Exception {
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .withDecisionService(mockDecisionService)
+                .build());
+
+        assertFalse(spyOptimizely.isFeatureEnabled(null, genericUserId));
+
+        logbackVerifier.expectMessage(
+                Level.WARN,
+                "The featureKey parameter must be nonnull."
+        );
+
+        verify(spyOptimizely, times(1)).isFeatureEnabled(
+                isNull(String.class),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+        verify(mockDecisionService, never()).getVariationForFeature(
+                any(FeatureFlag.class),
+                any(String.class),
+                anyMapOf(String.class, String.class)
+        );
     }
 
     /**
