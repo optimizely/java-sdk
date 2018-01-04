@@ -37,7 +37,6 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.EventBuilder;
 import com.optimizely.ab.event.internal.EventBuilderV2;
-import com.optimizely.ab.event.internal.payload.Feature;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.notification.ActivateNotification;
 import com.optimizely.ab.notification.NotificationCenter;
