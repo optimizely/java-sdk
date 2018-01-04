@@ -333,6 +333,14 @@ public class Optimizely {
     public @Nonnull Boolean isFeatureEnabled(@Nonnull String featureKey,
                                               @Nonnull String userId,
                                               @Nonnull Map<String, String> attributes) {
+        if (featureKey == null) {
+            logger.warn("The featureKey parameter must be nonnull.");
+            return false;
+        }
+        else if (userId == null) {
+            logger.warn("The userId parameter must be nonnull.");
+            return false;
+        }
         FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
         if (featureFlag == null) {
             logger.info("No feature flag was found for key \"{}\".", featureKey);
@@ -533,6 +541,18 @@ public class Optimizely {
                                                   @Nonnull String userId,
                                                   @Nonnull Map<String, String> attributes,
                                                   @Nonnull LiveVariable.VariableType variableType) {
+        if (featureKey == null) {
+            logger.warn("The featureKey parameter must be nonnull.");
+            return null;
+        }
+        else if (variableKey == null) {
+            logger.warn("The variableKey parameter must be nonnull.");
+            return null;
+        }
+        else if (userId == null) {
+            logger.warn("The userId parameter must be nonnull.");
+            return null;
+        }
         FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
         if (featureFlag == null) {
             logger.info("No feature flag was found for key \"{}\".", featureKey);
