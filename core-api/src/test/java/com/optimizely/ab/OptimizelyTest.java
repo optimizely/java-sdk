@@ -3507,6 +3507,108 @@ public class OptimizelyTest {
 
     /**
      * Verify {@link Optimizely#getFeatureVariableString(String, String, String)}
+     * calls through to {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
+     * and returns null
+     * when called with a null value for the feature Key parameter.
+     * @throws ConfigParseException
+     */
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
+    @Test
+    public void getFeatureVariableStringReturnsNullWhenFeatureKeyIsNull() throws ConfigParseException {
+        String variableKey = "";
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+        assertNull(spyOptimizely.getFeatureVariableString(
+                null,
+                variableKey,
+                genericUserId
+        ));
+
+        logbackVerifier.expectMessage(
+                Level.WARN,
+                "The featureKey parameter must be nonnull."
+        );
+        verify(spyOptimizely, times(1)).getFeatureVariableString(
+                isNull(String.class),
+                any(String.class),
+                any(String.class),
+                anyMapOf(String.class, String.class)
+        );
+    }
+
+    /**
+     * Verify {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
+     * calls through to {@link Optimizely#getFeatureVariableString(String, String, String)}
+     * and returns null
+     * when called with a null value for the variableKey parameter.
+     * @throws ConfigParseException
+     */
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
+    @Test
+    public void getFeatureVariableStringReturnsNullWhenVariableKeyIsNull() throws ConfigParseException {
+        String featureKey = "";
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+        assertNull(spyOptimizely.getFeatureVariableString(
+                featureKey,
+                null,
+                genericUserId
+        ));
+
+        logbackVerifier.expectMessage(
+                Level.WARN,
+                "The variableKey parameter must be nonnull."
+        );
+        verify(spyOptimizely, times(1)).getFeatureVariableString(
+                any(String.class),
+                isNull(String.class),
+                any(String.class),
+                anyMapOf(String.class, String.class)
+        );
+    }
+
+    /**
+     * Verify {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
+     * calls through to {@link Optimizely#getFeatureVariableString(String, String, String)}
+     * and returns null
+     * when called with a null value for the userID parameter.
+     * @throws ConfigParseException
+     */
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
+    @Test
+    public void getFeatureVariableStringReturnsNullWhenUserIdIsNull() throws ConfigParseException {
+        String featureKey = "";
+        String variableKey = "";
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .build());
+
+        assertNull(spyOptimizely.getFeatureVariableString(
+                featureKey,
+                variableKey,
+                null
+        ));
+
+        logbackVerifier.expectMessage(
+                Level.WARN,
+                "The userId parameter must be nonnull."
+        );
+        verify(spyOptimizely, times(1)).getFeatureVariableString(
+                any(String.class),
+                any(String.class),
+                isNull(String.class),
+                anyMapOf(String.class, String.class)
+        );
+    }
+    /**
+     * Verify {@link Optimizely#getFeatureVariableString(String, String, String)}
      * calls through to {@link Optimizely#getFeatureVariableString(String, String, String, Map<String, String>)}
      * and returns null
      * when {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, LiveVariable.VariableType)}
