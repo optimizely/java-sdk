@@ -37,6 +37,7 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.EventBuilder;
 import com.optimizely.ab.event.internal.EventBuilderV2;
+import com.optimizely.ab.event.internal.payload.Feature;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.notification.ActivateNotification;
 import com.optimizely.ab.notification.NotificationCenter;
@@ -3306,7 +3307,42 @@ public class OptimizelyTest {
      * Verify {@link Optimizely#isFeatureEnabled(String, String)} calls into
      * {@link Optimizely#isFeatureEnabled(String, String, Map)} and they both
      * return False
-     * when the APIs are called with an feature key that is not in the datafile.
+     * when the APIs are called with a null value for the user ID parameter.
+     * @throws Exception
+     */
+    @Test
+    public void isFeatureEnabledReturnsFalseWhenUserIdIsNull() throws Exception {
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .withDecisionService(mockDecisionService)
+                .build());
+
+        String featureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+
+        assertFalse(spyOptimizely.isFeatureEnabled(featureKey, null));
+
+        logbackVerifier.expectMessage(
+                Level.WARN,
+                "The userId parameter must be nonnull."
+        );
+
+        verify(spyOptimizely, times(1)).isFeatureEnabled(
+                eq(featureKey),
+                isNull(String.class),
+                eq(Collections.<String, String>emptyMap())
+        );
+        verify(mockDecisionService, never()).getVariationForFeature(
+                any(FeatureFlag.class),
+                any(String.class),
+                anyMapOf(String.class, String.class)
+        );
+    }
+
+    /**
+     * Verify {@link Optimizely#isFeatureEnabled(String, String)} calls into
+     * {@link Optimizely#isFeatureEnabled(String, String, Map)} and they both
+     * return False
+     * when the APIs are called with a feature key that is not in the datafile.
      * @throws Exception
      */
     @Test
