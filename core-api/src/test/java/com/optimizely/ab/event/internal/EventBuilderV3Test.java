@@ -328,9 +328,6 @@ public class EventBuilderV3Test {
                 eventTagMap);
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
-        List<EventMetric> eventMetrics = Arrays.asList(
-                new EventMetric(EventMetric.REVENUE_METRIC_TYPE, new LazilyParsedNumber(revenue.toString())),
-                new EventMetric(EventMetric.NUMERIC_METRIC_TYPE, new LazilyParsedNumber(value.toString())));
         // we're not going to verify everything, only the event metrics
         assertThat(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getRevenue().longValue(), is(revenue));
         assertThat(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getValue().doubleValue(), is(value));

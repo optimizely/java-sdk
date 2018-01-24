@@ -78,10 +78,8 @@ public class EventBuilderV3 extends EventBuilder {
         }
 
         ArrayList<DecisionV3> decisionV3s = new ArrayList<DecisionV3>();
-        ArrayList<EventV3> eventV3s = new ArrayList<EventV3>();
-        for (Experiment experiment : experimentVariationMap.keySet()) {
-            Variation variation = experimentVariationMap.get(experiment);
-            DecisionV3 decisionV3 = new DecisionV3(experiment.getLayerId(), experiment.getId(), variation.getId(), false);
+        for (Map.Entry<Experiment, Variation> entry : experimentVariationMap.entrySet()) {
+            DecisionV3 decisionV3 = new DecisionV3(entry.getKey().getLayerId(), entry.getKey().getId(), entry.getValue().getId(), false);
             decisionV3s.add(decisionV3);
         }
 
@@ -102,14 +100,14 @@ public class EventBuilderV3 extends EventBuilder {
         List<Attribute> attributes1 = new ArrayList<Attribute>();
 
         Map<String, com.optimizely.ab.config.Attribute> attributeMap = projectConfig.getAttributeKeyMapping();
-        for (String key : attributes.keySet()) {
-            com.optimizely.ab.config.Attribute projectAttribute = attributeMap.get(key);
+        for (Map.Entry<String, String> entry : attributes.entrySet()) {
+            com.optimizely.ab.config.Attribute projectAttribute = attributeMap.get(entry.getKey());
             Attribute attribute = new Attribute((projectAttribute != null ? projectAttribute.getId() : null),
-                    key, Attribute.CUSTOM_ATTRIBUTE_TYPE, attributes.get(key));
+                    entry.getKey(), Attribute.CUSTOM_ATTRIBUTE_TYPE, entry.getValue());
 
-            if (key == DecisionService.BUCKETING_ATTRIBUTE) {
+            if (entry.getKey() == DecisionService.BUCKETING_ATTRIBUTE) {
                 attribute = new Attribute(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
-                        EventBuilderV2.ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE, Attribute.CUSTOM_ATTRIBUTE_TYPE, attributes.get(key));
+                        EventBuilderV2.ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE, Attribute.CUSTOM_ATTRIBUTE_TYPE, entry.getValue());
             }
 
             attributes1.add(attribute);

@@ -17,8 +17,6 @@ public class EventBatch {
         this.accountId = accountId;
         this.visitors = visitors;
         this.anonymizeIp = anonymizeIp;
-        this.clientName = clientName;
-        this.clientVersion = clientVersion;
         this.projectId = projectId;
         this.revision = revision;
     }
