@@ -21,7 +21,7 @@ import org.json.JSONObject;
 
 class JsonSerializer implements Serializer {
 
-    public <T extends Event> String serialize(T payload) {
+    public <T> String serialize(T payload) {
         JSONObject payloadJsonObject = new JSONObject(payload);
         return payloadJsonObject.toString();
     }

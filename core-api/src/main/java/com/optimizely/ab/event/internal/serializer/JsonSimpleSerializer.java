@@ -32,7 +32,7 @@ import java.util.List;
 @SuppressWarnings("unchecked")
 class JsonSimpleSerializer implements Serializer {
 
-    public <T extends Event> String serialize(T payload) {
+    public <T> String serialize(T payload) {
         JSONObject payloadJsonObj;
         if (payload instanceof Impression) {
             payloadJsonObj = serializeImpression((Impression)payload);

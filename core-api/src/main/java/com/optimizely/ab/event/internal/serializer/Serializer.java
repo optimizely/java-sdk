@@ -19,5 +19,5 @@ package com.optimizely.ab.event.internal.serializer;
 import com.optimizely.ab.event.internal.payload.Event;
 
 public interface Serializer {
-    <T extends Event> String serialize(T payload) throws SerializationException;
+    <T> String serialize(T payload) throws SerializationException;
 }

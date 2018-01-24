@@ -24,7 +24,7 @@ class GsonSerializer implements Serializer {
 
     private Gson gson = new Gson();
 
-    public <T extends Event> String serialize(T payload) {
+    public <T> String serialize(T payload) {
         return gson.toJson(payload);
     }
 }

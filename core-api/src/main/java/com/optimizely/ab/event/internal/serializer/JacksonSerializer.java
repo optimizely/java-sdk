@@ -26,7 +26,7 @@ class JacksonSerializer implements Serializer {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public <T extends Event> String serialize(T payload) {
+    public <T> String serialize(T payload) {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         try {
             return mapper.writeValueAsString(payload);
