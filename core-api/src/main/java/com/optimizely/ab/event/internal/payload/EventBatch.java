@@ -23,6 +23,16 @@ public class EventBatch {
         this.revision = revision;
     }
 
+    public EventBatch(String clientName, String clientVersion, String accountId, List<Visitor> visitors, Boolean anonymizeIp, String projectId, String revision) {
+        this.accountId = accountId;
+        this.visitors = visitors;
+        this.anonymizeIp = anonymizeIp;
+        this.clientName = clientName;
+        this.clientVersion = clientVersion;
+        this.projectId = projectId;
+        this.revision = revision;
+    }
+
     public String getAccountId() {
         return accountId;
     }

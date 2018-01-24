@@ -37,11 +37,11 @@ public class DecisionV3 {
         this.variationId = variationId;
     }
 
-    public boolean getCampaignHoldback() {
+    public boolean getIsCampaignHoldback() {
         return isCampaignHoldback;
     }
 
-    public void setCampaignHoldback(boolean campaignHoldback) {
+    public void setIsCampaignHoldback(boolean campaignHoldback) {
         isCampaignHoldback = campaignHoldback;
     }
 

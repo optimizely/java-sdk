@@ -60,7 +60,7 @@ public class EventBuilderV3 extends EventBuilder {
 
         Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
         List<Visitor> visitors = Arrays.asList(visitor);
-        EventBatch eventBatch = new EventBatch(projectConfig.getAccountId(), visitors, projectConfig.getAnonymizeIP(), projectConfig.getProjectId(), projectConfig.getRevision());
+        EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, projectConfig.getAccountId(), visitors, projectConfig.getAnonymizeIP(), projectConfig.getProjectId(), projectConfig.getRevision());
         String payload = this.serializer.serialize(eventBatch);
         return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
     }
@@ -72,6 +72,10 @@ public class EventBuilderV3 extends EventBuilder {
                                                    @Nonnull String eventName,
                                                    @Nonnull Map<String, String> attributes,
                                                    @Nonnull Map<String, ?> eventTags) {
+
+        if (experimentVariationMap.isEmpty()) {
+            return null;
+        }
 
         ArrayList<DecisionV3> decisionV3s = new ArrayList<DecisionV3>();
         ArrayList<EventV3> eventV3s = new ArrayList<EventV3>();
@@ -89,7 +93,7 @@ public class EventBuilderV3 extends EventBuilder {
 
         Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
         List<Visitor> visitors = Arrays.asList(visitor);
-        EventBatch eventBatch = new EventBatch(projectConfig.getAccountId(), visitors, projectConfig.getAnonymizeIP(), projectConfig.getProjectId(), projectConfig.getRevision());
+        EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, projectConfig.getAccountId(), visitors, projectConfig.getAnonymizeIP(), projectConfig.getProjectId(), projectConfig.getRevision());
         String payload = this.serializer.serialize(eventBatch);
         return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
     }

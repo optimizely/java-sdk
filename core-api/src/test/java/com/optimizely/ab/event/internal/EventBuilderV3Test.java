@@ -117,8 +117,8 @@ public class EventBuilderV3Test {
 
         // verify payload information
         assertThat(eventBatch.getVisitors().get(0).getVisitorId(), is(userId));
-        //assertThat((double) eventBatch.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double)System.currentTimeMillis(), 60.0));
-        assertFalse(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getCampaignHoldback());
+        assertThat((double) eventBatch.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double)System.currentTimeMillis(), 1000.0));
+        assertFalse(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertThat(eventBatch.getAnonymizeIp(), is(projectConfig.getAnonymizeIP()));
         assertThat(eventBatch.getProjectId(), is(projectConfig.getProjectId()));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0), is(expectedDecision));
@@ -273,21 +273,14 @@ public class EventBuilderV3Test {
                 AUDIENCE_GRYFFINDOR_VALUE);
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = Collections.singletonList(feature);
 
-        // Event Features
-        List<Feature> expectedEventFeatures = new ArrayList<Feature>();
-        expectedEventFeatures.add(new Feature("", "boolean_param", Feature.EVENT_FEATURE_TYPE,
-                false, false));
-        expectedEventFeatures.add(new Feature("", "string_param", Feature.EVENT_FEATURE_TYPE,
-                "123", false));
-
         assertEquals(conversion.getVisitors().get(0).getAttributes(), expectedUserFeatures);
         assertThat(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions(), containsInAnyOrder(expectedDecisions.toArray()));
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getEntityId(), eventType.getId());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getKey(), eventType.getKey());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getRevenue(), null);
-        assertTrue(conversion.getVisitors().get(0).getAttributes().containsAll(expectedEventFeatures));
-        //assertTrue(expectedEventFeatures.containsAll(conversion.getEventFeatures()));
-        assertFalse(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getCampaignHoldback());
+        assertTrue(conversion.getVisitors().get(0).getAttributes().containsAll(expectedUserFeatures));
+        assertTrue(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTags().equals(eventTagMap));
+        assertFalse(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
         assertEquals(conversion.getClientName(), Event.ClientEngine.JAVA_SDK.getClientEngineValue());
         assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
@@ -448,7 +441,7 @@ public class EventBuilderV3Test {
      */
     @Test
     public void createConversionEventAndroidClientEngineClientVersion() throws Exception {
-        EventBuilderV2 builder = new EventBuilderV2(Event.ClientEngine.ANDROID_SDK, "0.0.0");
+        EventBuilderV3 builder = new EventBuilderV3(Event.ClientEngine.ANDROID_SDK, "0.0.0");
         Attribute attribute = validProjectConfig.getAttributes().get(0);
         EventType eventType = validProjectConfig.getEventTypes().get(0);
 
@@ -480,9 +473,9 @@ public class EventBuilderV3Test {
                 attributeMap,
                 Collections.<String, Object>emptyMap());
 
-        Conversion conversion = gson.fromJson(conversionEvent.getBody(), Conversion.class);
+        EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
-        assertThat(conversion.getClientEngine(), is(Event.ClientEngine.ANDROID_SDK.getClientEngineValue()));
+        assertThat(conversion.getClientName(), is(Event.ClientEngine.ANDROID_SDK.getClientEngineValue()));
         assertThat(conversion.getClientVersion(), is("0.0.0"));
     }
 
@@ -493,7 +486,7 @@ public class EventBuilderV3Test {
     @Test
     public void createConversionEventAndroidTVClientEngineClientVersion() throws Exception {
         String clientVersion = "0.0.0";
-        EventBuilderV2 builder = new EventBuilderV2(Event.ClientEngine.ANDROID_TV_SDK, clientVersion);
+        EventBuilderV3 builder = new EventBuilderV3(Event.ClientEngine.ANDROID_TV_SDK, clientVersion);
         ProjectConfig projectConfig = validProjectConfigV2();
         Attribute attribute = projectConfig.getAttributes().get(0);
         EventType eventType = projectConfig.getEventTypes().get(0);
@@ -520,9 +513,9 @@ public class EventBuilderV3Test {
                 eventType.getKey(),
                 attributeMap,
                 Collections.<String, Object>emptyMap());
-        Conversion conversion = gson.fromJson(conversionEvent.getBody(), Conversion.class);
+        EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
-        assertThat(conversion.getClientEngine(), is(Event.ClientEngine.ANDROID_TV_SDK.getClientEngineValue()));
+        assertThat(conversion.getClientName(), is(Event.ClientEngine.ANDROID_TV_SDK.getClientEngineValue()));
         assertThat(conversion.getClientVersion(), is(clientVersion));
     }
 
@@ -534,7 +527,7 @@ public class EventBuilderV3Test {
     @Test
     public void createConversionEventReturnsNullWhenExperimentVariationMapIsEmpty() {
         EventType eventType = validProjectConfig.getEventTypes().get(0);
-        EventBuilderV2 builder = new EventBuilderV2();
+        EventBuilderV3 builder = new EventBuilderV3();
 
         LogEvent conversionEvent = builder.createConversionEvent(
                 validProjectConfig,
@@ -565,39 +558,39 @@ public class EventBuilderV3Test {
 
         attributeMap.put(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE, "variation");
 
-        Decision expectedDecision = new Decision(bucketedVariation.getId(), false, activatedExperiment.getId());
-        Feature feature = new Feature(attribute.getId(), attribute.getKey(), Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
-                "value", true);
-        Feature feature1 = new Feature(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
+        DecisionV3 expectedDecision = new DecisionV3(activatedExperiment.getLayerId(), activatedExperiment.getId(), bucketedVariation.getId(), false);
+
+        com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(), attribute.getKey(), Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
+                "value");
+        com.optimizely.ab.event.internal.payload.Attribute feature1 = new com.optimizely.ab.event.internal.payload.Attribute(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
                 com.optimizely.ab.event.internal.EventBuilderV2.ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE,
                 Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
-                "variation", true);
-        List<Feature> expectedUserFeatures = new java.util.ArrayList<Feature>();
-        expectedUserFeatures.add(feature);
-        expectedUserFeatures.add(feature1);
+                "variation");
+
+        List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = Arrays.asList(feature, feature1);
 
         LogEvent impressionEvent = builder.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation,
                 userId, attributeMap);
 
         // verify that request endpoint is correct
-        assertThat(impressionEvent.getEndpointUrl(), is(EventBuilderV2.IMPRESSION_ENDPOINT));
+        assertThat(impressionEvent.getEndpointUrl(), is(EventBuilderV3.EVENT_ENDPOINT));
 
-        Impression impression = gson.fromJson(impressionEvent.getBody(), Impression.class);
+        EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
         // verify payload information
-        assertThat(impression.getVisitorId(), is(userId));
-        assertThat((double)impression.getTimestamp(), closeTo((double)System.currentTimeMillis(), 60.0));
-        assertFalse(impression.getIsGlobalHoldback());
-        assertThat(impression.getAnonymizeIP(), is(projectConfig.getAnonymizeIP()));
+        assertThat(impression.getVisitors().get(0).getVisitorId(), is(userId));
+        assertThat((double)impression.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double)System.currentTimeMillis(), 1000.0));
+        assertFalse(impression.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
+        assertThat(impression.getAnonymizeIp(), is(projectConfig.getAnonymizeIP()));
         assertThat(impression.getProjectId(), is(projectConfig.getProjectId()));
-        assertThat(impression.getDecision(), is(expectedDecision));
-        assertThat(impression.getLayerId(), is(activatedExperiment.getLayerId()));
+        assertThat(impression.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0), is(expectedDecision));
+        assertThat(impression.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getCampaignId(), is(activatedExperiment.getLayerId()));
         assertThat(impression.getAccountId(), is(projectConfig.getAccountId()));
 
-        assertThat(impression.getUserFeatures(), is(expectedUserFeatures));
-        assertThat(impression.getClientEngine(), is(Event.ClientEngine.JAVA_SDK.getClientEngineValue()));
+        assertThat(impression.getVisitors().get(0).getAttributes(), is(expectedUserFeatures));
+        assertThat(impression.getClientName(), is(Event.ClientEngine.JAVA_SDK.getClientEngineValue()));
         assertThat(impression.getClientVersion(), is(BuildVersionInfo.VERSION));
-        assertNull(impression.getSessionId());
+        assertNull(impression.getVisitors().get(0).getSessionId());
     }
 
     /**
@@ -651,54 +644,46 @@ public class EventBuilderV3Test {
                 attributeMap,
                 eventTagMap);
 
-        List<LayerState> expectedLayerStates = new ArrayList<LayerState>();
+        List<DecisionV3> expectedDecisions = new ArrayList<DecisionV3>();
 
         for (Experiment experiment : experimentsForEventKey) {
             if (experiment.isRunning()) {
-                LayerState layerState = new LayerState(experiment.getLayerId(), validProjectConfig.getRevision(),
-                        new Decision(experiment.getVariations().get(0).getId(), false, experiment.getId()), true);
-                expectedLayerStates.add(layerState);
+                DecisionV3 decisionV3 = new DecisionV3(experiment.getLayerId(), experiment.getId(),
+                        experiment.getVariations().get(0).getId(), false);
+                expectedDecisions.add(decisionV3);
             }
         }
 
         // verify that the request endpoint is correct
-        assertThat(conversionEvent.getEndpointUrl(), is(EventBuilderV2.CONVERSION_ENDPOINT));
+        assertThat(conversionEvent.getEndpointUrl(), is(EventBuilderV3.EVENT_ENDPOINT));
 
-        Conversion conversion = gson.fromJson(conversionEvent.getBody(), Conversion.class);
+        EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
         // verify payload information
-        assertThat(conversion.getVisitorId(), is(userId));
-        assertThat((double)conversion.getTimestamp(), closeTo((double)System.currentTimeMillis(), 120.0));
+        assertThat(conversion.getVisitors().get(0).getVisitorId(), is(userId));
+        assertThat((double)conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double)System.currentTimeMillis(), 1000.0));
         assertThat(conversion.getProjectId(), is(validProjectConfig.getProjectId()));
         assertThat(conversion.getAccountId(), is(validProjectConfig.getAccountId()));
 
-        Feature feature = new Feature(attribute.getId(), attribute.getKey(), Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
-                AUDIENCE_GRYFFINDOR_VALUE, true);
-        Feature feature1 = new Feature(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
+        com.optimizely.ab.event.internal.payload.Attribute attribute1 = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(), attribute.getKey(), Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
+                AUDIENCE_GRYFFINDOR_VALUE);
+        com.optimizely.ab.event.internal.payload.Attribute attribute2 = new com.optimizely.ab.event.internal.payload.Attribute(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
                 com.optimizely.ab.event.internal.EventBuilderV2.ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE,
                 Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
-                bucketingId, true);
-        List<Feature> expectedUserFeatures = new ArrayList<Feature>();
-        expectedUserFeatures.add(feature);
-        expectedUserFeatures.add(feature1);
+                bucketingId);
+        List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = Arrays.asList(attribute1, attribute2);
 
-        // Event Features
-        List<Feature> expectedEventFeatures = new ArrayList<Feature>();
-        expectedEventFeatures.add(new Feature("", "boolean_param", Feature.EVENT_FEATURE_TYPE,
-                false, false));
-        expectedEventFeatures.add(new Feature("", "string_param", Feature.EVENT_FEATURE_TYPE,
-                "123", false));
-
-        assertEquals(conversion.getUserFeatures(), expectedUserFeatures);
-        assertThat(conversion.getLayerStates(), containsInAnyOrder(expectedLayerStates.toArray()));
-        assertEquals(conversion.getEventEntityId(), eventType.getId());
-        assertEquals(conversion.getEventName(), eventType.getKey());
-        assertEquals(conversion.getEventMetrics(), Collections.<EventMetric>emptyList());
-        assertTrue(conversion.getEventFeatures().containsAll(expectedEventFeatures));
-        assertTrue(expectedEventFeatures.containsAll(conversion.getEventFeatures()));
-        assertFalse(conversion.getIsGlobalHoldback());
-        assertEquals(conversion.getAnonymizeIP(), validProjectConfig.getAnonymizeIP());
-        assertEquals(conversion.getClientEngine(), Event.ClientEngine.JAVA_SDK.getClientEngineValue());
+        assertEquals(conversion.getVisitors().get(0).getAttributes(), expectedUserFeatures);
+        assertThat(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions(), containsInAnyOrder(expectedDecisions.toArray()));
+        assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getEntityId(), eventType.getId());
+        assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getType(), eventType.getKey());
+        assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getKey(), eventType.getKey());
+        assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getRevenue(), null);
+        assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getQuantity(), null);
+        assertTrue(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTags().equals(eventTagMap));
+        assertFalse(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
+        assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
+        assertEquals(conversion.getClientName(), Event.ClientEngine.JAVA_SDK.getClientEngineValue());
         assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
     }
 
