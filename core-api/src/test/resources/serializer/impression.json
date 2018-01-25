@@ -1,26 +1,43 @@
 {
-  "visitorId": "testvisitor",
-  "timestamp": 12345,
-  "isGlobalHoldback": false,
-  "anonymizeIP": true,
-  "projectId": "1",
-  "decision": {
-    "variationId": "4",
-    "isLayerHoldback": false,
-    "experimentId": "5"
-  },
-  "layerId": "2",
   "accountId": "3",
-  "userFeatures": [
+  "visitors": [
     {
-      "id": "6",
-      "name": "testfeature",
-      "type": "custom",
-      "value": "testfeaturevalue",
-      "shouldIndex": true
+      "snapshots": [
+        {
+          "decisions": [
+            {
+              "variationId": "4",
+              "campaignId": "2",
+              "experimentId": "5",
+              "isCampaignHoldback": false
+            }
+          ],
+          "events": [
+            {
+              "revenue": 5000,
+              "entityId": "7",
+              "type": "testevent",
+              "uuid": "uuid",
+              "key": "testevent",
+              "timestamp": 12345
+            }
+          ]
+        }
+      ],
+      "attributes": [
+        {
+          "entityId": "6",
+          "type": "custom",
+          "value": "testfeaturevalue",
+          "key": "testfeature"
+        }
+      ],
+      "visitorId": "testvisitor"
     }
   ],
-  "clientEngine": "java-sdk",
+  "clientName": "java-sdk",
   "clientVersion": "0.1.1",
+  "anonymizeIp": true,
+  "projectId": "1",
   "revision": "1"
 }

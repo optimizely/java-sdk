@@ -1,7 +1,6 @@
 package com.optimizely.ab.event.internal;
 
 import com.google.gson.Gson;
-import com.google.gson.internal.LazilyParsedNumber;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.UserProfileService;
@@ -13,15 +12,9 @@ import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.LogEvent;
-import com.optimizely.ab.event.internal.payload.Conversion;
-import com.optimizely.ab.event.internal.payload.Decision;
 import com.optimizely.ab.event.internal.payload.DecisionV3;
 import com.optimizely.ab.event.internal.payload.Event;
 import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.event.internal.payload.EventMetric;
-import com.optimizely.ab.event.internal.payload.Feature;
-import com.optimizely.ab.event.internal.payload.Impression;
-import com.optimizely.ab.event.internal.payload.LayerState;
 import com.optimizely.ab.internal.ReservedEventKey;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -77,7 +70,7 @@ public class EventBuilderV3Test {
     }
 
     private Gson gson = new Gson();
-    private EventBuilderV3 builder = new EventBuilderV3();
+    private EventBuilder builder = new EventBuilder();
 
     private static String userId = "userId";
     private int datafileVersion;
@@ -90,7 +83,7 @@ public class EventBuilderV3Test {
     }
 
     /**
-     * Verify {@link com.optimizely.ab.event.internal.payload.Impression} event creation
+     * Verify {@link com.optimizely.ab.event.internal.payload.EventBatch} event creation
      */
     @Test
     public void createImpressionEvent() throws Exception {
@@ -103,7 +96,7 @@ public class EventBuilderV3Test {
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
         DecisionV3 expectedDecision = new DecisionV3(activatedExperiment.getLayerId(), activatedExperiment.getId(), bucketedVariation.getId(), false);
         com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(),
-                attribute.getKey(), Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
+                attribute.getKey(), com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "value");
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = Collections.singletonList(feature);
 
@@ -111,7 +104,7 @@ public class EventBuilderV3Test {
                 userId, attributeMap);
 
         // verify that request endpoint is correct
-        assertThat(impressionEvent.getEndpointUrl(), is(EventBuilderV3.EVENT_ENDPOINT));
+        assertThat(impressionEvent.getEndpointUrl(), is(EventBuilder.EVENT_ENDPOINT));
 
         EventBatch eventBatch = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
@@ -156,12 +149,12 @@ public class EventBuilderV3Test {
     }
 
     /**
-     * Verify that supplying {@link EventBuilderV2} with a custom client engine and client version results in impression
+     * Verify that supplying {@link EventBuilder} with a custom client engine and client version results in impression
      * events being sent with the overriden values.
      */
     @Test
     public void createImpressionEventAndroidClientEngineClientVersion() throws Exception {
-        EventBuilderV3 builder = new EventBuilderV3(Event.ClientEngine.ANDROID_SDK, "0.0.0");
+        EventBuilder builder = new EventBuilder(Event.ClientEngine.ANDROID_SDK, "0.0.0");
         ProjectConfig projectConfig = validProjectConfigV2();
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
@@ -178,13 +171,13 @@ public class EventBuilderV3Test {
     }
 
     /**
-     * Verify that supplying {@link EventBuilderV2} with a custom Android TV client engine and client version
+     * Verify that supplying {@link EventBuilder} with a custom Android TV client engine and client version
      * results in impression events being sent with the overriden values.
      */
     @Test
     public void createImpressionEventAndroidTVClientEngineClientVersion() throws Exception {
         String clientVersion = "0.0.0";
-        EventBuilderV3 builder = new EventBuilderV3(Event.ClientEngine.ANDROID_TV_SDK, clientVersion);
+        EventBuilder builder = new EventBuilder(Event.ClientEngine.ANDROID_TV_SDK, clientVersion);
         ProjectConfig projectConfig = validProjectConfigV2();
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
@@ -201,7 +194,7 @@ public class EventBuilderV3Test {
     }
 
     /**
-     * Verify {@link com.optimizely.ab.event.internal.payload.Conversion} event creation
+     * Verify {@link com.optimizely.ab.event.internal.payload.EventBatch} event creation
      */
     @Test
     public void createConversionEvent() throws Exception {
@@ -258,7 +251,7 @@ public class EventBuilderV3Test {
         }
 
         // verify that the request endpoint is correct
-        assertThat(conversionEvent.getEndpointUrl(), is(EventBuilderV3.EVENT_ENDPOINT));
+        assertThat(conversionEvent.getEndpointUrl(), is(EventBuilder.EVENT_ENDPOINT));
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
@@ -269,7 +262,8 @@ public class EventBuilderV3Test {
         assertThat(conversion.getProjectId(), is(validProjectConfig.getProjectId()));
         assertThat(conversion.getAccountId(), is(validProjectConfig.getAccountId()));
 
-        com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(), attribute.getKey(), Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
+        com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(), attribute.getKey(),
+                com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 AUDIENCE_GRYFFINDOR_VALUE);
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = Collections.singletonList(feature);
 
@@ -287,7 +281,7 @@ public class EventBuilderV3Test {
     }
 
     /**
-     * Verify that "revenue" and "value" are properly recorded in a conversion request as {@link EventMetric} objects.
+     * Verify that "revenue" and "value" are properly recorded in a conversion request as {@link com.optimizely.ab.event.internal.payload.EventV3} objects.
      * "revenue" is fixed-point and "value" is floating-point.
      */
     @Test
@@ -433,12 +427,12 @@ public class EventBuilderV3Test {
     }
 
     /**
-     * Verify that supplying {@link EventBuilderV2} with a custom client engine and client version results in conversion
+     * Verify that supplying {@link EventBuilder} with a custom client engine and client version results in conversion
      * events being sent with the overriden values.
      */
     @Test
     public void createConversionEventAndroidClientEngineClientVersion() throws Exception {
-        EventBuilderV3 builder = new EventBuilderV3(Event.ClientEngine.ANDROID_SDK, "0.0.0");
+        EventBuilder builder = new EventBuilder(Event.ClientEngine.ANDROID_SDK, "0.0.0");
         Attribute attribute = validProjectConfig.getAttributes().get(0);
         EventType eventType = validProjectConfig.getEventTypes().get(0);
 
@@ -477,13 +471,13 @@ public class EventBuilderV3Test {
     }
 
     /**
-     * Verify that supplying {@link EventBuilderV2} with a Android TV client engine and client version results in
+     * Verify that supplying {@link EventBuilder} with a Android TV client engine and client version results in
      * conversion events being sent with the overriden values.
      */
     @Test
     public void createConversionEventAndroidTVClientEngineClientVersion() throws Exception {
         String clientVersion = "0.0.0";
-        EventBuilderV3 builder = new EventBuilderV3(Event.ClientEngine.ANDROID_TV_SDK, clientVersion);
+        EventBuilder builder = new EventBuilder(Event.ClientEngine.ANDROID_TV_SDK, clientVersion);
         ProjectConfig projectConfig = validProjectConfigV2();
         Attribute attribute = projectConfig.getAttributes().get(0);
         EventType eventType = projectConfig.getEventTypes().get(0);
@@ -518,13 +512,13 @@ public class EventBuilderV3Test {
 
     /**
      * Verify that supplying an empty Experiment Variation map to
-     * {@link EventBuilderV2#createConversionEvent(ProjectConfig, Map, String, String, String, Map, Map)}
+     * {@link EventBuilder#createConversionEvent(ProjectConfig, Map, String, String, String, Map, Map)}
      * returns a null {@link LogEvent}.
      */
     @Test
     public void createConversionEventReturnsNullWhenExperimentVariationMapIsEmpty() {
         EventType eventType = validProjectConfig.getEventTypes().get(0);
-        EventBuilderV3 builder = new EventBuilderV3();
+        EventBuilder builder = new EventBuilder();
 
         LogEvent conversionEvent = builder.createConversionEvent(
                 validProjectConfig,
@@ -540,7 +534,7 @@ public class EventBuilderV3Test {
     }
 
     /**
-     * Verify {@link Impression} event creation
+     * Verify {@link com.optimizely.ab.event.internal.payload.EventBatch} event creation
      */
     @Test
     public void createImpressionEventWithBucketingId() throws Exception {
@@ -557,11 +551,12 @@ public class EventBuilderV3Test {
 
         DecisionV3 expectedDecision = new DecisionV3(activatedExperiment.getLayerId(), activatedExperiment.getId(), bucketedVariation.getId(), false);
 
-        com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(), attribute.getKey(), Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
+        com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(), attribute.getKey(),
+                com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "value");
         com.optimizely.ab.event.internal.payload.Attribute feature1 = new com.optimizely.ab.event.internal.payload.Attribute(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
-                com.optimizely.ab.event.internal.EventBuilderV2.ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE,
-                Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
+                EventBuilder.ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE,
+                com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "variation");
 
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = Arrays.asList(feature, feature1);
@@ -570,7 +565,7 @@ public class EventBuilderV3Test {
                 userId, attributeMap);
 
         // verify that request endpoint is correct
-        assertThat(impressionEvent.getEndpointUrl(), is(EventBuilderV3.EVENT_ENDPOINT));
+        assertThat(impressionEvent.getEndpointUrl(), is(EventBuilder.EVENT_ENDPOINT));
 
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
@@ -591,7 +586,7 @@ public class EventBuilderV3Test {
     }
 
     /**
-     * Verify {@link Conversion} event creation
+     * Verify {@link EventBatch} event creation
      */
     @Test
     public void createConversionEventWithBucketingId() throws Exception {
@@ -652,7 +647,7 @@ public class EventBuilderV3Test {
         }
 
         // verify that the request endpoint is correct
-        assertThat(conversionEvent.getEndpointUrl(), is(EventBuilderV3.EVENT_ENDPOINT));
+        assertThat(conversionEvent.getEndpointUrl(), is(EventBuilder.EVENT_ENDPOINT));
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
@@ -662,11 +657,12 @@ public class EventBuilderV3Test {
         assertThat(conversion.getProjectId(), is(validProjectConfig.getProjectId()));
         assertThat(conversion.getAccountId(), is(validProjectConfig.getAccountId()));
 
-        com.optimizely.ab.event.internal.payload.Attribute attribute1 = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(), attribute.getKey(), Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
+        com.optimizely.ab.event.internal.payload.Attribute attribute1 = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(), attribute.getKey(),
+                com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 AUDIENCE_GRYFFINDOR_VALUE);
         com.optimizely.ab.event.internal.payload.Attribute attribute2 = new com.optimizely.ab.event.internal.payload.Attribute(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
-                com.optimizely.ab.event.internal.EventBuilderV2.ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE,
-                Feature.CUSTOM_ATTRIBUTE_FEATURE_TYPE,
+                EventBuilder.ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE,
+                com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 bucketingId);
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = Arrays.asList(attribute1, attribute2);
 

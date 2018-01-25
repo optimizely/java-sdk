@@ -20,8 +20,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.optimizely.ab.event.internal.payload.Event;
-
 class JacksonSerializer implements Serializer {
 
     private final ObjectMapper mapper = new ObjectMapper();

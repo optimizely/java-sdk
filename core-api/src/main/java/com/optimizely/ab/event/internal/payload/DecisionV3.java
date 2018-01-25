@@ -13,6 +13,10 @@ public class DecisionV3 {
         this.isCampaignHoldback = isCampaignHoldback;
     }
 
+    public DecisionV3() {
+
+    }
+
     public String getCampaignId() {
         return campaignId;
     }

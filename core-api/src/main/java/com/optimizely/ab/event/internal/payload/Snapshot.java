@@ -5,11 +5,24 @@ import java.util.List;
 public class Snapshot {
     List<DecisionV3> decisions;
     List<EventV3> events;
-    long activationTimestamp;
+    Long activationTimestamp;
+
+    public Snapshot() {
+
+    }
 
     public Snapshot(List<DecisionV3> decisions, List<EventV3> events) {
         this.decisions = decisions;
         this.events = events;
+        this.activationTimestamp = null;
+    }
+
+    public Long getActivationTimestamp() {
+        return activationTimestamp;
+    }
+
+    public void setActivationTimestamp(Long activationTimestamp) {
+        this.activationTimestamp = activationTimestamp;
     }
 
     public List<DecisionV3> getDecisions() {
@@ -35,7 +48,9 @@ public class Snapshot {
 
         Snapshot snapshot = (Snapshot) o;
 
-        if (activationTimestamp != snapshot.activationTimestamp) return false;
+        if (activationTimestamp != null ?
+                !activationTimestamp.equals(snapshot.activationTimestamp) :
+                snapshot.activationTimestamp != null) return false;
         if (!decisions.equals(snapshot.decisions)) return false;
         return events.equals(snapshot.events);
     }
@@ -44,7 +59,9 @@ public class Snapshot {
     public int hashCode() {
         int result = decisions.hashCode();
         result = 31 * result + events.hashCode();
-        result = 31 * result + (int) (activationTimestamp ^ (activationTimestamp >>> 32));
+        if (activationTimestamp != null) {
+            result = 31 * result + (int) (activationTimestamp ^ (activationTimestamp >>> 32));
+        }
         return result;
     }
 }

@@ -18,8 +18,7 @@ package com.optimizely.ab.event.internal.serializer;
 
 import com.google.gson.Gson;
 
-import com.optimizely.ab.event.internal.payload.Conversion;
-import com.optimizely.ab.event.internal.payload.Impression;
+import com.optimizely.ab.event.internal.payload.EventBatch;
 
 import org.junit.Test;
 
@@ -44,40 +43,40 @@ public class GsonSerializerTest {
 
     @Test
     public void serializeImpression() throws IOException {
-        Impression impression = generateImpression();
+        EventBatch impression = generateImpression();
         // can't compare JSON strings since orders could vary so compare objects instead
-        Impression actual = gson.fromJson(serializer.serialize(impression), Impression.class);
-        Impression expected = gson.fromJson(generateImpressionJson(), Impression.class);
+        EventBatch actual = gson.fromJson(serializer.serialize(impression), EventBatch.class);
+        EventBatch expected = gson.fromJson(generateImpressionJson(), EventBatch.class);
 
         assertThat(actual, is(expected));
     }
 
     @Test
     public void serializeImpressionWithSessionId() throws IOException {
-        Impression impression = generateImpressionWithSessionId();
+        EventBatch impression = generateImpressionWithSessionId();
         // can't compare JSON strings since orders could vary so compare objects instead
-        Impression actual = gson.fromJson(serializer.serialize(impression), Impression.class);
-        Impression expected = gson.fromJson(generateImpressionWithSessionIdJson(), Impression.class);
+        EventBatch actual = gson.fromJson(serializer.serialize(impression), EventBatch.class);
+        EventBatch expected = gson.fromJson(generateImpressionWithSessionIdJson(), EventBatch.class);
 
         assertThat(actual, is(expected));
     }
 
     @Test
     public void serializeConversion() throws IOException {
-        Conversion conversion = generateConversion();
+        EventBatch conversion = generateConversion();
         // can't compare JSON strings since orders could vary so compare objects instead
-        Conversion actual = gson.fromJson(serializer.serialize(conversion), Conversion.class);
-        Conversion expected = gson.fromJson(generateConversionJson(), Conversion.class);
+        EventBatch actual = gson.fromJson(serializer.serialize(conversion), EventBatch.class);
+        EventBatch expected = gson.fromJson(generateConversionJson(), EventBatch.class);
 
         assertThat(actual, is(expected));
     }
 
     @Test
     public void serializeConversionWithSessionId() throws Exception {
-        Conversion conversion = generateConversionWithSessionId();
+        EventBatch conversion = generateConversionWithSessionId();
         // can't compare JSON strings since orders could vary so compare objects instead
-        Conversion actual = gson.fromJson(serializer.serialize(conversion), Conversion.class);
-        Conversion expected = gson.fromJson(generateConversionWithSessionIdJson(), Conversion.class);
+        EventBatch actual = gson.fromJson(serializer.serialize(conversion), EventBatch.class);
+        EventBatch expected = gson.fromJson(generateConversionWithSessionIdJson(), EventBatch.class);
 
         assertThat(actual, is(expected));
     }

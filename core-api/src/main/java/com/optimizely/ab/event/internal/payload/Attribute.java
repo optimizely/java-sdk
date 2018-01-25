@@ -9,6 +9,10 @@ public class Attribute {
     String type;
     String value;
 
+    public Attribute() {
+
+    }
+
     public Attribute(String entityId, String key, String type, String value) {
         this.entityId = entityId;
         this.key = key;

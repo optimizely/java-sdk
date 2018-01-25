@@ -13,36 +13,8 @@ public class EventV3 {
     String type;
     Number value;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public EventV3() {
 
-        EventV3 eventV3 = (EventV3) o;
-
-        if (timestamp != eventV3.timestamp) return false;
-        if (!uuid.equals(eventV3.uuid)) return false;
-        if (entityId != null ? !entityId.equals(eventV3.entityId) : eventV3.entityId != null) return false;
-        if (key != null ? !key.equals(eventV3.key) : eventV3.key != null) return false;
-        if (quantity != null ? !quantity.equals(eventV3.quantity) : eventV3.quantity != null) return false;
-        if (revenue != null ? !revenue.equals(eventV3.revenue) : eventV3.revenue != null) return false;
-        if (tags != null ? !tags.equals(eventV3.tags) : eventV3.tags != null) return false;
-        if (!type.equals(eventV3.type)) return false;
-        return value != null ? value.equals(eventV3.value) : eventV3.value == null;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (int) (timestamp ^ (timestamp >>> 32));
-        result = 31 * result + uuid.hashCode();
-        result = 31 * result + (entityId != null ? entityId.hashCode() : 0);
-        result = 31 * result + (key != null ? key.hashCode() : 0);
-        result = 31 * result + (quantity != null ? quantity.hashCode() : 0);
-        result = 31 * result + (revenue != null ? revenue.hashCode() : 0);
-        result = 31 * result + (tags != null ? tags.hashCode() : 0);
-        result = 31 * result + type.hashCode();
-        result = 31 * result + (value != null ? value.hashCode() : 0);
-        return result;
     }
 
     public EventV3(long timestamp, String uuid, String entityId, String key, Number quantity,
@@ -129,4 +101,37 @@ public class EventV3 {
     public void setValue(Number value) {
         this.value = value;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        EventV3 eventV3 = (EventV3) o;
+
+        if (timestamp != eventV3.timestamp) return false;
+        if (!uuid.equals(eventV3.uuid)) return false;
+        if (entityId != null ? !entityId.equals(eventV3.entityId) : eventV3.entityId != null) return false;
+        if (key != null ? !key.equals(eventV3.key) : eventV3.key != null) return false;
+        if (quantity != null ? !quantity.equals(eventV3.quantity) : eventV3.quantity != null) return false;
+        if (revenue != null ? !revenue.equals(eventV3.revenue) : eventV3.revenue != null) return false;
+        if (tags != null ? !tags.equals(eventV3.tags) : eventV3.tags != null) return false;
+        if (!type.equals(eventV3.type)) return false;
+        return value != null ? value.equals(eventV3.value) : eventV3.value == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (timestamp ^ (timestamp >>> 32));
+        result = 31 * result + uuid.hashCode();
+        result = 31 * result + (entityId != null ? entityId.hashCode() : 0);
+        result = 31 * result + (key != null ? key.hashCode() : 0);
+        result = 31 * result + (quantity != null ? quantity.hashCode() : 0);
+        result = 31 * result + (revenue != null ? revenue.hashCode() : 0);
+        result = 31 * result + (tags != null ? tags.hashCode() : 0);
+        result = 31 * result + type.hashCode();
+        result = 31 * result + (value != null ? value.hashCode() : 0);
+        return result;
+    }
+
 }

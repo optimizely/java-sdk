@@ -8,6 +8,10 @@ public class Visitor {
     List<Attribute> attributes;
     List<Snapshot> snapshots;
 
+    public Visitor() {
+
+    }
+
     public Visitor(String visitorId, String sessionId, List<Attribute> attributes, List<Snapshot> snapshots) {
         this.visitorId = visitorId;
         this.sessionId = sessionId;

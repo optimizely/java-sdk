@@ -16,142 +16,160 @@
  */
 package com.optimizely.ab.event.internal.serializer;
 
-import com.optimizely.ab.event.internal.payload.Conversion;
-import com.optimizely.ab.event.internal.payload.Decision;
-import com.optimizely.ab.event.internal.payload.EventMetric;
-import com.optimizely.ab.event.internal.payload.Feature;
-import com.optimizely.ab.event.internal.payload.Impression;
-import com.optimizely.ab.event.internal.payload.LayerState;
-import com.optimizely.ab.event.internal.payload.Event;
+import com.optimizely.ab.event.internal.payload.Attribute;
+import com.optimizely.ab.event.internal.payload.DecisionV3;
+import com.optimizely.ab.event.internal.payload.EventBatch;
 
+import com.optimizely.ab.event.internal.payload.EventV3;
+import com.optimizely.ab.event.internal.payload.Snapshot;
+import com.optimizely.ab.event.internal.payload.Visitor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("unchecked")
 class JsonSimpleSerializer implements Serializer {
 
     public <T> String serialize(T payload) {
-        JSONObject payloadJsonObj;
-        if (payload instanceof Impression) {
-            payloadJsonObj = serializeImpression((Impression)payload);
-        } else {
-            payloadJsonObj = serializeConversion((Conversion)payload);
-        }
+        JSONObject payloadJsonObj = serializeEventBatch((EventBatch)payload);
 
         return payloadJsonObj.toJSONString();
     }
 
-    private JSONObject serializeImpression(Impression impression) {
+    private JSONObject serializeEventBatch(EventBatch eventBatch) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("visitorId", impression.getVisitorId());
-        jsonObject.put("timestamp", impression.getTimestamp());
-        jsonObject.put("isGlobalHoldback", impression.getIsGlobalHoldback());
-        jsonObject.put("anonymizeIP", impression.getAnonymizeIP());
-        jsonObject.put("projectId", impression.getProjectId());
-        jsonObject.put("decision", serializeDecision(impression.getDecision()));
-        jsonObject.put("layerId", impression.getLayerId());
-        jsonObject.put("accountId", impression.getAccountId());
-        jsonObject.put("userFeatures", serializeFeatures(impression.getUserFeatures()));
-        jsonObject.put("clientEngine", impression.getClientEngine());
-        jsonObject.put("clientVersion", impression.getClientVersion());
-        jsonObject.put("revision", impression.getRevision());
 
-        if (impression.getSessionId() != null) {
-            jsonObject.put("sessionId", impression.getSessionId());
-        }
+        jsonObject.put("accountId", eventBatch.getAccountId());
+        jsonObject.put("visitors", serializeVisitors(eventBatch.getVisitors()));
+        if (eventBatch.getAnonymizeIp() != null) jsonObject.put("anonymizeIp", eventBatch.getAnonymizeIp());
+        if (eventBatch.getClientName() != null) jsonObject.put("clientName", eventBatch.getClientName());
+        if (eventBatch.getClientVersion() != null) jsonObject.put("clientVersion", eventBatch.getClientVersion());
+        if (eventBatch.getProjectId() != null) jsonObject.put("projectId", eventBatch.getProjectId());
+        if (eventBatch.getRevision() != null) jsonObject.put("revision", eventBatch.getRevision());
 
         return jsonObject;
+
     }
 
-    private JSONObject serializeConversion(Conversion conversion) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("visitorId", conversion.getVisitorId());
-        jsonObject.put("timestamp", conversion.getTimestamp());
-        jsonObject.put("projectId", conversion.getProjectId());
-        jsonObject.put("accountId", conversion.getAccountId());
-        jsonObject.put("userFeatures", serializeFeatures(conversion.getUserFeatures()));
-        jsonObject.put("layerStates", serializeLayerStates(conversion.getLayerStates()));
-        jsonObject.put("eventEntityId", conversion.getEventEntityId());
-        jsonObject.put("eventName", conversion.getEventName());
-        jsonObject.put("eventMetrics", serializeEventMetrics(conversion.getEventMetrics()));
-        jsonObject.put("eventFeatures", serializeFeatures(conversion.getEventFeatures()));
-        jsonObject.put("isGlobalHoldback", conversion.getIsGlobalHoldback());
-        jsonObject.put("anonymizeIP", conversion.getAnonymizeIP());
-        jsonObject.put("clientEngine", conversion.getClientEngine());
-        jsonObject.put("clientVersion", conversion.getClientVersion());
-        jsonObject.put("revision", conversion.getRevision());
-
-        if (conversion.getSessionId() != null) {
-            jsonObject.put("sessionId", conversion.getSessionId());
-        }
-
-        return jsonObject;
-    }
-
-    private JSONObject serializeDecision(Decision decision) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("variationId", decision.getVariationId());
-        jsonObject.put("isLayerHoldback", decision.getIsLayerHoldback());
-        jsonObject.put("experimentId", decision.getExperimentId());
-
-        return jsonObject;
-    }
-
-    private JSONArray serializeFeatures(List<Feature> features) {
+    private JSONArray serializeVisitors(List<Visitor> visitors) {
         JSONArray jsonArray = new JSONArray();
-        for (Feature feature : features) {
+
+        for (Visitor v: visitors) {
+            jsonArray.add(serializeVisitor(v));
+        }
+
+        return jsonArray;
+    }
+
+    private JSONObject serializeVisitor(Visitor visitor) {
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put("visitorId", visitor.getVisitorId());
+
+        if (visitor.getSessionId() != null) jsonObject.put("sessionId", visitor.getSessionId());
+
+        if (visitor.getAttributes() != null) jsonObject.put("attributes", serializeFeatures(visitor.getAttributes()));
+
+        jsonObject.put("snapshots", serializeSnapshots(visitor.getSnapshots()));
+
+        return jsonObject;
+    }
+
+    private JSONArray serializeSnapshots(List<Snapshot> snapshots) {
+        JSONArray jsonArray = new JSONArray();
+
+        for (Snapshot snapshot : snapshots) {
+            jsonArray.add(serializeSnapshot(snapshot));
+        }
+
+        return jsonArray;
+    }
+
+    private JSONObject serializeSnapshot(Snapshot snapshot) {
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put("decisions", serializeDecisions(snapshot.getDecisions()));
+        jsonObject.put("events", serializeEvents(snapshot.getEvents()));
+
+        return jsonObject;
+    }
+
+    private JSONArray serializeEvents(List<EventV3> eventV3s) {
+        JSONArray jsonArray = new JSONArray();
+
+        for (EventV3 eventV3 : eventV3s) {
+            jsonArray.add(serializeEvent(eventV3));
+        }
+
+        return jsonArray;
+    }
+
+    private JSONObject serializeEvent(EventV3 eventV3) {
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put("timestamp",eventV3.getTimestamp());
+        jsonObject.put("uuid",eventV3.getUuid());
+        jsonObject.put("key", eventV3.getKey());
+
+        if (eventV3.getEntityId() != null)  jsonObject.put("entityId",eventV3.getEntityId());
+        if (eventV3.getQuantity() != null)  jsonObject.put("quantity",eventV3.getQuantity());
+        if (eventV3.getRevenue() != null)   jsonObject.put("revenue",eventV3.getRevenue());
+        if (eventV3.getTags() != null)  jsonObject.put("tags",serializeTags(eventV3.getTags()));
+        if (eventV3.getType() != null)  jsonObject.put("type",eventV3.getType());
+        if (eventV3.getValue() != null)  jsonObject.put("value",eventV3.getValue());
+
+        return jsonObject;
+    }
+
+    private JSONArray serializeTags(Map<String, ?> tags) {
+        JSONArray jsonArray = new JSONArray();
+        for (Map.Entry<String, ?> entry : tags.entrySet()) {
+            if (entry.getValue() != null) {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return jsonArray;
+    }
+
+    private JSONObject serializeDecision(DecisionV3 decision) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("campaignId", decision.getCampaignId());
+        if (decision.getExperimentId() != null) jsonObject.put("experimentId", decision.getExperimentId());
+        if (decision.getVariationId() != null) jsonObject.put("variationId", decision.getVariationId());
+        jsonObject.put("isCampaignHoldback", decision.getIsCampaignHoldback());
+
+        return jsonObject;
+    }
+
+    private JSONArray serializeFeatures(List<Attribute> features) {
+        JSONArray jsonArray = new JSONArray();
+        for (Attribute feature : features) {
             jsonArray.add(serializeFeature(feature));
         }
 
         return jsonArray;
     }
 
-    private JSONObject serializeFeature(Feature feature) {
+    private JSONObject serializeFeature(Attribute feature) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("id", feature.getId());
-        jsonObject.put("name", feature.getName());
         jsonObject.put("type", feature.getType());
         jsonObject.put("value", feature.getValue());
-        jsonObject.put("shouldIndex", feature.getShouldIndex());
+        if (feature.getEntityId() != null) jsonObject.put("entityId", feature.getEntityId());
+        if (feature.getKey() != null) jsonObject.put("key", feature.getKey());
 
         return jsonObject;
     }
 
-    private JSONArray serializeLayerStates(List<LayerState> layerStates) {
+    private JSONArray serializeDecisions(List<DecisionV3> layerStates) {
         JSONArray jsonArray = new JSONArray();
-        for (LayerState layerState : layerStates) {
-            jsonArray.add(serializeLayerState(layerState));
+        for (DecisionV3 layerState : layerStates) {
+            jsonArray.add(serializeDecision(layerState));
         }
 
         return jsonArray;
-    }
-
-    private JSONObject serializeLayerState(LayerState layerState) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("layerId", layerState.getLayerId());
-        jsonObject.put("revision", layerState.getRevision());
-        jsonObject.put("decision", serializeDecision(layerState.getDecision()));
-        jsonObject.put("actionTriggered", layerState.getActionTriggered());
-
-        return jsonObject;
-    }
-
-    private JSONArray serializeEventMetrics(List<EventMetric> eventMetrics) {
-        JSONArray jsonArray = new JSONArray();
-        for (EventMetric eventMetric : eventMetrics) {
-            jsonArray.add(serializeEventMetric(eventMetric));
-        }
-
-        return jsonArray;
-    }
-
-    private JSONObject serializeEventMetric(EventMetric eventMetric) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("name", eventMetric.getName());
-        jsonObject.put("value", eventMetric.getValue());
-
-        return jsonObject;
     }
 }

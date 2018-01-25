@@ -13,6 +13,10 @@ public class EventBatch {
     String projectId;
     String revision;
 
+    public EventBatch() {
+
+    }
+
     public EventBatch(String accountId, List<Visitor> visitors, Boolean anonymizeIp, String projectId, String revision) {
         this.accountId = accountId;
         this.visitors = visitors;
@@ -85,5 +89,34 @@ public class EventBatch {
 
     public void setRevision(String revision) {
         this.revision = revision;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        EventBatch that = (EventBatch) o;
+
+        if (!accountId.equals(that.accountId)) return false;
+        if (!visitors.equals(that.visitors)) return false;
+        if (anonymizeIp != null ? !anonymizeIp.equals(that.anonymizeIp) : that.anonymizeIp != null) return false;
+        if (clientName != null ? !clientName.equals(that.clientName) : that.clientName != null) return false;
+        if (clientVersion != null ? !clientVersion.equals(that.clientVersion) : that.clientVersion != null)
+            return false;
+        if (projectId != null ? !projectId.equals(that.projectId) : that.projectId != null) return false;
+        return revision != null ? revision.equals(that.revision) : that.revision == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = accountId.hashCode();
+        result = 31 * result + visitors.hashCode();
+        result = 31 * result + (anonymizeIp != null ? anonymizeIp.hashCode() : 0);
+        result = 31 * result + (clientName != null ? clientName.hashCode() : 0);
+        result = 31 * result + (clientVersion != null ? clientVersion.hashCode() : 0);
+        result = 31 * result + (projectId != null ? projectId.hashCode() : 0);
+        result = 31 * result + (revision != null ? revision.hashCode() : 0);
+        return result;
     }
 }
