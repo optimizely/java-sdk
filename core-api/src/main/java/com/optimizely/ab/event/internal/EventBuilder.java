@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017-2018, Optimizely and contributors
+ *    Copyright 2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -73,9 +73,9 @@ public class EventBuilder {
 
         Decision decision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(),
                 variation.getId(), false);
-        Event eventV3 = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), activatedExperiment.getLayerId(),
+        Event impressionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), activatedExperiment.getLayerId(),
                 ACTIVATE_EVENT_KEY, null, null, null, ACTIVATE_EVENT_KEY, null);
-        Snapshot snapshot = new Snapshot(Arrays.asList(decision), Arrays.asList(eventV3));
+        Snapshot snapshot = new Snapshot(Arrays.asList(decision), Arrays.asList(impressionEvent));
 
         Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
         List<Visitor> visitors = Arrays.asList(visitor);
@@ -104,9 +104,9 @@ public class EventBuilder {
 
         EventType eventType = projectConfig.getEventNameMapping().get(eventName);
 
-        Event eventV3 = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), eventType.getId(),
+        Event conversionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), eventType.getId(),
                 eventType.getKey(), null, EventTagUtils.getRevenueValue(eventTags), eventTags, eventType.getKey(), EventTagUtils.getNumericValue(eventTags));
-        Snapshot snapshot = new Snapshot(decisions, Arrays.asList(eventV3));
+        Snapshot snapshot = new Snapshot(decisions, Arrays.asList(conversionEvent));
 
         Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
         List<Visitor> visitors = Arrays.asList(visitor);
@@ -116,7 +116,7 @@ public class EventBuilder {
     }
 
     private List<Attribute> buildAttributeList(ProjectConfig projectConfig, Map<String, String> attributes) {
-        List<Attribute> attributes1 = new ArrayList<Attribute>();
+        List<Attribute> attributesList = new ArrayList<Attribute>();
 
         Map<String, com.optimizely.ab.config.Attribute> attributeMap = projectConfig.getAttributeKeyMapping();
         for (Map.Entry<String, String> entry : attributes.entrySet()) {
@@ -129,9 +129,9 @@ public class EventBuilder {
                         ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE, Attribute.CUSTOM_ATTRIBUTE_TYPE, entry.getValue());
             }
 
-            attributes1.add(attribute);
+            attributesList.add(attribute);
         }
 
-        return attributes1;
+        return attributesList;
     }
 }
