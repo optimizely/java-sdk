@@ -1,17 +1,33 @@
+/**
+ *
+ *    Copyright 2017-2018, Optimizely and contributors
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package com.optimizely.ab.event.internal.payload;
 
 import java.util.List;
 
 public class Snapshot {
-    List<DecisionV3> decisions;
-    List<EventV3> events;
+    List<Decision> decisions;
+    List<Event> events;
     Long activationTimestamp;
 
     public Snapshot() {
 
     }
 
-    public Snapshot(List<DecisionV3> decisions, List<EventV3> events) {
+    public Snapshot(List<Decision> decisions, List<Event> events) {
         this.decisions = decisions;
         this.events = events;
         this.activationTimestamp = null;
@@ -25,19 +41,19 @@ public class Snapshot {
         this.activationTimestamp = activationTimestamp;
     }
 
-    public List<DecisionV3> getDecisions() {
+    public List<Decision> getDecisions() {
         return decisions;
     }
 
-    public void setDecisions(List<DecisionV3> decisions) {
+    public void setDecisions(List<Decision> decisions) {
         this.decisions = decisions;
     }
 
-    public List<EventV3> getEvents() {
+    public List<Event> getEvents() {
         return events;
     }
 
-    public void setEvents(List<EventV3> events) {
+    public void setEvents(List<Event> events) {
         this.events = events;
     }
 

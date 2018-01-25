@@ -17,10 +17,10 @@
 package com.optimizely.ab.event.internal.serializer;
 
 import com.optimizely.ab.event.internal.payload.Attribute;
-import com.optimizely.ab.event.internal.payload.DecisionV3;
+import com.optimizely.ab.event.internal.payload.Decision;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 
-import com.optimizely.ab.event.internal.payload.EventV3;
+import com.optimizely.ab.event.internal.payload.Event;
 import com.optimizely.ab.event.internal.payload.Snapshot;
 import com.optimizely.ab.event.internal.payload.Visitor;
 import org.json.simple.JSONArray;
@@ -96,17 +96,17 @@ class JsonSimpleSerializer implements Serializer {
         return jsonObject;
     }
 
-    private JSONArray serializeEvents(List<EventV3> eventV3s) {
+    private JSONArray serializeEvents(List<Event> eventV3s) {
         JSONArray jsonArray = new JSONArray();
 
-        for (EventV3 eventV3 : eventV3s) {
+        for (Event eventV3 : eventV3s) {
             jsonArray.add(serializeEvent(eventV3));
         }
 
         return jsonArray;
     }
 
-    private JSONObject serializeEvent(EventV3 eventV3) {
+    private JSONObject serializeEvent(Event eventV3) {
         JSONObject jsonObject = new JSONObject();
 
         jsonObject.put("timestamp",eventV3.getTimestamp());
@@ -135,7 +135,7 @@ class JsonSimpleSerializer implements Serializer {
         return jsonArray;
     }
 
-    private JSONObject serializeDecision(DecisionV3 decision) {
+    private JSONObject serializeDecision(Decision decision) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("campaignId", decision.getCampaignId());
         if (decision.getExperimentId() != null) jsonObject.put("experimentId", decision.getExperimentId());
@@ -164,9 +164,9 @@ class JsonSimpleSerializer implements Serializer {
         return jsonObject;
     }
 
-    private JSONArray serializeDecisions(List<DecisionV3> layerStates) {
+    private JSONArray serializeDecisions(List<Decision> layerStates) {
         JSONArray jsonArray = new JSONArray();
-        for (DecisionV3 layerState : layerStates) {
+        for (Decision layerState : layerStates) {
             jsonArray.add(serializeDecision(layerState));
         }
 

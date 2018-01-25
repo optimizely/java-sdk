@@ -1,14 +1,48 @@
+/**
+ *
+ *    Copyright 2017-2018, Optimizely and contributors
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package com.optimizely.ab.event.internal.payload;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 
 import java.util.List;
 
 public class EventBatch {
+    public enum ClientEngine {
+        JAVA_SDK ("java-sdk"),
+        ANDROID_SDK ("android-sdk"),
+        ANDROID_TV_SDK ("android-tv-sdk");
+
+        private final String clientEngineValue;
+
+        ClientEngine(String clientEngineValue) {
+            this.clientEngineValue = clientEngineValue;
+        }
+
+        @JsonValue
+        public String getClientEngineValue() {
+            return clientEngineValue;
+        }
+    }
+
     String accountId;
     List<Visitor> visitors;
     Boolean anonymizeIp;
-    String clientName = Event.ClientEngine.JAVA_SDK.getClientEngineValue();
+    String clientName = ClientEngine.JAVA_SDK.getClientEngineValue();
     String clientVersion = BuildVersionInfo.VERSION;
     String projectId;
     String revision;

@@ -16,7 +16,6 @@
  */
 package com.optimizely.ab.event.internal.serializer;
 
-import com.optimizely.ab.event.internal.payload.Event;
 import org.json.JSONObject;
 
 class JsonSerializer implements Serializer {

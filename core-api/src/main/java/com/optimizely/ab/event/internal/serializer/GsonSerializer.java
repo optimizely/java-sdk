@@ -18,8 +18,6 @@ package com.optimizely.ab.event.internal.serializer;
 
 import com.google.gson.Gson;
 
-import com.optimizely.ab.event.internal.payload.Event;
-
 class GsonSerializer implements Serializer {
 
     private Gson gson = new Gson();

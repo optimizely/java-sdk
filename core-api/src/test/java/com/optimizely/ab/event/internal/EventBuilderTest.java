@@ -12,8 +12,7 @@ import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.LogEvent;
-import com.optimizely.ab.event.internal.payload.DecisionV3;
-import com.optimizely.ab.event.internal.payload.Event;
+import com.optimizely.ab.event.internal.payload.Decision;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.internal.ReservedEventKey;
 import org.junit.Test;
@@ -53,7 +52,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(Parameterized.class)
-public class EventBuilderV3Test {
+public class EventBuilderTest {
 
     @Parameterized.Parameters
     public static Collection<Object[]> data() throws IOException {
@@ -76,8 +75,8 @@ public class EventBuilderV3Test {
     private int datafileVersion;
     private ProjectConfig validProjectConfig;
 
-    public EventBuilderV3Test(int datafileVersion,
-                              ProjectConfig validProjectConfig) {
+    public EventBuilderTest(int datafileVersion,
+                            ProjectConfig validProjectConfig) {
         this.datafileVersion = datafileVersion;
         this.validProjectConfig = validProjectConfig;
     }
@@ -94,7 +93,7 @@ public class EventBuilderV3Test {
         Attribute attribute = projectConfig.getAttributes().get(0);
         String userId = "userId";
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
-        DecisionV3 expectedDecision = new DecisionV3(activatedExperiment.getLayerId(), activatedExperiment.getId(), bucketedVariation.getId(), false);
+        Decision expectedDecision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(), bucketedVariation.getId(), false);
         com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(),
                 attribute.getKey(), com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "value");
@@ -119,7 +118,7 @@ public class EventBuilderV3Test {
                 is(activatedExperiment.getLayerId()));
         assertThat(eventBatch.getAccountId(), is(projectConfig.getAccountId()));
         assertThat(eventBatch.getVisitors().get(0).getAttributes(), is(expectedUserFeatures));
-        assertThat(eventBatch.getClientName(), is(Event.ClientEngine.JAVA_SDK.getClientEngineValue()));
+        assertThat(eventBatch.getClientName(), is(EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue()));
         assertThat(eventBatch.getClientVersion(), is(BuildVersionInfo.VERSION));
         assertNull(eventBatch.getVisitors().get(0).getSessionId());
     }
@@ -154,7 +153,7 @@ public class EventBuilderV3Test {
      */
     @Test
     public void createImpressionEventAndroidClientEngineClientVersion() throws Exception {
-        EventBuilder builder = new EventBuilder(Event.ClientEngine.ANDROID_SDK, "0.0.0");
+        EventBuilder builder = new EventBuilder(EventBatch.ClientEngine.ANDROID_SDK, "0.0.0");
         ProjectConfig projectConfig = validProjectConfigV2();
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
@@ -166,7 +165,7 @@ public class EventBuilderV3Test {
                 userId, attributeMap);
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
-        assertThat(impression.getClientName(), is(Event.ClientEngine.ANDROID_SDK.getClientEngineValue()));
+        assertThat(impression.getClientName(), is(EventBatch.ClientEngine.ANDROID_SDK.getClientEngineValue()));
         assertThat(impression.getClientVersion(), is("0.0.0"));
     }
 
@@ -177,7 +176,7 @@ public class EventBuilderV3Test {
     @Test
     public void createImpressionEventAndroidTVClientEngineClientVersion() throws Exception {
         String clientVersion = "0.0.0";
-        EventBuilder builder = new EventBuilder(Event.ClientEngine.ANDROID_TV_SDK, clientVersion);
+        EventBuilder builder = new EventBuilder(EventBatch.ClientEngine.ANDROID_TV_SDK, clientVersion);
         ProjectConfig projectConfig = validProjectConfigV2();
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
@@ -189,7 +188,7 @@ public class EventBuilderV3Test {
                 userId, attributeMap);
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
-        assertThat(impression.getClientName(), is(Event.ClientEngine.ANDROID_TV_SDK.getClientEngineValue()));
+        assertThat(impression.getClientName(), is(EventBatch.ClientEngine.ANDROID_TV_SDK.getClientEngineValue()));
         assertThat(impression.getClientVersion(), is(clientVersion));
     }
 
@@ -240,11 +239,11 @@ public class EventBuilderV3Test {
                 attributeMap,
                 eventTagMap);
 
-        List<DecisionV3> expectedDecisions = new ArrayList<DecisionV3>();
+        List<Decision> expectedDecisions = new ArrayList<Decision>();
 
         for (Experiment experiment : experimentsForEventKey) {
             if (experiment.isRunning()) {
-                DecisionV3 layerState = new DecisionV3(experiment.getLayerId(), experiment.getId(),
+                Decision layerState = new Decision(experiment.getLayerId(), experiment.getId(),
                         experiment.getVariations().get(0).getId(), false);
                 expectedDecisions.add(layerState);
             }
@@ -276,12 +275,12 @@ public class EventBuilderV3Test {
         assertTrue(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTags().equals(eventTagMap));
         assertFalse(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
-        assertEquals(conversion.getClientName(), Event.ClientEngine.JAVA_SDK.getClientEngineValue());
+        assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
         assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
     }
 
     /**
-     * Verify that "revenue" and "value" are properly recorded in a conversion request as {@link com.optimizely.ab.event.internal.payload.EventV3} objects.
+     * Verify that "revenue" and "value" are properly recorded in a conversion request as {@link com.optimizely.ab.event.internal.payload.Event} objects.
      * "revenue" is fixed-point and "value" is floating-point.
      */
     @Test
@@ -432,7 +431,7 @@ public class EventBuilderV3Test {
      */
     @Test
     public void createConversionEventAndroidClientEngineClientVersion() throws Exception {
-        EventBuilder builder = new EventBuilder(Event.ClientEngine.ANDROID_SDK, "0.0.0");
+        EventBuilder builder = new EventBuilder(EventBatch.ClientEngine.ANDROID_SDK, "0.0.0");
         Attribute attribute = validProjectConfig.getAttributes().get(0);
         EventType eventType = validProjectConfig.getEventTypes().get(0);
 
@@ -466,7 +465,7 @@ public class EventBuilderV3Test {
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
-        assertThat(conversion.getClientName(), is(Event.ClientEngine.ANDROID_SDK.getClientEngineValue()));
+        assertThat(conversion.getClientName(), is(EventBatch.ClientEngine.ANDROID_SDK.getClientEngineValue()));
         assertThat(conversion.getClientVersion(), is("0.0.0"));
     }
 
@@ -477,7 +476,7 @@ public class EventBuilderV3Test {
     @Test
     public void createConversionEventAndroidTVClientEngineClientVersion() throws Exception {
         String clientVersion = "0.0.0";
-        EventBuilder builder = new EventBuilder(Event.ClientEngine.ANDROID_TV_SDK, clientVersion);
+        EventBuilder builder = new EventBuilder(EventBatch.ClientEngine.ANDROID_TV_SDK, clientVersion);
         ProjectConfig projectConfig = validProjectConfigV2();
         Attribute attribute = projectConfig.getAttributes().get(0);
         EventType eventType = projectConfig.getEventTypes().get(0);
@@ -506,7 +505,7 @@ public class EventBuilderV3Test {
                 Collections.<String, Object>emptyMap());
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
-        assertThat(conversion.getClientName(), is(Event.ClientEngine.ANDROID_TV_SDK.getClientEngineValue()));
+        assertThat(conversion.getClientName(), is(EventBatch.ClientEngine.ANDROID_TV_SDK.getClientEngineValue()));
         assertThat(conversion.getClientVersion(), is(clientVersion));
     }
 
@@ -549,7 +548,7 @@ public class EventBuilderV3Test {
 
         attributeMap.put(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE, "variation");
 
-        DecisionV3 expectedDecision = new DecisionV3(activatedExperiment.getLayerId(), activatedExperiment.getId(), bucketedVariation.getId(), false);
+        Decision expectedDecision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(), bucketedVariation.getId(), false);
 
         com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(), attribute.getKey(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
@@ -580,7 +579,7 @@ public class EventBuilderV3Test {
         assertThat(impression.getAccountId(), is(projectConfig.getAccountId()));
 
         assertThat(impression.getVisitors().get(0).getAttributes(), is(expectedUserFeatures));
-        assertThat(impression.getClientName(), is(Event.ClientEngine.JAVA_SDK.getClientEngineValue()));
+        assertThat(impression.getClientName(), is(EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue()));
         assertThat(impression.getClientVersion(), is(BuildVersionInfo.VERSION));
         assertNull(impression.getVisitors().get(0).getSessionId());
     }
@@ -636,13 +635,13 @@ public class EventBuilderV3Test {
                 attributeMap,
                 eventTagMap);
 
-        List<DecisionV3> expectedDecisions = new ArrayList<DecisionV3>();
+        List<Decision> expectedDecisions = new ArrayList<Decision>();
 
         for (Experiment experiment : experimentsForEventKey) {
             if (experiment.isRunning()) {
-                DecisionV3 decisionV3 = new DecisionV3(experiment.getLayerId(), experiment.getId(),
+                Decision decision = new Decision(experiment.getLayerId(), experiment.getId(),
                         experiment.getVariations().get(0).getId(), false);
-                expectedDecisions.add(decisionV3);
+                expectedDecisions.add(decision);
             }
         }
 
@@ -676,7 +675,7 @@ public class EventBuilderV3Test {
         assertTrue(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTags().equals(eventTagMap));
         assertFalse(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
-        assertEquals(conversion.getClientName(), Event.ClientEngine.JAVA_SDK.getClientEngineValue());
+        assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
         assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
     }
 

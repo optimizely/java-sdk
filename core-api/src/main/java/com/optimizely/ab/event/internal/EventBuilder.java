@@ -8,10 +8,9 @@ import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.Attribute;
-import com.optimizely.ab.event.internal.payload.DecisionV3;
-import com.optimizely.ab.event.internal.payload.Event;
+import com.optimizely.ab.event.internal.payload.Decision;
 import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.event.internal.payload.EventV3;
+import com.optimizely.ab.event.internal.payload.Event;
 import com.optimizely.ab.event.internal.payload.Snapshot;
 import com.optimizely.ab.event.internal.payload.Visitor;
 import com.optimizely.ab.event.internal.serializer.DefaultJsonSerializer;
@@ -38,13 +37,13 @@ public class EventBuilder {
     @VisibleForTesting
     public final String clientVersion;
     @VisibleForTesting
-    public final Event.ClientEngine clientEngine;
+    public final EventBatch.ClientEngine clientEngine;
 
     public EventBuilder() {
-        this(Event.ClientEngine.JAVA_SDK, BuildVersionInfo.VERSION);
+        this(EventBatch.ClientEngine.JAVA_SDK, BuildVersionInfo.VERSION);
     }
 
-    public EventBuilder(Event.ClientEngine clientEngine, String clientVersion) {
+    public EventBuilder(EventBatch.ClientEngine clientEngine, String clientVersion) {
         this.clientEngine = clientEngine;
         this.clientVersion = clientVersion;
         this.serializer = DefaultJsonSerializer.getInstance();
@@ -57,11 +56,11 @@ public class EventBuilder {
                                                    @Nonnull String userId,
                                                    @Nonnull Map<String, String> attributes) {
 
-        DecisionV3 decisionV3 = new DecisionV3(activatedExperiment.getLayerId(), activatedExperiment.getId(),
+        Decision decision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(),
                 variation.getId(), false);
-        EventV3 eventV3 = new EventV3(System.currentTimeMillis(),UUID.randomUUID().toString(), activatedExperiment.getLayerId(),
+        Event eventV3 = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), activatedExperiment.getLayerId(),
                 ACTIVATE_EVENT_KEY, null, null, null, ACTIVATE_EVENT_KEY, null);
-        Snapshot snapshot = new Snapshot(Arrays.asList(decisionV3), Arrays.asList(eventV3));
+        Snapshot snapshot = new Snapshot(Arrays.asList(decision), Arrays.asList(eventV3));
 
         Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
         List<Visitor> visitors = Arrays.asList(visitor);
@@ -82,17 +81,17 @@ public class EventBuilder {
             return null;
         }
 
-        ArrayList<DecisionV3> decisionV3s = new ArrayList<DecisionV3>();
+        ArrayList<Decision> decisions = new ArrayList<Decision>();
         for (Map.Entry<Experiment, Variation> entry : experimentVariationMap.entrySet()) {
-            DecisionV3 decisionV3 = new DecisionV3(entry.getKey().getLayerId(), entry.getKey().getId(), entry.getValue().getId(), false);
-            decisionV3s.add(decisionV3);
+            Decision decision = new Decision(entry.getKey().getLayerId(), entry.getKey().getId(), entry.getValue().getId(), false);
+            decisions.add(decision);
         }
 
         EventType eventType = projectConfig.getEventNameMapping().get(eventName);
 
-        EventV3 eventV3 = new EventV3(System.currentTimeMillis(),UUID.randomUUID().toString(), eventType.getId(),
+        Event eventV3 = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), eventType.getId(),
                 eventType.getKey(), null, EventTagUtils.getRevenueValue(eventTags), eventTags, eventType.getKey(), EventTagUtils.getNumericValue(eventTags));
-        Snapshot snapshot = new Snapshot(decisionV3s, Arrays.asList(eventV3));
+        Snapshot snapshot = new Snapshot(decisions, Arrays.asList(eventV3));
 
         Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
         List<Visitor> visitors = Arrays.asList(visitor);

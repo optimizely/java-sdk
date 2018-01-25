@@ -18,7 +18,6 @@ package com.optimizely.ab.event.internal.serializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.optimizely.ab.event.internal.EventBuilderV3Test;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 
 import org.junit.Test;

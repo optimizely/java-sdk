@@ -19,18 +19,16 @@ package com.optimizely.ab.event.internal.serializer;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.optimizely.ab.event.internal.payload.Attribute;
-import com.optimizely.ab.event.internal.payload.DecisionV3;
+import com.optimizely.ab.event.internal.payload.Decision;
 import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.event.internal.payload.EventV3;
+import com.optimizely.ab.event.internal.payload.Event;
 import com.optimizely.ab.event.internal.payload.Snapshot;
 import com.optimizely.ab.event.internal.payload.Visitor;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class SerializerTestUtils {
 
@@ -45,7 +43,7 @@ public class SerializerTestUtils {
     private static final String experimentId = "5";
     private static final String sessionId = "sessionid";
     private static final String revision = "1";
-    private static final DecisionV3 decision = new DecisionV3(layerId, experimentId, variationId, isLayerHoldback);
+    private static final Decision decision = new Decision(layerId, experimentId, variationId, isLayerHoldback);
 
     private static final String featureId = "6";
     private static final String featureName = "testfeature";
@@ -62,7 +60,7 @@ public class SerializerTestUtils {
     private static final String eventMetricName = "revenue";
     private static final long eventMetricValue = 5000L;
 
-    private static final List<EventV3> events = Collections.singletonList(new EventV3(timestamp,
+    private static final List<Event> events = Collections.singletonList(new Event(timestamp,
             "uuid", eventEntityId, eventName, null, 5000L, null, eventName, null));
 
     static EventBatch generateImpression() {
