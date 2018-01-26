@@ -16,8 +16,10 @@
  */
 package com.optimizely.ab.event.internal.serializer;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 
+import com.google.gson.GsonBuilder;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 
 import org.junit.Test;
@@ -39,7 +41,9 @@ import static org.junit.Assert.assertThat;
 public class GsonSerializerTest {
 
     private GsonSerializer serializer = new GsonSerializer();
-    private Gson gson = new Gson();
+    private Gson gson = new GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .create();
 
     @Test
     public void serializeImpression() throws IOException {

@@ -41,12 +41,12 @@ class JsonSimpleSerializer implements Serializer {
     private JSONObject serializeEventBatch(EventBatch eventBatch) {
         JSONObject jsonObject = new JSONObject();
 
-        jsonObject.put("accountId", eventBatch.getAccountId());
+        jsonObject.put("account_id", eventBatch.getAccountId());
         jsonObject.put("visitors", serializeVisitors(eventBatch.getVisitors()));
-        if (eventBatch.getAnonymizeIp() != null) jsonObject.put("anonymizeIp", eventBatch.getAnonymizeIp());
-        if (eventBatch.getClientName() != null) jsonObject.put("clientName", eventBatch.getClientName());
-        if (eventBatch.getClientVersion() != null) jsonObject.put("clientVersion", eventBatch.getClientVersion());
-        if (eventBatch.getProjectId() != null) jsonObject.put("projectId", eventBatch.getProjectId());
+        if (eventBatch.getAnonymizeIp() != null) jsonObject.put("anonymize_ip", eventBatch.getAnonymizeIp());
+        if (eventBatch.getClientName() != null) jsonObject.put("client_name", eventBatch.getClientName());
+        if (eventBatch.getClientVersion() != null) jsonObject.put("client_version", eventBatch.getClientVersion());
+        if (eventBatch.getProjectId() != null) jsonObject.put("project_id", eventBatch.getProjectId());
         if (eventBatch.getRevision() != null) jsonObject.put("revision", eventBatch.getRevision());
 
         return jsonObject;
@@ -66,9 +66,9 @@ class JsonSimpleSerializer implements Serializer {
     private JSONObject serializeVisitor(Visitor visitor) {
         JSONObject jsonObject = new JSONObject();
 
-        jsonObject.put("visitorId", visitor.getVisitorId());
+        jsonObject.put("visitor_id", visitor.getVisitorId());
 
-        if (visitor.getSessionId() != null) jsonObject.put("sessionId", visitor.getSessionId());
+        if (visitor.getSessionId() != null) jsonObject.put("session_id", visitor.getSessionId());
 
         if (visitor.getAttributes() != null) jsonObject.put("attributes", serializeFeatures(visitor.getAttributes()));
 
@@ -96,11 +96,11 @@ class JsonSimpleSerializer implements Serializer {
         return jsonObject;
     }
 
-    private JSONArray serializeEvents(List<Event> eventV3s) {
+    private JSONArray serializeEvents(List<Event> events) {
         JSONArray jsonArray = new JSONArray();
 
-        for (Event eventV3 : eventV3s) {
-            jsonArray.add(serializeEvent(eventV3));
+        for (Event event : events) {
+            jsonArray.add(serializeEvent(event));
         }
 
         return jsonArray;
@@ -113,7 +113,7 @@ class JsonSimpleSerializer implements Serializer {
         jsonObject.put("uuid",eventV3.getUuid());
         jsonObject.put("key", eventV3.getKey());
 
-        if (eventV3.getEntityId() != null)  jsonObject.put("entityId",eventV3.getEntityId());
+        if (eventV3.getEntityId() != null)  jsonObject.put("entity_id",eventV3.getEntityId());
         if (eventV3.getQuantity() != null)  jsonObject.put("quantity",eventV3.getQuantity());
         if (eventV3.getRevenue() != null)   jsonObject.put("revenue",eventV3.getRevenue());
         if (eventV3.getTags() != null)  jsonObject.put("tags",serializeTags(eventV3.getTags()));
@@ -137,10 +137,10 @@ class JsonSimpleSerializer implements Serializer {
 
     private JSONObject serializeDecision(Decision decision) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("campaignId", decision.getCampaignId());
-        if (decision.getExperimentId() != null) jsonObject.put("experimentId", decision.getExperimentId());
-        if (decision.getVariationId() != null) jsonObject.put("variationId", decision.getVariationId());
-        jsonObject.put("isCampaignHoldback", decision.getIsCampaignHoldback());
+        jsonObject.put("campaign_id", decision.getCampaignId());
+        if (decision.getExperimentId() != null) jsonObject.put("experiment_id", decision.getExperimentId());
+        if (decision.getVariationId() != null) jsonObject.put("variation_id", decision.getVariationId());
+        jsonObject.put("is_campaign_holdback", decision.getIsCampaignHoldback());
 
         return jsonObject;
     }
@@ -158,7 +158,7 @@ class JsonSimpleSerializer implements Serializer {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", feature.getType());
         jsonObject.put("value", feature.getValue());
-        if (feature.getEntityId() != null) jsonObject.put("entityId", feature.getEntityId());
+        if (feature.getEntityId() != null) jsonObject.put("entity_id", feature.getEntityId());
         if (feature.getKey() != null) jsonObject.put("key", feature.getKey());
 
         return jsonObject;

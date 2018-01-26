@@ -16,11 +16,14 @@
  */
 package com.optimizely.ab.event.internal.payload;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Map;
 
 public class Event {
     long timestamp;
     String uuid;
+    @JsonProperty("entity_id")
     String entityId;
     String key;
     Number quantity;

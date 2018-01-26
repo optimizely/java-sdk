@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.event.internal.payload;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 
@@ -39,11 +40,16 @@ public class EventBatch {
         }
     }
 
+    @JsonProperty("account_id")
     String accountId;
     List<Visitor> visitors;
+    @JsonProperty("anonymize_ip")
     Boolean anonymizeIp;
+    @JsonProperty("client_name")
     String clientName = ClientEngine.JAVA_SDK.getClientEngineValue();
+    @JsonProperty("client_version")
     String clientVersion = BuildVersionInfo.VERSION;
+    @JsonProperty("project_id")
     String projectId;
     String revision;
 

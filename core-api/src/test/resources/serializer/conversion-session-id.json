@@ -1,21 +1,21 @@
 {
-  "accountId": "3",
+  "account_id": "3",
   "visitors": [
     {
       "snapshots": [
         {
           "decisions": [
             {
-              "variationId": "4",
-              "campaignId": "2",
-              "experimentId": "5",
-              "isCampaignHoldback": false
+              "variation_id": "4",
+              "campaign_id": "2",
+              "experiment_id": "5",
+              "is_campaign_holdback": false
             }
           ],
           "events": [
             {
               "revenue": 5000,
-              "entityId": "7",
+              "entity_id": "7",
               "type": "testevent",
               "uuid": "uuid",
               "key": "testevent",
@@ -26,19 +26,19 @@
       ],
       "attributes": [
         {
-          "entityId": "6",
+          "entity_id": "6",
           "type": "custom",
           "value": "testfeaturevalue",
           "key": "testfeature"
         }
       ],
-      "visitorId": "testvisitor",
-      "sessionId": "sessionid"
+      "visitor_id": "testvisitor",
+      "session_id": "sessionid"
     }
   ],
-  "clientName": "java-sdk",
-  "clientVersion": "0.1.1",
-  "anonymizeIp": true,
-  "projectId": "1",
+  "client_name": "java-sdk",
+  "client_version": "0.1.1",
+  "anonymize_ip": true,
+  "project_id": "1",
   "revision": "1"
 }

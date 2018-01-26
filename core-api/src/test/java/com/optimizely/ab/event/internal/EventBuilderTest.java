@@ -1,6 +1,8 @@
 package com.optimizely.ab.event.internal;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.UserProfileService;
@@ -68,7 +70,9 @@ public class EventBuilderTest {
         });
     }
 
-    private Gson gson = new Gson();
+    private Gson gson = new GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .create();
     private EventBuilder builder = new EventBuilder();
 
     private static String userId = "userId";

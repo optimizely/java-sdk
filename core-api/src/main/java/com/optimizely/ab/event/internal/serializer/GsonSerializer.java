@@ -16,11 +16,15 @@
  */
 package com.optimizely.ab.event.internal.serializer;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 class GsonSerializer implements Serializer {
 
-    private Gson gson = new Gson();
+    private Gson gson = new GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .create();
 
     public <T> String serialize(T payload) {
         return gson.toJson(payload);

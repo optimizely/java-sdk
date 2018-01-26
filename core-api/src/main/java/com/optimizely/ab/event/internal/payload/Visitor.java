@@ -16,10 +16,14 @@
  */
 package com.optimizely.ab.event.internal.payload;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 public class Visitor {
+    @JsonProperty("visitor_id")
     String visitorId;
+    @JsonProperty("session_id")
     String sessionId;
     List<Attribute> attributes;
     List<Snapshot> snapshots;

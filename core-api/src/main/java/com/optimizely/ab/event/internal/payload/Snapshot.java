@@ -16,11 +16,14 @@
  */
 package com.optimizely.ab.event.internal.payload;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 public class Snapshot {
     List<Decision> decisions;
     List<Event> events;
+    @JsonProperty("activation_timestamp")
     Long activationTimestamp;
 
     public Snapshot() {

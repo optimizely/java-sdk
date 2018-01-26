@@ -16,10 +16,16 @@
  */
 package com.optimizely.ab.event.internal.payload;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Decision {
+    @JsonProperty("campaign_id")
     String campaignId;
+    @JsonProperty("experiment_id")
     String experimentId;
+    @JsonProperty("variation_id")
     String variationId;
+    @JsonProperty("is_campaign_holdback")
     boolean isCampaignHoldback;
 
     public Decision(String campaignId, String experimentId, String variationId, boolean isCampaignHoldback) {

@@ -16,10 +16,13 @@
  */
 package com.optimizely.ab.event.internal.payload;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Attribute {
     public static final String CUSTOM_ATTRIBUTE_TYPE = "custom";
     public static final String CUSTOM_EVENT_TYPE = "custom";
 
+    @JsonProperty("entity_id")
     String entityId;
     String key;
     String type;

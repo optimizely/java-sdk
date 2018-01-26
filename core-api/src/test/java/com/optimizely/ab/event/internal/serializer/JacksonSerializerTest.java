@@ -18,6 +18,7 @@ package com.optimizely.ab.event.internal.serializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 
 import org.junit.Test;
@@ -39,7 +40,10 @@ import static org.junit.Assert.assertThat;
 public class JacksonSerializerTest {
 
     private JacksonSerializer serializer = new JacksonSerializer();
-    private ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper =
+            new ObjectMapper().setPropertyNamingStrategy(
+                    PropertyNamingStrategy.SNAKE_CASE);
+
 
     @Test
     public void serializeImpression() throws IOException {
