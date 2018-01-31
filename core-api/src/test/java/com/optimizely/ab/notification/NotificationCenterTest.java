@@ -1,9 +1,6 @@
 package com.optimizely.ab.notification;
 
 import ch.qos.logback.classic.Level;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.internal.LogbackVerifier;
 import org.junit.Before;
 import org.junit.Rule;
