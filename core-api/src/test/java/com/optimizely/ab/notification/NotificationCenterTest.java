@@ -1,12 +1,16 @@
 package com.optimizely.ab.notification;
 
 import ch.qos.logback.classic.Level;
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.internal.LogbackVerifier;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -14,8 +18,8 @@ import static org.mockito.Mockito.mock;
 
 public class NotificationCenterTest {
     private NotificationCenter notificationCenter;
-    private ActivateNotification activateNotification;
-    private TrackNotification trackNotification;
+    private ActivateNotificationListener activateNotification;
+    private TrackNotificationListener trackNotification;
 
     @Rule
     public LogbackVerifier logbackVerifier = new LogbackVerifier();
@@ -23,8 +27,8 @@ public class NotificationCenterTest {
     @Before
     public void initialize() {
         notificationCenter = new NotificationCenter();
-        activateNotification = mock(ActivateNotification.class);
-        trackNotification = mock(TrackNotification.class);
+        activateNotification = mock(ActivateNotificationListener.class);
+        trackNotification = mock(TrackNotificationListener.class);
     }
 
     @Test
@@ -33,6 +37,7 @@ public class NotificationCenterTest {
         logbackVerifier.expectMessage(Level.WARN,"Notification listener was the wrong type. It was not added to the notification center.");
         assertEquals(notificationId, -1);
         assertFalse(notificationCenter.removeNotification(notificationId));
+
     }
 
     @Test
