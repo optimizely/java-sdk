@@ -3472,6 +3472,79 @@ public class OptimizelyTest {
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
     }
 
+    /**
+     * Verify that the {@link Optimizely#activate(String, String, Map<String, String>)} call
+     * uses forced variation to force the user into the third variation in which FeatureEnabled is set to
+     * false so feature enabled will return false
+     */
+    @Test
+    public void isFeatureEnabledWithExperimentKeyForcedOfFeatureEnabledFalse() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        Experiment activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
+        Variation forcedVariation = activatedExperiment.getVariations().get(2);
+        EventBuilder mockEventBuilder = mock(EventBuilder.class);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withBucketing(mockBucketer)
+                .withEventBuilder(mockEventBuilder)
+                .withConfig(validProjectConfig)
+                .withErrorHandler(mockErrorHandler)
+                .build();
+
+        optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, forcedVariation.getKey() );
+        assertFalse(optimizely.isFeatureEnabled(FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(), testUserId));
+    }
+
+    @Test
+    public void isFeatureEnabledTrueWhenFeatureEnabledOfVariationIsTrue() throws Exception{
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .withDecisionService(mockDecisionService)
+                .build());
+        // Should be an experiment from the rollout associated with the feature, but for this test
+        // it doesn't matter. Just use any valid experiment.
+        Experiment experiment = validProjectConfig.getRolloutIdMapping().get(ROLLOUT_2_ID).getExperiments().get(0);
+        Variation variation = new Variation("variationId", "variationKey", true, null);
+        FeatureDecision featureDecision = new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.ROLLOUT);
+        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+                eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+
+        assertTrue(spyOptimizely.isFeatureEnabled(validFeatureKey, genericUserId));
+
+    }
+
+    @Test
+    public void isFeatureEnabledFalseWhenFeatureEnabledOfVariationIsFalse() throws Exception{
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .withDecisionService(mockDecisionService)
+                .build());
+        // Should be an experiment from the rollout associated with the feature, but for this test
+        // it doesn't matter. Just use any valid experiment.
+        Experiment experiment = validProjectConfig.getRolloutIdMapping().get(ROLLOUT_2_ID).getExperiments().get(0);
+        Variation variation = new Variation("variationId", "variationKey", false, null);
+        FeatureDecision featureDecision = new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.ROLLOUT);
+        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+                eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
+                eq(genericUserId),
+                eq(Collections.<String, String>emptyMap())
+        );
+
+        assertFalse(spyOptimizely.isFeatureEnabled(validFeatureKey, genericUserId));
+
+    }
+
     /** Integration Test
      * Verify {@link Optimizely#isFeatureEnabled(String, String, Map)}
      * returns True

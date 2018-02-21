@@ -490,10 +490,11 @@ public class ValidProjectConfigV4 {
     );
     private static final String     VARIATION_MULTIVARIATE_EXPERIMENT_GRED_ID = "4204375027";
     public  static final String     VARIATION_MULTIVARIATE_EXPERIMENT_GRED_KEY = "Gred";
+    public  static final Boolean    VARIATION_MULTIVARIATE_VARIATION_FEATURE_ENABLED_GRED_KEY = false;
     public  static final Variation  VARIATION_MULTIVARIATE_EXPERIMENT_GRED = new Variation(
             VARIATION_MULTIVARIATE_EXPERIMENT_GRED_ID,
             VARIATION_MULTIVARIATE_EXPERIMENT_GRED_KEY,
-            VARIATION_MULTIVARIATE_FEATURE_ENABLED_VALUE,
+            VARIATION_MULTIVARIATE_VARIATION_FEATURE_ENABLED_GRED_KEY,
             ProjectConfigTestUtils.createListOfObjects(
                     new LiveVariableUsageInstance(
                             VARIABLE_FIRST_LETTER_ID,
