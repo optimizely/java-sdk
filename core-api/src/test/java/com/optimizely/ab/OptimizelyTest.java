@@ -3439,7 +3439,7 @@ public class OptimizelyTest {
         // Should be an experiment from the rollout associated with the feature, but for this test
         // it doesn't matter. Just use any valid experiment.
         Experiment experiment = validProjectConfig.getRolloutIdMapping().get(ROLLOUT_2_ID).getExperiments().get(0);
-        Variation variation = new Variation("variationId", "variationKey");
+        Variation variation = new Variation("variationId", "variationKey", true, null);
         FeatureDecision featureDecision = new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.ROLLOUT);
         doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
                 eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
