@@ -595,7 +595,6 @@ public class ValidProjectConfigV4 {
     private static final Variation  VARIATION_DOUBLE_FEATURE_EULER_VARIATION = new Variation(
             VARIATION_DOUBLE_FEATURE_EULER_VARIATION_ID,
             VARIATION_DOUBLE_FEATURE_EULER_VARIATION_KEY,
-            VARIATION_MULTIVARIATE_FEATURE_ENABLED_VALUE,
             Collections.singletonList(
                     new LiveVariableUsageInstance(
                             VARIABLE_DOUBLE_VARIABLE_ID,

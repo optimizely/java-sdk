@@ -58,7 +58,10 @@ public class Variation implements IdKeyMapped {
                      @JsonProperty("variables") List<LiveVariableUsageInstance> liveVariableUsageInstances) {
         this.id = id;
         this.key = key;
-        this.featureEnabled = featureEnabled;
+        if(featureEnabled != null)
+            this.featureEnabled = featureEnabled;
+        else
+            this.featureEnabled = false;
         if (liveVariableUsageInstances == null) {
             this.liveVariableUsageInstances = Collections.emptyList();
         }

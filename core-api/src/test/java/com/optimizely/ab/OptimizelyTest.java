@@ -99,6 +99,7 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_FIRST_LETTE
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_INTEGER_VARIABLE_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIATION_MULTIVARIATE_EXPERIMENT_GRED;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIATION_MULTIVARIATE_EXPERIMENT_GRED_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT_KEY;
 import static com.optimizely.ab.event.LogEvent.RequestMethod;
 import static com.optimizely.ab.event.internal.EventBuilderTest.createExperimentVariationMap;
 import static java.util.Arrays.asList;
@@ -3495,6 +3496,36 @@ public class OptimizelyTest {
         assertFalse(optimizely.isFeatureEnabled(FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(), testUserId));
     }
 
+    /**
+     * Verify that the {@link Optimizely#activate(String, String, Map<String, String>)} call
+     * uses forced variation to force the user into the second variation in which FeatureEnabled is not set
+     * feature enabled will return false by default
+     */
+    @Test
+    public void isFeatureEnabledWithExperimentKeyForcedWithNoFeatureEnabledSet() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        Experiment activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT_KEY);
+        Variation forcedVariation = activatedExperiment.getVariations().get(1);
+        EventBuilder mockEventBuilder = mock(EventBuilder.class);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withBucketing(mockBucketer)
+                .withEventBuilder(mockEventBuilder)
+                .withConfig(validProjectConfig)
+                .withErrorHandler(mockErrorHandler)
+                .build();
+
+        optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, forcedVariation.getKey() );
+        assertFalse(optimizely.isFeatureEnabled(FEATURE_SINGLE_VARIABLE_DOUBLE_KEY, testUserId));
+    }
+
+    /**
+     * Verify {@link Optimizely#isFeatureEnabled(String, String)} calls into
+     * {@link Optimizely#isFeatureEnabled(String, String, Map)} sending FeatureEnabled true and they both
+     * return True when the user is bucketed into a variation for the feature.
+     * An impression event should not be dispatched since the user was not bucketed into an Experiment.
+     * @throws Exception
+     */
     @Test
     public void isFeatureEnabledTrueWhenFeatureEnabledOfVariationIsTrue() throws Exception{
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
@@ -3520,6 +3551,14 @@ public class OptimizelyTest {
 
     }
 
+
+    /**
+     * Verify {@link Optimizely#isFeatureEnabled(String, String)} calls into
+     * {@link Optimizely#isFeatureEnabled(String, String, Map)} sending FeatureEnabled false because of which and they both
+     * return false even when the user is bucketed into a variation for the feature.
+     * An impression event should not be dispatched since the user was not bucketed into an Experiment.
+     * @throws Exception
+     */
     @Test
     public void isFeatureEnabledFalseWhenFeatureEnabledOfVariationIsFalse() throws Exception{
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
