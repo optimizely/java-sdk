@@ -12,8 +12,10 @@ buildscript {
 }
 
 plugins {
-    id 'nebula.optional-base' version '3.2.0'
+    id 'com.github.kt3k.coveralls' version '2.8.2'
     id 'me.champeau.gradle.jmh' version '0.3.1'
+    id 'nebula.optional-base' version '3.2.0'
+    id 'net.saliman.cobertura' version '2.3.1'
 }
 
 allprojects {
@@ -175,4 +177,6 @@ subprojects {
 task ship() {
     dependsOn(':core-api:ship', ':core-httpclient-impl:ship')
 }
+
+cobertura.coverageFormats = ['html', 'xml'] // coveralls plugin depends on xml format report
 
