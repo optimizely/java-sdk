@@ -44,6 +44,7 @@ allprojects {
 subprojects {
     apply plugin: 'com.jfrog.bintray'
     apply plugin: 'findbugs'
+    apply plugin: 'jacoco'
     apply plugin: 'java'
     apply plugin: 'maven-publish'
     apply plugin: 'me.champeau.gradle.jmh'
@@ -180,6 +181,17 @@ subprojects {
     task ship() {
         dependsOn('bintrayUpload')
     }
+
+    jacocoTestReport {
+        additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
+        sourceDirectories = files(sourceSets.main.allSource.srcDirs)
+        classDirectories = files(sourceSets.main.output)
+        reports {
+            html.enabled = true
+            xml.enabled = true
+            csv.enabled = false
+        }
+    }
 }
 
 task ship() {
@@ -194,14 +206,27 @@ jacocoTestReport {
 }
 
 task jacocoRootReport(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
+    description = 'Generates an aggregate report from all subprojects'
     dependsOn = subprojects.test
+
+    additionalSourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs)
     sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
     classDirectories = files(subprojects.sourceSets.main.output)
     executionData = files(subprojects.jacocoTestReport.executionData)
+
     reports {
         html.enabled = true
         xml.enabled = true
         csv.enabled = false
-        xml.destination = "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+    }
+
+    doFirst {
+        executionData = files(executionData.findAll {
+            it.exists()
+        })
+    }
+
+    coveralls {
+        jacocoReportPath = "${buildDir}/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
     }
 }
