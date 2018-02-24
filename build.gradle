@@ -198,6 +198,8 @@ task ship() {
     dependsOn(':core-api:ship', ':core-httpclient-impl:ship')
 }
 
+coveralls.jacocoReportPath = "${buildDir}/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
+
 jacocoTestReport {
     reports {
         xml.enabled = true // coveralls plugin depends on xml format report
