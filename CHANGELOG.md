@@ -1,5 +1,23 @@
 # Optimizely Java X SDK Changelog
 
+## 2.0.0 Beta 5
+February 26, 2018
+
+This is a minor patch on 2.0.0-beta4.
+This release upgrades the gradle wrapper to 4.5.1 and adds tasks for compiling unit coverage metrics to export to coveralls.
+
+## 2.0.0 Beta 4
+February 1, 2018
+
+This release is a fourth beta release supporting feature flags and rollouts.
+It includes all the same new features and breaking changes as the last beta release.
+It also includes the latest Notification Listeners and bucketing ID changes from 1.9.0.
+
+### New Features
+
+* New Notification Center for track and activate notifications.
+* Use `$opt_bucketing_id` in your attribute list to support bucketing like users.
+
 ## 1.9.0
 
 January 30, 2018
