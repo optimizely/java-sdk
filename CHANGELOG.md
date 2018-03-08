@@ -1,5 +1,14 @@
 # Optimizely Java X SDK Changelog
 
+## 2.0.0 Beta 6
+March 8, 2018
+
+This is a patch on 2.0.0-beta5.
+
+### New Features
+This release includes a new API `Optimizely#getEnabledFeatures()` that returns all features that are enabled for a given user.
+Features are now enabled or disabled based on the `featureEnabled` property in each variation the user is bucketed into.
+
 ## 2.0.0 Beta 5
 February 26, 2018
 
