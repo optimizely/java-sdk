@@ -347,7 +347,10 @@ public class Optimizely {
         Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
 
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
-        if (featureDecision.variation != null) {
+        if (featureDecision.variation == null || !featureDecision.variation.getFeatureEnabled()) {
+            logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
+            return false;
+        } else {
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
                 sendImpression(
                         projectConfig,
@@ -361,9 +364,6 @@ public class Optimizely {
             }
             logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
             return true;
-        } else {
-            logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
-            return false;
         }
     }
 
@@ -588,6 +588,29 @@ public class Optimizely {
         }
 
         return variableValue;
+    }
+
+    /**
+     * Get the list of features that are enabled for the user.
+     * @param userId The ID of the user.
+     * @param attributes The user's attributes.
+     * @return List of the feature keys that are enabled for the user if the userId is empty it will
+     * return Empty List.
+     */
+    public List<String> getEnabledFeatures(@Nonnull String userId,@Nonnull Map<String, String> attributes) {
+        List<String> enabledFeaturesList = new ArrayList<String>();
+
+        if (!validateUserId(userId)){
+            return enabledFeaturesList;
+        }
+
+        for (FeatureFlag featureFlag : projectConfig.getFeatureFlags()){
+            String featureKey = featureFlag.getKey();
+            if(isFeatureEnabled(featureKey, userId, attributes))
+                enabledFeaturesList.add(featureKey);
+        }
+
+        return enabledFeaturesList;
     }
 
     //======== getVariation calls ========//
