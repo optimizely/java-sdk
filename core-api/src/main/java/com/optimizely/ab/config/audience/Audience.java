@@ -19,7 +19,6 @@ package com.optimizely.ab.config.audience;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import com.optimizely.ab.config.IdKeyMapped;
 
 import javax.annotation.concurrent.Immutable;
@@ -48,10 +47,6 @@ public class Audience implements IdKeyMapped {
 
     public String getId() {
         return id;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public String getKey() {

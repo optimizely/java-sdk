@@ -43,32 +43,16 @@ public class Decision {
         return campaignId;
     }
 
-    public void setCampaignId(String campaignId) {
-        this.campaignId = campaignId;
-    }
-
     public String getExperimentId() {
         return experimentId;
-    }
-
-    public void setExperimentId(String experimentId) {
-        this.experimentId = experimentId;
     }
 
     public String getVariationId() {
         return variationId;
     }
 
-    public void setVariationId(String variationId) {
-        this.variationId = variationId;
-    }
-
     public boolean getIsCampaignHoldback() {
         return isCampaignHoldback;
-    }
-
-    public void setIsCampaignHoldback(boolean campaignHoldback) {
-        isCampaignHoldback = campaignHoldback;
     }
 
     @Override
@@ -82,16 +66,6 @@ public class Decision {
         if (!campaignId.equals(that.campaignId)) return false;
         if (!experimentId.equals(that.experimentId)) return false;
         return variationId.equals(that.variationId);
-    }
-
-    @Override
-    public String toString() {
-        return "Decision{" +
-                "campaignId='" + campaignId + '\'' +
-                ", experimentId='" + experimentId + '\'' +
-                ", variationId='" + variationId + '\'' +
-                ", isCampaignHoldback=" + isCampaignHoldback +
-                '}';
     }
 
     @Override
