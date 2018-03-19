@@ -85,6 +85,16 @@ public class Decision {
     }
 
     @Override
+    public String toString() {
+        return "Decision{" +
+                "campaignId='" + campaignId + '\'' +
+                ", experimentId='" + experimentId + '\'' +
+                ", variationId='" + variationId + '\'' +
+                ", isCampaignHoldback=" + isCampaignHoldback +
+                '}';
+    }
+
+    @Override
     public int hashCode() {
         int result = campaignId.hashCode();
         result = 31 * result + experimentId.hashCode();
