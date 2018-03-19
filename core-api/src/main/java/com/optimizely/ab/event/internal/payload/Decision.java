@@ -67,13 +67,4 @@ public class Decision {
         if (!experimentId.equals(that.experimentId)) return false;
         return variationId.equals(that.variationId);
     }
-
-    @Override
-    public int hashCode() {
-        int result = campaignId.hashCode();
-        result = 31 * result + experimentId.hashCode();
-        result = 31 * result + variationId.hashCode();
-        result = 31 * result + (isCampaignHoldback ? 1 : 0);
-        return result;
-    }
 }
