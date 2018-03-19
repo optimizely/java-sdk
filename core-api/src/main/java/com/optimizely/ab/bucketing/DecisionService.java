@@ -217,6 +217,7 @@ public class DecisionService {
         Variation variation;
         for (int i = 0; i < rolloutRulesLength - 1; i++) {
             Experiment rolloutRule = rollout.getExperiments().get(i);
+            Audience audience = projectConfig.getAudienceIdMapping().get(rolloutRule.getAudienceIds().get(0));
             if (ExperimentUtils.isUserInExperiment(projectConfig, rolloutRule, filteredAttributes)) {
                 variation = bucketer.bucket(rolloutRule, bucketingId);
                 if (variation == null) {
@@ -224,6 +225,10 @@ public class DecisionService {
                 }
                 return new FeatureDecision(rolloutRule, variation,
                         FeatureDecision.DecisionSource.ROLLOUT);
+            }
+            else {
+                logger.debug("User \"{}\" did not meet the conditions to be in rollout rule for audience \"{}\".",
+                        userId, audience.getName());
             }
         }
 

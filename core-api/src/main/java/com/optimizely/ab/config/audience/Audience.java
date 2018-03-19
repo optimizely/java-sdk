@@ -53,6 +53,10 @@ public class Audience implements IdKeyMapped {
         return name;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public Condition getConditions() {
         return conditions;
     }
