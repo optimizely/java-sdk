@@ -235,7 +235,7 @@ public class DecisionService {
         // get last rule which is the fall back rule
         Experiment finalRule = rollout.getExperiments().get(rolloutRulesLength - 1);
         if (ExperimentUtils.isUserInExperiment(projectConfig, finalRule, filteredAttributes)) {
-            variation = bucketer.bucket(finalRule, bucketingId); // ignore audience
+            variation = bucketer.bucket(finalRule, bucketingId);
             if (variation != null) {
                 return new FeatureDecision(finalRule, variation,
                         FeatureDecision.DecisionSource.ROLLOUT);
