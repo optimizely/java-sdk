@@ -1,6 +1,6 @@
 # Optimizely Java X SDK Changelog
 
-## 2.0.0-beta1
+## 2.0.0-beta6
 
 March 29th, 2018
 
