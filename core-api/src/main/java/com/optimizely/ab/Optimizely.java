@@ -722,19 +722,17 @@ public class Optimizely {
 
     /**
      * Helper method to retrieve the {@link Experiment} for the given experiment key.
-     * If {@link RaiseExceptionErrorHandler} is provided, either an experiment is returned, or an exception is thrown.
+     * If {@link RaiseExceptionErrorHandler} is provided, either an experiment is returned,
+     *  or an exception is sent to the error handler
+     *  if there are no experiments in the project config with the given experiment key.
      * If {@link NoOpErrorHandler} is used, either an experiment or {@code null} is returned.
      *
      * @param projectConfig the current project config
      * @param experimentKey the experiment to retrieve from the current project config
      * @return the experiment for given experiment key
-     *
-     * @throws UnknownExperimentException if there are no experiments in the current project config with the given
-     * experiment key
      */
     private @CheckForNull Experiment getExperimentOrThrow(@Nonnull ProjectConfig projectConfig,
-                                                          @Nonnull String experimentKey)
-        throws UnknownExperimentException {
+                                                          @Nonnull String experimentKey) {
 
         Experiment experiment = projectConfig
             .getExperimentKeyMapping()
@@ -752,17 +750,15 @@ public class Optimizely {
 
     /**
      * Helper method to retrieve the {@link EventType} for the given event name.
-     * If {@link RaiseExceptionErrorHandler} is provided, either an event type is returned, or an exception is thrown.
+     * If {@link RaiseExceptionErrorHandler} is provided, either an event type is returned,
+     *  or an exception is sent to the error handler if there are no event types in the project config with the given name.
      * If {@link NoOpErrorHandler} is used, either an event type or {@code null} is returned.
      *
      * @param projectConfig the current project config
      * @param eventName the event type to retrieve from the current project config
      * @return the event type for the given event name
-     *
-     * @throws UnknownEventTypeException if there are no event types in the current project config with the given name
      */
-    private EventType getEventTypeOrThrow(ProjectConfig projectConfig, String eventName)
-        throws UnknownEventTypeException {
+    private EventType getEventTypeOrThrow(ProjectConfig projectConfig, String eventName) {
 
         EventType eventType = projectConfig
             .getEventNameMapping()
