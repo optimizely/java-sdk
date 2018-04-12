@@ -228,7 +228,7 @@ public class Optimizely {
 
         ProjectConfig currentConfig = getProjectConfig();
 
-        EventType eventType = getEventTypeOrThrow(currentConfig, eventName);
+        EventType eventType = getEventTypeForName(currentConfig, eventName);
         if (eventType == null) {
             // if no matching event type could be found, do not dispatch an event
             logger.info("Not tracking event \"{}\" for user \"{}\".", eventName, userId);
@@ -758,7 +758,7 @@ public class Optimizely {
      * @param eventName the event type to retrieve from the current project config
      * @return the event type for the given event name
      */
-    private EventType getEventTypeOrThrow(ProjectConfig projectConfig, String eventName) {
+    private EventType getEventTypeForName(ProjectConfig projectConfig, String eventName) {
 
         EventType eventType = projectConfig
             .getEventNameMapping()
