@@ -42,7 +42,6 @@ import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
@@ -131,7 +130,7 @@ public class Optimizely {
 
         ProjectConfig currentConfig = getProjectConfig();
 
-        Experiment experiment = getExperimentForKey(currentConfig, experimentKey);
+        Experiment experiment = currentConfig.getExperimentForKey(experimentKey, errorHandler);
         if (experiment == null) {
             // if we're unable to retrieve the associated experiment, return null
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experimentKey);
@@ -638,7 +637,7 @@ public class Optimizely {
 
         ProjectConfig currentConfig = getProjectConfig();
 
-        Experiment experiment = getExperimentForKey(currentConfig, experimentKey);
+        Experiment experiment = currentConfig.getExperimentForKey(experimentKey, errorHandler);
         if (experiment == null) {
             // if we're unable to retrieve the associated experiment, return null
             return null;
@@ -719,34 +718,6 @@ public class Optimizely {
     }
 
     //======== Helper methods ========//
-
-    /**
-     * Helper method to retrieve the {@link Experiment} for the given experiment key.
-     * If {@link RaiseExceptionErrorHandler} is provided, either an experiment is returned,
-     *  or an exception is sent to the error handler
-     *  if there are no experiments in the project config with the given experiment key.
-     * If {@link NoOpErrorHandler} is used, either an experiment or {@code null} is returned.
-     *
-     * @param projectConfig the current project config
-     * @param experimentKey the experiment to retrieve from the current project config
-     * @return the experiment for given experiment key
-     */
-    private @CheckForNull Experiment getExperimentForKey(@Nonnull ProjectConfig projectConfig,
-                                                         @Nonnull String experimentKey) {
-
-        Experiment experiment = projectConfig
-            .getExperimentKeyMapping()
-            .get(experimentKey);
-
-        // if the given experiment key isn't present in the config, log and potentially throw an exception
-        if (experiment == null) {
-            String unknownExperimentError = String.format("Experiment \"%s\" is not in the datafile.", experimentKey);
-            logger.error(unknownExperimentError);
-            errorHandler.handleError(new UnknownExperimentException(unknownExperimentError));
-        }
-
-        return experiment;
-    }
 
     /**
      * Helper method to retrieve the {@link EventType} for the given event name.
