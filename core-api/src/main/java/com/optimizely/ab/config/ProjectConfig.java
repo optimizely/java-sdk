@@ -17,6 +17,7 @@
 package com.optimizely.ab.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.optimizely.ab.UnknownEventTypeException;
 import com.optimizely.ab.UnknownExperimentException;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
@@ -242,6 +243,32 @@ public class ProjectConfig {
         }
 
         return experiment;
+    }
+
+    /**
+     * Helper method to retrieve the {@link EventType} for the given event name.
+     * If {@link RaiseExceptionErrorHandler} is provided, either an event type is returned,
+     *  or an exception is sent to the error handler if there are no event types in the project config with the given name.
+     * If {@link NoOpErrorHandler} is used, either an event type or {@code null} is returned.
+     *
+     * @param eventName the event type to retrieve from the current project config
+     * @param errorHandler the error handler to send exceptions to
+     * @return the event type for the given event name
+     */
+    public @CheckForNull EventType getEventTypeForName(String eventName, ErrorHandler errorHandler) {
+
+        EventType eventType =
+                getEventNameMapping()
+                        .get(eventName);
+
+        // if the given event name isn't present in the config, log and potentially throw an exception
+        if (eventType == null) {
+            String unknownEventTypeError = String.format("Event \"%s\" is not in the datafile.", eventName);
+            logger.error(unknownEventTypeError);
+            errorHandler.handleError(new UnknownEventTypeException(unknownEventTypeError));
+        }
+
+        return eventType;
     }
 
 
