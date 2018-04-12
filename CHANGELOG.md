@@ -36,6 +36,8 @@ eventTags.put("revenue", 6432);
 optimizelyClient.track("event_key", "user_id", userAttributes, eventTags);
 ```
 
+* We have removed deprecated classes with the `NotificationBroadcaster` in favor of the new API with the `NotificationCenter`. We have streamlined the API so that it is easily usable with Java Lambdas in *Java 1.8+*. We have also added some convenience methods to add these listeners. Finally, some of the API names have changed slightly (e.g. `clearAllNotifications()` is now `clearAllNotificationListeners()`)
+
 ## 2.0.0-beta6
 
 March 29th, 2018
