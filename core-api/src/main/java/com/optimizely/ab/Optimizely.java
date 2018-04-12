@@ -131,7 +131,7 @@ public class Optimizely {
 
         ProjectConfig currentConfig = getProjectConfig();
 
-        Experiment experiment = getExperimentOrThrow(currentConfig, experimentKey);
+        Experiment experiment = getExperimentForKey(currentConfig, experimentKey);
         if (experiment == null) {
             // if we're unable to retrieve the associated experiment, return null
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experimentKey);
@@ -638,7 +638,7 @@ public class Optimizely {
 
         ProjectConfig currentConfig = getProjectConfig();
 
-        Experiment experiment = getExperimentOrThrow(currentConfig, experimentKey);
+        Experiment experiment = getExperimentForKey(currentConfig, experimentKey);
         if (experiment == null) {
             // if we're unable to retrieve the associated experiment, return null
             return null;
@@ -731,8 +731,8 @@ public class Optimizely {
      * @param experimentKey the experiment to retrieve from the current project config
      * @return the experiment for given experiment key
      */
-    private @CheckForNull Experiment getExperimentOrThrow(@Nonnull ProjectConfig projectConfig,
-                                                          @Nonnull String experimentKey) {
+    private @CheckForNull Experiment getExperimentForKey(@Nonnull ProjectConfig projectConfig,
+                                                         @Nonnull String experimentKey) {
 
         Experiment experiment = projectConfig
             .getExperimentKeyMapping()
