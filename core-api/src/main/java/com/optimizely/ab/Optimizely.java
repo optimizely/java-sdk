@@ -604,7 +604,7 @@ public class Optimizely {
      * @return List of the feature keys that are enabled for the user if the userId is empty it will
      * return Empty List.
      */
-    public List<String> getEnabledFeatures(@Nonnull String userId, @Nonnull Map<String, String> attributes) throws IllegalArgumentException {
+    public List<String> getEnabledFeatures(@Nonnull String userId, @Nonnull Map<String, String> attributes) {
         List<String> enabledFeaturesList = new ArrayList<String>();
 
         if (!validateUserId(userId)){
