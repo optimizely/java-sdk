@@ -1,10 +1,10 @@
 # Optimizely Java X SDK Changelog
 
-## 2.0.0
+## 2.0.1
 
-April 12th, 2018
+April 25th, 2018
 
-This minor release of the Optimizely SDK on 2.0.0 which is a major release.
+This is a patch release of the Optimizely SDK for 2.0.0 which is a major release.
 
 ### Bug Fixes
 * Checking for invalid variables passed into getEnabledFeature, Activate, getVariation and track.
