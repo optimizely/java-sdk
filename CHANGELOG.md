@@ -4,6 +4,15 @@
 
 April 12th, 2018
 
+This minor release of the Optimizely SDK on 2.0.0 which is a major release.
+
+### Bug Fixes
+* Checking for invalid variables passed into getEnabledFeature, Activate, getVariation and track.
+
+## 2.0.0
+
+April 12th, 2018
+
 This major release of the Optimizely SDK introduces APIs for Feature Management. It also introduces some breaking changes listed below.
 
 ### New Features
