@@ -82,7 +82,7 @@ public class DecisionService {
                                             @Nonnull String userId,
                                             @Nonnull Map<String, String> filteredAttributes) {
 
-        if (!ExperimentUtils.isExperimentActive(experiment)) {
+        if (experiment == null || !ExperimentUtils.isExperimentActive(experiment)) {
             return null;
         }
 
@@ -104,7 +104,7 @@ public class DecisionService {
         if (userProfileService != null) {
             try {
                 Map<String, Object> userProfileMap = userProfileService.lookup(userId);
-                if (userProfileMap == null) {
+                if (userProfileMap == null || userProfileMap.isEmpty()) {
                     logger.info("We were unable to get a user profile map from the UserProfileService.");
                 } else if (UserProfileUtils.isValidUserProfileMap(userProfileMap)) {
                     userProfile = UserProfileUtils.convertMapToUserProfile(userProfileMap);
