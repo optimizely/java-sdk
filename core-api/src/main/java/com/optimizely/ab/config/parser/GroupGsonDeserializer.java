@@ -26,6 +26,8 @@ import com.google.gson.JsonParseException;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Group;
 import com.optimizely.ab.config.TrafficAllocation;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -33,10 +35,15 @@ import java.util.List;
 
 public class GroupGsonDeserializer implements JsonDeserializer<Group> {
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     @Override
     public Group deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
         throws JsonParseException {
 
+        injectFault(ExceptionSpot.GroupGsonDeserializer_deserialize_spot1);
         JsonObject jsonObject = json.getAsJsonObject();
 
         String id = jsonObject.get("id").getAsString();
@@ -45,6 +52,7 @@ public class GroupGsonDeserializer implements JsonDeserializer<Group> {
         List<Experiment> experiments = new ArrayList<Experiment>();
         JsonArray experimentsJson = jsonObject.getAsJsonArray("experiments");
         for (Object obj : experimentsJson) {
+            injectFault(ExceptionSpot.GroupGsonDeserializer_deserialize_spot2);
             JsonObject experimentObj = (JsonObject)obj;
             experiments.add(GsonHelpers.parseExperiment(experimentObj, id, context));
         }
@@ -52,6 +60,7 @@ public class GroupGsonDeserializer implements JsonDeserializer<Group> {
         List<TrafficAllocation> trafficAllocations =
                 GsonHelpers.parseTrafficAllocation(jsonObject.getAsJsonArray("trafficAllocation"));
 
+        injectFault(ExceptionSpot.GroupGsonDeserializer_deserialize_spot3);
         return new Group(id, policy, experiments, trafficAllocations);
     }
 }

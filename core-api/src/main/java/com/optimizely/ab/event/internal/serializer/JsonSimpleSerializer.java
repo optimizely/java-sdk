@@ -23,6 +23,8 @@ import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.payload.Event;
 import com.optimizely.ab.event.internal.payload.Snapshot;
 import com.optimizely.ab.event.internal.payload.Visitor;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -32,13 +34,19 @@ import java.util.Map;
 @SuppressWarnings("unchecked")
 class JsonSimpleSerializer implements Serializer {
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     public <T> String serialize(T payload) {
+        injectFault(ExceptionSpot.JsonSimpleSerializer_serialize_spot1);
         JSONObject payloadJsonObj = serializeEventBatch((EventBatch)payload);
 
         return payloadJsonObj.toJSONString();
     }
 
     private JSONObject serializeEventBatch(EventBatch eventBatch) {
+        injectFault(ExceptionSpot.JsonSimpleSerializer_serializeEventBatch_spot1);
         JSONObject jsonObject = new JSONObject();
 
         jsonObject.put("account_id", eventBatch.getAccountId());
@@ -54,6 +62,7 @@ class JsonSimpleSerializer implements Serializer {
     }
 
     private JSONArray serializeVisitors(List<Visitor> visitors) {
+        injectFault(ExceptionSpot.JsonSimpleSerializer_serializeVisitors_spot1);
         JSONArray jsonArray = new JSONArray();
 
         for (Visitor v: visitors) {
@@ -64,6 +73,7 @@ class JsonSimpleSerializer implements Serializer {
     }
 
     private JSONObject serializeVisitor(Visitor visitor) {
+        injectFault(ExceptionSpot.JsonSimpleSerializer_serializeVisitor_spot1);
         JSONObject jsonObject = new JSONObject();
 
         jsonObject.put("visitor_id", visitor.getVisitorId());
@@ -78,6 +88,7 @@ class JsonSimpleSerializer implements Serializer {
     }
 
     private JSONArray serializeSnapshots(List<Snapshot> snapshots) {
+        injectFault(ExceptionSpot.JsonSimpleSerializer_serializeSnapshots_spot1);
         JSONArray jsonArray = new JSONArray();
 
         for (Snapshot snapshot : snapshots) {
@@ -88,6 +99,7 @@ class JsonSimpleSerializer implements Serializer {
     }
 
     private JSONObject serializeSnapshot(Snapshot snapshot) {
+        injectFault(ExceptionSpot.JsonSimpleSerializer_serializeSnapshot_spot1);
         JSONObject jsonObject = new JSONObject();
 
         jsonObject.put("decisions", serializeDecisions(snapshot.getDecisions()));
@@ -97,6 +109,7 @@ class JsonSimpleSerializer implements Serializer {
     }
 
     private JSONArray serializeEvents(List<Event> events) {
+        injectFault(ExceptionSpot.JsonSimpleSerializer_serializeEvents_spot1);
         JSONArray jsonArray = new JSONArray();
 
         for (Event event : events) {
@@ -107,6 +120,7 @@ class JsonSimpleSerializer implements Serializer {
     }
 
     private JSONObject serializeEvent(Event eventV3) {
+        injectFault(ExceptionSpot.JsonSimpleSerializer_serializeEvent_spot1);
         JSONObject jsonObject = new JSONObject();
 
         jsonObject.put("timestamp",eventV3.getTimestamp());
@@ -124,6 +138,7 @@ class JsonSimpleSerializer implements Serializer {
     }
 
     private JSONArray serializeTags(Map<String, ?> tags) {
+        injectFault(ExceptionSpot.JsonSimpleSerializer_serializeTags_spot1);
         JSONArray jsonArray = new JSONArray();
         for (Map.Entry<String, ?> entry : tags.entrySet()) {
             if (entry.getValue() != null) {
@@ -136,6 +151,7 @@ class JsonSimpleSerializer implements Serializer {
     }
 
     private JSONObject serializeDecision(Decision decision) {
+        injectFault(ExceptionSpot.JsonSimpleSerializer_serializeDecision_spot1);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("campaign_id", decision.getCampaignId());
         if (decision.getExperimentId() != null) jsonObject.put("experiment_id", decision.getExperimentId());
@@ -146,6 +162,7 @@ class JsonSimpleSerializer implements Serializer {
     }
 
     private JSONArray serializeFeatures(List<Attribute> features) {
+        injectFault(ExceptionSpot.JsonSimpleSerializer_serializeFeatures_spot1);
         JSONArray jsonArray = new JSONArray();
         for (Attribute feature : features) {
             jsonArray.add(serializeFeature(feature));
@@ -155,6 +172,7 @@ class JsonSimpleSerializer implements Serializer {
     }
 
     private JSONObject serializeFeature(Attribute feature) {
+        injectFault(ExceptionSpot.JsonSimpleSerializer_serializeFeature_spot1);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", feature.getType());
         jsonObject.put("value", feature.getValue());
@@ -165,6 +183,7 @@ class JsonSimpleSerializer implements Serializer {
     }
 
     private JSONArray serializeDecisions(List<Decision> layerStates) {
+        injectFault(ExceptionSpot.JsonSimpleSerializer_serializeDecisions_spot1);
         JSONArray jsonArray = new JSONArray();
         for (Decision layerState : layerStates) {
             jsonArray.add(serializeDecision(layerState));

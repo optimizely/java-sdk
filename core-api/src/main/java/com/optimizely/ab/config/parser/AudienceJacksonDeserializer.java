@@ -28,6 +28,8 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.UserAttribute;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,24 +38,34 @@ import java.util.List;
 
 public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     @Override
     public Audience deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+        injectFault(ExceptionSpot.AudienceJacksonDeserializer_deserialize_spot1);
         ObjectMapper mapper = new ObjectMapper();
         JsonNode node = parser.getCodec().readTree(parser);
 
+        injectFault(ExceptionSpot.AudienceJacksonDeserializer_deserialize_spot2);
         String id = node.get("id").textValue();
         String name = node.get("name").textValue();
         List<Object> rawObjectList = (List<Object>)mapper.readValue(node.get("conditions").textValue(), List.class);
         Condition conditions = parseConditions(rawObjectList);
 
+        injectFault(ExceptionSpot.AudienceJacksonDeserializer_deserialize_spot3);
         return new Audience(id, name, conditions);
     }
 
     private Condition parseConditions(List<Object> rawObjectList) {
+
+        injectFault(ExceptionSpot.AudienceJacksonDeserializer_parseConditions_spot1);
         List<Condition> conditions = new ArrayList<Condition>();
         String operand = (String)rawObjectList.get(0);
 
         for (int i = 1; i < rawObjectList.size(); i++) {
+            injectFault(ExceptionSpot.AudienceJacksonDeserializer_parseConditions_spot2);
             Object obj = rawObjectList.get(i);
             if (obj instanceof List) {
                 List<Object> objectList = (List<Object>)rawObjectList.get(i);
@@ -74,6 +86,7 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
             condition = new NotCondition(conditions.get(0));
         }
 
+        injectFault(ExceptionSpot.AudienceJacksonDeserializer_parseConditions_spot3);
         return condition;
     }
 }

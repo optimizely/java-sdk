@@ -23,6 +23,8 @@ import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.error.ErrorHandler;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 import com.optimizely.ab.internal.ExperimentUtils;
 
 import org.slf4j.Logger;
@@ -53,6 +55,10 @@ public class DecisionService {
     private final UserProfileService userProfileService;
     private static final Logger logger = LoggerFactory.getLogger(DecisionService.class);
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     /**
      * Initialize a decision service for the Optimizely client.
      * @param bucketer Base bucketer to allocate new users to an experiment.
@@ -82,12 +88,16 @@ public class DecisionService {
                                             @Nonnull String userId,
                                             @Nonnull Map<String, String> filteredAttributes) {
 
+        injectFault(ExceptionSpot.DecisionService_getVariation_spot1);
+
         if (!ExperimentUtils.isExperimentActive(experiment)) {
             return null;
         }
 
         // look for forced bucketing first.
         Variation variation = projectConfig.getForcedVariation(experiment.getKey(), userId);
+
+        injectFault(ExceptionSpot.DecisionService_getVariation_spot2);
 
         // check for whitelisting
         if (variation == null) {
@@ -98,11 +108,14 @@ public class DecisionService {
             return variation;
         }
 
+        injectFault(ExceptionSpot.DecisionService_getVariation_spot3);
+
         // fetch the user profile map from the user profile service
         UserProfile userProfile = null;
         
         if (userProfileService != null) {
             try {
+                injectFault(ExceptionSpot.DecisionService_getVariation_spot4);
                 Map<String, Object> userProfileMap = userProfileService.lookup(userId);
                 if (userProfileMap == null) {
                     logger.info("We were unable to get a user profile map from the UserProfileService.");
@@ -119,21 +132,26 @@ public class DecisionService {
 
         // check if user exists in user profile
         if (userProfile != null) {
+            injectFault(ExceptionSpot.DecisionService_getVariation_spot5);
             variation = getStoredVariation(experiment, userProfile);
             // return the stored variation if it exists
             if (variation != null) {
                 return variation;
             }
         } else { // if we could not find a user profile, make a new one
+            injectFault(ExceptionSpot.DecisionService_getVariation_spot6);
             userProfile = new UserProfile(userId, new HashMap<String, Decision>());
         }
 
         if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
             String bucketingId = userId;
+            injectFault(ExceptionSpot.DecisionService_getVariation_spot7);
             if (filteredAttributes.containsKey(BUCKETING_ATTRIBUTE)) {
                 bucketingId = filteredAttributes.get(BUCKETING_ATTRIBUTE);
             }
             variation = bucketer.bucket(experiment, bucketingId);
+
+            injectFault(ExceptionSpot.DecisionService_getVariation_spot8);
 
             if (variation != null) {
                 if (userProfileService != null) {
@@ -143,9 +161,13 @@ public class DecisionService {
                 }
             }
 
+            injectFault(ExceptionSpot.DecisionService_getVariation_spot9);
+
             return variation;
         }
         logger.info("User \"{}\" does not meet conditions to be in experiment \"{}\".", userId, experiment.getKey());
+
+        injectFault(ExceptionSpot.DecisionService_getVariation_spot10);
 
         return null;
     }
@@ -160,11 +182,16 @@ public class DecisionService {
     public @Nonnull FeatureDecision getVariationForFeature(@Nonnull FeatureFlag featureFlag,
                                                            @Nonnull String userId,
                                                            @Nonnull Map<String, String> filteredAttributes) {
+
+        injectFault(ExceptionSpot.DecisionService_getVariationForFeature_spot1);
+
         if (!featureFlag.getExperimentIds().isEmpty()) {
             for (String experimentId : featureFlag.getExperimentIds()) {
+                injectFault(ExceptionSpot.DecisionService_getVariationForFeature_spot2);
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
                 Variation variation = this.getVariation(experiment, userId, filteredAttributes);
                 if (variation != null) {
+                    injectFault(ExceptionSpot.DecisionService_getVariationForFeature_spot3);
                     return new FeatureDecision(experiment, variation,
                             FeatureDecision.DecisionSource.EXPERIMENT);
                 }
@@ -181,6 +208,8 @@ public class DecisionService {
             logger.info("The user \"{}\" was bucketed into a rollout for feature flag \"{}\".",
                     userId, featureFlag.getKey());
         }
+
+        injectFault(ExceptionSpot.DecisionService_getVariationForFeature_spot4);
         return featureDecision;
     }
 
@@ -196,33 +225,43 @@ public class DecisionService {
     @Nonnull FeatureDecision getVariationForFeatureInRollout(@Nonnull FeatureFlag featureFlag,
                                                              @Nonnull String userId,
                                                              @Nonnull Map<String, String> filteredAttributes) {
+
+        injectFault(ExceptionSpot.DecisionService_getVariationForFeatureInRollout_spot1);
         // use rollout to get variation for feature
         if (featureFlag.getRolloutId().isEmpty()) {
+            injectFault(ExceptionSpot.DecisionService_getVariationForFeatureInRollout_spot2);
             logger.info("The feature flag \"{}\" is not used in a rollout.", featureFlag.getKey());
             return new FeatureDecision(null, null, null);
         }
         Rollout rollout = projectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
+        injectFault(ExceptionSpot.DecisionService_getVariationForFeatureInRollout_spot3);
         if (rollout == null) {
             logger.error("The rollout with id \"{}\" was not found in the datafile for feature flag \"{}\".",
                     featureFlag.getRolloutId(), featureFlag.getKey());
+            injectFault(ExceptionSpot.DecisionService_getVariationForFeatureInRollout_spot4);
             return new FeatureDecision(null, null, null);
         }
 
+        injectFault(ExceptionSpot.DecisionService_getVariationForFeatureInRollout_spot5);
         // for all rules before the everyone else rule
         int rolloutRulesLength = rollout.getExperiments().size();
         String bucketingId = userId;
         if (filteredAttributes.containsKey(BUCKETING_ATTRIBUTE)) {
+            injectFault(ExceptionSpot.DecisionService_getVariationForFeatureInRollout_spot6);
             bucketingId = filteredAttributes.get(BUCKETING_ATTRIBUTE);
         }
         Variation variation;
         for (int i = 0; i < rolloutRulesLength - 1; i++) {
+            injectFault(ExceptionSpot.DecisionService_getVariationForFeatureInRollout_spot7);
             Experiment rolloutRule = rollout.getExperiments().get(i);
             Audience audience = projectConfig.getAudienceIdMapping().get(rolloutRule.getAudienceIds().get(0));
             if (ExperimentUtils.isUserInExperiment(projectConfig, rolloutRule, filteredAttributes)) {
+                injectFault(ExceptionSpot.DecisionService_getVariationForFeatureInRollout_spot8);
                 variation = bucketer.bucket(rolloutRule, bucketingId);
                 if (variation == null) {
                     break;
                 }
+                injectFault(ExceptionSpot.DecisionService_getVariationForFeatureInRollout_spot9);
                 return new FeatureDecision(rolloutRule, variation,
                         FeatureDecision.DecisionSource.ROLLOUT);
             }
@@ -235,12 +274,16 @@ public class DecisionService {
         // get last rule which is the fall back rule
         Experiment finalRule = rollout.getExperiments().get(rolloutRulesLength - 1);
         if (ExperimentUtils.isUserInExperiment(projectConfig, finalRule, filteredAttributes)) {
+            injectFault(ExceptionSpot.DecisionService_getVariationForFeatureInRollout_spot10);
             variation = bucketer.bucket(finalRule, bucketingId);
             if (variation != null) {
+                injectFault(ExceptionSpot.DecisionService_getVariationForFeatureInRollout_spot11);
                 return new FeatureDecision(finalRule, variation,
                         FeatureDecision.DecisionSource.ROLLOUT);
             }
         }
+
+        injectFault(ExceptionSpot.DecisionService_getVariationForFeatureInRollout_spot12);
         return new FeatureDecision(null, null, null);
     }
 
@@ -252,11 +295,13 @@ public class DecisionService {
      *      {@link Variation} the user is bucketed into if the user has a specified whitelisted variation.
      */
     @Nullable Variation getWhitelistedVariation(@Nonnull Experiment experiment, @Nonnull String userId) {
+        injectFault(ExceptionSpot.DecisionService_getWhitelistedVariation_spot1);
         // if a user has a forced variation mapping, return the respective variation
         Map<String, String> userIdToVariationKeyMap = experiment.getUserIdToVariationKeyMap();
         if (userIdToVariationKeyMap.containsKey(userId)) {
             String forcedVariationKey = userIdToVariationKeyMap.get(userId);
             Variation forcedVariation = experiment.getVariationKeyToVariationMap().get(forcedVariationKey);
+            injectFault(ExceptionSpot.DecisionService_getWhitelistedVariation_spot2);
             if (forcedVariation != null) {
                 logger.info("User \"{}\" is forced in variation \"{}\".", userId, forcedVariationKey);
             } else {
@@ -265,6 +310,8 @@ public class DecisionService {
             }
             return forcedVariation;
         }
+
+        injectFault(ExceptionSpot.DecisionService_getWhitelistedVariation_spot3);
         return null;
     }
 
@@ -277,6 +324,8 @@ public class DecisionService {
      */
     @Nullable Variation getStoredVariation(@Nonnull Experiment experiment,
                                            @Nonnull UserProfile userProfile) {
+
+        injectFault(ExceptionSpot.DecisionService_getStoredVariation_spot1);
         // ---------- Check User Profile for Sticky Bucketing ----------
         // If a user profile instance is present then check it for a saved variation
         String experimentId = experiment.getId();
@@ -289,10 +338,12 @@ public class DecisionService {
                     .get(experimentId)
                     .getVariationIdToVariationMap()
                     .get(variationId);
+            injectFault(ExceptionSpot.DecisionService_getStoredVariation_spot2);
             if (savedVariation != null) {
                 logger.info("Returning previously activated variation \"{}\" of experiment \"{}\" " +
                                 "for user \"{}\" from user profile.",
                         savedVariation.getKey(), experimentKey, userProfile.userId);
+                injectFault(ExceptionSpot.DecisionService_getStoredVariation_spot3);
                 // A variation is stored for this combined bucket id
                 return savedVariation;
             } else {
@@ -305,6 +356,7 @@ public class DecisionService {
             logger.info("No previously activated variation of experiment \"{}\" " +
                             "for user \"{}\" found in user profile.",
                     experimentKey, userProfile.userId);
+            injectFault(ExceptionSpot.DecisionService_getStoredVariation_spot4);
             return null;
         }
     }
@@ -319,20 +371,25 @@ public class DecisionService {
     void saveVariation(@Nonnull Experiment experiment,
                        @Nonnull Variation variation,
                        @Nonnull UserProfile userProfile) {
+
+        injectFault(ExceptionSpot.DecisionService_saveVariation_spot1);
         // only save if the user has implemented a user profile service
         if (userProfileService != null) {
             String experimentId = experiment.getId();
             String variationId = variation.getId();
             Decision decision;
             if (userProfile.experimentBucketMap.containsKey(experimentId)) {
+                injectFault(ExceptionSpot.DecisionService_saveVariation_spot2);
                 decision = userProfile.experimentBucketMap.get(experimentId);
                 decision.variationId = variationId;
             } else {
+                injectFault(ExceptionSpot.DecisionService_saveVariation_spot3);
                 decision = new Decision(variationId);
             }
             userProfile.experimentBucketMap.put(experimentId, decision);
 
             try {
+                injectFault(ExceptionSpot.DecisionService_saveVariation_spot4);
                 userProfileService.save(userProfile.toMap());
                 logger.info("Saved variation \"{}\" of experiment \"{}\" for user \"{}\".",
                     variationId, experimentId, userProfile.userId);
@@ -342,5 +399,7 @@ public class DecisionService {
                 errorHandler.handleError(new OptimizelyRuntimeException(exception));
             }
         }
+
+        injectFault(ExceptionSpot.DecisionService_saveVariation_spot5);
     }
 }

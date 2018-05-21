@@ -16,6 +16,9 @@
  */
 package com.optimizely.ab.config;
 
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,10 +27,15 @@ import java.util.Map;
 
 public class ProjectConfigUtils {
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     /**
      * Helper method for creating convenience mappings from key to entity
      */
     public static <T extends IdKeyMapped> Map<String, T> generateNameMapping(List<T> nameables) {
+        injectFault(ExceptionSpot.ProjectConfigUtils_generateNameMapping_spot1);
         Map<String, T> nameMapping = new HashMap<String, T>();
         for (T nameable : nameables) {
             nameMapping.put(nameable.getKey(), nameable);
@@ -40,6 +48,7 @@ public class ProjectConfigUtils {
      * Helper method for creating convenience mappings from ID to entity
      */
     public static <T extends IdMapped> Map<String, T> generateIdMapping(List<T> nameables) {
+        injectFault(ExceptionSpot.ProjectConfigUtils_generateIdMapping_spot1);
         Map<String, T> nameMapping = new HashMap<String, T>();
         for (T nameable : nameables) {
             nameMapping.put(nameable.getId(), nameable);
@@ -53,15 +62,18 @@ public class ProjectConfigUtils {
      */
     public static Map<String, List<Experiment>> generateLiveVariableIdToExperimentsMapping(
             List<Experiment> experiments) {
-
+        injectFault(ExceptionSpot.ProjectConfigUtils_generateLiveVariableIdToExperimentsMapping_spot1);
         Map<String, List<Experiment>> variableIdToExperiments =
                 new HashMap<String, List<Experiment>>();
         for (Experiment experiment : experiments) {
+            injectFault(ExceptionSpot.ProjectConfigUtils_generateLiveVariableIdToExperimentsMapping_spot2);
             if (!experiment.getVariations().isEmpty()) {
+                injectFault(ExceptionSpot.ProjectConfigUtils_generateLiveVariableIdToExperimentsMapping_spot3);
                 // if a live variable is used by an experiment, it will have instances in all variations so we can
                 // short-circuit after getting the live variables for the first variation
                 Variation variation = experiment.getVariations().get(0);
                 if (variation.getLiveVariableUsageInstances() != null) {
+                    injectFault(ExceptionSpot.ProjectConfigUtils_generateLiveVariableIdToExperimentsMapping_spot4);
                     for (LiveVariableUsageInstance usageInstance : variation.getLiveVariableUsageInstances()) {
                         List<Experiment> experimentsUsingVariable = variableIdToExperiments.get(usageInstance.getId());
                         if (experimentsUsingVariable == null) {
@@ -83,12 +95,14 @@ public class ProjectConfigUtils {
      */
     public static Map<String, Map<String, LiveVariableUsageInstance>> generateVariationToLiveVariableUsageInstancesMap(
             List<Experiment> experiments) {
-
+        injectFault(ExceptionSpot.ProjectConfigUtils_generateVariationToLiveVariableUsageInstancesMap_spot1);
         Map<String, Map<String, LiveVariableUsageInstance>> liveVariableValueMap =
                 new HashMap<String, Map<String, LiveVariableUsageInstance>>();
         for (Experiment experiment : experiments) {
+            injectFault(ExceptionSpot.ProjectConfigUtils_generateVariationToLiveVariableUsageInstancesMap_spot2);
             for (Variation variation : experiment.getVariations()) {
                 if (variation.getLiveVariableUsageInstances() != null) {
+                    injectFault(ExceptionSpot.ProjectConfigUtils_generateVariationToLiveVariableUsageInstancesMap_spot3);
                     for (LiveVariableUsageInstance usageInstance : variation.getLiveVariableUsageInstances()) {
                         Map<String, LiveVariableUsageInstance> liveVariableIdToValueMap =
                                 liveVariableValueMap.get(variation.getId());
@@ -103,6 +117,7 @@ public class ProjectConfigUtils {
             }
         }
 
+        injectFault(ExceptionSpot.ProjectConfigUtils_generateVariationToLiveVariableUsageInstancesMap_spot4);
         return liveVariableValueMap;
     }
 }

@@ -19,6 +19,8 @@ package com.optimizely.ab.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import java.util.Collections;
 import java.util.List;
@@ -51,6 +53,10 @@ public class Experiment implements IdKeyMapped {
     private final Map<String, Variation> variationIdToVariationMap;
     private final Map<String, String> userIdToVariationKeyMap;
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     public enum ExperimentStatus {
         RUNNING ("Running"),
         LAUNCHED ("Launched"),
@@ -78,7 +84,9 @@ public class Experiment implements IdKeyMapped {
                       @JsonProperty("variations") List<Variation> variations,
                       @JsonProperty("forcedVariations") Map<String, String> userIdToVariationKeyMap,
                       @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation) {
+
         this(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap, trafficAllocation, "");
+        injectFault(ExceptionSpot.Experiment_constructor1_spot1);
     }
 
     public Experiment(@Nonnull String id,
@@ -90,6 +98,7 @@ public class Experiment implements IdKeyMapped {
                       @Nonnull Map<String, String> userIdToVariationKeyMap,
                       @Nonnull List<TrafficAllocation> trafficAllocation,
                       @Nonnull String groupId) {
+        injectFault(ExceptionSpot.Experiment_constructor2_spot1);
         this.id = id;
         this.key = key;
         this.status = status == null ? ExperimentStatus.NOT_STARTED.toString() : status;
@@ -148,20 +157,24 @@ public class Experiment implements IdKeyMapped {
     }
 
     public boolean isActive() {
+        injectFault(ExceptionSpot.Experiment_isActive_spot1);
         return status.equals(ExperimentStatus.RUNNING.toString()) ||
                status.equals(ExperimentStatus.LAUNCHED.toString());
     }
 
     public boolean isRunning() {
+        injectFault(ExceptionSpot.Experiment_isRunning_spot1);
         return status.equals(ExperimentStatus.RUNNING.toString());
     }
 
     public boolean isLaunched() {
+        injectFault(ExceptionSpot.Experiment_isLaunched_spot1);
         return status.equals(ExperimentStatus.LAUNCHED.toString());
     }
 
     @Override
     public String toString() {
+        injectFault(ExceptionSpot.Experiment_toString_spot1);
         return "Experiment{" +
                 "id='" + id + '\'' +
                 ", key='" + key + '\'' +

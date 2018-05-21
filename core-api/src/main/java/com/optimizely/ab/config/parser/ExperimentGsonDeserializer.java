@@ -23,6 +23,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import java.lang.reflect.Type;
 
@@ -32,6 +34,7 @@ final class ExperimentGsonDeserializer implements JsonDeserializer<Experiment> {
     public Experiment deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
         throws JsonParseException {
 
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ExperimentGsonDeserializer_deserialize_spot1);
         JsonObject jsonObject = json.getAsJsonObject();
         return GsonHelpers.parseExperiment(jsonObject, context);
     }

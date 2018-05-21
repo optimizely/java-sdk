@@ -19,6 +19,8 @@ package com.optimizely.ab.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import java.util.List;
 
@@ -45,6 +47,7 @@ public class Group implements IdMapped {
                  @JsonProperty("policy") String policy,
                  @JsonProperty("experiments") List<Experiment> experiments,
                  @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation) {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Group_constructor_spot1);
         this.id = id;
         this.policy = policy;
         this.trafficAllocation = trafficAllocation;
@@ -69,6 +72,7 @@ public class Group implements IdMapped {
 
     @Override
     public String toString() {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Group_toString_spot1);
         return "Group{" +
                 "id='" + id + '\'' +
                 ", policy='" + policy + '\'' +

@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 class JacksonSerializer implements Serializer {
 
@@ -28,6 +30,7 @@ class JacksonSerializer implements Serializer {
             PropertyNamingStrategy.SNAKE_CASE);
 
     public <T> String serialize(T payload) {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.JacksonSerializer_serialize_spot1);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         try {
             return mapper.writeValueAsString(payload);

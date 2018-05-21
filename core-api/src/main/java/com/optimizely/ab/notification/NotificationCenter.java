@@ -19,6 +19,8 @@ package com.optimizely.ab.notification;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +54,9 @@ public class NotificationCenter {
         }
     };
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
 
     // the notification id is incremented and is assigned as the callback id, it can then be used to remove the notification.
     private int notificationListenerID = 1;
@@ -74,6 +79,7 @@ public class NotificationCenter {
      * Instantiate a new NotificationCenter
      */
     public NotificationCenter() {
+        injectFault(ExceptionSpot.NotificationCenter_constructor_spot1);
         notificationsListeners.put(NotificationType.Activate, new ArrayList<NotificationHolder>());
         notificationsListeners.put(NotificationType.Track, new ArrayList<NotificationHolder>());
     }
@@ -88,6 +94,7 @@ public class NotificationCenter {
      * @return greater than zero if added.
      */
     public int addActivateNotificationListener(final ActivateNotificationListenerInterface activateNotificationListenerInterface) {
+        injectFault(ExceptionSpot.NotificationCenter_addActivateNotificationListener_spot1);
         if (activateNotificationListenerInterface instanceof ActivateNotificationListener) {
             return addNotificationListener(NotificationType.Activate, (NotificationListener)activateNotificationListenerInterface);
         }
@@ -107,6 +114,7 @@ public class NotificationCenter {
      * @return greater than zero if added.
      */
     public int addTrackNotificationListener(final TrackNotificationListenerInterface trackNotificationListenerInterface) {
+        injectFault(ExceptionSpot.NotificationCenter_addTrackNotificationListener_spot1);
         if (trackNotificationListenerInterface instanceof TrackNotificationListener) {
             return addNotificationListener(NotificationType.Activate, (NotificationListener)trackNotificationListenerInterface);
         }
@@ -129,6 +137,7 @@ public class NotificationCenter {
      */
     public int addNotificationListener(NotificationType notificationType, NotificationListener notificationListener) {
 
+        injectFault(ExceptionSpot.NotificationCenter_addNotificationListener_spot1);
         Class clazz = notificationType.notificationTypeClass;
         if (clazz == null || !clazz.isInstance(notificationListener)) {
             logger.warn("Notification listener was the wrong type. It was not added to the notification center.");
@@ -136,6 +145,7 @@ public class NotificationCenter {
         }
 
         for (NotificationHolder holder : notificationsListeners.get(notificationType)) {
+            injectFault(ExceptionSpot.NotificationCenter_addNotificationListener_spot2);
             if (holder.notificationListener == notificationListener) {
                 logger.warn("Notificication listener was already added");
                 return -1;
@@ -144,6 +154,7 @@ public class NotificationCenter {
         int id = notificationListenerID++;
         notificationsListeners.get(notificationType).add(new NotificationHolder(id, notificationListener ));
         logger.info("Notification listener {} was added with id {}", notificationListener.toString(), id);
+        injectFault(ExceptionSpot.NotificationCenter_addNotificationListener_spot3);
         return id;
     }
 
@@ -153,6 +164,7 @@ public class NotificationCenter {
      * @return true if removed otherwise false (if the notification is already registered, it returns false).
      */
    public boolean removeNotificationListener(int notificationID) {
+       injectFault(ExceptionSpot.NotificationCenter_removeNotificationListener_spot1);
        for (NotificationType type : NotificationType.values()) {
             for (NotificationHolder holder : notificationsListeners.get(type)) {
                 if (holder.notificationId == notificationID) {
@@ -172,6 +184,7 @@ public class NotificationCenter {
      * Clear out all the notification listeners.
      */
     public void clearAllNotificationListeners() {
+        injectFault(ExceptionSpot.NotificationCenter_clearAllNotificationListeners_spot1);
         for (NotificationType type : NotificationType.values()) {
             clearNotificationListeners(type);
         }
@@ -182,11 +195,13 @@ public class NotificationCenter {
      * @param notificationType type of notificationsListeners to remove.
      */
     public void clearNotificationListeners(NotificationType notificationType) {
+        injectFault(ExceptionSpot.NotificationCenter_clearNotificationListeners_spot1);
         notificationsListeners.get(notificationType).clear();
     }
 
     // fire a notificaiton of a certain type.  The arg list changes depending on the type of notification sent.
     public void sendNotifications(NotificationType notificationType, Object ...args) {
+        injectFault(ExceptionSpot.NotificationCenter_sendNotifications_spot1);
         ArrayList<NotificationHolder> holders = notificationsListeners.get(notificationType);
         for (NotificationHolder holder : holders) {
             try {

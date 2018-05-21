@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import javax.annotation.Nonnull;
 
@@ -30,11 +32,13 @@ final class JacksonConfigParser implements ConfigParser {
 
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.JacksonConfigParser_parseProjectConfig_spot1);
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
         module.addDeserializer(ProjectConfig.class, new ProjectConfigJacksonDeserializer());
         mapper.registerModule(module);
 
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.JacksonConfigParser_parseProjectConfig_spot2);
         try {
             return mapper.readValue(json, ProjectConfig.class);
         } catch (Exception e) {

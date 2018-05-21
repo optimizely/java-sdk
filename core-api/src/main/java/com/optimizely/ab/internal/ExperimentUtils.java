@@ -19,6 +19,8 @@ package com.optimizely.ab.internal;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +41,7 @@ public final class ExperimentUtils {
      * @return whether the pre-conditions are satisfied
      */
     public static boolean isExperimentActive(@Nonnull Experiment experiment) {
-
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ExperimentUtils_isExperimentActive_spot1);
         if (!experiment.isActive()) {
             logger.info("Experiment \"{}\" is not running.", experiment.getKey());
             return false;
@@ -59,6 +61,8 @@ public final class ExperimentUtils {
     public static boolean isUserInExperiment(@Nonnull ProjectConfig projectConfig,
                                              @Nonnull Experiment experiment,
                                              @Nonnull Map<String, String> attributes) {
+
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ExperimentUtils_isUserInExperiment_spot1);
         List<String> experimentAudienceIds = experiment.getAudienceIds();
 
         // if there are no audiences, ALL users should be part of the experiment
@@ -72,6 +76,7 @@ public final class ExperimentUtils {
         }
 
         for (String audienceId : experimentAudienceIds) {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ExperimentUtils_isUserInExperiment_spot2);
             Condition conditions = projectConfig.getAudienceConditionsFromId(audienceId);
             if (conditions.evaluate(attributes)) {
                 return true;

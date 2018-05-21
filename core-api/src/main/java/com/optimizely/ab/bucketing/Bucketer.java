@@ -23,6 +23,8 @@ import com.optimizely.ab.config.Group;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +51,10 @@ public class Bucketer {
 
     private static final int MURMUR_HASH_SEED = 1;
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     /**
      * The maximum bucket value (represents 100 Basis Points).
      */
@@ -56,40 +62,69 @@ public class Bucketer {
     static final int MAX_TRAFFIC_VALUE = 10000;
 
     public Bucketer(ProjectConfig projectConfig) {
+
+        injectFault(ExceptionSpot.Bucketer_constructor_spot1);
+
         this.projectConfig = projectConfig;
     }
 
     private String bucketToEntity(int bucketValue, List<TrafficAllocation> trafficAllocations) {
+
+        injectFault(ExceptionSpot.Bucketer_bucketToEntity_spot1);
+
         int currentEndOfRange;
         for (TrafficAllocation currAllocation : trafficAllocations) {
             currentEndOfRange = currAllocation.getEndOfRange();
+
+            injectFault(ExceptionSpot.Bucketer_bucketToEntity_spot2);
+
             if (bucketValue < currentEndOfRange) {
+
+                injectFault(ExceptionSpot.Bucketer_bucketToEntity_spot3);
+
                 // for mutually exclusive bucketing, de-allocated space is represented by an empty string
                 if (currAllocation.getEntityId().isEmpty()) {
                     return null;
                 }
+
+                injectFault(ExceptionSpot.Bucketer_bucketToEntity_spot4);
+
                 return currAllocation.getEntityId();
             }
         }
+
+        injectFault(ExceptionSpot.Bucketer_bucketToEntity_spot5);
 
         return null;
     }
 
     private Experiment bucketToExperiment(@Nonnull Group group,
                                           @Nonnull String bucketingId) {
+
+        injectFault(ExceptionSpot.Bucketer_bucketToExperiment_spot1);
+
         // "salt" the bucket id using the group id
         String bucketKey = bucketingId + group.getId();
-
         List<TrafficAllocation> trafficAllocations = group.getTrafficAllocation();
+
+        injectFault(ExceptionSpot.Bucketer_bucketToExperiment_spot2);
 
         int hashCode = MurmurHash3.murmurhash3_x86_32(bucketKey, 0, bucketKey.length(), MURMUR_HASH_SEED);
         int bucketValue = generateBucketValue(hashCode);
+
+        injectFault(ExceptionSpot.Bucketer_bucketToExperiment_spot3);
+
         logger.debug("Assigned bucket {} to user with bucketingId \"{}\" during experiment bucketing.", bucketValue, bucketingId);
 
         String bucketedExperimentId = bucketToEntity(bucketValue, trafficAllocations);
         if (bucketedExperimentId != null) {
+
+            injectFault(ExceptionSpot.Bucketer_bucketToExperiment_spot4);
+
             return projectConfig.getExperimentIdMapping().get(bucketedExperimentId);
         }
+
+        injectFault(ExceptionSpot.Bucketer_bucketToExperiment_spot4);
 
         // user was not bucketed to an experiment in the group
         return null;
@@ -97,26 +132,43 @@ public class Bucketer {
 
     private Variation bucketToVariation(@Nonnull Experiment experiment,
                                         @Nonnull String bucketingId) {
+
+        injectFault(ExceptionSpot.Bucketer_bucketToVariation_spot1);
+
         // "salt" the bucket id using the experiment id
         String experimentId = experiment.getId();
         String experimentKey = experiment.getKey();
         String combinedBucketId = bucketingId + experimentId;
 
+        injectFault(ExceptionSpot.Bucketer_bucketToVariation_spot2);
+
         List<TrafficAllocation> trafficAllocations = experiment.getTrafficAllocation();
+
+        injectFault(ExceptionSpot.Bucketer_bucketToVariation_spot3);
 
         int hashCode = MurmurHash3.murmurhash3_x86_32(combinedBucketId, 0, combinedBucketId.length(), MURMUR_HASH_SEED);
         int bucketValue = generateBucketValue(hashCode);
         logger.debug("Assigned bucket {} to user with bucketingId \"{}\" when bucketing to a variation.", bucketValue, bucketingId);
 
+        injectFault(ExceptionSpot.Bucketer_bucketToVariation_spot4);
+
         String bucketedVariationId = bucketToEntity(bucketValue, trafficAllocations);
         if (bucketedVariationId != null) {
+
+            injectFault(ExceptionSpot.Bucketer_bucketToVariation_spot5);
+
             Variation bucketedVariation = experiment.getVariationIdToVariationMap().get(bucketedVariationId);
             String variationKey = bucketedVariation.getKey();
+
+            injectFault(ExceptionSpot.Bucketer_bucketToVariation_spot6);
+
             logger.info("User with bucketingId \"{}\" is in variation \"{}\" of experiment \"{}\".", bucketingId, variationKey,
                     experimentKey);
 
             return bucketedVariation;
         }
+
+        injectFault(ExceptionSpot.Bucketer_bucketToVariation_spot7);
 
         // user was not bucketed to a variation
         logger.info("User with bucketingId \"{}\" is not in any variation of experiment \"{}\".", bucketingId, experimentKey);
@@ -131,14 +183,26 @@ public class Bucketer {
      */
     public @Nullable Variation bucket(@Nonnull Experiment experiment,
                                       @Nonnull String bucketingId) {
+
+        injectFault(ExceptionSpot.Bucketer_bucket_spot1);
+
         // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group
         if (!groupId.isEmpty()) {
+
+            injectFault(ExceptionSpot.Bucketer_bucket_spot2);
+
             Group experimentGroup = projectConfig.getGroupIdMapping().get(groupId);
+
+            injectFault(ExceptionSpot.Bucketer_bucket_spot3);
+
             // bucket to an experiment only if group entities are to be mutually exclusive
             if (experimentGroup.getPolicy().equals(Group.RANDOM_POLICY)) {
                 Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId);
+
+                injectFault(ExceptionSpot.Bucketer_bucket_spot4);
+
                 if (bucketedExperiment == null) {
                     logger.info("User with bucketingId \"{}\" is not in any experiment of group {}.", bucketingId, experimentGroup.getId());
                     return null;
@@ -146,6 +210,8 @@ public class Bucketer {
                 else {
 
                 }
+
+                injectFault(ExceptionSpot.Bucketer_bucket_spot5);
                 // if the experiment a user is bucketed in within a group isn't the same as the experiment provided,
                 // don't perform further bucketing within the experiment
                 if (!bucketedExperiment.getId().equals(experiment.getId())) {
@@ -154,10 +220,14 @@ public class Bucketer {
                     return null;
                 }
 
+                injectFault(ExceptionSpot.Bucketer_bucket_spot6);
+
                 logger.info("User with bucketingId \"{}\" is in experiment \"{}\" of group {}.", bucketingId, experiment.getKey(),
                         experimentGroup.getId());
             }
         }
+
+        injectFault(ExceptionSpot.Bucketer_bucket_spot7);
 
         return bucketToVariation(experiment, bucketingId);
     }
@@ -172,6 +242,9 @@ public class Bucketer {
      */
     @VisibleForTesting
     int generateBucketValue(int hashCode) {
+
+        injectFault(ExceptionSpot.Bucketer_generateBucketValue_spot1);
+
         // map the hashCode into the range [0, BucketAlgorithm.MAX_TRAFFIC_VALUE)
         double ratio = (double)(hashCode & 0xFFFFFFFFL) / Math.pow(2, 32);
         return (int)Math.floor(MAX_TRAFFIC_VALUE * ratio);

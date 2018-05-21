@@ -22,6 +22,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.optimizely.ab.config.FeatureFlag;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import java.lang.reflect.Type;
 
@@ -30,6 +32,7 @@ public class FeatureFlagGsonDeserializer implements JsonDeserializer<FeatureFlag
     public FeatureFlag deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
             throws JsonParseException {
 
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.FeatureFlagGsonDeserializer_deserialize_spot1);
         JsonObject jsonObject = json.getAsJsonObject();
         return GsonHelpers.parseFeatureFlag(jsonObject, context);
     }

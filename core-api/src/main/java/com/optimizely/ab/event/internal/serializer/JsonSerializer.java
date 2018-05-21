@@ -16,16 +16,24 @@
  */
 package com.optimizely.ab.event.internal.serializer;
 
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 import org.json.JSONObject;
 
 class JsonSerializer implements Serializer {
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     public <T> String serialize(T payload) {
+        injectFault(ExceptionSpot.JsonSerializer_serialize_spot1);
         JSONObject payloadJsonObject = new JSONObject(payload);
         String jsonResponse = payloadJsonObject.toString();
         StringBuilder stringBuilder = new StringBuilder();
 
         for (int i = 0; i < jsonResponse.length(); i ++) {
+            injectFault(ExceptionSpot.JsonSerializer_serialize_spot2);
             Character ch = jsonResponse.charAt(i);
             Character nextChar = null;
             if (i +1 < jsonResponse.length()) {
@@ -33,10 +41,12 @@ class JsonSerializer implements Serializer {
             }
             if ((Character.isLetter(ch) || Character.isDigit(ch)) && Character.isUpperCase(ch) &&
                     ((Character.isLetter(nextChar) || Character.isDigit(nextChar)))) {
+                injectFault(ExceptionSpot.JsonSerializer_serialize_spot3);
                 stringBuilder.append('_');
                 stringBuilder.append(Character.toLowerCase(ch));
             }
             else {
+                injectFault(ExceptionSpot.JsonSerializer_serialize_spot4);
                 stringBuilder.append(ch);
             }
         }

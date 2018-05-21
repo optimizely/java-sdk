@@ -19,6 +19,8 @@ package com.optimizely.ab.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 /**
  * Represents the Optimizely Traffic Allocation configuration.
@@ -34,6 +36,7 @@ public class TrafficAllocation {
     @JsonCreator
     public TrafficAllocation(@JsonProperty("entityId") String entityId,
                              @JsonProperty("endOfRange") int endOfRange) {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.TrafficAllocation_constructor_spot1);
         this.entityId = entityId;
         this.endOfRange = endOfRange;
     }
@@ -48,6 +51,7 @@ public class TrafficAllocation {
 
     @Override
     public String toString() {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.TrafficAllocation_toString_spot1);
         return "TrafficAllocation{" +
                "entityId='" + entityId + '\'' +
                ", endOfRange=" + endOfRange +

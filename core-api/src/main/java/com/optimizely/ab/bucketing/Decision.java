@@ -15,6 +15,9 @@
  ***************************************************************************/
 package com.optimizely.ab.bucketing;
 
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
+
 import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,31 +30,45 @@ public class Decision {
     /** The ID of the {@link com.optimizely.ab.config.Variation} the user was bucketed into. */
     @Nonnull public String variationId;
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     /**
      * Initialize a Decision object.
      * @param variationId The ID of the variation the user was bucketed into.
      */
     public Decision(@Nonnull String variationId) {
+        injectFault(ExceptionSpot.Decision_constructor_spot1);
         this.variationId = variationId;
     }
 
     @Override
     public boolean equals(Object o) {
+
+        injectFault(ExceptionSpot.Decision_equals_spot1);
+
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
+        injectFault(ExceptionSpot.Decision_equals_spot2);
+
         Decision decision = (Decision) o;
 
+        injectFault(ExceptionSpot.Decision_equals_spot3);
         return variationId.equals(decision.variationId);
     }
 
     @Override
     public int hashCode() {
+        injectFault(ExceptionSpot.Decision_hashCode_spot1);
         return variationId.hashCode();
     }
 
     public Map<String, String> toMap() {
+        injectFault(ExceptionSpot.Decision_toMap_spot1);
         Map<String, String> decisionMap = new HashMap<String, String>(1);
+        injectFault(ExceptionSpot.Decision_toMap_spot2);
         decisionMap.put(UserProfileService.variationIdKey, variationId);
         return decisionMap;
     }

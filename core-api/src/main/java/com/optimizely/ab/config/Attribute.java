@@ -19,6 +19,8 @@ package com.optimizely.ab.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -43,6 +45,7 @@ public class Attribute implements IdKeyMapped {
     public Attribute(@JsonProperty("id") String id,
                      @JsonProperty("key") String key,
                      @JsonProperty("segmentId") String segmentId) {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Attribute_constructor_spot1);
         this.id = id;
         this.key = key;
         this.segmentId = segmentId;
@@ -62,6 +65,7 @@ public class Attribute implements IdKeyMapped {
 
     @Override
     public String toString() {
+        FaultInjectionManager.getInstance().    injectFault(ExceptionSpot.Attribute_toString_spot1);
         return "Attribute{" +
                "id='" + id + '\'' +
                ", key='" + key + '\'' +

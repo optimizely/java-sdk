@@ -32,14 +32,22 @@ import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import java.io.IOException;
 import java.util.List;
 
 class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     @Override
     public ProjectConfig deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+
+        injectFault(ExceptionSpot.ProjectConfigJacksonDeserializer_deserialize_spot1);
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
         module.addDeserializer(Audience.class, new AudienceJacksonDeserializer());
@@ -54,6 +62,7 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
         String version = node.get("version").textValue();
         int datafileVersion = Integer.parseInt(version);
 
+        injectFault(ExceptionSpot.ProjectConfigJacksonDeserializer_deserialize_spot2);
         List<Group> groups = mapper.readValue(node.get("groups").toString(), new TypeReference<List<Group>>() {});
         List<Experiment> experiments = mapper.readValue(node.get("experiments").toString(),
                                                         new TypeReference<List<Experiment>>() {});
@@ -66,6 +75,7 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
         List<Audience> audiences = mapper.readValue(node.get("audiences").toString(),
                                                     new TypeReference<List<Audience>>() {});
 
+        injectFault(ExceptionSpot.ProjectConfigJacksonDeserializer_deserialize_spot3);
         boolean anonymizeIP = false;
         List<LiveVariable> liveVariables = null;
         if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
@@ -83,6 +93,7 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
                     new TypeReference<List<Rollout>>(){});
         }
 
+        injectFault(ExceptionSpot.ProjectConfigJacksonDeserializer_deserialize_spot4);
         return new ProjectConfig(
                 accountId,
                 anonymizeIP,

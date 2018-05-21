@@ -30,6 +30,8 @@ import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.LiveVariableUsageInstance;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,9 +46,16 @@ final class GsonHelpers {
 
     private static final Logger logger = LoggerFactory.getLogger(DecisionService.class);
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     private static List<Variation> parseVariations(JsonArray variationJson, JsonDeserializationContext context) {
+
+        injectFault(ExceptionSpot.GsonHelpers_parseVariations_spot1);
         List<Variation> variations = new ArrayList<Variation>(variationJson.size());
         for (Object obj : variationJson) {
+            injectFault(ExceptionSpot.GsonHelpers_parseVariations_spot2);
             JsonObject variationObject = (JsonObject)obj;
             String id = variationObject.get("id").getAsString();
             String key = variationObject.get("key").getAsString();
@@ -67,10 +76,12 @@ final class GsonHelpers {
             variations.add(new Variation(id, key, featureEnabled, variableUsageInstances));
         }
 
+        injectFault(ExceptionSpot.GsonHelpers_parseVariations_spot3);
         return variations;
     }
 
     private static Map<String, String> parseForcedVariations(JsonObject forcedVariationJson) {
+        injectFault(ExceptionSpot.GsonHelpers_parseForcedVariations_spot1);
         Map<String, String> userIdToVariationKeyMap = new HashMap<String, String>();
         Set<Map.Entry<String, JsonElement>> entrySet = forcedVariationJson.entrySet();
         for (Map.Entry<String, JsonElement> entry : entrySet) {
@@ -81,6 +92,8 @@ final class GsonHelpers {
     }
 
     static List<TrafficAllocation> parseTrafficAllocation(JsonArray trafficAllocationJson) {
+        injectFault(ExceptionSpot.GsonHelpers_parseTrafficAllocation_spot1);
+
         List<TrafficAllocation> trafficAllocation = new ArrayList<TrafficAllocation>(trafficAllocationJson.size());
 
         for (Object obj : trafficAllocationJson) {
@@ -95,6 +108,8 @@ final class GsonHelpers {
     }
 
     static Experiment parseExperiment(JsonObject experimentJson, String groupId, JsonDeserializationContext context) {
+        injectFault(ExceptionSpot.GsonHelpers_parseExperiment1_spot1);
+
         String id = experimentJson.get("id").getAsString();
         String key = experimentJson.get("key").getAsString();
         JsonElement experimentStatusJson = experimentJson.get("status");
@@ -106,6 +121,7 @@ final class GsonHelpers {
 
         JsonArray audienceIdsJson = experimentJson.getAsJsonArray("audienceIds");
         List<String> audienceIds = new ArrayList<String>(audienceIdsJson.size());
+        injectFault(ExceptionSpot.GsonHelpers_parseExperiment1_spot2);
         for (JsonElement audienceIdObj : audienceIdsJson) {
             audienceIds.add(audienceIdObj.getAsString());
         }
@@ -117,21 +133,26 @@ final class GsonHelpers {
         List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation(experimentJson.getAsJsonArray("trafficAllocation"));
 
+
+        injectFault(ExceptionSpot.GsonHelpers_parseExperiment1_spot3);
         return new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
                               trafficAllocations, groupId);
     }
 
     static Experiment parseExperiment(JsonObject experimentJson, JsonDeserializationContext context) {
+        injectFault(ExceptionSpot.GsonHelpers_parseExperiment2_spot1);
         return parseExperiment(experimentJson, "", context);
     }
 
     static FeatureFlag parseFeatureFlag(JsonObject featureFlagJson, JsonDeserializationContext context) {
+        injectFault(ExceptionSpot.GsonHelpers_parseFeatureFlag_spot1);
         String id = featureFlagJson.get("id").getAsString();
         String key = featureFlagJson.get("key").getAsString();
         String layerId = featureFlagJson.get("rolloutId").getAsString();
 
         JsonArray experimentIdsJson = featureFlagJson.getAsJsonArray("experimentIds");
         List<String> experimentIds = new ArrayList<String>();
+        injectFault(ExceptionSpot.GsonHelpers_parseFeatureFlag_spot2);
         for (JsonElement experimentIdObj : experimentIdsJson) {
             experimentIds.add(experimentIdObj.getAsString());
         }
@@ -147,6 +168,7 @@ final class GsonHelpers {
                     + "\". JsonParseException: " + exception);
         }
 
+        injectFault(ExceptionSpot.GsonHelpers_parseFeatureFlag_spot3);
         return new FeatureFlag(
                 id,
                 key,

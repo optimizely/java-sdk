@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.event.internal.serializer;
 
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +35,7 @@ public final class DefaultJsonSerializer {
     private DefaultJsonSerializer() { }
 
     public static Serializer getInstance() {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.DefaultJsonSerializer_getInstance_spot1);
         return LazyHolder.INSTANCE;
     }
 
@@ -45,6 +48,7 @@ public final class DefaultJsonSerializer {
      */
     private static @Nonnull
     Serializer create() {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.DefaultJsonSerializer_create_spot1);
         Serializer serializer;
 
         if (isPresent("com.fasterxml.jackson.databind.ObjectMapper")) {
@@ -66,6 +70,7 @@ public final class DefaultJsonSerializer {
 
     private static boolean isPresent(@Nonnull String className) {
         try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.DefaultJsonSerializer_isPresent_spot1);
             Class.forName(className);
             return true;
         } catch (ClassNotFoundException e) {

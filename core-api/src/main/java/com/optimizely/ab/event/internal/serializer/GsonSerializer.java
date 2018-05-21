@@ -19,6 +19,8 @@ package com.optimizely.ab.event.internal.serializer;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 class GsonSerializer implements Serializer {
 
@@ -27,6 +29,7 @@ class GsonSerializer implements Serializer {
             .create();
 
     public <T> String serialize(T payload) {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.GsonSerializer_serialize_spot1);
         return gson.toJson(payload);
     }
 }

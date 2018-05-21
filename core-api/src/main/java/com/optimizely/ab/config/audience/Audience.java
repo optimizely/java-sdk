@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.config.IdKeyMapped;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -40,6 +42,7 @@ public class Audience implements IdKeyMapped {
     public Audience(@JsonProperty("id") String id,
                     @JsonProperty("name") String name,
                     @JsonProperty("conditions") Condition conditions) {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Audience_constructor_spot1);
         this.id = id;
         this.name = name;
         this.conditions = conditions;
@@ -63,6 +66,7 @@ public class Audience implements IdKeyMapped {
 
     @Override
     public String toString() {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Audience_toString_spot1);
         return "Audience{" +
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +

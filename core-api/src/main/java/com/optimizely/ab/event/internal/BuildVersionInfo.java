@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.event.internal;
 
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +39,7 @@ public final class BuildVersionInfo {
 
     public final static String VERSION = readVersionNumber();
     private static String readVersionNumber() {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.BuildVersionInfo_readVersionNumber_spot1);
         BufferedReader bufferedReader =
             new BufferedReader(
                 new InputStreamReader(BuildVersionInfo.class.getResourceAsStream("/optimizely-build-version"),

@@ -16,6 +16,9 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
+
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 import java.util.List;
@@ -28,7 +31,12 @@ import java.util.Map;
 public class OrCondition implements Condition {
     private final List<Condition> conditions;
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     public OrCondition(@Nonnull List<Condition> conditions) {
+        injectFault(ExceptionSpot.OrCondition_constructor_spot1);
         this.conditions = conditions;
     }
 
@@ -37,7 +45,9 @@ public class OrCondition implements Condition {
     }
 
     public boolean evaluate(Map<String, String> attributes) {
+        injectFault(ExceptionSpot.OrCondition_evaluate_spot1);
         for (Condition condition : conditions) {
+            injectFault(ExceptionSpot.OrCondition_evaluate_spot2);
             if (condition.evaluate(attributes))
                 return true;
         }
@@ -47,31 +57,35 @@ public class OrCondition implements Condition {
 
     @Override
     public String toString() {
+        injectFault(ExceptionSpot.OrCondition_toString_spot1);
         StringBuilder s = new StringBuilder();
 
         s.append("[or, ");
         for (int i = 0; i < conditions.size(); i++) {
+            injectFault(ExceptionSpot.OrCondition_toString_spot2);
             s.append(conditions.get(i));
             if (i < conditions.size() - 1)
                 s.append(", ");
         }
         s.append("]");
-
+        injectFault(ExceptionSpot.OrCondition_toString_spot3);
         return s.toString();
     }
 
     @Override
     public boolean equals(Object other) {
+        injectFault(ExceptionSpot.OrCondition_equals_spot1);
         if (!(other instanceof OrCondition))
             return false;
 
         OrCondition otherOrCondition = (OrCondition)other;
-
+        injectFault(ExceptionSpot.OrCondition_equals_spot2);
         return conditions.equals(otherOrCondition.getConditions());
     }
 
     @Override
     public int hashCode() {
+        injectFault(ExceptionSpot.OrCondition_hasCode_spot1);
         return conditions.hashCode();
     }
 }

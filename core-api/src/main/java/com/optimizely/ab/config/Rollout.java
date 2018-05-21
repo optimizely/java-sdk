@@ -19,6 +19,8 @@ package com.optimizely.ab.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.List;
@@ -38,6 +40,7 @@ public class Rollout implements IdMapped {
     @JsonCreator
     public Rollout(@JsonProperty("id") String id,
                    @JsonProperty("experiments") List<Experiment> experiments) {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Rollout_constructor_spot1);
         this.id = id;
         this.experiments = experiments;
     }
@@ -53,6 +56,7 @@ public class Rollout implements IdMapped {
 
     @Override
     public String toString() {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Rollout_toString_spot1);
         return "Rollout{" +
                 "id='" + id + '\'' +
                 ", experiments=" + experiments +

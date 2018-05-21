@@ -19,6 +19,8 @@ package com.optimizely.ab.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import java.util.List;
 import java.util.Map;
@@ -36,12 +38,18 @@ public class FeatureFlag implements IdKeyMapped{
     private final List<LiveVariable> variables;
     private final Map<String, LiveVariable> variableKeyToLiveVariableMap;
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     @JsonCreator
     public FeatureFlag(@JsonProperty("id") String id,
                        @JsonProperty("key") String key,
                        @JsonProperty("rolloutId") String rolloutId,
                        @JsonProperty("experimentIds") List<String> experimentIds,
                        @JsonProperty("variables") List<LiveVariable> variables) {
+
+        injectFault(ExceptionSpot.FeatureFlag_constructor_spot1);
         this.id = id;
         this.key = key;
         this.rolloutId = rolloutId;
@@ -76,6 +84,7 @@ public class FeatureFlag implements IdKeyMapped{
 
     @Override
     public String toString() {
+        injectFault(ExceptionSpot.FeatureFlag_toString_spot1);
         return "FeatureFlag{" +
                 "id='" + id + '\'' +
                 ", key='" + key + '\'' +
@@ -88,11 +97,13 @@ public class FeatureFlag implements IdKeyMapped{
 
     @Override
     public boolean equals(Object o) {
+        injectFault(ExceptionSpot.FeatureFlag_equals_spot1);
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
         FeatureFlag that = (FeatureFlag) o;
 
+        injectFault(ExceptionSpot.FeatureFlag_equals_spot1);
         if (!id.equals(that.id)) return false;
         if (!key.equals(that.key)) return false;
         if (!rolloutId.equals(that.rolloutId)) return false;
@@ -103,6 +114,7 @@ public class FeatureFlag implements IdKeyMapped{
 
     @Override
     public int hashCode() {
+        injectFault(ExceptionSpot.FeatureFlag_hashCode_spot1);
         int result = id.hashCode();
         result = 31 * result + key.hashCode();
         result = 31 * result + rolloutId.hashCode();

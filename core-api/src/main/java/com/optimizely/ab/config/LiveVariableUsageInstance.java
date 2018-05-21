@@ -19,6 +19,8 @@ package com.optimizely.ab.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 /**
  * Represents the value of a live variable for a variation
@@ -29,9 +31,14 @@ public class LiveVariableUsageInstance implements IdMapped {
     private final String id;
     private final String value;
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     @JsonCreator
     public LiveVariableUsageInstance(@JsonProperty("id") String id,
                                      @JsonProperty("value") String value) {
+        injectFault(ExceptionSpot.LiveVariableUsageInstance_constructor_spot1);
         this.id = id;
         this.value = value;
     }
@@ -46,16 +53,18 @@ public class LiveVariableUsageInstance implements IdMapped {
 
     @Override
     public boolean equals(Object o) {
+        injectFault(ExceptionSpot.LiveVariableUsageInstance_equals_spot1);
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
         LiveVariableUsageInstance that = (LiveVariableUsageInstance) o;
-
+        injectFault(ExceptionSpot.LiveVariableUsageInstance_equals_spot2);
         return id.equals(that.id) && value.equals(that.value);
     }
 
     @Override
     public int hashCode() {
+        injectFault(ExceptionSpot.LiveVariableUsageInstance_hashCode_spot1);
         int result = id.hashCode();
         result = 31 * result + value.hashCode();
         return result;

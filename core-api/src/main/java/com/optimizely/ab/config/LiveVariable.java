@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.gson.annotations.SerializedName;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import javax.annotation.Nullable;
 
@@ -29,6 +31,10 @@ import javax.annotation.Nullable;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LiveVariable implements IdKeyMapped {
+
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
 
     public enum VariableStatus {
         @SerializedName("active")
@@ -110,6 +116,7 @@ public class LiveVariable implements IdKeyMapped {
                         @JsonProperty("defaultValue") String defaultValue,
                         @JsonProperty("status") VariableStatus status,
                         @JsonProperty("type") VariableType type) {
+        injectFault(ExceptionSpot.LiveVariable_constructor_spot1);
         this.id = id;
         this.key = key;
         this.defaultValue = defaultValue;
@@ -139,6 +146,7 @@ public class LiveVariable implements IdKeyMapped {
 
     @Override
     public String toString() {
+        injectFault(ExceptionSpot.LiveVariable_toString_spot1);
         return "LiveVariable{" +
                 "id='" + id + '\'' +
                 ", key='" + key + '\'' +
@@ -150,11 +158,12 @@ public class LiveVariable implements IdKeyMapped {
 
     @Override
     public boolean equals(Object o) {
+        injectFault(ExceptionSpot.LiveVariable_equals_spot1);
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
         LiveVariable variable = (LiveVariable) o;
-
+        injectFault(ExceptionSpot.LiveVariable_equals_spot2);
         if (!id.equals(variable.id)) return false;
         if (!key.equals(variable.key)) return false;
         if (!defaultValue.equals(variable.defaultValue)) return false;
@@ -164,6 +173,7 @@ public class LiveVariable implements IdKeyMapped {
 
     @Override
     public int hashCode() {
+        injectFault(ExceptionSpot.LiveVariable_hasCode_spot1);
         int result = id.hashCode();
         result = 31 * result + key.hashCode();
         result = 31 * result + defaultValue.hashCode();

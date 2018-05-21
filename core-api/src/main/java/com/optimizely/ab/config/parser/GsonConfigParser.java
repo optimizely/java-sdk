@@ -39,6 +39,8 @@ final class GsonConfigParser implements ConfigParser {
         if (json.length() == 0) {
             throw new ConfigParseException("Unable to parse empty json.");
         }
+
+
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(Audience.class, new AudienceGsonDeserializer())
                 .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())

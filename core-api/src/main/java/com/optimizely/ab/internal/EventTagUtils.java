@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.internal;
 
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +34,7 @@ public final class EventTagUtils {
      * @return Long
      */
     public static Long getRevenueValue(@Nonnull Map<String, ?> eventTags) {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.EventTagUtils_getRevenueValue_spot1);
         Long eventValue = null;
         if (eventTags.containsKey(ReservedEventKey.REVENUE.toString())) {
             Object rawValue = eventTags.get(ReservedEventKey.REVENUE.toString());
@@ -52,6 +55,7 @@ public final class EventTagUtils {
      * Fetch the numeric metric value from event tags. "value" is a reserved keyword.
      */
     public static Double getNumericValue(@Nonnull Map<String, ?> eventTags) {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.EventTagUtils_getNumericValue_spot1);
         Double eventValue = null;
         if (eventTags.containsKey(ReservedEventKey.VALUE.toString())) {
             Object rawValue = eventTags.get(ReservedEventKey.VALUE.toString());

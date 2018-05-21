@@ -19,6 +19,8 @@ package com.optimizely.ab.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -41,14 +43,20 @@ public class Variation implements IdKeyMapped {
     private final List<LiveVariableUsageInstance> liveVariableUsageInstances;
     private final Map<String, LiveVariableUsageInstance> variableIdToLiveVariableUsageInstanceMap;
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     public Variation(String id, String key) {
         this(id, key, null);
+        injectFault(ExceptionSpot.Variation_constructor1_spot1);
     }
 
     public Variation(String id,
                      String key,
                      List<LiveVariableUsageInstance> liveVariableUsageInstances) {
         this(id, key,false, liveVariableUsageInstances);
+        injectFault(ExceptionSpot.Variation_constructor2_spot1);
     }
 
     @JsonCreator
@@ -56,6 +64,7 @@ public class Variation implements IdKeyMapped {
                      @JsonProperty("key") String key,
                      @JsonProperty("featureEnabled") Boolean featureEnabled,
                      @JsonProperty("variables") List<LiveVariableUsageInstance> liveVariableUsageInstances) {
+        injectFault(ExceptionSpot.Variation_constructor3_spot1);
         this.id = id;
         this.key = key;
         if(featureEnabled != null)
@@ -92,11 +101,13 @@ public class Variation implements IdKeyMapped {
     }
 
     public boolean is(String otherKey) {
+        injectFault(ExceptionSpot.Variation_is_spot1);
         return key.equals(otherKey);
     }
 
     @Override
     public String toString() {
+        injectFault(ExceptionSpot.Variation_toString_spot1);
         return "Variation{" +
                "id='" + id + '\'' +
                ", key='" + key + '\'' +

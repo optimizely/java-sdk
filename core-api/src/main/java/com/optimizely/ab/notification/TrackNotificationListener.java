@@ -20,6 +20,8 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 
 import com.optimizely.ab.event.LogEvent;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 /**
  * This class handles the track event notification.
@@ -31,6 +33,7 @@ public abstract class TrackNotificationListener implements NotificationListener,
      */
     @Override
     public final void notify(Object... args) {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.TrackNotificationListener_notify_spot1);
         assert(args[0] instanceof String);
         String eventKey = (String) args[0];
         assert(args[1] instanceof String);

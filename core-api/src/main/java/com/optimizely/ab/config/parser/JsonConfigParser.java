@@ -36,6 +36,8 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -51,9 +53,15 @@ import java.util.Set;
  */
 final class JsonConfigParser implements ConfigParser {
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
         try {
+
+            injectFault(ExceptionSpot.JsonConfigParser_parseProjectConfig_spot1);
             JSONObject rootObject = new JSONObject(json);
 
             String accountId = rootObject.getString("accountId");
@@ -71,6 +79,8 @@ final class JsonConfigParser implements ConfigParser {
             List<Audience> audiences = parseAudiences(rootObject.getJSONArray("audiences"));
             List<Group> groups = parseGroups(rootObject.getJSONArray("groups"));
 
+            injectFault(ExceptionSpot.JsonConfigParser_parseProjectConfig_spot2);
+
             boolean anonymizeIP = false;
             List<LiveVariable> liveVariables = null;
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
@@ -82,10 +92,13 @@ final class JsonConfigParser implements ConfigParser {
             List<FeatureFlag> featureFlags = null;
             List<Rollout> rollouts = null;
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
+                injectFault(ExceptionSpot.JsonConfigParser_parseProjectConfig_spot3);
                 featureFlags = parseFeatureFlags(rootObject.getJSONArray("featureFlags"));
                 rollouts = parseRollouts(rootObject.getJSONArray("rollouts"));
             }
 
+
+            injectFault(ExceptionSpot.JsonConfigParser_parseProjectConfig_spot4);
             return new ProjectConfig(
                     accountId,
                     anonymizeIP,
@@ -113,9 +126,12 @@ final class JsonConfigParser implements ConfigParser {
     }
 
     private List<Experiment> parseExperiments(JSONArray experimentJson, String groupId) {
+
+        injectFault(ExceptionSpot.JsonConfigParser_parseExperiments_spot1);
         List<Experiment> experiments = new ArrayList<Experiment>(experimentJson.length());
 
         for (Object obj : experimentJson) {
+            injectFault(ExceptionSpot.JsonConfigParser_parseExperiments_spot2);
             JSONObject experimentObject = (JSONObject)obj;
             String id = experimentObject.getString("id");
             String key = experimentObject.getString("key");
@@ -130,6 +146,7 @@ final class JsonConfigParser implements ConfigParser {
                 audienceIds.add((String)audienceIdObj);
             }
 
+            injectFault(ExceptionSpot.JsonConfigParser_parseExperiments_spot3);
             // parse the child objects
             List<Variation> variations = parseVariations(experimentObject.getJSONArray("variations"));
             Map<String, String> userIdToVariationKeyMap =
@@ -145,6 +162,7 @@ final class JsonConfigParser implements ConfigParser {
     }
 
     private List<String> parseExperimentIds(JSONArray experimentIdsJson) {
+        injectFault(ExceptionSpot.JsonConfigParser_parseExperimentIds_spot1);
         ArrayList<String> experimentIds = new ArrayList<String>(experimentIdsJson.length());
 
         for (Object experimentIdObj : experimentIdsJson) {
@@ -155,6 +173,8 @@ final class JsonConfigParser implements ConfigParser {
     }
 
     private List<FeatureFlag> parseFeatureFlags(JSONArray featureFlagJson) {
+
+        injectFault(ExceptionSpot.JsonConfigParser_parseFeatureFlags_spot1);
         List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>(featureFlagJson.length());
 
         for (Object obj : featureFlagJson) {
@@ -167,6 +187,7 @@ final class JsonConfigParser implements ConfigParser {
 
             List<LiveVariable> variables = parseLiveVariables(featureFlagObject.getJSONArray("variables"));
 
+            injectFault(ExceptionSpot.JsonConfigParser_parseFeatureFlags_spot2);
             featureFlags.add(new FeatureFlag(
                     id,
                     key,
@@ -180,6 +201,8 @@ final class JsonConfigParser implements ConfigParser {
     }
 
     private List<Variation> parseVariations(JSONArray variationJson) {
+
+        injectFault(ExceptionSpot.JsonConfigParser_parseVariations_spot1);
         List<Variation> variations = new ArrayList<Variation>(variationJson.length());
 
         for (Object obj : variationJson) {
@@ -191,6 +214,7 @@ final class JsonConfigParser implements ConfigParser {
             if(variationObject.has("featureEnabled"))
                 featureEnabled = variationObject.getBoolean("featureEnabled");
 
+            injectFault(ExceptionSpot.JsonConfigParser_parseVariations_spot2);
             List<LiveVariableUsageInstance> liveVariableUsageInstances = null;
             if (variationObject.has("variables")) {
                 liveVariableUsageInstances =
@@ -204,6 +228,8 @@ final class JsonConfigParser implements ConfigParser {
     }
 
     private Map<String, String> parseForcedVariations(JSONObject forcedVariationJson) {
+
+        injectFault(ExceptionSpot.JsonConfigParser_parseForcedVariations_spot1);
         Map<String, String> userIdToVariationKeyMap = new HashMap<String, String>();
         Set<String> userIdSet = forcedVariationJson.keySet();
 
@@ -215,6 +241,8 @@ final class JsonConfigParser implements ConfigParser {
     }
 
     private List<TrafficAllocation> parseTrafficAllocation(JSONArray trafficAllocationJson) {
+
+        injectFault(ExceptionSpot.JsonConfigParser_parseTrafficAllocations_spot1);
         List<TrafficAllocation> trafficAllocation = new ArrayList<TrafficAllocation>(trafficAllocationJson.length());
 
         for (Object obj : trafficAllocationJson) {
@@ -229,6 +257,8 @@ final class JsonConfigParser implements ConfigParser {
     }
 
     private List<Attribute> parseAttributes(JSONArray attributeJson) {
+
+        injectFault(ExceptionSpot.JsonConfigParser_parseAttributes_spot1);
         List<Attribute> attributes = new ArrayList<Attribute>(attributeJson.length());
 
         for (Object obj : attributeJson) {
@@ -243,6 +273,8 @@ final class JsonConfigParser implements ConfigParser {
     }
 
     private List<EventType> parseEvents(JSONArray eventJson) {
+
+        injectFault(ExceptionSpot.JsonConfigParser_parseEvents_spot1);
         List<EventType> events = new ArrayList<EventType>(eventJson.length());
 
         for (Object obj : eventJson) {
@@ -259,6 +291,8 @@ final class JsonConfigParser implements ConfigParser {
     }
 
     private List<Audience> parseAudiences(JSONArray audienceJson) {
+
+        injectFault(ExceptionSpot.JsonConfigParser_parseAudiences_spot1);
         List<Audience> audiences = new ArrayList<Audience>(audienceJson.length());
 
         for (Object obj : audienceJson) {
@@ -276,6 +310,8 @@ final class JsonConfigParser implements ConfigParser {
     }
 
     private Condition parseConditions(JSONArray conditionJson) {
+
+        injectFault(ExceptionSpot.JsonConfigParser_parseConditions_spot1);
         List<Condition> conditions = new ArrayList<Condition>();
         String operand = (String)conditionJson.get(0);
 
@@ -297,6 +333,8 @@ final class JsonConfigParser implements ConfigParser {
             }
         }
 
+        injectFault(ExceptionSpot.JsonConfigParser_parseConditions_spot2);
+
         Condition condition;
         if (operand.equals("and")) {
             condition = new AndCondition(conditions);
@@ -310,6 +348,8 @@ final class JsonConfigParser implements ConfigParser {
     }
 
     private List<Group> parseGroups(JSONArray groupJson) {
+
+        injectFault(ExceptionSpot.JsonConfigParser_parseGroups_spot1);
         List<Group> groups = new ArrayList<Group>(groupJson.length());
 
         for (Object obj : groupJson) {
@@ -327,6 +367,8 @@ final class JsonConfigParser implements ConfigParser {
     }
 
     private List<LiveVariable> parseLiveVariables(JSONArray liveVariablesJson) {
+
+        injectFault(ExceptionSpot.JsonConfigParser_parseLiveVariables_spot1);
         List<LiveVariable> liveVariables = new ArrayList<LiveVariable>(liveVariablesJson.length());
 
         for (Object obj : liveVariablesJson) {
@@ -347,6 +389,8 @@ final class JsonConfigParser implements ConfigParser {
     }
 
     private List<LiveVariableUsageInstance> parseLiveVariableInstances(JSONArray liveVariableInstancesJson) {
+
+        injectFault(ExceptionSpot.JsonConfigParser_parseLiveVariableInstances_spot1);
         List<LiveVariableUsageInstance> liveVariableUsageInstances = new ArrayList<LiveVariableUsageInstance>(liveVariableInstancesJson.length());
 
         for (Object obj : liveVariableInstancesJson) {
@@ -361,6 +405,8 @@ final class JsonConfigParser implements ConfigParser {
     }
 
     private List<Rollout> parseRollouts(JSONArray rolloutsJson) {
+
+        injectFault(ExceptionSpot.JsonConfigParser_parseRollouts_spot1);
         List<Rollout> rollouts = new ArrayList<Rollout>(rolloutsJson.length());
 
         for (Object obj : rolloutsJson) {

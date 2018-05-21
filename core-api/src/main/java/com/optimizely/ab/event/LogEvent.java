@@ -16,6 +16,9 @@
  */
 package com.optimizely.ab.event;
 
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
+
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -36,6 +39,8 @@ public class LogEvent {
                     @Nonnull String endpointUrl,
                     @Nonnull Map<String, String> requestParams,
                     @Nonnull String body) {
+
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.LogEvent_constructor_spot1);
         this.requestMethod = requestMethod;
         this.endpointUrl = endpointUrl;
         this.requestParams = requestParams;
@@ -64,6 +69,7 @@ public class LogEvent {
 
     @Override
     public String toString() {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.LogEvent_toString_spot1);
         return "LogEvent{" +
                "requestMethod=" + requestMethod +
                ", endpointUrl='" + endpointUrl + '\'' +

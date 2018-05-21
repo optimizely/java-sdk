@@ -31,6 +31,8 @@ import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -40,9 +42,15 @@ import java.util.List;
  */
 public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectConfig> {
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     @Override
     public ProjectConfig deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
         throws JsonParseException {
+
+        injectFault(ExceptionSpot.ProjectConfigGsonDeserializer_deserialize_spot1);
         JsonObject jsonObject = json.getAsJsonObject();
 
         String accountId = jsonObject.get("accountId").getAsString();
@@ -58,6 +66,7 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
         Type eventsType = new TypeToken<List<EventType>>() {}.getType();
         Type audienceType = new TypeToken<List<Audience>>() {}.getType();
 
+        injectFault(ExceptionSpot.ProjectConfigGsonDeserializer_deserialize_spot2);
         List<Group> groups = context.deserialize(jsonObject.get("groups").getAsJsonArray(), groupsType);
         List<Experiment> experiments =
             context.deserialize(jsonObject.get("experiments").getAsJsonArray(), experimentsType);
@@ -70,6 +79,7 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
         List<Audience> audiences =
             context.deserialize(jsonObject.get("audiences").getAsJsonArray(), audienceType);
 
+        injectFault(ExceptionSpot.ProjectConfigGsonDeserializer_deserialize_spot3);
         boolean anonymizeIP = false;
         // live variables should be null if using V2
         List<LiveVariable> liveVariables = null;
@@ -88,6 +98,8 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
             Type rolloutsType = new TypeToken<List<Rollout>>() {}.getType();
             rollouts = context.deserialize(jsonObject.get("rollouts").getAsJsonArray(), rolloutsType);
         }
+
+        injectFault(ExceptionSpot.ProjectConfigGsonDeserializer_deserialize_spot4);
 
         return new ProjectConfig(
                 accountId,

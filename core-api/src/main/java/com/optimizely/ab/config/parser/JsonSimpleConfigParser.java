@@ -36,6 +36,8 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -52,9 +54,14 @@ import java.util.Map;
  */
 final class JsonSimpleConfigParser implements ConfigParser {
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
         try {
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseProjectConfig_spot1);
             JSONParser parser = new JSONParser();
             JSONObject rootObject = (JSONObject)parser.parse(json);
 
@@ -69,6 +76,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             List<Attribute> attributes;
             attributes = parseAttributes((JSONArray)rootObject.get("attributes"));
 
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseProjectConfig_spot2);
             List<EventType> events = parseEvents((JSONArray)rootObject.get("events"));
             List<Audience> audiences = parseAudiences((JSONArray)parser.parse(rootObject.get("audiences").toString()));
             List<Group> groups = parseGroups((JSONArray)rootObject.get("groups"));
@@ -76,6 +84,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
             boolean anonymizeIP = false;
             List<LiveVariable> liveVariables = null;
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
+
+                injectFault(ExceptionSpot.JsonSimpleConfigParser_parseProjectConfig_spot3);
                 liveVariables = parseLiveVariables((JSONArray)rootObject.get("variables"));
 
                 anonymizeIP = (Boolean)rootObject.get("anonymizeIP");
@@ -88,6 +98,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
                 rollouts = parseRollouts((JSONArray) rootObject.get("rollouts"));
             }
 
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseProjectConfig_spot4);
             return new ProjectConfig(
                     accountId,
                     anonymizeIP,
@@ -115,6 +126,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
     }
 
     private List<Experiment> parseExperiments(JSONArray experimentJson, String groupId) {
+
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseExperiments_spot1);
         List<Experiment> experiments = new ArrayList<Experiment>(experimentJson.size());
 
         for (Object obj : experimentJson) {
@@ -127,6 +140,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             Object layerIdObject = experimentObject.get("layerId");
             String layerId = layerIdObject == null ? null : (String)layerIdObject;
 
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseExperiments_spot2);
             JSONArray audienceIdsJson = (JSONArray)experimentObject.get("audienceIds");
             List<String> audienceIds = new ArrayList<String>(audienceIdsJson.size());
 
@@ -134,6 +148,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
                 audienceIds.add((String)audienceIdObj);
             }
 
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseExperiments_spot3);
             // parse the child objects
             List<Variation> variations = parseVariations((JSONArray)experimentObject.get("variations"));
             Map<String, String> userIdToVariationKeyMap =
@@ -149,6 +164,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
     }
 
     private List<String> parseExperimentIds(JSONArray experimentIdsJsonArray) {
+
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseExperimentIds_spot1);
         List<String> experimentIds = new ArrayList<String>(experimentIdsJsonArray.size());
 
         for (Object experimentIdObj : experimentIdsJsonArray) {
@@ -159,6 +176,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
     }
 
     private List<FeatureFlag> parseFeatureFlags(JSONArray featureFlagJson) {
+
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseFeatureFlags_spot1);
         List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>(featureFlagJson.size());
 
         for (Object obj : featureFlagJson) {
@@ -172,6 +191,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
 
             List<LiveVariable> liveVariables = parseLiveVariables((JSONArray) featureFlagObject.get("variables"));
 
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseFeatureFlags_spot2);
             featureFlags.add(new FeatureFlag(
                     id,
                     key,
@@ -185,6 +205,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
     }
 
     private List<Variation> parseVariations(JSONArray variationJson) {
+
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseVariations_spot1);
         List<Variation> variations = new ArrayList<Variation>(variationJson.size());
 
         for (Object obj : variationJson) {
@@ -200,7 +222,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             if (variationObject.containsKey("variables")) {
                 liveVariableUsageInstances = parseLiveVariableInstances((JSONArray)variationObject.get("variables"));
             }
-
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseVariations_spot2);
             variations.add(new Variation(id, key, featureEnabled, liveVariableUsageInstances));
         }
 
@@ -208,6 +230,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
     }
 
     private Map<String, String> parseForcedVariations(JSONObject forcedVariationJson) {
+
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseForcedVariations_spot1);
         Map<String, String> userIdToVariationKeyMap = new HashMap<String, String>();
         for (Object obj : forcedVariationJson.entrySet()) {
             Map.Entry<String, String> entry = (Map.Entry<String, String>)obj;
@@ -218,6 +242,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
     }
 
     private List<TrafficAllocation> parseTrafficAllocation(JSONArray trafficAllocationJson) {
+
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseTrafficAllocations_spot1);
         List<TrafficAllocation> trafficAllocation = new ArrayList<TrafficAllocation>(trafficAllocationJson.size());
 
         for (Object obj : trafficAllocationJson) {
@@ -232,6 +258,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
     }
 
     private List<Attribute> parseAttributes(JSONArray attributeJson) {
+
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseAttributes_spot1);
         List<Attribute> attributes = new ArrayList<Attribute>(attributeJson.size());
 
         for (Object obj : attributeJson) {
@@ -247,6 +275,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
     }
 
     private List<EventType> parseEvents(JSONArray eventJson) {
+
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseEvents_spot1);
         List<EventType> events = new ArrayList<EventType>(eventJson.size());
 
         for (Object obj : eventJson) {
@@ -264,6 +294,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
     }
 
     private List<Audience> parseAudiences(JSONArray audienceJson) throws ParseException {
+
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseAudiences_spot1);
         JSONParser parser = new JSONParser();
         List<Audience> audiences = new ArrayList<Audience>(audienceJson.size());
 
@@ -282,6 +314,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
     }
 
     private Condition parseConditions(JSONArray conditionJson) {
+
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseConditions_spot1);
         List<Condition> conditions = new ArrayList<Condition>();
         String operand = (String)conditionJson.get(0);
 
@@ -296,6 +330,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             }
         }
 
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseConditions_spot2);
         Condition condition;
         if (operand.equals("and")) {
             condition = new AndCondition(conditions);
@@ -309,6 +344,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
     }
 
     private List<Group> parseGroups(JSONArray groupJson) {
+
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseGroups_spot1);
         List<Group> groups = new ArrayList<Group>(groupJson.size());
 
         for (Object obj : groupJson) {
@@ -326,6 +363,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
     }
 
     private List<LiveVariable> parseLiveVariables(JSONArray liveVariablesJson) {
+
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseLiveVariables_spot1);
         List<LiveVariable> liveVariables = new ArrayList<LiveVariable>(liveVariablesJson.size());
 
         for (Object obj : liveVariablesJson) {
@@ -343,6 +382,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
     }
 
     private List<LiveVariableUsageInstance> parseLiveVariableInstances(JSONArray liveVariableInstancesJson) {
+
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseLiveVariableInstances_spot1);
         List<LiveVariableUsageInstance> liveVariableUsageInstances =
                 new ArrayList<LiveVariableUsageInstance>(liveVariableInstancesJson.size());
 
@@ -358,6 +399,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
     }
 
     private List<Rollout> parseRollouts(JSONArray rolloutsJson) {
+
+        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseRollouts_spot1);
         List<Rollout> rollouts = new ArrayList<Rollout>(rolloutsJson.size());
 
         for (Object obj : rolloutsJson) {

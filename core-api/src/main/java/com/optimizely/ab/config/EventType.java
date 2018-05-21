@@ -21,6 +21,8 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -46,6 +48,7 @@ public class EventType implements IdKeyMapped {
     public EventType(@JsonProperty("id") String id,
                      @JsonProperty("key") String key,
                      @JsonProperty("experimentIds") List<String> experimentIds) {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.EventType_constructor_spot1);
         this.id = id;
         this.key = key;
         this.experimentIds = experimentIds;
@@ -65,6 +68,7 @@ public class EventType implements IdKeyMapped {
 
     @Override
     public String toString() {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.EventType_toString_spot1);
         return "EventType{" +
                "id='" + id + '\'' +
                ", key='" + key + '\'' +

@@ -20,6 +20,8 @@ package com.optimizely.ab.notification;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -33,6 +35,7 @@ public abstract class ActivateNotificationListener implements NotificationListen
      */
     @Override
     public final void notify(Object... args) {
+        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ActivateNotificationListener_notify_spot1);
         assert(args[0] instanceof Experiment);
         Experiment experiment = (Experiment) args[0];
         assert(args[1] instanceof String);

@@ -27,6 +27,8 @@ import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Group;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,8 +37,13 @@ import java.util.Map;
 
 public class GroupJacksonDeserializer extends JsonDeserializer<Group> {
 
+    private static void injectFault(ExceptionSpot spot) {
+        FaultInjectionManager.getInstance().injectFault(spot);
+    }
+
     @Override
     public Group deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+        injectFault(ExceptionSpot.GroupJacksonDeserializer_deserialize_spot1);
         ObjectMapper mapper = new ObjectMapper();
         JsonNode node = parser.getCodec().readTree(parser);
 
@@ -48,15 +55,19 @@ public class GroupJacksonDeserializer extends JsonDeserializer<Group> {
         JsonNode groupExperimentsJson = node.get("experiments");
         List<Experiment> groupExperiments = new ArrayList<Experiment>();
         if (groupExperimentsJson.isArray()) {
+            injectFault(ExceptionSpot.GroupJacksonDeserializer_deserialize_spot2);
             for (JsonNode groupExperimentJson : groupExperimentsJson) {
                 groupExperiments.add(parseExperiment(groupExperimentJson, id));
             }
         }
 
+        injectFault(ExceptionSpot.GroupJacksonDeserializer_deserialize_spot3);
         return new Group(id, policy, groupExperiments, trafficAllocations);
     }
 
     private Experiment parseExperiment(JsonNode experimentJson, String groupId) throws IOException {
+
+        injectFault(ExceptionSpot.GroupJacksonDeserializer_parseExperiment_spot1);
         ObjectMapper mapper = new ObjectMapper();
 
         String id = experimentJson.get("id").textValue();
@@ -64,6 +75,8 @@ public class GroupJacksonDeserializer extends JsonDeserializer<Group> {
         String status = experimentJson.get("status").textValue();
         JsonNode layerIdJson = experimentJson.get("layerId");
         String layerId = layerIdJson == null ? null : layerIdJson.textValue();
+
+        injectFault(ExceptionSpot.GroupJacksonDeserializer_parseExperiment_spot2);
         List<String> audienceIds = mapper.readValue(experimentJson.get("audienceIds").toString(),
                                                     new TypeReference<List<String>>(){});
         List<Variation> variations = mapper.readValue(experimentJson.get("variations").toString(),
@@ -73,6 +86,7 @@ public class GroupJacksonDeserializer extends JsonDeserializer<Group> {
         Map<String, String>  userIdToVariationKeyMap = mapper.readValue(
             experimentJson.get("forcedVariations").toString(), new TypeReference<Map<String, String>>(){});
 
+        injectFault(ExceptionSpot.GroupJacksonDeserializer_parseExperiment_spot3);
         return new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
                               trafficAllocations, groupId);
     }
