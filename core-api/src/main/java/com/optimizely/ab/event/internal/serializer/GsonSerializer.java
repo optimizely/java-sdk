@@ -29,7 +29,12 @@ class GsonSerializer implements Serializer {
             .create();
 
     public <T> String serialize(T payload) {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.GsonSerializer_serialize_spot1);
-        return gson.toJson(payload);
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.GsonSerializer_serialize_spot1);
+            return gson.toJson(payload);
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 }

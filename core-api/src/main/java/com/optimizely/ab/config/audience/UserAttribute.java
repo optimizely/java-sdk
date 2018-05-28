@@ -30,20 +30,25 @@ import java.util.Map;
 @Immutable
 public class UserAttribute implements Condition {
 
-    private final String name;
-    private final String type;
-    private final String value;
+    private String name;
+    private String type;
+    private String value;
 
     private static void injectFault(ExceptionSpot spot) {
         FaultInjectionManager.getInstance().injectFault(spot);
     }
+    private static void throwInjectedExceptionIfTreatmentDisabled() { FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled(); }
 
     public UserAttribute(@Nonnull String name, @Nonnull String type, @Nullable String value) {
 
-        injectFault(ExceptionSpot.UserAttribute_constructor_spot1);
-        this.name = name;
-        this.type = type;
-        this.value = value;
+        try {
+            injectFault(ExceptionSpot.UserAttribute_constructor_spot1);
+            this.name = name;
+            this.type = type;
+            this.value = value;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+        }
     }
 
     public String getName() {
@@ -59,53 +64,74 @@ public class UserAttribute implements Condition {
     }
 
     public boolean evaluate(Map<String, String> attributes) {
-        String userAttributeValue = attributes.get(name);
-        injectFault(ExceptionSpot.UserAttribute_evaluate_spot1);
 
-        if (value != null) { // if there is a value in the condition
-            // check user attribute value is equal
-            injectFault(ExceptionSpot.UserAttribute_evaluate_spot2);
-            return value.equals(userAttributeValue);
-        }
-        else if (userAttributeValue != null) { // if the datafile value is null but user has a value for this attribute
-            // return false since null != nonnull
+        try {
+
+            String userAttributeValue = attributes.get(name);
+            injectFault(ExceptionSpot.UserAttribute_evaluate_spot1);
+
+            if (value != null) { // if there is a value in the condition
+                // check user attribute value is equal
+                injectFault(ExceptionSpot.UserAttribute_evaluate_spot2);
+                return value.equals(userAttributeValue);
+            } else if (userAttributeValue != null) { // if the datafile value is null but user has a value for this attribute
+                // return false since null != nonnull
+                return false;
+            } else { // both are null
+                return true;
+            }
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
             return false;
-        }
-        else { // both are null
-            return true;
         }
     }
 
     @Override
     public String toString() {
-        injectFault(ExceptionSpot.UserAttribute_toString_spot1);
-        return "{name='" + name + "\'" +
-               ", type='" + type + "\'" +
-               ", value='" + value + "\'" +
-               "}";
+        try {
+            injectFault(ExceptionSpot.UserAttribute_toString_spot1);
+            return "{name='" + name + "\'" +
+                    ", type='" + type + "\'" +
+                    ", value='" + value + "\'" +
+                    "}";
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
 
-        injectFault(ExceptionSpot.UserAttribute_equals_spot1);
-        UserAttribute that = (UserAttribute) o;
+        try {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
 
-        if (!name.equals(that.name)) return false;
-        if (!type.equals(that.type)) return false;
+            injectFault(ExceptionSpot.UserAttribute_equals_spot1);
+            UserAttribute that = (UserAttribute) o;
 
-        injectFault(ExceptionSpot.UserAttribute_equals_spot1);
-        return value != null ? value.equals(that.value) : that.value == null;
+            if (!name.equals(that.name)) return false;
+            if (!type.equals(that.type)) return false;
+
+            injectFault(ExceptionSpot.UserAttribute_equals_spot1);
+            return value != null ? value.equals(that.value) : that.value == null;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return false;
+        }
     }
 
     @Override
     public int hashCode() {
-        injectFault(ExceptionSpot.UserAttribute_hasCode_spot1);
-        int result = name.hashCode();
-        result = 31 * result + type.hashCode();
-        result = 31 * result + (value != null ? value.hashCode() : 0);
-        return result;
+        try {
+            injectFault(ExceptionSpot.UserAttribute_hasCode_spot1);
+            int result = name.hashCode();
+            result = 31 * result + type.hashCode();
+            result = 31 * result + (value != null ? value.hashCode() : 0);
+            return result;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return 0;
+        }
     }
 }

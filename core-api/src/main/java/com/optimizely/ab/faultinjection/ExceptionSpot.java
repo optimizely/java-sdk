@@ -338,8 +338,7 @@ public enum ExceptionSpot {
 
     // Experiment
 
-    Experiment_constructor1_spot1,
-    Experiment_constructor2_spot1,
+    Experiment_constructor_spot1,
 
     Experiment_isActive_spot1,
     Experiment_isRunning_spot1,
@@ -362,7 +361,6 @@ public enum ExceptionSpot {
 
     // LiveVariable
 
-    LiveVariable_constructor_spot1,
     LiveVariable_toString_spot1,
 
     LiveVariable_equals_spot1,
@@ -372,22 +370,17 @@ public enum ExceptionSpot {
 
     // LiveVariableUsageInstance
 
-    LiveVariableUsageInstance_constructor_spot1,
-
     LiveVariableUsageInstance_equals_spot1,
     LiveVariableUsageInstance_equals_spot2,
     LiveVariableUsageInstance_hashCode_spot1,
 
     // ProjectConfig
 
-    ProjectConfig_constructor1_spot1,
-    ProjectConfig_constructor2_spot1,
-
-    ProjectConfig_constructor3_spot1,
-    ProjectConfig_constructor3_spot2,
-    ProjectConfig_constructor3_spot3,
-    ProjectConfig_constructor3_spot4,
-    ProjectConfig_constructor3_spot5,
+    ProjectConfig_constructor_spot1,
+    ProjectConfig_constructor_spot2,
+    ProjectConfig_constructor_spot3,
+    ProjectConfig_constructor_spot4,
+    ProjectConfig_constructor_spot5,
 
     ProjectConfig_getExperimentForKey_spot1,
     ProjectConfig_getExperimentForKey_spot2,
@@ -432,20 +425,15 @@ public enum ExceptionSpot {
 
     // Rollout
 
-    Rollout_constructor_spot1,
     Rollout_toString_spot1,
-
 
     // TrafficAllocation
 
-    TrafficAllocation_constructor_spot1,
     TrafficAllocation_toString_spot1,
 
     // Variation
 
-    Variation_constructor1_spot1,
-    Variation_constructor2_spot1,
-    Variation_constructor3_spot1,
+    Variation_constructor_spot1,
 
     Variation_is_spot1,
 
@@ -491,8 +479,6 @@ public enum ExceptionSpot {
 
     // EventBuilder
 
-    EventBuilder_constructor_spot1,
-
     EventBuilder_createImpressionEvent_spot1,
     EventBuilder_createImpressionEvent_spot2,
     EventBuilder_createImpressionEvent_spot3,
@@ -507,7 +493,6 @@ public enum ExceptionSpot {
 
     // LogEvent
 
-    LogEvent_constructor_spot1,
     LogEvent_toString_spot1,
 
     // EventTagUtils

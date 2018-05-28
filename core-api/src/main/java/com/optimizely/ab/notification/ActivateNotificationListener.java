@@ -35,19 +35,23 @@ public abstract class ActivateNotificationListener implements NotificationListen
      */
     @Override
     public final void notify(Object... args) {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ActivateNotificationListener_notify_spot1);
-        assert(args[0] instanceof Experiment);
-        Experiment experiment = (Experiment) args[0];
-        assert(args[1] instanceof String);
-        String userId = (String) args[1];
-        assert(args[2] instanceof java.util.Map);
-        Map<String, String> attributes = (Map<String, String>) args[2];
-        assert(args[3] instanceof Variation);
-        Variation variation = (Variation) args[3];
-        assert(args[4] instanceof LogEvent);
-        LogEvent logEvent = (LogEvent) args[4];
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ActivateNotificationListener_notify_spot1);
+            assert (args[0] instanceof Experiment);
+            Experiment experiment = (Experiment) args[0];
+            assert (args[1] instanceof String);
+            String userId = (String) args[1];
+            assert (args[2] instanceof java.util.Map);
+            Map<String, String> attributes = (Map<String, String>) args[2];
+            assert (args[3] instanceof Variation);
+            Variation variation = (Variation) args[3];
+            assert (args[4] instanceof LogEvent);
+            LogEvent logEvent = (LogEvent) args[4];
 
-        onActivate(experiment, userId, attributes, variation, logEvent);
+            onActivate(experiment, userId, attributes, variation, logEvent);
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+        }
     }
 
     /**

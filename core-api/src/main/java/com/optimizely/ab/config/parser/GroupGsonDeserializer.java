@@ -43,24 +43,30 @@ public class GroupGsonDeserializer implements JsonDeserializer<Group> {
     public Group deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
         throws JsonParseException {
 
-        injectFault(ExceptionSpot.GroupGsonDeserializer_deserialize_spot1);
-        JsonObject jsonObject = json.getAsJsonObject();
+        //try {
 
-        String id = jsonObject.get("id").getAsString();
-        String policy = jsonObject.get("policy").getAsString();
+            injectFault(ExceptionSpot.GroupGsonDeserializer_deserialize_spot1);
+            JsonObject jsonObject = json.getAsJsonObject();
 
-        List<Experiment> experiments = new ArrayList<Experiment>();
-        JsonArray experimentsJson = jsonObject.getAsJsonArray("experiments");
-        for (Object obj : experimentsJson) {
-            injectFault(ExceptionSpot.GroupGsonDeserializer_deserialize_spot2);
-            JsonObject experimentObj = (JsonObject)obj;
-            experiments.add(GsonHelpers.parseExperiment(experimentObj, id, context));
-        }
+            String id = jsonObject.get("id").getAsString();
+            String policy = jsonObject.get("policy").getAsString();
 
-        List<TrafficAllocation> trafficAllocations =
-                GsonHelpers.parseTrafficAllocation(jsonObject.getAsJsonArray("trafficAllocation"));
+            List<Experiment> experiments = new ArrayList<Experiment>();
+            JsonArray experimentsJson = jsonObject.getAsJsonArray("experiments");
+            for (Object obj : experimentsJson) {
+                injectFault(ExceptionSpot.GroupGsonDeserializer_deserialize_spot2);
+                JsonObject experimentObj = (JsonObject) obj;
+                experiments.add(GsonHelpers.parseExperiment(experimentObj, id, context));
+            }
 
-        injectFault(ExceptionSpot.GroupGsonDeserializer_deserialize_spot3);
-        return new Group(id, policy, experiments, trafficAllocations);
+            List<TrafficAllocation> trafficAllocations =
+                    GsonHelpers.parseTrafficAllocation(jsonObject.getAsJsonArray("trafficAllocation"));
+
+            injectFault(ExceptionSpot.GroupGsonDeserializer_deserialize_spot3);
+            return new Group(id, policy, experiments, trafficAllocations);
+        /*} catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }*/
     }
 }

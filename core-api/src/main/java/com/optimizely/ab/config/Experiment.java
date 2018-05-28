@@ -39,19 +39,19 @@ import javax.annotation.concurrent.Immutable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Experiment implements IdKeyMapped {
 
-    private final String id;
-    private final String key;
-    private final String status;
-    private final String layerId;
-    private final String groupId;
+    private String id;
+    private String key;
+    private String status;
+    private String layerId;
+    private String groupId;
 
-    private final List<String> audienceIds;
-    private final List<Variation> variations;
-    private final List<TrafficAllocation> trafficAllocation;
+    private List<String> audienceIds;
+    private List<Variation> variations;
+    private List<TrafficAllocation> trafficAllocation;
 
-    private final Map<String, Variation> variationKeyToVariationMap;
-    private final Map<String, Variation> variationIdToVariationMap;
-    private final Map<String, String> userIdToVariationKeyMap;
+    private Map<String, Variation> variationKeyToVariationMap;
+    private Map<String, Variation> variationIdToVariationMap;
+    private Map<String, String> userIdToVariationKeyMap;
 
     private static void injectFault(ExceptionSpot spot) {
         FaultInjectionManager.getInstance().injectFault(spot);
@@ -84,9 +84,7 @@ public class Experiment implements IdKeyMapped {
                       @JsonProperty("variations") List<Variation> variations,
                       @JsonProperty("forcedVariations") Map<String, String> userIdToVariationKeyMap,
                       @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation) {
-
-        this(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap, trafficAllocation, "");
-        injectFault(ExceptionSpot.Experiment_constructor1_spot1);
+            this(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap, trafficAllocation, "");
     }
 
     public Experiment(@Nonnull String id,
@@ -98,18 +96,22 @@ public class Experiment implements IdKeyMapped {
                       @Nonnull Map<String, String> userIdToVariationKeyMap,
                       @Nonnull List<TrafficAllocation> trafficAllocation,
                       @Nonnull String groupId) {
-        injectFault(ExceptionSpot.Experiment_constructor2_spot1);
-        this.id = id;
-        this.key = key;
-        this.status = status == null ? ExperimentStatus.NOT_STARTED.toString() : status;
-        this.layerId = layerId;
-        this.audienceIds = Collections.unmodifiableList(audienceIds);
-        this.variations = Collections.unmodifiableList(variations);
-        this.trafficAllocation = Collections.unmodifiableList(trafficAllocation);
-        this.groupId = groupId;
-        this.userIdToVariationKeyMap = userIdToVariationKeyMap;
-        this.variationKeyToVariationMap = ProjectConfigUtils.generateNameMapping(variations);
-        this.variationIdToVariationMap = ProjectConfigUtils.generateIdMapping(variations);
+        try {
+            injectFault(ExceptionSpot.Experiment_constructor_spot1);
+            this.id = id;
+            this.key = key;
+            this.status = status == null ? ExperimentStatus.NOT_STARTED.toString() : status;
+            this.layerId = layerId;
+            this.audienceIds = Collections.unmodifiableList(audienceIds);
+            this.variations = Collections.unmodifiableList(variations);
+            this.trafficAllocation = Collections.unmodifiableList(trafficAllocation);
+            this.groupId = groupId;
+            this.userIdToVariationKeyMap = userIdToVariationKeyMap;
+            this.variationKeyToVariationMap = ProjectConfigUtils.generateNameMapping(variations);
+            this.variationIdToVariationMap = ProjectConfigUtils.generateIdMapping(variations);
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+        }
     }
 
     public String getId() {
@@ -157,34 +159,54 @@ public class Experiment implements IdKeyMapped {
     }
 
     public boolean isActive() {
-        injectFault(ExceptionSpot.Experiment_isActive_spot1);
-        return status.equals(ExperimentStatus.RUNNING.toString()) ||
-               status.equals(ExperimentStatus.LAUNCHED.toString());
+        try {
+            injectFault(ExceptionSpot.Experiment_isActive_spot1);
+            return status.equals(ExperimentStatus.RUNNING.toString()) ||
+                    status.equals(ExperimentStatus.LAUNCHED.toString());
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return false;
+        }
     }
 
     public boolean isRunning() {
-        injectFault(ExceptionSpot.Experiment_isRunning_spot1);
-        return status.equals(ExperimentStatus.RUNNING.toString());
+        try {
+            injectFault(ExceptionSpot.Experiment_isRunning_spot1);
+            return status.equals(ExperimentStatus.RUNNING.toString());
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return false;
+        }
     }
 
     public boolean isLaunched() {
-        injectFault(ExceptionSpot.Experiment_isLaunched_spot1);
-        return status.equals(ExperimentStatus.LAUNCHED.toString());
+        try {
+            injectFault(ExceptionSpot.Experiment_isLaunched_spot1);
+            return status.equals(ExperimentStatus.LAUNCHED.toString());
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return false;
+        }
     }
 
     @Override
     public String toString() {
-        injectFault(ExceptionSpot.Experiment_toString_spot1);
-        return "Experiment{" +
-                "id='" + id + '\'' +
-                ", key='" + key + '\'' +
-                ", groupId='" + groupId + '\'' +
-                ", status='" + status + '\'' +
-                ", audienceIds=" + audienceIds +
-                ", variations=" + variations +
-                ", variationKeyToVariationMap=" + variationKeyToVariationMap +
-                ", userIdToVariationKeyMap=" + userIdToVariationKeyMap +
-                ", trafficAllocation=" + trafficAllocation +
-                '}';
+        try {
+            injectFault(ExceptionSpot.Experiment_toString_spot1);
+            return "Experiment{" +
+                    "id='" + id + '\'' +
+                    ", key='" + key + '\'' +
+                    ", groupId='" + groupId + '\'' +
+                    ", status='" + status + '\'' +
+                    ", audienceIds=" + audienceIds +
+                    ", variations=" + variations +
+                    ", variationKeyToVariationMap=" + variationKeyToVariationMap +
+                    ", userIdToVariationKeyMap=" + userIdToVariationKeyMap +
+                    ", trafficAllocation=" + trafficAllocation +
+                    '}';
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 }

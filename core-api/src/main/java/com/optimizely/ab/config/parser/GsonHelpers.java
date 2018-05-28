@@ -52,129 +52,171 @@ final class GsonHelpers {
 
     private static List<Variation> parseVariations(JsonArray variationJson, JsonDeserializationContext context) {
 
-        injectFault(ExceptionSpot.GsonHelpers_parseVariations_spot1);
-        List<Variation> variations = new ArrayList<Variation>(variationJson.size());
-        for (Object obj : variationJson) {
-            injectFault(ExceptionSpot.GsonHelpers_parseVariations_spot2);
-            JsonObject variationObject = (JsonObject)obj;
-            String id = variationObject.get("id").getAsString();
-            String key = variationObject.get("key").getAsString();
-            Boolean featureEnabled = false;
-            if (variationObject.has("featureEnabled"))
-                featureEnabled = variationObject.get("featureEnabled").getAsBoolean();
+        try {
 
-            List<LiveVariableUsageInstance> variableUsageInstances = null;
-            // this is an existence check rather than a version check since it's difficult to pass data
-            // across deserializers.
-            if (variationObject.has("variables")) {
-                Type liveVariableUsageInstancesType = new TypeToken<List<LiveVariableUsageInstance>>() {}.getType();
-                variableUsageInstances =
-                        context.deserialize(variationObject.getAsJsonArray("variables"),
-                                            liveVariableUsageInstancesType);
+            injectFault(ExceptionSpot.GsonHelpers_parseVariations_spot1);
+            List<Variation> variations = new ArrayList<Variation>(variationJson.size());
+            for (Object obj : variationJson) {
+                injectFault(ExceptionSpot.GsonHelpers_parseVariations_spot2);
+                JsonObject variationObject = (JsonObject) obj;
+                String id = variationObject.get("id").getAsString();
+                String key = variationObject.get("key").getAsString();
+                Boolean featureEnabled = false;
+                if (variationObject.has("featureEnabled"))
+                    featureEnabled = variationObject.get("featureEnabled").getAsBoolean();
+
+                List<LiveVariableUsageInstance> variableUsageInstances = null;
+                // this is an existence check rather than a version check since it's difficult to pass data
+                // across deserializers.
+                if (variationObject.has("variables")) {
+                    Type liveVariableUsageInstancesType = new TypeToken<List<LiveVariableUsageInstance>>() {
+                    }.getType();
+                    variableUsageInstances =
+                            context.deserialize(variationObject.getAsJsonArray("variables"),
+                                    liveVariableUsageInstancesType);
+                }
+
+                variations.add(new Variation(id, key, featureEnabled, variableUsageInstances));
             }
 
-            variations.add(new Variation(id, key, featureEnabled, variableUsageInstances));
+            injectFault(ExceptionSpot.GsonHelpers_parseVariations_spot3);
+            return variations;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
         }
-
-        injectFault(ExceptionSpot.GsonHelpers_parseVariations_spot3);
-        return variations;
     }
 
     private static Map<String, String> parseForcedVariations(JsonObject forcedVariationJson) {
-        injectFault(ExceptionSpot.GsonHelpers_parseForcedVariations_spot1);
-        Map<String, String> userIdToVariationKeyMap = new HashMap<String, String>();
-        Set<Map.Entry<String, JsonElement>> entrySet = forcedVariationJson.entrySet();
-        for (Map.Entry<String, JsonElement> entry : entrySet) {
-            userIdToVariationKeyMap.put(entry.getKey(), entry.getValue().getAsString());
-        }
+        try {
 
-        return userIdToVariationKeyMap;
+            injectFault(ExceptionSpot.GsonHelpers_parseForcedVariations_spot1);
+            Map<String, String> userIdToVariationKeyMap = new HashMap<String, String>();
+            Set<Map.Entry<String, JsonElement>> entrySet = forcedVariationJson.entrySet();
+            for (Map.Entry<String, JsonElement> entry : entrySet) {
+                userIdToVariationKeyMap.put(entry.getKey(), entry.getValue().getAsString());
+            }
+
+            return userIdToVariationKeyMap;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
     static List<TrafficAllocation> parseTrafficAllocation(JsonArray trafficAllocationJson) {
-        injectFault(ExceptionSpot.GsonHelpers_parseTrafficAllocation_spot1);
 
-        List<TrafficAllocation> trafficAllocation = new ArrayList<TrafficAllocation>(trafficAllocationJson.size());
+        try {
 
-        for (Object obj : trafficAllocationJson) {
-            JsonObject allocationObject = (JsonObject)obj;
-            String entityId = allocationObject.get("entityId").getAsString();
-            int endOfRange = allocationObject.get("endOfRange").getAsInt();
+            injectFault(ExceptionSpot.GsonHelpers_parseTrafficAllocation_spot1);
 
-            trafficAllocation.add(new TrafficAllocation(entityId, endOfRange));
+            List<TrafficAllocation> trafficAllocation = new ArrayList<TrafficAllocation>(trafficAllocationJson.size());
+
+            for (Object obj : trafficAllocationJson) {
+                JsonObject allocationObject = (JsonObject) obj;
+                String entityId = allocationObject.get("entityId").getAsString();
+                int endOfRange = allocationObject.get("endOfRange").getAsInt();
+
+                trafficAllocation.add(new TrafficAllocation(entityId, endOfRange));
+            }
+
+            return trafficAllocation;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
         }
-
-        return trafficAllocation;
     }
 
     static Experiment parseExperiment(JsonObject experimentJson, String groupId, JsonDeserializationContext context) {
-        injectFault(ExceptionSpot.GsonHelpers_parseExperiment1_spot1);
 
-        String id = experimentJson.get("id").getAsString();
-        String key = experimentJson.get("key").getAsString();
-        JsonElement experimentStatusJson = experimentJson.get("status");
-        String status = experimentStatusJson.isJsonNull() ?
-                ExperimentStatus.NOT_STARTED.toString() : experimentStatusJson.getAsString();
+        try {
 
-        JsonElement layerIdJson = experimentJson.get("layerId");
-        String layerId = layerIdJson == null ? null : layerIdJson.getAsString();
+            injectFault(ExceptionSpot.GsonHelpers_parseExperiment1_spot1);
 
-        JsonArray audienceIdsJson = experimentJson.getAsJsonArray("audienceIds");
-        List<String> audienceIds = new ArrayList<String>(audienceIdsJson.size());
-        injectFault(ExceptionSpot.GsonHelpers_parseExperiment1_spot2);
-        for (JsonElement audienceIdObj : audienceIdsJson) {
-            audienceIds.add(audienceIdObj.getAsString());
+            String id = experimentJson.get("id").getAsString();
+            String key = experimentJson.get("key").getAsString();
+            JsonElement experimentStatusJson = experimentJson.get("status");
+            String status = experimentStatusJson.isJsonNull() ?
+                    ExperimentStatus.NOT_STARTED.toString() : experimentStatusJson.getAsString();
+
+            JsonElement layerIdJson = experimentJson.get("layerId");
+            String layerId = layerIdJson == null ? null : layerIdJson.getAsString();
+
+            JsonArray audienceIdsJson = experimentJson.getAsJsonArray("audienceIds");
+            List<String> audienceIds = new ArrayList<String>(audienceIdsJson.size());
+            injectFault(ExceptionSpot.GsonHelpers_parseExperiment1_spot2);
+            for (JsonElement audienceIdObj : audienceIdsJson) {
+                audienceIds.add(audienceIdObj.getAsString());
+            }
+
+            // parse the child objects
+            List<Variation> variations = parseVariations(experimentJson.getAsJsonArray("variations"), context);
+            Map<String, String> userIdToVariationKeyMap =
+                    parseForcedVariations(experimentJson.getAsJsonObject("forcedVariations"));
+            List<TrafficAllocation> trafficAllocations =
+                    parseTrafficAllocation(experimentJson.getAsJsonArray("trafficAllocation"));
+
+
+            injectFault(ExceptionSpot.GsonHelpers_parseExperiment1_spot3);
+            return new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
+                    trafficAllocations, groupId);
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
         }
-
-        // parse the child objects
-        List<Variation> variations = parseVariations(experimentJson.getAsJsonArray("variations"), context);
-        Map<String, String> userIdToVariationKeyMap =
-                parseForcedVariations(experimentJson.getAsJsonObject("forcedVariations"));
-        List<TrafficAllocation> trafficAllocations =
-                parseTrafficAllocation(experimentJson.getAsJsonArray("trafficAllocation"));
-
-
-        injectFault(ExceptionSpot.GsonHelpers_parseExperiment1_spot3);
-        return new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
-                              trafficAllocations, groupId);
     }
 
     static Experiment parseExperiment(JsonObject experimentJson, JsonDeserializationContext context) {
-        injectFault(ExceptionSpot.GsonHelpers_parseExperiment2_spot1);
-        return parseExperiment(experimentJson, "", context);
+
+        try {
+
+            injectFault(ExceptionSpot.GsonHelpers_parseExperiment2_spot1);
+            return parseExperiment(experimentJson, "", context);
+
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
     static FeatureFlag parseFeatureFlag(JsonObject featureFlagJson, JsonDeserializationContext context) {
-        injectFault(ExceptionSpot.GsonHelpers_parseFeatureFlag_spot1);
-        String id = featureFlagJson.get("id").getAsString();
-        String key = featureFlagJson.get("key").getAsString();
-        String layerId = featureFlagJson.get("rolloutId").getAsString();
 
-        JsonArray experimentIdsJson = featureFlagJson.getAsJsonArray("experimentIds");
-        List<String> experimentIds = new ArrayList<String>();
-        injectFault(ExceptionSpot.GsonHelpers_parseFeatureFlag_spot2);
-        for (JsonElement experimentIdObj : experimentIdsJson) {
-            experimentIds.add(experimentIdObj.getAsString());
-        }
-
-        List<LiveVariable> liveVariables = new ArrayList<LiveVariable>();
         try {
-            Type liveVariableType = new TypeToken<List<LiveVariable>>() {}.getType();
-            liveVariables = context.deserialize(featureFlagJson.getAsJsonArray("variables"),
-                    liveVariableType);
-        }
-        catch (JsonParseException exception) {
-            logger.warn("Unable to parse variables for feature \"" + key
-                    + "\". JsonParseException: " + exception);
-        }
 
-        injectFault(ExceptionSpot.GsonHelpers_parseFeatureFlag_spot3);
-        return new FeatureFlag(
-                id,
-                key,
-                layerId,
-                experimentIds,
-                liveVariables
-        );
+            injectFault(ExceptionSpot.GsonHelpers_parseFeatureFlag_spot1);
+            String id = featureFlagJson.get("id").getAsString();
+            String key = featureFlagJson.get("key").getAsString();
+            String layerId = featureFlagJson.get("rolloutId").getAsString();
+
+            JsonArray experimentIdsJson = featureFlagJson.getAsJsonArray("experimentIds");
+            List<String> experimentIds = new ArrayList<String>();
+            injectFault(ExceptionSpot.GsonHelpers_parseFeatureFlag_spot2);
+            for (JsonElement experimentIdObj : experimentIdsJson) {
+                experimentIds.add(experimentIdObj.getAsString());
+            }
+
+            List<LiveVariable> liveVariables = new ArrayList<LiveVariable>();
+            try {
+                Type liveVariableType = new TypeToken<List<LiveVariable>>() {
+                }.getType();
+                liveVariables = context.deserialize(featureFlagJson.getAsJsonArray("variables"),
+                        liveVariableType);
+            } catch (JsonParseException exception) {
+                logger.warn("Unable to parse variables for feature \"" + key
+                        + "\". JsonParseException: " + exception);
+            }
+
+            injectFault(ExceptionSpot.GsonHelpers_parseFeatureFlag_spot3);
+            return new FeatureFlag(
+                    id,
+                    key,
+                    layerId,
+                    experimentIds,
+                    liveVariables
+            );
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 }

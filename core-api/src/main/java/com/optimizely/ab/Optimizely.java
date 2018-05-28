@@ -951,8 +951,8 @@ public class Optimizely {
             return getVariation(experimentKey, userId, Collections.<String, String>emptyMap());
 
         }
-        catch (UnknownExperimentException e) {
-            throw e;
+        catch (UnknownExperimentException ue) {
+            throw ue;
         }
         catch (Exception e) {
             throwInjectedExceptionIfTreatmentDisabled();
@@ -997,8 +997,8 @@ public class Optimizely {
             injectFault(ExceptionSpot.Optimizely_getVariation4_spot5);
 
             return decisionService.getVariation(experiment, userId, filteredAttributes);
-        } catch (UnknownExperimentException e) {
-            throw e;
+        } catch (UnknownExperimentException ue) {
+            throw ue;
         }
         catch (Exception e) {
             throwInjectedExceptionIfTreatmentDisabled();
@@ -1076,7 +1076,6 @@ public class Optimizely {
      */
     private static ProjectConfig getProjectConfig(String datafile) throws ConfigParseException {
         try {
-
 
             if (datafile == null) {
                 throw new ConfigParseException("Unable to parse null datafile.");
@@ -1254,61 +1253,108 @@ public class Optimizely {
 
         public Builder(@Nonnull String datafile,
                        @Nonnull EventHandler eventHandler) {
-            injectFault(ExceptionSpot.Builder_constructor_spot1);
-            this.datafile = datafile;
-            this.eventHandler = eventHandler;
+            try {
+                injectFault(ExceptionSpot.Builder_constructor_spot1);
+                this.datafile = datafile;
+                this.eventHandler = eventHandler;
+            } catch (Exception e) {
+                throwInjectedExceptionIfTreatmentDisabled();
+                // eat it
+            }
         }
 
         protected Builder withBucketing(Bucketer bucketer) {
-            injectFault(ExceptionSpot.Builder_withBucketing_spot1);
-            this.bucketer = bucketer;
-            return this;
+            try {
+                injectFault(ExceptionSpot.Builder_withBucketing_spot1);
+                this.bucketer = bucketer;
+                return this;
+            } catch (Exception e) {
+                throwInjectedExceptionIfTreatmentDisabled();
+                return this;
+            }
         }
 
         protected Builder withDecisionService(DecisionService decisionService) {
-            injectFault(ExceptionSpot.Builder_withDecisionService_spot1);
-            this.decisionService = decisionService;
-            return this;
+            try {
+                injectFault(ExceptionSpot.Builder_withDecisionService_spot1);
+                this.decisionService = decisionService;
+                return this;
+            } catch (Exception e) {
+                throwInjectedExceptionIfTreatmentDisabled();
+                return this;
+            }
         }
 
         public Builder withErrorHandler(ErrorHandler errorHandler) {
-            injectFault(ExceptionSpot.Builder_withErrorHandler_spot1);
-            this.errorHandler = errorHandler;
-            return this;
+            try {
+                injectFault(ExceptionSpot.Builder_withErrorHandler_spot1);
+                this.errorHandler = errorHandler;
+                return this;
+            } catch (Exception e) {
+                throwInjectedExceptionIfTreatmentDisabled();
+                return this;
+            }
         }
 
         public Builder withUserProfileService(UserProfileService userProfileService) {
-            injectFault(ExceptionSpot.Builder_withUserProfileService_spot1);
-            this.userProfileService = userProfileService;
-            return this;
+            try {
+                injectFault(ExceptionSpot.Builder_withUserProfileService_spot1);
+                this.userProfileService = userProfileService;
+                return this;
+            } catch (Exception e) {
+                throwInjectedExceptionIfTreatmentDisabled();
+                return this;
+            }
         }
 
         public Builder withClientEngine(ClientEngine clientEngine) {
-            injectFault(ExceptionSpot.Builder_withClientEngine_spot1);
-            this.clientEngine = clientEngine;
-            return this;
+            try {
+                injectFault(ExceptionSpot.Builder_withClientEngine_spot1);
+                this.clientEngine = clientEngine;
+                return this;
+            } catch (Exception e) {
+                throwInjectedExceptionIfTreatmentDisabled();
+                return this;
+            }
         }
 
         public Builder withClientVersion(String clientVersion) {
-            injectFault(ExceptionSpot.Builder_withClientVersion_spot1);
-            this.clientVersion = clientVersion;
-            return this;
+            try {
+                injectFault(ExceptionSpot.Builder_withClientVersion_spot1);
+                this.clientVersion = clientVersion;
+                return this;
+            } catch (Exception e) {
+                throwInjectedExceptionIfTreatmentDisabled();
+                return this;
+            }
         }
 
         protected Builder withEventBuilder(EventBuilder eventBuilder) {
-            injectFault(ExceptionSpot.Builder_withEventBuilder_spot1);
-            this.eventBuilder = eventBuilder;
-            return this;
+            try {
+                injectFault(ExceptionSpot.Builder_withEventBuilder_spot1);
+                this.eventBuilder = eventBuilder;
+                return this;
+            } catch (Exception e) {
+                throwInjectedExceptionIfTreatmentDisabled();
+                return this;
+            }
         }
 
         // Helper function for making testing easier
         protected Builder withConfig(ProjectConfig projectConfig) {
-            injectFault(ExceptionSpot.Builder_withConfig_spot1);
-            this.projectConfig = projectConfig;
-            return this;
+            try {
+                injectFault(ExceptionSpot.Builder_withConfig_spot1);
+                this.projectConfig = projectConfig;
+                return this;
+            } catch (Exception e) {
+                throwInjectedExceptionIfTreatmentDisabled();
+                return this;
+            }
         }
 
         public Optimizely build() throws ConfigParseException {
+
+            try {
 
                 injectFault(ExceptionSpot.Builder_build_spot1);
                 if (projectConfig == null) {
@@ -1362,6 +1408,13 @@ public class Optimizely {
                 injectFault(ExceptionSpot.Builder_build_spot10);
 
                 return optimizely;
+
+            } catch (ConfigParseException e) {
+                throw e;
+            } catch (Exception e) {
+                throwInjectedExceptionIfTreatmentDisabled();
+                return null;
+            }
 
         }
     }

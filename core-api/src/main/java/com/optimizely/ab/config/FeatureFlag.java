@@ -31,12 +31,12 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FeatureFlag implements IdKeyMapped{
 
-    private final String id;
-    private final String key;
-    private final String rolloutId;
-    private final List<String> experimentIds;
-    private final List<LiveVariable> variables;
-    private final Map<String, LiveVariable> variableKeyToLiveVariableMap;
+    private String id;
+    private String key;
+    private String rolloutId;
+    private List<String> experimentIds;
+    private List<LiveVariable> variables;
+    private Map<String, LiveVariable> variableKeyToLiveVariableMap;
 
     private static void injectFault(ExceptionSpot spot) {
         FaultInjectionManager.getInstance().injectFault(spot);
@@ -48,14 +48,17 @@ public class FeatureFlag implements IdKeyMapped{
                        @JsonProperty("rolloutId") String rolloutId,
                        @JsonProperty("experimentIds") List<String> experimentIds,
                        @JsonProperty("variables") List<LiveVariable> variables) {
-
-        injectFault(ExceptionSpot.FeatureFlag_constructor_spot1);
-        this.id = id;
-        this.key = key;
-        this.rolloutId = rolloutId;
-        this.experimentIds = experimentIds;
-        this.variables = variables;
-        this.variableKeyToLiveVariableMap = ProjectConfigUtils.generateNameMapping(variables);
+        try {
+            injectFault(ExceptionSpot.FeatureFlag_constructor_spot1);
+            this.id = id;
+            this.key = key;
+            this.rolloutId = rolloutId;
+            this.experimentIds = experimentIds;
+            this.variables = variables;
+            this.variableKeyToLiveVariableMap = ProjectConfigUtils.generateNameMapping(variables);
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+        }
     }
 
     public String getId() {
@@ -84,43 +87,58 @@ public class FeatureFlag implements IdKeyMapped{
 
     @Override
     public String toString() {
-        injectFault(ExceptionSpot.FeatureFlag_toString_spot1);
-        return "FeatureFlag{" +
-                "id='" + id + '\'' +
-                ", key='" + key + '\'' +
-                ", rolloutId='" + rolloutId + '\'' +
-                ", experimentIds=" + experimentIds +
-                ", variables=" + variables +
-                ", variableKeyToLiveVariableMap=" + variableKeyToLiveVariableMap +
-                '}';
+        try {
+            injectFault(ExceptionSpot.FeatureFlag_toString_spot1);
+            return "FeatureFlag{" +
+                    "id='" + id + '\'' +
+                    ", key='" + key + '\'' +
+                    ", rolloutId='" + rolloutId + '\'' +
+                    ", experimentIds=" + experimentIds +
+                    ", variables=" + variables +
+                    ", variableKeyToLiveVariableMap=" + variableKeyToLiveVariableMap +
+                    '}';
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
+        }
     }
 
     @Override
     public boolean equals(Object o) {
-        injectFault(ExceptionSpot.FeatureFlag_equals_spot1);
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        try {
+            injectFault(ExceptionSpot.FeatureFlag_equals_spot1);
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
 
-        FeatureFlag that = (FeatureFlag) o;
+            FeatureFlag that = (FeatureFlag) o;
 
-        injectFault(ExceptionSpot.FeatureFlag_equals_spot1);
-        if (!id.equals(that.id)) return false;
-        if (!key.equals(that.key)) return false;
-        if (!rolloutId.equals(that.rolloutId)) return false;
-        if (!experimentIds.equals(that.experimentIds)) return false;
-        if (!variables.equals(that.variables)) return false;
-        return variableKeyToLiveVariableMap.equals(that.variableKeyToLiveVariableMap);
+            injectFault(ExceptionSpot.FeatureFlag_equals_spot1);
+            if (!id.equals(that.id)) return false;
+            if (!key.equals(that.key)) return false;
+            if (!rolloutId.equals(that.rolloutId)) return false;
+            if (!experimentIds.equals(that.experimentIds)) return false;
+            if (!variables.equals(that.variables)) return false;
+            return variableKeyToLiveVariableMap.equals(that.variableKeyToLiveVariableMap);
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return false;
+        }
     }
 
     @Override
     public int hashCode() {
-        injectFault(ExceptionSpot.FeatureFlag_hashCode_spot1);
-        int result = id.hashCode();
-        result = 31 * result + key.hashCode();
-        result = 31 * result + rolloutId.hashCode();
-        result = 31 * result + experimentIds.hashCode();
-        result = 31 * result + variables.hashCode();
-        result = 31 * result + variableKeyToLiveVariableMap.hashCode();
-        return result;
+        try {
+            injectFault(ExceptionSpot.FeatureFlag_hashCode_spot1);
+            int result = id.hashCode();
+            result = 31 * result + key.hashCode();
+            result = 31 * result + rolloutId.hashCode();
+            result = 31 * result + experimentIds.hashCode();
+            result = 31 * result + variables.hashCode();
+            result = 31 * result + variableKeyToLiveVariableMap.hashCode();
+            return result;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return 0;
+        }
     }
 }

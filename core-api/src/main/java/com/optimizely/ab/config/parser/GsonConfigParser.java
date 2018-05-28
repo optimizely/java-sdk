@@ -23,6 +23,8 @@ import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.Group;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.faultinjection.ExceptionSpot;
+import com.optimizely.ab.faultinjection.FaultInjectionManager;
 
 import javax.annotation.Nonnull;
 
@@ -33,26 +35,38 @@ final class GsonConfigParser implements ConfigParser {
 
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
-        if (json == null) {
-            throw new ConfigParseException("Unable to parse null json.");
-        }
-        if (json.length() == 0) {
-            throw new ConfigParseException("Unable to parse empty json.");
-        }
-
-
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapter(Audience.class, new AudienceGsonDeserializer())
-                .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())
-                .registerTypeAdapter(FeatureFlag.class, new FeatureFlagGsonDeserializer())
-                .registerTypeAdapter(Group.class, new GroupGsonDeserializer())
-                .registerTypeAdapter(ProjectConfig.class, new ProjectConfigGsonDeserializer())
-                .create();
-
         try {
-            return gson.fromJson(json, ProjectConfig.class);
-        } catch (Exception e) {
-            throw new ConfigParseException("Unable to parse datafile: " + json, e);
+
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.GsonConfigParser_parseProjectConfig_spot1);
+
+            if (json == null) {
+                throw new ConfigParseException("Unable to parse null json.");
+            }
+            if (json.length() == 0) {
+                throw new ConfigParseException("Unable to parse empty json.");
+            }
+
+
+            Gson gson = new GsonBuilder()
+                    .registerTypeAdapter(Audience.class, new AudienceGsonDeserializer())
+                    .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())
+                    .registerTypeAdapter(FeatureFlag.class, new FeatureFlagGsonDeserializer())
+                    .registerTypeAdapter(Group.class, new GroupGsonDeserializer())
+                    .registerTypeAdapter(ProjectConfig.class, new ProjectConfigGsonDeserializer())
+                    .create();
+
+            try {
+                return gson.fromJson(json, ProjectConfig.class);
+            } catch (Exception e) {
+                throw new ConfigParseException("Unable to parse datafile: " + json, e);
+            }
+        }
+        catch (ConfigParseException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
         }
     }
 }

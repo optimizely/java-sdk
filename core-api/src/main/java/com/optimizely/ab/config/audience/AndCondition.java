@@ -42,52 +42,75 @@ public class AndCondition implements Condition {
     private static void injectFault(ExceptionSpot spot) {
         FaultInjectionManager.getInstance().injectFault(spot);
     }
+    private static void throwInjectedExceptionIfTreatmentDisabled() { FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled(); }
 
     public boolean evaluate(Map<String, String> attributes) {
-        for (Condition condition : conditions) {
-            injectFault(ExceptionSpot.AndCondition_evaluate_spot1);
-            if (!condition.evaluate(attributes))
-                return false;
-        }
+        try {
+            for (Condition condition : conditions) {
+                injectFault(ExceptionSpot.AndCondition_evaluate_spot1);
+                if (!condition.evaluate(attributes))
+                    return false;
+            }
 
-        return true;
+            return true;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return false;
+        }
     }
 
     @Override
     public String toString() {
-        injectFault(ExceptionSpot.AndCondition_toString_spot1);
-        StringBuilder s = new StringBuilder();
-        s.append("[and, ");
-        for (int i = 0; i < conditions.size(); i++) {
-            injectFault(ExceptionSpot.AndCondition_toString_spot2);
-            s.append(conditions.get(i));
-            if (i < conditions.size() - 1)
-                s.append(", ");
-        }
-        s.append("]");
 
-        injectFault(ExceptionSpot.AndCondition_toString_spot3);
-        return s.toString();
+        try {
+
+            injectFault(ExceptionSpot.AndCondition_toString_spot1);
+            StringBuilder s = new StringBuilder();
+            s.append("[and, ");
+            for (int i = 0; i < conditions.size(); i++) {
+                injectFault(ExceptionSpot.AndCondition_toString_spot2);
+                s.append(conditions.get(i));
+                if (i < conditions.size() - 1)
+                    s.append(", ");
+            }
+            s.append("]");
+
+            injectFault(ExceptionSpot.AndCondition_toString_spot3);
+            return s.toString();
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
     @Override
     public boolean equals(Object other) {
-        injectFault(ExceptionSpot.AndCondition_equals_spot1);
+        try {
+            injectFault(ExceptionSpot.AndCondition_equals_spot1);
 
-        if (!(other instanceof AndCondition))
+            if (!(other instanceof AndCondition))
+                return false;
+
+            injectFault(ExceptionSpot.AndCondition_equals_spot2);
+            AndCondition otherAndCondition = (AndCondition) other;
+
+            injectFault(ExceptionSpot.AndCondition_equals_spot3);
+            return conditions.equals(otherAndCondition.getConditions());
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
             return false;
-
-        injectFault(ExceptionSpot.AndCondition_equals_spot2);
-        AndCondition otherAndCondition = (AndCondition)other;
-
-        injectFault(ExceptionSpot.AndCondition_equals_spot3);
-        return conditions.equals(otherAndCondition.getConditions());
+        }
     }
 
     @Override
     public int hashCode() {
-        injectFault(ExceptionSpot.AndCondition_hashCode_spot1);
-        return conditions.hashCode();
+        try {
+            injectFault(ExceptionSpot.AndCondition_hashCode_spot1);
+            return conditions.hashCode();
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return 0;
+        }
     }
 }
 

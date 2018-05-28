@@ -50,71 +50,87 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
     public ProjectConfig deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
         throws JsonParseException {
 
-        injectFault(ExceptionSpot.ProjectConfigGsonDeserializer_deserialize_spot1);
-        JsonObject jsonObject = json.getAsJsonObject();
+        //try {
 
-        String accountId = jsonObject.get("accountId").getAsString();
-        String projectId = jsonObject.get("projectId").getAsString();
-        String revision = jsonObject.get("revision").getAsString();
-        String version = jsonObject.get("version").getAsString();
-        int datafileVersion = Integer.parseInt(version);
+            injectFault(ExceptionSpot.ProjectConfigGsonDeserializer_deserialize_spot1);
+            JsonObject jsonObject = json.getAsJsonObject();
 
-        // generic list type tokens
-        Type groupsType = new TypeToken<List<Group>>() {}.getType();
-        Type experimentsType = new TypeToken<List<Experiment>>() {}.getType();
-        Type attributesType = new TypeToken<List<Attribute>>() {}.getType();
-        Type eventsType = new TypeToken<List<EventType>>() {}.getType();
-        Type audienceType = new TypeToken<List<Audience>>() {}.getType();
+            String accountId = jsonObject.get("accountId").getAsString();
+            String projectId = jsonObject.get("projectId").getAsString();
+            String revision = jsonObject.get("revision").getAsString();
+            String version = jsonObject.get("version").getAsString();
+            int datafileVersion = Integer.parseInt(version);
 
-        injectFault(ExceptionSpot.ProjectConfigGsonDeserializer_deserialize_spot2);
-        List<Group> groups = context.deserialize(jsonObject.get("groups").getAsJsonArray(), groupsType);
-        List<Experiment> experiments =
-            context.deserialize(jsonObject.get("experiments").getAsJsonArray(), experimentsType);
+            // generic list type tokens
+            Type groupsType = new TypeToken<List<Group>>() {
+            }.getType();
+            Type experimentsType = new TypeToken<List<Experiment>>() {
+            }.getType();
+            Type attributesType = new TypeToken<List<Attribute>>() {
+            }.getType();
+            Type eventsType = new TypeToken<List<EventType>>() {
+            }.getType();
+            Type audienceType = new TypeToken<List<Audience>>() {
+            }.getType();
 
-        List<Attribute> attributes;
-        attributes = context.deserialize(jsonObject.get("attributes"), attributesType);
+            injectFault(ExceptionSpot.ProjectConfigGsonDeserializer_deserialize_spot2);
+            List<Group> groups = context.deserialize(jsonObject.get("groups").getAsJsonArray(), groupsType);
+            List<Experiment> experiments =
+                    context.deserialize(jsonObject.get("experiments").getAsJsonArray(), experimentsType);
 
-        List<EventType> events =
-            context.deserialize(jsonObject.get("events").getAsJsonArray(), eventsType);
-        List<Audience> audiences =
-            context.deserialize(jsonObject.get("audiences").getAsJsonArray(), audienceType);
+            List<Attribute> attributes;
+            attributes = context.deserialize(jsonObject.get("attributes"), attributesType);
 
-        injectFault(ExceptionSpot.ProjectConfigGsonDeserializer_deserialize_spot3);
-        boolean anonymizeIP = false;
-        // live variables should be null if using V2
-        List<LiveVariable> liveVariables = null;
-        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
-            Type liveVariablesType = new TypeToken<List<LiveVariable>>() {}.getType();
-            liveVariables = context.deserialize(jsonObject.getAsJsonArray("variables"), liveVariablesType);
+            List<EventType> events =
+                    context.deserialize(jsonObject.get("events").getAsJsonArray(), eventsType);
+            List<Audience> audiences =
+                    context.deserialize(jsonObject.get("audiences").getAsJsonArray(), audienceType);
 
-            anonymizeIP = jsonObject.get("anonymizeIP").getAsBoolean();
-        }
+            injectFault(ExceptionSpot.ProjectConfigGsonDeserializer_deserialize_spot3);
+            boolean anonymizeIP = false;
+            // live variables should be null if using V2
+            List<LiveVariable> liveVariables = null;
+            if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
+                Type liveVariablesType = new TypeToken<List<LiveVariable>>() {
+                }.getType();
+                liveVariables = context.deserialize(jsonObject.getAsJsonArray("variables"), liveVariablesType);
 
-        List<FeatureFlag> featureFlags = null;
-        List<Rollout> rollouts = null;
-        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
-            Type featureFlagsType = new TypeToken<List<FeatureFlag>>() {}.getType();
-            featureFlags = context.deserialize(jsonObject.getAsJsonArray("featureFlags"), featureFlagsType);
-            Type rolloutsType = new TypeToken<List<Rollout>>() {}.getType();
-            rollouts = context.deserialize(jsonObject.get("rollouts").getAsJsonArray(), rolloutsType);
-        }
+                anonymizeIP = jsonObject.get("anonymizeIP").getAsBoolean();
+            }
 
-        injectFault(ExceptionSpot.ProjectConfigGsonDeserializer_deserialize_spot4);
+            List<FeatureFlag> featureFlags = null;
+            List<Rollout> rollouts = null;
+            if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
+                Type featureFlagsType = new TypeToken<List<FeatureFlag>>() {
+                }.getType();
+                featureFlags = context.deserialize(jsonObject.getAsJsonArray("featureFlags"), featureFlagsType);
+                Type rolloutsType = new TypeToken<List<Rollout>>() {
+                }.getType();
+                rollouts = context.deserialize(jsonObject.get("rollouts").getAsJsonArray(), rolloutsType);
+            }
 
-        return new ProjectConfig(
-                accountId,
-                anonymizeIP,
-                projectId,
-                revision,
-                version,
-                attributes,
-                audiences,
-                events,
-                experiments,
-                featureFlags,
-                groups,
-                liveVariables,
-                rollouts
-        );
+            injectFault(ExceptionSpot.ProjectConfigGsonDeserializer_deserialize_spot4);
+
+            return new ProjectConfig(
+                    accountId,
+                    anonymizeIP,
+                    projectId,
+                    revision,
+                    version,
+                    attributes,
+                    audiences,
+                    events,
+                    experiments,
+                    featureFlags,
+                    groups,
+                    liveVariables,
+                    rollouts
+            );
+        /*} catch (JsonParseException e) {
+            throw e;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
+        }*/
     }
 }

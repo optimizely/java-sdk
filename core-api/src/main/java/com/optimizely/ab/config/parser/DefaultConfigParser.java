@@ -44,25 +44,30 @@ public final class DefaultConfigParser {
      * @throws MissingJsonParserException if there are no supported json parsers available on the classpath
      */
     private static @Nonnull ConfigParser create() {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.DefaultConfigParser_create_spot1);
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.DefaultConfigParser_create_spot1);
 
-        ConfigParser configParser;
+            ConfigParser configParser;
 
-        if (isPresent("com.fasterxml.jackson.databind.ObjectMapper")) {
-            configParser = new JacksonConfigParser();
-        } else if (isPresent("com.google.gson.Gson")) {
-            configParser = new GsonConfigParser();
-        } else if (isPresent("org.json.simple.JSONObject")) {
-            configParser = new JsonSimpleConfigParser();
-        } else if (isPresent("org.json.JSONObject")) {
-            configParser = new JsonConfigParser();
-        } else {
-            throw new MissingJsonParserException("unable to locate a JSON parser. "
-                                                 + "Please see <link> for more information");
+            if (isPresent("com.fasterxml.jackson.databind.ObjectMapper")) {
+                configParser = new JacksonConfigParser();
+            } else if (isPresent("com.google.gson.Gson")) {
+                configParser = new GsonConfigParser();
+            } else if (isPresent("org.json.simple.JSONObject")) {
+                configParser = new JsonSimpleConfigParser();
+            } else if (isPresent("org.json.JSONObject")) {
+                configParser = new JsonConfigParser();
+            } else {
+                throw new MissingJsonParserException("unable to locate a JSON parser. "
+                        + "Please see <link> for more information");
+            }
+
+            logger.info("using json parser: {}", configParser.getClass().getSimpleName());
+            return configParser;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
         }
-
-        logger.info("using json parser: {}", configParser.getClass().getSimpleName());
-        return configParser;
     }
 
     private static boolean isPresent(@Nonnull String className) {
@@ -71,6 +76,9 @@ public final class DefaultConfigParser {
             Class.forName(className);
             return true;
         } catch (ClassNotFoundException e) {
+            return false;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
             return false;
         }
     }

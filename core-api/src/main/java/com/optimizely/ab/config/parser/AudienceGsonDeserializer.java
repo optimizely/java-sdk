@@ -46,52 +46,64 @@ public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {
     public Audience deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
             throws JsonParseException {
 
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.AudienceGsonDeserializer_deserialize_spot1);
-        Gson gson = new Gson();
-        JsonParser parser = new JsonParser();
-        JsonObject jsonObject = json.getAsJsonObject();
+        //try {
 
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.AudienceGsonDeserializer_deserialize_spot2);
-        String id = jsonObject.get("id").getAsString();
-        String name = jsonObject.get("name").getAsString();
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.AudienceGsonDeserializer_deserialize_spot1);
+            Gson gson = new Gson();
+            JsonParser parser = new JsonParser();
+            JsonObject jsonObject = json.getAsJsonObject();
 
-        JsonElement conditionsElement = parser.parse(jsonObject.get("conditions").getAsString());
-        List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
-        Condition conditions = parseConditions(rawObjectList);
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.AudienceGsonDeserializer_deserialize_spot2);
+            String id = jsonObject.get("id").getAsString();
+            String name = jsonObject.get("name").getAsString();
 
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.AudienceGsonDeserializer_deserialize_spot3);
-        return new Audience(id, name, conditions);
+            JsonElement conditionsElement = parser.parse(jsonObject.get("conditions").getAsString());
+            List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
+            Condition conditions = parseConditions(rawObjectList);
+
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.AudienceGsonDeserializer_deserialize_spot3);
+            return new Audience(id, name, conditions);
+        //} catch (Exception e) {
+        //    FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+        //    return null;
+       // }
     }
 
     private Condition parseConditions(List<Object> rawObjectList) {
 
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.AudienceGsonDeserializer_parseConditions_spot1);
-        List<Condition> conditions = new ArrayList<Condition>();
-        String operand = (String)rawObjectList.get(0);
+        try {
 
-        for (int i = 1; i < rawObjectList.size(); i++) {
-            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.AudienceGsonDeserializer_parseConditions_spot2);
-            Object obj = rawObjectList.get(i);
-            if (obj instanceof List) {
-                List<Object> objectList = (List<Object>)rawObjectList.get(i);
-                conditions.add(parseConditions(objectList));
-            } else {
-                LinkedTreeMap<String, String> conditionMap = (LinkedTreeMap<String, String>)rawObjectList.get(i);
-                conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
-                               conditionMap.get("value")));
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.AudienceGsonDeserializer_parseConditions_spot1);
+            List<Condition> conditions = new ArrayList<Condition>();
+            String operand = (String) rawObjectList.get(0);
+
+            for (int i = 1; i < rawObjectList.size(); i++) {
+                FaultInjectionManager.getInstance().injectFault(ExceptionSpot.AudienceGsonDeserializer_parseConditions_spot2);
+                Object obj = rawObjectList.get(i);
+                if (obj instanceof List) {
+                    List<Object> objectList = (List<Object>) rawObjectList.get(i);
+                    conditions.add(parseConditions(objectList));
+                } else {
+                    LinkedTreeMap<String, String> conditionMap = (LinkedTreeMap<String, String>) rawObjectList.get(i);
+                    conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
+                            conditionMap.get("value")));
+                }
             }
-        }
 
-        Condition condition;
-        if (operand.equals("and")) {
-            condition = new AndCondition(conditions);
-        } else if (operand.equals("or")) {
-            condition = new OrCondition(conditions);
-        } else {
-            condition = new NotCondition(conditions.get(0));
-        }
+            Condition condition;
+            if (operand.equals("and")) {
+                condition = new AndCondition(conditions);
+            } else if (operand.equals("or")) {
+                condition = new OrCondition(conditions);
+            } else {
+                condition = new NotCondition(conditions.get(0));
+            }
 
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.AudienceGsonDeserializer_parseConditions_spot3);
-        return condition;
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.AudienceGsonDeserializer_parseConditions_spot3);
+            return condition;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 }

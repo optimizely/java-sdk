@@ -59,13 +59,13 @@ public class EventBuilder {
     private static void injectFault(ExceptionSpot spot) {
         FaultInjectionManager.getInstance().injectFault(spot);
     }
+    private static void throwInjectedExceptionIfTreatmentDisabled() { FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled(); }
 
     public EventBuilder() {
         this(EventBatch.ClientEngine.JAVA_SDK, BuildVersionInfo.VERSION);
     }
 
     public EventBuilder(EventBatch.ClientEngine clientEngine, String clientVersion) {
-        injectFault(ExceptionSpot.EventBuilder_constructor_spot1);
         this.clientEngine = clientEngine;
         this.clientVersion = clientVersion;
         this.serializer = DefaultJsonSerializer.getInstance();
@@ -78,21 +78,27 @@ public class EventBuilder {
                                                    @Nonnull String userId,
                                                    @Nonnull Map<String, String> attributes) {
 
-        injectFault(ExceptionSpot.EventBuilder_createImpressionEvent_spot1);
-        Decision decision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(),
-                variation.getId(), false);
-        Event impressionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), activatedExperiment.getLayerId(),
-                ACTIVATE_EVENT_KEY, null, null, null, ACTIVATE_EVENT_KEY, null);
-        Snapshot snapshot = new Snapshot(Arrays.asList(decision), Arrays.asList(impressionEvent));
+        try {
 
-        injectFault(ExceptionSpot.EventBuilder_createImpressionEvent_spot2);
-        Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
-        List<Visitor> visitors = Arrays.asList(visitor);
-        EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, projectConfig.getAccountId(), visitors, projectConfig.getAnonymizeIP(), projectConfig.getProjectId(), projectConfig.getRevision());
-        String payload = this.serializer.serialize(eventBatch);
+            injectFault(ExceptionSpot.EventBuilder_createImpressionEvent_spot1);
+            Decision decision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(),
+                    variation.getId(), false);
+            Event impressionEvent = new Event(System.currentTimeMillis(), UUID.randomUUID().toString(), activatedExperiment.getLayerId(),
+                    ACTIVATE_EVENT_KEY, null, null, null, ACTIVATE_EVENT_KEY, null);
+            Snapshot snapshot = new Snapshot(Arrays.asList(decision), Arrays.asList(impressionEvent));
 
-        injectFault(ExceptionSpot.EventBuilder_createImpressionEvent_spot3);
-        return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
+            injectFault(ExceptionSpot.EventBuilder_createImpressionEvent_spot2);
+            Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
+            List<Visitor> visitors = Arrays.asList(visitor);
+            EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, projectConfig.getAccountId(), visitors, projectConfig.getAnonymizeIP(), projectConfig.getProjectId(), projectConfig.getRevision());
+            String payload = this.serializer.serialize(eventBatch);
+
+            injectFault(ExceptionSpot.EventBuilder_createImpressionEvent_spot3);
+            return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
     public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
@@ -103,56 +109,70 @@ public class EventBuilder {
                                                    @Nonnull Map<String, String> attributes,
                                                    @Nonnull Map<String, ?> eventTags) {
 
-        injectFault(ExceptionSpot.EventBuilder_createConversionEvent_spot1);
+        try {
 
-        if (experimentVariationMap.isEmpty()) {
+            injectFault(ExceptionSpot.EventBuilder_createConversionEvent_spot1);
+
+            if (experimentVariationMap.isEmpty()) {
+                return null;
+            }
+
+            ArrayList<Decision> decisions = new ArrayList<Decision>();
+            for (Map.Entry<Experiment, Variation> entry : experimentVariationMap.entrySet()) {
+                Decision decision = new Decision(entry.getKey().getLayerId(), entry.getKey().getId(), entry.getValue().getId(), false);
+                decisions.add(decision);
+            }
+
+            injectFault(ExceptionSpot.EventBuilder_createConversionEvent_spot2);
+
+            EventType eventType = projectConfig.getEventNameMapping().get(eventName);
+
+            Event conversionEvent = new Event(System.currentTimeMillis(), UUID.randomUUID().toString(), eventType.getId(),
+                    eventType.getKey(), null, EventTagUtils.getRevenueValue(eventTags), eventTags, eventType.getKey(), EventTagUtils.getNumericValue(eventTags));
+            Snapshot snapshot = new Snapshot(decisions, Arrays.asList(conversionEvent));
+
+            Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
+            List<Visitor> visitors = Arrays.asList(visitor);
+            EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, projectConfig.getAccountId(), visitors, projectConfig.getAnonymizeIP(), projectConfig.getProjectId(), projectConfig.getRevision());
+            String payload = this.serializer.serialize(eventBatch);
+
+            injectFault(ExceptionSpot.EventBuilder_createConversionEvent_spot3);
+            return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
+
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
             return null;
         }
-
-        ArrayList<Decision> decisions = new ArrayList<Decision>();
-        for (Map.Entry<Experiment, Variation> entry : experimentVariationMap.entrySet()) {
-            Decision decision = new Decision(entry.getKey().getLayerId(), entry.getKey().getId(), entry.getValue().getId(), false);
-            decisions.add(decision);
-        }
-
-        injectFault(ExceptionSpot.EventBuilder_createConversionEvent_spot2);
-
-        EventType eventType = projectConfig.getEventNameMapping().get(eventName);
-
-        Event conversionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), eventType.getId(),
-                eventType.getKey(), null, EventTagUtils.getRevenueValue(eventTags), eventTags, eventType.getKey(), EventTagUtils.getNumericValue(eventTags));
-        Snapshot snapshot = new Snapshot(decisions, Arrays.asList(conversionEvent));
-
-        Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
-        List<Visitor> visitors = Arrays.asList(visitor);
-        EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, projectConfig.getAccountId(), visitors, projectConfig.getAnonymizeIP(), projectConfig.getProjectId(), projectConfig.getRevision());
-        String payload = this.serializer.serialize(eventBatch);
-
-        injectFault(ExceptionSpot.EventBuilder_createConversionEvent_spot3);
-        return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
     }
 
     private List<Attribute> buildAttributeList(ProjectConfig projectConfig, Map<String, String> attributes) {
-        List<Attribute> attributesList = new ArrayList<Attribute>();
 
-        injectFault(ExceptionSpot.EventBuilder_buildAttributeList_spot1);
-        Map<String, com.optimizely.ab.config.Attribute> attributeMap = projectConfig.getAttributeKeyMapping();
-        for (Map.Entry<String, String> entry : attributes.entrySet()) {
-            com.optimizely.ab.config.Attribute projectAttribute = attributeMap.get(entry.getKey());
-            Attribute attribute = new Attribute((projectAttribute != null ? projectAttribute.getId() : null),
-                    entry.getKey(), Attribute.CUSTOM_ATTRIBUTE_TYPE, entry.getValue());
+        try {
 
-            injectFault(ExceptionSpot.EventBuilder_buildAttributeList_spot2);
+            List<Attribute> attributesList = new ArrayList<Attribute>();
 
-            if (entry.getKey() == DecisionService.BUCKETING_ATTRIBUTE) {
-                attribute = new Attribute(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
-                        ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE, Attribute.CUSTOM_ATTRIBUTE_TYPE, entry.getValue());
+            injectFault(ExceptionSpot.EventBuilder_buildAttributeList_spot1);
+            Map<String, com.optimizely.ab.config.Attribute> attributeMap = projectConfig.getAttributeKeyMapping();
+            for (Map.Entry<String, String> entry : attributes.entrySet()) {
+                com.optimizely.ab.config.Attribute projectAttribute = attributeMap.get(entry.getKey());
+                Attribute attribute = new Attribute((projectAttribute != null ? projectAttribute.getId() : null),
+                        entry.getKey(), Attribute.CUSTOM_ATTRIBUTE_TYPE, entry.getValue());
+
+                injectFault(ExceptionSpot.EventBuilder_buildAttributeList_spot2);
+
+                if (entry.getKey() == DecisionService.BUCKETING_ATTRIBUTE) {
+                    attribute = new Attribute(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
+                            ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE, Attribute.CUSTOM_ATTRIBUTE_TYPE, entry.getValue());
+                }
+
+                attributesList.add(attribute);
             }
 
-            attributesList.add(attribute);
+            injectFault(ExceptionSpot.EventBuilder_buildAttributeList_spot3);
+            return attributesList;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return null;
         }
-
-        injectFault(ExceptionSpot.EventBuilder_buildAttributeList_spot3);
-        return attributesList;
     }
 }

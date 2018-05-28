@@ -31,9 +31,13 @@ public class FeatureFlagGsonDeserializer implements JsonDeserializer<FeatureFlag
     @Override
     public FeatureFlag deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
             throws JsonParseException {
-
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.FeatureFlagGsonDeserializer_deserialize_spot1);
-        JsonObject jsonObject = json.getAsJsonObject();
-        return GsonHelpers.parseFeatureFlag(jsonObject, context);
+        //try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.FeatureFlagGsonDeserializer_deserialize_spot1);
+            JsonObject jsonObject = json.getAsJsonObject();
+            return GsonHelpers.parseFeatureFlag(jsonObject, context);
+        //} catch (Exception e) {
+        //    FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+        //    return null;
+       // }
     }
 }

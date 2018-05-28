@@ -30,15 +30,20 @@ import java.util.Map;
 @Immutable
 public class NotCondition implements Condition {
 
-    private final Condition condition;
+    private Condition condition;
 
     private static void injectFault(ExceptionSpot spot) {
         FaultInjectionManager.getInstance().injectFault(spot);
     }
+    private static void throwInjectedExceptionIfTreatmentDisabled() { FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled(); }
 
     public NotCondition(@Nonnull Condition condition) {
-        injectFault(ExceptionSpot.NotCondition_constructor_spot1);
-        this.condition = condition;
+        try {
+            injectFault(ExceptionSpot.NotCondition_constructor_spot1);
+            this.condition = condition;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+        }
     }
 
     public Condition getCondition() {
@@ -46,38 +51,58 @@ public class NotCondition implements Condition {
     }
 
     public boolean evaluate(Map<String, String> attributes) {
-        injectFault(ExceptionSpot.NotCondition_evaluate_spot1);
-        return !condition.evaluate(attributes);
+        try {
+            injectFault(ExceptionSpot.NotCondition_evaluate_spot1);
+            return !condition.evaluate(attributes);
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return false;
+        }
     }
 
     @Override
     public String toString() {
-        injectFault(ExceptionSpot.NotCondition_toString_spot1);
-        StringBuilder s = new StringBuilder();
+        try {
+            injectFault(ExceptionSpot.NotCondition_toString_spot1);
+            StringBuilder s = new StringBuilder();
 
-        s.append("[not, ");
-        s.append(condition);
-        s.append("]");
-        injectFault(ExceptionSpot.NotCondition_toString_spot2);
-        return s.toString();
+            s.append("[not, ");
+            s.append(condition);
+            s.append("]");
+            injectFault(ExceptionSpot.NotCondition_toString_spot2);
+            return s.toString();
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
     @Override
     public boolean equals(Object other) {
-        injectFault(ExceptionSpot.NotCondition_equals_spot1);
+        try {
+            injectFault(ExceptionSpot.NotCondition_equals_spot1);
 
-        if (!(other instanceof NotCondition))
+            if (!(other instanceof NotCondition))
+                return false;
+
+            NotCondition otherNotCondition = (NotCondition) other;
+
+            injectFault(ExceptionSpot.NotCondition_equals_spot2);
+            return condition.equals(otherNotCondition.getCondition());
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
             return false;
-
-        NotCondition otherNotCondition = (NotCondition)other;
-
-        injectFault(ExceptionSpot.NotCondition_equals_spot2);
-        return condition.equals(otherNotCondition.getCondition());
+        }
     }
 
     @Override
     public int hashCode() {
-        injectFault(ExceptionSpot.NotCondition_hashCode_spot1);
-        return condition.hashCode();
+        try {
+            injectFault(ExceptionSpot.NotCondition_hashCode_spot1);
+            return condition.hashCode();
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return 0;
+        }
     }
 }

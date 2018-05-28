@@ -32,16 +32,17 @@ public class UserProfile {
      * A user's ID.
      */
     @Nonnull
-    public final String userId;
+    public String userId;
     /**
      * The bucketing experimentBucketMap of the user.
      */
     @Nonnull
-    public final Map<String, Decision> experimentBucketMap;
+    public Map<String, Decision> experimentBucketMap;
 
     private static void injectFault(ExceptionSpot spot) {
         FaultInjectionManager.getInstance().injectFault(spot);
     }
+    private static void throwInjectedExceptionIfTreatmentDisabled() { FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled(); }
 
     /**
      * Construct a User Profile instance from explicit components.
@@ -50,31 +51,45 @@ public class UserProfile {
      * @param experimentBucketMap The bucketing experimentBucketMap of the user.
      */
     public UserProfile(@Nonnull String userId, @Nonnull Map<String, Decision> experimentBucketMap) {
-        injectFault(ExceptionSpot.UserProfile_constructor_spot1);
-        this.userId = userId;
-        this.experimentBucketMap = experimentBucketMap;
+        try {
+            injectFault(ExceptionSpot.UserProfile_constructor_spot1);
+            this.userId = userId;
+            this.experimentBucketMap = experimentBucketMap;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+        }
     }
 
     @Override
     public boolean equals(Object o) {
-        injectFault(ExceptionSpot.UserProfile_equals_spot1);
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        injectFault(ExceptionSpot.UserProfile_equals_spot2);
-        UserProfile that = (UserProfile) o;
+        try {
+            injectFault(ExceptionSpot.UserProfile_equals_spot1);
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            injectFault(ExceptionSpot.UserProfile_equals_spot2);
+            UserProfile that = (UserProfile) o;
 
-        if (!userId.equals(that.userId)) return false;
-        injectFault(ExceptionSpot.UserProfile_equals_spot3);
-        return experimentBucketMap.equals(that.experimentBucketMap);
+            if (!userId.equals(that.userId)) return false;
+            injectFault(ExceptionSpot.UserProfile_equals_spot3);
+            return experimentBucketMap.equals(that.experimentBucketMap);
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return false;
+        }
     }
 
     @Override
     public int hashCode() {
-        injectFault(ExceptionSpot.UserProfile_hashCode_spot1);
-        int result = userId.hashCode();
-        result = 31 * result + experimentBucketMap.hashCode();
-        injectFault(ExceptionSpot.UserProfile_hashCode_spot2);
-        return result;
+        try {
+            injectFault(ExceptionSpot.UserProfile_hashCode_spot1);
+            int result = userId.hashCode();
+            result = 31 * result + experimentBucketMap.hashCode();
+            injectFault(ExceptionSpot.UserProfile_hashCode_spot2);
+            return result;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return 0;
+        }
     }
 
     /**
@@ -83,16 +98,21 @@ public class UserProfile {
      * @return A map representation of the user profile instance.
      */
     Map<String, Object> toMap() {
-        injectFault(ExceptionSpot.UserProfile_toMap_spot1);
-        Map<String, Object> userProfileMap = new HashMap<String, Object>(2);
-        userProfileMap.put(UserProfileService.userIdKey, userId);
-        Map<String, Map<String, String>> decisionsMap = new HashMap<String, Map<String, String>>(experimentBucketMap.size());
-        for (Entry<String, Decision> decisionEntry : experimentBucketMap.entrySet()) {
-            injectFault(ExceptionSpot.UserProfile_toMap_spot2);
-            decisionsMap.put(decisionEntry.getKey(), decisionEntry.getValue().toMap());
+        try {
+            injectFault(ExceptionSpot.UserProfile_toMap_spot1);
+            Map<String, Object> userProfileMap = new HashMap<String, Object>(2);
+            userProfileMap.put(UserProfileService.userIdKey, userId);
+            Map<String, Map<String, String>> decisionsMap = new HashMap<String, Map<String, String>>(experimentBucketMap.size());
+            for (Entry<String, Decision> decisionEntry : experimentBucketMap.entrySet()) {
+                injectFault(ExceptionSpot.UserProfile_toMap_spot2);
+                decisionsMap.put(decisionEntry.getKey(), decisionEntry.getValue().toMap());
+            }
+            userProfileMap.put(UserProfileService.experimentBucketMapKey, decisionsMap);
+            injectFault(ExceptionSpot.UserProfile_toMap_spot3);
+            return userProfileMap;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return null;
         }
-        userProfileMap.put(UserProfileService.experimentBucketMapKey, decisionsMap);
-        injectFault(ExceptionSpot.UserProfile_toMap_spot3);
-        return userProfileMap;
     }
 }

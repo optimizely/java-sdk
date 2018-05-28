@@ -35,26 +35,36 @@ public class ProjectConfigUtils {
      * Helper method for creating convenience mappings from key to entity
      */
     public static <T extends IdKeyMapped> Map<String, T> generateNameMapping(List<T> nameables) {
-        injectFault(ExceptionSpot.ProjectConfigUtils_generateNameMapping_spot1);
-        Map<String, T> nameMapping = new HashMap<String, T>();
-        for (T nameable : nameables) {
-            nameMapping.put(nameable.getKey(), nameable);
-        }
+        try {
+            injectFault(ExceptionSpot.ProjectConfigUtils_generateNameMapping_spot1);
+            Map<String, T> nameMapping = new HashMap<String, T>();
+            for (T nameable : nameables) {
+                nameMapping.put(nameable.getKey(), nameable);
+            }
 
-        return Collections.unmodifiableMap(nameMapping);
+            return Collections.unmodifiableMap(nameMapping);
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
     /**
      * Helper method for creating convenience mappings from ID to entity
      */
     public static <T extends IdMapped> Map<String, T> generateIdMapping(List<T> nameables) {
-        injectFault(ExceptionSpot.ProjectConfigUtils_generateIdMapping_spot1);
-        Map<String, T> nameMapping = new HashMap<String, T>();
-        for (T nameable : nameables) {
-            nameMapping.put(nameable.getId(), nameable);
-        }
+        try {
+            injectFault(ExceptionSpot.ProjectConfigUtils_generateIdMapping_spot1);
+            Map<String, T> nameMapping = new HashMap<String, T>();
+            for (T nameable : nameables) {
+                nameMapping.put(nameable.getId(), nameable);
+            }
 
-        return Collections.unmodifiableMap(nameMapping);
+            return Collections.unmodifiableMap(nameMapping);
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
     /**
@@ -62,32 +72,38 @@ public class ProjectConfigUtils {
      */
     public static Map<String, List<Experiment>> generateLiveVariableIdToExperimentsMapping(
             List<Experiment> experiments) {
-        injectFault(ExceptionSpot.ProjectConfigUtils_generateLiveVariableIdToExperimentsMapping_spot1);
-        Map<String, List<Experiment>> variableIdToExperiments =
-                new HashMap<String, List<Experiment>>();
-        for (Experiment experiment : experiments) {
-            injectFault(ExceptionSpot.ProjectConfigUtils_generateLiveVariableIdToExperimentsMapping_spot2);
-            if (!experiment.getVariations().isEmpty()) {
-                injectFault(ExceptionSpot.ProjectConfigUtils_generateLiveVariableIdToExperimentsMapping_spot3);
-                // if a live variable is used by an experiment, it will have instances in all variations so we can
-                // short-circuit after getting the live variables for the first variation
-                Variation variation = experiment.getVariations().get(0);
-                if (variation.getLiveVariableUsageInstances() != null) {
-                    injectFault(ExceptionSpot.ProjectConfigUtils_generateLiveVariableIdToExperimentsMapping_spot4);
-                    for (LiveVariableUsageInstance usageInstance : variation.getLiveVariableUsageInstances()) {
-                        List<Experiment> experimentsUsingVariable = variableIdToExperiments.get(usageInstance.getId());
-                        if (experimentsUsingVariable == null) {
-                            experimentsUsingVariable = new ArrayList<Experiment>();
-                        }
 
-                        experimentsUsingVariable.add(experiment);
-                        variableIdToExperiments.put(usageInstance.getId(), experimentsUsingVariable);
+        try {
+            injectFault(ExceptionSpot.ProjectConfigUtils_generateLiveVariableIdToExperimentsMapping_spot1);
+            Map<String, List<Experiment>> variableIdToExperiments =
+                    new HashMap<String, List<Experiment>>();
+            for (Experiment experiment : experiments) {
+                injectFault(ExceptionSpot.ProjectConfigUtils_generateLiveVariableIdToExperimentsMapping_spot2);
+                if (!experiment.getVariations().isEmpty()) {
+                    injectFault(ExceptionSpot.ProjectConfigUtils_generateLiveVariableIdToExperimentsMapping_spot3);
+                    // if a live variable is used by an experiment, it will have instances in all variations so we can
+                    // short-circuit after getting the live variables for the first variation
+                    Variation variation = experiment.getVariations().get(0);
+                    if (variation.getLiveVariableUsageInstances() != null) {
+                        injectFault(ExceptionSpot.ProjectConfigUtils_generateLiveVariableIdToExperimentsMapping_spot4);
+                        for (LiveVariableUsageInstance usageInstance : variation.getLiveVariableUsageInstances()) {
+                            List<Experiment> experimentsUsingVariable = variableIdToExperiments.get(usageInstance.getId());
+                            if (experimentsUsingVariable == null) {
+                                experimentsUsingVariable = new ArrayList<Experiment>();
+                            }
+
+                            experimentsUsingVariable.add(experiment);
+                            variableIdToExperiments.put(usageInstance.getId(), experimentsUsingVariable);
+                        }
                     }
                 }
             }
-        }
 
-        return variableIdToExperiments;
+            return variableIdToExperiments;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
     /**
@@ -95,29 +111,37 @@ public class ProjectConfigUtils {
      */
     public static Map<String, Map<String, LiveVariableUsageInstance>> generateVariationToLiveVariableUsageInstancesMap(
             List<Experiment> experiments) {
-        injectFault(ExceptionSpot.ProjectConfigUtils_generateVariationToLiveVariableUsageInstancesMap_spot1);
-        Map<String, Map<String, LiveVariableUsageInstance>> liveVariableValueMap =
-                new HashMap<String, Map<String, LiveVariableUsageInstance>>();
-        for (Experiment experiment : experiments) {
-            injectFault(ExceptionSpot.ProjectConfigUtils_generateVariationToLiveVariableUsageInstancesMap_spot2);
-            for (Variation variation : experiment.getVariations()) {
-                if (variation.getLiveVariableUsageInstances() != null) {
-                    injectFault(ExceptionSpot.ProjectConfigUtils_generateVariationToLiveVariableUsageInstancesMap_spot3);
-                    for (LiveVariableUsageInstance usageInstance : variation.getLiveVariableUsageInstances()) {
-                        Map<String, LiveVariableUsageInstance> liveVariableIdToValueMap =
-                                liveVariableValueMap.get(variation.getId());
-                        if (liveVariableIdToValueMap == null) {
-                            liveVariableIdToValueMap = new HashMap<String, LiveVariableUsageInstance>();
-                        }
 
-                        liveVariableIdToValueMap.put(usageInstance.getId(), usageInstance);
-                        liveVariableValueMap.put(variation.getId(), liveVariableIdToValueMap);
+        try {
+
+            injectFault(ExceptionSpot.ProjectConfigUtils_generateVariationToLiveVariableUsageInstancesMap_spot1);
+            Map<String, Map<String, LiveVariableUsageInstance>> liveVariableValueMap =
+                    new HashMap<String, Map<String, LiveVariableUsageInstance>>();
+            for (Experiment experiment : experiments) {
+                injectFault(ExceptionSpot.ProjectConfigUtils_generateVariationToLiveVariableUsageInstancesMap_spot2);
+                for (Variation variation : experiment.getVariations()) {
+                    if (variation.getLiveVariableUsageInstances() != null) {
+                        injectFault(ExceptionSpot.ProjectConfigUtils_generateVariationToLiveVariableUsageInstancesMap_spot3);
+                        for (LiveVariableUsageInstance usageInstance : variation.getLiveVariableUsageInstances()) {
+                            Map<String, LiveVariableUsageInstance> liveVariableIdToValueMap =
+                                    liveVariableValueMap.get(variation.getId());
+                            if (liveVariableIdToValueMap == null) {
+                                liveVariableIdToValueMap = new HashMap<String, LiveVariableUsageInstance>();
+                            }
+
+                            liveVariableIdToValueMap.put(usageInstance.getId(), usageInstance);
+                            liveVariableValueMap.put(variation.getId(), liveVariableIdToValueMap);
+                        }
                     }
                 }
             }
-        }
 
-        injectFault(ExceptionSpot.ProjectConfigUtils_generateVariationToLiveVariableUsageInstancesMap_spot4);
-        return liveVariableValueMap;
+            injectFault(ExceptionSpot.ProjectConfigUtils_generateVariationToLiveVariableUsageInstancesMap_spot4);
+            return liveVariableValueMap;
+
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 }

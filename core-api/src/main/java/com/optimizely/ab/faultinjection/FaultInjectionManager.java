@@ -22,9 +22,9 @@ public class FaultInjectionManager {
 
     public static final String INJECTED_EXCEPTION = "InjectedException";
 
-    private ExceptionSpot activeExceptionSpot = ExceptionSpot.none;
+    private ExceptionSpot activeExceptionSpot = ExceptionSpot.Optimizely_activate3_spot1;
 
-    private static final boolean treatException = true;
+    private static final boolean treatException = false;
 
     /**
      * Private constructor to implement singleton

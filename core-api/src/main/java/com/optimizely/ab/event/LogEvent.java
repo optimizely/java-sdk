@@ -40,7 +40,6 @@ public class LogEvent {
                     @Nonnull Map<String, String> requestParams,
                     @Nonnull String body) {
 
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.LogEvent_constructor_spot1);
         this.requestMethod = requestMethod;
         this.endpointUrl = endpointUrl;
         this.requestParams = requestParams;
@@ -69,13 +68,18 @@ public class LogEvent {
 
     @Override
     public String toString() {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.LogEvent_toString_spot1);
-        return "LogEvent{" +
-               "requestMethod=" + requestMethod +
-               ", endpointUrl='" + endpointUrl + '\'' +
-               ", requestParams=" + requestParams +
-               ", body='" + body + '\'' +
-               '}';
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.LogEvent_toString_spot1);
+            return "LogEvent{" +
+                    "requestMethod=" + requestMethod +
+                    ", endpointUrl='" + endpointUrl + '\'' +
+                    ", requestParams=" + requestParams +
+                    ", body='" + body + '\'' +
+                    '}';
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
     //======== Helper classes ========//

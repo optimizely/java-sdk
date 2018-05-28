@@ -36,7 +36,6 @@ public class TrafficAllocation {
     @JsonCreator
     public TrafficAllocation(@JsonProperty("entityId") String entityId,
                              @JsonProperty("endOfRange") int endOfRange) {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.TrafficAllocation_constructor_spot1);
         this.entityId = entityId;
         this.endOfRange = endOfRange;
     }
@@ -51,11 +50,16 @@ public class TrafficAllocation {
 
     @Override
     public String toString() {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.TrafficAllocation_toString_spot1);
-        return "TrafficAllocation{" +
-               "entityId='" + entityId + '\'' +
-               ", endOfRange=" + endOfRange +
-               '}';
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.TrafficAllocation_toString_spot1);
+            return "TrafficAllocation{" +
+                    "entityId='" + entityId + '\'' +
+                    ", endOfRange=" + endOfRange +
+                    '}';
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 }
 

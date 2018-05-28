@@ -44,7 +44,17 @@ public class TestSuiteRunner {
         List<String> csvOutput = new ArrayList<String>();
         csvOutput.add(" % Pass, % Exception, % Assertion Failure, Fault Spot");
 
+        int i = -1;
+        //int start = 397;
+        //int end = 428;
+        int start = -1;
+        int end  = 1000;
+
         for ( ExceptionSpot spot : mgr.getAllExceptionSpots() ) {
+        //    ExceptionSpot spot = ExceptionSpot.none;
+            ++i;
+            //if( i < start ) continue;
+            //if( i >= end) break;
 
             // change the active exception spot on every run
             mgr.setActiveExceptionSpot(spot);
@@ -56,6 +66,14 @@ public class TestSuiteRunner {
             int exceptionCount = 0;
             int failedAssertionCount = 0;
             for (Failure f : result.getFailures()) {
+
+                System.out.println("==================");
+                System.out.println(f.getTestHeader());
+                System.out.println(f.getMessage());
+                System.out.println(f.getException());
+                System.out.println(f.getDescription());
+                System.out.println("==================");
+
                 // if the exception type is INJECTED_EXCEPTION, it means it was failure due to exception
                 if(f.getMessage() != null && f.getMessage().equals(FaultInjectionManager.INJECTED_EXCEPTION)) {
                     exceptionCount++;
@@ -71,6 +89,8 @@ public class TestSuiteRunner {
                             getPercentage(exceptionCount, result.getRunCount()) + "," +
                             getPercentage(failedAssertionCount, result.getRunCount()) + "," +
                             spot.getReadableName());
+
+            if(spot == ExceptionSpot.Optimizely_activate3_spot1) break;
         }
 
         writeCSVToFile(csvOutput);

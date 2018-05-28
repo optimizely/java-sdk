@@ -47,67 +47,83 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
     @Override
     public ProjectConfig deserialize(JsonParser parser, DeserializationContext context) throws IOException {
 
-        injectFault(ExceptionSpot.ProjectConfigJacksonDeserializer_deserialize_spot1);
-        ObjectMapper mapper = new ObjectMapper();
-        SimpleModule module = new SimpleModule();
-        module.addDeserializer(Audience.class, new AudienceJacksonDeserializer());
-        module.addDeserializer(Group.class, new GroupJacksonDeserializer());
-        mapper.registerModule(module);
+        //try {
 
-        JsonNode node = parser.getCodec().readTree(parser);
+            injectFault(ExceptionSpot.ProjectConfigJacksonDeserializer_deserialize_spot1);
+            ObjectMapper mapper = new ObjectMapper();
+            SimpleModule module = new SimpleModule();
+            module.addDeserializer(Audience.class, new AudienceJacksonDeserializer());
+            module.addDeserializer(Group.class, new GroupJacksonDeserializer());
+            mapper.registerModule(module);
 
-        String accountId = node.get("accountId").textValue();
-        String projectId = node.get("projectId").textValue();
-        String revision = node.get("revision").textValue();
-        String version = node.get("version").textValue();
-        int datafileVersion = Integer.parseInt(version);
+            JsonNode node = parser.getCodec().readTree(parser);
 
-        injectFault(ExceptionSpot.ProjectConfigJacksonDeserializer_deserialize_spot2);
-        List<Group> groups = mapper.readValue(node.get("groups").toString(), new TypeReference<List<Group>>() {});
-        List<Experiment> experiments = mapper.readValue(node.get("experiments").toString(),
-                                                        new TypeReference<List<Experiment>>() {});
+            String accountId = node.get("accountId").textValue();
+            String projectId = node.get("projectId").textValue();
+            String revision = node.get("revision").textValue();
+            String version = node.get("version").textValue();
+            int datafileVersion = Integer.parseInt(version);
 
-        List<Attribute> attributes;
-        attributes = mapper.readValue(node.get("attributes").toString(), new TypeReference<List<Attribute>>() {});
+            injectFault(ExceptionSpot.ProjectConfigJacksonDeserializer_deserialize_spot2);
+            List<Group> groups = mapper.readValue(node.get("groups").toString(), new TypeReference<List<Group>>() {
+            });
+            List<Experiment> experiments = mapper.readValue(node.get("experiments").toString(),
+                    new TypeReference<List<Experiment>>() {
+                    });
 
-        List<EventType> events = mapper.readValue(node.get("events").toString(),
-                                                  new TypeReference<List<EventType>>() {});
-        List<Audience> audiences = mapper.readValue(node.get("audiences").toString(),
-                                                    new TypeReference<List<Audience>>() {});
+            List<Attribute> attributes;
+            attributes = mapper.readValue(node.get("attributes").toString(), new TypeReference<List<Attribute>>() {
+            });
 
-        injectFault(ExceptionSpot.ProjectConfigJacksonDeserializer_deserialize_spot3);
-        boolean anonymizeIP = false;
-        List<LiveVariable> liveVariables = null;
-        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
-            liveVariables = mapper.readValue(node.get("variables").toString(),
-                                             new TypeReference<List<LiveVariable>>() {});
-            anonymizeIP = node.get("anonymizeIP").asBoolean();
-        }
+            List<EventType> events = mapper.readValue(node.get("events").toString(),
+                    new TypeReference<List<EventType>>() {
+                    });
+            List<Audience> audiences = mapper.readValue(node.get("audiences").toString(),
+                    new TypeReference<List<Audience>>() {
+                    });
 
-        List<FeatureFlag> featureFlags = null;
-        List<Rollout> rollouts = null;
-        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
-            featureFlags = mapper.readValue(node.get("featureFlags").toString(),
-                   new TypeReference<List<FeatureFlag>>() {});
-            rollouts = mapper.readValue(node.get("rollouts").toString(),
-                    new TypeReference<List<Rollout>>(){});
-        }
+            injectFault(ExceptionSpot.ProjectConfigJacksonDeserializer_deserialize_spot3);
+            boolean anonymizeIP = false;
+            List<LiveVariable> liveVariables = null;
+            if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
+                liveVariables = mapper.readValue(node.get("variables").toString(),
+                        new TypeReference<List<LiveVariable>>() {
+                        });
+                anonymizeIP = node.get("anonymizeIP").asBoolean();
+            }
 
-        injectFault(ExceptionSpot.ProjectConfigJacksonDeserializer_deserialize_spot4);
-        return new ProjectConfig(
-                accountId,
-                anonymizeIP,
-                projectId,
-                revision,
-                version,
-                attributes,
-                audiences,
-                events,
-                experiments,
-                featureFlags,
-                groups,
-                liveVariables,
-                rollouts
-        );
+            List<FeatureFlag> featureFlags = null;
+            List<Rollout> rollouts = null;
+            if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
+                featureFlags = mapper.readValue(node.get("featureFlags").toString(),
+                        new TypeReference<List<FeatureFlag>>() {
+                        });
+                rollouts = mapper.readValue(node.get("rollouts").toString(),
+                        new TypeReference<List<Rollout>>() {
+                        });
+            }
+
+            injectFault(ExceptionSpot.ProjectConfigJacksonDeserializer_deserialize_spot4);
+            return new ProjectConfig(
+                    accountId,
+                    anonymizeIP,
+                    projectId,
+                    revision,
+                    version,
+                    attributes,
+                    audiences,
+                    events,
+                    experiments,
+                    featureFlags,
+                    groups,
+                    liveVariables,
+                    rollouts
+            );
+        /*} catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
+        }*/
     }
 }

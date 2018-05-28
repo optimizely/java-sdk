@@ -32,17 +32,28 @@ final class JacksonConfigParser implements ConfigParser {
 
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.JacksonConfigParser_parseProjectConfig_spot1);
-        ObjectMapper mapper = new ObjectMapper();
-        SimpleModule module = new SimpleModule();
-        module.addDeserializer(ProjectConfig.class, new ProjectConfigJacksonDeserializer());
-        mapper.registerModule(module);
 
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.JacksonConfigParser_parseProjectConfig_spot2);
         try {
-            return mapper.readValue(json, ProjectConfig.class);
-        } catch (Exception e) {
-            throw new ConfigParseException("Unable to parse datafile: " + json, e);
+
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.JacksonConfigParser_parseProjectConfig_spot1);
+            ObjectMapper mapper = new ObjectMapper();
+            SimpleModule module = new SimpleModule();
+            module.addDeserializer(ProjectConfig.class, new ProjectConfigJacksonDeserializer());
+            mapper.registerModule(module);
+
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.JacksonConfigParser_parseProjectConfig_spot2);
+            try {
+                return mapper.readValue(json, ProjectConfig.class);
+            } catch (Exception e) {
+                throw new ConfigParseException("Unable to parse datafile: " + json, e);
+            }
+        }
+        catch (ConfigParseException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
         }
     }
 }

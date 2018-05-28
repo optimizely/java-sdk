@@ -40,7 +40,6 @@ public class Rollout implements IdMapped {
     @JsonCreator
     public Rollout(@JsonProperty("id") String id,
                    @JsonProperty("experiments") List<Experiment> experiments) {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Rollout_constructor_spot1);
         this.id = id;
         this.experiments = experiments;
     }
@@ -56,10 +55,15 @@ public class Rollout implements IdMapped {
 
     @Override
     public String toString() {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Rollout_toString_spot1);
-        return "Rollout{" +
-                "id='" + id + '\'' +
-                ", experiments=" + experiments +
-                '}';
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Rollout_toString_spot1);
+            return "Rollout{" +
+                    "id='" + id + '\'' +
+                    ", experiments=" + experiments +
+                    '}';
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 }

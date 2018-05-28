@@ -34,18 +34,22 @@ import javax.annotation.concurrent.Immutable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Audience implements IdKeyMapped {
 
-    private final String id;
-    private final String name;
-    private final Condition conditions;
+    private String id;
+    private String name;
+    private Condition conditions;
 
     @JsonCreator
     public Audience(@JsonProperty("id") String id,
                     @JsonProperty("name") String name,
                     @JsonProperty("conditions") Condition conditions) {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Audience_constructor_spot1);
-        this.id = id;
-        this.name = name;
-        this.conditions = conditions;
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Audience_constructor_spot1);
+            this.id = id;
+            this.name = name;
+            this.conditions = conditions;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+        }
     }
 
     public String getId() {
@@ -66,11 +70,17 @@ public class Audience implements IdKeyMapped {
 
     @Override
     public String toString() {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Audience_toString_spot1);
-        return "Audience{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", conditions=" + conditions +
-                '}';
+
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Audience_toString_spot1);
+            return "Audience{" +
+                    "id='" + id + '\'' +
+                    ", name='" + name + '\'' +
+                    ", conditions=" + conditions +
+                    '}';
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 }

@@ -37,11 +37,11 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Variation implements IdKeyMapped {
 
-    private final String id;
-    private final String key;
-    private final Boolean featureEnabled;
-    private final List<LiveVariableUsageInstance> liveVariableUsageInstances;
-    private final Map<String, LiveVariableUsageInstance> variableIdToLiveVariableUsageInstanceMap;
+    private String id;
+    private String key;
+    private Boolean featureEnabled;
+    private List<LiveVariableUsageInstance> liveVariableUsageInstances;
+    private Map<String, LiveVariableUsageInstance> variableIdToLiveVariableUsageInstanceMap;
 
     private static void injectFault(ExceptionSpot spot) {
         FaultInjectionManager.getInstance().injectFault(spot);
@@ -49,14 +49,12 @@ public class Variation implements IdKeyMapped {
 
     public Variation(String id, String key) {
         this(id, key, null);
-        injectFault(ExceptionSpot.Variation_constructor1_spot1);
     }
 
     public Variation(String id,
                      String key,
                      List<LiveVariableUsageInstance> liveVariableUsageInstances) {
         this(id, key,false, liveVariableUsageInstances);
-        injectFault(ExceptionSpot.Variation_constructor2_spot1);
     }
 
     @JsonCreator
@@ -64,20 +62,24 @@ public class Variation implements IdKeyMapped {
                      @JsonProperty("key") String key,
                      @JsonProperty("featureEnabled") Boolean featureEnabled,
                      @JsonProperty("variables") List<LiveVariableUsageInstance> liveVariableUsageInstances) {
-        injectFault(ExceptionSpot.Variation_constructor3_spot1);
-        this.id = id;
-        this.key = key;
-        if(featureEnabled != null)
-            this.featureEnabled = featureEnabled;
-        else
-            this.featureEnabled = false;
-        if (liveVariableUsageInstances == null) {
-            this.liveVariableUsageInstances = Collections.emptyList();
+
+        try {
+            injectFault(ExceptionSpot.Variation_constructor_spot1);
+            this.id = id;
+            this.key = key;
+            if (featureEnabled != null)
+                this.featureEnabled = featureEnabled;
+            else
+                this.featureEnabled = false;
+            if (liveVariableUsageInstances == null) {
+                this.liveVariableUsageInstances = Collections.emptyList();
+            } else {
+                this.liveVariableUsageInstances = liveVariableUsageInstances;
+            }
+            this.variableIdToLiveVariableUsageInstanceMap = ProjectConfigUtils.generateIdMapping(this.liveVariableUsageInstances);
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
         }
-        else {
-            this.liveVariableUsageInstances = liveVariableUsageInstances;
-        }
-        this.variableIdToLiveVariableUsageInstanceMap = ProjectConfigUtils.generateIdMapping(this.liveVariableUsageInstances);
     }
 
     public @Nonnull String getId() {
@@ -101,16 +103,26 @@ public class Variation implements IdKeyMapped {
     }
 
     public boolean is(String otherKey) {
-        injectFault(ExceptionSpot.Variation_is_spot1);
-        return key.equals(otherKey);
+        try {
+            injectFault(ExceptionSpot.Variation_is_spot1);
+            return key.equals(otherKey);
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return false;
+        }
     }
 
     @Override
     public String toString() {
-        injectFault(ExceptionSpot.Variation_toString_spot1);
-        return "Variation{" +
-               "id='" + id + '\'' +
-               ", key='" + key + '\'' +
-               '}';
+        try {
+            injectFault(ExceptionSpot.Variation_toString_spot1);
+            return "Variation{" +
+                    "id='" + id + '\'' +
+                    ", key='" + key + '\'' +
+                    '}';
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 }

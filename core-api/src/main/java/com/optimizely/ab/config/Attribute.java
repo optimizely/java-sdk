@@ -33,9 +33,9 @@ import javax.annotation.concurrent.Immutable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Attribute implements IdKeyMapped {
 
-    private final String id;
-    private final String key;
-    private final String segmentId;
+    private String id;
+    private String key;
+    private String segmentId;
 
     public Attribute(String id, String key) {
         this(id, key, null);
@@ -45,10 +45,14 @@ public class Attribute implements IdKeyMapped {
     public Attribute(@JsonProperty("id") String id,
                      @JsonProperty("key") String key,
                      @JsonProperty("segmentId") String segmentId) {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Attribute_constructor_spot1);
-        this.id = id;
-        this.key = key;
-        this.segmentId = segmentId;
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Attribute_constructor_spot1);
+            this.id = id;
+            this.key = key;
+            this.segmentId = segmentId;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+        }
     }
 
     public String getId() {
@@ -65,11 +69,16 @@ public class Attribute implements IdKeyMapped {
 
     @Override
     public String toString() {
-        FaultInjectionManager.getInstance().    injectFault(ExceptionSpot.Attribute_toString_spot1);
-        return "Attribute{" +
-               "id='" + id + '\'' +
-               ", key='" + key + '\'' +
-               ", segmentId='" + segmentId + '\'' +
-               '}';
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Attribute_toString_spot1);
+            return "Attribute{" +
+                    "id='" + id + '\'' +
+                    ", key='" + key + '\'' +
+                    ", segmentId='" + segmentId + '\'' +
+                    '}';
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 }

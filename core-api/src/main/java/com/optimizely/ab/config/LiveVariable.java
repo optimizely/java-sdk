@@ -116,12 +116,11 @@ public class LiveVariable implements IdKeyMapped {
                         @JsonProperty("defaultValue") String defaultValue,
                         @JsonProperty("status") VariableStatus status,
                         @JsonProperty("type") VariableType type) {
-        injectFault(ExceptionSpot.LiveVariable_constructor_spot1);
-        this.id = id;
-        this.key = key;
-        this.defaultValue = defaultValue;
-        this.status = status;
-        this.type = type;
+            this.id = id;
+            this.key = key;
+            this.defaultValue = defaultValue;
+            this.status = status;
+            this.type = type;
     }
 
     public @Nullable VariableStatus getStatus() {
@@ -146,39 +145,54 @@ public class LiveVariable implements IdKeyMapped {
 
     @Override
     public String toString() {
-        injectFault(ExceptionSpot.LiveVariable_toString_spot1);
-        return "LiveVariable{" +
-                "id='" + id + '\'' +
-                ", key='" + key + '\'' +
-                ", defaultValue='" + defaultValue + '\'' +
-                ", type=" + type +
-                ", status=" + status +
-                '}';
+        try {
+            injectFault(ExceptionSpot.LiveVariable_toString_spot1);
+            return "LiveVariable{" +
+                    "id='" + id + '\'' +
+                    ", key='" + key + '\'' +
+                    ", defaultValue='" + defaultValue + '\'' +
+                    ", type=" + type +
+                    ", status=" + status +
+                    '}';
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
     @Override
     public boolean equals(Object o) {
-        injectFault(ExceptionSpot.LiveVariable_equals_spot1);
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        try {
+            injectFault(ExceptionSpot.LiveVariable_equals_spot1);
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
 
-        LiveVariable variable = (LiveVariable) o;
-        injectFault(ExceptionSpot.LiveVariable_equals_spot2);
-        if (!id.equals(variable.id)) return false;
-        if (!key.equals(variable.key)) return false;
-        if (!defaultValue.equals(variable.defaultValue)) return false;
-        if (type != variable.type) return false;
-        return status == variable.status;
+            LiveVariable variable = (LiveVariable) o;
+            injectFault(ExceptionSpot.LiveVariable_equals_spot2);
+            if (!id.equals(variable.id)) return false;
+            if (!key.equals(variable.key)) return false;
+            if (!defaultValue.equals(variable.defaultValue)) return false;
+            if (type != variable.type) return false;
+            return status == variable.status;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return false;
+        }
     }
 
     @Override
     public int hashCode() {
-        injectFault(ExceptionSpot.LiveVariable_hasCode_spot1);
-        int result = id.hashCode();
-        result = 31 * result + key.hashCode();
-        result = 31 * result + defaultValue.hashCode();
-        result = 31 * result + type.hashCode();
-        result = 31 * result + status.hashCode();
-        return result;
+        try {
+            injectFault(ExceptionSpot.LiveVariable_hasCode_spot1);
+            int result = id.hashCode();
+            result = 31 * result + key.hashCode();
+            result = 31 * result + defaultValue.hashCode();
+            result = 31 * result + type.hashCode();
+            result = 31 * result + status.hashCode();
+            return result;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return 0;
+        }
     }
 }

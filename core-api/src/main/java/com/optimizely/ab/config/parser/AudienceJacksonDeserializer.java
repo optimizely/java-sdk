@@ -44,50 +44,61 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
 
     @Override
     public Audience deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-        injectFault(ExceptionSpot.AudienceJacksonDeserializer_deserialize_spot1);
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode node = parser.getCodec().readTree(parser);
+        try {
+            injectFault(ExceptionSpot.AudienceJacksonDeserializer_deserialize_spot1);
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode node = parser.getCodec().readTree(parser);
 
-        injectFault(ExceptionSpot.AudienceJacksonDeserializer_deserialize_spot2);
-        String id = node.get("id").textValue();
-        String name = node.get("name").textValue();
-        List<Object> rawObjectList = (List<Object>)mapper.readValue(node.get("conditions").textValue(), List.class);
-        Condition conditions = parseConditions(rawObjectList);
+            injectFault(ExceptionSpot.AudienceJacksonDeserializer_deserialize_spot2);
+            String id = node.get("id").textValue();
+            String name = node.get("name").textValue();
+            List<Object> rawObjectList = (List<Object>) mapper.readValue(node.get("conditions").textValue(), List.class);
+            Condition conditions = parseConditions(rawObjectList);
 
-        injectFault(ExceptionSpot.AudienceJacksonDeserializer_deserialize_spot3);
-        return new Audience(id, name, conditions);
+            injectFault(ExceptionSpot.AudienceJacksonDeserializer_deserialize_spot3);
+            return new Audience(id, name, conditions);
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
     private Condition parseConditions(List<Object> rawObjectList) {
 
-        injectFault(ExceptionSpot.AudienceJacksonDeserializer_parseConditions_spot1);
-        List<Condition> conditions = new ArrayList<Condition>();
-        String operand = (String)rawObjectList.get(0);
+        try {
 
-        for (int i = 1; i < rawObjectList.size(); i++) {
-            injectFault(ExceptionSpot.AudienceJacksonDeserializer_parseConditions_spot2);
-            Object obj = rawObjectList.get(i);
-            if (obj instanceof List) {
-                List<Object> objectList = (List<Object>)rawObjectList.get(i);
-                conditions.add(parseConditions(objectList));
-            } else {
-                HashMap<String, String> conditionMap = (HashMap<String, String>)rawObjectList.get(i);
-                conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
-                               conditionMap.get("value")));
+            injectFault(ExceptionSpot.AudienceJacksonDeserializer_parseConditions_spot1);
+            List<Condition> conditions = new ArrayList<Condition>();
+            String operand = (String) rawObjectList.get(0);
+
+            for (int i = 1; i < rawObjectList.size(); i++) {
+                injectFault(ExceptionSpot.AudienceJacksonDeserializer_parseConditions_spot2);
+                Object obj = rawObjectList.get(i);
+                if (obj instanceof List) {
+                    List<Object> objectList = (List<Object>) rawObjectList.get(i);
+                    conditions.add(parseConditions(objectList));
+                } else {
+                    HashMap<String, String> conditionMap = (HashMap<String, String>) rawObjectList.get(i);
+                    conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
+                            conditionMap.get("value")));
+                }
             }
-        }
 
-        Condition condition;
-        if (operand.equals("and")) {
-            condition = new AndCondition(conditions);
-        } else if (operand.equals("or")) {
-            condition = new OrCondition(conditions);
-        } else {
-            condition = new NotCondition(conditions.get(0));
-        }
+            Condition condition;
+            if (operand.equals("and")) {
+                condition = new AndCondition(conditions);
+            } else if (operand.equals("or")) {
+                condition = new OrCondition(conditions);
+            } else {
+                condition = new NotCondition(conditions.get(0));
+            }
 
-        injectFault(ExceptionSpot.AudienceJacksonDeserializer_parseConditions_spot3);
-        return condition;
+            injectFault(ExceptionSpot.AudienceJacksonDeserializer_parseConditions_spot3);
+            return condition;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 }
 

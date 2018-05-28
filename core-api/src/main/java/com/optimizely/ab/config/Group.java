@@ -35,10 +35,10 @@ import javax.annotation.concurrent.Immutable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Group implements IdMapped {
 
-    private final String id;
-    private final String policy;
-    private final List<TrafficAllocation> trafficAllocation;
-    private final List<Experiment> experiments;
+    private String id;
+    private String policy;
+    private List<TrafficAllocation> trafficAllocation;
+    private List<Experiment> experiments;
 
     public static final String RANDOM_POLICY = "random";
 
@@ -47,11 +47,16 @@ public class Group implements IdMapped {
                  @JsonProperty("policy") String policy,
                  @JsonProperty("experiments") List<Experiment> experiments,
                  @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation) {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Group_constructor_spot1);
-        this.id = id;
-        this.policy = policy;
-        this.trafficAllocation = trafficAllocation;
-        this.experiments = experiments;
+
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Group_constructor_spot1);
+            this.id = id;
+            this.policy = policy;
+            this.trafficAllocation = trafficAllocation;
+            this.experiments = experiments;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+        }
     }
 
     public String getId() {
@@ -72,12 +77,16 @@ public class Group implements IdMapped {
 
     @Override
     public String toString() {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Group_toString_spot1);
-        return "Group{" +
-                "id='" + id + '\'' +
-                ", policy='" + policy + '\'' +
-                ", experiments=" + experiments +
-                ", trafficAllocation=" + trafficAllocation +
-                '}';
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.Group_toString_spot1);
+            return "Group{" +
+                    "id='" + id + '\'' +
+                    ", policy='" + policy + '\'' +
+                    ", experiments=" + experiments +
+                    ", trafficAllocation=" + trafficAllocation +
+                    '}';
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

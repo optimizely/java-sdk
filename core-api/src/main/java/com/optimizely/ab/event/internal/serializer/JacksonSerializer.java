@@ -30,12 +30,17 @@ class JacksonSerializer implements Serializer {
             PropertyNamingStrategy.SNAKE_CASE);
 
     public <T> String serialize(T payload) {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.JacksonSerializer_serialize_spot1);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         try {
-            return mapper.writeValueAsString(payload);
-        } catch (JsonProcessingException e) {
-            throw new SerializationException("Unable to serialize payload", e);
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.JacksonSerializer_serialize_spot1);
+            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+            try {
+                return mapper.writeValueAsString(payload);
+            } catch (JsonProcessingException e) {
+                throw new SerializationException("Unable to serialize payload", e);
+            }
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
         }
     }
 }

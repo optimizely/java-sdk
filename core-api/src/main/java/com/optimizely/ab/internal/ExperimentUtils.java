@@ -41,13 +41,18 @@ public final class ExperimentUtils {
      * @return whether the pre-conditions are satisfied
      */
     public static boolean isExperimentActive(@Nonnull Experiment experiment) {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ExperimentUtils_isExperimentActive_spot1);
-        if (!experiment.isActive()) {
-            logger.info("Experiment \"{}\" is not running.", experiment.getKey());
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ExperimentUtils_isExperimentActive_spot1);
+            if (!experiment.isActive()) {
+                logger.info("Experiment \"{}\" is not running.", experiment.getKey());
+                return false;
+            }
+
+            return true;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
             return false;
         }
-
-        return true;
     }
 
     /**
@@ -61,28 +66,33 @@ public final class ExperimentUtils {
     public static boolean isUserInExperiment(@Nonnull ProjectConfig projectConfig,
                                              @Nonnull Experiment experiment,
                                              @Nonnull Map<String, String> attributes) {
+        try {
 
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ExperimentUtils_isUserInExperiment_spot1);
-        List<String> experimentAudienceIds = experiment.getAudienceIds();
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ExperimentUtils_isUserInExperiment_spot1);
+            List<String> experimentAudienceIds = experiment.getAudienceIds();
 
-        // if there are no audiences, ALL users should be part of the experiment
-        if (experimentAudienceIds.isEmpty()) {
-            return true;
-        }
-
-        // if there are audiences, but no user attributes, the user is not in the experiment.
-        if (attributes.isEmpty()) {
-            return false;
-        }
-
-        for (String audienceId : experimentAudienceIds) {
-            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ExperimentUtils_isUserInExperiment_spot2);
-            Condition conditions = projectConfig.getAudienceConditionsFromId(audienceId);
-            if (conditions.evaluate(attributes)) {
+            // if there are no audiences, ALL users should be part of the experiment
+            if (experimentAudienceIds.isEmpty()) {
                 return true;
             }
-        }
 
-        return false;
+            // if there are audiences, but no user attributes, the user is not in the experiment.
+            if (attributes.isEmpty()) {
+                return false;
+            }
+
+            for (String audienceId : experimentAudienceIds) {
+                FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ExperimentUtils_isUserInExperiment_spot2);
+                Condition conditions = projectConfig.getAudienceConditionsFromId(audienceId);
+                if (conditions.evaluate(attributes)) {
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return false;
+        }
     }
 }

@@ -38,7 +38,6 @@ public class LiveVariableUsageInstance implements IdMapped {
     @JsonCreator
     public LiveVariableUsageInstance(@JsonProperty("id") String id,
                                      @JsonProperty("value") String value) {
-        injectFault(ExceptionSpot.LiveVariableUsageInstance_constructor_spot1);
         this.id = id;
         this.value = value;
     }
@@ -53,20 +52,30 @@ public class LiveVariableUsageInstance implements IdMapped {
 
     @Override
     public boolean equals(Object o) {
-        injectFault(ExceptionSpot.LiveVariableUsageInstance_equals_spot1);
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        try {
+            injectFault(ExceptionSpot.LiveVariableUsageInstance_equals_spot1);
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
 
-        LiveVariableUsageInstance that = (LiveVariableUsageInstance) o;
-        injectFault(ExceptionSpot.LiveVariableUsageInstance_equals_spot2);
-        return id.equals(that.id) && value.equals(that.value);
+            LiveVariableUsageInstance that = (LiveVariableUsageInstance) o;
+            injectFault(ExceptionSpot.LiveVariableUsageInstance_equals_spot2);
+            return id.equals(that.id) && value.equals(that.value);
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return false;
+        }
     }
 
     @Override
     public int hashCode() {
-        injectFault(ExceptionSpot.LiveVariableUsageInstance_hashCode_spot1);
-        int result = id.hashCode();
-        result = 31 * result + value.hashCode();
-        return result;
+        try {
+            injectFault(ExceptionSpot.LiveVariableUsageInstance_hashCode_spot1);
+            int result = id.hashCode();
+            result = 31 * result + value.hashCode();
+            return result;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return 0;
+        }
     }
 }

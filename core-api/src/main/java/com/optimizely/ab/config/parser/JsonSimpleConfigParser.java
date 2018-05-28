@@ -114,7 +114,11 @@ final class JsonSimpleConfigParser implements ConfigParser {
                     liveVariables,
                     rollouts
             );
-        } catch (Exception e) {
+        }
+        /*catch (ConfigParseException e) {
+            throw e;
+        }*/
+        catch (Exception e) {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
         }
     }
@@ -127,291 +131,377 @@ final class JsonSimpleConfigParser implements ConfigParser {
 
     private List<Experiment> parseExperiments(JSONArray experimentJson, String groupId) {
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseExperiments_spot1);
-        List<Experiment> experiments = new ArrayList<Experiment>(experimentJson.size());
+        try {
 
-        for (Object obj : experimentJson) {
-            JSONObject experimentObject = (JSONObject)obj;
-            String id = (String)experimentObject.get("id");
-            String key = (String)experimentObject.get("key");
-            Object statusJson = experimentObject.get("status");
-            String status = statusJson == null ? ExperimentStatus.NOT_STARTED.toString() :
-                    (String)experimentObject.get("status");
-            Object layerIdObject = experimentObject.get("layerId");
-            String layerId = layerIdObject == null ? null : (String)layerIdObject;
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseExperiments_spot1);
+            List<Experiment> experiments = new ArrayList<Experiment>(experimentJson.size());
 
-            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseExperiments_spot2);
-            JSONArray audienceIdsJson = (JSONArray)experimentObject.get("audienceIds");
-            List<String> audienceIds = new ArrayList<String>(audienceIdsJson.size());
+            for (Object obj : experimentJson) {
+                JSONObject experimentObject = (JSONObject) obj;
+                String id = (String) experimentObject.get("id");
+                String key = (String) experimentObject.get("key");
+                Object statusJson = experimentObject.get("status");
+                String status = statusJson == null ? ExperimentStatus.NOT_STARTED.toString() :
+                        (String) experimentObject.get("status");
+                Object layerIdObject = experimentObject.get("layerId");
+                String layerId = layerIdObject == null ? null : (String) layerIdObject;
 
-            for (Object audienceIdObj : audienceIdsJson) {
-                audienceIds.add((String)audienceIdObj);
+                injectFault(ExceptionSpot.JsonSimpleConfigParser_parseExperiments_spot2);
+                JSONArray audienceIdsJson = (JSONArray) experimentObject.get("audienceIds");
+                List<String> audienceIds = new ArrayList<String>(audienceIdsJson.size());
+
+                for (Object audienceIdObj : audienceIdsJson) {
+                    audienceIds.add((String) audienceIdObj);
+                }
+
+                injectFault(ExceptionSpot.JsonSimpleConfigParser_parseExperiments_spot3);
+                // parse the child objects
+                List<Variation> variations = parseVariations((JSONArray) experimentObject.get("variations"));
+                Map<String, String> userIdToVariationKeyMap =
+                        parseForcedVariations((JSONObject) experimentObject.get("forcedVariations"));
+                List<TrafficAllocation> trafficAllocations =
+                        parseTrafficAllocation((JSONArray) experimentObject.get("trafficAllocation"));
+
+                experiments.add(new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
+                        trafficAllocations, groupId));
             }
 
-            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseExperiments_spot3);
-            // parse the child objects
-            List<Variation> variations = parseVariations((JSONArray)experimentObject.get("variations"));
-            Map<String, String> userIdToVariationKeyMap =
-                parseForcedVariations((JSONObject)experimentObject.get("forcedVariations"));
-            List<TrafficAllocation> trafficAllocations =
-                parseTrafficAllocation((JSONArray)experimentObject.get("trafficAllocation"));
+            return experiments;
 
-            experiments.add(new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
-                                           trafficAllocations, groupId));
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
         }
-
-        return experiments;
     }
 
     private List<String> parseExperimentIds(JSONArray experimentIdsJsonArray) {
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseExperimentIds_spot1);
-        List<String> experimentIds = new ArrayList<String>(experimentIdsJsonArray.size());
+        try {
 
-        for (Object experimentIdObj : experimentIdsJsonArray) {
-            experimentIds.add((String)experimentIdObj);
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseExperimentIds_spot1);
+            List<String> experimentIds = new ArrayList<String>(experimentIdsJsonArray.size());
+
+            for (Object experimentIdObj : experimentIdsJsonArray) {
+                experimentIds.add((String) experimentIdObj);
+            }
+
+            return experimentIds;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
         }
-
-        return experimentIds;
     }
 
     private List<FeatureFlag> parseFeatureFlags(JSONArray featureFlagJson) {
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseFeatureFlags_spot1);
-        List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>(featureFlagJson.size());
+        try {
 
-        for (Object obj : featureFlagJson) {
-            JSONObject featureFlagObject = (JSONObject)obj;
-            String id = (String)featureFlagObject.get("id");
-            String key = (String)featureFlagObject.get("key");
-            String layerId = (String)featureFlagObject.get("rolloutId");
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseFeatureFlags_spot1);
+            List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>(featureFlagJson.size());
 
-            JSONArray experimentIdsJsonArray = (JSONArray)featureFlagObject.get("experimentIds");
-            List<String> experimentIds = parseExperimentIds(experimentIdsJsonArray);
+            for (Object obj : featureFlagJson) {
+                JSONObject featureFlagObject = (JSONObject) obj;
+                String id = (String) featureFlagObject.get("id");
+                String key = (String) featureFlagObject.get("key");
+                String layerId = (String) featureFlagObject.get("rolloutId");
 
-            List<LiveVariable> liveVariables = parseLiveVariables((JSONArray) featureFlagObject.get("variables"));
+                JSONArray experimentIdsJsonArray = (JSONArray) featureFlagObject.get("experimentIds");
+                List<String> experimentIds = parseExperimentIds(experimentIdsJsonArray);
 
-            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseFeatureFlags_spot2);
-            featureFlags.add(new FeatureFlag(
-                    id,
-                    key,
-                    layerId,
-                    experimentIds,
-                    liveVariables
-            ));
+                List<LiveVariable> liveVariables = parseLiveVariables((JSONArray) featureFlagObject.get("variables"));
+
+                injectFault(ExceptionSpot.JsonSimpleConfigParser_parseFeatureFlags_spot2);
+                featureFlags.add(new FeatureFlag(
+                        id,
+                        key,
+                        layerId,
+                        experimentIds,
+                        liveVariables
+                ));
+            }
+
+            return featureFlags;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
         }
-
-        return featureFlags;
     }
 
     private List<Variation> parseVariations(JSONArray variationJson) {
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseVariations_spot1);
-        List<Variation> variations = new ArrayList<Variation>(variationJson.size());
+        try {
 
-        for (Object obj : variationJson) {
-            JSONObject variationObject = (JSONObject)obj;
-            String id = (String)variationObject.get("id");
-            String key = (String)variationObject.get("key");
-            Boolean featureEnabled = false;
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseVariations_spot1);
+            List<Variation> variations = new ArrayList<Variation>(variationJson.size());
 
-            if(variationObject.containsKey("featureEnabled"))
-                featureEnabled = (Boolean)variationObject.get("featureEnabled");
+            for (Object obj : variationJson) {
+                JSONObject variationObject = (JSONObject) obj;
+                String id = (String) variationObject.get("id");
+                String key = (String) variationObject.get("key");
+                Boolean featureEnabled = false;
 
-            List<LiveVariableUsageInstance> liveVariableUsageInstances = null;
-            if (variationObject.containsKey("variables")) {
-                liveVariableUsageInstances = parseLiveVariableInstances((JSONArray)variationObject.get("variables"));
+                if (variationObject.containsKey("featureEnabled"))
+                    featureEnabled = (Boolean) variationObject.get("featureEnabled");
+
+                List<LiveVariableUsageInstance> liveVariableUsageInstances = null;
+                if (variationObject.containsKey("variables")) {
+                    liveVariableUsageInstances = parseLiveVariableInstances((JSONArray) variationObject.get("variables"));
+                }
+                injectFault(ExceptionSpot.JsonSimpleConfigParser_parseVariations_spot2);
+                variations.add(new Variation(id, key, featureEnabled, liveVariableUsageInstances));
             }
-            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseVariations_spot2);
-            variations.add(new Variation(id, key, featureEnabled, liveVariableUsageInstances));
-        }
 
-        return variations;
+            return variations;
+
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
+        }
     }
 
     private Map<String, String> parseForcedVariations(JSONObject forcedVariationJson) {
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseForcedVariations_spot1);
-        Map<String, String> userIdToVariationKeyMap = new HashMap<String, String>();
-        for (Object obj : forcedVariationJson.entrySet()) {
-            Map.Entry<String, String> entry = (Map.Entry<String, String>)obj;
-            userIdToVariationKeyMap.put(entry.getKey(), entry.getValue());
-        }
+        try {
 
-        return userIdToVariationKeyMap;
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseForcedVariations_spot1);
+            Map<String, String> userIdToVariationKeyMap = new HashMap<String, String>();
+            for (Object obj : forcedVariationJson.entrySet()) {
+                Map.Entry<String, String> entry = (Map.Entry<String, String>) obj;
+                userIdToVariationKeyMap.put(entry.getKey(), entry.getValue());
+            }
+
+            return userIdToVariationKeyMap;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
+        }
     }
 
     private List<TrafficAllocation> parseTrafficAllocation(JSONArray trafficAllocationJson) {
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseTrafficAllocations_spot1);
-        List<TrafficAllocation> trafficAllocation = new ArrayList<TrafficAllocation>(trafficAllocationJson.size());
+        try {
 
-        for (Object obj : trafficAllocationJson) {
-            JSONObject allocationObject = (JSONObject)obj;
-            String entityId = (String)allocationObject.get("entityId");
-            long endOfRange = (Long)allocationObject.get("endOfRange");
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseTrafficAllocations_spot1);
+            List<TrafficAllocation> trafficAllocation = new ArrayList<TrafficAllocation>(trafficAllocationJson.size());
 
-            trafficAllocation.add(new TrafficAllocation(entityId, (int)endOfRange));
+            for (Object obj : trafficAllocationJson) {
+                JSONObject allocationObject = (JSONObject) obj;
+                String entityId = (String) allocationObject.get("entityId");
+                long endOfRange = (Long) allocationObject.get("endOfRange");
+
+                trafficAllocation.add(new TrafficAllocation(entityId, (int) endOfRange));
+            }
+
+            return trafficAllocation;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
         }
-
-        return trafficAllocation;
     }
 
     private List<Attribute> parseAttributes(JSONArray attributeJson) {
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseAttributes_spot1);
-        List<Attribute> attributes = new ArrayList<Attribute>(attributeJson.size());
+        try {
 
-        for (Object obj : attributeJson) {
-            JSONObject attributeObject = (JSONObject)obj;
-            String id = (String)attributeObject.get("id");
-            String key = (String)attributeObject.get("key");
-            String segmentId = (String)attributeObject.get("segmentId");
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseAttributes_spot1);
+            List<Attribute> attributes = new ArrayList<Attribute>(attributeJson.size());
 
-            attributes.add(new Attribute(id, key, segmentId));
+            for (Object obj : attributeJson) {
+                JSONObject attributeObject = (JSONObject) obj;
+                String id = (String) attributeObject.get("id");
+                String key = (String) attributeObject.get("key");
+                String segmentId = (String) attributeObject.get("segmentId");
+
+                attributes.add(new Attribute(id, key, segmentId));
+            }
+
+            return attributes;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
         }
-
-        return attributes;
     }
 
     private List<EventType> parseEvents(JSONArray eventJson) {
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseEvents_spot1);
-        List<EventType> events = new ArrayList<EventType>(eventJson.size());
+        try {
 
-        for (Object obj : eventJson) {
-            JSONObject eventObject = (JSONObject)obj;
-            JSONArray experimentIdsJson = (JSONArray)eventObject.get("experimentIds");
-            List<String> experimentIds = parseExperimentIds(experimentIdsJson);
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseEvents_spot1);
+            List<EventType> events = new ArrayList<EventType>(eventJson.size());
 
-            String id = (String)eventObject.get("id");
-            String key = (String)eventObject.get("key");
+            for (Object obj : eventJson) {
+                JSONObject eventObject = (JSONObject) obj;
+                JSONArray experimentIdsJson = (JSONArray) eventObject.get("experimentIds");
+                List<String> experimentIds = parseExperimentIds(experimentIdsJson);
 
-            events.add(new EventType(id, key, experimentIds));
+                String id = (String) eventObject.get("id");
+                String key = (String) eventObject.get("key");
+
+                events.add(new EventType(id, key, experimentIds));
+            }
+
+            return events;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
         }
-
-        return events;
     }
 
     private List<Audience> parseAudiences(JSONArray audienceJson) throws ParseException {
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseAudiences_spot1);
-        JSONParser parser = new JSONParser();
-        List<Audience> audiences = new ArrayList<Audience>(audienceJson.size());
+        try {
 
-        for (Object obj : audienceJson) {
-            JSONObject audienceObject = (JSONObject)obj;
-            String id = (String)audienceObject.get("id");
-            String key = (String)audienceObject.get("name");
-            String conditionString = (String)audienceObject.get("conditions");
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseAudiences_spot1);
+            JSONParser parser = new JSONParser();
+            List<Audience> audiences = new ArrayList<Audience>(audienceJson.size());
 
-            JSONArray conditionJson = (JSONArray)parser.parse(conditionString);
-            Condition conditions = parseConditions(conditionJson);
-            audiences.add(new Audience(id, key, conditions));
+            for (Object obj : audienceJson) {
+                JSONObject audienceObject = (JSONObject) obj;
+                String id = (String) audienceObject.get("id");
+                String key = (String) audienceObject.get("name");
+                String conditionString = (String) audienceObject.get("conditions");
+
+                JSONArray conditionJson = (JSONArray) parser.parse(conditionString);
+                Condition conditions = parseConditions(conditionJson);
+                audiences.add(new Audience(id, key, conditions));
+            }
+
+            return audiences;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
         }
-
-        return audiences;
     }
 
     private Condition parseConditions(JSONArray conditionJson) {
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseConditions_spot1);
-        List<Condition> conditions = new ArrayList<Condition>();
-        String operand = (String)conditionJson.get(0);
+        try {
 
-        for (int i = 1; i < conditionJson.size(); i++) {
-            Object obj = conditionJson.get(i);
-            if (obj instanceof JSONArray) {
-                conditions.add(parseConditions((JSONArray)conditionJson.get(i)));
-            } else {
-                JSONObject conditionMap = (JSONObject)obj;
-                conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
-                               (String)conditionMap.get("value")));
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseConditions_spot1);
+            List<Condition> conditions = new ArrayList<Condition>();
+            String operand = (String) conditionJson.get(0);
+
+            for (int i = 1; i < conditionJson.size(); i++) {
+                Object obj = conditionJson.get(i);
+                if (obj instanceof JSONArray) {
+                    conditions.add(parseConditions((JSONArray) conditionJson.get(i)));
+                } else {
+                    JSONObject conditionMap = (JSONObject) obj;
+                    conditions.add(new UserAttribute((String) conditionMap.get("name"), (String) conditionMap.get("type"),
+                            (String) conditionMap.get("value")));
+                }
             }
-        }
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseConditions_spot2);
-        Condition condition;
-        if (operand.equals("and")) {
-            condition = new AndCondition(conditions);
-        } else if (operand.equals("or")) {
-            condition = new OrCondition(conditions);
-        } else {
-            condition = new NotCondition(conditions.get(0));
-        }
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseConditions_spot2);
+            Condition condition;
+            if (operand.equals("and")) {
+                condition = new AndCondition(conditions);
+            } else if (operand.equals("or")) {
+                condition = new OrCondition(conditions);
+            } else {
+                condition = new NotCondition(conditions.get(0));
+            }
 
-        return condition;
+            return condition;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
+        }
     }
 
     private List<Group> parseGroups(JSONArray groupJson) {
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseGroups_spot1);
-        List<Group> groups = new ArrayList<Group>(groupJson.size());
+        try {
 
-        for (Object obj : groupJson) {
-            JSONObject groupObject = (JSONObject)obj;
-            String id = (String)groupObject.get("id");
-            String policy = (String)groupObject.get("policy");
-            List<Experiment> experiments = parseExperiments((JSONArray)groupObject.get("experiments"), id);
-            List<TrafficAllocation> trafficAllocations =
-                    parseTrafficAllocation((JSONArray)groupObject.get("trafficAllocation"));
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseGroups_spot1);
+            List<Group> groups = new ArrayList<Group>(groupJson.size());
 
-            groups.add(new Group(id, policy, experiments, trafficAllocations));
+            for (Object obj : groupJson) {
+                JSONObject groupObject = (JSONObject) obj;
+                String id = (String) groupObject.get("id");
+                String policy = (String) groupObject.get("policy");
+                List<Experiment> experiments = parseExperiments((JSONArray) groupObject.get("experiments"), id);
+                List<TrafficAllocation> trafficAllocations =
+                        parseTrafficAllocation((JSONArray) groupObject.get("trafficAllocation"));
+
+                groups.add(new Group(id, policy, experiments, trafficAllocations));
+            }
+
+            return groups;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
         }
-
-        return groups;
     }
 
     private List<LiveVariable> parseLiveVariables(JSONArray liveVariablesJson) {
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseLiveVariables_spot1);
-        List<LiveVariable> liveVariables = new ArrayList<LiveVariable>(liveVariablesJson.size());
+        try {
 
-        for (Object obj : liveVariablesJson) {
-            JSONObject liveVariableObject = (JSONObject)obj;
-            String id = (String)liveVariableObject.get("id");
-            String key = (String)liveVariableObject.get("key");
-            String defaultValue = (String)liveVariableObject.get("defaultValue");
-            VariableType type = VariableType.fromString((String)liveVariableObject.get("type"));
-            VariableStatus status = VariableStatus.fromString((String)liveVariableObject.get("status"));
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseLiveVariables_spot1);
+            List<LiveVariable> liveVariables = new ArrayList<LiveVariable>(liveVariablesJson.size());
 
-            liveVariables.add(new LiveVariable(id, key, defaultValue, status, type));
+            for (Object obj : liveVariablesJson) {
+                JSONObject liveVariableObject = (JSONObject) obj;
+                String id = (String) liveVariableObject.get("id");
+                String key = (String) liveVariableObject.get("key");
+                String defaultValue = (String) liveVariableObject.get("defaultValue");
+                VariableType type = VariableType.fromString((String) liveVariableObject.get("type"));
+                VariableStatus status = VariableStatus.fromString((String) liveVariableObject.get("status"));
+
+                liveVariables.add(new LiveVariable(id, key, defaultValue, status, type));
+            }
+
+            return liveVariables;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
         }
-
-        return liveVariables;
     }
 
     private List<LiveVariableUsageInstance> parseLiveVariableInstances(JSONArray liveVariableInstancesJson) {
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseLiveVariableInstances_spot1);
-        List<LiveVariableUsageInstance> liveVariableUsageInstances =
-                new ArrayList<LiveVariableUsageInstance>(liveVariableInstancesJson.size());
+        try {
 
-        for (Object obj : liveVariableInstancesJson) {
-            JSONObject liveVariableInstanceObject = (JSONObject)obj;
-            String id = (String)liveVariableInstanceObject.get("id");
-            String value = (String)liveVariableInstanceObject.get("value");
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseLiveVariableInstances_spot1);
+            List<LiveVariableUsageInstance> liveVariableUsageInstances =
+                    new ArrayList<LiveVariableUsageInstance>(liveVariableInstancesJson.size());
 
-            liveVariableUsageInstances.add(new LiveVariableUsageInstance(id, value));
+            for (Object obj : liveVariableInstancesJson) {
+                JSONObject liveVariableInstanceObject = (JSONObject) obj;
+                String id = (String) liveVariableInstanceObject.get("id");
+                String value = (String) liveVariableInstanceObject.get("value");
+
+                liveVariableUsageInstances.add(new LiveVariableUsageInstance(id, value));
+            }
+
+            return liveVariableUsageInstances;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
         }
-
-        return liveVariableUsageInstances;
     }
 
     private List<Rollout> parseRollouts(JSONArray rolloutsJson) {
 
-        injectFault(ExceptionSpot.JsonSimpleConfigParser_parseRollouts_spot1);
-        List<Rollout> rollouts = new ArrayList<Rollout>(rolloutsJson.size());
+        try {
 
-        for (Object obj : rolloutsJson) {
-            JSONObject rolloutObject = (JSONObject) obj;
-            String id = (String) rolloutObject.get("id");
-            List<Experiment> experiments = parseExperiments((JSONArray) rolloutObject.get("experiments"));
+            injectFault(ExceptionSpot.JsonSimpleConfigParser_parseRollouts_spot1);
+            List<Rollout> rollouts = new ArrayList<Rollout>(rolloutsJson.size());
 
-            rollouts.add(new Rollout(id, experiments));
+            for (Object obj : rolloutsJson) {
+                JSONObject rolloutObject = (JSONObject) obj;
+                String id = (String) rolloutObject.get("id");
+                List<Experiment> experiments = parseExperiments((JSONArray) rolloutObject.get("experiments"));
+
+                rollouts.add(new Rollout(id, experiments));
+            }
+
+            return rollouts;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
         }
-
-        return rollouts;
     }
 }
 

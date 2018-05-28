@@ -35,8 +35,13 @@ public final class DefaultJsonSerializer {
     private DefaultJsonSerializer() { }
 
     public static Serializer getInstance() {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.DefaultJsonSerializer_getInstance_spot1);
-        return LazyHolder.INSTANCE;
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.DefaultJsonSerializer_getInstance_spot1);
+            return LazyHolder.INSTANCE;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
     //======== Helper methods ========//
@@ -48,24 +53,31 @@ public final class DefaultJsonSerializer {
      */
     private static @Nonnull
     Serializer create() {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.DefaultJsonSerializer_create_spot1);
-        Serializer serializer;
 
-        if (isPresent("com.fasterxml.jackson.databind.ObjectMapper")) {
-            serializer = new JacksonSerializer();
-        } else if (isPresent("com.google.gson.Gson")) {
-            serializer = new GsonSerializer();
-        } else if (isPresent("org.json.simple.JSONObject")) {
-            serializer = new JsonSimpleSerializer();
-        } else if (isPresent("org.json.JSONObject")) {
-            serializer = new JsonSerializer();
-        } else {
-            throw new MissingJsonParserException("unable to locate a JSON parser. "
-                    + "Please see <link> for more information");
+        try {
+
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.DefaultJsonSerializer_create_spot1);
+            Serializer serializer;
+
+            if (isPresent("com.fasterxml.jackson.databind.ObjectMapper")) {
+                serializer = new JacksonSerializer();
+            } else if (isPresent("com.google.gson.Gson")) {
+                serializer = new GsonSerializer();
+            } else if (isPresent("org.json.simple.JSONObject")) {
+                serializer = new JsonSimpleSerializer();
+            } else if (isPresent("org.json.JSONObject")) {
+                serializer = new JsonSerializer();
+            } else {
+                throw new MissingJsonParserException("unable to locate a JSON parser. "
+                        + "Please see <link> for more information");
+            }
+
+            logger.info("using json serializer: {}", serializer.getClass().getSimpleName());
+            return serializer;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
         }
-
-        logger.info("using json serializer: {}", serializer.getClass().getSimpleName());
-        return serializer;
     }
 
     private static boolean isPresent(@Nonnull String className) {
@@ -74,6 +86,9 @@ public final class DefaultJsonSerializer {
             Class.forName(className);
             return true;
         } catch (ClassNotFoundException e) {
+            return false;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
             return false;
         }
     }

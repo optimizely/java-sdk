@@ -33,43 +33,63 @@ public class Decision {
     private static void injectFault(ExceptionSpot spot) {
         FaultInjectionManager.getInstance().injectFault(spot);
     }
+    private static void throwInjectedExceptionIfTreatmentDisabled() { FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled(); }
 
     /**
      * Initialize a Decision object.
      * @param variationId The ID of the variation the user was bucketed into.
      */
     public Decision(@Nonnull String variationId) {
-        injectFault(ExceptionSpot.Decision_constructor_spot1);
-        this.variationId = variationId;
+        try {
+            injectFault(ExceptionSpot.Decision_constructor_spot1);
+            this.variationId = variationId;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+        }
     }
 
     @Override
     public boolean equals(Object o) {
 
-        injectFault(ExceptionSpot.Decision_equals_spot1);
+        try {
+            injectFault(ExceptionSpot.Decision_equals_spot1);
 
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
 
-        injectFault(ExceptionSpot.Decision_equals_spot2);
+            injectFault(ExceptionSpot.Decision_equals_spot2);
 
-        Decision decision = (Decision) o;
+            Decision decision = (Decision) o;
 
-        injectFault(ExceptionSpot.Decision_equals_spot3);
-        return variationId.equals(decision.variationId);
+            injectFault(ExceptionSpot.Decision_equals_spot3);
+            return variationId.equals(decision.variationId);
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return false;
+        }
     }
 
     @Override
     public int hashCode() {
-        injectFault(ExceptionSpot.Decision_hashCode_spot1);
-        return variationId.hashCode();
+        try {
+            injectFault(ExceptionSpot.Decision_hashCode_spot1);
+            return variationId.hashCode();
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return 0;
+        }
     }
 
     public Map<String, String> toMap() {
-        injectFault(ExceptionSpot.Decision_toMap_spot1);
-        Map<String, String> decisionMap = new HashMap<String, String>(1);
-        injectFault(ExceptionSpot.Decision_toMap_spot2);
-        decisionMap.put(UserProfileService.variationIdKey, variationId);
-        return decisionMap;
+        try {
+            injectFault(ExceptionSpot.Decision_toMap_spot1);
+            Map<String, String> decisionMap = new HashMap<String, String>(1);
+            injectFault(ExceptionSpot.Decision_toMap_spot2);
+            decisionMap.put(UserProfileService.variationIdKey, variationId);
+            return decisionMap;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 }

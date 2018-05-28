@@ -52,6 +52,7 @@ public class ProjectConfig {
     private static void injectFault(ExceptionSpot spot) {
         FaultInjectionManager.getInstance().injectFault(spot);
     }
+    private static void throwInjectedExceptionIfTreatmentDisabled() { FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled(); }
 
     public enum Version {
         V2 ("2"),
@@ -74,37 +75,37 @@ public class ProjectConfig {
     private static final Logger logger = LoggerFactory.getLogger(ProjectConfig.class);
 
     // ProjectConfig properties
-    private final String accountId;
-    private final String projectId;
-    private final String revision;
-    private final String version;
-    private final boolean anonymizeIP;
-    private final List<Attribute> attributes;
-    private final List<Audience> audiences;
-    private final List<EventType> events;
-    private final List<Experiment> experiments;
-    private final List<FeatureFlag> featureFlags;
-    private final List<Group> groups;
-    private final List<LiveVariable> liveVariables;
-    private final List<Rollout> rollouts;
+    private String accountId;
+    private String projectId;
+    private String revision;
+    private String version;
+    private boolean anonymizeIP;
+    private List<Attribute> attributes;
+    private List<Audience> audiences;
+    private List<EventType> events;
+    private List<Experiment> experiments;
+    private List<FeatureFlag> featureFlags;
+    private List<Group> groups;
+    private List<LiveVariable> liveVariables;
+    private List<Rollout> rollouts;
 
     // key to entity mappings
-    private final Map<String, Attribute> attributeKeyMapping;
-    private final Map<String, EventType> eventNameMapping;
-    private final Map<String, Experiment> experimentKeyMapping;
-    private final Map<String, FeatureFlag> featureKeyMapping;
-    private final Map<String, LiveVariable> liveVariableKeyMapping;
+    private Map<String, Attribute> attributeKeyMapping;
+    private Map<String, EventType> eventNameMapping;
+    private Map<String, Experiment> experimentKeyMapping;
+    private Map<String, FeatureFlag> featureKeyMapping;
+    private Map<String, LiveVariable> liveVariableKeyMapping;
 
     // id to entity mappings
-    private final Map<String, Audience> audienceIdMapping;
-    private final Map<String, Experiment> experimentIdMapping;
-    private final Map<String, Group> groupIdMapping;
-    private final Map<String, Rollout> rolloutIdMapping;
+    private Map<String, Audience> audienceIdMapping;
+    private Map<String, Experiment> experimentIdMapping;
+    private Map<String, Group> groupIdMapping;
+    private Map<String, Rollout> rolloutIdMapping;
 
     // other mappings
-    private final Map<String, List<Experiment>> liveVariableIdToExperimentsMapping;
-    private final Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping;
-    private final Map<String, Experiment> variationIdToExperimentMapping;
+    private Map<String, List<Experiment>> liveVariableIdToExperimentsMapping;
+    private Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping;
+    private Map<String, Experiment> variationIdToExperimentMapping;
 
     /**
      *  Forced variations supersede any other mappings.  They are transient and are not persistent or part of
@@ -120,7 +121,6 @@ public class ProjectConfig {
                          List<Audience> audiences) {
         this(accountId, projectId, version, revision, groups, experiments, attributes, eventType, audiences, false,
              null);
-        injectFault(ExceptionSpot.ProjectConfig_constructor1_spot1);
     }
 
     // v3 constructor
@@ -142,7 +142,6 @@ public class ProjectConfig {
                 liveVariables,
                 null
         );
-        injectFault(ExceptionSpot.ProjectConfig_constructor2_spot1);
     }
 
     // v4 constructor
@@ -160,71 +159,74 @@ public class ProjectConfig {
                          List<LiveVariable> liveVariables,
                          List<Rollout> rollouts) {
 
-        injectFault(ExceptionSpot.ProjectConfig_constructor3_spot1);
-        this.accountId = accountId;
-        this.projectId = projectId;
-        this.version = version;
-        this.revision = revision;
-        this.anonymizeIP = anonymizeIP;
+        try {
 
-        this.attributes = Collections.unmodifiableList(attributes);
-        this.audiences = Collections.unmodifiableList(audiences);
-        this.events = Collections.unmodifiableList(events);
-        if (featureFlags == null) {
-            this.featureFlags = Collections.emptyList();
-        }
-        else {
-            this.featureFlags = Collections.unmodifiableList(featureFlags);
-        }
-        if (rollouts == null) {
-            this.rollouts = Collections.emptyList();
-        }
-        else {
-            this.rollouts = Collections.unmodifiableList(rollouts);
-        }
+            injectFault(ExceptionSpot.ProjectConfig_constructor_spot1);
+            this.accountId = accountId;
+            this.projectId = projectId;
+            this.version = version;
+            this.revision = revision;
+            this.anonymizeIP = anonymizeIP;
 
-        this.groups = Collections.unmodifiableList(groups);
-        injectFault(ExceptionSpot.ProjectConfig_constructor3_spot2);
-        List<Experiment> allExperiments = new ArrayList<Experiment>();
-        allExperiments.addAll(experiments);
-        allExperiments.addAll(aggregateGroupExperiments(groups));
-        this.experiments = Collections.unmodifiableList(allExperiments);
-
-        Map<String, Experiment> variationIdToExperimentMap = new HashMap<String, Experiment>();
-        for (Experiment experiment : this.experiments) {
-            for (Variation variation: experiment.getVariations()) {
-                injectFault(ExceptionSpot.ProjectConfig_constructor3_spot3);
-                variationIdToExperimentMap.put(variation.getId(), experiment);
+            this.attributes = Collections.unmodifiableList(attributes);
+            this.audiences = Collections.unmodifiableList(audiences);
+            this.events = Collections.unmodifiableList(events);
+            if (featureFlags == null) {
+                this.featureFlags = Collections.emptyList();
+            } else {
+                this.featureFlags = Collections.unmodifiableList(featureFlags);
             }
-        }
-        this.variationIdToExperimentMapping = Collections.unmodifiableMap(variationIdToExperimentMap);
+            if (rollouts == null) {
+                this.rollouts = Collections.emptyList();
+            } else {
+                this.rollouts = Collections.unmodifiableList(rollouts);
+            }
 
-        // generate the name mappers
-        this.attributeKeyMapping = ProjectConfigUtils.generateNameMapping(attributes);
-        this.eventNameMapping = ProjectConfigUtils.generateNameMapping(this.events);
-        this.experimentKeyMapping = ProjectConfigUtils.generateNameMapping(this.experiments);
-        this.featureKeyMapping = ProjectConfigUtils.generateNameMapping(this.featureFlags);
+            this.groups = Collections.unmodifiableList(groups);
+            injectFault(ExceptionSpot.ProjectConfig_constructor_spot2);
+            List<Experiment> allExperiments = new ArrayList<Experiment>();
+            allExperiments.addAll(experiments);
+            allExperiments.addAll(aggregateGroupExperiments(groups));
+            this.experiments = Collections.unmodifiableList(allExperiments);
 
-        // generate audience id to audience mapping
-        this.audienceIdMapping = ProjectConfigUtils.generateIdMapping(audiences);
-        this.experimentIdMapping = ProjectConfigUtils.generateIdMapping(this.experiments);
-        this.groupIdMapping = ProjectConfigUtils.generateIdMapping(groups);
-        this.rolloutIdMapping = ProjectConfigUtils.generateIdMapping(this.rollouts);
+            Map<String, Experiment> variationIdToExperimentMap = new HashMap<String, Experiment>();
+            for (Experiment experiment : this.experiments) {
+                for (Variation variation : experiment.getVariations()) {
+                    injectFault(ExceptionSpot.ProjectConfig_constructor_spot3);
+                    variationIdToExperimentMap.put(variation.getId(), experiment);
+                }
+            }
+            this.variationIdToExperimentMapping = Collections.unmodifiableMap(variationIdToExperimentMap);
 
-        if (liveVariables == null) {
-            injectFault(ExceptionSpot.ProjectConfig_constructor3_spot4);
-            this.liveVariables = null;
-            this.liveVariableKeyMapping = Collections.emptyMap();
-            this.liveVariableIdToExperimentsMapping = Collections.emptyMap();
-            this.variationToLiveVariableUsageInstanceMapping = Collections.emptyMap();
-        } else {
-            injectFault(ExceptionSpot.ProjectConfig_constructor3_spot5);
-            this.liveVariables = Collections.unmodifiableList(liveVariables);
-            this.liveVariableKeyMapping = ProjectConfigUtils.generateNameMapping(this.liveVariables);
-            this.liveVariableIdToExperimentsMapping =
-                    ProjectConfigUtils.generateLiveVariableIdToExperimentsMapping(this.experiments);
-            this.variationToLiveVariableUsageInstanceMapping =
-                    ProjectConfigUtils.generateVariationToLiveVariableUsageInstancesMap(this.experiments);
+            // generate the name mappers
+            this.attributeKeyMapping = ProjectConfigUtils.generateNameMapping(attributes);
+            this.eventNameMapping = ProjectConfigUtils.generateNameMapping(this.events);
+            this.experimentKeyMapping = ProjectConfigUtils.generateNameMapping(this.experiments);
+            this.featureKeyMapping = ProjectConfigUtils.generateNameMapping(this.featureFlags);
+
+            // generate audience id to audience mapping
+            this.audienceIdMapping = ProjectConfigUtils.generateIdMapping(audiences);
+            this.experimentIdMapping = ProjectConfigUtils.generateIdMapping(this.experiments);
+            this.groupIdMapping = ProjectConfigUtils.generateIdMapping(groups);
+            this.rolloutIdMapping = ProjectConfigUtils.generateIdMapping(this.rollouts);
+
+            if (liveVariables == null) {
+                injectFault(ExceptionSpot.ProjectConfig_constructor_spot4);
+                this.liveVariables = null;
+                this.liveVariableKeyMapping = Collections.emptyMap();
+                this.liveVariableIdToExperimentsMapping = Collections.emptyMap();
+                this.variationToLiveVariableUsageInstanceMapping = Collections.emptyMap();
+            } else {
+                injectFault(ExceptionSpot.ProjectConfig_constructor_spot5);
+                this.liveVariables = Collections.unmodifiableList(liveVariables);
+                this.liveVariableKeyMapping = ProjectConfigUtils.generateNameMapping(this.liveVariables);
+                this.liveVariableIdToExperimentsMapping =
+                        ProjectConfigUtils.generateLiveVariableIdToExperimentsMapping(this.experiments);
+                this.variationToLiveVariableUsageInstanceMapping =
+                        ProjectConfigUtils.generateVariationToLiveVariableUsageInstancesMap(this.experiments);
+            }
+        } catch (Exception e){
+            throwInjectedExceptionIfTreatmentDisabled();
         }
     }
 
@@ -243,20 +245,30 @@ public class ProjectConfig {
     public Experiment getExperimentForKey(@Nonnull String experimentKey,
                                           @Nonnull ErrorHandler errorHandler) {
 
-        injectFault(ExceptionSpot.ProjectConfig_getExperimentForKey_spot1);
-        Experiment experiment =
-                getExperimentKeyMapping()
-                        .get(experimentKey);
+        try {
 
-        // if the given experiment key isn't present in the config, log an exception to the error handler
-        if (experiment == null) {
-            injectFault(ExceptionSpot.ProjectConfig_getExperimentForKey_spot2);
-            String unknownExperimentError = String.format("Experiment \"%s\" is not in the datafile.", experimentKey);
-            logger.error(unknownExperimentError);
-            errorHandler.handleError(new UnknownExperimentException(unknownExperimentError));
+            injectFault(ExceptionSpot.ProjectConfig_getExperimentForKey_spot1);
+            Experiment experiment =
+                    getExperimentKeyMapping()
+                            .get(experimentKey);
+
+            // if the given experiment key isn't present in the config, log an exception to the error handler
+            if (experiment == null) {
+                injectFault(ExceptionSpot.ProjectConfig_getExperimentForKey_spot2);
+                String unknownExperimentError = String.format("Experiment \"%s\" is not in the datafile.", experimentKey);
+                logger.error(unknownExperimentError);
+                errorHandler.handleError(new UnknownExperimentException(unknownExperimentError));
+            }
+
+            return experiment;
         }
-
-        return experiment;
+        catch (UnknownExperimentException ue) {
+            throw ue;
+        }
+        catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return  null;
+        }
     }
 
     /**
@@ -270,36 +282,56 @@ public class ProjectConfig {
      * @return the event type for the given event name
      */
     public @CheckForNull EventType getEventTypeForName(String eventName, ErrorHandler errorHandler) {
-        injectFault(ExceptionSpot.ProjectConfig_getEventTypeForName_spot1);
-        EventType eventType =
-                getEventNameMapping()
-                        .get(eventName);
+        try {
+            injectFault(ExceptionSpot.ProjectConfig_getEventTypeForName_spot1);
+            EventType eventType =
+                    getEventNameMapping()
+                            .get(eventName);
 
-        // if the given event name isn't present in the config, log an exception to the error handler
-        if (eventType == null) {
-            injectFault(ExceptionSpot.ProjectConfig_getEventTypeForName_spot2);
-            String unknownEventTypeError = String.format("Event \"%s\" is not in the datafile.", eventName);
-            logger.error(unknownEventTypeError);
-            errorHandler.handleError(new UnknownEventTypeException(unknownEventTypeError));
+            // if the given event name isn't present in the config, log an exception to the error handler
+            if (eventType == null) {
+                injectFault(ExceptionSpot.ProjectConfig_getEventTypeForName_spot2);
+                String unknownEventTypeError = String.format("Event \"%s\" is not in the datafile.", eventName);
+                logger.error(unknownEventTypeError);
+                errorHandler.handleError(new UnknownEventTypeException(unknownEventTypeError));
+            }
+
+            return eventType;
         }
-
-        return eventType;
+        catch (UnknownEventTypeException ue) {
+            throw ue;
+        }
+        catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return  null;
+        }
     }
 
 
     public @Nullable Experiment getExperimentForVariationId(String variationId) {
-        injectFault(ExceptionSpot.ProjectConfig_getExperimentForVariationId_spot1);
-        return this.variationIdToExperimentMapping.get(variationId);
+        try {
+            injectFault(ExceptionSpot.ProjectConfig_getExperimentForVariationId_spot1);
+            return this.variationIdToExperimentMapping.get(variationId);
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return  null;
+        }
     }
 
     private List<Experiment> aggregateGroupExperiments(List<Group> groups) {
-        injectFault(ExceptionSpot.ProjectConfig_aggregateGroupExperiments_spot1);
-        List<Experiment> groupExperiments = new ArrayList<Experiment>();
-        for (Group group : groups) {
-            groupExperiments.addAll(group.getExperiments());
-        }
+        try {
 
-        return groupExperiments;
+            injectFault(ExceptionSpot.ProjectConfig_aggregateGroupExperiments_spot1);
+            List<Experiment> groupExperiments = new ArrayList<Experiment>();
+            for (Group group : groups) {
+                groupExperiments.addAll(group.getExperiments());
+            }
+
+            return groupExperiments;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return  null;
+        }
     }
 
     public String getAccountId() {
@@ -331,19 +363,25 @@ public class ProjectConfig {
     }
 
     public List<Experiment> getExperimentsForEventKey(String eventKey) {
-        injectFault(ExceptionSpot.ProjectConfig_getExperimentsForEventKey_spot1);
-        EventType event = eventNameMapping.get(eventKey);
-        if (event != null) {
-            List<String> experimentIds = event.getExperimentIds();
-            List<Experiment> experiments = new ArrayList<Experiment>(experimentIds.size());
-            for (String experimentId : experimentIds) {
-                experiments.add(experimentIdMapping.get(experimentId));
+        try {
+
+            injectFault(ExceptionSpot.ProjectConfig_getExperimentsForEventKey_spot1);
+            EventType event = eventNameMapping.get(eventKey);
+            if (event != null) {
+                List<String> experimentIds = event.getExperimentIds();
+                List<Experiment> experiments = new ArrayList<Experiment>(experimentIds.size());
+                for (String experimentId : experimentIds) {
+                    experiments.add(experimentIdMapping.get(experimentId));
+                }
+
+                return experiments;
             }
 
-            return experiments;
+            return Collections.emptyList();
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return  null;
         }
-
-        return Collections.emptyList();
     }
 
     public List<FeatureFlag> getFeatureFlags() {
@@ -367,10 +405,16 @@ public class ProjectConfig {
     }
 
     public Condition getAudienceConditionsFromId(String audienceId) {
-        injectFault(ExceptionSpot.ProjectConfig_getAudienceConditionsFromId_spot1);
-        Audience audience = audienceIdMapping.get(audienceId);
+        try {
 
-        return audience != null ? audience.getConditions() : null;
+            injectFault(ExceptionSpot.ProjectConfig_getAudienceConditionsFromId_spot1);
+            Audience audience = audienceIdMapping.get(audienceId);
+
+            return audience != null ? audience.getConditions() : null;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return  null;
+        }
     }
 
     public List<LiveVariable> getLiveVariables() {
@@ -439,76 +483,79 @@ public class ProjectConfig {
                                       @Nonnull String userId,
                                       @Nullable String variationKey) {
 
-        injectFault(ExceptionSpot.ProjectConfig_setForcedVariation_spot1);
+        try {
 
-        // if the experiment is not a valid experiment key, don't set it.
-        Experiment experiment = getExperimentKeyMapping().get(experimentKey);
-        if (experiment == null){
-            logger.error("Experiment {} does not exist in ProjectConfig for project {}", experimentKey, projectId);
-            return false;
-        }
+            injectFault(ExceptionSpot.ProjectConfig_setForcedVariation_spot1);
 
-        Variation variation = null;
-
-        // keep in mind that you can pass in a variationKey that is null if you want to
-        // remove the variation.
-        if (variationKey != null) {
-            variation = experiment.getVariationKeyToVariationMap().get(variationKey);
-            // if the variation is not part of the experiment, return false.
-            if (variation == null) {
-                logger.error("Variation {} does not exist for experiment {}", variationKey, experimentKey);
+            // if the experiment is not a valid experiment key, don't set it.
+            Experiment experiment = getExperimentKeyMapping().get(experimentKey);
+            if (experiment == null) {
+                logger.error("Experiment {} does not exist in ProjectConfig for project {}", experimentKey, projectId);
                 return false;
             }
-        }
 
-        injectFault(ExceptionSpot.ProjectConfig_setForcedVariation_spot2);
+            Variation variation = null;
 
-        // if the user id is invalid, return false.
-        if (userId == null || userId.trim().isEmpty()) {
-            logger.error("User ID is invalid");
+            // keep in mind that you can pass in a variationKey that is null if you want to
+            // remove the variation.
+            if (variationKey != null) {
+                variation = experiment.getVariationKeyToVariationMap().get(variationKey);
+                // if the variation is not part of the experiment, return false.
+                if (variation == null) {
+                    logger.error("Variation {} does not exist for experiment {}", variationKey, experimentKey);
+                    return false;
+                }
+            }
+
+            injectFault(ExceptionSpot.ProjectConfig_setForcedVariation_spot2);
+
+            // if the user id is invalid, return false.
+            if (userId == null || userId.trim().isEmpty()) {
+                logger.error("User ID is invalid");
+                return false;
+            }
+
+            ConcurrentHashMap<String, String> experimentToVariation;
+            if (!forcedVariationMapping.containsKey(userId)) {
+                forcedVariationMapping.putIfAbsent(userId, new ConcurrentHashMap<String, String>());
+            }
+            experimentToVariation = forcedVariationMapping.get(userId);
+
+            boolean retVal = true;
+            // if it is null remove the variation if it exists.
+            if (variationKey == null) {
+                injectFault(ExceptionSpot.ProjectConfig_setForcedVariation_spot3);
+                String removedVariationId = experimentToVariation.remove(experiment.getId());
+                if (removedVariationId != null) {
+                    Variation removedVariation = experiment.getVariationIdToVariationMap().get(removedVariationId);
+                    if (removedVariation != null) {
+                        logger.debug("Variation mapped to experiment \"{}\" has been removed for user \"{}\"", experiment.getKey(), userId);
+                    } else {
+                        logger.debug("Removed forced variation that did not exist in experiment");
+                    }
+                } else {
+                    logger.debug("No variation for experiment {}", experimentKey);
+                    retVal = false;
+                }
+            } else {
+                injectFault(ExceptionSpot.ProjectConfig_setForcedVariation_spot4);
+                String previous = experimentToVariation.put(experiment.getId(), variation.getId());
+                logger.debug("Set variation \"{}\" for experiment \"{}\" and user \"{}\" in the forced variation map.",
+                        variation.getKey(), experiment.getKey(), userId);
+                if (previous != null) {
+                    Variation previousVariation = experiment.getVariationIdToVariationMap().get(previous);
+                    if (previousVariation != null) {
+                        logger.debug("forced variation {} replaced forced variation {} in forced variation map.",
+                                variation.getKey(), previousVariation.getKey());
+                    }
+                }
+            }
+
+            return retVal;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
             return false;
         }
-
-        ConcurrentHashMap<String, String> experimentToVariation;
-        if (!forcedVariationMapping.containsKey(userId)) {
-            forcedVariationMapping.putIfAbsent(userId, new ConcurrentHashMap<String, String>());
-        }
-        experimentToVariation = forcedVariationMapping.get(userId);
-
-        boolean retVal = true;
-        // if it is null remove the variation if it exists.
-        if (variationKey == null) {
-            injectFault(ExceptionSpot.ProjectConfig_setForcedVariation_spot3);
-            String removedVariationId = experimentToVariation.remove(experiment.getId());
-            if (removedVariationId != null) {
-                Variation removedVariation = experiment.getVariationIdToVariationMap().get(removedVariationId);
-                if (removedVariation != null) {
-                    logger.debug("Variation mapped to experiment \"{}\" has been removed for user \"{}\"", experiment.getKey(), userId);
-                }
-                else {
-                    logger.debug("Removed forced variation that did not exist in experiment");
-                }
-            }
-            else {
-                logger.debug("No variation for experiment {}", experimentKey);
-                retVal = false;
-            }
-        }
-        else {
-            injectFault(ExceptionSpot.ProjectConfig_setForcedVariation_spot4);
-            String previous = experimentToVariation.put(experiment.getId(), variation.getId());
-            logger.debug("Set variation \"{}\" for experiment \"{}\" and user \"{}\" in the forced variation map.",
-                    variation.getKey(), experiment.getKey(), userId);
-            if (previous != null) {
-                Variation previousVariation = experiment.getVariationIdToVariationMap().get(previous);
-                if (previousVariation != null) {
-                    logger.debug("forced variation {} replaced forced variation {} in forced variation map.",
-                            variation.getKey(), previousVariation.getKey());
-                }
-            }
-        }
-
-        return retVal;
     }
 
     /**
@@ -523,76 +570,87 @@ public class ProjectConfig {
     public @Nullable Variation getForcedVariation(@Nonnull String experimentKey,
                                                   @Nonnull String userId) {
 
-        injectFault(ExceptionSpot.ProjectConfig_getForcedVariation_spot1);
+        try {
 
-        // if the user id is invalid, return false.
-        if (userId == null || userId.trim().isEmpty()) {
-            logger.error("User ID is invalid");
-            return null;
-        }
+            injectFault(ExceptionSpot.ProjectConfig_getForcedVariation_spot1);
 
-        if (experimentKey == null || experimentKey.isEmpty()) {
-            logger.error("experiment key is invalid");
-            return null;
-        }
-
-        injectFault(ExceptionSpot.ProjectConfig_getForcedVariation_spot2);
-
-        Map<String, String> experimentToVariation = getForcedVariationMapping().get(userId);
-        if (experimentToVariation != null) {
-            Experiment experiment = getExperimentKeyMapping().get(experimentKey);
-            if (experiment == null)  {
-                injectFault(ExceptionSpot.ProjectConfig_getForcedVariation_spot3);
-                logger.debug("No experiment \"{}\" mapped to user \"{}\" in the forced variation map ", experimentKey, userId);
+            // if the user id is invalid, return false.
+            if (userId == null || userId.trim().isEmpty()) {
+                logger.error("User ID is invalid");
                 return null;
             }
-            String variationId = experimentToVariation.get(experiment.getId());
-            if (variationId != null) {
-                injectFault(ExceptionSpot.ProjectConfig_getForcedVariation_spot4);
-                Variation variation =  experiment.getVariationIdToVariationMap().get(variationId);
-                if (variation != null) {
-                    logger.debug("Variation \"{}\" is mapped to experiment \"{}\" and user \"{}\" in the forced variation map",
-                            variation.getKey(), experimentKey, userId);
-                    return variation;
+
+            if (experimentKey == null || experimentKey.isEmpty()) {
+                logger.error("experiment key is invalid");
+                return null;
+            }
+
+            injectFault(ExceptionSpot.ProjectConfig_getForcedVariation_spot2);
+
+            Map<String, String> experimentToVariation = getForcedVariationMapping().get(userId);
+            if (experimentToVariation != null) {
+                Experiment experiment = getExperimentKeyMapping().get(experimentKey);
+                if (experiment == null) {
+                    injectFault(ExceptionSpot.ProjectConfig_getForcedVariation_spot3);
+                    logger.debug("No experiment \"{}\" mapped to user \"{}\" in the forced variation map ", experimentKey, userId);
+                    return null;
+                }
+                String variationId = experimentToVariation.get(experiment.getId());
+                if (variationId != null) {
+                    injectFault(ExceptionSpot.ProjectConfig_getForcedVariation_spot4);
+                    Variation variation = experiment.getVariationIdToVariationMap().get(variationId);
+                    if (variation != null) {
+                        logger.debug("Variation \"{}\" is mapped to experiment \"{}\" and user \"{}\" in the forced variation map",
+                                variation.getKey(), experimentKey, userId);
+                        return variation;
+                    }
+                } else {
+                    logger.debug("No variation for experiment \"{}\" mapped to user \"{}\" in the forced variation map ", experimentKey, userId);
                 }
             }
-            else {
-                logger.debug("No variation for experiment \"{}\" mapped to user \"{}\" in the forced variation map ", experimentKey, userId);
-            }
+            return null;
+        } catch (Exception e) {
+            throwInjectedExceptionIfTreatmentDisabled();
+            return  null;
         }
-        return null;
     }
 
     @Override
     public String toString() {
-        injectFault(ExceptionSpot.ProjectConfig_toString_spot1);
-        return "ProjectConfig{" +
-                "accountId='" + accountId + '\'' +
-                ", projectId='" + projectId + '\'' +
-                ", revision='" + revision + '\'' +
-                ", version='" + version + '\'' +
-                ", anonymizeIP=" + anonymizeIP +
-                ", attributes=" + attributes +
-                ", audiences=" + audiences +
-                ", events=" + events +
-                ", experiments=" + experiments +
-                ", featureFlags=" + featureFlags +
-                ", groups=" + groups +
-                ", liveVariables=" + liveVariables +
-                ", rollouts=" + rollouts +
-                ", attributeKeyMapping=" + attributeKeyMapping +
-                ", eventNameMapping=" + eventNameMapping +
-                ", experimentKeyMapping=" + experimentKeyMapping +
-                ", featureKeyMapping=" + featureKeyMapping +
-                ", liveVariableKeyMapping=" + liveVariableKeyMapping +
-                ", audienceIdMapping=" + audienceIdMapping +
-                ", experimentIdMapping=" + experimentIdMapping +
-                ", groupIdMapping=" + groupIdMapping +
-                ", rolloutIdMapping=" + rolloutIdMapping +
-                ", liveVariableIdToExperimentsMapping=" + liveVariableIdToExperimentsMapping +
-                ", variationToLiveVariableUsageInstanceMapping=" + variationToLiveVariableUsageInstanceMapping +
-                ", forcedVariationMapping=" + forcedVariationMapping +
-                ", variationIdToExperimentMapping=" + variationIdToExperimentMapping +
-                '}';
+        try {
+
+            injectFault(ExceptionSpot.ProjectConfig_toString_spot1);
+            return "ProjectConfig{" +
+                    "accountId='" + accountId + '\'' +
+                    ", projectId='" + projectId + '\'' +
+                    ", revision='" + revision + '\'' +
+                    ", version='" + version + '\'' +
+                    ", anonymizeIP=" + anonymizeIP +
+                    ", attributes=" + attributes +
+                    ", audiences=" + audiences +
+                    ", events=" + events +
+                    ", experiments=" + experiments +
+                    ", featureFlags=" + featureFlags +
+                    ", groups=" + groups +
+                    ", liveVariables=" + liveVariables +
+                    ", rollouts=" + rollouts +
+                    ", attributeKeyMapping=" + attributeKeyMapping +
+                    ", eventNameMapping=" + eventNameMapping +
+                    ", experimentKeyMapping=" + experimentKeyMapping +
+                    ", featureKeyMapping=" + featureKeyMapping +
+                    ", liveVariableKeyMapping=" + liveVariableKeyMapping +
+                    ", audienceIdMapping=" + audienceIdMapping +
+                    ", experimentIdMapping=" + experimentIdMapping +
+                    ", groupIdMapping=" + groupIdMapping +
+                    ", rolloutIdMapping=" + rolloutIdMapping +
+                    ", liveVariableIdToExperimentsMapping=" + liveVariableIdToExperimentsMapping +
+                    ", variationToLiveVariableUsageInstanceMapping=" + variationToLiveVariableUsageInstanceMapping +
+                    ", forcedVariationMapping=" + forcedVariationMapping +
+                    ", variationIdToExperimentMapping=" + variationIdToExperimentMapping +
+                    '}';
+        } catch (Exception e) {
+            //throwInjectedExceptionIfTreatmentDisabled();
+            return  null;
+        }
     }
 }

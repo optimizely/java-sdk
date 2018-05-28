@@ -34,39 +34,50 @@ public final class EventTagUtils {
      * @return Long
      */
     public static Long getRevenueValue(@Nonnull Map<String, ?> eventTags) {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.EventTagUtils_getRevenueValue_spot1);
-        Long eventValue = null;
-        if (eventTags.containsKey(ReservedEventKey.REVENUE.toString())) {
-            Object rawValue = eventTags.get(ReservedEventKey.REVENUE.toString());
-            if (Long.class.isInstance(rawValue)) {
-                eventValue = (Long)rawValue;
-                logger.info("Parsed revenue value \"{}\" from event tags.", eventValue);
-            } else if (Integer.class.isInstance(rawValue)) {
-                eventValue = ((Integer)rawValue).longValue();
-                logger.info("Parsed revenue value \"{}\" from event tags.", eventValue);
-            } else {
-                logger.warn("Failed to parse revenue value \"{}\" from event tags.", rawValue);
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.EventTagUtils_getRevenueValue_spot1);
+            Long eventValue = null;
+            if (eventTags.containsKey(ReservedEventKey.REVENUE.toString())) {
+                Object rawValue = eventTags.get(ReservedEventKey.REVENUE.toString());
+                if (Long.class.isInstance(rawValue)) {
+                    eventValue = (Long) rawValue;
+                    logger.info("Parsed revenue value \"{}\" from event tags.", eventValue);
+                } else if (Integer.class.isInstance(rawValue)) {
+                    eventValue = ((Integer) rawValue).longValue();
+                    logger.info("Parsed revenue value \"{}\" from event tags.", eventValue);
+                } else {
+                    logger.warn("Failed to parse revenue value \"{}\" from event tags.", rawValue);
+                }
             }
+            return eventValue;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
         }
-        return eventValue;
     }
 
     /**
      * Fetch the numeric metric value from event tags. "value" is a reserved keyword.
      */
     public static Double getNumericValue(@Nonnull Map<String, ?> eventTags) {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.EventTagUtils_getNumericValue_spot1);
-        Double eventValue = null;
-        if (eventTags.containsKey(ReservedEventKey.VALUE.toString())) {
-            Object rawValue = eventTags.get(ReservedEventKey.VALUE.toString());
-            if (rawValue instanceof Number) {
-                eventValue = ((Number) rawValue).doubleValue();
-                logger.info("Parsed numeric metric value \"{}\" from event tags.", eventValue);
-            } else {
-                logger.warn("Failed to parse numeric metric value \"{}\" from event tags.", rawValue);
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.EventTagUtils_getNumericValue_spot1);
+            Double eventValue = null;
+            if (eventTags.containsKey(ReservedEventKey.VALUE.toString())) {
+                Object rawValue = eventTags.get(ReservedEventKey.VALUE.toString());
+                if (rawValue instanceof Number) {
+                    eventValue = ((Number) rawValue).doubleValue();
+                    logger.info("Parsed numeric metric value \"{}\" from event tags.", eventValue);
+                } else {
+                    logger.warn("Failed to parse numeric metric value \"{}\" from event tags.", rawValue);
+                }
             }
+
+            return eventValue;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
         }
 
-        return eventValue;
     }
 }

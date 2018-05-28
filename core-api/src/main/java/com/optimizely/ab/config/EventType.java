@@ -40,18 +40,22 @@ public class EventType implements IdKeyMapped {
      */
     public static final String TOTAL_REVENUE_GOAL_KEY = "Total Revenue";
 
-    private final String id;
-    private final String key;
-    private final List<String> experimentIds;
+    private String id;
+    private String key;
+    private List<String> experimentIds;
 
     @JsonCreator
     public EventType(@JsonProperty("id") String id,
                      @JsonProperty("key") String key,
                      @JsonProperty("experimentIds") List<String> experimentIds) {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.EventType_constructor_spot1);
-        this.id = id;
-        this.key = key;
-        this.experimentIds = experimentIds;
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.EventType_constructor_spot1);
+            this.id = id;
+            this.key = key;
+            this.experimentIds = experimentIds;
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+        }
     }
 
     public String getId() {
@@ -68,11 +72,16 @@ public class EventType implements IdKeyMapped {
 
     @Override
     public String toString() {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.EventType_toString_spot1);
-        return "EventType{" +
-               "id='" + id + '\'' +
-               ", key='" + key + '\'' +
-               ", experimentIds=" + experimentIds +
-               '}';
+        try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.EventType_toString_spot1);
+            return "EventType{" +
+                    "id='" + id + '\'' +
+                    ", key='" + key + '\'' +
+                    ", experimentIds=" + experimentIds +
+                    '}';
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return  null;
+        }
     }
 }

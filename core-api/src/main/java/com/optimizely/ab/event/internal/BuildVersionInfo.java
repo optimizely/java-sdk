@@ -39,22 +39,27 @@ public final class BuildVersionInfo {
 
     public final static String VERSION = readVersionNumber();
     private static String readVersionNumber() {
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.BuildVersionInfo_readVersionNumber_spot1);
-        BufferedReader bufferedReader =
-            new BufferedReader(
-                new InputStreamReader(BuildVersionInfo.class.getResourceAsStream("/optimizely-build-version"),
-                                      Charset.forName("UTF-8")));
         try {
-            return bufferedReader.readLine();
-        } catch (Exception e) {
-            logger.error("unable to read version number");
-            return "unknown";
-        } finally {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.BuildVersionInfo_readVersionNumber_spot1);
+            BufferedReader bufferedReader =
+                    new BufferedReader(
+                            new InputStreamReader(BuildVersionInfo.class.getResourceAsStream("/optimizely-build-version"),
+                                    Charset.forName("UTF-8")));
             try {
-                bufferedReader.close();
+                return bufferedReader.readLine();
             } catch (Exception e) {
-                logger.error("unable to close reader cleanly");
+                logger.error("unable to read version number");
+                return "unknown";
+            } finally {
+                try {
+                    bufferedReader.close();
+                } catch (Exception e) {
+                    logger.error("unable to close reader cleanly");
+                }
             }
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
         }
     }
 

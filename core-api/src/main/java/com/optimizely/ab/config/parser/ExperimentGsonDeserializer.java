@@ -33,9 +33,13 @@ final class ExperimentGsonDeserializer implements JsonDeserializer<Experiment> {
     @Override
     public Experiment deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
         throws JsonParseException {
-
-        FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ExperimentGsonDeserializer_deserialize_spot1);
-        JsonObject jsonObject = json.getAsJsonObject();
-        return GsonHelpers.parseExperiment(jsonObject, context);
+        //try {
+            FaultInjectionManager.getInstance().injectFault(ExceptionSpot.ExperimentGsonDeserializer_deserialize_spot1);
+            JsonObject jsonObject = json.getAsJsonObject();
+            return GsonHelpers.parseExperiment(jsonObject, context);
+        //} catch (Exception e) {
+        //    FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+        //    return null;
+        //}
     }
 }

@@ -43,52 +43,70 @@ public class GroupJacksonDeserializer extends JsonDeserializer<Group> {
 
     @Override
     public Group deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-        injectFault(ExceptionSpot.GroupJacksonDeserializer_deserialize_spot1);
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode node = parser.getCodec().readTree(parser);
 
-        String id = node.get("id").textValue();
-        String policy = node.get("policy").textValue();
-        List<TrafficAllocation> trafficAllocations = mapper.readValue(node.get("trafficAllocation").toString(),
-                                                                      new TypeReference<List<TrafficAllocation>>(){});
+        try {
 
-        JsonNode groupExperimentsJson = node.get("experiments");
-        List<Experiment> groupExperiments = new ArrayList<Experiment>();
-        if (groupExperimentsJson.isArray()) {
-            injectFault(ExceptionSpot.GroupJacksonDeserializer_deserialize_spot2);
-            for (JsonNode groupExperimentJson : groupExperimentsJson) {
-                groupExperiments.add(parseExperiment(groupExperimentJson, id));
+            injectFault(ExceptionSpot.GroupJacksonDeserializer_deserialize_spot1);
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode node = parser.getCodec().readTree(parser);
+
+            String id = node.get("id").textValue();
+            String policy = node.get("policy").textValue();
+            List<TrafficAllocation> trafficAllocations = mapper.readValue(node.get("trafficAllocation").toString(),
+                    new TypeReference<List<TrafficAllocation>>() {
+                    });
+
+            JsonNode groupExperimentsJson = node.get("experiments");
+            List<Experiment> groupExperiments = new ArrayList<Experiment>();
+            if (groupExperimentsJson.isArray()) {
+                injectFault(ExceptionSpot.GroupJacksonDeserializer_deserialize_spot2);
+                for (JsonNode groupExperimentJson : groupExperimentsJson) {
+                    groupExperiments.add(parseExperiment(groupExperimentJson, id));
+                }
             }
-        }
 
-        injectFault(ExceptionSpot.GroupJacksonDeserializer_deserialize_spot3);
-        return new Group(id, policy, groupExperiments, trafficAllocations);
+            injectFault(ExceptionSpot.GroupJacksonDeserializer_deserialize_spot3);
+            return new Group(id, policy, groupExperiments, trafficAllocations);
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
     private Experiment parseExperiment(JsonNode experimentJson, String groupId) throws IOException {
 
-        injectFault(ExceptionSpot.GroupJacksonDeserializer_parseExperiment_spot1);
-        ObjectMapper mapper = new ObjectMapper();
+        try {
 
-        String id = experimentJson.get("id").textValue();
-        String key = experimentJson.get("key").textValue();
-        String status = experimentJson.get("status").textValue();
-        JsonNode layerIdJson = experimentJson.get("layerId");
-        String layerId = layerIdJson == null ? null : layerIdJson.textValue();
+            injectFault(ExceptionSpot.GroupJacksonDeserializer_parseExperiment_spot1);
+            ObjectMapper mapper = new ObjectMapper();
 
-        injectFault(ExceptionSpot.GroupJacksonDeserializer_parseExperiment_spot2);
-        List<String> audienceIds = mapper.readValue(experimentJson.get("audienceIds").toString(),
-                                                    new TypeReference<List<String>>(){});
-        List<Variation> variations = mapper.readValue(experimentJson.get("variations").toString(),
-                                                      new TypeReference<List<Variation>>(){});
-        List<TrafficAllocation> trafficAllocations = mapper.readValue(experimentJson.get("trafficAllocation").toString(),
-                                                                      new TypeReference<List<TrafficAllocation>>(){});
-        Map<String, String>  userIdToVariationKeyMap = mapper.readValue(
-            experimentJson.get("forcedVariations").toString(), new TypeReference<Map<String, String>>(){});
+            String id = experimentJson.get("id").textValue();
+            String key = experimentJson.get("key").textValue();
+            String status = experimentJson.get("status").textValue();
+            JsonNode layerIdJson = experimentJson.get("layerId");
+            String layerId = layerIdJson == null ? null : layerIdJson.textValue();
 
-        injectFault(ExceptionSpot.GroupJacksonDeserializer_parseExperiment_spot3);
-        return new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
-                              trafficAllocations, groupId);
+            injectFault(ExceptionSpot.GroupJacksonDeserializer_parseExperiment_spot2);
+            List<String> audienceIds = mapper.readValue(experimentJson.get("audienceIds").toString(),
+                    new TypeReference<List<String>>() {
+                    });
+            List<Variation> variations = mapper.readValue(experimentJson.get("variations").toString(),
+                    new TypeReference<List<Variation>>() {
+                    });
+            List<TrafficAllocation> trafficAllocations = mapper.readValue(experimentJson.get("trafficAllocation").toString(),
+                    new TypeReference<List<TrafficAllocation>>() {
+                    });
+            Map<String, String> userIdToVariationKeyMap = mapper.readValue(
+                    experimentJson.get("forcedVariations").toString(), new TypeReference<Map<String, String>>() {
+                    });
+
+            injectFault(ExceptionSpot.GroupJacksonDeserializer_parseExperiment_spot3);
+            return new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
+                    trafficAllocations, groupId);
+        } catch (Exception e) {
+            FaultInjectionManager.getInstance().throwExceptionIfTreatmentDisabled();
+            return null;
+        }
     }
 
 }
