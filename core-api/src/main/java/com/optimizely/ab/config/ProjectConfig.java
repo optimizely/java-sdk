@@ -73,6 +73,7 @@ public class ProjectConfig {
     private final String revision;
     private final String version;
     private final boolean anonymizeIP;
+    private final boolean botFiltering;
     private final List<Attribute> attributes;
     private final List<Audience> audiences;
     private final List<EventType> events;
@@ -123,6 +124,7 @@ public class ProjectConfig {
         this(
                 accountId,
                 anonymizeIP,
+                false,
                 projectId,
                 revision,
                 version,
@@ -140,6 +142,7 @@ public class ProjectConfig {
     // v4 constructor
     public ProjectConfig(String accountId,
                          boolean anonymizeIP,
+                         boolean botFiltering,
                          String projectId,
                          String revision,
                          String version,
@@ -157,6 +160,7 @@ public class ProjectConfig {
         this.version = version;
         this.revision = revision;
         this.anonymizeIP = anonymizeIP;
+        this.botFiltering = botFiltering;
 
         this.attributes = Collections.unmodifiableList(attributes);
         this.audiences = Collections.unmodifiableList(audiences);
@@ -303,6 +307,10 @@ public class ProjectConfig {
 
     public boolean getAnonymizeIP() {
         return anonymizeIP;
+    }
+
+    public boolean getBotFiltering() {
+        return botFiltering;
     }
 
     public List<Group> getGroups() {
@@ -540,6 +548,7 @@ public class ProjectConfig {
                 ", revision='" + revision + '\'' +
                 ", version='" + version + '\'' +
                 ", anonymizeIP=" + anonymizeIP +
+                ", botFiltering=" + botFiltering +
                 ", attributes=" + attributes +
                 ", audiences=" + audiences +
                 ", events=" + events +

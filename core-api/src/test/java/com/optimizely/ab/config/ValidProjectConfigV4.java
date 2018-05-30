@@ -31,6 +31,7 @@ public class ValidProjectConfigV4 {
     // simple properties
     private static final String     ACCOUNT_ID = "2360254204";
     private static final boolean    ANONYMIZE_IP = true;
+    private static final boolean    BOT_FILTERING = true;
     private static final String     PROJECT_ID = "3918735994";
     private static final String     REVISION = "1480511547";
     private static final String     VERSION = "4";
@@ -1073,6 +1074,7 @@ public class ValidProjectConfigV4 {
         return new ProjectConfig(
                 ACCOUNT_ID,
                 ANONYMIZE_IP,
+                BOT_FILTERING,
                 PROJECT_ID,
                 REVISION,
                 VERSION,
