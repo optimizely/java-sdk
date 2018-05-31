@@ -32,6 +32,7 @@ import com.optimizely.ab.event.internal.payload.Visitor;
 import com.optimizely.ab.event.internal.serializer.DefaultJsonSerializer;
 import com.optimizely.ab.event.internal.serializer.Serializer;
 import com.optimizely.ab.internal.EventTagUtils;
+import com.optimizely.ab.internal.ReservedAttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
@@ -44,11 +45,8 @@ import java.util.UUID;
 
 public class EventBuilder {
     private static final Logger logger = LoggerFactory.getLogger(EventBuilder.class);
-    static final String ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE = "optimizely_bucketing_id";
     static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";
-    static final String  ACTIVATE_EVENT_KEY = "campaign_activated";
-    public static final String BOT_FILTERING_ATTRIBUTE = "$opt_bot_filtering";
-    public static final String USER_AGENT_ATTRIBUTE = "$opt_user_agent";
+    static final String ACTIVATE_EVENT_KEY = "campaign_activated";
 
     private Serializer serializer;
     @VisibleForTesting
@@ -126,19 +124,27 @@ public class EventBuilder {
             Attribute attribute = new Attribute((projectAttribute != null ? projectAttribute.getId() : null),
                     entry.getKey(), Attribute.CUSTOM_ATTRIBUTE_TYPE, entry.getValue());
 
-            if (entry.getKey().equals(DecisionService.BUCKETING_ATTRIBUTE)) {
-                attribute = new Attribute(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
-                        ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE, Attribute.CUSTOM_ATTRIBUTE_TYPE, entry.getValue());
-            } else if (entry.getKey().equals(USER_AGENT_ATTRIBUTE)) {
-                attribute = new Attribute(USER_AGENT_ATTRIBUTE,
-                        USER_AGENT_ATTRIBUTE, Attribute.CUSTOM_ATTRIBUTE_TYPE, entry.getValue());
+            if (entry.getKey().equals(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString())) {
+                attribute = new Attribute(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(),
+                        ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(),
+                        Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                        entry.getValue());
+            } else if (entry.getKey().equals(ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString())) {
+                attribute = new Attribute(ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString(),
+                        ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString(),
+                        Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                        entry.getValue());
             }
 
             attributesList.add(attribute);
         }
 
-        Attribute attribute = new Attribute(BOT_FILTERING_ATTRIBUTE,
-                BOT_FILTERING_ATTRIBUTE, Attribute.CUSTOM_ATTRIBUTE_TYPE, Boolean.toString(projectConfig.getBotFiltering()));
+        Attribute attribute = new Attribute(
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                Boolean.toString(projectConfig.getBotFiltering())
+        );
 
         attributesList.add(attribute);
 
