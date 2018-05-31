@@ -56,29 +56,29 @@ final class JsonSimpleConfigParser implements ConfigParser {
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
         try {
             JSONParser parser = new JSONParser();
-            JSONObject rootObject = (JSONObject)parser.parse(json);
+            JSONObject rootObject = (JSONObject) parser.parse(json);
 
-            String accountId = (String)rootObject.get("accountId");
-            String projectId = (String)rootObject.get("projectId");
-            String revision = (String)rootObject.get("revision");
-            String version = (String)rootObject.get("version");
+            String accountId = (String) rootObject.get("accountId");
+            String projectId = (String) rootObject.get("projectId");
+            String revision = (String) rootObject.get("revision");
+            String version = (String) rootObject.get("version");
             int datafileVersion = Integer.parseInt(version);
 
-            List<Experiment> experiments = parseExperiments((JSONArray)rootObject.get("experiments"));
+            List<Experiment> experiments = parseExperiments((JSONArray) rootObject.get("experiments"));
 
             List<Attribute> attributes;
-            attributes = parseAttributes((JSONArray)rootObject.get("attributes"));
+            attributes = parseAttributes((JSONArray) rootObject.get("attributes"));
 
-            List<EventType> events = parseEvents((JSONArray)rootObject.get("events"));
-            List<Audience> audiences = parseAudiences((JSONArray)parser.parse(rootObject.get("audiences").toString()));
-            List<Group> groups = parseGroups((JSONArray)rootObject.get("groups"));
+            List<EventType> events = parseEvents((JSONArray) rootObject.get("events"));
+            List<Audience> audiences = parseAudiences((JSONArray) parser.parse(rootObject.get("audiences").toString()));
+            List<Group> groups = parseGroups((JSONArray) rootObject.get("groups"));
 
             boolean anonymizeIP = false;
             List<LiveVariable> liveVariables = null;
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
-                liveVariables = parseLiveVariables((JSONArray)rootObject.get("variables"));
+                liveVariables = parseLiveVariables((JSONArray) rootObject.get("variables"));
 
-                anonymizeIP = (Boolean)rootObject.get("anonymizeIP");
+                anonymizeIP = (Boolean) rootObject.get("anonymizeIP");
             }
 
             List<FeatureFlag> featureFlags = null;
@@ -87,7 +87,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
                 featureFlags = parseFeatureFlags((JSONArray) rootObject.get("featureFlags"));
                 rollouts = parseRollouts((JSONArray) rootObject.get("rollouts"));
-                botFiltering = (Boolean)rootObject.get("botFiltering");
+                botFiltering = (Boolean) rootObject.get("botFiltering");
             }
 
             return new ProjectConfig(
