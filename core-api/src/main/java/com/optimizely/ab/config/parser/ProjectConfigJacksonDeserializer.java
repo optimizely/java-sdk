@@ -76,16 +76,19 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
 
         List<FeatureFlag> featureFlags = null;
         List<Rollout> rollouts = null;
+        boolean botFiltering = false;
         if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
             featureFlags = mapper.readValue(node.get("featureFlags").toString(),
                    new TypeReference<List<FeatureFlag>>() {});
             rollouts = mapper.readValue(node.get("rollouts").toString(),
                     new TypeReference<List<Rollout>>(){});
+            botFiltering = node.get("botFiltering").asBoolean();
         }
 
         return new ProjectConfig(
                 accountId,
                 anonymizeIP,
+                botFiltering,
                 projectId,
                 revision,
                 version,
