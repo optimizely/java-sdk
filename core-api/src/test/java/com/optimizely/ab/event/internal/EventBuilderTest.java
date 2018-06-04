@@ -1,3 +1,19 @@
+/**
+ *
+ *    Copyright 2016-2018, Optimizely and contributors
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package com.optimizely.ab.event.internal;
 
 import com.google.gson.FieldNamingPolicy;
@@ -16,6 +32,7 @@ import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.Decision;
 import com.optimizely.ab.event.internal.payload.EventBatch;
+import com.optimizely.ab.internal.ReservedAttributeKey;
 import com.optimizely.ab.internal.ReservedEventKey;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,11 +50,7 @@ import java.util.Map;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV4;
-import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_GRYFFINDOR_VALUE;
-import static com.optimizely.ab.config.ValidProjectConfigV4.EVENT_BASIC_EVENT_KEY;
-import static com.optimizely.ab.config.ValidProjectConfigV4.EVENT_PAUSED_EXPERIMENT_KEY;
-import static com.optimizely.ab.config.ValidProjectConfigV4.MULTIVARIATE_EXPERIMENT_FORCED_VARIATION_USER_ID_GRED;
-import static com.optimizely.ab.config.ValidProjectConfigV4.PAUSED_EXPERIMENT_FORCED_VARIATION_USER_ID_CONTROL;
+import static com.optimizely.ab.config.ValidProjectConfigV4.*;
 import static junit.framework.Assert.assertNotNull;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.closeTo;
@@ -89,21 +102,38 @@ public class EventBuilderTest {
      * Verify {@link com.optimizely.ab.event.internal.payload.EventBatch} event creation
      */
     @Test
-    public void createImpressionEvent() throws Exception {
+    public void createImpressionEventPassingUserAgentAttribute() throws Exception {
         // use the "valid" project config and its associated experiment, variation, and attributes
-        ProjectConfig projectConfig = validProjectConfigV2();
-        Experiment activatedExperiment = projectConfig.getExperiments().get(0);
+        Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
-        Attribute attribute = projectConfig.getAttributes().get(0);
+        Attribute attribute = validProjectConfig.getAttributes().get(0);
         String userId = "userId";
-        Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
+        Map<String, String> attributeMap = new HashMap<String, String>();
+        attributeMap.put(attribute.getKey(), "value");
+        attributeMap.put(ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString(), "Chrome");
         Decision expectedDecision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(), bucketedVariation.getId(), false);
         com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(),
                 attribute.getKey(), com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "value");
-        List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = Collections.singletonList(feature);
+        com.optimizely.ab.event.internal.payload.Attribute userAgentFeature = new com.optimizely.ab.event.internal.payload.Attribute(
+                ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString(),
+                ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString(),
+                com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                "Chrome");
 
-        LogEvent impressionEvent = builder.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation,
+        com.optimizely.ab.event.internal.payload.Attribute BotFilteringFeature = new com.optimizely.ab.event.internal.payload.Attribute(
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                validProjectConfig.getBotFiltering()+"");
+        List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
+
+        if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
+            expectedUserFeatures = Arrays.asList(userAgentFeature, feature, BotFilteringFeature);
+        else
+            expectedUserFeatures = Arrays.asList(userAgentFeature, feature);
+
+        LogEvent impressionEvent = builder.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation,
                 userId, attributeMap);
 
         // verify that request endpoint is correct
@@ -115,12 +145,63 @@ public class EventBuilderTest {
         assertThat(eventBatch.getVisitors().get(0).getVisitorId(), is(userId));
         assertThat((double) eventBatch.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double)System.currentTimeMillis(), 1000.0));
         assertFalse(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
-        assertThat(eventBatch.getAnonymizeIp(), is(projectConfig.getAnonymizeIP()));
-        assertThat(eventBatch.getProjectId(), is(projectConfig.getProjectId()));
+        assertThat(eventBatch.getAnonymizeIp(), is(validProjectConfig.getAnonymizeIP()));
+        assertThat(eventBatch.getProjectId(), is(validProjectConfig.getProjectId()));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0), is(expectedDecision));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getCampaignId(),
                 is(activatedExperiment.getLayerId()));
-        assertThat(eventBatch.getAccountId(), is(projectConfig.getAccountId()));
+        assertThat(eventBatch.getAccountId(), is(validProjectConfig.getAccountId()));
+        assertThat(eventBatch.getVisitors().get(0).getAttributes(), is(expectedUserFeatures));
+        assertThat(eventBatch.getClientName(), is(EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue()));
+        assertThat(eventBatch.getClientVersion(), is(BuildVersionInfo.VERSION));
+        assertNull(eventBatch.getVisitors().get(0).getSessionId());
+    }
+
+    /**
+     * Verify {@link com.optimizely.ab.event.internal.payload.EventBatch} event creation
+     */
+    @Test
+    public void createImpressionEvent() throws Exception {
+        // use the "valid" project config and its associated experiment, variation, and attributes
+        Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
+        Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+        Attribute attribute = validProjectConfig.getAttributes().get(0);
+        String userId = "userId";
+        Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
+        Decision expectedDecision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(), bucketedVariation.getId(), false);
+        com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(),
+                attribute.getKey(), com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                "value");
+        com.optimizely.ab.event.internal.payload.Attribute BotFilteringFeature = new com.optimizely.ab.event.internal.payload.Attribute(
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                validProjectConfig.getBotFiltering()+"");
+        List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
+
+        if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
+            expectedUserFeatures = Arrays.asList(feature, BotFilteringFeature);
+        else
+            expectedUserFeatures = Arrays.asList(feature);
+
+        LogEvent impressionEvent = builder.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation,
+                userId, attributeMap);
+
+        // verify that request endpoint is correct
+        assertThat(impressionEvent.getEndpointUrl(), is(EventBuilder.EVENT_ENDPOINT));
+
+        EventBatch eventBatch = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
+
+        // verify payload information
+        assertThat(eventBatch.getVisitors().get(0).getVisitorId(), is(userId));
+        assertThat((double) eventBatch.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double)System.currentTimeMillis(), 1000.0));
+        assertFalse(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
+        assertThat(eventBatch.getAnonymizeIp(), is(validProjectConfig.getAnonymizeIP()));
+        assertThat(eventBatch.getProjectId(), is(validProjectConfig.getProjectId()));
+        assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0), is(expectedDecision));
+        assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getCampaignId(),
+                is(activatedExperiment.getLayerId()));
+        assertThat(eventBatch.getAccountId(), is(validProjectConfig.getAccountId()));
         assertThat(eventBatch.getVisitors().get(0).getAttributes(), is(expectedUserFeatures));
         assertThat(eventBatch.getClientName(), is(EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue()));
         assertThat(eventBatch.getClientVersion(), is(BuildVersionInfo.VERSION));
@@ -134,7 +215,7 @@ public class EventBuilderTest {
     @Test
     public void createImpressionEventIgnoresUnknownAttributes() throws Exception {
         // use the "valid" project config and its associated experiment, variation, and attributes
-        ProjectConfig projectConfig = validProjectConfigV2();
+        ProjectConfig projectConfig = validProjectConfig;
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
 
@@ -268,7 +349,121 @@ public class EventBuilderTest {
         com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(), attribute.getKey(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 AUDIENCE_GRYFFINDOR_VALUE);
-        List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = Collections.singletonList(feature);
+        com.optimizely.ab.event.internal.payload.Attribute feature2 = new com.optimizely.ab.event.internal.payload.Attribute(
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                validProjectConfig.getBotFiltering()+"");
+        List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
+
+        if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
+            expectedUserFeatures = Arrays.asList(feature, feature2);
+        else
+            expectedUserFeatures = Arrays.asList(feature);
+
+        assertEquals(conversion.getVisitors().get(0).getAttributes(), expectedUserFeatures);
+        assertThat(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions(), containsInAnyOrder(expectedDecisions.toArray()));
+        assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getEntityId(), eventType.getId());
+        assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getKey(), eventType.getKey());
+        assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getRevenue(), null);
+        assertTrue(conversion.getVisitors().get(0).getAttributes().containsAll(expectedUserFeatures));
+        assertTrue(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTags().equals(eventTagMap));
+        assertFalse(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
+        assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
+        assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
+        assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
+    }
+
+    /**
+     * Verify {@link com.optimizely.ab.event.internal.payload.EventBatch} event creation
+     * passing User Agent reserved attribute in attribute map and to check it exist in visitors.attributes
+     */
+    @Test
+    public void createConversionEventPassingUserAgentAttribute() throws Exception {
+        // use the "valid" project config and its associated experiment, variation, and attributes
+        Attribute attribute = validProjectConfig.getAttributes().get(0);
+        EventType eventType = validProjectConfig.getEventTypes().get(0);
+        String userId = "userId";
+
+        Bucketer mockBucketAlgorithm = mock(Bucketer.class);
+
+        List<Experiment> allExperiments = validProjectConfig.getExperiments();
+        List<Experiment> experimentsForEventKey = validProjectConfig.getExperimentsForEventKey(eventType.getKey());
+
+        // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
+        // call the bucket function.
+        for (Experiment experiment : allExperiments) {
+            when(mockBucketAlgorithm.bucket(experiment, userId))
+                    .thenReturn(experiment.getVariations().get(0));
+        }
+        DecisionService decisionService = new DecisionService(
+                mockBucketAlgorithm,
+                mock(ErrorHandler.class),
+                validProjectConfig,
+                mock(UserProfileService.class)
+        );
+
+        Map<String, String> attributeMap = new HashMap<String, String>();
+        attributeMap.put(attribute.getKey(), AUDIENCE_GRYFFINDOR_VALUE);
+        attributeMap.put(ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString(), "Chrome");
+        Map<String, Object> eventTagMap = new HashMap<String, Object>();
+        eventTagMap.put("boolean_param", false);
+        eventTagMap.put("string_param", "123");
+        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
+                validProjectConfig,
+                decisionService,
+                eventType.getKey(),
+                userId,
+                attributeMap);
+        LogEvent conversionEvent = builder.createConversionEvent(
+                validProjectConfig,
+                experimentVariationMap,
+                userId,
+                eventType.getId(),
+                eventType.getKey(),
+                attributeMap,
+                eventTagMap);
+
+        List<Decision> expectedDecisions = new ArrayList<Decision>();
+
+        for (Experiment experiment : experimentsForEventKey) {
+            if (experiment.isRunning()) {
+                Decision layerState = new Decision(experiment.getLayerId(), experiment.getId(),
+                        experiment.getVariations().get(0).getId(), false);
+                expectedDecisions.add(layerState);
+            }
+        }
+
+        // verify that the request endpoint is correct
+        assertThat(conversionEvent.getEndpointUrl(), is(EventBuilder.EVENT_ENDPOINT));
+
+        EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
+
+        // verify payload information
+        assertThat(conversion.getVisitors().get(0).getVisitorId(), is(userId));
+        assertThat(conversion.getProjectId(), is(validProjectConfig.getProjectId()));
+        assertThat(conversion.getAccountId(), is(validProjectConfig.getAccountId()));
+
+        com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(
+                attribute.getId(), attribute.getKey(),
+                com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                AUDIENCE_GRYFFINDOR_VALUE);
+        com.optimizely.ab.event.internal.payload.Attribute userAgentFeature = new com.optimizely.ab.event.internal.payload.Attribute(
+                ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString(),
+                ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString(),
+                com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                "Chrome");
+        com.optimizely.ab.event.internal.payload.Attribute botFilteringFeature = new com.optimizely.ab.event.internal.payload.Attribute(
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                validProjectConfig.getBotFiltering()+"");
+        List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
+
+        if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
+            expectedUserFeatures = Arrays.asList(userAgentFeature, feature, botFilteringFeature);
+        else
+            expectedUserFeatures = Arrays.asList(userAgentFeature, feature);
 
         assertEquals(conversion.getVisitors().get(0).getAttributes(), expectedUserFeatures);
         assertThat(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions(), containsInAnyOrder(expectedDecisions.toArray()));
@@ -542,7 +737,7 @@ public class EventBuilderTest {
     @Test
     public void createImpressionEventWithBucketingId() throws Exception {
         // use the "valid" project config and its associated experiment, variation, and attributes
-        ProjectConfig projectConfig = validProjectConfigV2();
+        ProjectConfig projectConfig = validProjectConfig;
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
         Attribute attribute = projectConfig.getAttributes().get(0);
@@ -550,19 +745,30 @@ public class EventBuilderTest {
         Map<String, String> attributeMap = new HashMap<String, String>();
         attributeMap.put(attribute.getKey(), "value");
 
-        attributeMap.put(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE, "variation");
+        attributeMap.put(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(), "variation");
 
         Decision expectedDecision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(), bucketedVariation.getId(), false);
 
         com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(), attribute.getKey(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "value");
-        com.optimizely.ab.event.internal.payload.Attribute feature1 = new com.optimizely.ab.event.internal.payload.Attribute(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
-                EventBuilder.ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE,
+        com.optimizely.ab.event.internal.payload.Attribute feature1 = new com.optimizely.ab.event.internal.payload.Attribute(
+                ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(),
+                ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "variation");
+        com.optimizely.ab.event.internal.payload.Attribute feature2 = new com.optimizely.ab.event.internal.payload.Attribute(
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                validProjectConfig.getBotFiltering()+"");
 
-        List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = Arrays.asList(feature, feature1);
+        List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
+
+        if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
+            expectedUserFeatures = Arrays.asList(feature, feature1, feature2);
+        else
+            expectedUserFeatures = Arrays.asList(feature, feature1);
 
         LogEvent impressionEvent = builder.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation,
                 userId, attributeMap);
@@ -619,7 +825,7 @@ public class EventBuilderTest {
 
         Map<String, String> attributeMap = new java.util.HashMap<String, String>();
         attributeMap.put(attribute.getKey(), AUDIENCE_GRYFFINDOR_VALUE);
-        attributeMap.put(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE, bucketingId);
+        attributeMap.put(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(), bucketingId);
 
         Map<String, Object> eventTagMap = new HashMap<String, Object>();
         eventTagMap.put("boolean_param", false);
@@ -663,11 +869,22 @@ public class EventBuilderTest {
         com.optimizely.ab.event.internal.payload.Attribute attribute1 = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(), attribute.getKey(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 AUDIENCE_GRYFFINDOR_VALUE);
-        com.optimizely.ab.event.internal.payload.Attribute attribute2 = new com.optimizely.ab.event.internal.payload.Attribute(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
-                EventBuilder.ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE,
+        com.optimizely.ab.event.internal.payload.Attribute attribute2 = new com.optimizely.ab.event.internal.payload.Attribute(
+                ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(),
+                ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 bucketingId);
-        List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = Arrays.asList(attribute1, attribute2);
+        com.optimizely.ab.event.internal.payload.Attribute attribute3 = new com.optimizely.ab.event.internal.payload.Attribute(
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                validProjectConfig.getBotFiltering()+"");
+        List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
+
+        if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
+            expectedUserFeatures = Arrays.asList(attribute1, attribute2, attribute3);
+        else
+            expectedUserFeatures = Arrays.asList(attribute1, attribute2);
 
         assertEquals(conversion.getVisitors().get(0).getAttributes(), expectedUserFeatures);
         assertThat(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions(), containsInAnyOrder(expectedDecisions.toArray()));

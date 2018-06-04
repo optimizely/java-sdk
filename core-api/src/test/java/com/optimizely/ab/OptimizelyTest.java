@@ -37,6 +37,7 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.EventBuilder;
 import com.optimizely.ab.internal.LogbackVerifier;
+import com.optimizely.ab.internal.ReservedAttributeKey;
 import com.optimizely.ab.notification.ActivateNotificationListener;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.notification.NotificationListener;
@@ -179,7 +180,7 @@ public class OptimizelyTest {
     private static final String genericUserId = "genericUserId";
     private static final String testUserId = "userId";
     private static final String testBucketingId = "bucketingId";
-    private static final String testBucketingIdKey = DecisionService.BUCKETING_ATTRIBUTE;
+    private static final String testBucketingIdKey = ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString();
 
     private int datafileVersion;
     private String validDatafile;

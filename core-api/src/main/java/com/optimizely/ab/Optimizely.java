@@ -37,6 +37,7 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventBuilder;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
+import com.optimizely.ab.internal.ReservedAttributeKey;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -749,7 +750,7 @@ public class Optimizely {
      *
      * @param projectConfig the current project config
      * @param attributes the attributes map to validate and potentially filter. The reserved key for bucketing id
-     * {@link DecisionService#BUCKETING_ATTRIBUTE} is kept.
+     * {@link DecisionService#{ReservedAttributeKey.BUCKETING_ATTRIBUTE} is kept.
      * @return the filtered attributes map (containing only attributes that are present in the project config) or an
      * empty map if a null attributes object is passed in
      */
@@ -765,7 +766,8 @@ public class Optimizely {
         Map<String, Attribute> attributeKeyMapping = projectConfig.getAttributeKeyMapping();
         for (Map.Entry<String, String> attribute : attributes.entrySet()) {
             if (!attributeKeyMapping.containsKey(attribute.getKey()) &&
-                    attribute.getKey() != com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE) {
+                    !attribute.getKey().equals(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString()) &&
+                        !attribute.getKey().equals(ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString())) {
                 if (unknownAttributes == null) {
                     unknownAttributes = new ArrayList<String>();
                 }

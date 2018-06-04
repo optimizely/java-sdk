@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config;
 
+import ch.qos.logback.classic.Level;
 import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
@@ -37,7 +38,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 
+import com.optimizely.ab.internal.LogbackVerifier;
+import com.optimizely.ab.internal.ReservedAttributeKey;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -48,6 +52,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public class ProjectConfigTest {
 
     private ProjectConfig projectConfig;
+
+    @Rule
+    public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
     @Before
     public void initialize() {
@@ -143,7 +150,7 @@ public class ProjectConfigTest {
         expectedLiveVariableIdToExperimentsMapping.put("7", Collections.singletonList(groupedExpWithVariables));
 
         assertThat(projectConfig.getLiveVariableIdToExperimentsMapping(),
-                   is(expectedLiveVariableIdToExperimentsMapping));
+                is(expectedLiveVariableIdToExperimentsMapping));
     }
 
     /**
@@ -185,12 +192,13 @@ public class ProjectConfigTest {
         expectedVariationToLiveVariableUsageInstanceMapping.put("281", groupedVariation281VariableValues);
 
         assertThat(projectConfig.getVariationToLiveVariableUsageInstanceMapping(),
-                   is(expectedVariationToLiveVariableUsageInstanceMapping));
+                is(expectedVariationToLiveVariableUsageInstanceMapping));
     }
 
     /**
      * Asserts that anonymizeIP is set to false if not explicitly passed into the constructor (in the case of V2
      * projects).
+     *
      * @throws Exception
      */
     @Test
@@ -201,24 +209,24 @@ public class ProjectConfigTest {
 
     /**
      * Invalid User IDs
-
-     User ID is null
-     User ID is an empty string
-     Invalid Experiment IDs
-
-     Experiment key does not exist in the datafile
-     Experiment key is null
-     Experiment key is an empty string
-     Invalid Variation IDs [set only]
-
-     Variation key does not exist in the datafile
-     Variation key is null
-     Variation key is an empty string
-     Multiple set calls [set only]
-
-     Call set variation with different variations on one user/experiment to confirm that each set is expected.
-     Set variation on multiple variations for one user.
-     Set variations for multiple users.
+     * <p>
+     * User ID is null
+     * User ID is an empty string
+     * Invalid Experiment IDs
+     * <p>
+     * Experiment key does not exist in the datafile
+     * Experiment key is null
+     * Experiment key is an empty string
+     * Invalid Variation IDs [set only]
+     * <p>
+     * Variation key does not exist in the datafile
+     * Variation key is null
+     * Variation key is an empty string
+     * Multiple set calls [set only]
+     * <p>
+     * Call set variation with different variations on one user/experiment to confirm that each set is expected.
+     * Set variation on multiple variations for one user.
+     * Set variations for multiple users.
      */
     /* UserID test */
     @Test
@@ -227,6 +235,7 @@ public class ProjectConfigTest {
         boolean b = projectConfig.setForcedVariation("etag1", null, "vtag1");
         assertFalse(b);
     }
+
     @Test
     @SuppressFBWarnings("NP")
     public void getForcedVariationNullUserId() {
@@ -237,6 +246,7 @@ public class ProjectConfigTest {
     public void setForcedVariationEmptyUserId() {
         assertFalse(projectConfig.setForcedVariation("etag1", "", "vtag1"));
     }
+
     @Test
     public void getForcedVariationEmptyUserId() {
         assertNull(projectConfig.getForcedVariation("etag1", ""));
@@ -248,6 +258,7 @@ public class ProjectConfigTest {
     public void setForcedVariationNullExperimentKey() {
         assertFalse(projectConfig.setForcedVariation(null, "testUser1", "vtag1"));
     }
+
     @Test
     @SuppressFBWarnings("NP")
     public void getForcedVariationNullExperimentKey() {
@@ -259,6 +270,7 @@ public class ProjectConfigTest {
         assertFalse(projectConfig.setForcedVariation("wrongKey", "testUser1", "vtag1"));
 
     }
+
     @Test
     public void getForcedVariationWrongExperimentKey() {
         assertNull(projectConfig.getForcedVariation("wrongKey", "testUser1"));
@@ -269,6 +281,7 @@ public class ProjectConfigTest {
         assertFalse(projectConfig.setForcedVariation("", "testUser1", "vtag1"));
 
     }
+
     @Test
     public void getForcedVariationEmptyExperimentKey() {
         assertNull(projectConfig.getForcedVariation("", "testUser1"));
@@ -345,4 +358,56 @@ public class ProjectConfigTest {
         assertNull(projectConfig.getForcedVariation("etag2", "testUser2"));
 
     }
+
+    @Test
+    public void getAttributeIDWhenAttributeKeyIsEqualtoBotFiltering() {
+        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
+        String attributeID = projectConfig.getAttributeId(projectConfig, "$opt_bot_filtering");
+        assertNull(attributeID);
+    }
+
+    @Test
+    public void getAttributeIDWhenAttributeKeyIsFromAttributeKeyMapping() {
+        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
+        String attributeID = projectConfig.getAttributeId(projectConfig, "house");
+        assertEquals(attributeID, "553339214");
+    }
+
+    @Test
+    public void getAttributeIDWhenAttributeKeyIsUsingReservedKey() {
+        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
+        String attributeID = projectConfig.getAttributeId(projectConfig, "$opt_user_agent");
+        assertEquals(attributeID, ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString());
+    }
+
+    @Test
+    public void getAttributeIDWhenAttributeKeyUnrecognizedAttribute() {
+        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
+        String invalidAttribute = "empty";
+        String attributeID = projectConfig.getAttributeId(projectConfig, invalidAttribute);
+        assertNull(attributeID);
+        logbackVerifier.expectMessage(Level.DEBUG, "Unrecognized Attribute \""+invalidAttribute+"\"");
+    }
+
+    @Test
+    public void getAttributeIDWhenAttributeKeyPrefixIsMatched() {
+        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
+        String attributeWithReservedPrefix = "$opt_test";
+        String attributeID = projectConfig.getAttributeId(projectConfig, attributeWithReservedPrefix);
+        assertEquals(attributeID,"583394100");
+        logbackVerifier.expectMessage(Level.WARN, "Attribute "+attributeWithReservedPrefix +" unexpectedly" +
+                " has reserved prefix $opt_; using attribute ID instead of reserved attribute name.");
+    }
+
+    @Test
+    public void getAttributeIDWhenAttributeKeyBotFilteringIsMatched() {
+        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
+        String attributeWithReservedPrefix = "$opt_bot_filtering";
+        String attributeID = projectConfig.getAttributeId(projectConfig, attributeWithReservedPrefix);
+        assertNull(attributeID);
+        logbackVerifier.expectMessage(Level.WARN, "Attribute "+attributeWithReservedPrefix +" unexpectedly has reserved key " +
+                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString()+".");
+    }
+
+
 }

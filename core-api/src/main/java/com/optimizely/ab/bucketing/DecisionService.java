@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2017, Optimizely, Inc. and contributors                        *
+ * Copyright 2017-2018, Optimizely, Inc. and contributors                        *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -25,6 +25,7 @@ import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ExperimentUtils;
 
+import com.optimizely.ab.internal.ReservedAttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,6 @@ import javax.annotation.Nullable;
  */
 public class DecisionService {
 
-    public static final String BUCKETING_ATTRIBUTE = "$opt_bucketing_id";
     private final Bucketer bucketer;
     private final ErrorHandler errorHandler;
     private final ProjectConfig projectConfig;
@@ -130,8 +130,8 @@ public class DecisionService {
 
         if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
             String bucketingId = userId;
-            if (filteredAttributes.containsKey(BUCKETING_ATTRIBUTE)) {
-                bucketingId = filteredAttributes.get(BUCKETING_ATTRIBUTE);
+            if (filteredAttributes.containsKey(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString())) {
+                bucketingId = filteredAttributes.get(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString());
             }
             variation = bucketer.bucket(experiment, bucketingId);
 
@@ -211,8 +211,8 @@ public class DecisionService {
         // for all rules before the everyone else rule
         int rolloutRulesLength = rollout.getExperiments().size();
         String bucketingId = userId;
-        if (filteredAttributes.containsKey(BUCKETING_ATTRIBUTE)) {
-            bucketingId = filteredAttributes.get(BUCKETING_ATTRIBUTE);
+        if (filteredAttributes.containsKey(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString())) {
+            bucketingId = filteredAttributes.get(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString());
         }
         Variation variation;
         for (int i = 0; i < rolloutRulesLength - 1; i++) {

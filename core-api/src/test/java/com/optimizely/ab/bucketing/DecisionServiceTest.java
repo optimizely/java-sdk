@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2017, Optimizely, Inc. and contributors                        *
+ * Copyright 2017-2018, Optimizely, Inc. and contributors                        *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -26,6 +26,7 @@ import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.LogbackVerifier;
 
+import com.optimizely.ab.internal.ReservedAttributeKey;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1050,7 +1051,7 @@ public class DecisionServiceTest {
         when(bucketer.bucket(experiment, "bucketId")).thenReturn(expectedVariation);
 
         Map<String, String> attr = new HashMap<String, String>();
-        attr.put(DecisionService.BUCKETING_ATTRIBUTE, "bucketId");
+        attr.put(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(), "bucketId");
         // user excluded without audiences and whitelisting
         assertThat(decisionService.getVariation(experiment, genericUserId, attr), is(expectedVariation));
 
@@ -1068,7 +1069,7 @@ public class DecisionServiceTest {
         String bucketingId = "user_bucketing_id";
         String userId = "user_id";
         Map<String, String> attributes = new HashMap<String, String>();
-        attributes.put(DecisionService.BUCKETING_ATTRIBUTE, bucketingId);
+        attributes.put(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(), bucketingId);
 
         Bucketer bucketer = mock(Bucketer.class);
         when(bucketer.bucket(rolloutRuleExperiment, userId)).thenReturn(null);

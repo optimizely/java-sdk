@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -64,33 +64,37 @@ final class JsonSimpleConfigParser implements ConfigParser {
             String version = (String)rootObject.get("version");
             int datafileVersion = Integer.parseInt(version);
 
-            List<Experiment> experiments = parseExperiments((JSONArray)rootObject.get("experiments"));
+            List<Experiment> experiments = parseExperiments((JSONArray) rootObject.get("experiments"));
 
             List<Attribute> attributes;
-            attributes = parseAttributes((JSONArray)rootObject.get("attributes"));
+            attributes = parseAttributes((JSONArray) rootObject.get("attributes"));
 
-            List<EventType> events = parseEvents((JSONArray)rootObject.get("events"));
-            List<Audience> audiences = parseAudiences((JSONArray)parser.parse(rootObject.get("audiences").toString()));
-            List<Group> groups = parseGroups((JSONArray)rootObject.get("groups"));
+            List<EventType> events = parseEvents((JSONArray) rootObject.get("events"));
+            List<Audience> audiences = parseAudiences((JSONArray) parser.parse(rootObject.get("audiences").toString()));
+            List<Group> groups = parseGroups((JSONArray) rootObject.get("groups"));
 
             boolean anonymizeIP = false;
             List<LiveVariable> liveVariables = null;
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
-                liveVariables = parseLiveVariables((JSONArray)rootObject.get("variables"));
+                liveVariables = parseLiveVariables((JSONArray) rootObject.get("variables"));
 
-                anonymizeIP = (Boolean)rootObject.get("anonymizeIP");
+                anonymizeIP = (Boolean) rootObject.get("anonymizeIP");
             }
 
             List<FeatureFlag> featureFlags = null;
             List<Rollout> rollouts = null;
+            Boolean botFiltering = null;
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
                 featureFlags = parseFeatureFlags((JSONArray) rootObject.get("featureFlags"));
                 rollouts = parseRollouts((JSONArray) rootObject.get("rollouts"));
+                if(rootObject.containsKey("botFiltering"))
+                    botFiltering = (Boolean) rootObject.get("botFiltering");
             }
 
             return new ProjectConfig(
                     accountId,
                     anonymizeIP,
+                    botFiltering,
                     projectId,
                     revision,
                     version,

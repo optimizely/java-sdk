@@ -17,7 +17,6 @@
 package com.optimizely.ab.event.internal;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
-import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
@@ -32,6 +31,7 @@ import com.optimizely.ab.event.internal.payload.Visitor;
 import com.optimizely.ab.event.internal.serializer.DefaultJsonSerializer;
 import com.optimizely.ab.event.internal.serializer.Serializer;
 import com.optimizely.ab.internal.EventTagUtils;
+import com.optimizely.ab.internal.ReservedAttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
@@ -44,7 +44,6 @@ import java.util.UUID;
 
 public class EventBuilder {
     private static final Logger logger = LoggerFactory.getLogger(EventBuilder.class);
-    static final String ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE = "optimizely_bucketing_id";
     static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";
     static final String  ACTIVATE_EVENT_KEY = "campaign_activated";
 
@@ -118,17 +117,25 @@ public class EventBuilder {
     private List<Attribute> buildAttributeList(ProjectConfig projectConfig, Map<String, String> attributes) {
         List<Attribute> attributesList = new ArrayList<Attribute>();
 
-        Map<String, com.optimizely.ab.config.Attribute> attributeMap = projectConfig.getAttributeKeyMapping();
         for (Map.Entry<String, String> entry : attributes.entrySet()) {
-            com.optimizely.ab.config.Attribute projectAttribute = attributeMap.get(entry.getKey());
-            Attribute attribute = new Attribute((projectAttribute != null ? projectAttribute.getId() : null),
-                    entry.getKey(), Attribute.CUSTOM_ATTRIBUTE_TYPE, entry.getValue());
-
-            if (entry.getKey() == DecisionService.BUCKETING_ATTRIBUTE) {
-                attribute = new Attribute(com.optimizely.ab.bucketing.DecisionService.BUCKETING_ATTRIBUTE,
-                        ATTRIBUTE_KEY_FOR_BUCKETING_ATTRIBUTE, Attribute.CUSTOM_ATTRIBUTE_TYPE, entry.getValue());
+            String attributeId = projectConfig.getAttributeId(projectConfig, entry.getKey());
+            if(attributeId != null) {
+                Attribute attribute = new Attribute(attributeId,
+                        entry.getKey(),
+                        Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                        entry.getValue());
+                attributesList.add(attribute);
             }
+        }
 
+        //checks if botFiltering value is not set in the project config file.
+        if(projectConfig.getBotFiltering() != null) {
+            Attribute attribute = new Attribute(
+                    ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                    ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                    Attribute.CUSTOM_ATTRIBUTE_TYPE,
+                    Boolean.toString(projectConfig.getBotFiltering())
+            );
             attributesList.add(attribute);
         }
 

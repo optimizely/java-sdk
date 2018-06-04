@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017, Optimizely and contributors
+ *    Copyright 2017-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ public class ValidProjectConfigV4 {
     // simple properties
     private static final String     ACCOUNT_ID = "2360254204";
     private static final boolean    ANONYMIZE_IP = true;
+    private static final boolean    BOT_FILTERING = true;
     private static final String     PROJECT_ID = "3918735994";
     private static final String     REVISION = "1480511547";
     private static final String     VERSION = "4";
@@ -43,6 +44,10 @@ public class ValidProjectConfigV4 {
     private static final String     ATTRIBUTE_NATIONALITY_ID = "58339410";
     public  static final String     ATTRIBUTE_NATIONALITY_KEY = "nationality";
     private static final Attribute  ATTRIBUTE_NATIONALITY = new Attribute(ATTRIBUTE_NATIONALITY_ID, ATTRIBUTE_NATIONALITY_KEY);
+
+    private static final String     ATTRIBUTE_OPT_ID = "583394100";
+    public  static final String     ATTRIBUTE_OPT_KEY = "$opt_test";
+    private static final Attribute  ATTRIBUTE_OPT = new Attribute(ATTRIBUTE_OPT_ID, ATTRIBUTE_OPT_KEY);
 
     // audiences
     private static final String     CUSTOM_DIMENSION_TYPE = "custom_dimension";
@@ -1027,6 +1032,7 @@ public class ValidProjectConfigV4 {
         List<Attribute> attributes = new ArrayList<Attribute>();
         attributes.add(ATTRIBUTE_HOUSE);
         attributes.add(ATTRIBUTE_NATIONALITY);
+        attributes.add(ATTRIBUTE_OPT);
 
         // list audiences
         List<Audience> audiences = new ArrayList<Audience>();
@@ -1073,6 +1079,7 @@ public class ValidProjectConfigV4 {
         return new ProjectConfig(
                 ACCOUNT_ID,
                 ANONYMIZE_IP,
+                BOT_FILTERING,
                 PROJECT_ID,
                 REVISION,
                 VERSION,

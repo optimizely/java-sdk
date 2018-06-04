@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -24,8 +24,10 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
+import com.optimizely.ab.internal.ReservedAttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Attr;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -37,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.ErrorManager;
 
 /**
  * Represents the Optimizely Project configuration.
@@ -73,6 +76,7 @@ public class ProjectConfig {
     private final String revision;
     private final String version;
     private final boolean anonymizeIP;
+    private final Boolean botFiltering;
     private final List<Attribute> attributes;
     private final List<Audience> audiences;
     private final List<EventType> events;
@@ -100,6 +104,8 @@ public class ProjectConfig {
     private final Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping;
     private final Map<String, Experiment> variationIdToExperimentMapping;
 
+    private final static String RESERVED_ATTRIBUTE_PREFIX = "$opt_";
+
     /**
      *  Forced variations supersede any other mappings.  They are transient and are not persistent or part of
      * the actual datafile. This contains all the forced variations
@@ -123,6 +129,7 @@ public class ProjectConfig {
         this(
                 accountId,
                 anonymizeIP,
+                null,
                 projectId,
                 revision,
                 version,
@@ -140,6 +147,7 @@ public class ProjectConfig {
     // v4 constructor
     public ProjectConfig(String accountId,
                          boolean anonymizeIP,
+                         Boolean botFiltering,
                          String projectId,
                          String revision,
                          String version,
@@ -157,6 +165,7 @@ public class ProjectConfig {
         this.version = version;
         this.revision = revision;
         this.anonymizeIP = anonymizeIP;
+        this.botFiltering = botFiltering;
 
         this.attributes = Collections.unmodifiableList(attributes);
         this.audiences = Collections.unmodifiableList(audiences);
@@ -285,6 +294,35 @@ public class ProjectConfig {
         return groupExperiments;
     }
 
+    /**
+     * Checks is attributeKey is reserved or not and is it exist in attributeKeyMapping
+     * @param attributeKey
+     * @return AttributeId corresponding to AttributeKeyMapping, AttributeKey when it's a reserved attribute and
+     * null when attributeKey is equal to BOT_FILTERING_ATTRIBUTE key.
+     */
+    public String getAttributeId(ProjectConfig projectConfig, String attributeKey) {
+        String attributeIdOrKey = null;
+        if (!attributeKey.equals(ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString())) {
+            com.optimizely.ab.config.Attribute attribute = projectConfig.getAttributeKeyMapping().get(attributeKey);
+            boolean hasReservedPrefix = attributeKey.indexOf(RESERVED_ATTRIBUTE_PREFIX) == 0;
+            if (attribute != null) {
+                if (hasReservedPrefix) {
+                    logger.warn("Attribute {} unexpectedly has reserved prefix {}; using attribute ID instead of reserved attribute name.",
+                            attributeKey, RESERVED_ATTRIBUTE_PREFIX);
+                }
+                attributeIdOrKey = attribute.getId();
+            } else if (hasReservedPrefix) {
+                attributeIdOrKey = attributeKey;
+            } else {
+                logger.debug("Unrecognized Attribute \"{}\"", attributeKey);
+            }
+        } else {
+            logger.warn("Attribute {} unexpectedly has reserved key {}.",
+                    attributeKey, ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString());
+        }
+        return attributeIdOrKey;
+    }
+
     public String getAccountId() {
         return accountId;
     }
@@ -303,6 +341,10 @@ public class ProjectConfig {
 
     public boolean getAnonymizeIP() {
         return anonymizeIP;
+    }
+
+    public Boolean getBotFiltering() {
+        return botFiltering;
     }
 
     public List<Group> getGroups() {
@@ -540,6 +582,7 @@ public class ProjectConfig {
                 ", revision='" + revision + '\'' +
                 ", version='" + version + '\'' +
                 ", anonymizeIP=" + anonymizeIP +
+                ", botFiltering=" + botFiltering +
                 ", attributes=" + attributes +
                 ", audiences=" + audiences +
                 ", events=" + events +
