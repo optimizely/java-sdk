@@ -107,6 +107,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
                     liveVariables,
                     rollouts
             );
+        } catch (RuntimeException ex){
+            throw new ConfigParseException("Unable to parse datafile: " + json, ex);
         } catch (Exception e) {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
         }
