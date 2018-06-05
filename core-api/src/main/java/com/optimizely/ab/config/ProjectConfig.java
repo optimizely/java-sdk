@@ -27,7 +27,6 @@ import com.optimizely.ab.error.RaiseExceptionErrorHandler;
 import com.optimizely.ab.internal.ReservedAttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Attr;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -39,7 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.ErrorManager;
 
 /**
  * Represents the Optimizely Project configuration.
@@ -304,7 +302,7 @@ public class ProjectConfig {
         String attributeIdOrKey = null;
         if (!attributeKey.equals(ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString())) {
             com.optimizely.ab.config.Attribute attribute = projectConfig.getAttributeKeyMapping().get(attributeKey);
-            boolean hasReservedPrefix = attributeKey.indexOf(RESERVED_ATTRIBUTE_PREFIX) == 0;
+            boolean hasReservedPrefix = attributeKey.startsWith(RESERVED_ATTRIBUTE_PREFIX);
             if (attribute != null) {
                 if (hasReservedPrefix) {
                     logger.warn("Attribute {} unexpectedly has reserved prefix {}; using attribute ID instead of reserved attribute name.",

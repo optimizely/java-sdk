@@ -209,24 +209,24 @@ public class ProjectConfigTest {
 
     /**
      * Invalid User IDs
-     * <p>
-     * User ID is null
-     * User ID is an empty string
-     * Invalid Experiment IDs
-     * <p>
-     * Experiment key does not exist in the datafile
-     * Experiment key is null
-     * Experiment key is an empty string
-     * Invalid Variation IDs [set only]
-     * <p>
-     * Variation key does not exist in the datafile
-     * Variation key is null
-     * Variation key is an empty string
-     * Multiple set calls [set only]
-     * <p>
-     * Call set variation with different variations on one user/experiment to confirm that each set is expected.
-     * Set variation on multiple variations for one user.
-     * Set variations for multiple users.
+
+      User ID is null
+      User ID is an empty string
+      Invalid Experiment IDs
+
+      Experiment key does not exist in the datafile
+      Experiment key is null
+      Experiment key is an empty string
+      Invalid Variation IDs [set only]
+
+      Variation key does not exist in the datafile
+      Variation key is null
+      Variation key is an empty string
+      Multiple set calls [set only]
+
+      Call set variation with different variations on one user/experiment to confirm that each set is expected.
+      Set variation on multiple variations for one user.
+      Set variations for multiple users.
      */
     /* UserID test */
     @Test
