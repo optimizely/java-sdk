@@ -32,7 +32,7 @@ import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.Decision;
 import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.internal.ReservedAttributeKey;
+import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.ReservedEventKey;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -110,20 +110,20 @@ public class EventBuilderTest {
         String userId = "userId";
         Map<String, String> attributeMap = new HashMap<String, String>();
         attributeMap.put(attribute.getKey(), "value");
-        attributeMap.put(ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString(), "Chrome");
+        attributeMap.put(ControlAttribute.USER_AGENT_ATTRIBUTE.toString(), "Chrome");
         Decision expectedDecision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(), bucketedVariation.getId(), false);
         com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(),
                 attribute.getKey(), com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "value");
         com.optimizely.ab.event.internal.payload.Attribute userAgentFeature = new com.optimizely.ab.event.internal.payload.Attribute(
-                ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString(),
-                ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString(),
+                ControlAttribute.USER_AGENT_ATTRIBUTE.toString(),
+                ControlAttribute.USER_AGENT_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "Chrome");
 
         com.optimizely.ab.event.internal.payload.Attribute BotFilteringFeature = new com.optimizely.ab.event.internal.payload.Attribute(
-                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
-                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
+                ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 validProjectConfig.getBotFiltering()+"");
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
@@ -173,8 +173,8 @@ public class EventBuilderTest {
                 attribute.getKey(), com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "value");
         com.optimizely.ab.event.internal.payload.Attribute BotFilteringFeature = new com.optimizely.ab.event.internal.payload.Attribute(
-                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
-                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
+                ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 validProjectConfig.getBotFiltering()+"");
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
@@ -350,8 +350,8 @@ public class EventBuilderTest {
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 AUDIENCE_GRYFFINDOR_VALUE);
         com.optimizely.ab.event.internal.payload.Attribute feature2 = new com.optimizely.ab.event.internal.payload.Attribute(
-                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
-                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
+                ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 validProjectConfig.getBotFiltering()+"");
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
@@ -405,7 +405,7 @@ public class EventBuilderTest {
 
         Map<String, String> attributeMap = new HashMap<String, String>();
         attributeMap.put(attribute.getKey(), AUDIENCE_GRYFFINDOR_VALUE);
-        attributeMap.put(ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString(), "Chrome");
+        attributeMap.put(ControlAttribute.USER_AGENT_ATTRIBUTE.toString(), "Chrome");
         Map<String, Object> eventTagMap = new HashMap<String, Object>();
         eventTagMap.put("boolean_param", false);
         eventTagMap.put("string_param", "123");
@@ -449,13 +449,13 @@ public class EventBuilderTest {
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 AUDIENCE_GRYFFINDOR_VALUE);
         com.optimizely.ab.event.internal.payload.Attribute userAgentFeature = new com.optimizely.ab.event.internal.payload.Attribute(
-                ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString(),
-                ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString(),
+                ControlAttribute.USER_AGENT_ATTRIBUTE.toString(),
+                ControlAttribute.USER_AGENT_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "Chrome");
         com.optimizely.ab.event.internal.payload.Attribute botFilteringFeature = new com.optimizely.ab.event.internal.payload.Attribute(
-                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
-                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
+                ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 validProjectConfig.getBotFiltering()+"");
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
@@ -745,7 +745,7 @@ public class EventBuilderTest {
         Map<String, String> attributeMap = new HashMap<String, String>();
         attributeMap.put(attribute.getKey(), "value");
 
-        attributeMap.put(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(), "variation");
+        attributeMap.put(ControlAttribute.BUCKETING_ATTRIBUTE.toString(), "variation");
 
         Decision expectedDecision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(), bucketedVariation.getId(), false);
 
@@ -753,13 +753,13 @@ public class EventBuilderTest {
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "value");
         com.optimizely.ab.event.internal.payload.Attribute feature1 = new com.optimizely.ab.event.internal.payload.Attribute(
-                ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(),
-                ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(),
+                ControlAttribute.BUCKETING_ATTRIBUTE.toString(),
+                ControlAttribute.BUCKETING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "variation");
         com.optimizely.ab.event.internal.payload.Attribute feature2 = new com.optimizely.ab.event.internal.payload.Attribute(
-                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
-                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
+                ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 validProjectConfig.getBotFiltering()+"");
 
@@ -825,7 +825,7 @@ public class EventBuilderTest {
 
         Map<String, String> attributeMap = new java.util.HashMap<String, String>();
         attributeMap.put(attribute.getKey(), AUDIENCE_GRYFFINDOR_VALUE);
-        attributeMap.put(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(), bucketingId);
+        attributeMap.put(ControlAttribute.BUCKETING_ATTRIBUTE.toString(), bucketingId);
 
         Map<String, Object> eventTagMap = new HashMap<String, Object>();
         eventTagMap.put("boolean_param", false);
@@ -870,13 +870,13 @@ public class EventBuilderTest {
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 AUDIENCE_GRYFFINDOR_VALUE);
         com.optimizely.ab.event.internal.payload.Attribute attribute2 = new com.optimizely.ab.event.internal.payload.Attribute(
-                ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(),
-                ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString(),
+                ControlAttribute.BUCKETING_ATTRIBUTE.toString(),
+                ControlAttribute.BUCKETING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 bucketingId);
         com.optimizely.ab.event.internal.payload.Attribute attribute3 = new com.optimizely.ab.event.internal.payload.Attribute(
-                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
-                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
+                ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 validProjectConfig.getBotFiltering()+"");
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;

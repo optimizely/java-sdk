@@ -25,7 +25,7 @@ import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ExperimentUtils;
 
-import com.optimizely.ab.internal.ReservedAttributeKey;
+import com.optimizely.ab.internal.ControlAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,8 +130,8 @@ public class DecisionService {
 
         if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
             String bucketingId = userId;
-            if (filteredAttributes.containsKey(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString())) {
-                bucketingId = filteredAttributes.get(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString());
+            if (filteredAttributes.containsKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())) {
+                bucketingId = filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString());
             }
             variation = bucketer.bucket(experiment, bucketingId);
 
@@ -211,8 +211,8 @@ public class DecisionService {
         // for all rules before the everyone else rule
         int rolloutRulesLength = rollout.getExperiments().size();
         String bucketingId = userId;
-        if (filteredAttributes.containsKey(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString())) {
-            bucketingId = filteredAttributes.get(ReservedAttributeKey.BUCKETING_ATTRIBUTE.toString());
+        if (filteredAttributes.containsKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())) {
+            bucketingId = filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString());
         }
         Variation variation;
         for (int i = 0; i < rolloutRulesLength - 1; i++) {

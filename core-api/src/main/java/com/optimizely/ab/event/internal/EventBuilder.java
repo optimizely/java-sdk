@@ -31,7 +31,7 @@ import com.optimizely.ab.event.internal.payload.Visitor;
 import com.optimizely.ab.event.internal.serializer.DefaultJsonSerializer;
 import com.optimizely.ab.event.internal.serializer.Serializer;
 import com.optimizely.ab.internal.EventTagUtils;
-import com.optimizely.ab.internal.ReservedAttributeKey;
+import com.optimizely.ab.internal.ControlAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
@@ -131,8 +131,8 @@ public class EventBuilder {
         //checks if botFiltering value is not set in the project config file.
         if(projectConfig.getBotFiltering() != null) {
             Attribute attribute = new Attribute(
-                    ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
-                    ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString(),
+                    ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
+                    ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                     Attribute.CUSTOM_ATTRIBUTE_TYPE,
                     Boolean.toString(projectConfig.getBotFiltering())
             );

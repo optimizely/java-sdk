@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
 
 
 import com.optimizely.ab.internal.LogbackVerifier;
-import com.optimizely.ab.internal.ReservedAttributeKey;
+import com.optimizely.ab.internal.ControlAttribute;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -377,7 +377,7 @@ public class ProjectConfigTest {
     public void getAttributeIDWhenAttributeKeyIsUsingReservedKey() {
         ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
         String attributeID = projectConfig.getAttributeId(projectConfig, "$opt_user_agent");
-        assertEquals(attributeID, ReservedAttributeKey.USER_AGENT_ATTRIBUTE.toString());
+        assertEquals(attributeID, ControlAttribute.USER_AGENT_ATTRIBUTE.toString());
     }
 
     @Test
@@ -406,7 +406,7 @@ public class ProjectConfigTest {
         String attributeID = projectConfig.getAttributeId(projectConfig, attributeWithReservedPrefix);
         assertNull(attributeID);
         logbackVerifier.expectMessage(Level.WARN, "Attribute "+attributeWithReservedPrefix +" unexpectedly has reserved key " +
-                ReservedAttributeKey.BOT_FILTERING_ATTRIBUTE.toString()+".");
+                ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString()+".");
     }
 
 
