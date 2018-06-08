@@ -6,13 +6,14 @@
 * Open terminal navigate to SDK root directory.
 * In SDK root directory, execute **./gradlew build**
 * This will generate HTML documentation in **core-api/build/docs/javadoc** directory
-* Browse **core-api/build/docs/index.html** in browser.
+* Browse **core-api/build/docs/javadoc/index.html** in browser.
 
-### Manual
+### Manual for whole project
 		
 * Open project in IntelliJ.
 * Select **core-api** from projects side bar.
 * Go to **Tools -> Generate JavaDoc**
+* Make sure **Generate JavaDoc scope -> Whole project** is checked.
 * Uncheck **Include test sources**.
 * Select **Output Directory**.
 * Click **OK**.
