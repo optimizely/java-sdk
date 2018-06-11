@@ -4,9 +4,11 @@ jdk:
   - openjdk8
   - oraclejdk8
   - oraclejdk9
+matrix:
+  include:
+  - openjdk8:
+    env: RUN_SOURCECLEAR=true
 install: true
-addons:
-  srcclr: true
 script:
     - "./gradlew clean"
     - "./gradlew exhaustiveTest"
@@ -25,4 +27,5 @@ branches:
   - master
   - /^\d+\.\d+\.\d+(-SNAPSHOT|-alpha|-beta)?\d*$/ # trigger builds on tags which are semantically versioned to ship the SDK.
 after_success:
+  - ./sourceclear.sh
   - ./gradlew coveralls uploadArchives --console plain
