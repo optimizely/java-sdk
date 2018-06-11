@@ -14,84 +14,65 @@ import com.optimizely.ab.faultinjection.ExceptionSpot;
 import com.optimizely.ab.faultinjection.FaultInjectionManager;
 import com.optimizely.ab.internal.ExperimentUtilsTest;
 import com.optimizely.ab.notification.NotificationCenterTest;
+import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TestSuiteRunner {
 
-    public static void main(String[] args) {
+    @Test
+    public void main() {
+        String spotString = System.getProperty("arg1");
         TestSuiteRunner runner = new TestSuiteRunner();
-        runner.runAllTests();
+        try {
+            runner.runAllTests(ExceptionSpot.valueOf(spotString));
+        } catch (IllegalArgumentException e) {
+            // eat it
+        }
     }
 
     /**
      * Loops through all the exception spots and runs the complete test suite once for each spot
      * and collects results in results.csv
      */
-    private void runAllTests() {
+    public void runAllTests(ExceptionSpot spot) {
+
 
         FaultInjectionManager mgr = FaultInjectionManager.getInstance();
 
         List<String> csvOutput = new ArrayList<String>();
-        csvOutput.add(" % Pass, % Exception, % Assertion Failure, Fault Spot");
 
-        int i = -1;
-        //int start = 397;
-        //int end = 428;
-        int start = -1;
-        int end  = 1000;
+        mgr.setActiveExceptionSpot(spot);
 
-        for ( ExceptionSpot spot : mgr.getAllExceptionSpots() ) {
-        //    ExceptionSpot spot = ExceptionSpot.none;
-            ++i;
-            //if( i < start ) continue;
-            //if( i >= end) break;
+        // collect results of test suite run
+        Result result = this.runTestSuite();
 
-            // change the active exception spot on every run
-            mgr.setActiveExceptionSpot(spot);
-
-            // collect results of test suite run
-            Result result = this.runTestSuite();
-
-            // separating failures due to exceptions and assertion failures
-            int exceptionCount = 0;
-            int failedAssertionCount = 0;
-            for (Failure f : result.getFailures()) {
-
-                System.out.println("==================");
-                System.out.println(f.getTestHeader());
-                System.out.println(f.getMessage());
-                System.out.println(f.getException());
-                System.out.println(f.getDescription());
-                System.out.println("==================");
-
-                // if the exception type is INJECTED_EXCEPTION, it means it was failure due to exception
-                if(f.getMessage() != null && f.getMessage().equals(FaultInjectionManager.INJECTED_EXCEPTION)) {
-                    exceptionCount++;
-                } else {
-                    failedAssertionCount++;
-                }
+        // separating failures due to exceptions and assertion failures
+        int exceptionCount = 0;
+        int failedAssertionCount = 0;
+        for (Failure f : result.getFailures()) {
+            // if the exception type is INJECTED_EXCEPTION, it means it was failure due to exception
+            if(f.getMessage() != null && f.getMessage().equals(FaultInjectionManager.INJECTED_EXCEPTION)) {
+                exceptionCount++;
+            } else {
+                failedAssertionCount++;
             }
-
-            Integer passCount = result.getRunCount() - result.getFailureCount();
-
-            csvOutput.add(
-                    getPercentage(passCount, result.getRunCount()) + "," +
-                            getPercentage(exceptionCount, result.getRunCount()) + "," +
-                            getPercentage(failedAssertionCount, result.getRunCount()) + "," +
-                            spot.getReadableName());
-
-            if(spot == ExceptionSpot.Optimizely_activate3_spot1) break;
         }
+
+        Integer passCount = result.getRunCount() - result.getFailureCount();
+
+        csvOutput.add(
+                getPercentage(passCount, result.getRunCount()) + "," +
+                        getPercentage(exceptionCount, result.getRunCount()) + "," +
+                        getPercentage(failedAssertionCount, result.getRunCount()) + "," +
+                        spot.getReadableName());
+
 
         writeCSVToFile(csvOutput);
 
@@ -135,14 +116,12 @@ public class TestSuiteRunner {
 
     private void writeCSVToFile(List<String> csv) {
         try {
-            PrintWriter pr = new PrintWriter("results.csv", "UTF-8");
+            PrintWriter pr = new PrintWriter(new FileOutputStream(new File("results.csv"), true));
             for( String csvLine : csv) {
                 pr.println(csvLine);
             }
             pr.close();
         } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());
-        } catch (UnsupportedEncodingException e) {
             System.out.println(e.getMessage());
         }
     }

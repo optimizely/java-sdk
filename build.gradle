@@ -87,6 +87,8 @@ subprojects {
         testLogging {
             showStandardStreams = false
         }
+
+        systemProperty 'arg1', System.getProperty('arg1')
     }
 
     task exhaustiveTest(type: Test) {

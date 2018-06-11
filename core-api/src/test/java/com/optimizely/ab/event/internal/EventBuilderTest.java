@@ -199,7 +199,7 @@ public class EventBuilderTest {
     /**
      * Verify {@link com.optimizely.ab.event.internal.payload.EventBatch} event creation
      */
-    //@Test
+    @Test
     public void createConversionEvent() throws Exception {
         // use the "valid" project config and its associated experiment, variation, and attributes
         Attribute attribute = validProjectConfig.getAttributes().get(0);
@@ -591,7 +591,7 @@ public class EventBuilderTest {
     /**
      * Verify {@link EventBatch} event creation
      */
-    //@Test
+    @Test
     public void createConversionEventWithBucketingId() throws Exception {
         // use the "valid" project config and its associated experiment, variation, and attributes
         Attribute attribute = validProjectConfig.getAttributes().get(0);

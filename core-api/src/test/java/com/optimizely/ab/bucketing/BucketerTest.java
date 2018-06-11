@@ -70,7 +70,7 @@ public class BucketerTest {
      * Verify that across the entire 32-bit hashCode space, all generated bucket values fall within the range
      * [0, {@link Bucketer#MAX_TRAFFIC_VALUE}) and that there's an even distribution over 50/50 split.
      */
-    //@Test
+    @Test
     //@Category(ExhaustiveTest.class)
     public void generateBucketValueDistribution() throws Exception {
         Assume.assumeTrue(Boolean.valueOf(System.getenv("CI")));
