@@ -102,7 +102,7 @@ public class ProjectConfig {
     private final Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping;
     private final Map<String, Experiment> variationIdToExperimentMapping;
 
-    private final static String RESERVED_ATTRIBUTE_PREFIX = "$opt_";
+    public final static String RESERVED_ATTRIBUTE_PREFIX = "$opt_";
 
     /**
      *  Forced variations supersede any other mappings.  They are transient and are not persistent or part of
