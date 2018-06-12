@@ -1,19 +1,12 @@
 # Generate Code Documentation
-## Steps
-
-### Automatic
-		
-* Open terminal navigate to SDK root directory.
-* In SDK root directory, execute **./gradlew build**
-* This will generate HTML documentation in **core-api/build/docs/javadoc** directory
-* Browse **core-api/build/docs/javadoc/index.html** in browser.
-
-### Manual for whole project
-		
-* Open project in IntelliJ.
-* Select **core-api** from projects side bar.
+### Steps	
+* Checkout **master** branch.
+* Open project in **IntelliJ**.
 * Go to **Tools -> Generate JavaDoc**
-* Make sure **Generate JavaDoc scope -> Whole project** is checked.
+* Make sure **Generate JavaDoc scope -> Custom Scope** is checked.
+* Click on three dotted icon to make custom scope.
+* Give name **Custom_Docs**.
+* Copy and paste following regex: **`!src[core-api_main]:*..internal..*&&!test:*..*&&!lib:*..*`** into **Pattern** and click **OK**.
 * Uncheck **Include test sources**.
 * Select **Output Directory**.
 * Click **OK**.
