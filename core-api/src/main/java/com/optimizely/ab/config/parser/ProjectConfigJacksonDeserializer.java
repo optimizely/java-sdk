@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -76,16 +76,20 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
 
         List<FeatureFlag> featureFlags = null;
         List<Rollout> rollouts = null;
+        Boolean botFiltering = null;
         if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
             featureFlags = mapper.readValue(node.get("featureFlags").toString(),
                    new TypeReference<List<FeatureFlag>>() {});
             rollouts = mapper.readValue(node.get("rollouts").toString(),
                     new TypeReference<List<Rollout>>(){});
+            if (node.hasNonNull("botFiltering"))
+                botFiltering = node.get("botFiltering").asBoolean();
         }
 
         return new ProjectConfig(
                 accountId,
                 anonymizeIP,
+                botFiltering,
                 projectId,
                 revision,
                 version,
