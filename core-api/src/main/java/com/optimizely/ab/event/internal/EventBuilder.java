@@ -134,7 +134,7 @@ public class EventBuilder {
                     ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                     ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                     Attribute.CUSTOM_ATTRIBUTE_TYPE,
-                    Boolean.toString(projectConfig.getBotFiltering())
+                    projectConfig.getBotFiltering()
             );
             attributesList.add(attribute);
         }

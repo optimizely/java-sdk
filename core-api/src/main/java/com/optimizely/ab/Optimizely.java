@@ -749,8 +749,8 @@ public class Optimizely {
      * {@link ProjectConfig}.
      *
      * @param projectConfig the current project config
-     * @param attributes the attributes map to validate and potentially filter. The reserved key for bucketing id
-     * {@link DecisionService#{ProjectConfig.RESERVED_ATTRIBUTE_PREFIX} is kept.
+     * @param attributes the attributes map to validate and potentially filter. Attributes which starts with reserved key
+     * {@link ProjectConfig#RESERVED_ATTRIBUTE_PREFIX} are kept.
      * @return the filtered attributes map (containing only attributes that are present in the project config) or an
      * empty map if a null attributes object is passed in
      */

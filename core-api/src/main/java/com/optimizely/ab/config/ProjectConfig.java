@@ -300,23 +300,18 @@ public class ProjectConfig {
      */
     public String getAttributeId(ProjectConfig projectConfig, String attributeKey) {
         String attributeIdOrKey = null;
-        if (!attributeKey.equals(ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString())) {
-            com.optimizely.ab.config.Attribute attribute = projectConfig.getAttributeKeyMapping().get(attributeKey);
-            boolean hasReservedPrefix = attributeKey.startsWith(RESERVED_ATTRIBUTE_PREFIX);
-            if (attribute != null) {
-                if (hasReservedPrefix) {
-                    logger.warn("Attribute {} unexpectedly has reserved prefix {}; using attribute ID instead of reserved attribute name.",
-                            attributeKey, RESERVED_ATTRIBUTE_PREFIX);
-                }
-                attributeIdOrKey = attribute.getId();
-            } else if (hasReservedPrefix) {
-                attributeIdOrKey = attributeKey;
-            } else {
-                logger.debug("Unrecognized Attribute \"{}\"", attributeKey);
+        com.optimizely.ab.config.Attribute attribute = projectConfig.getAttributeKeyMapping().get(attributeKey);
+        boolean hasReservedPrefix = attributeKey.startsWith(RESERVED_ATTRIBUTE_PREFIX);
+        if (attribute != null) {
+            if (hasReservedPrefix) {
+                logger.warn("Attribute {} unexpectedly has reserved prefix {}; using attribute ID instead of reserved attribute name.",
+                        attributeKey, RESERVED_ATTRIBUTE_PREFIX);
             }
+            attributeIdOrKey = attribute.getId();
+        } else if (hasReservedPrefix) {
+            attributeIdOrKey = attributeKey;
         } else {
-            logger.warn("Attribute {} unexpectedly has reserved key {}.",
-                    attributeKey, ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString());
+            logger.debug("Unrecognized Attribute \"{}\"", attributeKey);
         }
         return attributeIdOrKey;
     }

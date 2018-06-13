@@ -24,8 +24,8 @@ import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ExperimentUtils;
-
 import com.optimizely.ab.internal.ControlAttribute;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

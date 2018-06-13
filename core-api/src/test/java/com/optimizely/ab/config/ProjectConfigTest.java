@@ -360,13 +360,6 @@ public class ProjectConfigTest {
     }
 
     @Test
-    public void getAttributeIDWhenAttributeKeyIsEqualtoBotFiltering() {
-        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
-        String attributeID = projectConfig.getAttributeId(projectConfig, "$opt_bot_filtering");
-        assertNull(attributeID);
-    }
-
-    @Test
     public void getAttributeIDWhenAttributeKeyIsFromAttributeKeyMapping() {
         ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
         String attributeID = projectConfig.getAttributeId(projectConfig, "house");
@@ -398,16 +391,5 @@ public class ProjectConfigTest {
         logbackVerifier.expectMessage(Level.WARN, "Attribute "+attributeWithReservedPrefix +" unexpectedly" +
                 " has reserved prefix $opt_; using attribute ID instead of reserved attribute name.");
     }
-
-    @Test
-    public void getAttributeIDWhenAttributeKeyBotFilteringIsMatched() {
-        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
-        String attributeWithReservedPrefix = "$opt_bot_filtering";
-        String attributeID = projectConfig.getAttributeId(projectConfig, attributeWithReservedPrefix);
-        assertNull(attributeID);
-        logbackVerifier.expectMessage(Level.WARN, "Attribute "+attributeWithReservedPrefix +" unexpectedly has reserved key " +
-                ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString()+".");
-    }
-
 
 }

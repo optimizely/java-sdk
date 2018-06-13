@@ -18,8 +18,6 @@ package com.optimizely.ab.event.internal.payload;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Objects;
-
 public class Decision {
     @JsonProperty("campaign_id")
     String campaignId;

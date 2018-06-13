@@ -121,15 +121,15 @@ public class EventBuilderTest {
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "Chrome");
 
-        com.optimizely.ab.event.internal.payload.Attribute BotFilteringFeature = new com.optimizely.ab.event.internal.payload.Attribute(
+        com.optimizely.ab.event.internal.payload.Attribute botFilteringFeature = new com.optimizely.ab.event.internal.payload.Attribute(
                 ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
-                validProjectConfig.getBotFiltering()+"");
+                validProjectConfig.getBotFiltering());
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
 
         if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
-            expectedUserFeatures = Arrays.asList(userAgentFeature, feature, BotFilteringFeature);
+            expectedUserFeatures = Arrays.asList(userAgentFeature, feature, botFilteringFeature);
         else
             expectedUserFeatures = Arrays.asList(userAgentFeature, feature);
 
@@ -172,15 +172,15 @@ public class EventBuilderTest {
         com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute(attribute.getId(),
                 attribute.getKey(), com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
                 "value");
-        com.optimizely.ab.event.internal.payload.Attribute BotFilteringFeature = new com.optimizely.ab.event.internal.payload.Attribute(
+        com.optimizely.ab.event.internal.payload.Attribute botFilteringFeature = new com.optimizely.ab.event.internal.payload.Attribute(
                 ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
-                validProjectConfig.getBotFiltering()+"");
+                validProjectConfig.getBotFiltering());
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
 
         if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
-            expectedUserFeatures = Arrays.asList(feature, BotFilteringFeature);
+            expectedUserFeatures = Arrays.asList(feature, botFilteringFeature);
         else
             expectedUserFeatures = Arrays.asList(feature);
 
@@ -353,7 +353,7 @@ public class EventBuilderTest {
                 ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
-                validProjectConfig.getBotFiltering()+"");
+                validProjectConfig.getBotFiltering());
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
 
         if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
@@ -457,7 +457,7 @@ public class EventBuilderTest {
                 ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
-                validProjectConfig.getBotFiltering()+"");
+                validProjectConfig.getBotFiltering());
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
 
         if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
@@ -761,7 +761,7 @@ public class EventBuilderTest {
                 ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
-                validProjectConfig.getBotFiltering()+"");
+                validProjectConfig.getBotFiltering());
 
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
 
@@ -878,7 +878,7 @@ public class EventBuilderTest {
                 ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
                 com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE,
-                validProjectConfig.getBotFiltering()+"");
+                validProjectConfig.getBotFiltering());
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
 
         if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
