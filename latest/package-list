@@ -1,0 +1,14 @@
+com.optimizely.ab
+com.optimizely.ab.annotations
+com.optimizely.ab.bucketing
+com.optimizely.ab.bucketing.internal
+com.optimizely.ab.config
+com.optimizely.ab.config.audience
+com.optimizely.ab.config.parser
+com.optimizely.ab.error
+com.optimizely.ab.event
+com.optimizely.ab.event.internal
+com.optimizely.ab.event.internal.payload
+com.optimizely.ab.event.internal.serializer
+com.optimizely.ab.internal
+com.optimizely.ab.notification

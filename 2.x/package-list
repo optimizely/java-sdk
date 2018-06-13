@@ -1,0 +1,9 @@
+com.optimizely.ab
+com.optimizely.ab.annotations
+com.optimizely.ab.bucketing
+com.optimizely.ab.config
+com.optimizely.ab.config.audience
+com.optimizely.ab.config.parser
+com.optimizely.ab.error
+com.optimizely.ab.event
+com.optimizely.ab.notification
