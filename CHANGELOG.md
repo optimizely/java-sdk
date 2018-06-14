@@ -1,5 +1,11 @@
 # Optimizely Java X SDK Changelog
 
+## 2.1.0
+
+June 14th, 2018
+
+* Introduces support for bot filtering.
+
 ## 2.0.1
 
 April 25th, 2018
