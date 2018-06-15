@@ -2,7 +2,7 @@
 
 ## 2.1.0
 
-June 14th, 2018
+June 15th, 2018
 
 * Introduces support for bot filtering.
 
