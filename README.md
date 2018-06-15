@@ -3,7 +3,7 @@ Optimizely Java SDK
 [![Build Status](https://travis-ci.org/optimizely/java-sdk.svg?branch=master)](https://travis-ci.org/optimizely/java-sdk)
 [![Apache 2.0](https://img.shields.io/badge/license-APACHE%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
-This repository houses the Java SDK for Optimizely's Full Stack product.
+This repository houses the official Java SDK for Optimizely Full Stack.
 
 ## Getting Started
 
