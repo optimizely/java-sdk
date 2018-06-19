@@ -6,7 +6,7 @@
 * Make sure **Generate JavaDoc scope -> Custom Scope** is checked.
 * Click on three dotted icon to make custom scope.
 * Give name **Custom_Docs**.
-* Copy and paste following regex: **`!src[core-api_main]:*..internal..*&&!test:*..*&&!lib:*..*`** into **Pattern** and click **OK**.
+* Copy and paste following regex: **`!*..internal..*&&!test:*..*&&!lib:*..*`** into **Pattern** and click **OK**.
 * Uncheck **Include test sources**.
 * Select **Output Directory**.
 * Click **OK**.
