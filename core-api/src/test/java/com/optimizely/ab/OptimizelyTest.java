@@ -3436,15 +3436,13 @@ public class OptimizelyTest {
      * false so feature enabled will return false
      */
     @Test
-    public void isFeatureEnabledWithExperimentKeyForcedOfFeatureEnabledFalse() throws Exception {
+    public void isFeatureEnabledWithExperimentKeyForcedOffFeatureEnabledFalse() throws Exception {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
         Experiment activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
         Variation forcedVariation = activatedExperiment.getVariations().get(2);
-        EventBuilder mockEventBuilder = mock(EventBuilder.class);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
                 .withBucketing(mockBucketer)
-                .withEventBuilder(mockEventBuilder)
                 .withConfig(validProjectConfig)
                 .withErrorHandler(mockErrorHandler)
                 .build();
@@ -3463,11 +3461,9 @@ public class OptimizelyTest {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
         Experiment activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT_KEY);
         Variation forcedVariation = activatedExperiment.getVariations().get(1);
-        EventBuilder mockEventBuilder = mock(EventBuilder.class);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
                 .withBucketing(mockBucketer)
-                .withEventBuilder(mockEventBuilder)
                 .withConfig(validProjectConfig)
                 .withErrorHandler(mockErrorHandler)
                 .build();
@@ -3539,6 +3535,44 @@ public class OptimizelyTest {
 
         assertFalse(spyOptimizely.isFeatureEnabled(validFeatureKey, genericUserId));
 
+    }
+
+    /**
+     * Verify {@link Optimizely#isFeatureEnabled(String, String)} calls into
+     * {@link Optimizely#isFeatureEnabled(String, String, Map)} and they both
+     * return False
+     * when the user is bucketed an feature test variation that is turned off.
+     * @throws Exception
+     */
+    @Test
+    public void isFeatureEnabledReturnsFalseAndDispatchesWhenUserIsBucketedIntoAnExperimentVariationToggleOff() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+                .withConfig(validProjectConfig)
+                .withDecisionService(mockDecisionService)
+                .build());
+
+        Experiment activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
+        Variation variation = new Variation("2", "variation_toggled_off", false, null);
+
+        FeatureDecision featureDecision = new FeatureDecision(activatedExperiment, variation, FeatureDecision.DecisionSource.EXPERIMENT);
+        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+                any(FeatureFlag.class),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        );
+
+        assertFalse(spyOptimizely.isFeatureEnabled(validFeatureKey, genericUserId));
+
+        logbackVerifier.expectMessage(
+                Level.INFO,
+                "Feature \"" + validFeatureKey +
+                        "\" is not enabled for user \"" + genericUserId + "\"."
+        );
+        verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
     }
 
     /** Integration Test
