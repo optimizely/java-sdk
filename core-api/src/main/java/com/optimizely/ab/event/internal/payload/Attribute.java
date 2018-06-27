@@ -26,13 +26,13 @@ public class Attribute {
     String entityId;
     String key;
     String type;
-    String value;
+    Object value;
 
     public Attribute() {
 
     }
 
-    public Attribute(String entityId, String key, String type, String value) {
+    public Attribute(String entityId, String key, String type, Object value) {
         this.entityId = entityId;
         this.key = key;
         this.type = type;
@@ -63,7 +63,7 @@ public class Attribute {
         this.type = type;
     }
 
-    public String getValue() {
+    public Object getValue() {
         return value;
     }
 
