@@ -115,50 +115,71 @@ public class Optimizely {
     public @Nullable
     Variation activate(@Nonnull String experimentKey,
                        @Nonnull String userId) throws UnknownExperimentException {
-        return activate(experimentKey, userId, Collections.<String, String>emptyMap());
+        try {
+            return activate(experimentKey, userId, Collections.<String, String>emptyMap());
+        } catch (UnknownExperimentException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred", e);
+            return null;
+        }
     }
 
     public @Nullable
     Variation activate(@Nonnull String experimentKey,
                        @Nonnull String userId,
                        @Nonnull Map<String, String> attributes) throws UnknownExperimentException {
+        try {
+            if (experimentKey == null) {
+                logger.error("The experimentKey parameter must be nonnull.");
+                return null;
+            }
 
-        if (experimentKey == null) {
-            logger.error("The experimentKey parameter must be nonnull.");
+            if (!validateUserId(userId)) {
+                logger.info("Not activating user for experiment \"{}\".", experimentKey);
+                return null;
+            }
+
+            ProjectConfig currentConfig = getProjectConfig();
+
+            Experiment experiment = currentConfig.getExperimentForKey(experimentKey, errorHandler);
+            if (experiment == null) {
+                // if we're unable to retrieve the associated experiment, return null
+                logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experimentKey);
+                return null;
+            }
+
+            return activate(currentConfig, experiment, userId, attributes);
+        } catch (UnknownExperimentException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred", e);
             return null;
         }
-
-        if (!validateUserId(userId)) {
-            logger.info("Not activating user for experiment \"{}\".", experimentKey);
-            return null;
-        }
-
-        ProjectConfig currentConfig = getProjectConfig();
-
-        Experiment experiment = currentConfig.getExperimentForKey(experimentKey, errorHandler);
-        if (experiment == null) {
-            // if we're unable to retrieve the associated experiment, return null
-            logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experimentKey);
-            return null;
-        }
-
-        return activate(currentConfig, experiment, userId, attributes);
     }
 
     public @Nullable
     Variation activate(@Nonnull Experiment experiment,
                        @Nonnull String userId) {
-        return activate(experiment, userId, Collections.<String, String>emptyMap());
+        try {
+            return activate(experiment, userId, Collections.<String, String>emptyMap());
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred", e);
+            return null;
+        }
     }
 
     public @Nullable
     Variation activate(@Nonnull Experiment experiment,
                        @Nonnull String userId,
                        @Nonnull Map<String, String> attributes) {
-
-        ProjectConfig currentConfig = getProjectConfig();
-
-        return activate(currentConfig, experiment, userId, attributes);
+        try {
+            ProjectConfig currentConfig = getProjectConfig();
+            return activate(currentConfig, experiment, userId, attributes);
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred", e);
+            return null;
+        }
     }
 
     private @Nullable
@@ -166,25 +187,29 @@ public class Optimizely {
                        @Nonnull Experiment experiment,
                        @Nonnull String userId,
                        @Nonnull Map<String, String> attributes) {
+        try {
+            if (!validateUserId(userId)) {
+                logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
+                return null;
+            }
+            // determine whether all the given attributes are present in the project config. If not, filter out the unknown
+            // attributes.
+            Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
 
-        if (!validateUserId(userId)){
-            logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
+            // bucket the user to the given experiment and dispatch an impression event
+            Variation variation = decisionService.getVariation(experiment, userId, filteredAttributes);
+            if (variation == null) {
+                logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
+                return null;
+            }
+
+            sendImpression(projectConfig, experiment, userId, filteredAttributes, variation);
+
+            return variation;
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred", e);
             return null;
         }
-        // determine whether all the given attributes are present in the project config. If not, filter out the unknown
-        // attributes.
-        Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
-
-        // bucket the user to the given experiment and dispatch an impression event
-        Variation variation = decisionService.getVariation(experiment, userId, filteredAttributes);
-        if (variation == null) {
-            logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
-            return null;
-        }
-
-        sendImpression(projectConfig, experiment, userId, filteredAttributes, variation);
-
-        return variation;
     }
 
     private void sendImpression(@Nonnull ProjectConfig projectConfig,
@@ -233,78 +258,83 @@ public class Optimizely {
                       @Nonnull String userId,
                       @Nonnull Map<String, String> attributes,
                       @Nonnull Map<String, ?> eventTags) throws UnknownEventTypeException {
-
-        if (!validateUserId(userId)) {
-            logger.info("Not tracking event \"{}\".", eventName);
-            return;
-        }
-
-        if (eventName == null || eventName.trim().isEmpty()){
-            logger.error("Event Key is null or empty when non-null and non-empty String was expected.");
-            logger.info("Not tracking event for user \"{}\".", userId);
-            return;
-        }
-
-        ProjectConfig currentConfig = getProjectConfig();
-
-        EventType eventType = currentConfig.getEventTypeForName(eventName, errorHandler);
-        if (eventType == null) {
-            // if no matching event type could be found, do not dispatch an event
-            logger.info("Not tracking event \"{}\" for user \"{}\".", eventName, userId);
-            return;
-        }
-
-        // determine whether all the given attributes are present in the project config. If not, filter out the unknown
-        // attributes.
-        Map<String, String> filteredAttributes = filterAttributes(currentConfig, attributes);
-
-        if (eventTags == null) {
-            logger.warn("Event tags is null when non-null was expected. Defaulting to an empty event tags map.");
-            eventTags = Collections.<String, String>emptyMap();
-        }
-
-        List<Experiment> experimentsForEvent = projectConfig.getExperimentsForEventKey(eventName);
-        Map<Experiment, Variation> experimentVariationMap = new HashMap<Experiment, Variation>(experimentsForEvent.size());
-        for (Experiment experiment : experimentsForEvent) {
-            if (experiment.isRunning()) {
-                Variation variation = decisionService.getVariation(experiment, userId, filteredAttributes);
-                if (variation != null) {
-                    experimentVariationMap.put(experiment, variation);
-                }
-            } else {
-                logger.info(
-                        "Not tracking event \"{}\" for experiment \"{}\" because experiment has status \"Launched\".",
-                        eventType.getKey(), experiment.getKey());
-            }
-        }
-
-        // create the conversion event request parameters, then dispatch
-        LogEvent conversionEvent = eventBuilder.createConversionEvent(
-                projectConfig,
-                experimentVariationMap,
-                userId,
-                eventType.getId(),
-                eventType.getKey(),
-                filteredAttributes,
-                eventTags);
-
-        if (conversionEvent == null) {
-            logger.info("There are no valid experiments for event \"{}\" to track.", eventName);
-            logger.info("Not tracking event \"{}\" for user \"{}\".", eventName, userId);
-            return;
-        }
-
-        logger.info("Tracking event \"{}\" for user \"{}\".", eventName, userId);
-        logger.debug("Dispatching conversion event to URL {} with params {} and payload \"{}\".",
-                conversionEvent.getEndpointUrl(), conversionEvent.getRequestParams(), conversionEvent.getBody());
         try {
-            eventHandler.dispatchEvent(conversionEvent);
-        } catch (Exception e) {
-            logger.error("Unexpected exception in event dispatcher", e);
-        }
+            if (!validateUserId(userId)) {
+                logger.info("Not tracking event \"{}\".", eventName);
+                return;
+            }
 
-        notificationCenter.sendNotifications(NotificationCenter.NotificationType.Track, eventName, userId,
-                filteredAttributes, eventTags, conversionEvent);
+            if (eventName == null || eventName.trim().isEmpty()) {
+                logger.error("Event Key is null or empty when non-null and non-empty String was expected.");
+                logger.info("Not tracking event for user \"{}\".", userId);
+                return;
+            }
+
+            ProjectConfig currentConfig = getProjectConfig();
+
+            EventType eventType = currentConfig.getEventTypeForName(eventName, errorHandler);
+            if (eventType == null) {
+                // if no matching event type could be found, do not dispatch an event
+                logger.info("Not tracking event \"{}\" for user \"{}\".", eventName, userId);
+                return;
+            }
+
+            // determine whether all the given attributes are present in the project config. If not, filter out the unknown
+            // attributes.
+            Map<String, String> filteredAttributes = filterAttributes(currentConfig, attributes);
+
+            if (eventTags == null) {
+                logger.warn("Event tags is null when non-null was expected. Defaulting to an empty event tags map.");
+                eventTags = Collections.<String, String>emptyMap();
+            }
+
+            List<Experiment> experimentsForEvent = projectConfig.getExperimentsForEventKey(eventName);
+            Map<Experiment, Variation> experimentVariationMap = new HashMap<Experiment, Variation>(experimentsForEvent.size());
+            for (Experiment experiment : experimentsForEvent) {
+                if (experiment.isRunning()) {
+                    Variation variation = decisionService.getVariation(experiment, userId, filteredAttributes);
+                    if (variation != null) {
+                        experimentVariationMap.put(experiment, variation);
+                    }
+                } else {
+                    logger.info(
+                            "Not tracking event \"{}\" for experiment \"{}\" because experiment has status \"Launched\".",
+                            eventType.getKey(), experiment.getKey());
+                }
+            }
+
+            // create the conversion event request parameters, then dispatch
+            LogEvent conversionEvent = eventBuilder.createConversionEvent(
+                    projectConfig,
+                    experimentVariationMap,
+                    userId,
+                    eventType.getId(),
+                    eventType.getKey(),
+                    filteredAttributes,
+                    eventTags);
+
+            if (conversionEvent == null) {
+                logger.info("There are no valid experiments for event \"{}\" to track.", eventName);
+                logger.info("Not tracking event \"{}\" for user \"{}\".", eventName, userId);
+                return;
+            }
+
+            logger.info("Tracking event \"{}\" for user \"{}\".", eventName, userId);
+            logger.debug("Dispatching conversion event to URL {} with params {} and payload \"{}\".",
+                    conversionEvent.getEndpointUrl(), conversionEvent.getRequestParams(), conversionEvent.getBody());
+            try {
+                eventHandler.dispatchEvent(conversionEvent);
+            } catch (Exception e) {
+                logger.error("Unexpected exception in event dispatcher", e);
+            }
+
+            notificationCenter.sendNotifications(NotificationCenter.NotificationType.Track, eventName, userId,
+                    filteredAttributes, eventTags, conversionEvent);
+        } catch (UnknownEventTypeException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
+        }
     }
 
     //======== FeatureFlag APIs ========//
@@ -338,42 +368,45 @@ public class Optimizely {
     public @Nonnull Boolean isFeatureEnabled(@Nonnull String featureKey,
                                               @Nonnull String userId,
                                               @Nonnull Map<String, String> attributes) {
-        if (featureKey == null) {
-            logger.warn("The featureKey parameter must be nonnull.");
-            return false;
-        }
-        else if (userId == null) {
-            logger.warn("The userId parameter must be nonnull.");
-            return false;
-        }
-        FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
-        if (featureFlag == null) {
-            logger.info("No feature flag was found for key \"{}\".", featureKey);
-            return false;
-        }
-
-        Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
-
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
-        if (featureDecision.variation != null) {
-            if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
-                sendImpression(
-                        projectConfig,
-                        featureDecision.experiment,
-                        userId,
-                        filteredAttributes,
-                        featureDecision.variation);
-            } else {
-                logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
-                        userId, featureKey);
+        try {
+            if (featureKey == null) {
+                logger.warn("The featureKey parameter must be nonnull.");
+                return false;
+            } else if (userId == null) {
+                logger.warn("The userId parameter must be nonnull.");
+                return false;
             }
-            if (featureDecision.variation.getFeatureEnabled()) {
-                logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
-                return true;
+            FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
+            if (featureFlag == null) {
+                logger.info("No feature flag was found for key \"{}\".", featureKey);
+                return false;
             }
-        }
 
-        logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
+            Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
+
+            FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
+            if (featureDecision.variation != null) {
+                if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
+                    sendImpression(
+                            projectConfig,
+                            featureDecision.experiment,
+                            userId,
+                            filteredAttributes,
+                            featureDecision.variation);
+                } else {
+                    logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
+                            userId, featureKey);
+                }
+                if (featureDecision.variation.getFeatureEnabled()) {
+                    logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
+                    return true;
+                }
+            }
+
+            logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
+        }
         return false;
     }
 
@@ -404,15 +437,20 @@ public class Optimizely {
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
                                                        @Nonnull Map<String, String> attributes) {
-        String variableValue = getFeatureVariableValueForType(
-                featureKey,
-                variableKey,
-                userId,
-                attributes,
-                LiveVariable.VariableType.BOOLEAN
-        );
-        if (variableValue != null) {
-            return Boolean.parseBoolean(variableValue);
+        try {
+            String variableValue = getFeatureVariableValueForType(
+                    featureKey,
+                    variableKey,
+                    userId,
+                    attributes,
+                    LiveVariable.VariableType.BOOLEAN
+            );
+            if (variableValue != null) {
+                return Boolean.parseBoolean(variableValue);
+            }
+        }  catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
+            return false;
         }
         return null;
     }
@@ -444,20 +482,24 @@ public class Optimizely {
                                                      @Nonnull String variableKey,
                                                      @Nonnull String userId,
                                                      @Nonnull Map<String, String> attributes) {
-        String variableValue = getFeatureVariableValueForType(
-                featureKey,
-                variableKey,
-                userId,
-                attributes,
-                LiveVariable.VariableType.DOUBLE
-        );
-        if (variableValue != null) {
-            try {
-                return Double.parseDouble(variableValue);
-            } catch (NumberFormatException exception) {
-                logger.error("NumberFormatException while trying to parse \"" + variableValue +
-                        "\" as Double. " + exception);
+        try {
+            String variableValue = getFeatureVariableValueForType(
+                    featureKey,
+                    variableKey,
+                    userId,
+                    attributes,
+                    LiveVariable.VariableType.DOUBLE
+            );
+            if (variableValue != null) {
+                try {
+                    return Double.parseDouble(variableValue);
+                } catch (NumberFormatException exception) {
+                    logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                            "\" as Double. " + exception);
+                }
             }
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
         }
         return null;
     }
@@ -489,20 +531,24 @@ public class Optimizely {
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
                                                        @Nonnull Map<String, String> attributes) {
-        String variableValue = getFeatureVariableValueForType(
-                featureKey,
-                variableKey,
-                userId,
-                attributes,
-                LiveVariable.VariableType.INTEGER
-        );
-        if (variableValue != null) {
-            try {
-                return Integer.parseInt(variableValue);
-            } catch (NumberFormatException exception) {
-                logger.error("NumberFormatException while trying to parse \"" + variableValue +
-                        "\" as Integer. " + exception.toString());
+        try {
+            String variableValue = getFeatureVariableValueForType(
+                    featureKey,
+                    variableKey,
+                    userId,
+                    attributes,
+                    LiveVariable.VariableType.INTEGER
+            );
+            if (variableValue != null) {
+                try {
+                    return Integer.parseInt(variableValue);
+                } catch (NumberFormatException exception) {
+                    logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                            "\" as Integer. " + exception.toString());
+                }
             }
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
         }
         return null;
     }
@@ -548,56 +594,59 @@ public class Optimizely {
                                                   @Nonnull String userId,
                                                   @Nonnull Map<String, String> attributes,
                                                   @Nonnull LiveVariable.VariableType variableType) {
-        if (featureKey == null) {
-            logger.warn("The featureKey parameter must be nonnull.");
-            return null;
-        }
-        else if (variableKey == null) {
-            logger.warn("The variableKey parameter must be nonnull.");
-            return null;
-        }
-        else if (userId == null) {
-            logger.warn("The userId parameter must be nonnull.");
-            return null;
-        }
-        FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
-        if (featureFlag == null) {
-            logger.info("No feature flag was found for key \"{}\".", featureKey);
-            return null;
-        }
-
-        LiveVariable variable = featureFlag.getVariableKeyToLiveVariableMap().get(variableKey);
-        if (variable == null) {
-            logger.info("No feature variable was found for key \"{}\" in feature flag \"{}\".",
-                    variableKey, featureKey);
-            return null;
-        } else if (!variable.getType().equals(variableType)) {
-            logger.info("The feature variable \"" + variableKey +
-                    "\" is actually of type \"" + variable.getType().toString() +
-                    "\" type. You tried to access it as type \"" + variableType.toString() +
-                    "\". Please use the appropriate feature variable accessor.");
-            return null;
-        }
-
-        String variableValue = variable.getDefaultValue();
-
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, attributes);
-        if (featureDecision.variation != null) {
-            LiveVariableUsageInstance liveVariableUsageInstance =
-                    featureDecision.variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
-            if (liveVariableUsageInstance != null) {
-                variableValue = liveVariableUsageInstance.getValue();
-            } else {
-                variableValue = variable.getDefaultValue();
+        try {
+            if (featureKey == null) {
+                logger.warn("The featureKey parameter must be nonnull.");
+                return null;
+            } else if (variableKey == null) {
+                logger.warn("The variableKey parameter must be nonnull.");
+                return null;
+            } else if (userId == null) {
+                logger.warn("The userId parameter must be nonnull.");
+                return null;
             }
-        } else {
-            logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
-                            "The default value \"{}\" for \"{}\" is being returned.",
-                    userId, featureKey, variableValue, variableKey
-            );
-        }
+            FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
+            if (featureFlag == null) {
+                logger.info("No feature flag was found for key \"{}\".", featureKey);
+                return null;
+            }
 
-        return variableValue;
+            LiveVariable variable = featureFlag.getVariableKeyToLiveVariableMap().get(variableKey);
+            if (variable == null) {
+                logger.info("No feature variable was found for key \"{}\" in feature flag \"{}\".",
+                        variableKey, featureKey);
+                return null;
+            } else if (!variable.getType().equals(variableType)) {
+                logger.info("The feature variable \"" + variableKey +
+                        "\" is actually of type \"" + variable.getType().toString() +
+                        "\" type. You tried to access it as type \"" + variableType.toString() +
+                        "\". Please use the appropriate feature variable accessor.");
+                return null;
+            }
+
+            String variableValue = variable.getDefaultValue();
+
+            FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, attributes);
+            if (featureDecision.variation != null) {
+                LiveVariableUsageInstance liveVariableUsageInstance =
+                        featureDecision.variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
+                if (liveVariableUsageInstance != null) {
+                    variableValue = liveVariableUsageInstance.getValue();
+                } else {
+                    variableValue = variable.getDefaultValue();
+                }
+            } else {
+                logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
+                                "The default value \"{}\" for \"{}\" is being returned.",
+                        userId, featureKey, variableValue, variableKey
+                );
+            }
+
+            return variableValue;
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
+            return null;
+        }
     }
 
     /**
@@ -608,19 +657,24 @@ public class Optimizely {
      * return Empty List.
      */
     public List<String> getEnabledFeatures(@Nonnull String userId, @Nonnull Map<String, String> attributes) {
-        List<String> enabledFeaturesList = new ArrayList<String>();
+        try {
+            List<String> enabledFeaturesList = new ArrayList<String>();
 
-        if (!validateUserId(userId)){
+            if (!validateUserId(userId)) {
+                return enabledFeaturesList;
+            }
+
+            for (FeatureFlag featureFlag : projectConfig.getFeatureFlags()) {
+                String featureKey = featureFlag.getKey();
+                if (isFeatureEnabled(featureKey, userId, attributes))
+                    enabledFeaturesList.add(featureKey);
+            }
+
             return enabledFeaturesList;
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
+            return new ArrayList<String>();
         }
-
-        for (FeatureFlag featureFlag : projectConfig.getFeatureFlags()){
-            String featureKey = featureFlag.getKey();
-            if(isFeatureEnabled(featureKey, userId, attributes))
-                enabledFeaturesList.add(featureKey);
-        }
-
-        return enabledFeaturesList;
     }
 
     //======== getVariation calls ========//
@@ -636,10 +690,15 @@ public class Optimizely {
     Variation getVariation(@Nonnull Experiment experiment,
                            @Nonnull String userId,
                            @Nonnull Map<String, String> attributes) throws UnknownExperimentException {
-
-        Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
-
-        return decisionService.getVariation(experiment, userId, filteredAttributes);
+        try {
+            Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
+            return decisionService.getVariation(experiment, userId, filteredAttributes);
+        } catch (UnknownExperimentException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
+            return null;
+        }
     }
 
     public @Nullable
@@ -653,26 +712,33 @@ public class Optimizely {
     Variation getVariation(@Nonnull String experimentKey,
                            @Nonnull String userId,
                            @Nonnull Map<String, String> attributes) {
-        if (!validateUserId(userId)) {
+        try {
+            if (!validateUserId(userId)) {
+                return null;
+            }
+
+            if (experimentKey == null || experimentKey.trim().isEmpty()) {
+                logger.error("The experimentKey parameter must be nonnull.");
+                return null;
+            }
+
+            ProjectConfig currentConfig = getProjectConfig();
+
+            Experiment experiment = currentConfig.getExperimentForKey(experimentKey, errorHandler);
+            if (experiment == null) {
+                // if we're unable to retrieve the associated experiment, return null
+                return null;
+            }
+
+            Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
+
+            return decisionService.getVariation(experiment, userId, filteredAttributes);
+        } catch (UnknownExperimentException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
             return null;
         }
-
-        if (experimentKey == null || experimentKey.trim().isEmpty()){
-            logger.error("The experimentKey parameter must be nonnull.");
-            return null;
-        }
-
-        ProjectConfig currentConfig = getProjectConfig();
-
-        Experiment experiment = currentConfig.getExperimentForKey(experimentKey, errorHandler);
-        if (experiment == null) {
-            // if we're unable to retrieve the associated experiment, return null
-            return null;
-        }
-
-        Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
-
-        return decisionService.getVariation(experiment,userId,filteredAttributes);
     }
 
     /**
@@ -691,8 +757,12 @@ public class Optimizely {
                                       @Nonnull String userId,
                                       @Nullable String variationKey) {
 
-
-        return projectConfig.setForcedVariation(experimentKey, userId, variationKey);
+        try {
+            return projectConfig.setForcedVariation(experimentKey, userId, variationKey);
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
+            return false;
+        }
     }
 
     /**
@@ -708,7 +778,12 @@ public class Optimizely {
      */
     public @Nullable Variation getForcedVariation(@Nonnull String experimentKey,
                                         @Nonnull String userId) {
-        return projectConfig.getForcedVariation(experimentKey, userId);
+        try {
+            return projectConfig.getForcedVariation(experimentKey, userId);
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
+            return null;
+        }
     }
 
     /**
@@ -811,7 +886,12 @@ public class Optimizely {
 
     public static Builder builder(@Nonnull String datafile,
                                   @Nonnull EventHandler eventHandler) {
-        return new Builder(datafile, eventHandler);
+        try {
+            return new Builder(datafile, eventHandler);
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
+            return null;
+        }
     }
 
     /**
@@ -883,38 +963,45 @@ public class Optimizely {
         }
 
         public Optimizely build() throws ConfigParseException {
-            if (projectConfig == null) {
-                projectConfig = Optimizely.getProjectConfig(datafile);
+            try {
+                if (projectConfig == null) {
+                    projectConfig = Optimizely.getProjectConfig(datafile);
+                }
+
+                if (bucketer == null) {
+                    bucketer = new Bucketer(projectConfig);
+                }
+
+                if (clientEngine == null) {
+                    clientEngine = ClientEngine.JAVA_SDK;
+                }
+
+                if (clientVersion == null) {
+                    clientVersion = BuildVersionInfo.VERSION;
+                }
+
+
+                if (eventBuilder == null) {
+                    eventBuilder = new EventBuilder(clientEngine, clientVersion);
+                }
+
+                if (errorHandler == null) {
+                    errorHandler = new NoOpErrorHandler();
+                }
+
+                if (decisionService == null) {
+                    decisionService = new DecisionService(bucketer, errorHandler, projectConfig, userProfileService);
+                }
+
+                Optimizely optimizely = new Optimizely(projectConfig, decisionService, eventHandler, eventBuilder, errorHandler, userProfileService);
+                optimizely.initialize();
+                return optimizely;
+            } catch (ConfigParseException e) {
+                throw e;
+            } catch (Exception e) {
+                logger.error("An unexpected error has occurred",e);
+                return null;
             }
-
-            if (bucketer == null) {
-                bucketer = new Bucketer(projectConfig);
-            }
-
-            if (clientEngine == null) {
-                clientEngine = ClientEngine.JAVA_SDK;
-            }
-
-            if (clientVersion == null) {
-                clientVersion = BuildVersionInfo.VERSION;
-            }
-
-
-            if (eventBuilder == null) {
-                eventBuilder = new EventBuilder(clientEngine, clientVersion);
-            }
-
-            if (errorHandler == null) {
-                errorHandler = new NoOpErrorHandler();
-            }
-
-            if (decisionService == null) {
-                decisionService = new DecisionService(bucketer, errorHandler, projectConfig, userProfileService);
-            }
-
-            Optimizely optimizely = new Optimizely(projectConfig, decisionService, eventHandler, eventBuilder, errorHandler, userProfileService);
-            optimizely.initialize();
-            return optimizely;
         }
     }
 }

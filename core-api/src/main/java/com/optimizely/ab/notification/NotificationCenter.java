@@ -88,16 +88,20 @@ public class NotificationCenter {
      * @return greater than zero if added.
      */
     public int addActivateNotificationListener(final ActivateNotificationListenerInterface activateNotificationListenerInterface) {
-        if (activateNotificationListenerInterface instanceof ActivateNotificationListener) {
-            return addNotificationListener(NotificationType.Activate, (NotificationListener)activateNotificationListenerInterface);
-        }
-        else {
-            return addNotificationListener(NotificationType.Activate, new ActivateNotificationListener() {
-                @Override
-                public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
-                    activateNotificationListenerInterface.onActivate(experiment, userId, attributes, variation, event);
-                }
-            });
+        try {
+            if (activateNotificationListenerInterface instanceof ActivateNotificationListener) {
+                return addNotificationListener(NotificationType.Activate, (NotificationListener) activateNotificationListenerInterface);
+            } else {
+                return addNotificationListener(NotificationType.Activate, new ActivateNotificationListener() {
+                    @Override
+                    public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+                        activateNotificationListenerInterface.onActivate(experiment, userId, attributes, variation, event);
+                    }
+                });
+            }
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
+            return -1;
         }
     }
 
@@ -107,16 +111,20 @@ public class NotificationCenter {
      * @return greater than zero if added.
      */
     public int addTrackNotificationListener(final TrackNotificationListenerInterface trackNotificationListenerInterface) {
-        if (trackNotificationListenerInterface instanceof TrackNotificationListener) {
-            return addNotificationListener(NotificationType.Activate, (NotificationListener)trackNotificationListenerInterface);
-        }
-        else {
-            return addNotificationListener(NotificationType.Track, new TrackNotificationListener() {
-                @Override
-                public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
-                    trackNotificationListenerInterface.onTrack(eventKey, userId, attributes, eventTags, event);
-                }
-            });
+        try {
+            if (trackNotificationListenerInterface instanceof TrackNotificationListener) {
+                return addNotificationListener(NotificationType.Activate, (NotificationListener) trackNotificationListenerInterface);
+            } else {
+                return addNotificationListener(NotificationType.Track, new TrackNotificationListener() {
+                    @Override
+                    public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
+                        trackNotificationListenerInterface.onTrack(eventKey, userId, attributes, eventTags, event);
+                    }
+                });
+            }
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
+            return -1;
         }
     }
 
@@ -129,22 +137,27 @@ public class NotificationCenter {
      */
     public int addNotificationListener(NotificationType notificationType, NotificationListener notificationListener) {
 
-        Class clazz = notificationType.notificationTypeClass;
-        if (clazz == null || !clazz.isInstance(notificationListener)) {
-            logger.warn("Notification listener was the wrong type. It was not added to the notification center.");
-            return -1;
-        }
-
-        for (NotificationHolder holder : notificationsListeners.get(notificationType)) {
-            if (holder.notificationListener == notificationListener) {
-                logger.warn("Notificication listener was already added");
+        try {
+            Class clazz = notificationType.notificationTypeClass;
+            if (clazz == null || !clazz.isInstance(notificationListener)) {
+                logger.warn("Notification listener was the wrong type. It was not added to the notification center.");
                 return -1;
             }
+
+            for (NotificationHolder holder : notificationsListeners.get(notificationType)) {
+                if (holder.notificationListener == notificationListener) {
+                    logger.warn("Notificication listener was already added");
+                    return -1;
+                }
+            }
+            int id = notificationListenerID++;
+            notificationsListeners.get(notificationType).add(new NotificationHolder(id, notificationListener));
+            logger.info("Notification listener {} was added with id {}", notificationListener.toString(), id);
+            return id;
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
+            return -1;
         }
-        int id = notificationListenerID++;
-        notificationsListeners.get(notificationType).add(new NotificationHolder(id, notificationListener ));
-        logger.info("Notification listener {} was added with id {}", notificationListener.toString(), id);
-        return id;
     }
 
     /**
@@ -153,18 +166,21 @@ public class NotificationCenter {
      * @return true if removed otherwise false (if the notification is already registered, it returns false).
      */
    public boolean removeNotificationListener(int notificationID) {
-       for (NotificationType type : NotificationType.values()) {
-            for (NotificationHolder holder : notificationsListeners.get(type)) {
-                if (holder.notificationId == notificationID) {
-                    notificationsListeners.get(type).remove(holder);
-                    logger.info("Notification listener removed {}", notificationID);
-                    return true;
-                }
-            }
+        try {
+           for (NotificationType type : NotificationType.values()) {
+               for (NotificationHolder holder : notificationsListeners.get(type)) {
+                   if (holder.notificationId == notificationID) {
+                       notificationsListeners.get(type).remove(holder);
+                       logger.info("Notification listener removed {}", notificationID);
+                       return true;
+                   }
+               }
+           }
+
+           logger.warn("Notification listener with id {} not found", notificationID);
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
         }
-
-        logger.warn("Notification listener with id {} not found", notificationID);
-
         return false;
     }
 
@@ -172,8 +188,12 @@ public class NotificationCenter {
      * Clear out all the notification listeners.
      */
     public void clearAllNotificationListeners() {
-        for (NotificationType type : NotificationType.values()) {
-            clearNotificationListeners(type);
+        try {
+            for (NotificationType type : NotificationType.values()) {
+                clearNotificationListeners(type);
+            }
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
         }
     }
 
@@ -182,19 +202,26 @@ public class NotificationCenter {
      * @param notificationType type of notificationsListeners to remove.
      */
     public void clearNotificationListeners(NotificationType notificationType) {
-        notificationsListeners.get(notificationType).clear();
+        try {
+            notificationsListeners.get(notificationType).clear();
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
+        }
     }
 
     // fire a notificaiton of a certain type.  The arg list changes depending on the type of notification sent.
     public void sendNotifications(NotificationType notificationType, Object ...args) {
-        ArrayList<NotificationHolder> holders = notificationsListeners.get(notificationType);
-        for (NotificationHolder holder : holders) {
-            try {
-                holder.notificationListener.notify(args);
+        try {
+            ArrayList<NotificationHolder> holders = notificationsListeners.get(notificationType);
+            for (NotificationHolder holder : holders) {
+                try {
+                    holder.notificationListener.notify(args);
+                } catch (Exception e) {
+                    logger.error("Unexpected exception calling notification listener {}", holder.notificationId, e);
+                }
             }
-            catch (Exception e) {
-                logger.error("Unexpected exception calling notification listener {}", holder.notificationId, e);
-            }
+        } catch (Exception e) {
+            logger.error("An unexpected error has occurred",e);
         }
     }
 
