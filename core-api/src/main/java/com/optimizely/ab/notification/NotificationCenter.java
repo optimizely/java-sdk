@@ -16,8 +16,11 @@
  */
 package com.optimizely.ab.notification;
 
+import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.error.ErrorHandler;
+import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.LogEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +58,7 @@ public class NotificationCenter {
 
     // the notification id is incremented and is assigned as the callback id, it can then be used to remove the notification.
     private int notificationListenerID = 1;
+    private final ErrorHandler errorHandler;
 
     final private static Logger logger = LoggerFactory.getLogger(NotificationCenter.class);
 
@@ -71,11 +75,19 @@ public class NotificationCenter {
     }
 
     /**
-     * Instantiate a new NotificationCenter
+     * Instantiate a new NotificationCenter with {@link ErrorHandler}
      */
-    public NotificationCenter() {
+    public NotificationCenter(ErrorHandler errorHandler) {
+        this.errorHandler = errorHandler == null? new NoOpErrorHandler() : errorHandler;
         notificationsListeners.put(NotificationType.Activate, new ArrayList<NotificationHolder>());
         notificationsListeners.put(NotificationType.Track, new ArrayList<NotificationHolder>());
+    }
+
+    /**
+     * Instantiate a new NotificationCenter with a {@link NoOpErrorHandler}
+     */
+    public NotificationCenter() {
+        this(new NoOpErrorHandler());
     }
 
     // private list of notification by notification type.
@@ -100,7 +112,7 @@ public class NotificationCenter {
                 });
             }
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
             return -1;
         }
     }
@@ -123,7 +135,7 @@ public class NotificationCenter {
                 });
             }
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
             return -1;
         }
     }
@@ -155,7 +167,7 @@ public class NotificationCenter {
             logger.info("Notification listener {} was added with id {}", notificationListener.toString(), id);
             return id;
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
             return -1;
         }
     }
@@ -179,7 +191,7 @@ public class NotificationCenter {
 
            logger.warn("Notification listener with id {} not found", notificationID);
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
         }
         return false;
     }
@@ -193,7 +205,7 @@ public class NotificationCenter {
                 clearNotificationListeners(type);
             }
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
         }
     }
 
@@ -205,7 +217,7 @@ public class NotificationCenter {
         try {
             notificationsListeners.get(notificationType).clear();
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
         }
     }
 
@@ -221,8 +233,12 @@ public class NotificationCenter {
                 }
             }
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
         }
     }
 
+    private void logAndHandleUnexpectedException(Exception e) {
+        logger.error("An unexpected error has occurred",e);
+        errorHandler.handleError(new OptimizelyRuntimeException(e));
+    }
 }

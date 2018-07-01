@@ -86,7 +86,7 @@ public class Optimizely {
     @VisibleForTesting final ProjectConfig projectConfig;
     @VisibleForTesting final EventHandler eventHandler;
     @VisibleForTesting final ErrorHandler errorHandler;
-    public final NotificationCenter notificationCenter = new NotificationCenter();
+    public final NotificationCenter notificationCenter;
 
     @Nullable private final UserProfileService userProfileService;
 
@@ -102,6 +102,7 @@ public class Optimizely {
         this.eventBuilder = eventBuilder;
         this.errorHandler = errorHandler;
         this.userProfileService = userProfileService;
+        this.notificationCenter = new NotificationCenter(errorHandler);
     }
 
     // Do work here that should be done once per Optimizely lifecycle
@@ -115,14 +116,7 @@ public class Optimizely {
     public @Nullable
     Variation activate(@Nonnull String experimentKey,
                        @Nonnull String userId) throws UnknownExperimentException {
-        try {
-            return activate(experimentKey, userId, Collections.<String, String>emptyMap());
-        } catch (UnknownExperimentException e) {
-            throw e;
-        } catch (Exception e) {
-            logger.error("An unexpected error has occurred", e);
-            return null;
-        }
+        return activate(experimentKey, userId, Collections.<String, String>emptyMap());
     }
 
     public @Nullable
@@ -153,7 +147,7 @@ public class Optimizely {
         } catch (UnknownExperimentException e) {
             throw e;
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred", e);
+            logAndHandleUnexpectedException(e);
             return null;
         }
     }
@@ -161,12 +155,7 @@ public class Optimizely {
     public @Nullable
     Variation activate(@Nonnull Experiment experiment,
                        @Nonnull String userId) {
-        try {
-            return activate(experiment, userId, Collections.<String, String>emptyMap());
-        } catch (Exception e) {
-            logger.error("An unexpected error has occurred", e);
-            return null;
-        }
+        return activate(experiment, userId, Collections.<String, String>emptyMap());
     }
 
     public @Nullable
@@ -177,7 +166,7 @@ public class Optimizely {
             ProjectConfig currentConfig = getProjectConfig();
             return activate(currentConfig, experiment, userId, attributes);
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred", e);
+            logAndHandleUnexpectedException(e);
             return null;
         }
     }
@@ -207,7 +196,7 @@ public class Optimizely {
 
             return variation;
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred", e);
+            logAndHandleUnexpectedException(e);
             return null;
         }
     }
@@ -333,7 +322,7 @@ public class Optimizely {
         } catch (UnknownEventTypeException e) {
             throw e;
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
         }
     }
 
@@ -405,7 +394,7 @@ public class Optimizely {
 
             logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
         }
         return false;
     }
@@ -449,7 +438,7 @@ public class Optimizely {
                 return Boolean.parseBoolean(variableValue);
             }
         }  catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
             return false;
         }
         return null;
@@ -499,7 +488,7 @@ public class Optimizely {
                 }
             }
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
         }
         return null;
     }
@@ -548,7 +537,7 @@ public class Optimizely {
                 }
             }
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
         }
         return null;
     }
@@ -644,7 +633,7 @@ public class Optimizely {
 
             return variableValue;
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
             return null;
         }
     }
@@ -672,7 +661,7 @@ public class Optimizely {
 
             return enabledFeaturesList;
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
             return new ArrayList<String>();
         }
     }
@@ -696,7 +685,7 @@ public class Optimizely {
         } catch (UnknownExperimentException e) {
             throw e;
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
             return null;
         }
     }
@@ -736,7 +725,7 @@ public class Optimizely {
         } catch (UnknownExperimentException e) {
             throw e;
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
             return null;
         }
     }
@@ -760,7 +749,7 @@ public class Optimizely {
         try {
             return projectConfig.setForcedVariation(experimentKey, userId, variationKey);
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
             return false;
         }
     }
@@ -781,7 +770,7 @@ public class Optimizely {
         try {
             return projectConfig.getForcedVariation(experimentKey, userId);
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logAndHandleUnexpectedException(e);
             return null;
         }
     }
@@ -882,6 +871,11 @@ public class Optimizely {
         return true;
     }
 
+    private void logAndHandleUnexpectedException(Exception e) {
+        logger.error("An unexpected error has occurred",e);
+        errorHandler.handleError(new OptimizelyRuntimeException(e));
+    }
+
     //======== Builder ========//
 
     public static Builder builder(@Nonnull String datafile,
@@ -889,7 +883,8 @@ public class Optimizely {
         try {
             return new Builder(datafile, eventHandler);
         } catch (Exception e) {
-            logger.error("An unexpected error has occurred",e);
+            logger.error("An unexpected error has occurred", e);
+            // Cannot add ErrorHandler here as its not yet passed by the consumer app.
             return null;
         }
     }
@@ -1000,6 +995,7 @@ public class Optimizely {
                 throw e;
             } catch (Exception e) {
                 logger.error("An unexpected error has occurred",e);
+                errorHandler.handleError(new OptimizelyRuntimeException(e));
                 return null;
             }
         }
