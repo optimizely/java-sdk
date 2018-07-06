@@ -41,6 +41,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class EventBuilder {
     private static final Logger logger = LoggerFactory.getLogger(EventBuilder.class);
@@ -61,8 +63,32 @@ public class EventBuilder {
         this.clientEngine = clientEngine;
         this.clientVersion = clientVersion;
         this.serializer = DefaultJsonSerializer.getInstance();
+
+        Runnable r = new Runnable() {
+            public void run() {
+                primeSerializer();
+            }
+        };
+
+        ExecutorService executor = Executors.newCachedThreadPool();
+        executor.submit(r);
+
     }
 
+    private void primeSerializer() {
+        Decision decision = new Decision("", "",
+                "", false);
+        Event impressionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), "",
+                ACTIVATE_EVENT_KEY, null, null, null, ACTIVATE_EVENT_KEY, null);
+
+        Snapshot snapshot = new Snapshot(Arrays.asList(decision), Arrays.asList(impressionEvent));
+        Visitor visitor = new Visitor("", null, new ArrayList<Attribute>(), Arrays.asList(snapshot));
+        List<Visitor> visitors = Arrays.asList(visitor);
+        EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, "", visitors, true, "", "");
+        String payload = this.serializer.serialize(eventBatch);
+        LogEvent retVal  =  new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
+        logger.debug(String.format("Prime Serializer with event body %s", retVal.getBody()));
+    }
 
     public LogEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
                                                    @Nonnull Experiment activatedExperiment,
@@ -75,7 +101,6 @@ public class EventBuilder {
         Event impressionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), activatedExperiment.getLayerId(),
                 ACTIVATE_EVENT_KEY, null, null, null, ACTIVATE_EVENT_KEY, null);
         Snapshot snapshot = new Snapshot(Arrays.asList(decision), Arrays.asList(impressionEvent));
-
         Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
         List<Visitor> visitors = Arrays.asList(visitor);
         EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, projectConfig.getAccountId(), visitors, projectConfig.getAnonymizeIP(), projectConfig.getProjectId(), projectConfig.getRevision());
