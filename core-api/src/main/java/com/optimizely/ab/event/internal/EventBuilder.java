@@ -41,8 +41,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class EventBuilder {
     private static final Logger logger = LoggerFactory.getLogger(EventBuilder.class);
@@ -55,6 +57,8 @@ public class EventBuilder {
     @VisibleForTesting
     public final EventBatch.ClientEngine clientEngine;
 
+    private Future<EventBatch> primedEvent = null;
+
     public EventBuilder() {
         this(EventBatch.ClientEngine.JAVA_SDK, BuildVersionInfo.VERSION);
     }
@@ -64,18 +68,33 @@ public class EventBuilder {
         this.clientVersion = clientVersion;
         this.serializer = DefaultJsonSerializer.getInstance();
 
-        Runnable r = new Runnable() {
-            public void run() {
-                primeSerializer();
+        Callable<EventBatch> callable = new Callable<EventBatch>() {
+            @Override
+            public EventBatch call() throws Exception {
+                EventBatch eventBatch = null;
+                try {
+                    eventBatch = primeSerializer();
+                } catch (Exception e) {
+                    logger.error("Problem priming the JsonSerializer ", e);
+                }
+                finally {
+                    return eventBatch;
+                }
             }
         };
 
-        ExecutorService executor = Executors.newCachedThreadPool();
-        executor.submit(r);
+        ExecutorService ex = Executors.newSingleThreadExecutor();
+        primedEvent = ex.submit(callable);
+        ex.shutdown();
 
     }
 
-    private void primeSerializer() {
+    /**
+     * primeSerializer primes the JsonSerializer and Json annotations from the EventBatch object and it's contained
+     * hierarchy.  The introspection overhead is very high for the first time hit.  This sets up all the serializer
+     * caching, taking the burden off of the first time hit in sending an event.
+     */
+    private EventBatch primeSerializer() {
         Decision decision = new Decision("", "",
                 "", false);
         Event impressionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), "",
@@ -86,8 +105,46 @@ public class EventBuilder {
         List<Visitor> visitors = Arrays.asList(visitor);
         EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, "", visitors, true, "", "");
         String payload = this.serializer.serialize(eventBatch);
-        LogEvent retVal  =  new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
-        logger.debug(String.format("Prime Serializer with event body %s", retVal.getBody()));
+        logger.debug("JSON Serializer primed for payload {}", payload);
+
+        return  eventBatch;
+    }
+
+    private LogEvent usePrimedEvent(@Nonnull ProjectConfig projectConfig,
+                                    @Nonnull Experiment activatedExperiment,
+                                    @Nonnull Variation variation,
+                                    @Nonnull String userId,
+                                    @Nonnull Map<String, String> attributes) {
+        try {
+            EventBatch eventBatch = primedEvent.get();
+            primedEvent = null;
+            Decision decision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(),
+                    variation.getId(), false);
+
+            eventBatch.getVisitors().get(0).getSnapshots().get(0).setDecisions(Arrays.asList(decision));
+            Event event = eventBatch.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0);
+            event.setEntityId(activatedExperiment.getLayerId());
+
+            Visitor visitor = eventBatch.getVisitors().get(0);
+            visitor.setVisitorId(userId);
+            visitor.setAttributes(buildAttributeList(projectConfig, attributes));
+
+            eventBatch.setClientName(clientEngine.getClientEngineValue());
+            eventBatch.setClientVersion(clientVersion);
+
+            eventBatch.setAccountId(projectConfig.getAccountId());
+            eventBatch.setAnonymizeIp(projectConfig.getAnonymizeIP());
+            eventBatch.setProjectId(projectConfig.getProjectId());
+            eventBatch.setRevision(projectConfig.getRevision());
+
+            String payload = this.serializer.serialize(eventBatch);
+            return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
+
+        }
+        catch (Exception e) {
+            logger.error("Problem getting lock ", e);
+            return null;
+        }
     }
 
     public LogEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
@@ -95,6 +152,14 @@ public class EventBuilder {
                                                    @Nonnull Variation variation,
                                                    @Nonnull String userId,
                                                    @Nonnull Map<String, String> attributes) {
+        if (primedEvent != null) {
+            logger.debug("had to wait for prime");
+            LogEvent logEvent = usePrimedEvent(projectConfig, activatedExperiment, variation,
+                    userId, attributes);
+            if (logEvent != null) {
+                return logEvent;
+            }
+        }
 
         Decision decision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(),
                 variation.getId(), false);
