@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -83,14 +83,18 @@ final class JsonSimpleConfigParser implements ConfigParser {
 
             List<FeatureFlag> featureFlags = null;
             List<Rollout> rollouts = null;
+            Boolean botFiltering = null;
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
                 featureFlags = parseFeatureFlags((JSONArray) rootObject.get("featureFlags"));
                 rollouts = parseRollouts((JSONArray) rootObject.get("rollouts"));
+                if(rootObject.containsKey("botFiltering"))
+                    botFiltering = (Boolean) rootObject.get("botFiltering");
             }
 
             return new ProjectConfig(
                     accountId,
                     anonymizeIP,
+                    botFiltering,
                     projectId,
                     revision,
                     version,
@@ -103,6 +107,8 @@ final class JsonSimpleConfigParser implements ConfigParser {
                     liveVariables,
                     rollouts
             );
+        } catch (RuntimeException ex){
+            throw new ConfigParseException("Unable to parse datafile: " + json, ex);
         } catch (Exception e) {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
         }

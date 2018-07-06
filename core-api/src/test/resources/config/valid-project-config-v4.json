@@ -1,6 +1,7 @@
 {
   "accountId": "2360254204",
   "anonymizeIP": true,
+  "botFiltering": true,
   "projectId": "3918735994",
   "revision": "1480511547",
   "version": "4",
@@ -34,6 +35,10 @@
     {
       "id": "58339410",
       "key": "nationality"
+    },
+    {
+      "id": "583394100",
+      "key": "$opt_test"
     }
   ],
   "events": [

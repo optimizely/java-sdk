@@ -1,5 +1,29 @@
 # Optimizely Java X SDK Changelog
 
+## 2.1.1
+
+June 19th, 2018
+
+This is a patch release of the Optimizely SDK for 2.1.0 which is a major release.
+
+### Bug Fixes
+* Send impression event for Feature Test with Feature disabled ([#193](https://github.com/optimizely/java-sdk/pull/193))
+
+## 2.0.2
+
+June 19th, 2018
+
+This is a patch release of the Optimizely SDK for 2.0.0 which is a major release.
+
+### Bug Fixes
+* Send impression event for Feature Test with Feature disabled ([#193](https://github.com/optimizely/java-sdk/pull/193))
+
+## 2.1.0
+
+June 15th, 2018
+
+* Introduces support for bot filtering.
+
 ## 2.0.1
 
 April 25th, 2018
