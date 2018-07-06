@@ -116,6 +116,9 @@ public class EventBuilder {
                                     @Nonnull String userId,
                                     @Nonnull Map<String, String> attributes) {
         try {
+            // guard 
+            if (primedEvent == null) return null;
+
             EventBatch eventBatch = primedEvent.get();
             primedEvent = null;
             Decision decision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(),
