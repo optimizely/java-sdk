@@ -110,43 +110,18 @@ public class EventBuilder {
         return  eventBatch;
     }
 
-    private LogEvent usePrimedEvent(@Nonnull ProjectConfig projectConfig,
-                                    @Nonnull Experiment activatedExperiment,
-                                    @Nonnull Variation variation,
-                                    @Nonnull String userId,
-                                    @Nonnull Map<String, String> attributes) {
-        try {
-            // guard 
-            if (primedEvent == null) return null;
-
-            EventBatch eventBatch = primedEvent.get();
-            primedEvent = null;
-            Decision decision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(),
-                    variation.getId(), false);
-
-            eventBatch.getVisitors().get(0).getSnapshots().get(0).setDecisions(Arrays.asList(decision));
-            Event event = eventBatch.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0);
-            event.setEntityId(activatedExperiment.getLayerId());
-
-            Visitor visitor = eventBatch.getVisitors().get(0);
-            visitor.setVisitorId(userId);
-            visitor.setAttributes(buildAttributeList(projectConfig, attributes));
-
-            eventBatch.setClientName(clientEngine.getClientEngineValue());
-            eventBatch.setClientVersion(clientVersion);
-
-            eventBatch.setAccountId(projectConfig.getAccountId());
-            eventBatch.setAnonymizeIp(projectConfig.getAnonymizeIP());
-            eventBatch.setProjectId(projectConfig.getProjectId());
-            eventBatch.setRevision(projectConfig.getRevision());
-
-            String payload = this.serializer.serialize(eventBatch);
-            return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
-
-        }
-        catch (Exception e) {
-            logger.error("Problem getting lock ", e);
-            return null;
+    private void waitForPrimedEvent() {
+        if (primedEvent != null) {
+            logger.debug("had to wait for prime");
+            try {
+                primedEvent.get();
+            }
+            catch (Exception e) {
+                logger.error("Problem getting lock ", e);
+            }
+            finally {
+                primedEvent = null;
+            }
         }
     }
 
@@ -155,14 +130,8 @@ public class EventBuilder {
                                                    @Nonnull Variation variation,
                                                    @Nonnull String userId,
                                                    @Nonnull Map<String, String> attributes) {
-        if (primedEvent != null) {
-            logger.debug("had to wait for prime");
-            LogEvent logEvent = usePrimedEvent(projectConfig, activatedExperiment, variation,
-                    userId, attributes);
-            if (logEvent != null) {
-                return logEvent;
-            }
-        }
+
+        waitForPrimedEvent();
 
         Decision decision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(),
                 variation.getId(), false);
