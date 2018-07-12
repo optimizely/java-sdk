@@ -46,7 +46,25 @@ public class EventBuilder {
     private static final Logger logger = LoggerFactory.getLogger(EventBuilder.class);
     static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";
     static final String ACTIVATE_EVENT_KEY = "campaign_activated";
-    static final String EVENT_TEMPLATE = "{\"revision\":\"${BATCHEVENT.REVISION}\",\"visitors\":[{\"attributes\":${VISITOR.ATTRIBUTES},\"snapshots\":[{\"decisions\":[{\"campaign_id\":\"${DECISION.CAMPAIGNID}\",\"experiment_id\":\"${DECISION.EXPERIMENTID}\",\"is_campaign_holdback\":${DECISION.HOLDBACK},\"variation_id\":\"${DECISION.VARIATIONID}\"}],\"events\":[{\"key\":\"${EVENT.KEY}\",\"timestamp\":${EVENT.TIMESTAMP},\"type\":\"${EVENT.TYPE}\",\"uuid\":\"${EVENT.UUID}\",\"entity_id\":\"${EVENT.ENTITYID}\"}]}],\"visitor_id\":\"${VISITOR.VISITORID}\"}],\"account_id\":\"${EVENTBATCH.ACCOUNTID}\",\"anonymize_ip\":${EVENTBATCH.ANONIP},\"client_name\":\"${EVENTBATCH.CLIENTNAME}\",\"client_version\":\"${EVENTBATCH.CLIENTVERSION}\",\"project_id\":\"${EVENTBATCH.PROJECTID}\"}";
+    // An Event Template used to send events.  The template approach makes activate and track events
+    // as fast as possible.
+    // Swagger definition of events json: https://api.optimizely.com/swagger/v1/events.json
+    static final String EVENT_TEMPLATE = "{\"revision\":\"${BATCHEVENT.REVISION}\"," + // Batch Event
+            "\"visitors\":[" + // Visitors
+            "{\"attributes\":${VISITOR.ATTRIBUTES},\"snapshots\":[" + // snapshots
+            "{\"decisions\":[" + // decisions
+            "{\"campaign_id\":\"${DECISION.CAMPAIGNID}\",\"experiment_id\":\"${DECISION.EXPERIMENTID}\"," +
+            "\"is_campaign_holdback\":${DECISION.HOLDBACK},\"variation_id\":\"${DECISION.VARIATIONID}\"}" +
+            "]," + // end of decision
+            "\"events\":[" + // events
+            "{\"key\":\"${EVENT.KEY}\",\"timestamp\":${EVENT.TIMESTAMP},\"type\":\"${EVENT.TYPE}\"," +
+            "\"uuid\":\"${EVENT.UUID}\",\"entity_id\":\"${EVENT.ENTITYID}\"}" +
+            "]}]" + // end of events end of snapshots
+            ",\"visitor_id\":\"${VISITOR.VISITORID}\"" +
+            "}]," +// end of visitors
+            "\"account_id\":\"${EVENTBATCH.ACCOUNTID}\",\"anonymize_ip\":${EVENTBATCH.ANONIP}," +
+            "\"client_name\":\"${EVENTBATCH.CLIENTNAME}\",\"client_version\":\"${EVENTBATCH.CLIENTVERSION}\"," +
+            "\"project_id\":\"${EVENTBATCH.PROJECTID}\"}";
 
     private Serializer serializer;
     @VisibleForTesting
