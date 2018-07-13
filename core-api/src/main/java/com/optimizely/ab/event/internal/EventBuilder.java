@@ -175,14 +175,14 @@ public class EventBuilder {
 
         if (value != null && revenue != null) {
             revenueValue.append(",");
-            revenueValue.append(revenueString);
+            revenueValue.append(revenueString.toString());
             revenueValue.append(",");
-            revenueValue.append(valueSting);
+            revenueValue.append(valueSting.toString());
         }
         else if (value !=null || revenue != null){
             revenueValue.append(",");
-            revenueValue.append(revenueString);
-            revenueValue.append(valueSting);
+            revenueValue.append(revenueString.toString());
+            revenueValue.append(valueSting.toString());
         }
 
         payload = payload.replace("${EVENT.REVENUE_VALUE}", revenueValue.toString());
