@@ -49,17 +49,20 @@ public class EventBuilder {
     // An Event Template used to send events.  The template approach makes activate and track events
     // as fast as possible.
     // Swagger definition of events json: https://api.optimizely.com/swagger/v1/events.json
+    // https://github.com/optimizely/avro-schemas/blob/master/event_batch/src/main/avro/EventBatch.avsc#L46
     static final String EVENT_TEMPLATE = "{\"revision\":\"${BATCHEVENT.REVISION}\"," + // Batch Event
             "\"visitors\":[" + // Visitors
             "{\"attributes\":${VISITOR.ATTRIBUTES},\"snapshots\":[" + // snapshots
             "{\"decisions\":[" + // decisions
-            "{\"campaign_id\":\"${DECISION.CAMPAIGNID}\",\"experiment_id\":\"${DECISION.EXPERIMENTID}\"," +
-            "\"is_campaign_holdback\":${DECISION.HOLDBACK},\"variation_id\":\"${DECISION.VARIATIONID}\"}" +
-            "]," + // end of decision
+            "${DECISIONS}" +
+            "]," + // end of decisions
             "\"events\":[" + // events
-            "{\"key\":\"${EVENT.KEY}\",\"timestamp\":${EVENT.TIMESTAMP},\"type\":\"${EVENT.TYPE}\"," +
-            "\"uuid\":\"${EVENT.UUID}\",\"entity_id\":\"${EVENT.ENTITYID}\"}" +
-            "]}]" + // end of events end of snapshots
+            "{\"key\":\"${EVENT.KEY}\"" +
+            "${EVENT.TAGS.OBJECT}" + // replace with ,\"tags\":{values}, or ,
+            "\"timestamp\":${EVENT.TIMESTAMP},\"type\":\"${EVENT.TYPE}\"," +
+            "\"uuid\":\"${EVENT.UUID}\",\"entity_id\":\"${EVENT.ENTITYID}\"" +
+            "${EVENT.REVENUE_VALUE}}" +
+            "]}]" + // end of events, end of snapshot, end of snapshots
             ",\"visitor_id\":\"${VISITOR.VISITORID}\"" +
             "}]," +// end of visitors
             "\"account_id\":\"${EVENTBATCH.ACCOUNTID}\",\"anonymize_ip\":${EVENTBATCH.ANONIP}," +
@@ -90,17 +93,18 @@ public class EventBuilder {
                                                    @Nonnull Map<String, String> attributes) {
 
         String payload = EVENT_TEMPLATE;
-        payload = payload.replace("${DECISION.CAMPAIGNID}", activatedExperiment.getLayerId());
-        payload = payload.replace("${DECISION.EXPERIMENTID}", activatedExperiment.getId());
-        payload = payload.replace("${DECISION.VARIATIONID}", variation.getId());
-        payload = payload.replace("${DECISION.HOLDBACK}", "false");
+
+        payload = payload.replace("${DECISIONS}",
+                createDecisionString(activatedExperiment.getLayerId(), activatedExperiment.getId(),
+                        variation.getId(), false));
 
         payload = payload.replace("${EVENT.TIMESTAMP}", Long.toString(System.currentTimeMillis()));
         payload = payload.replace("${EVENT.UUID}", UUID.randomUUID().toString());
         payload = payload.replace("${EVENT.ENTITYID}", activatedExperiment.getLayerId());
         payload = payload.replace("${EVENT.KEY}", ACTIVATE_EVENT_KEY);
         payload = payload.replace("${EVENT.TYPE}", ACTIVATE_EVENT_KEY);
-
+        payload = payload.replace("${EVENT.TAGS.OBJECT}", ",");
+        payload = payload.replace("${EVENT.REVENUE_VALUE}", "");
         payload = payload.replace("${VISITOR.VISITORID}", userId);
         payload = payload.replace("${VISITOR.ATTRIBUTES}", buildAttributeStrings(buildAttributeList(projectConfig, attributes)));
 
@@ -126,22 +130,102 @@ public class EventBuilder {
             return null;
         }
 
-        ArrayList<Decision> decisions = new ArrayList<Decision>();
+        String payload = EVENT_TEMPLATE;
+
+        StringBuilder decisions = new StringBuilder();
+        int count = experimentVariationMap.entrySet().size();
         for (Map.Entry<Experiment, Variation> entry : experimentVariationMap.entrySet()) {
-            Decision decision = new Decision(entry.getKey().getLayerId(), entry.getKey().getId(), entry.getValue().getId(), false);
-            decisions.add(decision);
+            String decision = createDecisionString(entry.getKey().getLayerId(), entry.getKey().getId(), entry.getValue().getId(), false);
+            decisions.append(decision); count--;
+            if (count >= 1) {
+                decisions.append(",");
+            }
         }
+
+
+        payload = payload.replace("${DECISIONS}", decisions.toString());
 
         EventType eventType = projectConfig.getEventNameMapping().get(eventName);
 
-        Event conversionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), eventType.getId(),
-                eventType.getKey(), null, EventTagUtils.getRevenueValue(eventTags), eventTags, eventType.getKey(), EventTagUtils.getNumericValue(eventTags));
-        Snapshot snapshot = new Snapshot(decisions, Arrays.asList(conversionEvent));
+        payload = payload.replace("${EVENT.TIMESTAMP}", Long.toString(System.currentTimeMillis()));
+        payload = payload.replace("${EVENT.UUID}", UUID.randomUUID().toString());
+        payload = payload.replace("${EVENT.ENTITYID}", eventType.getId());
+        payload = payload.replace("${EVENT.KEY}", eventType.getKey());
+        payload = payload.replace("${EVENT.TYPE}", eventType.getKey());
 
-        Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
-        List<Visitor> visitors = Arrays.asList(visitor);
-        EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, projectConfig.getAccountId(), visitors, projectConfig.getAnonymizeIP(), projectConfig.getProjectId(), projectConfig.getRevision());
-        String payload = this.serializer.serialize(eventBatch);
+        StringBuilder revenueValue = new StringBuilder("");
+
+        Number revenue = EventTagUtils.getRevenueValue(eventTags);
+
+        StringBuilder revenueString = new StringBuilder("");
+
+        if (revenue != null) {
+            revenueString.append("\"revenue\":");
+            revenueString.append(revenue);
+        }
+
+        StringBuilder valueSting = new StringBuilder("");
+
+        Number value = EventTagUtils.getNumericValue(eventTags);
+
+        if (value != null) {
+            valueSting.append("\"value\":");
+            valueSting.append(value);
+        }
+
+        if (value != null && revenue != null) {
+            revenueValue.append(",");
+            revenueValue.append(revenueString);
+            revenueValue.append(",");
+            revenueValue.append(valueSting);
+        }
+        else if (value !=null || revenue != null){
+            revenueValue.append(",");
+            revenueValue.append(revenueString);
+            revenueValue.append(valueSting);
+        }
+
+        payload = payload.replace("${EVENT.REVENUE_VALUE}", revenueValue.toString());
+
+        StringBuilder tags = new StringBuilder(",\"tags\":{");
+        count = eventTags.entrySet().size();
+        for (Map.Entry<String,?> entry : eventTags.entrySet()) {
+            tags.append("\"");
+            tags.append(entry.getKey());
+            tags.append("\":");
+
+            boolean isString = entry.getValue() instanceof String;
+
+            if (isString) {
+                tags.append("\"");
+
+                tags.append(((String)entry.getValue()).replaceAll("\"", "\\" + "\""));
+
+                tags.append("\"");
+            }
+            else {
+                tags.append(entry.getValue());
+            }
+
+            count--;
+            if (count >= 1) {
+                tags.append(",");
+            }
+        }
+        tags.append("},");
+        payload = payload.replace("${EVENT.TAGS.OBJECT}", tags.toString());
+
+        payload = payload.replace("${VISITOR.VISITORID}", userId);
+        payload = payload.replace("${VISITOR.ATTRIBUTES}", buildAttributeStrings(buildAttributeList(projectConfig, attributes)));
+
+        payload = payload.replace("${EVENTBATCH.CLIENTNAME}", clientEngine.getClientEngineValue());
+        payload = payload.replace("${EVENTBATCH.CLIENTVERSION}", clientVersion);
+        payload = payload.replace("${EVENTBATCH.ANONIP}", projectConfig.getAnonymizeIP() ? "true" : "false");
+        payload = payload.replace("${EVENTBATCH.PROJECTID}", projectConfig.getProjectId());
+        payload = payload.replace("${BATCHEVENT.REVISION}",  projectConfig.getRevision());
+        payload = payload.replace("${EVENTBATCH.ACCOUNTID}",  projectConfig.getAccountId());
+
+
         return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
     }
 
@@ -171,6 +255,19 @@ public class EventBuilder {
         }
 
         return attributesList;
+    }
+
+    String createDecisionString(String campaignId, String experimentId, String variationId, boolean holdback) {
+        String decisionTemplate = "{\"campaign_id\":\"${DECISION.CAMPAIGNID}\",\"experiment_id\":\"${DECISION.EXPERIMENTID}\"," +
+                "\"is_campaign_holdback\":${DECISION.HOLDBACK},\"variation_id\":\"${DECISION.VARIATIONID}\"}";
+
+        String payload = decisionTemplate;
+        payload = payload.replace("${DECISION.CAMPAIGNID}", campaignId);
+        payload = payload.replace("${DECISION.EXPERIMENTID}", experimentId);
+        payload = payload.replace("${DECISION.VARIATIONID}", variationId);
+        payload = payload.replace("${DECISION.HOLDBACK}", holdback ? "true" : "false");
+
+        return payload;
     }
 
     String buildAttributeStrings(List<Attribute> attributes) {
