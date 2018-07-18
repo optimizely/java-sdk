@@ -308,6 +308,41 @@ public class Optimizely {
 
     //======== FeatureFlag APIs ========//
 
+    private void sendEventForFeatureAndVariableCreation(
+            @Nonnull String featureKey,
+            @Nonnull String variableKey,
+            @Nonnull String userId,
+            @Nonnull Map<String, String> attributes) {
+        EventType featureEvent = new EventType(featureKey);
+        Map<String, Object> eventTags = new HashMap<String, Object>();
+
+        eventTags.put("feature_key", featureKey);
+        if (!variableKey.trim().isEmpty()) {
+            eventTags.put("variable_key", variableKey);
+        }
+        LogEvent conversionEvent = eventBuilder.createConversionEvent(
+                projectConfig,
+                new HashMap<Experiment, Variation>(),
+                userId,
+                featureEvent,
+                attributes,
+                eventTags
+        );
+        try{
+            eventHandler.dispatchEvent(conversionEvent);
+        } catch (Exception e) {
+            logger.error("Unexpected exception in event dispatcher", e);
+        }
+    }
+
+    private void sendEventForFeatureAndVariableCreation(
+            @Nonnull String featureKey,
+            @Nonnull String userId,
+            @Nonnull Map<String, String> attributes) {
+        sendEventForFeatureAndVariableCreation(featureKey, "", userId, attributes);
+    }
+
+
     /**
      * Determine whether a boolean feature is enabled.
      * Send an impression event if the user is bucketed into an experiment using the feature.
@@ -348,6 +383,8 @@ public class Optimizely {
         FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
         if (featureFlag == null) {
             logger.info("No feature flag was found for key \"{}\".", featureKey);
+            logger.info("Sending event for \"{}\" to trigger feature creation.", featureKey);
+            sendEventForFeatureAndVariableCreation(featureKey, userId, attributes);
             return false;
         }
 
@@ -562,6 +599,8 @@ public class Optimizely {
         FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
         if (featureFlag == null) {
             logger.info("No feature flag was found for key \"{}\".", featureKey);
+            logger.info("Sending event for \"{}\" to trigger feature and variable creation.", featureKey);
+            sendEventForFeatureAndVariableCreation(featureKey, variableKey, userId, attributes);
             return null;
         }
 
