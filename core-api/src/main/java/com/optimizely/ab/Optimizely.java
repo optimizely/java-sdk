@@ -310,23 +310,24 @@ public class Optimizely {
 
     private void sendEventForFeatureAndVariableCreation(
             @Nonnull String featureKey,
+            @Nonnull String variableType,
             @Nonnull String variableKey,
             @Nonnull String userId,
             @Nonnull Map<String, String> attributes) {
-        EventType featureEvent = new EventType(featureKey);
-        Map<String, Object> eventTags = new HashMap<String, Object>();
-
-        eventTags.put("feature_key", featureKey);
+        String eventType = "feature_key";
+        String eventKey = featureKey;
         if (!variableKey.trim().isEmpty()) {
-            eventTags.put("variable_key", variableKey);
+            eventType = "feature_key:variable_type:variable_key";
+            eventKey = featureKey + ":" + variableType + ":" + variableKey;
         }
+        EventType featureEvent = new EventType(eventKey, eventType);
         LogEvent conversionEvent = eventBuilder.createConversionEvent(
                 projectConfig,
                 new HashMap<Experiment, Variation>(),
                 userId,
                 featureEvent,
                 attributes,
-                eventTags
+                new HashMap<String, Object>()
         );
         try{
             eventHandler.dispatchEvent(conversionEvent);
@@ -339,7 +340,7 @@ public class Optimizely {
             @Nonnull String featureKey,
             @Nonnull String userId,
             @Nonnull Map<String, String> attributes) {
-        sendEventForFeatureAndVariableCreation(featureKey, "", userId, attributes);
+        sendEventForFeatureAndVariableCreation(featureKey, "", "", userId, attributes);
     }
 
 
@@ -600,7 +601,7 @@ public class Optimizely {
         if (featureFlag == null) {
             logger.info("No feature flag was found for key \"{}\".", featureKey);
             logger.info("Sending event for \"{}\" to trigger feature and variable creation.", featureKey);
-            sendEventForFeatureAndVariableCreation(featureKey, variableKey, userId, attributes);
+            sendEventForFeatureAndVariableCreation(featureKey, variableType.getVariableType(), variableKey, userId, attributes);
             return null;
         }
 
@@ -608,6 +609,7 @@ public class Optimizely {
         if (variable == null) {
             logger.info("No feature variable was found for key \"{}\" in feature flag \"{}\".",
                     variableKey, featureKey);
+            sendEventForFeatureAndVariableCreation(featureKey, variableType.getVariableType(), variableKey, userId, attributes);
             return null;
         } else if (!variable.getType().equals(variableType)) {
             logger.info("The feature variable \"" + variableKey +

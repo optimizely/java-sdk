@@ -42,19 +42,28 @@ public class EventType implements IdKeyMapped {
 
     private final String id;
     private final String key;
+    private final String type;
     private final List<String> experimentIds;
 
     @JsonCreator
     public EventType(@JsonProperty("id") String id,
                      @JsonProperty("key") String key,
                      @JsonProperty("experimentIds") List<String> experimentIds) {
+        this(id, key, "custom", experimentIds);
+    }
+
+    public EventType(@Nonnull String id,
+                     @Nonnull String key,
+                     @Nonnull String type,
+                     @Nonnull List<String> experimentIds) {
         this.id = id;
         this.key = key;
+        this.type = type;
         this.experimentIds = experimentIds;
     }
 
-    public EventType(@Nonnull String key) {
-        this(key, key, Collections.<String>emptyList());
+    public EventType(@Nonnull String key, String type) {
+        this(key, key, type, Collections.<String>emptyList());
     }
 
     public String getId() {
@@ -64,6 +73,8 @@ public class EventType implements IdKeyMapped {
     public String getKey() {
         return key;
     }
+
+    public String getType() { return type; }
 
     public List<String> getExperimentIds() {
         return experimentIds;

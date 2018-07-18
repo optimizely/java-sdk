@@ -97,7 +97,7 @@ public class EventBuilder {
         }
 
         Event conversionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), eventType.getId(),
-                eventType.getKey(), null, EventTagUtils.getRevenueValue(eventTags), eventTags, eventType.getKey(), EventTagUtils.getNumericValue(eventTags));
+                eventType.getKey(), null, EventTagUtils.getRevenueValue(eventTags), eventTags, eventType.getType(), EventTagUtils.getNumericValue(eventTags));
         Snapshot snapshot = new Snapshot(decisions, Arrays.asList(conversionEvent));
 
         Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
