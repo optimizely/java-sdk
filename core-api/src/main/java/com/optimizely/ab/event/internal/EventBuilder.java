@@ -89,7 +89,7 @@ public class EventBuilder {
                                                    @Nonnull String userId,
                                                    @Nonnull Map<String, String> attributes) {
 
-        String payload = EVENT_TEMPLATE;
+        String payload = String.copyValueOf(EVENT_TEMPLATE.toCharArray());
         payload = payload.replace("${DECISION.CAMPAIGNID}", activatedExperiment.getLayerId());
         payload = payload.replace("${DECISION.EXPERIMENTID}", activatedExperiment.getId());
         payload = payload.replace("${DECISION.VARIATIONID}", variation.getId());
