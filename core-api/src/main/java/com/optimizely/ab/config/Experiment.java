@@ -20,9 +20,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -101,6 +99,12 @@ public class Experiment implements IdKeyMapped {
         this.userIdToVariationKeyMap = userIdToVariationKeyMap;
         this.variationKeyToVariationMap = ProjectConfigUtils.generateNameMapping(variations);
         this.variationIdToVariationMap = ProjectConfigUtils.generateIdMapping(variations);
+    }
+
+    public Experiment(@Nonnull String key) {
+        this(key, key, ExperimentStatus.RUNNING.toString(), key, Collections.<String>emptyList(),
+                Collections.singletonList(new Variation(key, key)), new HashMap<String, String>(),
+                Collections.singletonList(new TrafficAllocation(key, 10000)), "");
     }
 
     public String getId() {

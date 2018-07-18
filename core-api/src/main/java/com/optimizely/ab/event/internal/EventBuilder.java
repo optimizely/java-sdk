@@ -86,22 +86,15 @@ public class EventBuilder {
     public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
                                                    @Nonnull Map<Experiment, Variation> experimentVariationMap,
                                                    @Nonnull String userId,
-                                                   @Nonnull String eventId,
-                                                   @Nonnull String eventName,
+                                                   @Nonnull EventType eventType,
                                                    @Nonnull Map<String, String> attributes,
                                                    @Nonnull Map<String, ?> eventTags) {
-
-        if (experimentVariationMap.isEmpty()) {
-            return null;
-        }
 
         ArrayList<Decision> decisions = new ArrayList<Decision>();
         for (Map.Entry<Experiment, Variation> entry : experimentVariationMap.entrySet()) {
             Decision decision = new Decision(entry.getKey().getLayerId(), entry.getKey().getId(), entry.getValue().getId(), false);
             decisions.add(decision);
         }
-
-        EventType eventType = projectConfig.getEventNameMapping().get(eventName);
 
         Event conversionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), eventType.getId(),
                 eventType.getKey(), null, EventTagUtils.getRevenueValue(eventTags), eventTags, eventType.getKey(), EventTagUtils.getNumericValue(eventTags));

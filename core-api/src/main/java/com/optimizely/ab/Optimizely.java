@@ -283,8 +283,7 @@ public class Optimizely {
                 projectConfig,
                 experimentVariationMap,
                 userId,
-                eventType.getId(),
-                eventType.getKey(),
+                eventType,
                 filteredAttributes,
                 eventTags);
 

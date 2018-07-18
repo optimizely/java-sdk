@@ -16,12 +16,14 @@
  */
 package com.optimizely.ab.config;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -49,6 +51,10 @@ public class EventType implements IdKeyMapped {
         this.id = id;
         this.key = key;
         this.experimentIds = experimentIds;
+    }
+
+    public EventType(@Nonnull String key) {
+        this(key, key, Collections.<String>emptyList());
     }
 
     public String getId() {
