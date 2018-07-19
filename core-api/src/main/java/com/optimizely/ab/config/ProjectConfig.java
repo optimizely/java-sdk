@@ -268,7 +268,7 @@ public class ProjectConfig {
 
         // if the given event name isn't present in the config, log an exception to the error handler
         if (eventType == null) {
-            eventType = new EventType(eventName);
+            eventType = new EventType(eventName, "event_key");
         }
 
         return eventType;
