@@ -39,6 +39,7 @@ import com.optimizely.ab.event.internal.EventBuilder;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.notification.NotificationCenter;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -425,7 +426,14 @@ public class Optimizely {
     public @Nullable Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId) {
-        return getFeatureVariableBoolean(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
+        return getFeatureVariableBoolean(featureKey, variableKey, userId, false);
+    }
+
+    public @Nullable Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
+                                                       @Nonnull String variableKey,
+                                                       @Nonnull String userId,
+                                                       @Nonnull Boolean defaultValue) {
+        return getFeatureVariableBoolean(featureKey, variableKey, userId, Collections.<String, String>emptyMap(), defaultValue);
     }
 
     /**
@@ -440,7 +448,8 @@ public class Optimizely {
     public @Nullable Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
-                                                       @Nonnull Map<String, String> attributes) {
+                                                       @Nonnull Map<String, String> attributes,
+                                                       @Nonnull Boolean defaultValue) {
         String variableValue = getFeatureVariableValueForType(
                 featureKey,
                 variableKey,
@@ -451,7 +460,7 @@ public class Optimizely {
         if (variableValue != null) {
             return Boolean.parseBoolean(variableValue);
         }
-        return null;
+        return defaultValue;
     }
 
     /**
@@ -465,7 +474,14 @@ public class Optimizely {
     public @Nullable Double getFeatureVariableDouble(@Nonnull String featureKey,
                                                      @Nonnull String variableKey,
                                                      @Nonnull String userId) {
-        return getFeatureVariableDouble(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
+        return getFeatureVariableDouble(featureKey, variableKey, userId, 0.0);
+    }
+
+    public @Nullable Double getFeatureVariableDouble(@Nonnull String featureKey,
+                                                     @Nonnull String variableKey,
+                                                     @Nonnull String userId,
+                                                     @Nonnull Double defaultValue) {
+        return getFeatureVariableDouble(featureKey, variableKey, userId, Collections.<String, String>emptyMap(), defaultValue);
     }
 
     /**
@@ -480,7 +496,8 @@ public class Optimizely {
     public @Nullable Double getFeatureVariableDouble(@Nonnull String featureKey,
                                                      @Nonnull String variableKey,
                                                      @Nonnull String userId,
-                                                     @Nonnull Map<String, String> attributes) {
+                                                     @Nonnull Map<String, String> attributes,
+                                                     @Nonnull Double defaultValue) {
         String variableValue = getFeatureVariableValueForType(
                 featureKey,
                 variableKey,
@@ -496,7 +513,7 @@ public class Optimizely {
                         "\" as Double. " + exception);
             }
         }
-        return null;
+        return defaultValue;
     }
 
     /**
@@ -510,7 +527,14 @@ public class Optimizely {
     public @Nullable Integer getFeatureVariableInteger(@Nonnull String featureKey,
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId) {
-        return getFeatureVariableInteger(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
+        return getFeatureVariableInteger(featureKey, variableKey, userId, 0);
+    }
+
+    public @Nullable Integer getFeatureVariableInteger(@Nonnull String featureKey,
+                                                       @Nonnull String variableKey,
+                                                       @Nonnull String userId,
+                                                       @Nonnull Integer defaultValue) {
+        return getFeatureVariableInteger(featureKey, variableKey, userId, Collections.<String, String>emptyMap(), defaultValue);
     }
 
     /**
@@ -525,7 +549,8 @@ public class Optimizely {
     public @Nullable Integer getFeatureVariableInteger(@Nonnull String featureKey,
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
-                                                       @Nonnull Map<String, String> attributes) {
+                                                       @Nonnull Map<String, String> attributes,
+                                                       @Nonnull Integer defaultValue) {
         String variableValue = getFeatureVariableValueForType(
                 featureKey,
                 variableKey,
@@ -541,7 +566,7 @@ public class Optimizely {
                         "\" as Integer. " + exception.toString());
             }
         }
-        return null;
+        return defaultValue;
     }
 
     /**
@@ -555,7 +580,14 @@ public class Optimizely {
     public @Nullable String getFeatureVariableString(@Nonnull String featureKey,
                                                      @Nonnull String variableKey,
                                                      @Nonnull String userId) {
-        return getFeatureVariableString(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
+        return getFeatureVariableString(featureKey, variableKey, userId, "");
+    }
+
+    public @Nullable String getFeatureVariableString(@Nonnull String featureKey,
+                                                     @Nonnull String variableKey,
+                                                     @Nonnull String userId,
+                                                     @Nonnull String defaultValue) {
+        return getFeatureVariableString(featureKey, variableKey, userId, Collections.<String, String>emptyMap(), defaultValue);
     }
 
     /**
@@ -570,13 +602,20 @@ public class Optimizely {
     public @Nullable String getFeatureVariableString(@Nonnull String featureKey,
                                                      @Nonnull String variableKey,
                                                      @Nonnull String userId,
-                                                     @Nonnull Map<String, String> attributes) {
-        return getFeatureVariableValueForType(
+                                                     @Nonnull Map<String, String> attributes,
+                                                     @Nonnull String defaultValue) {
+        String variableValue = getFeatureVariableValueForType(
                 featureKey,
                 variableKey,
                 userId,
                 attributes,
                 LiveVariable.VariableType.STRING);
+
+        if (variableValue != null) {
+            return variableValue;
+        }
+
+        return defaultValue;
     }
 
     @VisibleForTesting
