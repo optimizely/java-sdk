@@ -455,7 +455,8 @@ public class Optimizely {
                 variableKey,
                 userId,
                 attributes,
-                LiveVariable.VariableType.BOOLEAN
+                LiveVariable.VariableType.BOOLEAN,
+                defaultValue
         );
         if (variableValue != null) {
             return Boolean.parseBoolean(variableValue);
@@ -503,7 +504,8 @@ public class Optimizely {
                 variableKey,
                 userId,
                 attributes,
-                LiveVariable.VariableType.DOUBLE
+                LiveVariable.VariableType.DOUBLE,
+                defaultValue
         );
         if (variableValue != null) {
             try {
@@ -556,7 +558,8 @@ public class Optimizely {
                 variableKey,
                 userId,
                 attributes,
-                LiveVariable.VariableType.INTEGER
+                LiveVariable.VariableType.INTEGER,
+                defaultValue
         );
         if (variableValue != null) {
             try {
@@ -609,7 +612,8 @@ public class Optimizely {
                 variableKey,
                 userId,
                 attributes,
-                LiveVariable.VariableType.STRING);
+                LiveVariable.VariableType.STRING,
+                defaultValue);
 
         if (variableValue != null) {
             return variableValue;
@@ -623,7 +627,8 @@ public class Optimizely {
                                                   @Nonnull String variableKey,
                                                   @Nonnull String userId,
                                                   @Nonnull Map<String, String> attributes,
-                                                  @Nonnull LiveVariable.VariableType variableType) {
+                                                  @Nonnull LiveVariable.VariableType variableType,
+                                                  @Nonnull Object defaultValue) {
         if (featureKey == null) {
             logger.warn("The featureKey parameter must be nonnull.");
             return null;
@@ -640,7 +645,7 @@ public class Optimizely {
         if (featureFlag == null) {
             logger.info("No feature flag was found for key \"{}\".", featureKey);
             logger.info("Sending event for \"{}\" to trigger feature and variable creation.", featureKey);
-            sendEventForFeatureAndVariableCreation(featureKey, variableType.getVariableType(), variableKey, userId, attributes);
+            sendEventForFeatureAndVariableCreation(featureKey, variableType.getVariableType(), variableKey + ":" + defaultValue.toString(), userId, attributes);
             return null;
         }
 
@@ -648,7 +653,7 @@ public class Optimizely {
         if (variable == null) {
             logger.info("No feature variable was found for key \"{}\" in feature flag \"{}\".",
                     variableKey, featureKey);
-            sendEventForFeatureAndVariableCreation(featureKey, variableType.getVariableType(), variableKey, userId, attributes);
+            sendEventForFeatureAndVariableCreation(featureKey, variableType.getVariableType(), variableKey + ":" + defaultValue.toString(), userId, attributes);
             return null;
         } else if (!variable.getType().equals(variableType)) {
             logger.info("The feature variable \"" + variableKey +
