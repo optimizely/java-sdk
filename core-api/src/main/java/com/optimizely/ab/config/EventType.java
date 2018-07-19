@@ -63,7 +63,7 @@ public class EventType implements IdKeyMapped {
     }
 
     public EventType(@Nonnull String key, String type) {
-        this(key, key, type, Collections.<String>emptyList());
+        this("", key, type, Collections.<String>emptyList());
     }
 
     public String getId() {
