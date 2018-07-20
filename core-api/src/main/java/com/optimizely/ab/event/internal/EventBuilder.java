@@ -44,7 +44,7 @@ import java.util.UUID;
 
 public class EventBuilder {
     private static final Logger logger = LoggerFactory.getLogger(EventBuilder.class);
-    static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";
+    static final String EVENT_ENDPOINT = "https://logx-staging.dz.optimizely.com/v1/events";
     static final String  ACTIVATE_EVENT_KEY = "campaign_activated";
 
     private Serializer serializer;
