@@ -2,7 +2,6 @@
   "experiments": [
     {
       "status": "Running",
-      "percentageIncluded": 10000,
       "key": "testExperiment4",
       "trafficAllocation": [
         {
@@ -30,11 +29,11 @@
       "forcedVariations": {
 
       },
-      "id": "6358043286"
+      "id": "6358043286",
+      "layerId": "6358043286"
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
       "key": "testExperiment5",
       "trafficAllocation": [
         {
@@ -62,11 +61,11 @@
       "forcedVariations": {
 
       },
-      "id": "6364835526"
+      "id": "6364835526",
+      "layerId": "6364835526"
     },
     {
       "status": "Paused",
-      "percentageIncluded": 10000,
       "key": "testExperimentNotRunning",
       "trafficAllocation": [
         {
@@ -94,11 +93,11 @@
       "forcedVariations": {
 
       },
-      "id": "6367444440"
+      "id": "6367444440",
+      "layerId": "6367444440"
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
       "key": "testExperiment1",
       "trafficAllocation": [
         {
@@ -127,11 +126,11 @@
         "variation_user": "variation",
         "control_user": "control"
       },
-      "id": "6367863211"
+      "id": "6367863211",
+      "layerId": "6367863211"
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
       "key": "testExperiment3",
       "trafficAllocation": [
         {
@@ -159,11 +158,11 @@
       "forcedVariations": {
 
       },
-      "id": "6370392407"
+      "id": "6370392407",
+      "layerId": "6370392407"
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
       "key": "testExperiment6",
       "trafficAllocation": [
         {
@@ -191,11 +190,11 @@
       "forcedVariations": {
         "forced_variation_user": "variation"
       },
-      "id": "6370821515"
+      "id": "6370821515",
+      "layerId": "6370821515"
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
       "key": "testExperiment2",
       "trafficAllocation": [
         {
@@ -224,11 +223,11 @@
         "variation_user": "variation",
         "control_user": "control"
       },
-      "id": "6376870125"
+      "id": "6376870125",
+      "layerId": "6376870125"
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
       "key": "testExperimentWithFirefoxAudience",
       "trafficAllocation": [
         {
@@ -256,57 +255,57 @@
       "forcedVariations": {
 
       },
-      "id": "6383811281"
+      "id": "6383811281",
+      "layerId": "6383811281"
     }
   ],
-  "version": "1",
+  "version": "2",
   "audiences": [
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"safari\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"safari\"}]]]",
       "id": "6352892614",
       "name": "Safari users"
     },
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"android\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"android\"}]]]",
       "id": "6355234780",
       "name": "Android users"
     },
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"desktop\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"desktop\"}]]]",
       "id": "6360574256",
       "name": "Desktop users"
     },
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"opera\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"opera\"}]]]",
       "id": "6365864533",
       "name": "Opera users"
     },
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"tablet\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"tablet\"}]]]",
       "id": "6369831151",
       "name": "Tablet users"
     },
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"firefox\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"firefox\"}]]]",
       "id": "6369992312",
       "name": "Firefox users"
     },
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"chrome\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"chrome\"}]]]",
       "id": "6373141157",
       "name": "Chrome users"
     },
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"ie\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"ie\"}]]]",
       "id": "6378191386",
       "name": "IE users"
     }
   ],
-  "dimensions": [
+  "attributes": [
     {
       "id": "6359881003",
-      "key": "browser_type",
-      "segmentId": "6380740826"
+      "key": "browser_type"
     }
   ],
   "groups": [
@@ -345,7 +344,6 @@
       "experiments": [
         {
           "status": "Running",
-          "percentageIncluded": 5000,
           "key": "mutex_exp2",
           "trafficAllocation": [
             {
@@ -374,11 +372,11 @@
             "user_b": "b",
             "user_a": "a"
           },
-          "id": "6447021179"
+          "id": "6447021179",
+          "layerId": "6447021179"
         },
         {
           "status": "Running",
-          "percentageIncluded": 5000,
           "key": "mutex_exp1",
           "trafficAllocation": [
             {
@@ -406,7 +404,8 @@
           "forcedVariations": {
 
           },
-          "id": "6450630664"
+          "id": "6450630664",
+          "layerId": "6450630664"
         }
       ],
       "id": "6436903041"

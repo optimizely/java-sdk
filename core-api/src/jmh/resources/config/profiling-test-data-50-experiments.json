@@ -2,7 +2,7 @@
   "experiments": [
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment31",
       "trafficAllocation": [
         {
@@ -34,7 +34,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment15",
       "trafficAllocation": [
         {
@@ -66,7 +66,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment33",
       "trafficAllocation": [
         {
@@ -98,7 +98,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment38",
       "trafficAllocation": [
         {
@@ -130,7 +130,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment44",
       "trafficAllocation": [
         {
@@ -162,7 +162,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperimentWithFirefoxAudience",
       "trafficAllocation": [
         {
@@ -194,7 +194,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment14",
       "trafficAllocation": [
         {
@@ -226,7 +226,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment46",
       "trafficAllocation": [
         {
@@ -258,7 +258,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment16",
       "trafficAllocation": [
         {
@@ -290,7 +290,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment10",
       "trafficAllocation": [
         {
@@ -322,7 +322,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment11",
       "trafficAllocation": [
         {
@@ -354,7 +354,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment12",
       "trafficAllocation": [
         {
@@ -386,7 +386,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment7",
       "trafficAllocation": [
         {
@@ -418,7 +418,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment6",
       "trafficAllocation": [
         {
@@ -450,7 +450,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment23",
       "trafficAllocation": [
         {
@@ -482,7 +482,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment13",
       "trafficAllocation": [
         {
@@ -514,7 +514,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment39",
       "trafficAllocation": [
         {
@@ -546,7 +546,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment4",
       "trafficAllocation": [
         {
@@ -578,7 +578,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment17",
       "trafficAllocation": [
         {
@@ -610,7 +610,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment42",
       "trafficAllocation": [
         {
@@ -642,7 +642,7 @@
     },
     {
       "status": "Not started",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperimentNotRunning",
       "trafficAllocation": [
         {
@@ -674,7 +674,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment36",
       "trafficAllocation": [
         {
@@ -706,7 +706,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment45",
       "trafficAllocation": [
         {
@@ -738,7 +738,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment43",
       "trafficAllocation": [
         {
@@ -770,7 +770,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment25",
       "trafficAllocation": [
         {
@@ -802,7 +802,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment2",
       "trafficAllocation": [
         {
@@ -835,7 +835,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment18",
       "trafficAllocation": [
         {
@@ -867,7 +867,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment24",
       "trafficAllocation": [
         {
@@ -899,7 +899,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment19",
       "trafficAllocation": [
         {
@@ -931,7 +931,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment20",
       "trafficAllocation": [
         {
@@ -963,7 +963,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment28",
       "trafficAllocation": [
         {
@@ -995,7 +995,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment35",
       "trafficAllocation": [
         {
@@ -1027,7 +1027,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment1",
       "trafficAllocation": [
         {
@@ -1060,7 +1060,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment8",
       "trafficAllocation": [
         {
@@ -1092,7 +1092,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment3",
       "trafficAllocation": [
         {
@@ -1124,7 +1124,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment22",
       "trafficAllocation": [
         {
@@ -1156,7 +1156,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment37",
       "trafficAllocation": [
         {
@@ -1188,7 +1188,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment41",
       "trafficAllocation": [
         {
@@ -1220,7 +1220,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment27",
       "trafficAllocation": [
         {
@@ -1252,7 +1252,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment26",
       "trafficAllocation": [
         {
@@ -1284,7 +1284,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment9",
       "trafficAllocation": [
         {
@@ -1316,7 +1316,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment29",
       "trafficAllocation": [
         {
@@ -1348,7 +1348,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment32",
       "trafficAllocation": [
         {
@@ -1380,7 +1380,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment30",
       "trafficAllocation": [
         {
@@ -1412,7 +1412,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment34",
       "trafficAllocation": [
         {
@@ -1444,7 +1444,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment21",
       "trafficAllocation": [
         {
@@ -1476,7 +1476,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment40",
       "trafficAllocation": [
         {
@@ -1508,7 +1508,7 @@
     },
     {
       "status": "Running",
-      "percentageIncluded": 10000,
+      "layerId": "42",
       "key": "testExperiment5",
       "trafficAllocation": [
         {
@@ -1539,54 +1539,53 @@
       "id": "6388170688"
     }
   ],
-  "version": "1",
+  "version": "2",
   "audiences": [
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"android\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"android\"}]]]",
       "id": "6366023138",
       "name": "Android users"
     },
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"firefox\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"firefox\"}]]]",
       "id": "6373742627",
       "name": "Firefox users"
     },
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"ie\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"ie\"}]]]",
       "id": "6376161539",
       "name": "IE users"
     },
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"desktop\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"desktop\"}]]]",
       "id": "6376714797",
       "name": "Desktop users"
     },
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"safari\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"safari\"}]]]",
       "id": "6381732153",
       "name": "Safari users"
     },
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"opera\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"opera\"}]]]",
       "id": "6383110825",
       "name": "Opera users"
     },
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"tablet\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"tablet\"}]]]",
       "id": "6387291324",
       "name": "Tablet users"
     },
     {
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\": \"chrome\"}]]]",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\": \"chrome\"}]]]",
       "id": "6388221254",
       "name": "Chrome users"
     }
   ],
-  "dimensions": [
+  "attributes": [
     {
       "id": "6380961481",
-      "key": "browser_type",
-      "segmentId": "6384711633"
+      "key": "browser_type"
     }
   ],
   "groups": [
@@ -1605,7 +1604,7 @@
       "experiments": [
         {
           "status": "Running",
-          "percentageIncluded": 5000,
+          "layerId": "42",
           "key": "mutex_exp1",
           "trafficAllocation": [
             {
@@ -1637,7 +1636,7 @@
         },
         {
           "status": "Running",
-          "percentageIncluded": 5000,
+          "layerId": "42",
           "key": "mutex_exp2",
           "trafficAllocation": [
             {
