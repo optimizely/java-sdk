@@ -49,7 +49,7 @@ public class EventBatch {
     @JsonProperty("client_name")
     String clientName;
     @JsonProperty("client_version")
-    String clientVersion = BuildVersionInfo.VERSION;
+    String clientVersion;
     @JsonProperty("project_id")
     String projectId;
     String revision;
