@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +43,7 @@ import java.util.UUID;
 
 public class EventBuilder {
     private static final Logger logger = LoggerFactory.getLogger(EventBuilder.class);
-    static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";
+    static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";  // Should be part of the datafile
     static final String  ACTIVATE_EVENT_KEY = "campaign_activated";
 
     private Serializer serializer;
@@ -63,53 +62,110 @@ public class EventBuilder {
         this.serializer = DefaultJsonSerializer.getInstance();
     }
 
-
     public LogEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
-                                                   @Nonnull Experiment activatedExperiment,
-                                                   @Nonnull Variation variation,
-                                                   @Nonnull String userId,
-                                                   @Nonnull Map<String, String> attributes) {
+                                          @Nonnull Experiment activatedExperiment,
+                                          @Nonnull Variation variation,
+                                          @Nonnull String userId,
+                                          @Nonnull Map<String, String> attributes) {
 
-        Decision decision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(),
-                variation.getId(), false);
-        Event impressionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), activatedExperiment.getLayerId(),
-                ACTIVATE_EVENT_KEY, null, null, null, ACTIVATE_EVENT_KEY, null);
-        Snapshot snapshot = new Snapshot(Arrays.asList(decision), Arrays.asList(impressionEvent));
+        Decision decision = new Decision.Builder()
+                .setCampaignId(activatedExperiment.getLayerId())
+                .setExperimentId(activatedExperiment.getId())
+                .setVariationId(variation.getId())
+                .setIsCampaignHoldback(false)
+                .build();
 
-        Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
-        List<Visitor> visitors = Arrays.asList(visitor);
-        EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, projectConfig.getAccountId(), visitors, projectConfig.getAnonymizeIP(), projectConfig.getProjectId(), projectConfig.getRevision());
+        Event impressionEvent = new Event.Builder()
+                .setTimestamp(System.currentTimeMillis())
+                .setUuid(UUID.randomUUID().toString())
+                .setEntityId(activatedExperiment.getLayerId())
+                .setKey(ACTIVATE_EVENT_KEY)
+                .setType(ACTIVATE_EVENT_KEY)
+                .build();
+
+        Snapshot snapshot = new Snapshot.Builder()
+                .setDecisions(Collections.singletonList(decision))
+                .setEvents(Collections.singletonList(impressionEvent))
+                .build();
+
+        Visitor visitor = new Visitor.Builder()
+                .setVisitorId(userId)
+                .setAttributes(buildAttributeList(projectConfig, attributes))
+                .setSnapshots(Collections.singletonList((snapshot)))
+                .build();
+
+        EventBatch eventBatch = new EventBatch.Builder()
+                .setClientName(clientEngine.getClientEngineValue())
+                .setClientVersion(clientVersion)
+                .setAccountId(projectConfig.getAccountId())
+                .setVisitors(Collections.singletonList(visitor))
+                .setAnonymizeIp(projectConfig.getAnonymizeIP())
+                .setProjectId(projectConfig.getProjectId())
+                .setRevision(projectConfig.getRevision())
+                .build();
+
         String payload = this.serializer.serialize(eventBatch);
         return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
     }
 
     public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
-                                                   @Nonnull Map<Experiment, Variation> experimentVariationMap,
-                                                   @Nonnull String userId,
-                                                   @Nonnull String eventId,
-                                                   @Nonnull String eventName,
-                                                   @Nonnull Map<String, String> attributes,
-                                                   @Nonnull Map<String, ?> eventTags) {
+                                          @Nonnull Map<Experiment, Variation> experimentVariationMap,
+                                          @Nonnull String userId,
+                                          @Nonnull String eventId, // Why is this not used?
+                                          @Nonnull String eventName,
+                                          @Nonnull Map<String, String> attributes,
+                                          @Nonnull Map<String, ?> eventTags) {
 
         if (experimentVariationMap.isEmpty()) {
             return null;
         }
 
-        ArrayList<Decision> decisions = new ArrayList<Decision>();
+        ArrayList<Decision> decisions = new ArrayList<Decision>(experimentVariationMap.size());
         for (Map.Entry<Experiment, Variation> entry : experimentVariationMap.entrySet()) {
-            Decision decision = new Decision(entry.getKey().getLayerId(), entry.getKey().getId(), entry.getValue().getId(), false);
+            Decision decision = new Decision.Builder()
+                    .setCampaignId(entry.getKey().getLayerId())
+                    .setExperimentId(entry.getKey().getId())
+                    .setVariationId(entry.getValue().getId())
+                    .setIsCampaignHoldback(false)
+                    .build();
+
             decisions.add(decision);
         }
 
         EventType eventType = projectConfig.getEventNameMapping().get(eventName);
 
-        Event conversionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), eventType.getId(),
-                eventType.getKey(), null, EventTagUtils.getRevenueValue(eventTags), eventTags, eventType.getKey(), EventTagUtils.getNumericValue(eventTags));
-        Snapshot snapshot = new Snapshot(decisions, Arrays.asList(conversionEvent));
+        Event conversionEvent = new Event.Builder()
+                .setTimestamp(System.currentTimeMillis())
+                .setUuid(UUID.randomUUID().toString())
+                .setEntityId(eventType.getId())
+                .setKey(eventType.getKey())
+                .setRevenue(EventTagUtils.getRevenueValue(eventTags))
+                .setTags(eventTags)
+                .setType(eventType.getKey())
+                .setValue(EventTagUtils.getNumericValue(eventTags))
+                .build();
 
-        Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
-        List<Visitor> visitors = Arrays.asList(visitor);
-        EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, projectConfig.getAccountId(), visitors, projectConfig.getAnonymizeIP(), projectConfig.getProjectId(), projectConfig.getRevision());
+        Snapshot snapshot = new Snapshot.Builder()
+                .setDecisions(decisions)
+                .setEvents(Collections.singletonList((conversionEvent)))
+                .build();
+
+        Visitor visitor = new Visitor.Builder()
+                .setVisitorId(userId)
+                .setAttributes(buildAttributeList(projectConfig, attributes))
+                .setSnapshots(Collections.singletonList(snapshot))
+                .build();
+
+        EventBatch eventBatch = new EventBatch.Builder()
+                .setClientName(clientEngine.getClientEngineValue())
+                .setClientVersion(clientVersion)
+                .setAccountId(projectConfig.getAccountId())
+                .setVisitors(Collections.singletonList(visitor))
+                .setAnonymizeIp(projectConfig.getAnonymizeIP())
+                .setProjectId(projectConfig.getProjectId())
+                .setRevision(projectConfig.getRevision())
+                .build();
+
         String payload = this.serializer.serialize(eventBatch);
         return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
     }
@@ -119,23 +175,29 @@ public class EventBuilder {
 
         for (Map.Entry<String, String> entry : attributes.entrySet()) {
             String attributeId = projectConfig.getAttributeId(projectConfig, entry.getKey());
-            if(attributeId != null) {
-                Attribute attribute = new Attribute(attributeId,
-                        entry.getKey(),
-                        Attribute.CUSTOM_ATTRIBUTE_TYPE,
-                        entry.getValue());
-                attributesList.add(attribute);
+            if(attributeId == null) {
+                continue;
             }
+
+            Attribute attribute = new Attribute.Builder()
+                    .setEntityId(attributeId)
+                    .setKey(entry.getKey())
+                    .setType(Attribute.CUSTOM_ATTRIBUTE_TYPE)
+                    .setValue(entry.getValue())
+                    .build();
+
+            attributesList.add(attribute);
         }
 
         //checks if botFiltering value is not set in the project config file.
         if(projectConfig.getBotFiltering() != null) {
-            Attribute attribute = new Attribute(
-                    ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
-                    ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString(),
-                    Attribute.CUSTOM_ATTRIBUTE_TYPE,
-                    projectConfig.getBotFiltering()
-            );
+            Attribute attribute = new Attribute.Builder()
+                    .setEntityId(ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString())
+                    .setKey(ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString())
+                    .setType(Attribute.CUSTOM_ATTRIBUTE_TYPE)
+                    .setValue(projectConfig.getBotFiltering())
+                    .build();
+
             attributesList.add(attribute);
         }
 

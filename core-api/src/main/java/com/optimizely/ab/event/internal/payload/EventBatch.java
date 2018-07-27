@@ -18,6 +18,7 @@ package com.optimizely.ab.event.internal.payload;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 
 import java.util.List;
@@ -46,26 +47,17 @@ public class EventBatch {
     @JsonProperty("anonymize_ip")
     Boolean anonymizeIp;
     @JsonProperty("client_name")
-    String clientName = ClientEngine.JAVA_SDK.getClientEngineValue();
+    String clientName;
     @JsonProperty("client_version")
     String clientVersion = BuildVersionInfo.VERSION;
     @JsonProperty("project_id")
     String projectId;
     String revision;
 
-    public EventBatch() {
+    @VisibleForTesting
+    public EventBatch() { }
 
-    }
-
-    public EventBatch(String accountId, List<Visitor> visitors, Boolean anonymizeIp, String projectId, String revision) {
-        this.accountId = accountId;
-        this.visitors = visitors;
-        this.anonymizeIp = anonymizeIp;
-        this.projectId = projectId;
-        this.revision = revision;
-    }
-
-    public EventBatch(String clientName, String clientVersion, String accountId, List<Visitor> visitors, Boolean anonymizeIp, String projectId, String revision) {
+    private EventBatch(String clientName, String clientVersion, String accountId, List<Visitor> visitors, Boolean anonymizeIp, String projectId, String revision) {
         this.accountId = accountId;
         this.visitors = visitors;
         this.anonymizeIp = anonymizeIp;
@@ -159,4 +151,55 @@ public class EventBatch {
         result = 31 * result + (revision != null ? revision.hashCode() : 0);
         return result;
     }
+
+    public static class Builder {
+
+        private String clientName = ClientEngine.JAVA_SDK.getClientEngineValue();
+        private String clientVersion = BuildVersionInfo.VERSION;
+        private String accountId;
+        private List<Visitor> visitors;
+        private Boolean anonymizeIp;
+        private String projectId;
+        private String revision;
+
+        public Builder setClientName(String clientName) {
+            this.clientName = clientName;
+            return this;
+        }
+
+        public Builder setClientVersion(String clientVersion) {
+            this.clientVersion = clientVersion;
+            return this;
+        }
+
+        public Builder setAccountId(String accountId) {
+            this.accountId = accountId;
+            return this;
+        }
+
+        public Builder setVisitors(List<Visitor> visitors) {
+            this.visitors = visitors;
+            return this;
+        }
+
+        public Builder setAnonymizeIp(Boolean anonymizeIp) {
+            this.anonymizeIp = anonymizeIp;
+            return this;
+        }
+
+        public Builder setProjectId(String projectId) {
+            this.projectId = projectId;
+            return this;
+        }
+
+        public Builder setRevision(String revision) {
+            this.revision = revision;
+            return this;
+        }
+
+        public EventBatch build() {
+            return new EventBatch(clientName, clientVersion, accountId, visitors, anonymizeIp, projectId, revision);
+        }
+    }
+
 }

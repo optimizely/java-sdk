@@ -17,6 +17,7 @@
 package com.optimizely.ab.event.internal.payload;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.annotations.VisibleForTesting;
 
 public class Attribute {
     public static final String CUSTOM_ATTRIBUTE_TYPE = "custom";
@@ -28,11 +29,10 @@ public class Attribute {
     String type;
     Object value;
 
-    public Attribute() {
+    @VisibleForTesting
+    public Attribute() { }
 
-    }
-
-    public Attribute(String entityId, String key, String type, Object value) {
+    private Attribute(String entityId, String key, String type, Object value) {
         this.entityId = entityId;
         this.key = key;
         this.type = type;
@@ -91,5 +91,37 @@ public class Attribute {
         result = 31 * result + type.hashCode();
         result = 31 * result + value.hashCode();
         return result;
+    }
+
+    public static class Builder {
+
+        private String entityId;
+        private String key;
+        private String type;
+        private Object value;
+
+        public Builder setEntityId(String entityId) {
+            this.entityId = entityId;
+            return this;
+        }
+
+        public Builder setKey(String key) {
+            this.key = key;
+            return this;
+        }
+
+        public Builder setType(String type) {
+            this.type = type;
+            return this;
+        }
+
+        public Builder setValue(Object value) {
+            this.value = value;
+            return this;
+        }
+
+        public Attribute build() {
+            return new Attribute(entityId, key, type, value);
+        }
     }
 }
