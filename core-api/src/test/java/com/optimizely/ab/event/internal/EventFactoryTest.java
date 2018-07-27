@@ -67,7 +67,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(Parameterized.class)
-public class EventBuilderTest {
+public class EventFactoryTest {
 
     @Parameterized.Parameters
     public static Collection<Object[]> data() throws IOException {
@@ -86,13 +86,13 @@ public class EventBuilderTest {
     private Gson gson = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .create();
-    private EventBuilder builder = new EventBuilder();
+    private EventFactory factory = new EventFactory();
 
     private static String userId = "userId";
     private int datafileVersion;
     private ProjectConfig validProjectConfig;
 
-    public EventBuilderTest(int datafileVersion,
+    public EventFactoryTest(int datafileVersion,
                             ProjectConfig validProjectConfig) {
         this.datafileVersion = datafileVersion;
         this.validProjectConfig = validProjectConfig;
@@ -142,11 +142,11 @@ public class EventBuilderTest {
         else
             expectedUserFeatures = Arrays.asList(userAgentFeature, feature);
 
-        LogEvent impressionEvent = builder.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation,
+        LogEvent impressionEvent = factory.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation,
                 userId, attributeMap);
 
         // verify that request endpoint is correct
-        assertThat(impressionEvent.getEndpointUrl(), is(EventBuilder.EVENT_ENDPOINT));
+        assertThat(impressionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
 
         EventBatch eventBatch = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
@@ -201,11 +201,11 @@ public class EventBuilderTest {
         else
             expectedUserFeatures = Arrays.asList(feature);
 
-        LogEvent impressionEvent = builder.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation,
+        LogEvent impressionEvent = factory.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation,
                 userId, attributeMap);
 
         // verify that request endpoint is correct
-        assertThat(impressionEvent.getEndpointUrl(), is(EventBuilder.EVENT_ENDPOINT));
+        assertThat(impressionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
 
         EventBatch eventBatch = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
@@ -237,7 +237,7 @@ public class EventBuilderTest {
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
 
         LogEvent impressionEvent =
-                builder.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation, "userId",
+                factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation, "userId",
                         Collections.singletonMap("unknownAttribute", "blahValue"));
 
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
@@ -250,12 +250,12 @@ public class EventBuilderTest {
     }
 
     /**
-     * Verify that supplying {@link EventBuilder} with a custom client engine and client version results in impression
+     * Verify that supplying {@link EventFactory} with a custom client engine and client version results in impression
      * events being sent with the overriden values.
      */
     @Test
     public void createImpressionEventAndroidClientEngineClientVersion() throws Exception {
-        EventBuilder builder = new EventBuilder(EventBatch.ClientEngine.ANDROID_SDK, "0.0.0");
+        EventFactory factory = new EventFactory(EventBatch.ClientEngine.ANDROID_SDK, "0.0.0");
         ProjectConfig projectConfig = validProjectConfigV2();
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
@@ -263,7 +263,7 @@ public class EventBuilderTest {
         String userId = "userId";
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
 
-        LogEvent impressionEvent = builder.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation,
+        LogEvent impressionEvent = factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation,
                 userId, attributeMap);
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
@@ -272,13 +272,13 @@ public class EventBuilderTest {
     }
 
     /**
-     * Verify that supplying {@link EventBuilder} with a custom Android TV client engine and client version
+     * Verify that supplying {@link EventFactory} with a custom Android TV client engine and client version
      * results in impression events being sent with the overriden values.
      */
     @Test
     public void createImpressionEventAndroidTVClientEngineClientVersion() throws Exception {
         String clientVersion = "0.0.0";
-        EventBuilder builder = new EventBuilder(EventBatch.ClientEngine.ANDROID_TV_SDK, clientVersion);
+        EventFactory factory = new EventFactory(EventBatch.ClientEngine.ANDROID_TV_SDK, clientVersion);
         ProjectConfig projectConfig = validProjectConfigV2();
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
@@ -286,7 +286,7 @@ public class EventBuilderTest {
         String userId = "userId";
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
 
-        LogEvent impressionEvent = builder.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation,
+        LogEvent impressionEvent = factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation,
                 userId, attributeMap);
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
@@ -332,7 +332,7 @@ public class EventBuilderTest {
                 eventType.getKey(),
                 userId,
                 attributeMap);
-        LogEvent conversionEvent = builder.createConversionEvent(
+        LogEvent conversionEvent = factory.createConversionEvent(
                 validProjectConfig,
                 experimentVariationMap,
                 userId,
@@ -357,7 +357,7 @@ public class EventBuilderTest {
         }
 
         // verify that the request endpoint is correct
-        assertThat(conversionEvent.getEndpointUrl(), is(EventBuilder.EVENT_ENDPOINT));
+        assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
@@ -435,7 +435,7 @@ public class EventBuilderTest {
                 eventType.getKey(),
                 userId,
                 attributeMap);
-        LogEvent conversionEvent = builder.createConversionEvent(
+        LogEvent conversionEvent = factory.createConversionEvent(
                 validProjectConfig,
                 experimentVariationMap,
                 userId,
@@ -460,7 +460,7 @@ public class EventBuilderTest {
         }
 
         // verify that the request endpoint is correct
-        assertThat(conversionEvent.getEndpointUrl(), is(EventBuilder.EVENT_ENDPOINT));
+        assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
@@ -541,7 +541,7 @@ public class EventBuilderTest {
                 userId,
                 attributeMap);
 
-        LogEvent conversionEvent = builder.createConversionEvent(validProjectConfig, experimentVariationMap, userId,
+        LogEvent conversionEvent = factory.createConversionEvent(validProjectConfig, experimentVariationMap, userId,
                 eventType.getId(), eventType.getKey(), attributeMap,
                 eventTagMap);
 
@@ -583,7 +583,7 @@ public class EventBuilderTest {
                 eventType.getKey(),
                 whitelistedUserId,
                 Collections.<String, String>emptyMap());
-        LogEvent conversionEvent = builder.createConversionEvent(
+        LogEvent conversionEvent = factory.createConversionEvent(
                 validProjectConfig,
                 experimentVariationMap,
                 whitelistedUserId,
@@ -634,7 +634,7 @@ public class EventBuilderTest {
                 eventType.getKey(),
                 whitelistedUserId,
                 Collections.<String, String>emptyMap());
-        LogEvent conversionEvent = builder.createConversionEvent(
+        LogEvent conversionEvent = factory.createConversionEvent(
                 validProjectConfig,
                 experimentVariationMap,
                 whitelistedUserId,
@@ -651,12 +651,12 @@ public class EventBuilderTest {
     }
 
     /**
-     * Verify that supplying {@link EventBuilder} with a custom client engine and client version results in conversion
+     * Verify that supplying {@link EventFactory} with a custom client engine and client version results in conversion
      * events being sent with the overriden values.
      */
     @Test
     public void createConversionEventAndroidClientEngineClientVersion() throws Exception {
-        EventBuilder builder = new EventBuilder(EventBatch.ClientEngine.ANDROID_SDK, "0.0.0");
+        EventFactory factory = new EventFactory(EventBatch.ClientEngine.ANDROID_SDK, "0.0.0");
         Attribute attribute = validProjectConfig.getAttributes().get(0);
         EventType eventType = validProjectConfig.getEventTypes().get(0);
 
@@ -680,7 +680,7 @@ public class EventBuilderTest {
                 userId,
                 attributeMap);
 
-        LogEvent conversionEvent = builder.createConversionEvent(
+        LogEvent conversionEvent = factory.createConversionEvent(
                 validProjectConfig,
                 experimentVariationMap,
                 userId,
@@ -696,13 +696,13 @@ public class EventBuilderTest {
     }
 
     /**
-     * Verify that supplying {@link EventBuilder} with a Android TV client engine and client version results in
+     * Verify that supplying {@link EventFactory} with a Android TV client engine and client version results in
      * conversion events being sent with the overriden values.
      */
     @Test
     public void createConversionEventAndroidTVClientEngineClientVersion() throws Exception {
         String clientVersion = "0.0.0";
-        EventBuilder builder = new EventBuilder(EventBatch.ClientEngine.ANDROID_TV_SDK, clientVersion);
+        EventFactory factory = new EventFactory(EventBatch.ClientEngine.ANDROID_TV_SDK, clientVersion);
         ProjectConfig projectConfig = validProjectConfigV2();
         Attribute attribute = projectConfig.getAttributes().get(0);
         EventType eventType = projectConfig.getEventTypes().get(0);
@@ -721,7 +721,7 @@ public class EventBuilderTest {
             experimentVariationMap.put(experiment, experiment.getVariations().get(0));
         }
 
-        LogEvent conversionEvent = builder.createConversionEvent(
+        LogEvent conversionEvent = factory.createConversionEvent(
                 projectConfig,
                 experimentVariationMap,
                 userId,
@@ -737,15 +737,15 @@ public class EventBuilderTest {
 
     /**
      * Verify that supplying an empty Experiment Variation map to
-     * {@link EventBuilder#createConversionEvent(ProjectConfig, Map, String, String, String, Map, Map)}
+     * {@link EventFactory#createConversionEvent(ProjectConfig, Map, String, String, String, Map, Map)}
      * returns a null {@link LogEvent}.
      */
     @Test
     public void createConversionEventReturnsNullWhenExperimentVariationMapIsEmpty() {
         EventType eventType = validProjectConfig.getEventTypes().get(0);
-        EventBuilder builder = new EventBuilder();
+        EventFactory factory = new EventFactory();
 
-        LogEvent conversionEvent = builder.createConversionEvent(
+        LogEvent conversionEvent = factory.createConversionEvent(
                 validProjectConfig,
                 Collections.<Experiment, Variation>emptyMap(),
                 userId,
@@ -802,11 +802,11 @@ public class EventBuilderTest {
             expectedUserFeatures.add(getBotFilteringAttribute());
         }
 
-        LogEvent impressionEvent = builder.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation,
+        LogEvent impressionEvent = factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation,
                 userId, attributeMap);
 
         // verify that request endpoint is correct
-        assertThat(impressionEvent.getEndpointUrl(), is(EventBuilder.EVENT_ENDPOINT));
+        assertThat(impressionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
 
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
@@ -870,7 +870,7 @@ public class EventBuilderTest {
                 userId,
                 attributeMap);
 
-        LogEvent conversionEvent = builder.createConversionEvent(
+        LogEvent conversionEvent = factory.createConversionEvent(
                 validProjectConfig,
                 experimentVariationMap,
                 userId,
@@ -895,7 +895,7 @@ public class EventBuilderTest {
         }
 
         // verify that the request endpoint is correct
-        assertThat(conversionEvent.getEndpointUrl(), is(EventBuilder.EVENT_ENDPOINT));
+        assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 

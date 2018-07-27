@@ -41,8 +41,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class EventBuilder {
-    private static final Logger logger = LoggerFactory.getLogger(EventBuilder.class);
+public class EventFactory {
+    private static final Logger logger = LoggerFactory.getLogger(EventFactory.class);
     static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";  // Should be part of the datafile
     static final String  ACTIVATE_EVENT_KEY = "campaign_activated";
 
@@ -52,11 +52,11 @@ public class EventBuilder {
     @VisibleForTesting
     public final EventBatch.ClientEngine clientEngine;
 
-    public EventBuilder() {
+    public EventFactory() {
         this(EventBatch.ClientEngine.JAVA_SDK, BuildVersionInfo.VERSION);
     }
 
-    public EventBuilder(EventBatch.ClientEngine clientEngine, String clientVersion) {
+    public EventFactory(EventBatch.ClientEngine clientEngine, String clientVersion) {
         this.clientEngine = clientEngine;
         this.clientVersion = clientVersion;
         this.serializer = DefaultJsonSerializer.getInstance();

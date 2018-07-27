@@ -23,7 +23,7 @@ import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
-import com.optimizely.ab.event.internal.EventBuilder;
+import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
@@ -114,7 +114,7 @@ public class OptimizelyBuilderTest {
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
             .build();
 
-        assertThat(((EventBuilder)optimizelyClient.eventBuilder).clientEngine, is(ClientEngine.JAVA_SDK));
+        assertThat(((EventFactory)optimizelyClient.eventFactory).clientEngine, is(ClientEngine.JAVA_SDK));
     }
 
     @Test
@@ -123,7 +123,7 @@ public class OptimizelyBuilderTest {
             .withClientEngine(ClientEngine.ANDROID_SDK)
             .build();
 
-        assertThat(((EventBuilder)optimizelyClient.eventBuilder).clientEngine, is(ClientEngine.ANDROID_SDK));
+        assertThat(((EventFactory)optimizelyClient.eventFactory).clientEngine, is(ClientEngine.ANDROID_SDK));
     }
 
     @Test
@@ -132,7 +132,7 @@ public class OptimizelyBuilderTest {
             .withClientEngine(ClientEngine.ANDROID_TV_SDK)
             .build();
 
-        assertThat(((EventBuilder)optimizelyClient.eventBuilder).clientEngine, is(ClientEngine.ANDROID_TV_SDK));
+        assertThat(((EventFactory)optimizelyClient.eventFactory).clientEngine, is(ClientEngine.ANDROID_TV_SDK));
     }
 
     @Test
@@ -140,7 +140,7 @@ public class OptimizelyBuilderTest {
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
             .build();
 
-        assertThat(((EventBuilder)optimizelyClient.eventBuilder).clientVersion, is(BuildVersionInfo.VERSION));
+        assertThat(((EventFactory)optimizelyClient.eventFactory).clientVersion, is(BuildVersionInfo.VERSION));
     }
 
     @Test
@@ -149,7 +149,7 @@ public class OptimizelyBuilderTest {
             .withClientVersion("0.0.0")
             .build();
 
-        assertThat(((EventBuilder)optimizelyClient.eventBuilder).clientVersion, is("0.0.0"));
+        assertThat(((EventFactory)optimizelyClient.eventFactory).clientVersion, is("0.0.0"));
     }
 
     @SuppressFBWarnings(value="NP_NONNULL_PARAM_VIOLATION", justification="Testing nullness contract violation")
