@@ -17,6 +17,7 @@
 package com.optimizely.ab.event.internal.payload;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.annotations.VisibleForTesting;
 
 public class Decision {
     @JsonProperty("campaign_id")
@@ -28,15 +29,14 @@ public class Decision {
     @JsonProperty("is_campaign_holdback")
     boolean isCampaignHoldback;
 
+    @VisibleForTesting
+    public Decision() { }
+
     public Decision(String campaignId, String experimentId, String variationId, boolean isCampaignHoldback) {
         this.campaignId = campaignId;
         this.experimentId = experimentId;
         this.variationId = variationId;
         this.isCampaignHoldback = isCampaignHoldback;
-    }
-
-    public Decision() {
-
     }
 
     public String getCampaignId() {
@@ -67,6 +67,7 @@ public class Decision {
         if (!experimentId.equals(that.experimentId)) return false;
         return variationId.equals(that.variationId);
     }
+
     @Override
     public int hashCode() {
         int result = campaignId.hashCode();
@@ -74,5 +75,37 @@ public class Decision {
         result = 31 * result + variationId.hashCode();
         result = 31 * result + (isCampaignHoldback ? 1 : 0);
         return result;
+    }
+
+    public static class Builder {
+
+        private String campaignId;
+        private String experimentId;
+        private String variationId;
+        private boolean isCampaignHoldback;
+
+        public Builder setCampaignId(String campaignId) {
+            this.campaignId = campaignId;
+            return this;
+        }
+
+        public Builder setExperimentId(String experimentId) {
+            this.experimentId = experimentId;
+            return this;
+        }
+
+        public Builder setVariationId(String variationId) {
+            this.variationId = variationId;
+            return this;
+        }
+
+        public Builder setIsCampaignHoldback(boolean isCampaignHoldback) {
+            this.isCampaignHoldback = isCampaignHoldback;
+            return this;
+        }
+
+        public Decision build() {
+            return new Decision(campaignId, experimentId, variationId, isCampaignHoldback);
+        }
     }
 }

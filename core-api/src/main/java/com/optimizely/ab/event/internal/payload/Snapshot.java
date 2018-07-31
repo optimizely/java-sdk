@@ -17,6 +17,7 @@
 package com.optimizely.ab.event.internal.payload;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.annotations.VisibleForTesting;
 
 import java.util.List;
 
@@ -26,9 +27,8 @@ public class Snapshot {
     @JsonProperty("activation_timestamp")
     Long activationTimestamp;
 
-    public Snapshot() {
-
-    }
+    @VisibleForTesting
+    public Snapshot() { }
 
     public Snapshot(List<Decision> decisions, List<Event> events) {
         this.decisions = decisions;
@@ -82,5 +82,25 @@ public class Snapshot {
             result = 31 * result + (int) (activationTimestamp ^ (activationTimestamp >>> 32));
         }
         return result;
+    }
+
+    public static class Builder {
+
+        private List<Decision> decisions;
+        private List<Event> events;
+
+        public Builder setDecisions(List<Decision> decisions) {
+            this.decisions = decisions;
+            return this;
+        }
+
+        public Builder setEvents(List<Event> events) {
+            this.events = events;
+            return this;
+        }
+
+        public Snapshot build() {
+            return new Snapshot(decisions, events);
+        }
     }
 }

@@ -35,9 +35,8 @@ import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
-import com.optimizely.ab.event.internal.EventBuilder;
+import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
-import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +81,7 @@ public class Optimizely {
     private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
 
     @VisibleForTesting final DecisionService decisionService;
-    @VisibleForTesting final EventBuilder eventBuilder;
+    @VisibleForTesting final EventFactory eventFactory;
     @VisibleForTesting final ProjectConfig projectConfig;
     @VisibleForTesting final EventHandler eventHandler;
     @VisibleForTesting final ErrorHandler errorHandler;
@@ -93,13 +92,13 @@ public class Optimizely {
     private Optimizely(@Nonnull ProjectConfig projectConfig,
                        @Nonnull DecisionService decisionService,
                        @Nonnull EventHandler eventHandler,
-                       @Nonnull EventBuilder eventBuilder,
+                       @Nonnull EventFactory eventFactory,
                        @Nonnull ErrorHandler errorHandler,
                        @Nullable UserProfileService userProfileService) {
         this.projectConfig = projectConfig;
         this.decisionService = decisionService;
         this.eventHandler = eventHandler;
-        this.eventBuilder = eventBuilder;
+        this.eventFactory = eventFactory;
         this.errorHandler = errorHandler;
         this.userProfileService = userProfileService;
     }
@@ -193,7 +192,7 @@ public class Optimizely {
                                 @Nonnull Map<String, String> filteredAttributes,
                                 @Nonnull Variation variation) {
         if (experiment.isRunning()) {
-            LogEvent impressionEvent = eventBuilder.createImpressionEvent(
+            LogEvent impressionEvent = eventFactory.createImpressionEvent(
                     projectConfig,
                     experiment,
                     variation,
@@ -279,7 +278,7 @@ public class Optimizely {
         }
 
         // create the conversion event request parameters, then dispatch
-        LogEvent conversionEvent = eventBuilder.createConversionEvent(
+        LogEvent conversionEvent = eventFactory.createConversionEvent(
                 projectConfig,
                 experimentVariationMap,
                 userId,
@@ -829,7 +828,7 @@ public class Optimizely {
         private DecisionService decisionService;
         private ErrorHandler errorHandler;
         private EventHandler eventHandler;
-        private EventBuilder eventBuilder;
+        private EventFactory eventFactory;
         private ClientEngine clientEngine;
         private String clientVersion;
         private ProjectConfig projectConfig;
@@ -871,8 +870,8 @@ public class Optimizely {
             return this;
         }
 
-        protected Builder withEventBuilder(EventBuilder eventBuilder) {
-            this.eventBuilder = eventBuilder;
+        protected Builder withEventBuilder(EventFactory eventFactory) {
+            this.eventFactory = eventFactory;
             return this;
         }
 
@@ -900,8 +899,8 @@ public class Optimizely {
             }
 
 
-            if (eventBuilder == null) {
-                eventBuilder = new EventBuilder(clientEngine, clientVersion);
+            if (eventFactory == null) {
+                eventFactory = new EventFactory(clientEngine, clientVersion);
             }
 
             if (errorHandler == null) {
@@ -912,7 +911,7 @@ public class Optimizely {
                 decisionService = new DecisionService(bucketer, errorHandler, projectConfig, userProfileService);
             }
 
-            Optimizely optimizely = new Optimizely(projectConfig, decisionService, eventHandler, eventBuilder, errorHandler, userProfileService);
+            Optimizely optimizely = new Optimizely(projectConfig, decisionService, eventHandler, eventFactory, errorHandler, userProfileService);
             optimizely.initialize();
             return optimizely;
         }
