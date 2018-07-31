@@ -45,7 +45,26 @@ import java.util.UUID;
 public class EventBuilder {
     private static final Logger logger = LoggerFactory.getLogger(EventBuilder.class);
     static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";
-    static final String  ACTIVATE_EVENT_KEY = "campaign_activated";
+    static final String ACTIVATE_EVENT_KEY = "campaign_activated";
+    // An Event Template used to send events.  The template approach makes activate and track events
+    // as fast as possible.
+    // Swagger definition of events json: https://api.optimizely.com/swagger/v1/events.json
+    static final String EVENT_TEMPLATE = "{\"revision\":\"${BATCHEVENT.REVISION}\"," + // Batch Event
+            "\"visitors\":[" + // Visitors
+            "{\"attributes\":${VISITOR.ATTRIBUTES},\"snapshots\":[" + // snapshots
+            "{\"decisions\":[" + // decisions
+            "{\"campaign_id\":\"${DECISION.CAMPAIGNID}\",\"experiment_id\":\"${DECISION.EXPERIMENTID}\"," +
+            "\"is_campaign_holdback\":${DECISION.HOLDBACK},\"variation_id\":\"${DECISION.VARIATIONID}\"}" +
+            "]," + // end of decision
+            "\"events\":[" + // events
+            "{\"key\":\"${EVENT.KEY}\",\"timestamp\":${EVENT.TIMESTAMP},\"type\":\"${EVENT.TYPE}\"," +
+            "\"uuid\":\"${EVENT.UUID}\",\"entity_id\":\"${EVENT.ENTITYID}\"}" +
+            "]}]" + // end of events end of snapshots
+            ",\"visitor_id\":\"${VISITOR.VISITORID}\"" +
+            "}]," +// end of visitors
+            "\"account_id\":\"${EVENTBATCH.ACCOUNTID}\",\"anonymize_ip\":${EVENTBATCH.ANONIP}," +
+            "\"client_name\":\"${EVENTBATCH.CLIENTNAME}\",\"client_version\":\"${EVENTBATCH.CLIENTVERSION}\"," +
+            "\"project_id\":\"${EVENTBATCH.PROJECTID}\"}";
 
     private Serializer serializer;
     @VisibleForTesting
@@ -70,16 +89,28 @@ public class EventBuilder {
                                                    @Nonnull String userId,
                                                    @Nonnull Map<String, String> attributes) {
 
-        Decision decision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(),
-                variation.getId(), false);
-        Event impressionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), activatedExperiment.getLayerId(),
-                ACTIVATE_EVENT_KEY, null, null, null, ACTIVATE_EVENT_KEY, null);
-        Snapshot snapshot = new Snapshot(Arrays.asList(decision), Arrays.asList(impressionEvent));
+        String payload = String.copyValueOf(EVENT_TEMPLATE.toCharArray());
+        payload = payload.replace("${DECISION.CAMPAIGNID}", activatedExperiment.getLayerId());
+        payload = payload.replace("${DECISION.EXPERIMENTID}", activatedExperiment.getId());
+        payload = payload.replace("${DECISION.VARIATIONID}", variation.getId());
+        payload = payload.replace("${DECISION.HOLDBACK}", "false");
 
-        Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
-        List<Visitor> visitors = Arrays.asList(visitor);
-        EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, projectConfig.getAccountId(), visitors, projectConfig.getAnonymizeIP(), projectConfig.getProjectId(), projectConfig.getRevision());
-        String payload = this.serializer.serialize(eventBatch);
+        payload = payload.replace("${EVENT.TIMESTAMP}", Long.toString(System.currentTimeMillis()));
+        payload = payload.replace("${EVENT.UUID}", UUID.randomUUID().toString());
+        payload = payload.replace("${EVENT.ENTITYID}", activatedExperiment.getLayerId());
+        payload = payload.replace("${EVENT.KEY}", ACTIVATE_EVENT_KEY);
+        payload = payload.replace("${EVENT.TYPE}", ACTIVATE_EVENT_KEY);
+
+        payload = payload.replace("${VISITOR.VISITORID}", userId);
+        payload = payload.replace("${VISITOR.ATTRIBUTES}", buildAttributeStrings(buildAttributeList(projectConfig, attributes)));
+
+        payload = payload.replace("${EVENTBATCH.CLIENTNAME}", clientEngine.getClientEngineValue());
+        payload = payload.replace("${EVENTBATCH.CLIENTVERSION}", clientVersion);
+        payload = payload.replace("${EVENTBATCH.ANONIP}", projectConfig.getAnonymizeIP() ? "true" : "false");
+        payload = payload.replace("${EVENTBATCH.PROJECTID}", projectConfig.getProjectId());
+        payload = payload.replace("${BATCHEVENT.REVISION}",  projectConfig.getRevision());
+        payload = payload.replace("${EVENTBATCH.ACCOUNTID}",  projectConfig.getAccountId());
+
         return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
     }
 
@@ -140,5 +171,60 @@ public class EventBuilder {
         }
 
         return attributesList;
+    }
+
+    String buildAttributeStrings(List<Attribute> attributes) {
+        StringBuilder stringBuilder = new StringBuilder("[");
+
+        if (attributes == null || attributes.size() == 0) {
+            stringBuilder.append("]");
+            return stringBuilder.toString();
+        }
+
+        for (Attribute attribute : attributes) {
+            stringBuilder.append("{");
+
+            stringBuilder.append("\"entity_id\":");
+            stringBuilder.append("\"");
+            stringBuilder.append(attribute.getEntityId());
+            stringBuilder.append("\"");
+            stringBuilder.append(",");
+
+            stringBuilder.append("\"key\":");
+            stringBuilder.append("\"");
+            stringBuilder.append(attribute.getKey().replaceAll("\"", "\\" + "\""));
+            stringBuilder.append("\"");
+            stringBuilder.append(",");
+
+            stringBuilder.append("\"type\":");
+            stringBuilder.append("\"");
+            stringBuilder.append(attribute.getType());
+            stringBuilder.append("\"");
+            stringBuilder.append(",");
+
+            stringBuilder.append("\"value\":");
+            boolean isString = attribute.getValue() instanceof String;
+
+            if (isString) {
+                stringBuilder.append("\"");
+
+                stringBuilder.append(((String)attribute.getValue()).replaceAll("\"", "\\" + "\""));
+
+                stringBuilder.append("\"");
+            }
+            else {
+                stringBuilder.append(attribute.getValue());
+            }
+
+            stringBuilder.append("}");
+
+            if (!attribute.equals(attributes.get(attributes.size()-1))) {
+                stringBuilder.append(",");
+            }
+        }
+
+        stringBuilder.append("]");
+
+        return stringBuilder.toString();
     }
 }

@@ -151,7 +151,8 @@ public class EventBuilderTest {
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getCampaignId(),
                 is(activatedExperiment.getLayerId()));
         assertThat(eventBatch.getAccountId(), is(validProjectConfig.getAccountId()));
-        assertThat(eventBatch.getVisitors().get(0).getAttributes(), is(expectedUserFeatures));
+        assertThat(eventBatch.getVisitors().get(0).getAttributes(), containsInAnyOrder(expectedUserFeatures.toArray()));
+
         assertThat(eventBatch.getClientName(), is(EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue()));
         assertThat(eventBatch.getClientVersion(), is(BuildVersionInfo.VERSION));
         assertNull(eventBatch.getVisitors().get(0).getSessionId());
@@ -886,7 +887,7 @@ public class EventBuilderTest {
         else
             expectedUserFeatures = Arrays.asList(attribute1, attribute2);
 
-        assertEquals(conversion.getVisitors().get(0).getAttributes(), expectedUserFeatures);
+        assertThat(conversion.getVisitors().get(0).getAttributes(), containsInAnyOrder(expectedUserFeatures.toArray()));
         assertThat(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions(), containsInAnyOrder(expectedDecisions.toArray()));
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getEntityId(), eventType.getId());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getType(), eventType.getKey());
