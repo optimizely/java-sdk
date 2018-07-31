@@ -41,6 +41,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class EventBuilder {
     private static final Logger logger = LoggerFactory.getLogger(EventBuilder.class);
@@ -53,6 +57,8 @@ public class EventBuilder {
     @VisibleForTesting
     public final EventBatch.ClientEngine clientEngine;
 
+    private Future<EventBatch> primedEvent = null;
+
     public EventBuilder() {
         this(EventBatch.ClientEngine.JAVA_SDK, BuildVersionInfo.VERSION);
     }
@@ -61,8 +67,63 @@ public class EventBuilder {
         this.clientEngine = clientEngine;
         this.clientVersion = clientVersion;
         this.serializer = DefaultJsonSerializer.getInstance();
+
+        Callable<EventBatch> callable = new Callable<EventBatch>() {
+            @Override
+            public EventBatch call() throws Exception {
+                EventBatch eventBatch = null;
+                try {
+                    eventBatch = primeSerializer();
+                } catch (Exception e) {
+                    logger.error("Problem priming the JsonSerializer ", e);
+                }
+                finally {
+                    return eventBatch;
+                }
+            }
+        };
+
+        ExecutorService ex = Executors.newSingleThreadExecutor();
+        primedEvent = ex.submit(callable);
+        ex.shutdown();
+
     }
 
+    /**
+     * primeSerializer primes the JsonSerializer and Json annotations from the EventBatch object and it's contained
+     * hierarchy.  The introspection overhead is very high for the first time hit.  This sets up all the serializer
+     * caching, taking the burden off of the first time hit in sending an event.
+     */
+    private EventBatch primeSerializer() {
+        Decision decision = new Decision("", "",
+                "", false);
+        Event impressionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), "",
+                ACTIVATE_EVENT_KEY, null, null, null, ACTIVATE_EVENT_KEY, null);
+
+        Snapshot snapshot = new Snapshot(Arrays.asList(decision), Arrays.asList(impressionEvent));
+        Visitor visitor = new Visitor("", null, new ArrayList<Attribute>(), Arrays.asList(snapshot));
+        List<Visitor> visitors = Arrays.asList(visitor);
+        EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, "", visitors, true, "", "");
+        String payload = this.serializer.serialize(eventBatch);
+        logger.debug("JSON Serializer primed for payload {}", payload);
+
+        return  eventBatch;
+    }
+
+    private void waitForPrimedEvent() {
+        if (primedEvent != null) {
+            logger.debug("had to wait for prime");
+            try {
+                primedEvent.get();
+            }
+            catch (Exception e) {
+                logger.error("Problem getting lock ", e);
+            }
+            finally {
+                primedEvent = null;
+            }
+        }
+    }
 
     public LogEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
                                                    @Nonnull Experiment activatedExperiment,
@@ -70,12 +131,13 @@ public class EventBuilder {
                                                    @Nonnull String userId,
                                                    @Nonnull Map<String, String> attributes) {
 
+        waitForPrimedEvent();
+
         Decision decision = new Decision(activatedExperiment.getLayerId(), activatedExperiment.getId(),
                 variation.getId(), false);
         Event impressionEvent = new Event(System.currentTimeMillis(),UUID.randomUUID().toString(), activatedExperiment.getLayerId(),
                 ACTIVATE_EVENT_KEY, null, null, null, ACTIVATE_EVENT_KEY, null);
         Snapshot snapshot = new Snapshot(Arrays.asList(decision), Arrays.asList(impressionEvent));
-
         Visitor visitor = new Visitor(userId, null, buildAttributeList(projectConfig, attributes), Arrays.asList(snapshot));
         List<Visitor> visitors = Arrays.asList(visitor);
         EventBatch eventBatch = new EventBatch(clientEngine.getClientEngineValue(), clientVersion, projectConfig.getAccountId(), visitors, projectConfig.getAnonymizeIP(), projectConfig.getProjectId(), projectConfig.getRevision());
