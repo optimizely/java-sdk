@@ -36,12 +36,14 @@ import com.optimizely.ab.error.RaiseExceptionErrorHandler;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.EventFactory;
+import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.notification.ActivateNotificationListener;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.notification.TrackNotificationListener;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -134,6 +136,8 @@ public class OptimizelyTest {
     private static final String testUserId = "userId";
     private static final String testBucketingId = "bucketingId";
     private static final String testBucketingIdKey = ControlAttribute.BUCKETING_ATTRIBUTE.toString();
+    private static final Map<String, String> testParams = Collections.singletonMap("test", "params");
+    private static final LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, null);
 
     private int datafileVersion;
     private String validDatafile;
@@ -185,10 +189,7 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
 
-        testParams.put("test", "params");
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation, testUserId,
                 testUserAttributes))
                 .thenReturn(logEventToDispatch);
@@ -305,10 +306,6 @@ public class OptimizelyTest {
         testUserAttributes.put(testBucketingIdKey,
                 testBucketingId);
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
-
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(forcedVariation),
                 eq(testUserId), eq(testUserAttributes)))
                 .thenReturn(logEventToDispatch);
@@ -361,10 +358,6 @@ public class OptimizelyTest {
         testUserAttributes.put(testBucketingIdKey,
                 testBucketingId);
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
-
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(forcedVariation),
                 eq(testUserId), eq(testUserAttributes)))
                 .thenReturn(logEventToDispatch);
@@ -413,10 +406,6 @@ public class OptimizelyTest {
             testUserAttributes.put("browser_type", "chrome");
         }
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
-
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(forcedVariation),
                 eq(testUserId), eq(testUserAttributes)))
                 .thenReturn(logEventToDispatch);
@@ -463,9 +452,6 @@ public class OptimizelyTest {
 
         testUserAttributes.put(testBucketingIdKey, testBucketingId);
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
                 eq(testUserId), eq(testUserAttributes)))
                 .thenReturn(logEventToDispatch);
@@ -550,9 +536,6 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
                 eq(testUserId), anyMapOf(String.class, String.class)))
                 .thenReturn(logEventToDispatch);
@@ -618,9 +601,6 @@ public class OptimizelyTest {
         }
         testUserAttributes.put("unknownAttribute", "dimValue");
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
                 eq(testUserId), anyMapOf(String.class, String.class)))
                 .thenReturn(logEventToDispatch);
@@ -675,9 +655,6 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createImpressionEvent(eq(noAudienceProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
                 eq(testUserId), eq(Collections.<String, String>emptyMap())))
                 .thenReturn(logEventToDispatch);
@@ -726,9 +703,6 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
                 eq(testUserId), anyMapOf(String.class, String.class)))
                 .thenReturn(logEventToDispatch);
@@ -1339,8 +1313,6 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
         Map<String, String> attributes = ImmutableMap.of(attribute.getKey(), "attributeValue");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
@@ -1348,7 +1320,7 @@ public class OptimizelyTest {
                 eventType.getKey(),
                 genericUserId,
                 attributes);
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+
         when(mockEventFactory.createConversionEvent(
                 eq(validProjectConfig),
                 eq(experimentVariationMap),
@@ -1412,15 +1384,13 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockDecisionService,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+
         when(mockEventFactory.createConversionEvent(
                 eq(validProjectConfig),
                 eq(experimentVariationMap),
@@ -1484,15 +1454,13 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockDecisionService,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+
         when(mockEventFactory.createConversionEvent(
                 eq(validProjectConfig),
                 eq(experimentVariationMap),
@@ -1556,15 +1524,13 @@ public class OptimizelyTest {
                 .withErrorHandler(new RaiseExceptionErrorHandler())
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockDecisionService,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+
         when(mockEventFactory.createConversionEvent(
                 eq(validProjectConfig),
                 eq(experimentVariationMap),
@@ -1627,9 +1593,6 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
-
         Map<String, Object> eventTags = new HashMap<String, Object>();
         eventTags.put("int_param", 123);
         eventTags.put("string_param", "123");
@@ -1642,7 +1605,6 @@ public class OptimizelyTest {
                 genericUserId,
                 Collections.<String, String>emptyMap());
 
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createConversionEvent(
                 eq(validProjectConfig),
                 eq(experimentVariationMap),
@@ -1710,15 +1672,13 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockDecisionService,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+
         when(mockEventFactory.createConversionEvent(
                 eq(validProjectConfig),
                 eq(experimentVariationMap),
@@ -1775,15 +1735,13 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockDecisionService,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+
         when(mockEventFactory.createConversionEvent(
                 eq(validProjectConfig),
                 eq(experimentVariationMap),
@@ -1826,15 +1784,13 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockDecisionService,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+
         when(mockEventFactory.createConversionEvent(
                 eq(validProjectConfig),
                 eq(experimentVariationMap),
@@ -1983,8 +1939,6 @@ public class OptimizelyTest {
                 .withEventBuilder(mockEventFactory)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 noAudienceProjectConfig,
                 client.decisionService,
@@ -1995,7 +1949,6 @@ public class OptimizelyTest {
         // Create an Argument Captor to ensure we are creating a correct experiment variation map
         ArgumentCaptor<Map> experimentVariationMapCaptor = ArgumentCaptor.forClass(Map.class);
 
-        LogEvent conversionEvent = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createConversionEvent(
                 eq(noAudienceProjectConfig),
                 experimentVariationMapCaptor.capture(),
@@ -2004,7 +1957,7 @@ public class OptimizelyTest {
                 eq(eventType.getKey()),
                 eq(Collections.<String, String>emptyMap()),
                 eq(Collections.<String, Object>emptyMap())
-        )).thenReturn(conversionEvent);
+        )).thenReturn(logEventToDispatch);
 
         List<Experiment> eventExperiments = noAudienceProjectConfig.getExperimentsForEventKey(eventType.getKey());
         for (Experiment experiment : eventExperiments) {
@@ -2020,7 +1973,7 @@ public class OptimizelyTest {
         // The event has 1 launched experiment and 1 running experiment.
         // It should send a track event with the running experiment
         client.track(eventType.getKey(), genericUserId, Collections.<String, String>emptyMap());
-        verify(client.eventHandler).dispatchEvent(eq(conversionEvent));
+        verify(client.eventHandler).dispatchEvent(eq(logEventToDispatch));
 
         // Check the argument captor got the correct arguments
         Map<Experiment, Variation> actualExperimentVariationMap = experimentVariationMapCaptor.getValue();
@@ -2384,9 +2337,6 @@ public class OptimizelyTest {
 
         int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Activate, activateNotification);
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
                 eq(testUserId), eq(testUserAttributes)))
                 .thenReturn(logEventToDispatch);
@@ -2425,9 +2375,6 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createImpressionEvent(eq(noAudienceProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
                 eq(testUserId), eq(Collections.<String, String>emptyMap())))
                 .thenReturn(logEventToDispatch);
@@ -2505,9 +2452,6 @@ public class OptimizelyTest {
 
         Map<String, String> attributes = Collections.emptyMap();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createImpressionEvent(validProjectConfig, activatedExperiment,
                 bucketedVariation, genericUserId, attributes))
                 .thenReturn(logEventToDispatch);
@@ -2576,9 +2520,6 @@ public class OptimizelyTest {
         Map<String, String> attributes = new HashMap<String, String>();
         attributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createImpressionEvent(validProjectConfig, activatedExperiment,
                 bucketedVariation, genericUserId, attributes))
                 .thenReturn(logEventToDispatch);
@@ -2661,9 +2602,6 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
         when(mockEventFactory.createImpressionEvent(validProjectConfig, activatedExperiment,
                 bucketedVariation, genericUserId, attributes))
                 .thenReturn(logEventToDispatch);
@@ -2756,8 +2694,6 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
         final Map<String, String> attributes = ImmutableMap.of(attribute.getKey(), "attributeValue");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
@@ -2765,7 +2701,7 @@ public class OptimizelyTest {
                 eventType.getKey(),
                 genericUserId,
                 attributes);
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+
         when(mockEventFactory.createConversionEvent(
                 eq(validProjectConfig),
                 eq(experimentVariationMap),
@@ -2843,15 +2779,13 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        Map<String, String> testParams = new HashMap<String, String>();
-        testParams.put("test", "params");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockDecisionService,
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
-        LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, "");
+
         when(mockEventFactory.createConversionEvent(
                 eq(validProjectConfig),
                 eq(experimentVariationMap),

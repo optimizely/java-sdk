@@ -199,9 +199,13 @@ public class Optimizely {
                     userId,
                     filteredAttributes);
             logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
-            logger.debug(
-                    "Dispatching impression event to URL {} with params {} and payload \"{}\".",
-                    impressionEvent.getEndpointUrl(), impressionEvent.getRequestParams(), impressionEvent.getBody());
+
+            if (logger.isDebugEnabled()) {
+                logger.debug(
+                        "Dispatching impression event to URL {} with params {} and payload \"{}\".",
+                        impressionEvent.getEndpointUrl(), impressionEvent.getRequestParams(), impressionEvent.getBody());
+            }
+
             try {
                 eventHandler.dispatchEvent(impressionEvent);
             } catch (Exception e) {
@@ -294,8 +298,12 @@ public class Optimizely {
         }
 
         logger.info("Tracking event \"{}\" for user \"{}\".", eventName, userId);
-        logger.debug("Dispatching conversion event to URL {} with params {} and payload \"{}\".",
-                conversionEvent.getEndpointUrl(), conversionEvent.getRequestParams(), conversionEvent.getBody());
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Dispatching conversion event to URL {} with params {} and payload \"{}\".",
+                    conversionEvent.getEndpointUrl(), conversionEvent.getRequestParams(), conversionEvent.getBody());
+        }
+
         try {
             eventHandler.dispatchEvent(conversionEvent);
         } catch (Exception e) {

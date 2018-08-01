@@ -28,8 +28,6 @@ import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.payload.Event;
 import com.optimizely.ab.event.internal.payload.Snapshot;
 import com.optimizely.ab.event.internal.payload.Visitor;
-import com.optimizely.ab.event.internal.serializer.DefaultJsonSerializer;
-import com.optimizely.ab.event.internal.serializer.Serializer;
 import com.optimizely.ab.internal.EventTagUtils;
 import com.optimizely.ab.internal.ControlAttribute;
 import org.slf4j.Logger;
@@ -46,7 +44,6 @@ public class EventFactory {
     static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";  // Should be part of the datafile
     static final String  ACTIVATE_EVENT_KEY = "campaign_activated";
 
-    private Serializer serializer;
     @VisibleForTesting
     public final String clientVersion;
     @VisibleForTesting
@@ -59,7 +56,6 @@ public class EventFactory {
     public EventFactory(EventBatch.ClientEngine clientEngine, String clientVersion) {
         this.clientEngine = clientEngine;
         this.clientVersion = clientVersion;
-        this.serializer = DefaultJsonSerializer.getInstance();
     }
 
     public LogEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
@@ -104,8 +100,7 @@ public class EventFactory {
                 .setRevision(projectConfig.getRevision())
                 .build();
 
-        String payload = this.serializer.serialize(eventBatch);
-        return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
+        return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), eventBatch);
     }
 
     public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
@@ -166,8 +161,7 @@ public class EventFactory {
                 .setRevision(projectConfig.getRevision())
                 .build();
 
-        String payload = this.serializer.serialize(eventBatch);
-        return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), payload);
+        return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), eventBatch);
     }
 
     private List<Attribute> buildAttributeList(ProjectConfig projectConfig, Map<String, String> attributes) {
