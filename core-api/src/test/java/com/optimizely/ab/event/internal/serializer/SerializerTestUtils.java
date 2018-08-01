@@ -26,7 +26,6 @@ import com.optimizely.ab.event.internal.payload.Snapshot;
 import com.optimizely.ab.event.internal.payload.Visitor;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,7 +33,6 @@ public class SerializerTestUtils {
 
     private static final String visitorId = "testvisitor";
     private static final long timestamp = 12345L;
-    private static final boolean isGlobalHoldback = false;
     private static final String projectId = "1";
     private static final String layerId = "2";
     private static final String accountId = "3";
@@ -43,38 +41,57 @@ public class SerializerTestUtils {
     private static final String experimentId = "5";
     private static final String sessionId = "sessionid";
     private static final String revision = "1";
-    private static final Decision decision = new Decision(layerId, experimentId, variationId, isLayerHoldback);
+    private static final Decision decision = new Decision.Builder()
+            .setCampaignId(layerId)
+            .setExperimentId(experimentId)
+            .setVariationId(variationId)
+            .setIsCampaignHoldback(isLayerHoldback)
+            .build();
 
     private static final String featureId = "6";
     private static final String featureName = "testfeature";
     private static final String featureType = "custom";
     private static final String featureValue = "testfeaturevalue";
-    private static final boolean shouldIndex = true;
-    private static final List<Attribute> userFeatures = Collections.singletonList(
-            new Attribute(featureId, featureName, featureType, featureValue));
-
-    private static final boolean actionTriggered = true;
+    private static final List<Attribute> userFeatures = Collections.singletonList(new Attribute.Builder()
+            .setEntityId(featureId)
+            .setKey(featureName)
+            .setType(featureType)
+            .setValue(featureValue)
+            .build());
 
     private static final String eventEntityId = "7";
     private static final String eventName = "testevent";
-    private static final String eventMetricName = "revenue";
-    private static final long eventMetricValue = 5000L;
 
-    private static final List<Event> events = Collections.singletonList(new Event(timestamp,
-            "uuid", eventEntityId, eventName, null, 5000L, null, eventName, null));
+    private static final List<Event> events = Collections.singletonList(new Event.Builder()
+            .setTimestamp(timestamp)
+            .setUuid("uuid")
+            .setEntityId(eventEntityId)
+            .setKey(eventName)
+            .setRevenue(5000L)
+            .setType(eventName)
+            .build()
+    );
 
     static EventBatch generateImpression() {
-        Snapshot snapshot = new Snapshot(Arrays.asList(decision), events);
+        Snapshot snapshot = new Snapshot.Builder()
+                .setDecisions(Collections.singletonList(decision))
+                .setEvents(events)
+                .build();
 
-        Visitor vistor = new Visitor(visitorId, null, userFeatures, Arrays.asList(snapshot));
-        EventBatch impression = new EventBatch(accountId, Arrays.asList(vistor), false, projectId,revision );
-        impression.setProjectId(projectId);
-        impression.setAccountId(accountId);
-        impression.setClientVersion("0.1.1");
-        impression.setAnonymizeIp(true);
-        impression.setRevision(revision);
+        Visitor visitor = new Visitor.Builder()
+                .setVisitorId(visitorId)
+                .setAttributes(userFeatures)
+                .setSnapshots(Collections.singletonList(snapshot))
+                .build();
 
-        return impression;
+        return new EventBatch.Builder()
+                .setClientVersion("0.1.1")
+                .setAccountId(accountId)
+                .setVisitors(Collections.singletonList(visitor))
+                .setAnonymizeIp(true)
+                .setProjectId(projectId)
+                .setRevision(revision)
+                .build();
     }
 
     static EventBatch generateImpressionWithSessionId() {

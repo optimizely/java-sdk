@@ -17,6 +17,7 @@
 package com.optimizely.ab.event.internal.payload;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.annotations.VisibleForTesting;
 
 import java.util.List;
 
@@ -28,11 +29,10 @@ public class Visitor {
     List<Attribute> attributes;
     List<Snapshot> snapshots;
 
-    public Visitor() {
+    @VisibleForTesting
+    public Visitor() { }
 
-    }
-
-    public Visitor(String visitorId, String sessionId, List<Attribute> attributes, List<Snapshot> snapshots) {
+    private Visitor(String visitorId, String sessionId, List<Attribute> attributes, List<Snapshot> snapshots) {
         this.visitorId = visitorId;
         this.sessionId = sessionId;
         this.attributes = attributes;
@@ -91,5 +91,37 @@ public class Visitor {
         result = 31 * result + (attributes != null ? attributes.hashCode() : 0);
         result = 31 * result + snapshots.hashCode();
         return result;
+    }
+
+    public static class Builder {
+
+        private String visitorId;
+        private String sessionId = null;
+        private List<Attribute> attributes;
+        private List<Snapshot> snapshots;
+
+        public Builder setVisitorId(String visitorId) {
+            this.visitorId = visitorId;
+            return this;
+        }
+
+        public Builder setSessionId(String sessionId) {
+            this.sessionId = sessionId;
+            return this;
+        }
+
+        public Builder setAttributes(List<Attribute> attributes) {
+            this.attributes = attributes;
+            return this;
+        }
+
+        public Builder setSnapshots(List<Snapshot> snapshots) {
+            this.snapshots = snapshots;
+            return this;
+        }
+
+        public Visitor build() {
+            return new Visitor(visitorId, sessionId, attributes, snapshots);
+        }
     }
 }
