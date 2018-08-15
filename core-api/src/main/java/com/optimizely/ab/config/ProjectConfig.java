@@ -21,10 +21,11 @@ import com.optimizely.ab.UnknownEventTypeException;
 import com.optimizely.ab.UnknownExperimentException;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
-import com.optimizely.ab.internal.ControlAttribute;
+import com.optimizely.ab.config.parser.DefaultConfigParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -598,5 +599,39 @@ public class ProjectConfig {
                 ", forcedVariationMapping=" + forcedVariationMapping +
                 ", variationIdToExperimentMapping=" + variationIdToExperimentMapping +
                 '}';
+    }
+
+    public static class Builder {
+        private String datafile;
+
+        public Builder withDatafile(String datafile) {
+            this.datafile = datafile;
+            return this;
+        }
+
+        /**
+         * @return a {@link ProjectConfig} instance given a json string datafile
+         */
+        public ProjectConfig build() throws ConfigParseException{
+            if (datafile == null) {
+                throw new ConfigParseException("Unable to parse null datafile.");
+            }
+            if (datafile.length() == 0) {
+                throw new ConfigParseException("Unable to parse empty datafile.");
+            }
+
+            ProjectConfig projectConfig = DefaultConfigParser.getInstance().parseProjectConfig(datafile);
+
+            if (projectConfig.getVersion().equals("1")) {
+                throw new ConfigParseException("This version of the Java SDK does not support version 1 datafiles. " +
+                        "Please use a version 2 or 3 datafile with this SDK.");
+            }
+
+            if (Integer.parseInt(projectConfig.getVersion()) > Integer.parseInt(Version.V4.version)) {
+                throw new ConfigParseException("This version of the Java SDK does not support datafile versions greater than 4. Got: " + projectConfig.getVersion());
+            }
+
+            return projectConfig;
+        }
     }
 }

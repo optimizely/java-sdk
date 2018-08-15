@@ -439,6 +439,13 @@ public final class ProjectConfigTestUtils {
     }
 
     /**
+     * @return the expected {@link ProjectConfig} for the json produced by {@link #invalidProjectConfigV5()}
+     */
+    public static String invalidProjectConfigV5() throws IOException {
+        return Resources.toString(Resources.getResource("config/invalid-project-config-v5.json"), Charsets.UTF_8);
+    }
+
+    /**
      * Asserts that the provided project configs are equivalent.
      */
     public static void verifyProjectConfig(@CheckForNull ProjectConfig actual, @Nonnull ProjectConfig expected) {
