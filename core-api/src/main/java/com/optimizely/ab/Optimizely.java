@@ -770,6 +770,7 @@ public class Optimizely {
             return Collections.<String, String>emptyMap();
         }
 
+        // List of attribute keys
         List<String> unknownAttributes = null;
         List<String> invalidTypeAttributes = null;
 
@@ -786,7 +787,7 @@ public class Optimizely {
                         !Number.class.isInstance(attribute.getValue()) &&
                             !String.class.isInstance(attribute.getValue())) {
                 if (invalidTypeAttributes == null) {
-                    invalidTypeAttributes = null;
+                    invalidTypeAttributes = new ArrayList<String>();
                 }
                 invalidTypeAttributes.add(attribute.getKey());
             }
@@ -802,10 +803,10 @@ public class Optimizely {
         }
 
         if (invalidTypeAttributes != null) {
-            //TODO: logger message
+            // TODO: logger message
             attributes = new HashMap<String, Object>(attributes);
-            Remove invalid attributes? dont do anything with them? 
-            for (String invalidTypeAttribute: invalidTypeAttributes) {
+            // Remove invalid attributes? dont do anything with them? 
+            for (String invalidTypeAttribute : invalidTypeAttributes) {
                 attributes.remove(invalidTypeAttribute);
             }
         }
