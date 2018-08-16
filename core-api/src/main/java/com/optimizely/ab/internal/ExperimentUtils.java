@@ -58,7 +58,7 @@ public final class ExperimentUtils {
      */
     public static boolean isUserInExperiment(@Nonnull ProjectConfig projectConfig,
                                              @Nonnull Experiment experiment,
-                                             @Nonnull Map<String, String> attributes) {
+                                             @Nonnull Map<String, ?> attributes) {
         List<String> experimentAudienceIds = experiment.getAudienceIds();
 
         // if there are no audiences, ALL users should be part of the experiment

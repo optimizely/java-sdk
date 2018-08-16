@@ -37,7 +37,7 @@ public class NotCondition implements Condition {
         return condition;
     }
 
-    public boolean evaluate(Map<String, String> attributes) {
+    public boolean evaluate(Map<String, ?> attributes) {
         return !condition.evaluate(attributes);
     }
 

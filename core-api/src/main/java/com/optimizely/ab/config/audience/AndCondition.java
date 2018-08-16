@@ -36,7 +36,7 @@ public class AndCondition implements Condition {
         return conditions;
     }
 
-    public boolean evaluate(Map<String, String> attributes) {
+    public boolean evaluate(Map<String, ?> attributes) {
         for (Condition condition : conditions) {
             if (!condition.evaluate(attributes))
                 return false;

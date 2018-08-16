@@ -62,7 +62,7 @@ public class EventFactory {
                                           @Nonnull Experiment activatedExperiment,
                                           @Nonnull Variation variation,
                                           @Nonnull String userId,
-                                          @Nonnull Map<String, String> attributes) {
+                                          @Nonnull Map<String, ?> attributes) {
 
         Decision decision = new Decision.Builder()
                 .setCampaignId(activatedExperiment.getLayerId())
@@ -108,7 +108,7 @@ public class EventFactory {
                                           @Nonnull String userId,
                                           @Nonnull String eventId, // Why is this not used?
                                           @Nonnull String eventName,
-                                          @Nonnull Map<String, String> attributes,
+                                          @Nonnull Map<String, ?> attributes,
                                           @Nonnull Map<String, ?> eventTags) {
 
         if (experimentVariationMap.isEmpty()) {
@@ -164,10 +164,10 @@ public class EventFactory {
         return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), eventBatch);
     }
 
-    private List<Attribute> buildAttributeList(ProjectConfig projectConfig, Map<String, String> attributes) {
+    private List<Attribute> buildAttributeList(ProjectConfig projectConfig, Map<String, ?> attributes) {
         List<Attribute> attributesList = new ArrayList<Attribute>();
 
-        for (Map.Entry<String, String> entry : attributes.entrySet()) {
+        for (Map.Entry<String, ?> entry : attributes.entrySet()) {
             String attributeId = projectConfig.getAttributeId(projectConfig, entry.getKey());
             if(attributeId == null) {
                 continue;

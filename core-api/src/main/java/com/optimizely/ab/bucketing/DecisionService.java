@@ -80,7 +80,7 @@ public class DecisionService {
      */
     public @Nullable Variation getVariation(@Nonnull Experiment experiment,
                                             @Nonnull String userId,
-                                            @Nonnull Map<String, String> filteredAttributes) {
+                                            @Nonnull Map<String, ?> filteredAttributes) {
 
         if (!ExperimentUtils.isExperimentActive(experiment)) {
             return null;
@@ -131,7 +131,7 @@ public class DecisionService {
         if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
             String bucketingId = userId;
             if (filteredAttributes.containsKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())) {
-                bucketingId = filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString());
+                bucketingId = (String) filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString());
             }
             variation = bucketer.bucket(experiment, bucketingId);
 
@@ -159,7 +159,7 @@ public class DecisionService {
      */
     public @Nonnull FeatureDecision getVariationForFeature(@Nonnull FeatureFlag featureFlag,
                                                            @Nonnull String userId,
-                                                           @Nonnull Map<String, String> filteredAttributes) {
+                                                           @Nonnull Map<String, ?> filteredAttributes) {
         if (!featureFlag.getExperimentIds().isEmpty()) {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
@@ -195,7 +195,7 @@ public class DecisionService {
      */
     @Nonnull FeatureDecision getVariationForFeatureInRollout(@Nonnull FeatureFlag featureFlag,
                                                              @Nonnull String userId,
-                                                             @Nonnull Map<String, String> filteredAttributes) {
+                                                             @Nonnull Map<String, ?> filteredAttributes) {
         // use rollout to get variation for feature
         if (featureFlag.getRolloutId().isEmpty()) {
             logger.info("The feature flag \"{}\" is not used in a rollout.", featureFlag.getKey());
@@ -212,7 +212,7 @@ public class DecisionService {
         int rolloutRulesLength = rollout.getExperiments().size();
         String bucketingId = userId;
         if (filteredAttributes.containsKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())) {
-            bucketingId = filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString());
+            bucketingId = (String) filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString());
         }
         Variation variation;
         for (int i = 0; i < rolloutRulesLength - 1; i++) {

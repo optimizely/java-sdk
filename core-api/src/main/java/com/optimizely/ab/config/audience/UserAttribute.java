@@ -49,8 +49,8 @@ public class UserAttribute implements Condition {
         return value;
     }
 
-    public boolean evaluate(Map<String, String> attributes) {
-        String userAttributeValue = attributes.get(name);
+    public boolean evaluate(Map<String, ?> attributes) {
+        Object userAttributeValue = attributes.get(name);
 
         if (value != null) { // if there is a value in the condition
             // check user attribute value is equal
