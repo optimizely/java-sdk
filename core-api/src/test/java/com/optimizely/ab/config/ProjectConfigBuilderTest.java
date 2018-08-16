@@ -46,7 +46,7 @@ public class ProjectConfigBuilderTest {
     @Test
     public void withInvalidNewerDatafile() throws Exception {
         thrown.expect(ConfigParseException.class);
-        ProjectConfig projectConfig = new ProjectConfig.Builder()
+        new ProjectConfig.Builder()
                 .withDatafile(invalidProjectConfigV5())
                 .build();
     }
