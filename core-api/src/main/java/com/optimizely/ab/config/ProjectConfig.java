@@ -33,11 +33,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -65,6 +61,12 @@ public class ProjectConfig {
             return version;
         }
     }
+
+    private static final List<String> supportedVersions = Arrays.asList(
+            Version.V2.version,
+            Version.V3.version,
+            Version.V4.version
+    );
 
     // logger
     private static final Logger logger = LoggerFactory.getLogger(ProjectConfig.class);
@@ -610,25 +612,20 @@ public class ProjectConfig {
         }
 
         /**
-         * @return a {@link ProjectConfig} instance given a json string datafile
+         * @return a {@link ProjectConfig} instance given a JSON string datafile
          */
         public ProjectConfig build() throws ConfigParseException{
             if (datafile == null) {
                 throw new ConfigParseException("Unable to parse null datafile.");
             }
-            if (datafile.length() == 0) {
+            if (datafile.isEmpty()) {
                 throw new ConfigParseException("Unable to parse empty datafile.");
             }
 
             ProjectConfig projectConfig = DefaultConfigParser.getInstance().parseProjectConfig(datafile);
 
-            if (projectConfig.getVersion().equals("1")) {
-                throw new ConfigParseException("This version of the Java SDK does not support version 1 datafiles. " +
-                        "Please use a version 2 or 3 datafile with this SDK.");
-            }
-
-            if (Integer.parseInt(projectConfig.getVersion()) > Integer.parseInt(Version.V4.version)) {
-                throw new ConfigParseException("This version of the Java SDK does not support datafile versions greater than 4. Got: " + projectConfig.getVersion());
+            if (!supportedVersions.contains(projectConfig.getVersion())) {
+                throw new ConfigParseException("This version of the Java SDK does not support the given datafile version: " + projectConfig.getVersion());
             }
 
             return projectConfig;
