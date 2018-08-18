@@ -725,7 +725,7 @@ public class OptimizelyTest {
                 eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
 
         Map<String, String> actualValue = attributeCaptor.getValue();
-        assertThat(actualValue, not(hasEntry(attribute.getKey(), null)));
+        assertThat(actualValue, hasEntry(attribute.getKey(), null));
 
         // verify that dispatchEvent was called with the correct LogEvent object
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);

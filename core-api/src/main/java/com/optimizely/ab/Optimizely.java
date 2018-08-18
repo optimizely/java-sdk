@@ -783,9 +783,10 @@ public class Optimizely {
                 }
                 unknownAttributes.add(attribute.getKey());
             }
-            else if (!Boolean.class.isInstance(attribute.getValue()) &&
-                        !Number.class.isInstance(attribute.getValue()) &&
-                            !String.class.isInstance(attribute.getValue())) {
+            else if (attribute.getValue() != null &&
+                        !Boolean.class.isInstance(attribute.getValue()) &&
+                            !Number.class.isInstance(attribute.getValue()) &&
+                                !String.class.isInstance(attribute.getValue())) {
                 if (invalidTypeAttributes == null) {
                     invalidTypeAttributes = new ArrayList<String>();
                 }
