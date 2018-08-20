@@ -22,10 +22,10 @@ import com.optimizely.ab.UnknownExperimentException;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.parser.ConfigParseException;
+import com.optimizely.ab.config.parser.DefaultConfigParser;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
-import com.optimizely.ab.config.parser.DefaultConfigParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,9 +63,9 @@ public class ProjectConfig {
     }
 
     private static final List<String> supportedVersions = Arrays.asList(
-            Version.V2.version,
-            Version.V3.version,
-            Version.V4.version
+        Version.V2.version,
+        Version.V3.version,
+        Version.V4.version
     );
 
     // logger
