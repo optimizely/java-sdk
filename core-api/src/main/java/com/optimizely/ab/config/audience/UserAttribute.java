@@ -29,9 +29,9 @@ public class UserAttribute implements Condition {
 
     private final String name;
     private final String type;
-    private final String value;
+    private final Object value;
 
-    public UserAttribute(@Nonnull String name, @Nonnull String type, @Nullable String value) {
+    public UserAttribute(@Nonnull String name, @Nonnull String type, @Nullable Object value) {
         this.name = name;
         this.type = type;
         this.value = value;
@@ -45,7 +45,7 @@ public class UserAttribute implements Condition {
         return type;
     }
 
-    public String getValue() {
+    public Object getValue() {
         return value;
     }
 
