@@ -772,7 +772,6 @@ public class Optimizely {
 
         // List of attribute keys
         List<String> unknownAttributes = null;
-        List<String> invalidTypeAttributes = null;
 
         Map<String, Attribute> attributeKeyMapping = projectConfig.getAttributeKeyMapping();
         for (Map.Entry<String, ?> attribute : attributes.entrySet()) {
@@ -783,15 +782,6 @@ public class Optimizely {
                 }
                 unknownAttributes.add(attribute.getKey());
             }
-            else if (attribute.getValue() != null &&
-                        !Boolean.class.isInstance(attribute.getValue()) &&
-                            !Number.class.isInstance(attribute.getValue()) &&
-                                !String.class.isInstance(attribute.getValue())) {
-                if (invalidTypeAttributes == null) {
-                    invalidTypeAttributes = new ArrayList<String>();
-                }
-                invalidTypeAttributes.add(attribute.getKey());
-            }
         }
 
         if (unknownAttributes != null) {
@@ -800,15 +790,6 @@ public class Optimizely {
             attributes = new HashMap<String, Object>(attributes);
             for (String unknownAttribute : unknownAttributes) {
                 attributes.remove(unknownAttribute);
-            }
-        }
-
-        if (invalidTypeAttributes != null) {
-            // TODO: logger message
-            attributes = new HashMap<String, Object>(attributes);
-            // Remove invalid attributes? dont do anything with them? 
-            for (String invalidTypeAttribute : invalidTypeAttributes) {
-                attributes.remove(invalidTypeAttribute);
             }
         }
 
