@@ -49,6 +49,18 @@ public class ValidProjectConfigV4 {
     public  static final String     ATTRIBUTE_OPT_KEY = "$opt_test";
     private static final Attribute  ATTRIBUTE_OPT = new Attribute(ATTRIBUTE_OPT_ID, ATTRIBUTE_OPT_KEY);
 
+    private static final String     ATTRIBUTE_BOOLEAN_ID = "323434545";
+    public  static final String     ATTRIBUTE_BOOLEAN_KEY = "booleanKey";
+    private static final Attribute  ATTRIBUTE_BOOLEAN = new Attribute(ATTRIBUTE_BOOLEAN_ID, ATTRIBUTE_BOOLEAN_KEY);
+
+    private static final String     ATTRIBUTE_INTEGER_ID = "616727838";
+    public  static final String     ATTRIBUTE_INTEGER_KEY = "integerKey";
+    private static final Attribute  ATTRIBUTE_INTEGER = new Attribute(ATTRIBUTE_INTEGER_ID, ATTRIBUTE_INTEGER_KEY);
+
+    private static final String     ATTRIBUTE_DOUBLE_ID = "808797686";
+    public  static final String     ATTRIBUTE_DOUBLE_KEY = "doubleKey";
+    private static final Attribute  ATTRIBUTE_DOUBLE = new Attribute(ATTRIBUTE_DOUBLE_ID, ATTRIBUTE_DOUBLE_KEY);
+
     // audiences
     private static final String     CUSTOM_DIMENSION_TYPE = "custom_dimension";
     private static final String     AUDIENCE_GRYFFINDOR_ID = "3468206642";
@@ -1033,6 +1045,9 @@ public class ValidProjectConfigV4 {
         attributes.add(ATTRIBUTE_HOUSE);
         attributes.add(ATTRIBUTE_NATIONALITY);
         attributes.add(ATTRIBUTE_OPT);
+        attributes.add(ATTRIBUTE_BOOLEAN);
+        attributes.add(ATTRIBUTE_INTEGER);
+        attributes.add(ATTRIBUTE_DOUBLE);
 
         // list audiences
         List<Audience> audiences = new ArrayList<Audience>();

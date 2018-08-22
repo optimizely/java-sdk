@@ -50,6 +50,7 @@ public class UserAttribute implements Condition {
     }
 
     public boolean evaluate(Map<String, ?> attributes) {
+        // Valid for primative types, but needs to change when a value is an object or an array
         Object userAttributeValue = attributes.get(name);
 
         if (value != null) { // if there is a value in the condition

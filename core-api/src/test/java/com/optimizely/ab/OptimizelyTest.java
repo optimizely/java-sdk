@@ -524,7 +524,7 @@ public class OptimizelyTest {
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
         Variation userIdBucketedVariation = activatedExperiment.getVariations().get(1);
-        Attribute attribute = validProjectConfig.getAttributes().get(0);
+        Attribute attributeString = validProjectConfig.getAttributes().get(0); 
 
         // setup a mock event builder to return expected impression params
         EventFactory mockEventFactory = mock(EventFactory.class);
@@ -546,8 +546,9 @@ public class OptimizelyTest {
         when(mockBucketer.bucket(activatedExperiment, testBucketingId))
                 .thenReturn(bucketedVariation);
 
-        Map<String, String> attr = new HashMap<String,String>();
-        attr.put(attribute.getKey(), "attributeValue");
+        Map<String, String> attr = new HashMap<String, String>();
+
+        attr.put(attributeString.getKey(), "attributeValue");
         attr.put(testBucketingIdKey, testBucketingId);
 
         // activate the experiment
@@ -564,10 +565,77 @@ public class OptimizelyTest {
                 eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
 
         Map<String, String> actualValue = attributeCaptor.getValue();
-        assertThat(actualValue, hasEntry(attribute.getKey(), "attributeValue"));
+        assertThat(actualValue, hasEntry(attributeString.getKey(), "attributeValue"));
 
         // verify that dispatchEvent was called with the correct LogEvent object
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
+    }
+
+    public void activateWithTypedAttributes() throws Exception {
+        if (datafileVersion >= 4) {
+            Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
+            Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+            Variation userIdBucketedVariation = activatedExperiment.getVariations().get(1);
+            Attribute attributeString = validProjectConfig.getAttributes().get(0); 
+            Attribute attributeBoolean = validProjectConfig.getAttributes().get(3); 
+            Attribute attributeInteger = validProjectConfig.getAttributes().get(4); 
+            Attribute attributeDouble = validProjectConfig.getAttributes().get(5); 
+            
+
+            // setup a mock event builder to return expected impression params
+            EventFactory mockEventFactory = mock(EventFactory.class);
+
+            Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                    .withBucketing(mockBucketer)
+                    .withEventBuilder(mockEventFactory)
+                    .withConfig(validProjectConfig)
+                    .withErrorHandler(mockErrorHandler)
+                    .build();
+
+            when(mockEventFactory.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
+                    eq(testUserId), anyMapOf(String.class, String.class)))
+                    .thenReturn(logEventToDispatch);
+
+            when(mockBucketer.bucket(activatedExperiment, testUserId))
+                    .thenReturn(userIdBucketedVariation);
+
+            when(mockBucketer.bucket(activatedExperiment, testBucketingId))
+                    .thenReturn(bucketedVariation);
+
+            Map<String, Object> attr = new HashMap<String, Object>();
+
+            attr.put(attributeString.getKey(), "attributeValue");
+            attr.put(attributeBoolean.getKey(), true);
+            attr.put(attributeInteger.getKey(), 3);
+            attr.put(attributeDouble.getKey(), 3.123);
+            attr.put(testBucketingIdKey, testBucketingId);
+
+            // activate the experiment
+            Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId,
+                    attr);
+
+            // verify that the bucketing algorithm was called correctly
+            verify(mockBucketer).bucket(activatedExperiment, testBucketingId);
+            assertThat(actualVariation, is(bucketedVariation));
+
+            // setup the attribute map captor (so we can verify its content)
+            ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
+            verify(mockEventFactory).createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment),
+                    eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
+
+            Map<String, Object> actualValue = attributeCaptor.getValue();
+
+            assertThat(actualValue, hasKey(attributeString.getKey()));
+            if (String.class.isInstance(actualValue.get(attributeString.getKey()))){
+                assertThat((String) actualValue.get(attributeString.getKey()), is("attributeValue"));
+            }
+            // assertThat(actualValue, hasEntry(attributeBoolean.getKey(), true));
+            // assertThat(actualValue, hasEntry(attributeInteger.getKey(), 3));
+            // assertThat(actualValue, hasEntry(attributeDouble.getKey(), 3.1415));
+
+            // verify that dispatchEvent was called with the correct LogEvent object
+            verify(mockEventHandler).dispatchEvent(logEventToDispatch);
+        }
     }
 
     /**

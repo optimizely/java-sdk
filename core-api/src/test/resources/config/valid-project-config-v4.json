@@ -35,10 +35,21 @@
     {
       "id": "58339410",
       "key": "nationality"
-    },
-    {
+    },    {
       "id": "583394100",
       "key": "$opt_test"
+    },
+    {
+      "id": "323434545",
+      "key": "booleanKey"
+    },
+    {
+      "id": "616727838",
+      "key": "integerKey"
+    },
+    {
+      "id": "808797686",
+      "key": "doubleKey"
     }
   ],
   "events": [
