@@ -107,12 +107,6 @@ License (MIT): [https://www.slf4j.org/license.html](https://www.slf4j.org/licens
 **Jackson Annotations** [https://github.com/FasterXML/jackson-annotations](https://github.com/FasterXML/jackson-annotations)  
 License (Apache 2.0): [https://github.com/FasterXML/jackson-annotations/blob/master/src/main/resources/META-INF/LICENSE](https://github.com/FasterXML/jackson-annotations/blob/master/src/main/resources/META-INF/LICENSE)
 
-**FindBugs Annotations** [http://findbugs.sourceforge.net/](http://findbugs.sourceforge.net/)  
-License (LGPL): [https://mvnrepository.com/artifact/com.google.code.findbugs/annotations](https://mvnrepository.com/artifact/com.google.code.findbugs/annotations)
-
-**FindBugs JSR305** [http://findbugs.sourceforge.net/ ](http://findbugs.sourceforge.net/ )   
-License (Apache 2.0): [https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305](https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305)
-
 **Gson** [https://github.com/google/gson ](https://github.com/google/gson)  
 Copyright &copy; 2008 Google Inc.
 License (Apache 2.0): [https://github.com/google/gson/blob/master/LICENSE](https://github.com/google/gson/blob/master/LICENSE)
