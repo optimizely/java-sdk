@@ -50,8 +50,8 @@ subprojects {
     apply plugin: 'me.champeau.gradle.jmh'
     apply plugin: 'nebula.optional-base'
 
-    sourceCompatibility = 1.6
-    targetCompatibility = 1.6
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
 
     repositories {
         jcenter()
