@@ -725,27 +725,6 @@ public class Optimizely {
         return projectConfig;
     }
 
-    /**
-     * @return a {@link ProjectConfig} instance given a json string
-     */
-    private static ProjectConfig getProjectConfig(String datafile) throws ConfigParseException {
-        if (datafile == null) {
-            throw new ConfigParseException("Unable to parse null datafile.");
-        }
-        if (datafile.length() == 0) {
-            throw new ConfigParseException("Unable to parse empty datafile.");
-        }
-
-        ProjectConfig projectConfig = DefaultConfigParser.getInstance().parseProjectConfig(datafile);
-
-        if (projectConfig.getVersion().equals("1")) {
-            throw new ConfigParseException("This version of the Java SDK does not support version 1 datafiles. " +
-                    "Please use a version 2 or 3 datafile with this SDK.");
-        }
-
-        return projectConfig;
-    }
-
     @Nullable
     public UserProfileService getUserProfileService() {
         return userProfileService;
@@ -891,7 +870,9 @@ public class Optimizely {
 
         public Optimizely build() throws ConfigParseException {
             if (projectConfig == null) {
-                projectConfig = Optimizely.getProjectConfig(datafile);
+                projectConfig = new ProjectConfig.Builder()
+                        .withDatafile(datafile)
+                        .build();
             }
 
             if (bucketer == null) {
