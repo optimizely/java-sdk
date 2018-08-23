@@ -766,7 +766,7 @@ public class Optimizely {
         if (unknownAttributes != null) {
             logger.warn("Attribute(s) {} not in the datafile.", unknownAttributes);
             // make a copy of the passed through attributes, then remove the unknown list
-            attributes = new HashMap<String, Object>(attributes);
+            attributes = new HashMap<>(attributes);
             for (String unknownAttribute : unknownAttributes) {
                 attributes.remove(unknownAttribute);
             }
