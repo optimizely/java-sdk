@@ -43,6 +43,7 @@ import com.optimizely.ab.notification.ActivateNotificationListener;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.notification.TrackNotificationListener;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -594,7 +595,7 @@ public class OptimizelyTest {
                     .build();
 
             when(mockEventFactory.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
-                    eq(testUserId), anyMapOf(String.class, String.class)))
+                    eq(testUserId), anyMapOf(String.class, Object.class)))
                     .thenReturn(logEventToDispatch);
 
             when(mockBucketer.bucket(activatedExperiment, testUserId))
@@ -603,7 +604,7 @@ public class OptimizelyTest {
             when(mockBucketer.bucket(activatedExperiment, testBucketingId))
                     .thenReturn(bucketedVariation);
 
-            Map<String, Object> attr = new HashMap<String, Object>();
+            Map<String, Object> attr = new HashMap<>();
 
             attr.put(attributeString.getKey(), "attributeValue");
             attr.put(attributeBoolean.getKey(), true);
@@ -624,8 +625,9 @@ public class OptimizelyTest {
             verify(mockEventFactory).createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment),
                     eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
 
-            Map<String, Object> actualValue = attributeCaptor.getValue();
+            Map<String, ?> actualValue = attributeCaptor.getValue();
 
+            assertThat((Map<String,? extends String>)actualValue, hasEntry(attributeString.getKey(), "attributeValue"));
             assertThat(actualValue, hasKey(attributeString.getKey()));
             assertThat("attributeValue", sameInstance(actualValue.get(attributeString.getKey())));
             assertThat((String) actualValue.get(attributeString.getKey()), is("attributeValue"));
