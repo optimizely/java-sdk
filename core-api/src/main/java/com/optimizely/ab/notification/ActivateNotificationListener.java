@@ -38,7 +38,7 @@ public abstract class ActivateNotificationListener implements NotificationListen
         assert(args[1] instanceof String);
         String userId = (String) args[1];
         assert(args[2] instanceof java.util.Map);
-        Map<String, String> attributes = (Map<String, String>) args[2];
+        Map<String, ?> attributes = (Map<String, ?>) args[2];
         assert(args[3] instanceof Variation);
         Variation variation = (Variation) args[3];
         assert(args[4] instanceof LogEvent);
@@ -57,7 +57,7 @@ public abstract class ActivateNotificationListener implements NotificationListen
      */
     public abstract void onActivate(@Nonnull Experiment experiment,
                              @Nonnull String userId,
-                             @Nonnull Map<String, String> attributes,
+                             @Nonnull Map<String, ?> attributes,
                              @Nonnull Variation variation,
                              @Nonnull LogEvent event) ;
 

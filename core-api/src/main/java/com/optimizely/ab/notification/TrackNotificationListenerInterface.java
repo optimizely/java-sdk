@@ -16,7 +16,7 @@ public interface TrackNotificationListenerInterface {
      */
     public void onTrack(@Nonnull String eventKey,
                                  @Nonnull String userId,
-                                 @Nonnull Map<String, String> attributes,
+                                 @Nonnull Map<String, ?> attributes,
                                  @Nonnull Map<String, ?>  eventTags,
                                  @Nonnull LogEvent event) ;
 

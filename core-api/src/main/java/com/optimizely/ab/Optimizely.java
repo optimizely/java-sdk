@@ -228,13 +228,13 @@ public class Optimizely {
 
     public void track(@Nonnull String eventName,
                       @Nonnull String userId,
-                      @Nonnull Map<String, String> attributes) throws UnknownEventTypeException {
+                      @Nonnull Map<String, ?> attributes) throws UnknownEventTypeException {
         track(eventName, userId, attributes, Collections.<String, String>emptyMap());
     }
 
     public void track(@Nonnull String eventName,
                       @Nonnull String userId,
-                      @Nonnull Map<String, String> attributes,
+                      @Nonnull Map<String, ?> attributes,
                       @Nonnull Map<String, ?> eventTags) throws UnknownEventTypeException {
 
         if (!validateUserId(userId)) {
@@ -344,7 +344,7 @@ public class Optimizely {
      */
     public @Nonnull Boolean isFeatureEnabled(@Nonnull String featureKey,
                                               @Nonnull String userId,
-                                              @Nonnull Map<String, String> attributes) {
+                                              @Nonnull Map<String, ?> attributes) {
         if (featureKey == null) {
             logger.warn("The featureKey parameter must be nonnull.");
             return false;
@@ -410,7 +410,7 @@ public class Optimizely {
     public @Nullable Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
-                                                       @Nonnull Map<String, String> attributes) {
+                                                       @Nonnull Map<String, ?> attributes) {
         String variableValue = getFeatureVariableValueForType(
                 featureKey,
                 variableKey,
@@ -450,7 +450,7 @@ public class Optimizely {
     public @Nullable Double getFeatureVariableDouble(@Nonnull String featureKey,
                                                      @Nonnull String variableKey,
                                                      @Nonnull String userId,
-                                                     @Nonnull Map<String, String> attributes) {
+                                                     @Nonnull Map<String, ?> attributes) {
         String variableValue = getFeatureVariableValueForType(
                 featureKey,
                 variableKey,
@@ -495,7 +495,7 @@ public class Optimizely {
     public @Nullable Integer getFeatureVariableInteger(@Nonnull String featureKey,
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
-                                                       @Nonnull Map<String, String> attributes) {
+                                                       @Nonnull Map<String, ?> attributes) {
         String variableValue = getFeatureVariableValueForType(
                 featureKey,
                 variableKey,
@@ -540,7 +540,7 @@ public class Optimizely {
     public @Nullable String getFeatureVariableString(@Nonnull String featureKey,
                                                      @Nonnull String variableKey,
                                                      @Nonnull String userId,
-                                                     @Nonnull Map<String, String> attributes) {
+                                                     @Nonnull Map<String, ?> attributes) {
         return getFeatureVariableValueForType(
                 featureKey,
                 variableKey,
@@ -553,7 +553,7 @@ public class Optimizely {
     String getFeatureVariableValueForType(@Nonnull String featureKey,
                                                   @Nonnull String variableKey,
                                                   @Nonnull String userId,
-                                                  @Nonnull Map<String, String> attributes,
+                                                  @Nonnull Map<String, ?> attributes,
                                                   @Nonnull LiveVariable.VariableType variableType) {
         if (featureKey == null) {
             logger.warn("The featureKey parameter must be nonnull.");
@@ -614,7 +614,7 @@ public class Optimizely {
      * @return List of the feature keys that are enabled for the user if the userId is empty it will
      * return Empty List.
      */
-    public List<String> getEnabledFeatures(@Nonnull String userId, @Nonnull Map<String, String> attributes) {
+    public List<String> getEnabledFeatures(@Nonnull String userId, @Nonnull Map<String, ?> attributes) {
         List<String> enabledFeaturesList = new ArrayList<String>();
 
         if (!validateUserId(userId)){
@@ -642,7 +642,7 @@ public class Optimizely {
     public @Nullable
     Variation getVariation(@Nonnull Experiment experiment,
                            @Nonnull String userId,
-                           @Nonnull Map<String, String> attributes) throws UnknownExperimentException {
+                           @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
 
         Map<String, ?> filteredAttributes = filterAttributes(projectConfig, attributes);
 
@@ -659,7 +659,7 @@ public class Optimizely {
     public @Nullable
     Variation getVariation(@Nonnull String experimentKey,
                            @Nonnull String userId,
-                           @Nonnull Map<String, String> attributes) {
+                           @Nonnull Map<String, ?> attributes) {
         if (!validateUserId(userId)) {
             return null;
         }

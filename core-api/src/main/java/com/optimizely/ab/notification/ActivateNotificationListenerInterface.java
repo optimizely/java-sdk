@@ -18,7 +18,7 @@ public interface ActivateNotificationListenerInterface {
      */
     public void onActivate(@Nonnull Experiment experiment,
                                     @Nonnull String userId,
-                                    @Nonnull Map<String, String> attributes,
+                                    @Nonnull Map<String, ?> attributes,
                                     @Nonnull Variation variation,
                                     @Nonnull LogEvent event) ;
 
