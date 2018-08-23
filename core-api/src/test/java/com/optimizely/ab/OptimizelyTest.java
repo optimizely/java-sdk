@@ -2389,11 +2389,11 @@ public class OptimizelyTest {
 
         ActivateNotificationListener activateNotification = new ActivateNotificationListener() {
             @Override
-            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
                 assertEquals(experiment.getKey(), activatedExperiment.getKey());
                 assertEquals(bucketedVariation.getKey(), variation.getKey());
                 assertEquals(userId, testUserId);
-                for (Map.Entry<String, String> entry : attributes.entrySet()) {
+                for (Map.Entry<String, ?> entry : attributes.entrySet()) {
                     assertEquals(testUserAttributes.get(entry.getKey()), entry.getValue());
                 }
 
@@ -2451,7 +2451,7 @@ public class OptimizelyTest {
 
         ActivateNotificationListener activateNotification = new ActivateNotificationListener() {
             @Override
-            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
                 assertEquals(experiment.getKey(), activatedExperiment.getKey());
                 assertEquals(bucketedVariation.getKey(), variation.getKey());
                 assertEquals(userId, testUserId);
@@ -2786,7 +2786,7 @@ public class OptimizelyTest {
 
         TrackNotificationListener trackNotification = new TrackNotificationListener() {
             @Override
-            public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, String> _attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
+            public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, ?> _attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
                 assertEquals(eventType.getKey(), eventKey);
                 assertEquals(genericUserId, userId);
                 assertEquals(attributes, _attributes);
@@ -2870,7 +2870,7 @@ public class OptimizelyTest {
 
         TrackNotificationListener trackNotification = new TrackNotificationListener() {
             @Override
-            public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
+            public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
                 assertEquals(eventType.getKey(), eventKey);
                 assertEquals(genericUserId, userId);
                 assertTrue(attributes.isEmpty());
