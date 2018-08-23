@@ -133,7 +133,11 @@ public class DecisionService {
             if (filteredAttributes.containsKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())) {
                 if (String.class.isInstance(filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString()))) {
                     bucketingId = (String) filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString());
-                }  
+                    logger.info("bucketingId has a valid type");
+                } 
+                else {
+                    logger.warn("bucketingID has type mismatch, defaulted to userId ");
+                } 
             }
             variation = bucketer.bucket(experiment, bucketingId);
 
@@ -216,7 +220,11 @@ public class DecisionService {
         if (filteredAttributes.containsKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())) {
             if (String.class.isInstance(filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString()))) {
                 bucketingId = (String) filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString());
-            }
+                logger.info("bucketingId has a valid type");
+            } 
+            else {
+                logger.warn("bucketingID has type mismatch, defaulted to userId ");
+            } 
         }
         Variation variation;
         for (int i = 0; i < rolloutRulesLength - 1; i++) {

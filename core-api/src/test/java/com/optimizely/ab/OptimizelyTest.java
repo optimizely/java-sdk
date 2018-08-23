@@ -76,6 +76,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -626,12 +627,20 @@ public class OptimizelyTest {
             Map<String, Object> actualValue = attributeCaptor.getValue();
 
             assertThat(actualValue, hasKey(attributeString.getKey()));
-            if (String.class.isInstance(actualValue.get(attributeString.getKey()))){
-                assertThat((String) actualValue.get(attributeString.getKey()), is("attributeValue"));
-            }
-            // assertThat(actualValue, hasEntry(attributeBoolean.getKey(), true));
-            // assertThat(actualValue, hasEntry(attributeInteger.getKey(), 3));
-            // assertThat(actualValue, hasEntry(attributeDouble.getKey(), 3.1415));
+            assertThat("attributeValue", sameInstance(actualValue.get(attributeString.getKey())));
+            assertThat((String) actualValue.get(attributeString.getKey()), is("attributeValue"));
+            
+            assertThat(actualValue, hasKey(attributeBoolean.getKey()));
+            assertThat(true, sameInstance(actualValue.get(attributeBoolean.getKey())));
+            assertThat((Boolean) actualValue.get(attributeBoolean.getKey()), is(true));
+
+            assertThat(actualValue, hasKey(attributeInteger.getKey()));
+            assertThat(3, sameInstance(actualValue.get(attributeInteger.getKey())));
+            assertThat((Integer) actualValue.get(attributeInteger.getKey()), is(3));
+
+            assertThat(actualValue, hasKey(attributeDouble.getKey()));
+            assertThat(3.123, sameInstance(actualValue.get(attributeDouble.getKey())));
+            assertThat((Double) actualValue.get(attributeDouble.getKey()), is(3.123));
 
             // verify that dispatchEvent was called with the correct LogEvent object
             verify(mockEventHandler).dispatchEvent(logEventToDispatch);
