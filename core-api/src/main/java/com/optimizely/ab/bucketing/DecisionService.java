@@ -129,16 +129,7 @@ public class DecisionService {
         }
 
         if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
-            String bucketingId = userId;
-            if (filteredAttributes.containsKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())) {
-                if (String.class.isInstance(filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString()))) {
-                    bucketingId = (String) filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString());
-                    logger.info("bucketingId is valid");
-                } 
-                else {
-                    logger.warn("bucketingID has type mismatch, defaulted to userId ");
-                } 
-            }
+            String bucketingId = getBucketingId(userId,filteredAttributes);
             variation = bucketer.bucket(experiment, bucketingId);
 
             if (variation != null) {
@@ -216,16 +207,7 @@ public class DecisionService {
 
         // for all rules before the everyone else rule
         int rolloutRulesLength = rollout.getExperiments().size();
-        String bucketingId = userId;
-        if (filteredAttributes.containsKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())) {
-            if (String.class.isInstance(filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString()))) {
-                bucketingId = (String) filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString());
-                logger.info("bucketingId is valid");
-            } 
-            else {
-                logger.warn("bucketingID has type mismatch, defaulted to userId ");
-            } 
-        }
+        String bucketingId = getBucketingId(userId, filteredAttributes);
         Variation variation;
         for (int i = 0; i < rolloutRulesLength - 1; i++) {
             Experiment rolloutRule = rollout.getExperiments().get(i);
@@ -354,5 +336,26 @@ public class DecisionService {
                 errorHandler.handleError(new OptimizelyRuntimeException(exception));
             }
         }
+    }
+
+    /**
+     * @param userId The userId of the user.
+     * @param filteredAttributes The user's attributes. This should be filtered to just attributes in the Datafile.
+     * @return bucketingId if it is a String type in attributes.
+     *      else return userId
+     */
+    String getBucketingId(@Nonnull String userId,
+                          @Nonnull Map<String, ?> filteredAttributes) {
+        String bucketingId = userId;
+        if (filteredAttributes.containsKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())) {
+            if (String.class.isInstance(filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString()))) {
+                bucketingId = (String) filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString());
+                logger.debug("BucketingId is valid: \"{}\"", bucketingId);
+            } 
+            else {
+                logger.warn("BucketingID attribute is not a string. Defaulted to userId");
+            } 
+        }
+        return bucketingId;
     }
 }
