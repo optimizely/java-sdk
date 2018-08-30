@@ -129,7 +129,7 @@ public class DecisionService {
         }
 
         if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
-            String bucketingId = getBucketingId(userId,filteredAttributes);
+            String bucketingId = getBucketingId(userId, filteredAttributes);
             variation = bucketer.bucket(experiment, bucketingId);
 
             if (variation != null) {
@@ -339,6 +339,7 @@ public class DecisionService {
     }
 
     /**
+     * Get the bucketingId of a user if a bucketingId exists in attributes, or else default to userId.
      * @param userId The userId of the user.
      * @param filteredAttributes The user's attributes. This should be filtered to just attributes in the Datafile.
      * @return bucketingId if it is a String type in attributes.
