@@ -36,7 +36,7 @@ public class OrCondition implements Condition {
         return conditions;
     }
 
-    public boolean evaluate(Map<String, ?> attributes) {
+    public Boolean evaluate(Map<String, ?> attributes) {
         for (Condition condition : conditions) {
             if (condition.evaluate(attributes))
                 return true;

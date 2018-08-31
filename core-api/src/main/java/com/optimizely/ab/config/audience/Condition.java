@@ -23,5 +23,5 @@ import java.util.Map;
  */
 public interface Condition {
 
-    boolean evaluate(Map<String, ?> attributes);
+    Boolean evaluate(Map<String, ?> attributes);
 }

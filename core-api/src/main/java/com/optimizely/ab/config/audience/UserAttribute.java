@@ -49,13 +49,19 @@ public class UserAttribute implements Condition {
         return value;
     }
 
-    public boolean evaluate(Map<String, ?> attributes) {
+    public Boolean evaluate(Map<String, ?> attributes) {
         // Valid for primative types, but needs to change when a value is an object or an array
         Object userAttributeValue = attributes.get(name);
 
         if (value != null) { // if there is a value in the condition
             // check user attribute value is equal
-            return value.equals(userAttributeValue);
+            try {
+                return MatchType.getMatchType(type, value).getMatcher().eval(attributes.get(name));
+            }
+            catch (NullPointerException np) {
+                return false;
+            }
+
         }
         else if (userAttributeValue != null) { // if the datafile value is null but user has a value for this attribute
             // return false since null != nonnull
