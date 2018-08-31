@@ -524,7 +524,7 @@ public class OptimizelyTest {
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
         Variation userIdBucketedVariation = activatedExperiment.getVariations().get(1);
-        Attribute attribute = validProjectConfig.getAttributes().get(0);
+        Attribute attributeString = validProjectConfig.getAttributes().get(0); 
 
         // setup a mock event builder to return expected impression params
         EventFactory mockEventFactory = mock(EventFactory.class);
@@ -546,8 +546,9 @@ public class OptimizelyTest {
         when(mockBucketer.bucket(activatedExperiment, testBucketingId))
                 .thenReturn(bucketedVariation);
 
-        Map<String, String> attr = new HashMap<String,String>();
-        attr.put(attribute.getKey(), "attributeValue");
+        Map<String, String> attr = new HashMap<String, String>();
+
+        attr.put(attributeString.getKey(), "attributeValue");
         attr.put(testBucketingIdKey, testBucketingId);
 
         // activate the experiment
@@ -564,10 +565,75 @@ public class OptimizelyTest {
                 eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
 
         Map<String, String> actualValue = attributeCaptor.getValue();
-        assertThat(actualValue, hasEntry(attribute.getKey(), "attributeValue"));
+        assertThat(actualValue, hasEntry(attributeString.getKey(), "attributeValue"));
 
         // verify that dispatchEvent was called with the correct LogEvent object
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
+    }
+
+    public void activateWithTypedAttributes() throws Exception {
+        if (datafileVersion < 4) {
+            return;
+        }
+
+        Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
+        Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+        Variation userIdBucketedVariation = activatedExperiment.getVariations().get(1);
+        Attribute attributeString = validProjectConfig.getAttributes().get(0); 
+        Attribute attributeBoolean = validProjectConfig.getAttributes().get(3); 
+        Attribute attributeInteger = validProjectConfig.getAttributes().get(4); 
+        Attribute attributeDouble = validProjectConfig.getAttributes().get(5); 
+        
+        // setup a mock event builder to return expected impression params
+        EventFactory mockEventFactory = mock(EventFactory.class);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withBucketing(mockBucketer)
+                .withEventBuilder(mockEventFactory)
+                .withConfig(validProjectConfig)
+                .withErrorHandler(mockErrorHandler)
+                .build();
+
+        when(mockEventFactory.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
+                eq(testUserId), anyMapOf(String.class, Object.class)))
+                .thenReturn(logEventToDispatch);
+
+        when(mockBucketer.bucket(activatedExperiment, testUserId))
+                .thenReturn(userIdBucketedVariation);
+
+        when(mockBucketer.bucket(activatedExperiment, testBucketingId))
+                .thenReturn(bucketedVariation);
+
+        Map<String, Object> attr = new HashMap<>();
+
+        attr.put(attributeString.getKey(), "attributeValue");
+        attr.put(attributeBoolean.getKey(), true);
+        attr.put(attributeInteger.getKey(), 3);
+        attr.put(attributeDouble.getKey(), 3.123);
+        attr.put(testBucketingIdKey, testBucketingId);
+
+        // activate the experiment
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId,
+                attr);
+
+        // verify that the bucketing algorithm was called correctly
+        verify(mockBucketer).bucket(activatedExperiment, testBucketingId);
+        assertThat(actualVariation, is(bucketedVariation));
+
+        // setup the attribute map captor (so we can verify its content)
+        ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockEventFactory).createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment),
+                eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
+
+        Map<String, ?> actualValue = attributeCaptor.getValue();
+
+        assertThat((Map<String,? extends String>)actualValue, hasEntry(attributeString.getKey(), "attributeValue"));
+        assertThat((Map<String,? extends Boolean>)actualValue, hasEntry(attributeBoolean.getKey(), true));
+        assertThat((Map<String,? extends Integer>)actualValue, hasEntry(attributeInteger.getKey(), 3));
+        assertThat((Map<String,? extends Double>)actualValue, hasEntry(attributeDouble.getKey(), 3.123));
+
+        // verify that dispatchEvent was called with the correct LogEvent object
+        verify(mockEventHandler).dispatchEvent(logEventToDispatch);   
     }
 
     /**
@@ -2322,11 +2388,11 @@ public class OptimizelyTest {
 
         ActivateNotificationListener activateNotification = new ActivateNotificationListener() {
             @Override
-            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
                 assertEquals(experiment.getKey(), activatedExperiment.getKey());
                 assertEquals(bucketedVariation.getKey(), variation.getKey());
                 assertEquals(userId, testUserId);
-                for (Map.Entry<String, String> entry : attributes.entrySet()) {
+                for (Map.Entry<String, ?> entry : attributes.entrySet()) {
                     assertEquals(testUserAttributes.get(entry.getKey()), entry.getValue());
                 }
 
@@ -2384,7 +2450,7 @@ public class OptimizelyTest {
 
         ActivateNotificationListener activateNotification = new ActivateNotificationListener() {
             @Override
-            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
                 assertEquals(experiment.getKey(), activatedExperiment.getKey());
                 assertEquals(bucketedVariation.getKey(), variation.getKey());
                 assertEquals(userId, testUserId);
@@ -2719,7 +2785,7 @@ public class OptimizelyTest {
 
         TrackNotificationListener trackNotification = new TrackNotificationListener() {
             @Override
-            public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, String> _attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
+            public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, ?> _attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
                 assertEquals(eventType.getKey(), eventKey);
                 assertEquals(genericUserId, userId);
                 assertEquals(attributes, _attributes);
@@ -2803,7 +2869,7 @@ public class OptimizelyTest {
 
         TrackNotificationListener trackNotification = new TrackNotificationListener() {
             @Override
-            public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
+            public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
                 assertEquals(eventType.getKey(), eventKey);
                 assertEquals(genericUserId, userId);
                 assertTrue(attributes.isEmpty());

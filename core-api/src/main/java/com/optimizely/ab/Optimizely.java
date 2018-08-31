@@ -120,7 +120,7 @@ public class Optimizely {
     public @Nullable
     Variation activate(@Nonnull String experimentKey,
                        @Nonnull String userId,
-                       @Nonnull Map<String, String> attributes) throws UnknownExperimentException {
+                       @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
 
         if (experimentKey == null) {
             logger.error("The experimentKey parameter must be nonnull.");
@@ -153,7 +153,7 @@ public class Optimizely {
     public @Nullable
     Variation activate(@Nonnull Experiment experiment,
                        @Nonnull String userId,
-                       @Nonnull Map<String, String> attributes) {
+                       @Nonnull Map<String, ?> attributes) {
 
         ProjectConfig currentConfig = getProjectConfig();
 
@@ -164,7 +164,7 @@ public class Optimizely {
     Variation activate(@Nonnull ProjectConfig projectConfig,
                        @Nonnull Experiment experiment,
                        @Nonnull String userId,
-                       @Nonnull Map<String, String> attributes) {
+                       @Nonnull Map<String, ?> attributes) {
 
         if (!validateUserId(userId)){
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
@@ -172,7 +172,7 @@ public class Optimizely {
         }
         // determine whether all the given attributes are present in the project config. If not, filter out the unknown
         // attributes.
-        Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
+        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, attributes);
 
         // bucket the user to the given experiment and dispatch an impression event
         Variation variation = decisionService.getVariation(experiment, userId, filteredAttributes);
@@ -189,7 +189,7 @@ public class Optimizely {
     private void sendImpression(@Nonnull ProjectConfig projectConfig,
                                 @Nonnull Experiment experiment,
                                 @Nonnull String userId,
-                                @Nonnull Map<String, String> filteredAttributes,
+                                @Nonnull Map<String, ?> filteredAttributes,
                                 @Nonnull Variation variation) {
         if (experiment.isRunning()) {
             LogEvent impressionEvent = eventFactory.createImpressionEvent(
@@ -228,13 +228,13 @@ public class Optimizely {
 
     public void track(@Nonnull String eventName,
                       @Nonnull String userId,
-                      @Nonnull Map<String, String> attributes) throws UnknownEventTypeException {
+                      @Nonnull Map<String, ?> attributes) throws UnknownEventTypeException {
         track(eventName, userId, attributes, Collections.<String, String>emptyMap());
     }
 
     public void track(@Nonnull String eventName,
                       @Nonnull String userId,
-                      @Nonnull Map<String, String> attributes,
+                      @Nonnull Map<String, ?> attributes,
                       @Nonnull Map<String, ?> eventTags) throws UnknownEventTypeException {
 
         if (!validateUserId(userId)) {
@@ -259,7 +259,7 @@ public class Optimizely {
 
         // determine whether all the given attributes are present in the project config. If not, filter out the unknown
         // attributes.
-        Map<String, String> filteredAttributes = filterAttributes(currentConfig, attributes);
+        Map<String, ?> filteredAttributes = filterAttributes(currentConfig, attributes);
 
         if (eventTags == null) {
             logger.warn("Event tags is null when non-null was expected. Defaulting to an empty event tags map.");
@@ -344,7 +344,7 @@ public class Optimizely {
      */
     public @Nonnull Boolean isFeatureEnabled(@Nonnull String featureKey,
                                               @Nonnull String userId,
-                                              @Nonnull Map<String, String> attributes) {
+                                              @Nonnull Map<String, ?> attributes) {
         if (featureKey == null) {
             logger.warn("The featureKey parameter must be nonnull.");
             return false;
@@ -359,7 +359,7 @@ public class Optimizely {
             return false;
         }
 
-        Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
+        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, attributes);
 
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
         if (featureDecision.variation != null) {
@@ -410,7 +410,7 @@ public class Optimizely {
     public @Nullable Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
-                                                       @Nonnull Map<String, String> attributes) {
+                                                       @Nonnull Map<String, ?> attributes) {
         String variableValue = getFeatureVariableValueForType(
                 featureKey,
                 variableKey,
@@ -450,7 +450,7 @@ public class Optimizely {
     public @Nullable Double getFeatureVariableDouble(@Nonnull String featureKey,
                                                      @Nonnull String variableKey,
                                                      @Nonnull String userId,
-                                                     @Nonnull Map<String, String> attributes) {
+                                                     @Nonnull Map<String, ?> attributes) {
         String variableValue = getFeatureVariableValueForType(
                 featureKey,
                 variableKey,
@@ -495,7 +495,7 @@ public class Optimizely {
     public @Nullable Integer getFeatureVariableInteger(@Nonnull String featureKey,
                                                        @Nonnull String variableKey,
                                                        @Nonnull String userId,
-                                                       @Nonnull Map<String, String> attributes) {
+                                                       @Nonnull Map<String, ?> attributes) {
         String variableValue = getFeatureVariableValueForType(
                 featureKey,
                 variableKey,
@@ -540,7 +540,7 @@ public class Optimizely {
     public @Nullable String getFeatureVariableString(@Nonnull String featureKey,
                                                      @Nonnull String variableKey,
                                                      @Nonnull String userId,
-                                                     @Nonnull Map<String, String> attributes) {
+                                                     @Nonnull Map<String, ?> attributes) {
         return getFeatureVariableValueForType(
                 featureKey,
                 variableKey,
@@ -553,7 +553,7 @@ public class Optimizely {
     String getFeatureVariableValueForType(@Nonnull String featureKey,
                                                   @Nonnull String variableKey,
                                                   @Nonnull String userId,
-                                                  @Nonnull Map<String, String> attributes,
+                                                  @Nonnull Map<String, ?> attributes,
                                                   @Nonnull LiveVariable.VariableType variableType) {
         if (featureKey == null) {
             logger.warn("The featureKey parameter must be nonnull.");
@@ -614,7 +614,7 @@ public class Optimizely {
      * @return List of the feature keys that are enabled for the user if the userId is empty it will
      * return Empty List.
      */
-    public List<String> getEnabledFeatures(@Nonnull String userId, @Nonnull Map<String, String> attributes) {
+    public List<String> getEnabledFeatures(@Nonnull String userId, @Nonnull Map<String, ?> attributes) {
         List<String> enabledFeaturesList = new ArrayList<String>();
 
         if (!validateUserId(userId)){
@@ -642,9 +642,9 @@ public class Optimizely {
     public @Nullable
     Variation getVariation(@Nonnull Experiment experiment,
                            @Nonnull String userId,
-                           @Nonnull Map<String, String> attributes) throws UnknownExperimentException {
+                           @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
 
-        Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
+        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, attributes);
 
         return decisionService.getVariation(experiment, userId, filteredAttributes);
     }
@@ -659,7 +659,7 @@ public class Optimizely {
     public @Nullable
     Variation getVariation(@Nonnull String experimentKey,
                            @Nonnull String userId,
-                           @Nonnull Map<String, String> attributes) {
+                           @Nonnull Map<String, ?> attributes) {
         if (!validateUserId(userId)) {
             return null;
         }
@@ -677,7 +677,7 @@ public class Optimizely {
             return null;
         }
 
-        Map<String, String> filteredAttributes = filterAttributes(projectConfig, attributes);
+        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, attributes);
 
         return decisionService.getVariation(experiment,userId,filteredAttributes);
     }
@@ -742,17 +742,18 @@ public class Optimizely {
      * @return the filtered attributes map (containing only attributes that are present in the project config) or an
      * empty map if a null attributes object is passed in
      */
-    private Map<String, String> filterAttributes(@Nonnull ProjectConfig projectConfig,
-                                                 @Nonnull Map<String, String> attributes) {
+    private Map<String, ?> filterAttributes(@Nonnull ProjectConfig projectConfig,
+                                                 @Nonnull Map<String, ?> attributes) {
         if (attributes == null) {
             logger.warn("Attributes is null when non-null was expected. Defaulting to an empty attributes map.");
             return Collections.<String, String>emptyMap();
         }
 
+        // List of attribute keys
         List<String> unknownAttributes = null;
 
         Map<String, Attribute> attributeKeyMapping = projectConfig.getAttributeKeyMapping();
-        for (Map.Entry<String, String> attribute : attributes.entrySet()) {
+        for (Map.Entry<String, ?> attribute : attributes.entrySet()) {
             if (!attributeKeyMapping.containsKey(attribute.getKey()) &&
                     !attribute.getKey().startsWith(ProjectConfig.RESERVED_ATTRIBUTE_PREFIX)) {
                 if (unknownAttributes == null) {
@@ -765,7 +766,7 @@ public class Optimizely {
         if (unknownAttributes != null) {
             logger.warn("Attribute(s) {} not in the datafile.", unknownAttributes);
             // make a copy of the passed through attributes, then remove the unknown list
-            attributes = new HashMap<String, String>(attributes);
+            attributes = new HashMap<>(attributes);
             for (String unknownAttribute : unknownAttributes) {
                 attributes.remove(unknownAttribute);
             }

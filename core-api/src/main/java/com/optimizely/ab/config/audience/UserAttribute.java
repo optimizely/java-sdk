@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -29,9 +29,9 @@ public class UserAttribute implements Condition {
 
     private final String name;
     private final String type;
-    private final String value;
+    private final Object value;
 
-    public UserAttribute(@Nonnull String name, @Nonnull String type, @Nullable String value) {
+    public UserAttribute(@Nonnull String name, @Nonnull String type, @Nullable Object value) {
         this.name = name;
         this.type = type;
         this.value = value;
@@ -45,12 +45,13 @@ public class UserAttribute implements Condition {
         return type;
     }
 
-    public String getValue() {
+    public Object getValue() {
         return value;
     }
 
-    public boolean evaluate(Map<String, String> attributes) {
-        String userAttributeValue = attributes.get(name);
+    public boolean evaluate(Map<String, ?> attributes) {
+        // Valid for primative types, but needs to change when a value is an object or an array
+        Object userAttributeValue = attributes.get(name);
 
         if (value != null) { // if there is a value in the condition
             // check user attribute value is equal
@@ -69,7 +70,7 @@ public class UserAttribute implements Condition {
     public String toString() {
         return "{name='" + name + "\'" +
                ", type='" + type + "\'" +
-               ", value='" + value + "\'" +
+               ", value='" + value.toString() + "\'" +
                "}";
     }
 

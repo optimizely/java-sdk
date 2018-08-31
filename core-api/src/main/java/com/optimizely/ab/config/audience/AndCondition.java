@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ public class AndCondition implements Condition {
         return conditions;
     }
 
-    public boolean evaluate(Map<String, String> attributes) {
+    public boolean evaluate(Map<String, ?> attributes) {
         for (Condition condition : conditions) {
             if (!condition.evaluate(attributes))
                 return false;

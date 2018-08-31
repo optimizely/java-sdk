@@ -54,7 +54,7 @@ public class NotificationCenterTest {
     public void testAddActivateNotificationTwice() {
         ActivateNotificationListener listener = new ActivateNotificationListener() {
             @Override
-            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
 
             }
         };
@@ -70,7 +70,7 @@ public class NotificationCenterTest {
     public void testAddActivateNotification() {
         int notificationId = notificationCenter.addActivateNotificationListener(new ActivateNotificationListenerInterface() {
             @Override
-            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
 
             }
         });
@@ -83,7 +83,7 @@ public class NotificationCenterTest {
     public void testAddTrackNotification() {
         int notificationId = notificationCenter.addTrackNotificationListener(new TrackNotificationListenerInterface() {
             @Override
-            public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
+            public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
 
             }
         });
@@ -103,7 +103,7 @@ public class NotificationCenterTest {
     public void testAddTrackNotificationInterface() {
         int notificationId = notificationCenter.addTrackNotificationListener(new TrackNotificationListenerInterface() {
             @Override
-            public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
+            public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
 
             }
         });
@@ -116,7 +116,7 @@ public class NotificationCenterTest {
     public void testAddActivateNotificationInterface() {
         int notificationId = notificationCenter.addActivateNotificationListener(new ActivateNotificationListenerInterface() {
             @Override
-            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
 
             }
         });

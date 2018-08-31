@@ -43,12 +43,19 @@ import static org.mockito.Mockito.when;
 public class AudienceConditionEvaluationTest {
 
     Map<String, String> testUserAttributes;
+    Map<String, Object> testTypedUserAttributes;
 
     @Before
     public void initialize() {
         testUserAttributes = new HashMap<String, String>();
         testUserAttributes.put("browser_type", "chrome");
         testUserAttributes.put("device_type", "Android");
+
+        testTypedUserAttributes = new HashMap<String, Object>();
+        testTypedUserAttributes.put("is_firefox", true);
+        testTypedUserAttributes.put("num_counts", 3.55);
+        testTypedUserAttributes.put("num_size", 3);
+        testTypedUserAttributes.put("meta_data", testUserAttributes);
     }
 
     /**
@@ -58,6 +65,23 @@ public class AudienceConditionEvaluationTest {
     public void userAttributeEvaluateTrue() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_dimension", "chrome");
         assertTrue(testInstance.evaluate(testUserAttributes));
+    }
+
+
+    /**
+     * Verify that UserAttribute.evaluate returns true on exact-matching visitor attribute data.
+     */
+    @Test
+    public void typedUserAttributeEvaluateTrue() throws Exception {
+        UserAttribute testInstance = new UserAttribute("meta_data", "custom_dimension", testUserAttributes);
+        UserAttribute testInstance2 = new UserAttribute("is_firefox", "custom_dimension", true);
+        UserAttribute testInstance3 = new UserAttribute("num_counts", "custom_dimension", 3.55);
+        UserAttribute testInstance4 = new UserAttribute("num_size", "custom_dimension", 3);
+
+        assertTrue(testInstance.evaluate(testTypedUserAttributes));
+        assertTrue(testInstance2.evaluate(testTypedUserAttributes));
+        assertTrue(testInstance3.evaluate(testTypedUserAttributes));
+        assertTrue(testInstance4.evaluate(testTypedUserAttributes));
     }
 
     /**

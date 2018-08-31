@@ -94,7 +94,7 @@ public class NotificationCenter {
         else {
             return addNotificationListener(NotificationType.Activate, new ActivateNotificationListener() {
                 @Override
-                public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+                public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
                     activateNotificationListenerInterface.onActivate(experiment, userId, attributes, variation, event);
                 }
             });
@@ -113,7 +113,7 @@ public class NotificationCenter {
         else {
             return addNotificationListener(NotificationType.Track, new TrackNotificationListener() {
                 @Override
-                public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, String> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
+                public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
                     trackNotificationListenerInterface.onTrack(eventKey, userId, attributes, eventTags, event);
                 }
             });
