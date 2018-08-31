@@ -33,12 +33,10 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV3;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -154,20 +152,31 @@ public class OptimizelyBuilderTest {
 
     @SuppressFBWarnings(value="NP_NONNULL_PARAM_VIOLATION", justification="Testing nullness contract violation")
     @Test
-    public void builderThrowsConfigParseExceptionForNullDatafile() throws Exception {
-        thrown.expect(ConfigParseException.class);
-        Optimizely.builder(null, mockEventHandler).build();
+    public void nullDatafileResultsInInvalidOptimizelyInstance() throws Exception {
+        Optimizely optimizelyClient = Optimizely.builder(null, mockEventHandler).build();
+
+        assertFalse(optimizelyClient.isValid);
     }
 
     @Test
-    public void builderThrowsConfigParseExceptionForEmptyDatafile() throws Exception {
-        thrown.expect(ConfigParseException.class);
-        Optimizely.builder("", mockEventHandler).build();
+    public void emptyDatafileResultsInInvalidOptimizelyInstance() throws Exception {
+        Optimizely optimizelyClient = Optimizely.builder("", mockEventHandler).build();
+
+        assertFalse(optimizelyClient.isValid);
     }
 
     @Test
-    public void builderThrowsConfigParseExceptionForInvalidDatafile() throws Exception {
-        thrown.expect(ConfigParseException.class);
-        Optimizely.builder("{invalidDatafile}", mockEventHandler).build();
+    public void invalidDatafileResultsInInvalidOptimizelyInstance() throws Exception {
+        Optimizely optimizelyClient = Optimizely.builder("{invalidDatafile}", mockEventHandler).build();
+
+        assertFalse(optimizelyClient.isValid);
+    }
+
+    @Test
+    public void unsupportedDatafileResultsInInvalidOptimizelyInstance() throws Exception {
+        Optimizely optimizelyClient = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler)
+                .build();
+
+        assertFalse(optimizelyClient.isValid);
     }
 }
