@@ -1,5 +1,7 @@
 package com.optimizely.ab.config.audience;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -65,6 +67,7 @@ class LTMatch extends LeafMatch<Number> {
 }
 
 class ExistsMatch extends LeafMatch<Object> {
+    @SuppressFBWarnings("URF_UNREAD_FIELD")
     Object value;
     protected ExistsMatch(Object value) {
         this.value = value;
