@@ -66,6 +66,22 @@ class LTMatch extends LeafMatch<Number> {
     }
 }
 
+class ExistsMatch extends LeafMatch<Object> {
+    Object value;
+    protected ExistsMatch(Object value) {
+        this.value = value;
+    }
+
+    public @Nullable Boolean eval(Object otherValue) {
+        try {
+            return otherValue != null;
+        }
+        catch (Exception e) {
+            return null;
+        }
+    }
+}
+
 public class MatchType {
 
     private String type;
@@ -73,6 +89,8 @@ public class MatchType {
 
     public static MatchType getMatchType(String type, Object value) {
         switch (type) {
+            case "exists":
+                return new MatchType(type, new ExistsMatch(value));
             case "exact":
                 if (value instanceof String) {
                     return new MatchType(type, new ExactMatch<String>((String) value));
