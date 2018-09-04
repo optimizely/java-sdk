@@ -18,8 +18,18 @@ abstract class LeafMatch<T> implements LeafMatcher {
         } catch(java.lang.ClassCastException e) {
             return null;
         }
+    }
+}
 
+class NullMatch extends LeafMatch<Object> {
+    @SuppressFBWarnings("URF_UNREAD_FIELD")
+    Object value;
+    protected NullMatch() {
+        this.value = null;
+    }
 
+    public @Nullable Boolean eval(Object otherValue) {
+        return null;
     }
 }
 
@@ -83,6 +93,22 @@ class ExistsMatch extends LeafMatch<Object> {
     }
 }
 
+class SubstringMatch extends LeafMatch<String> {
+    String value;
+    protected SubstringMatch(String value) {
+        this.value = value;
+    }
+
+    public @Nullable Boolean eval(Object otherValue) {
+        try {
+            return value.contains(convert(otherValue));
+        }
+        catch (Exception e) {
+            return null;
+        }
+    }
+}
+
 public class MatchType {
 
     private String type;
@@ -102,21 +128,32 @@ public class MatchType {
                 else if (value instanceof Boolean) {
                     return new MatchType(type, new ExactMatch<Boolean>((Boolean) value));
                 }
+                break;
+            case "substring":
+                if (value instanceof String) {
+                    return new MatchType(type, new SubstringMatch((String) value));
+                }
+                break;
             case "gt":
                 if (value instanceof Number) {
                     return new MatchType(type, new GTMatch((Number) value));
                 }
+                break;
             case "lt":
                 if (value instanceof Number) {
                     return new MatchType(type, new LTMatch((Number) value));
                 }
+                break;
             case "custom_dimension":
                 if (value instanceof String) {
                     return new MatchType(type, new ExactMatch<String>((String) value));
                 }
+                break;
             default:
-                return null;
+                return new MatchType(type, new NullMatch());
         }
+
+        return new MatchType(type, new NullMatch());
     }
 
 
@@ -134,6 +171,4 @@ public class MatchType {
     public String toString() {
         return type;
     }
-
-
 }
