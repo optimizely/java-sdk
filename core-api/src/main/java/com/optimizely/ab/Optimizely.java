@@ -84,7 +84,7 @@ public class Optimizely {
     @VisibleForTesting ProjectConfig projectConfig;
     @VisibleForTesting final EventHandler eventHandler;
     @VisibleForTesting final ErrorHandler errorHandler;
-    public boolean isValid = false;
+    private boolean isValid;
     public final NotificationCenter notificationCenter = new NotificationCenter();
 
     @Nullable private final UserProfileService userProfileService;
@@ -128,6 +128,16 @@ public class Optimizely {
             Bucketer bucketer = new Bucketer(projectConfig);
             decisionService = new DecisionService(bucketer, errorHandler, projectConfig, userProfileService);
         }
+    }
+
+    /**
+     * Determine if the instance of the Optimizely client is valid. An instance can be deemed invalid if it was not
+     * initialized properly due to an invalid datafile being passed in.
+     * @return True if the Optimizely instance is valid.
+     *         False if the Optimizely instance is not valid.
+     */
+    public boolean isValid() {
+        return isValid;
     }
 
     //======== activate calls ========//

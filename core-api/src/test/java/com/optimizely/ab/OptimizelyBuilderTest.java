@@ -155,21 +155,21 @@ public class OptimizelyBuilderTest {
     public void nullDatafileResultsInInvalidOptimizelyInstance() throws Exception {
         Optimizely optimizelyClient = Optimizely.builder(null, mockEventHandler).build();
 
-        assertFalse(optimizelyClient.isValid);
+        assertFalse(optimizelyClient.isValid());
     }
 
     @Test
     public void emptyDatafileResultsInInvalidOptimizelyInstance() throws Exception {
         Optimizely optimizelyClient = Optimizely.builder("", mockEventHandler).build();
 
-        assertFalse(optimizelyClient.isValid);
+        assertFalse(optimizelyClient.isValid());
     }
 
     @Test
     public void invalidDatafileResultsInInvalidOptimizelyInstance() throws Exception {
         Optimizely optimizelyClient = Optimizely.builder("{invalidDatafile}", mockEventHandler).build();
 
-        assertFalse(optimizelyClient.isValid);
+        assertFalse(optimizelyClient.isValid());
     }
 
     @Test
@@ -177,6 +177,6 @@ public class OptimizelyBuilderTest {
         Optimizely optimizelyClient = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler)
                 .build();
 
-        assertFalse(optimizelyClient.isValid);
+        assertFalse(optimizelyClient.isValid());
     }
 }

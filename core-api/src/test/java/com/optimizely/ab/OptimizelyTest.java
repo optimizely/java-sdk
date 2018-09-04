@@ -4607,6 +4607,32 @@ public class OptimizelyTest {
         assertThat(actualVariation, is(bucketedVariation));
     }
 
+    //======== isValid calls  ========//
+
+    /**
+     * Verify that {@link Optimizely#isValid()} returns false when the Optimizely instance is not valid
+     */
+    @Test
+    public void isValidReturnsFalseWhenClientIsInvalid() throws Exception {
+        Optimizely optimizely = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler)
+            .withBucketing(mockBucketer)
+            .build();
+
+        assertFalse(optimizely.isValid());
+    }
+
+    /**
+     * Verify that {@link Optimizely#isValid()} returns false when the Optimizely instance is not valid
+     */
+    @Test
+    public void isValidReturnsTrueWhenClientIsValid() throws Exception {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withBucketing(mockBucketer)
+                .build();
+
+        assertTrue(optimizely.isValid());
+    }
+
     //======== Helper methods ========//
 
     private Experiment createUnknownExperiment() {
