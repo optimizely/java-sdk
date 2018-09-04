@@ -40,8 +40,7 @@ class GTMatch extends LeafMatch<Number> {
 
     public @Nullable Boolean eval(Object otherValue) {
        try {
-           return value.doubleValue() <
-           ((Number) convert(otherValue)).doubleValue();
+           return ((Number) convert(otherValue)).doubleValue() > value.doubleValue();
        }
        catch (Exception e) {
            return null;
@@ -57,8 +56,7 @@ class LTMatch extends LeafMatch<Number> {
 
     public @Nullable Boolean eval(Object otherValue) {
         try {
-            return value.doubleValue() <
-                    ((Number) convert(otherValue)).doubleValue();
+            return ((Number) convert(otherValue)).doubleValue() < value.doubleValue();
         }
         catch (Exception e) {
             return null;
