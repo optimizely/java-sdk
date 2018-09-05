@@ -614,7 +614,7 @@ public class ProjectConfig {
         /**
          * @return a {@link ProjectConfig} instance given a JSON string datafile
          */
-        public ProjectConfig build() throws ConfigParseException{
+        public ProjectConfig build() throws ConfigParseException {
             if (datafile == null) {
                 throw new ConfigParseException("Unable to parse null datafile.");
             }
