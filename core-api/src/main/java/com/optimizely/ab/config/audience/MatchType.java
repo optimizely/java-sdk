@@ -40,6 +40,23 @@ class ExactMatch<T> extends LeafMatch<T> {
     }
 
     public @Nullable Boolean eval(Object otherValue) {
+        if (!value.getClass().isInstance(otherValue)) return null;
+        return value.equals(convert(otherValue));
+    }
+}
+
+/**
+ * This is a temporary class.  It mimics the current behaviour for
+ * custom dimension.  This will be dropped for ExactMatch and the unit tests need to be fixed.
+ * @param <T>
+ */
+class CustomDimensionMatch<T> extends LeafMatch<T> {
+    T value;
+    protected CustomDimensionMatch(T value) {
+        this.value = value;
+    }
+
+    public @Nullable Boolean eval(Object otherValue) {
         return value.equals(convert(otherValue));
     }
 }
@@ -146,7 +163,7 @@ public class MatchType {
                 break;
             case "custom_dimension":
                 if (value instanceof String) {
-                    return new MatchType(type, new ExactMatch<String>((String) value));
+                    return new MatchType(type, new CustomDimensionMatch<String>((String) value));
                 }
                 break;
             default:

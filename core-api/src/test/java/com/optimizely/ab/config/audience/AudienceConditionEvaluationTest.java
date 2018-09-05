@@ -154,13 +154,13 @@ public class AudienceConditionEvaluationTest {
         assertNull(testInstanceObject.evaluate(testTypedUserAttributes));
 
         // hmm??? passes because we aren't specifying the type of the value
-        // assertNull(testInstanceString.evaluate(testUserAttributes));
-        // assertNull(testInstanceBoolean.evaluate(testTypedUserAttributes));
-        // assertNull(testInstanceInteger.evaluate(testTypedUserAttributes));
-        // assertNull(testInstanceDouble.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceString.evaluate(testUserAttributes));
+        assertNull(testInstanceBoolean.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceInteger.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceDouble.evaluate(testTypedUserAttributes));
 
-        // UserAttribute testInstanceNull = new UserAttribute("null_val", "exact", "null_val");
-        // assertNull(testInstanceNull.evaluate(testTypedUserAttributes));
+        UserAttribute testInstanceNull = new UserAttribute("null_val", "exact", "null_val");
+        assertNull(testInstanceNull.evaluate(testTypedUserAttributes));
     }
 
 
