@@ -87,12 +87,19 @@ public class AudienceConditionEvaluationTest {
         assertFalse(testInstance.evaluate(testUserAttributes));
     }
 
+    /**
+     * Verify that UserAttribute.evaluate returns null on invalid match type.
+     */
     @Test
     public void invalidMatchCondition() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "unknown_dimension", "chrome");
         assertNull(testInstance.evaluate(testUserAttributes));
     }
 
+    /**
+     * Verify that UserAttribute.evaluate for EXIST match type returns true for known visitor 
+     * attributes with non-null instances
+     */
     @Test
     public void existsMatchConditionEvaluatesTrue() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "exists", "firefox");
@@ -108,6 +115,10 @@ public class AudienceConditionEvaluationTest {
         assertTrue(testInstanceObject.evaluate(testTypedUserAttributes));
     }
 
+    /**
+     * Verify that UserAttribute.evaluate for EXIST match type returns false for unknown visitor 
+     * attributes OR null visitor attributes.
+     */
     @Test
     public void existsMatchConditionEvaluatesFalse() throws Exception {
         UserAttribute testInstance = new UserAttribute("bad_var", "exists", "chrome");
@@ -116,6 +127,10 @@ public class AudienceConditionEvaluationTest {
         assertFalse(testInstanceNull.evaluate(testTypedUserAttributes));
     }
 
+    /**
+     * Verify that UserAttribute.evaluate for EXACT match type returns true for known visitor 
+     * attributes where the values and the value's type are the same
+     */
     @Test
     public void exactMatchConditionEvaluatesTrue() throws Exception {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "exact", "chrome");
@@ -129,6 +144,10 @@ public class AudienceConditionEvaluationTest {
         assertTrue(testInstanceDouble.evaluate(testTypedUserAttributes));
     }
 
+    /**
+     * Verify that UserAttribute.evaluate for EXACT match type returns false for known visitor 
+     * attributes where the value's type are the same, but the values are different
+     */
     @Test
     public void exactMatchConditionEvaluatesFalse() throws Exception {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "exact", "firefox");
@@ -142,28 +161,32 @@ public class AudienceConditionEvaluationTest {
         assertFalse(testInstanceDouble.evaluate(testTypedUserAttributes));
     }
 
+    /**
+     * Verify that UserAttribute.evaluate for EXACT match type returns null for known visitor 
+     * attributes where the value's type are different OR for values with null and object type.
+     */
     @Test
     public void exactMatchConditionEvaluatesNull() throws Exception {
         UserAttribute testInstanceObject = new UserAttribute("meta_data", "exact", testUserAttributes);
-
         UserAttribute testInstanceString = new UserAttribute("browser_type", "exact", true);
         UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "exact", "true");
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "exact", "3");
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "exact", "3.55");
+        UserAttribute testInstanceNull = new UserAttribute("null_val", "exact", "null_val");
 
         assertNull(testInstanceObject.evaluate(testTypedUserAttributes));
-
-        // hmm??? passes because we aren't specifying the type of the value
         assertNull(testInstanceString.evaluate(testUserAttributes));
         assertNull(testInstanceBoolean.evaluate(testTypedUserAttributes));
         assertNull(testInstanceInteger.evaluate(testTypedUserAttributes));
         assertNull(testInstanceDouble.evaluate(testTypedUserAttributes));
-
-        UserAttribute testInstanceNull = new UserAttribute("null_val", "exact", "null_val");
         assertNull(testInstanceNull.evaluate(testTypedUserAttributes));
     }
 
-
+    /**
+     * Verify that UserAttribute.evaluate for GT match type returns true for known visitor 
+     * attributes where the value's type is a number, and the UserAttribute's value is greater than
+     * the condition's value.
+     */
     @Test
     public void gtMatchConditionEvaluatesTrue() throws Exception {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "gt", 2);
@@ -173,6 +196,11 @@ public class AudienceConditionEvaluationTest {
         assertTrue(testInstanceDouble.evaluate(testTypedUserAttributes));
     }
 
+    /**
+     * Verify that UserAttribute.evaluate for GT match type returns false for known visitor 
+     * attributes where the value's type is a number, and the UserAttribute's value is not greater
+     * than the condition's value.
+     */
     @Test
     public void gtMatchConditionEvaluatesFalse() throws Exception {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "gt", 5);
@@ -182,6 +210,10 @@ public class AudienceConditionEvaluationTest {
         assertFalse(testInstanceDouble.evaluate(testTypedUserAttributes));
     }
 
+    /**
+     * Verify that UserAttribute.evaluate for GT match type returns null if the UserAttribute's 
+     * value type is not a number.
+     */
     @Test
     public void gtMatchConditionEvaluatesNull() throws Exception {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "gt", 3.5);
@@ -195,6 +227,11 @@ public class AudienceConditionEvaluationTest {
         assertNull(testInstanceNull.evaluate(testTypedUserAttributes));
     }
 
+    /**
+     * Verify that UserAttribute.evaluate for GT match type returns true for known visitor 
+     * attributes where the value's type is a number, and the UserAttribute's value is less than
+     * the condition's value.
+     */
     @Test
     public void ltMatchConditionEvaluatesTrue() throws Exception {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "lt", 5);
@@ -204,6 +241,11 @@ public class AudienceConditionEvaluationTest {
         assertTrue(testInstanceDouble.evaluate(testTypedUserAttributes));
     }
 
+    /**
+     * Verify that UserAttribute.evaluate for GT match type returns true for known visitor 
+     * attributes where the value's type is a number, and the UserAttribute's value is not less
+     * than the condition's value.
+     */
     @Test
     public void ltMatchConditionEvaluatesFalse() throws Exception {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "lt", 2);
@@ -213,7 +255,10 @@ public class AudienceConditionEvaluationTest {
         assertFalse(testInstanceDouble.evaluate(testTypedUserAttributes));
     }
 
-
+    /**
+     * Verify that UserAttribute.evaluate for LT match type returns null if the UserAttribute's 
+     * value type is not a number.
+     */
     @Test
     public void ltMatchConditionEvaluatesNull() throws Exception {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "lt", 3.5);
@@ -227,18 +272,30 @@ public class AudienceConditionEvaluationTest {
         assertNull(testInstanceNull.evaluate(testTypedUserAttributes));
     }
 
+    /**
+     * Verify that UserAttribute.evaluate for SUBSTRING match type returns true if the 
+     * UserAttribute's value is a substring of the condition's value.
+     */
     @Test
     public void substringMatchConditionEvaluatesTrue() throws Exception {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "substring", "chrome1");
         assertTrue(testInstanceString.evaluate(testUserAttributes));
     }
 
+    /**
+     * Verify that UserAttribute.evaluate for SUBSTRING match type returns true if the 
+     * UserAttribute's value is NOT a substring of the condition's value.
+     */
     @Test
     public void substringMatchConditionEvaluatesFalse() throws Exception {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "substring", "chr");
         assertFalse(testInstanceString.evaluate(testUserAttributes));
     }
 
+    /**
+     * Verify that UserAttribute.evaluate for SUBSTRING match type returns null if the 
+     * UserAttribute's value type is not a string.
+     */
     @Test
     public void substringMatchConditionEvaluatesNull() throws Exception {
         UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "substring", "chrome1");
@@ -253,7 +310,6 @@ public class AudienceConditionEvaluationTest {
         assertNull(testInstanceObject.evaluate(testTypedUserAttributes));
         assertNull(testInstanceNull.evaluate(testTypedUserAttributes));
     }
-
 
     /**
      * Verify that NotCondition.evaluate returns true when its condition operand evaluates to false.
