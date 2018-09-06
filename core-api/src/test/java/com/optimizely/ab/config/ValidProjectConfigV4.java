@@ -62,7 +62,7 @@ public class ValidProjectConfigV4 {
     private static final Attribute  ATTRIBUTE_DOUBLE = new Attribute(ATTRIBUTE_DOUBLE_ID, ATTRIBUTE_DOUBLE_KEY);
 
     // audiences
-    private static final String     CUSTOM_DIMENSION_TYPE = "custom_dimension";
+    private static final String     CUSTOM_ATTRIBUTE_TYPE = "custom_attribute";
     private static final String     AUDIENCE_GRYFFINDOR_ID = "3468206642";
     private static final String     AUDIENCE_GRYFFINDOR_KEY = "Gryffindors";
     public  static final String     AUDIENCE_GRYFFINDOR_VALUE = "Gryffindor";
@@ -72,7 +72,7 @@ public class ValidProjectConfigV4 {
             new AndCondition(Collections.<Condition>singletonList(
                     new OrCondition(Collections.<Condition>singletonList(
                             new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_HOUSE_KEY,
-                                    CUSTOM_DIMENSION_TYPE,
+                                    CUSTOM_ATTRIBUTE_TYPE,
                                     AUDIENCE_GRYFFINDOR_VALUE)))))))
     );
     private static final String     AUDIENCE_SLYTHERIN_ID = "3988293898";
@@ -84,7 +84,7 @@ public class ValidProjectConfigV4 {
             new AndCondition(Collections.<Condition>singletonList(
                     new OrCondition(Collections.<Condition>singletonList(
                             new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_HOUSE_KEY,
-                                    CUSTOM_DIMENSION_TYPE,
+                                    CUSTOM_ATTRIBUTE_TYPE,
                                     AUDIENCE_SLYTHERIN_VALUE)))))))
     );
 
@@ -97,7 +97,7 @@ public class ValidProjectConfigV4 {
             new AndCondition(Collections.<Condition>singletonList(
                     new OrCondition(Collections.<Condition>singletonList(
                             new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_NATIONALITY_KEY,
-                                    CUSTOM_DIMENSION_TYPE,
+                                    CUSTOM_ATTRIBUTE_TYPE,
                                     AUDIENCE_ENGLISH_CITIZENS_VALUE)))))))
     );
     private static final String     AUDIENCE_WITH_MISSING_VALUE_ID = "2196265320";
@@ -105,12 +105,12 @@ public class ValidProjectConfigV4 {
     public  static final String     AUDIENCE_WITH_MISSING_VALUE_VALUE = "English";
     private static final UserAttribute ATTRIBUTE_WITH_VALUE = new UserAttribute(
             ATTRIBUTE_NATIONALITY_KEY,
-            CUSTOM_DIMENSION_TYPE,
+            CUSTOM_ATTRIBUTE_TYPE,
             AUDIENCE_WITH_MISSING_VALUE_VALUE
     );
     private static final UserAttribute ATTRIBUTE_WITHOUT_VALUE = new UserAttribute(
             ATTRIBUTE_NATIONALITY_KEY,
-            CUSTOM_DIMENSION_TYPE,
+            CUSTOM_ATTRIBUTE_TYPE,
             null
     );
     private static final Audience   AUDIENCE_WITH_MISSING_VALUE = new Audience(

@@ -201,7 +201,7 @@
     {
       "id": "100",
       "name": "not_firefox_users",
-      "conditions": "[\"and\", [\"or\", [\"not\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_dimension\", \"value\":\"firefox\"}]]]]"
+      "conditions": "[\"and\", [\"or\", [\"not\", [\"or\", {\"name\": \"browser_type\", \"type\": \"custom_attribute\", \"value\":\"firefox\"}]]]]"
     }
   ],
   "attributes": [

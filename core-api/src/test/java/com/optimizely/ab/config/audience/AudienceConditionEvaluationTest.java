@@ -63,7 +63,7 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void userAttributeEvaluateTrue() throws Exception {
-        UserAttribute testInstance = new UserAttribute("browser_type", "custom_dimension", "chrome");
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "chrome");
         assertTrue(testInstance.evaluate(testUserAttributes));
     }
 
@@ -73,10 +73,10 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void typedUserAttributeEvaluateTrue() throws Exception {
-        UserAttribute testInstance = new UserAttribute("meta_data", "custom_dimension", testUserAttributes);
-        UserAttribute testInstance2 = new UserAttribute("is_firefox", "custom_dimension", true);
-        UserAttribute testInstance3 = new UserAttribute("num_counts", "custom_dimension", 3.55);
-        UserAttribute testInstance4 = new UserAttribute("num_size", "custom_dimension", 3);
+        UserAttribute testInstance = new UserAttribute("meta_data", "custom_attribute", testUserAttributes);
+        UserAttribute testInstance2 = new UserAttribute("is_firefox", "custom_attribute", true);
+        UserAttribute testInstance3 = new UserAttribute("num_counts", "custom_attribute", 3.55);
+        UserAttribute testInstance4 = new UserAttribute("num_size", "custom_attribute", 3);
 
         assertTrue(testInstance.evaluate(testTypedUserAttributes));
         assertTrue(testInstance2.evaluate(testTypedUserAttributes));
@@ -89,7 +89,7 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void userAttributeEvaluateFalse() throws Exception {
-        UserAttribute testInstance = new UserAttribute("browser_type", "custom_dimension", "firefox");
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "firefox");
         assertFalse(testInstance.evaluate(testUserAttributes));
     }
 
@@ -98,7 +98,7 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void userAttributeUnknownAttribute() throws Exception {
-        UserAttribute testInstance = new UserAttribute("unknown_dim", "custom_dimension", "unknown");
+        UserAttribute testInstance = new UserAttribute("unknown_dim", "custom_attribute", "unknown");
         assertFalse(testInstance.evaluate(testUserAttributes));
     }
 
