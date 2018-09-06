@@ -17,6 +17,7 @@
 package com.optimizely.ab.config.audience;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.List;
 import java.util.Map;
@@ -36,13 +37,27 @@ public class AndCondition implements Condition {
         return conditions;
     }
 
-    public Boolean evaluate(Map<String, ?> attributes) {
+    public @Nullable
+    Boolean evaluate(Map<String, ?> attributes) {
+        boolean foundNull = false;
+        // https://docs.google.com/document/d/158_83difXVXF0nb91rxzrfHZwnhsybH21ImRA_si7sg/edit#
+        // According to the matix mentioned in the above document.
         for (Condition condition : conditions) {
-            if (!condition.evaluate(attributes))
+            Boolean conditionEval = condition.evaluate(attributes);
+            if (conditionEval == null) {
+                foundNull = true;
+            }
+            else if (!conditionEval) { // false with nulls or trues is false.
                 return false;
+            }
+            // true and nulls with no false will be null.
         }
 
-        return true;
+        if (foundNull) { // true and null or all null returns null
+            return null;
+        }
+
+        return true; // otherwise, return true
     }
 
     @Override

@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config.audience;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
@@ -23,5 +24,6 @@ import java.util.Map;
  */
 public interface Condition {
 
+    @Nullable
     Boolean evaluate(Map<String, ?> attributes);
 }
