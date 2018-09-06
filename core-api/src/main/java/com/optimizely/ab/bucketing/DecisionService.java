@@ -62,7 +62,7 @@ public class DecisionService {
      */
     public DecisionService(@Nonnull Bucketer bucketer,
                            @Nonnull ErrorHandler errorHandler,
-                           @Nonnull ProjectConfig projectConfig,
+                           @Nullable ProjectConfig projectConfig,
                            @Nullable UserProfileService userProfileService) {
         this.bucketer = bucketer;
         this.errorHandler = errorHandler;
