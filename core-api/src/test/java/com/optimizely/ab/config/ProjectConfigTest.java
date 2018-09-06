@@ -106,7 +106,7 @@ public class ProjectConfigTest {
     @Test
     public void verifyGetAudienceConditionsFromValidId() throws Exception {
         List<Condition> userAttributes = new ArrayList<Condition>();
-        userAttributes.add(new UserAttribute("browser_type", "custom_dimension", "firefox"));
+        userAttributes.add(new UserAttribute("browser_type", "custom_attribute", "firefox"));
 
         OrCondition orInner = new OrCondition(userAttributes);
 
