@@ -70,6 +70,7 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.*;
 import static com.optimizely.ab.event.LogEvent.RequestMethod;
 import static com.optimizely.ab.event.internal.EventFactoryTest.createExperimentVariationMap;
 import static java.util.Arrays.asList;
+import static junit.framework.Assert.assertNotSame;
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -676,7 +677,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
                 activatedExperiment.getKey() + "\".");
-        logbackVerifier.expectMessage(Level.WARN, "Attribute(s) [unknownAttribute] not in the datafile.");
+        logbackVerifier.expectMessage(Level.WARN, "Attribute(s) [unknownAttribute] not in the datafile or has NULL value.");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
                 testParams + " and payload \"\"");
 
@@ -755,21 +756,30 @@ public class OptimizelyTest {
      */
     @Test
     public void activateWithNullAttributeValues() throws Exception {
-        Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
+        ProjectConfig projectConfig;
+        String datafile;
+        if (datafileVersion == 4) {
+            projectConfig = validProjectConfig;
+            datafile = validDatafile;
+        } else {
+            projectConfig = noAudienceProjectConfig;
+            datafile = noAudienceDatafile;
+        }
+        Experiment activatedExperiment = projectConfig.getExperiments().get(0);
+        Attribute attribute = projectConfig.getAttributes().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
-        Attribute attribute = validProjectConfig.getAttributes().get(0);
 
         // setup a mock event builder to return expected impression params
         EventFactory mockEventFactory = mock(EventFactory.class);
 
-        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+        Optimizely optimizely = Optimizely.builder(datafile, mockEventHandler)
                 .withBucketing(mockBucketer)
                 .withEventBuilder(mockEventFactory)
-                .withConfig(validProjectConfig)
+                .withConfig(projectConfig)
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        when(mockEventFactory.createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
+        when(mockEventFactory.createImpressionEvent(eq(projectConfig), eq(activatedExperiment), eq(bucketedVariation),
                 eq(testUserId), anyMapOf(String.class, String.class)))
                 .thenReturn(logEventToDispatch);
 
@@ -777,7 +787,7 @@ public class OptimizelyTest {
                 .thenReturn(bucketedVariation);
 
         // activate the experiment
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, String> attributes = new HashMap<>();
         attributes.put(attribute.getKey(), null);
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, attributes);
 
@@ -787,11 +797,12 @@ public class OptimizelyTest {
 
         // setup the attribute map captor (so we can verify its content)
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(mockEventFactory).createImpressionEvent(eq(validProjectConfig), eq(activatedExperiment),
+        verify(mockEventFactory).createImpressionEvent(eq(projectConfig), eq(activatedExperiment),
                 eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
 
         Map<String, String> actualValue = attributeCaptor.getValue();
-        assertThat(actualValue, hasEntry(attribute.getKey(), null));
+        assertNotSame(actualValue, hasEntry(attribute.getKey(), null));
+        logbackVerifier.expectMessage(Level.WARN, "Attribute(s) [" + attribute.getKey() + "] not in the datafile or has NULL value.");
 
         // verify that dispatchEvent was called with the correct LogEvent object
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
@@ -1624,7 +1635,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
                 "\" for user \"" + genericUserId + "\".");
-        logbackVerifier.expectMessage(Level.WARN, "Attribute(s) [unknownAttribute] not in the datafile.");
+        logbackVerifier.expectMessage(Level.WARN, "Attribute(s) [unknownAttribute] not in the datafile or has NULL value.");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
                 testParams + " and payload \"\"");
 

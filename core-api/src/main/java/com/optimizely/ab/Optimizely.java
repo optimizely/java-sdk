@@ -823,7 +823,7 @@ public class Optimizely {
      * {@link ProjectConfig}.
      *
      * @param projectConfig the current project config
-     * @param attributes the attributes map to validate and potentially filter. Attributes which starts with reserved key
+     * @param attributes the attributes map to validate and potentially filter. Attributes which starts with reserved key or has null values
      * {@link ProjectConfig#RESERVED_ATTRIBUTE_PREFIX} are kept.
      * @return the filtered attributes map (containing only attributes that are present in the project config) or an
      * empty map if a null attributes object is passed in
@@ -836,25 +836,25 @@ public class Optimizely {
         }
 
         // List of attribute keys
-        List<String> unknownAttributes = null;
+        List<String> unknownAndNullValueAttributes = null;
 
         Map<String, Attribute> attributeKeyMapping = projectConfig.getAttributeKeyMapping();
         for (Map.Entry<String, ?> attribute : attributes.entrySet()) {
-            if (!attributeKeyMapping.containsKey(attribute.getKey()) &&
-                    !attribute.getKey().startsWith(ProjectConfig.RESERVED_ATTRIBUTE_PREFIX)) {
-                if (unknownAttributes == null) {
-                    unknownAttributes = new ArrayList<String>();
+            if ((!attributeKeyMapping.containsKey(attribute.getKey()) &&
+                    !attribute.getKey().startsWith(ProjectConfig.RESERVED_ATTRIBUTE_PREFIX)) || attribute.getValue() == null) {
+                if (unknownAndNullValueAttributes == null) {
+                    unknownAndNullValueAttributes = new ArrayList<String>();
                 }
-                unknownAttributes.add(attribute.getKey());
+                unknownAndNullValueAttributes.add(attribute.getKey());
             }
         }
 
-        if (unknownAttributes != null) {
-            logger.warn("Attribute(s) {} not in the datafile.", unknownAttributes);
-            // make a copy of the passed through attributes, then remove the unknown list
+        if (unknownAndNullValueAttributes != null) {
+            logger.warn("Attribute(s) {} not in the datafile or has NULL value.", unknownAndNullValueAttributes);
+            // make a copy of the passed through attributes, then remove the unknown and null values attributes list
             attributes = new HashMap<>(attributes);
-            for (String unknownAttribute : unknownAttributes) {
-                attributes.remove(unknownAttribute);
+            for (String unknownOrNullValueAttribute : unknownAndNullValueAttributes) {
+                attributes.remove(unknownOrNullValueAttribute);
             }
         }
 
