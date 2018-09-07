@@ -296,6 +296,7 @@ final class JsonConfigParser implements ConfigParser {
                 conditions.add(new UserAttribute(
                         (String)conditionMap.get("name"),
                         (String)conditionMap.get("type"),
+                        (String)conditionMap.get("match"),
                                value
                 ));
             }

@@ -132,6 +132,8 @@ public class MatchType {
     private LeafMatcher matcher;
 
     public static MatchType getMatchType(String type, Object value) {
+        if (type == null) type = "custom_dimension";
+
         switch (type) {
             case "exists":
                 return new MatchType(type, new ExistsMatch(value));

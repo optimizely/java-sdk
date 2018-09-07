@@ -69,7 +69,7 @@ public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {
             } else {
                 LinkedTreeMap<String, String> conditionMap = (LinkedTreeMap<String, String>)rawObjectList.get(i);
                 conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
-                               conditionMap.get("value")));
+                        conditionMap.get("match"), conditionMap.get("value")));
             }
         }
 

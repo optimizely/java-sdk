@@ -29,11 +29,13 @@ public class UserAttribute implements Condition {
 
     private final String name;
     private final String type;
+    private final String match;
     private final Object value;
 
-    public UserAttribute(@Nonnull String name, @Nonnull String type, @Nullable Object value) {
+    public UserAttribute(@Nonnull String name, @Nonnull String type, @Nullable String match, @Nullable Object value) {
         this.name = name;
         this.type = type;
+        this.match = match;
         this.value = value;
     }
 
@@ -45,6 +47,10 @@ public class UserAttribute implements Condition {
         return type;
     }
 
+    public String getMatch() {
+        return match;
+    }
+
     public Object getValue() {
         return value;
     }
@@ -53,23 +59,14 @@ public class UserAttribute implements Condition {
         // Valid for primative types, but needs to change when a value is an object or an array
         Object userAttributeValue = attributes.get(name);
 
-        if (value != null) { // if there is a value in the condition
-            // check user attribute value is equal
-            try {
-                return MatchType.getMatchType(type, value).getMatcher().eval(attributes.get(name));
-            }
-            catch (NullPointerException np) {
-                return false;
-            }
+        // check user attribute value is equal
+        try {
+            return MatchType.getMatchType(match, value).getMatcher().eval(userAttributeValue);
+        }
+        catch (NullPointerException np) {
+            return null;
+        }
 
-        }
-        else if (userAttributeValue != null) { // if the datafile value is null but user has a value for this attribute
-            // return false since null != nonnull
-            return false;
-        }
-        else { // both are null
-            return true;
-        }
     }
 
     @Override
