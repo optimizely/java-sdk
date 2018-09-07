@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017, Optimizely and contributors
+ *    Copyright 2017-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ public final class ExperimentUtils {
      */
     public static boolean isUserInExperiment(@Nonnull ProjectConfig projectConfig,
                                              @Nonnull Experiment experiment,
-                                             @Nonnull Map<String, String> attributes) {
+                                             @Nonnull Map<String, ?> attributes) {
         List<String> experimentAudienceIds = experiment.getAudienceIds();
 
         // if there are no audiences, ALL users should be part of the experiment

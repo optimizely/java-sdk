@@ -9,22 +9,22 @@
     {
       "id": "3468206642",
       "name": "Gryffindors",
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"house\", \"type\": \"custom_dimension\", \"value\":\"Gryffindor\"}]]]"
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"house\", \"type\": \"custom_attribute\", \"value\":\"Gryffindor\"}]]]"
     },
     {
       "id": "3988293898",
       "name": "Slytherins",
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"house\", \"type\": \"custom_dimension\", \"value\":\"Slytherin\"}]]]"
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"house\", \"type\": \"custom_attribute\", \"value\":\"Slytherin\"}]]]"
     },
     {
       "id": "4194404272",
       "name": "english_citizens",
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"nationality\", \"type\": \"custom_dimension\", \"value\":\"English\"}]]]"
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"nationality\", \"type\": \"custom_attribute\", \"value\":\"English\"}]]]"
     },
     {
       "id": "2196265320",
       "name": "audience_with_missing_value",
-      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"nationality\", \"type\": \"custom_dimension\", \"value\": \"English\"}, {\"name\": \"nationality\", \"type\": \"custom_dimension\"}]]]"
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"nationality\", \"type\": \"custom_attribute\", \"value\": \"English\"}, {\"name\": \"nationality\", \"type\": \"custom_attribute\"}]]]"
     }
   ],
   "attributes": [
@@ -39,6 +39,18 @@
     {
       "id": "583394100",
       "key": "$opt_test"
+    },
+    {
+      "id": "323434545",
+      "key": "booleanKey"
+    },
+    {
+      "id": "616727838",
+      "key": "integerKey"
+    },
+    {
+      "id": "808797686",
+      "key": "doubleKey"
     }
   ],
   "events": [

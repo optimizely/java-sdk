@@ -88,7 +88,7 @@ public final class ProjectConfigTestUtils {
                                         new EventType("100", "no_running_experiments", singletonList("118")));
 
         List<Condition> userAttributes = new ArrayList<Condition>();
-        userAttributes.add(new UserAttribute("browser_type", "custom_dimension", "firefox"));
+        userAttributes.add(new UserAttribute("browser_type", "custom_attribute", "firefox"));
 
         OrCondition orInner = new OrCondition(userAttributes);
 
@@ -245,7 +245,7 @@ public final class ProjectConfigTestUtils {
                                         new EventType("100", "no_running_experiments", singletonList("118")));
 
         List<Condition> userAttributes = new ArrayList<Condition>();
-        userAttributes.add(new UserAttribute("browser_type", "custom_dimension", "firefox"));
+        userAttributes.add(new UserAttribute("browser_type", "custom_attribute", "firefox"));
 
         OrCondition orInner = new OrCondition(userAttributes);
 
@@ -436,6 +436,13 @@ public final class ProjectConfigTestUtils {
 
     public static ProjectConfig validProjectConfigV4() {
         return VALID_PROJECT_CONFIG_V4;
+    }
+
+    /**
+     * @return the expected {@link ProjectConfig} for the json produced by {@link #invalidProjectConfigV5()}
+     */
+    public static String invalidProjectConfigV5() throws IOException {
+        return Resources.toString(Resources.getResource("config/invalid-project-config-v5.json"), Charsets.UTF_8);
     }
 
     /**

@@ -17,17 +17,15 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.bucketing.UserProfileService;
-import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.ProjectConfigTestUtils;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
-import com.optimizely.ab.event.internal.EventBuilder;
+import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -35,14 +33,10 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigJsonV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV3;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -51,17 +45,6 @@ import static org.mockito.Mockito.mock;
  */
 @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
 public class OptimizelyBuilderTest {
-
-
-    private static final String userId = "userId";
-    private static String noAudienceDatafile;
-    private static ProjectConfig noAudienceProjectConfig;
-
-    @BeforeClass
-    public static void setUp() throws Exception {
-        noAudienceDatafile = noAudienceProjectConfigJsonV2();
-        noAudienceProjectConfig = noAudienceProjectConfigV2();
-    }
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -129,7 +112,7 @@ public class OptimizelyBuilderTest {
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
             .build();
 
-        assertThat(((EventBuilder)optimizelyClient.eventBuilder).clientEngine, is(ClientEngine.JAVA_SDK));
+        assertThat(((EventFactory)optimizelyClient.eventFactory).clientEngine, is(ClientEngine.JAVA_SDK));
     }
 
     @Test
@@ -138,7 +121,7 @@ public class OptimizelyBuilderTest {
             .withClientEngine(ClientEngine.ANDROID_SDK)
             .build();
 
-        assertThat(((EventBuilder)optimizelyClient.eventBuilder).clientEngine, is(ClientEngine.ANDROID_SDK));
+        assertThat(((EventFactory)optimizelyClient.eventFactory).clientEngine, is(ClientEngine.ANDROID_SDK));
     }
 
     @Test
@@ -147,7 +130,7 @@ public class OptimizelyBuilderTest {
             .withClientEngine(ClientEngine.ANDROID_TV_SDK)
             .build();
 
-        assertThat(((EventBuilder)optimizelyClient.eventBuilder).clientEngine, is(ClientEngine.ANDROID_TV_SDK));
+        assertThat(((EventFactory)optimizelyClient.eventFactory).clientEngine, is(ClientEngine.ANDROID_TV_SDK));
     }
 
     @Test
@@ -155,7 +138,7 @@ public class OptimizelyBuilderTest {
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
             .build();
 
-        assertThat(((EventBuilder)optimizelyClient.eventBuilder).clientVersion, is(BuildVersionInfo.VERSION));
+        assertThat(((EventFactory)optimizelyClient.eventFactory).clientVersion, is(BuildVersionInfo.VERSION));
     }
 
     @Test
@@ -164,25 +147,36 @@ public class OptimizelyBuilderTest {
             .withClientVersion("0.0.0")
             .build();
 
-        assertThat(((EventBuilder)optimizelyClient.eventBuilder).clientVersion, is("0.0.0"));
+        assertThat(((EventFactory)optimizelyClient.eventFactory).clientVersion, is("0.0.0"));
     }
 
     @SuppressFBWarnings(value="NP_NONNULL_PARAM_VIOLATION", justification="Testing nullness contract violation")
     @Test
-    public void builderThrowsConfigParseExceptionForNullDatafile() throws Exception {
-        thrown.expect(ConfigParseException.class);
-        Optimizely.builder(null, mockEventHandler).build();
+    public void nullDatafileResultsInInvalidOptimizelyInstance() throws Exception {
+        Optimizely optimizelyClient = Optimizely.builder(null, mockEventHandler).build();
+
+        assertFalse(optimizelyClient.isValid());
     }
 
     @Test
-    public void builderThrowsConfigParseExceptionForEmptyDatafile() throws Exception {
-        thrown.expect(ConfigParseException.class);
-        Optimizely.builder("", mockEventHandler).build();
+    public void emptyDatafileResultsInInvalidOptimizelyInstance() throws Exception {
+        Optimizely optimizelyClient = Optimizely.builder("", mockEventHandler).build();
+
+        assertFalse(optimizelyClient.isValid());
     }
 
     @Test
-    public void builderThrowsConfigParseExceptionForInvalidDatafile() throws Exception {
-        thrown.expect(ConfigParseException.class);
-        Optimizely.builder("{invalidDatafile}", mockEventHandler).build();
+    public void invalidDatafileResultsInInvalidOptimizelyInstance() throws Exception {
+        Optimizely optimizelyClient = Optimizely.builder("{invalidDatafile}", mockEventHandler).build();
+
+        assertFalse(optimizelyClient.isValid());
+    }
+
+    @Test
+    public void unsupportedDatafileResultsInInvalidOptimizelyInstance() throws Exception {
+        Optimizely optimizelyClient = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler)
+                .build();
+
+        assertFalse(optimizelyClient.isValid());
     }
 }

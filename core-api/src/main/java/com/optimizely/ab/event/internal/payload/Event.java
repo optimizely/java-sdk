@@ -17,6 +17,7 @@
 package com.optimizely.ab.event.internal.payload;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.annotations.VisibleForTesting;
 
 import java.util.Map;
 
@@ -32,9 +33,8 @@ public class Event {
     String type;
     Number value;
 
-    public Event() {
-
-    }
+    @VisibleForTesting
+    public Event() { }
 
     public Event(long timestamp, String uuid, String entityId, String key, Number quantity,
                  Number revenue, Map<String, ?> tags, String type, Number value) {
@@ -153,4 +153,65 @@ public class Event {
         return result;
     }
 
+    public static class Builder {
+
+        private long timestamp;
+        private String uuid;
+        private String entityId;
+        private String key;
+        private Number quantity = null;
+        private Number revenue = null;
+        private Map<String, ?> tags = null;
+        private String type;
+        private Number value = null;
+
+        public Builder setTimestamp(long timestamp) {
+            this.timestamp = timestamp;
+            return this;
+        }
+
+        public Builder setUuid(String uuid) {
+            this.uuid = uuid;
+            return this;
+        }
+
+        public Builder setEntityId(String entityId) {
+            this.entityId = entityId;
+            return this;
+        }
+
+        public Builder setKey(String key) {
+            this.key = key;
+            return this;
+        }
+
+        public Builder setQuantity(Number quantity) {
+            this.quantity = quantity;
+            return this;
+        }
+
+        public Builder setRevenue(Number revenue) {
+            this.revenue = revenue;
+            return this;
+        }
+
+        public Builder setTags(Map<String, ?> tags) {
+            this.tags = tags;
+            return this;
+        }
+
+        public Builder setType(String type) {
+            this.type = type;
+            return this;
+        }
+
+        public Builder setValue(Number value) {
+            this.value = value;
+            return this;
+        }
+
+        public Event build() {
+            return new Event(timestamp, uuid, entityId, key, quantity, revenue, tags, type, value);
+        }
+    }
 }

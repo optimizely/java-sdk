@@ -1,5 +1,12 @@
 # Optimizely Java X SDK Changelog
 
+## 2.1.2
+
+August 1st, 2018
+
+### Bug Fixes
+* Move serialization to LogEvent.getBody() to improve performance of API calls ([#201](https://github.com/optimizely/java-sdk/pull/201))
+
 ## 2.1.1
 
 June 19th, 2018
