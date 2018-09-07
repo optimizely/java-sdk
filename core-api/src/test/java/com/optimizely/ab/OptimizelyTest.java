@@ -802,7 +802,7 @@ public class OptimizelyTest {
 
         Map<String, String> actualValue = attributeCaptor.getValue();
         assertNotSame(actualValue, hasEntry(attribute.getKey(), null));
-        logbackVerifier.expectMessage(Level.WARN, "Attribute(s) ["+attribute.getKey()+"] not in the datafile or has NULL value.");
+        logbackVerifier.expectMessage(Level.WARN, "Attribute(s) [" + attribute.getKey() + "] not in the datafile or has NULL value.");
 
         // verify that dispatchEvent was called with the correct LogEvent object
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
