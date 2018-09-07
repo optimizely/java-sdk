@@ -412,6 +412,7 @@ public class AudienceConditionEvaluationTest {
         OrCondition orCondition2 = mock(OrCondition.class);
         when(orCondition2.evaluate(testUserAttributes)).thenReturn(true);
 
+        // and[false, true]
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(orCondition1);
         conditions.add(orCondition2);
@@ -421,7 +422,35 @@ public class AudienceConditionEvaluationTest {
         verify(orCondition1, times(1)).evaluate(testUserAttributes);
         // shouldn't be called due to short-circuiting in 'And' evaluation
         verify(orCondition2, times(0)).evaluate(testUserAttributes);
+
+        OrCondition orCondition3 = mock(OrCondition.class);
+        when(orCondition3.evaluate(testUserAttributes)).thenReturn(null);
+
+        // and[null, false]
+        List<Condition> conditions2 = new ArrayList<Condition>();
+        conditions2.add(orCondition3);
+        conditions2.add(orCondition1);
+
+        AndCondition andCondition2 = new AndCondition(conditions2);
+        assertFalse(andCondition2.evaluate(testUserAttributes));
+
+        // and[true, false, null]
+        List<Condition> conditions3 = new ArrayList<Condition>();
+        conditions3.add(orCondition2);
+        conditions3.add(orCondition3);
+        conditions3.add(orCondition1);
+
+        AndCondition andCondition3 = new AndCondition(conditions3);
+        assertFalse(andCondition3.evaluate(testUserAttributes));
     }
+
+    /**
+     * Verify that AndCondition.evaluate returns null when any one of its operand conditions evaluate to false.
+     */
+    // @Test
+    // public void andConditionEvaluateNull() throws Exception {
+
+    // }
 
     /**
      * Verify that {@link UserAttribute#evaluate(Map)}
