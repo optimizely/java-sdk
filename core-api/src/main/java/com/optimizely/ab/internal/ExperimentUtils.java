@@ -66,14 +66,11 @@ public final class ExperimentUtils {
             return true;
         }
 
-        // if there are audiences, but no user attributes, the user is not in the experiment.
-        if (attributes.isEmpty()) {
-            return false;
-        }
-
         for (String audienceId : experimentAudienceIds) {
             Condition conditions = projectConfig.getAudienceConditionsFromId(audienceId);
-            if (conditions.evaluate(attributes)) {
+            Boolean conditionEval = conditions.evaluate(attributes);
+
+            if (conditionEval != null && conditionEval){
                 return true;
             }
         }

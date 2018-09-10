@@ -137,7 +137,7 @@ public class OptimizelyTest {
     private static final String testBucketingId = "bucketingId";
     private static final String testBucketingIdKey = ControlAttribute.BUCKETING_ATTRIBUTE.toString();
     private static final Map<String, String> testParams = Collections.singletonMap("test", "params");
-    private static final LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, null);
+    private static final LogEvent logEventToDispatch = new LogEvent(RequestMethod.GET, "test_url", testParams, new EventBatch());
 
     private int datafileVersion;
     private String validDatafile;
@@ -197,10 +197,16 @@ public class OptimizelyTest {
         when(mockBucketer.bucket(activatedExperiment, bucketingId))
                 .thenReturn(bucketedVariation);
 
+        logbackVerifier.expectMessage(Level.DEBUG, String.format("No variation for experiment \"%s\" mapped to user \"%s\" in the forced variation map", activatedExperiment.getKey(), testUserId));
+
+        logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
+
+        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
                 activatedExperiment.getKey() + "\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
-                testParams + " and payload \"\"");
+                testParams + " and payload \"{}\"");
 
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, testUserAttributes);
@@ -678,7 +684,7 @@ public class OptimizelyTest {
                 activatedExperiment.getKey() + "\".");
         logbackVerifier.expectMessage(Level.WARN, "Attribute(s) [unknownAttribute] not in the datafile.");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
-                testParams + " and payload \"\"");
+                testParams + " and payload \"{}\"");
 
         // Use an immutable map to also check that we're not attempting to change the provided attribute map
         Variation actualVariation =
@@ -982,12 +988,18 @@ public class OptimizelyTest {
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
                 .build();
 
-        logbackVerifier.expectMessage(Level.INFO,
-                "User \"userId\" does not meet conditions to be in experiment \"" + experiment.getKey() + "\".");
-        logbackVerifier.expectMessage(Level.INFO, "Not activating user \"userId\" for experiment \"" +
-                experiment.getKey() + "\".");
-
-        assertNull(optimizely.activate(experiment.getKey(), testUserId));
+        /**
+         * TBD: This should be fixed.  The v4 datafile does not contain the same condition so
+         * results are different.  We have made a change around 9/7/18 where we evaluate audience
+         * regardless if you pass in a attribute list or not.  In this case there is a not("broswer_type = "firefox")
+         * This causes the user to be bucketed now because they don't have browser_type set to firefox.
+         */
+        if (datafileVersion == 4) {
+            assertNull(optimizely.activate(experiment.getKey(), testUserId));
+        }
+        else {
+            assertNotNull(optimizely.activate(experiment.getKey(), testUserId));
+        }
     }
 
     /**
@@ -1415,7 +1427,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
                 "\" for user \"" + genericUserId + "\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
-                testParams + " and payload \"\"");
+                testParams + " and payload \"{}\"");
 
         // call track
         optimizely.track(eventType.getKey(), genericUserId, attributes);
@@ -1485,7 +1497,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
                 "\" for user \"" + genericUserId + "\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
-                testParams + " and payload \"\"");
+                testParams + " and payload \"{}\"");
 
         // call track
         Map<String, String> attributes = null;
@@ -1555,7 +1567,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
                 "\" for user \"" + genericUserId + "\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
-                testParams + " and payload \"\"");
+                testParams + " and payload \"{}\"");
 
         // call track
         Map<String, String> attributes = new HashMap<String, String>();
@@ -1626,7 +1638,7 @@ public class OptimizelyTest {
                 "\" for user \"" + genericUserId + "\".");
         logbackVerifier.expectMessage(Level.WARN, "Attribute(s) [unknownAttribute] not in the datafile.");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
-                testParams + " and payload \"\"");
+                testParams + " and payload \"{}\"");
 
         // call track
         optimizely.track(eventType.getKey(), genericUserId, ImmutableMap.of("unknownAttribute", "attributeValue"));
@@ -1699,7 +1711,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() + "\" for user \""
                 + genericUserId + "\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
-                testParams + " and payload \"\"");
+                testParams + " and payload \"{}\"");
 
         // call track
         optimizely.track(eventType.getKey(), genericUserId, Collections.<String, String>emptyMap(), eventTags);
@@ -1773,7 +1785,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
                 "\" for user \"" + genericUserId + "\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
-                testParams + " and payload \"\"");
+                testParams + " and payload \"{}\"");
 
         // call track
         optimizely.track(eventType.getKey(), genericUserId, Collections.<String, String>emptyMap(), null);
@@ -2247,11 +2259,18 @@ public class OptimizelyTest {
                 .withErrorHandler(mockErrorHandler)
                 .build();
 
-        logbackVerifier.expectMessage(Level.INFO,
-                "User \"userId\" does not meet conditions to be in experiment \"" + experiment.getKey() + "\".");
-
         Variation actualVariation = optimizely.getVariation(experiment.getKey(), testUserId);
-        assertNull(actualVariation);
+        /**
+         * This test now passes because the audience is evaludated even if there is no
+         * attributes passed in.  In version 2,3 of the datafile, the audience is a not condition
+         * which evaluates to true if it is absent.
+         */
+        if (datafileVersion >= 4) {
+            assertNull(actualVariation);
+        }
+        else {
+            assertNotNull(actualVariation);
+        }
     }
 
     /**
@@ -2630,11 +2649,13 @@ public class OptimizelyTest {
                 .build();
 
         Map<String, String> attributes = new HashMap<String, String>();
-        attributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
 
-        when(mockEventFactory.createImpressionEvent(validProjectConfig, activatedExperiment,
-                bucketedVariation, genericUserId, attributes))
-                .thenReturn(logEventToDispatch);
+        if (datafileVersion >= 4) {
+            attributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+        }
+        else {
+            attributes.put("browser_type", "chrome");
+        }
 
         when(mockBucketer.bucket(activatedExperiment, genericUserId))
                 .thenReturn(bucketedVariation);
@@ -2827,7 +2848,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
                 "\" for user \"" + genericUserId + "\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
-                testParams + " and payload \"\"");
+                testParams + " and payload \"{}\"");
 
         TrackNotificationListener trackNotification = new TrackNotificationListener() {
             @Override
@@ -2911,7 +2932,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
                 "\" for user \"" + genericUserId + "\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
-                testParams + " and payload \"\"");
+                testParams + " and payload \"{}\"");
 
         TrackNotificationListener trackNotification = new TrackNotificationListener() {
             @Override

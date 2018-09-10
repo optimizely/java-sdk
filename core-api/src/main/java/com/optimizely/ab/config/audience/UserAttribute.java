@@ -59,6 +59,9 @@ public class UserAttribute implements Condition {
         // Valid for primative types, but needs to change when a value is an object or an array
         Object userAttributeValue = attributes.get(name);
 
+        if (!"custom_attribute".equals(type)) {
+            return null; // unknown type
+        }
         // check user attribute value is equal
         try {
             return MatchType.getMatchType(match, value).getMatcher().eval(userAttributeValue);
