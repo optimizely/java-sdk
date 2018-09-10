@@ -77,6 +77,43 @@
         "entityId": "281",
         "endOfRange": 10000
       }]
+    },
+    {
+      "id": "120",
+      "key": "no_variable_feature_test",
+      "status": "Running",
+      "layerId": "3",
+      "audienceIds": [],
+      "variations": [
+        {
+          "id": "282",
+          "key": "no_variable_feature_test_variation_1"
+        },
+        {
+          "id": "283",
+          "key": "no_variable_feature_test_variation_2"
+        }
+      ],
+      "forcedVariations": {},
+      "trafficAllocation": [
+        {
+          "entityId": "282",
+          "endOfRange": 5000
+        },
+        {
+          "entityId": "283",
+          "endOfRange": 10000
+        }
+      ]
+    }
+  ],
+  "featureFlags": [
+    {
+      "id": "4195505407",
+      "key": "no_variable_feature",
+      "rolloutId": "",
+      "experimentIds": [120],
+      "variables": []
     }
   ],
   "groups": [],

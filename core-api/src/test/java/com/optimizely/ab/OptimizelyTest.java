@@ -1177,6 +1177,21 @@ public class OptimizelyTest {
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
     }
 
+    /**
+     * Verify that we don't attempt to activate the user when the Optimizely instance is not valid
+     */
+    @Test
+    public void activateWithInvalidDatafile() throws Exception {
+        Optimizely optimizely = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler)
+                .withBucketing(mockBucketer)
+                .build();
+        Variation expectedVariation = optimizely.activate("etag1", genericUserId);
+        assertNull(expectedVariation);
+
+        // make sure we didn't even attempt to bucket the user
+        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString());
+    }
+
     //======== track tests ========//
 
     /**
@@ -2068,6 +2083,21 @@ public class OptimizelyTest {
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
     }
 
+    /**
+     * Verify that we don't attempt to track any events if the Optimizely instance is not valid
+     */
+    @Test
+    public void trackWithInvalidDatafile() throws Exception {
+        Optimizely optimizely = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler)
+                .withBucketing(mockBucketer)
+                .build();
+        optimizely.track("event_with_launched_and_running_experiments", genericUserId);
+
+        // make sure we didn't even attempt to bucket the user or fire any conversion events
+        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString());
+        verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
+    }
+
     //======== getVariation tests ========//
 
     /**
@@ -2354,6 +2384,22 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.INFO, "Experiment \"" + experiment.getKey() + "\" is not running.");
         // testUser3 has a corresponding forced variation, but experiment status should be checked first
         assertNull(optimizely.getVariation(experiment.getKey(), "testUser3"));
+    }
+
+    /**
+     * Verify that we don't attempt to track any events if the Optimizely instance is not valid
+     */
+    @Test
+    public void getVariationWithInvalidDatafile() throws Exception {
+        Optimizely optimizely = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler)
+                .withBucketing(mockBucketer)
+                .build();
+        Variation variation = optimizely.getVariation("etag1", genericUserId);
+
+        assertNull(variation);
+
+        // make sure we didn't even attempt to bucket the user
+        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString());
     }
 
     //======== Notification listeners ========//
@@ -3560,6 +3606,21 @@ public class OptimizelyTest {
     }
 
     /**
+     * Verify that we don't attempt to activate the user when the Optimizely instance is not valid
+     */
+    @Test
+    public void isFeatureEnabledWithInvalidDatafile() throws Exception {
+        Optimizely optimizely = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler)
+                .withDecisionService(mockDecisionService)
+                .build();
+        Boolean isEnabled = optimizely.isFeatureEnabled("no_variable_feature", genericUserId);
+        assertFalse(isEnabled);
+
+        // make sure we didn't even attempt to bucket the user
+        verify(mockDecisionService, never()).getVariationForFeature(any(FeatureFlag.class), anyString(), anyMap());
+    }
+
+    /**
      * Verify {@link Optimizely#getEnabledFeatures(String, Map)} calls into
      * {@link Optimizely#isFeatureEnabled(String, String, Map)} for each featureFlag
      * return List of FeatureFlags that are enabled
@@ -4544,6 +4605,32 @@ public class OptimizelyTest {
         verify(mockBucketer).bucket(experiment, bucketingId);
 
         assertThat(actualVariation, is(bucketedVariation));
+    }
+
+    //======== isValid calls  ========//
+
+    /**
+     * Verify that {@link Optimizely#isValid()} returns false when the Optimizely instance is not valid
+     */
+    @Test
+    public void isValidReturnsFalseWhenClientIsInvalid() throws Exception {
+        Optimizely optimizely = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler)
+            .withBucketing(mockBucketer)
+            .build();
+
+        assertFalse(optimizely.isValid());
+    }
+
+    /**
+     * Verify that {@link Optimizely#isValid()} returns false when the Optimizely instance is not valid
+     */
+    @Test
+    public void isValidReturnsTrueWhenClientIsValid() throws Exception {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withBucketing(mockBucketer)
+                .build();
+
+        assertTrue(optimizely.isValid());
     }
 
     //======== Helper methods ========//
