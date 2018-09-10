@@ -655,8 +655,8 @@ public class Optimizely {
         }
 
         String variableValue = variable.getDefaultValue();
-
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, attributes);
+        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, attributes);
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
         if (featureDecision.variation != null) {
             LiveVariableUsageInstance liveVariableUsageInstance =
                     featureDecision.variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
