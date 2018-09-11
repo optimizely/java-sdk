@@ -52,6 +52,7 @@ import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfig
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV4;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNotSame;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -246,6 +247,32 @@ public class EventFactoryTest {
         for (com.optimizely.ab.event.internal.payload.Attribute feature : impression.getVisitors().get(0).getAttributes()) {
             assertFalse(feature.getKey() == "unknownAttribute");
             assertFalse(feature.getValue() == "blahValue");
+        }
+    }
+
+
+    /**
+     * Verify that passing through an null value attribute causes that attribute to be ignored, rather than
+     * causing an exception to be thrown.
+     */
+    @Test
+    public void createImpressionEventIgnoresInvalidAttributes() throws Exception {
+        // use the "valid" project config and its associated experiment, variation, and attributes
+        ProjectConfig projectConfig = validProjectConfig;
+        Experiment activatedExperiment = projectConfig.getExperiments().get(0);
+        Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+        Attribute attribute = validProjectConfig.getAttributes().get(0);
+
+        LogEvent impressionEvent =
+                factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation, "userId",
+                        Collections.singletonMap(attribute.getKey(), null));
+
+        EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
+
+        // verify that no Feature is created for attribute.getKey() -> null
+        for (com.optimizely.ab.event.internal.payload.Attribute feature : impression.getVisitors().get(0).getAttributes()) {
+            assertNotSame(feature.getKey(), attribute.getKey());
+            assertNotSame(feature.getValue(),  null);
         }
     }
 

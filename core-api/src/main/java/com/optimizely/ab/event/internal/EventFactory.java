@@ -168,6 +168,11 @@ public class EventFactory {
         List<Attribute> attributesList = new ArrayList<Attribute>();
 
         for (Map.Entry<String, ?> entry : attributes.entrySet()) {
+            //Ignore null value attribute
+            if (entry.getValue() == null) {
+                continue;
+            }
+
             String attributeId = projectConfig.getAttributeId(projectConfig, entry.getKey());
             if(attributeId == null) {
                 continue;
