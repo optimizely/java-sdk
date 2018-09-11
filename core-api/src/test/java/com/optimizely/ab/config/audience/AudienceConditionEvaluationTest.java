@@ -28,6 +28,7 @@ import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
@@ -66,6 +67,10 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void userAttributeEvaluateTrue() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", null,"chrome");
+        assertTrue(testInstance.hashCode() != 0);
+        assertNull(testInstance.getMatch());
+        assertEquals(testInstance.getName(), "browser_type");
+        assertEquals(testInstance.getType(), "custom_attribute");
         assertTrue(testInstance.evaluate(testUserAttributes));
     }
 
@@ -93,6 +98,15 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void invalidMatchCondition() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "unknown_dimension", null,"chrome");
+        assertNull(testInstance.evaluate(testUserAttributes));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on invalid match type.
+     */
+    @Test
+    public void invalidMatch() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah","chrome");
         assertNull(testInstance.evaluate(testUserAttributes));
     }
 
@@ -194,6 +208,10 @@ public class AudienceConditionEvaluationTest {
 
         assertTrue(testInstanceInteger.evaluate(testTypedUserAttributes));
         assertTrue(testInstanceDouble.evaluate(testTypedUserAttributes));
+
+        Map<String,Object> badAttributes = new HashMap<>();
+        badAttributes.put("num_size", "bobs burgers");
+        assertNull(testInstanceInteger.evaluate(badAttributes));
     }
 
     /**

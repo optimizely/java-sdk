@@ -2,7 +2,6 @@ package com.optimizely.ab.config.audience;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -101,12 +100,7 @@ class ExistsMatch extends LeafMatch<Object> {
     }
 
     public @Nullable Boolean eval(Object otherValue) {
-        try {
-            return otherValue != null;
-        }
-        catch (Exception e) {
-            return null;
-        }
+        return otherValue != null;
     }
 }
 
