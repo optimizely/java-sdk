@@ -95,11 +95,11 @@ public class AudienceConditionEvaluationTest {
     /**
      * Verify that UserAttribute.evaluate returns null on invalid match type.
      */
-    @Test
-    public void invalidMatchCondition() throws Exception {
-        UserAttribute testInstance = new UserAttribute("browser_type", "unknown_dimension", null,"chrome");
-        assertNull(testInstance.evaluate(testUserAttributes));
-    }
+//    @Test
+//    public void invalidMatchCondition() throws Exception {
+//        UserAttribute testInstance = new UserAttribute("browser_type", "unknown_dimension", null,"chrome");
+//        assertNull(testInstance.evaluate(testUserAttributes));
+//    }
 
     /**
      * Verify that UserAttribute.evaluate returns null on invalid match type.
