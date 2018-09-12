@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.config.audience.match.MatchType;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
