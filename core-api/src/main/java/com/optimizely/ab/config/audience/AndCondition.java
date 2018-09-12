@@ -41,7 +41,7 @@ public class AndCondition implements Condition {
     Boolean evaluate(Map<String, ?> attributes) {
         boolean foundNull = false;
         // https://docs.google.com/document/d/158_83difXVXF0nb91rxzrfHZwnhsybH21ImRA_si7sg/edit#
-        // According to the matix mentioned in the above document.
+        // According to the matrix mentioned in the above document.
         for (Condition condition : conditions) {
             Boolean conditionEval = condition.evaluate(attributes);
             if (conditionEval == null) {

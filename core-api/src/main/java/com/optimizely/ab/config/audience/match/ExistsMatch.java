@@ -29,6 +29,11 @@ class ExistsMatch extends LeafMatch<Object> {
 
     public @Nullable
     Boolean eval(Object otherValue) {
-        return otherValue != null;
+        try {
+            return otherValue != null;
+        }
+        catch (Exception e) {
+            return null;
+        }
     }
 }

@@ -38,7 +38,7 @@ public class OrCondition implements Condition {
     }
 
     // https://docs.google.com/document/d/158_83difXVXF0nb91rxzrfHZwnhsybH21ImRA_si7sg/edit#
-    // According to the matix mentioned in the above document.
+    // According to the matrix mentioned in the above document.
     public @Nullable Boolean evaluate(Map<String, ?> attributes) {
         boolean foundNull = false;
         for (Condition condition : conditions) {
