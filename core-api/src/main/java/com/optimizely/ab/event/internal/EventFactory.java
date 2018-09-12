@@ -169,7 +169,11 @@ public class EventFactory {
 
         for (Map.Entry<String, ?> entry : attributes.entrySet()) {
             //Ignore null value attribute
-            if (entry.getValue() == null) {
+            if (entry.getValue() == null ||
+                    (!(entry.getValue() instanceof String) &&
+                    !(entry.getValue() instanceof Integer) &&
+                    !(entry.getValue() instanceof Double) &&
+                    !(entry.getValue() instanceof Boolean))) {
                 continue;
             }
 

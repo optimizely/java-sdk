@@ -40,13 +40,7 @@ import org.junit.runners.Parameterized;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV4;
@@ -252,11 +246,35 @@ public class EventFactoryTest {
 
 
     /**
-     * Verify that passing through an null value attribute causes that attribute to be ignored, rather than
+     * Verify that passing through an list value attribute causes that attribute to be ignored, rather than
      * causing an exception to be thrown.
      */
     @Test
-    public void createImpressionEventIgnoresInvalidAttributes() throws Exception {
+    public void createImpressionEventIgnoresInvalidAttributes() {
+        // use the "valid" project config and its associated experiment, variation, and attributes
+        ProjectConfig projectConfig = validProjectConfig;
+        Experiment activatedExperiment = projectConfig.getExperiments().get(0);
+        Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+        Attribute attribute = validProjectConfig.getAttributes().get(0);
+        List invalidAttribute = new LinkedList();
+        LogEvent impressionEvent =
+                factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation, "userId",
+                        Collections.singletonMap(attribute.getKey(), invalidAttribute));
+
+        EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
+
+        // verify that no Feature is created for attribute.getKey() -> invalidAttribute
+        for (com.optimizely.ab.event.internal.payload.Attribute feature : impression.getVisitors().get(0).getAttributes()) {
+            assertNotSame(feature.getKey(), attribute.getKey());
+            assertNotSame(feature.getValue(),  invalidAttribute);
+        }
+    }
+
+    /**
+     * Verify that passing through an null value attribute causes that attribute to be ignored, rather than
+     * causing an exception to be thrown.
+     */
+    public void createImpressionEventIgnoresNullAttributes() {
         // use the "valid" project config and its associated experiment, variation, and attributes
         ProjectConfig projectConfig = validProjectConfig;
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
