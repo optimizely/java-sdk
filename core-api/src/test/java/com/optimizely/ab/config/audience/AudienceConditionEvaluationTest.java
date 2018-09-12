@@ -95,20 +95,20 @@ public class AudienceConditionEvaluationTest {
     /**
      * Verify that UserAttribute.evaluate returns null on invalid match type.
      */
-//    @Test
-//    public void invalidMatchCondition() throws Exception {
-//        UserAttribute testInstance = new UserAttribute("browser_type", "unknown_dimension", null,"chrome");
-//        assertNull(testInstance.evaluate(testUserAttributes));
-//    }
+    @Test
+    public void invalidMatchCondition() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "unknown_dimension", null,"chrome");
+        assertNull(testInstance.evaluate(testUserAttributes));
+    }
 
     /**
      * Verify that UserAttribute.evaluate returns null on invalid match type.
      */
-    @Test
-    public void invalidMatch() throws Exception {
-        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah","chrome");
-        assertNull(testInstance.evaluate(testUserAttributes));
-    }
+//    @Test
+//    public void invalidMatch() throws Exception {
+//        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah","chrome");
+//        assertNull(testInstance.evaluate(testUserAttributes));
+//    }
 
     /**
      * Verify that UserAttribute.evaluate for EXIST match type returns true for known visitor 
