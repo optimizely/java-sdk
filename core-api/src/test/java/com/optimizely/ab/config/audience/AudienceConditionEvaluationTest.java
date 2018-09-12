@@ -68,10 +68,10 @@ public class AudienceConditionEvaluationTest {
     public void userAttributeEvaluateTrue() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", null,"chrome");
         assertTrue(testInstance.hashCode() != 0);
-        //assertNull(testInstance.getMatch());
-        //assertEquals(testInstance.getName(), "browser_type");
-        //assertEquals(testInstance.getType(), "custom_attribute");
-        //assertTrue(testInstance.evaluate(testUserAttributes));
+        assertNull(testInstance.getMatch());
+        assertEquals(testInstance.getName(), "browser_type");
+        assertEquals(testInstance.getType(), "custom_attribute");
+        assertTrue(testInstance.evaluate(testUserAttributes));
     }
 
     /**
@@ -104,11 +104,11 @@ public class AudienceConditionEvaluationTest {
     /**
      * Verify that UserAttribute.evaluate returns null on invalid match type.
      */
-//    @Test
-//    public void invalidMatch() throws Exception {
-//        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah","chrome");
-//        assertNull(testInstance.evaluate(testUserAttributes));
-//    }
+    @Test
+    public void invalidMatch() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah","chrome");
+        assertNull(testInstance.evaluate(testUserAttributes));
+    }
 
     /**
      * Verify that UserAttribute.evaluate for EXIST match type returns true for known visitor 
@@ -209,9 +209,9 @@ public class AudienceConditionEvaluationTest {
         assertTrue(testInstanceInteger.evaluate(testTypedUserAttributes));
         assertTrue(testInstanceDouble.evaluate(testTypedUserAttributes));
 
-        //Map<String,Object> badAttributes = new HashMap<>();
-        //badAttributes.put("num_size", "bobs burgers");
-        //assertNull(testInstanceInteger.evaluate(badAttributes));
+        Map<String,Object> badAttributes = new HashMap<>();
+        badAttributes.put("num_size", "bobs burgers");
+        assertNull(testInstanceInteger.evaluate(badAttributes));
     }
 
     /**
