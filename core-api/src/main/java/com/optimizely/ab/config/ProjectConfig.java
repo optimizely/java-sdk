@@ -80,6 +80,7 @@ public class ProjectConfig {
     private final Boolean botFiltering;
     private final List<Attribute> attributes;
     private final List<Audience> audiences;
+    private final List<Audience> typedAudiences;
     private final List<EventType> events;
     private final List<Experiment> experiments;
     private final List<FeatureFlag> featureFlags;
@@ -136,6 +137,7 @@ public class ProjectConfig {
                 version,
                 attributes,
                 audiences,
+                null,
                 eventType,
                 experiments,
                 null,
@@ -154,6 +156,7 @@ public class ProjectConfig {
                          String version,
                          List<Attribute> attributes,
                          List<Audience> audiences,
+                         List<Audience> typedAudiences,
                          List<EventType> events,
                          List<Experiment> experiments,
                          List<FeatureFlag> featureFlags,
@@ -170,6 +173,14 @@ public class ProjectConfig {
 
         this.attributes = Collections.unmodifiableList(attributes);
         this.audiences = Collections.unmodifiableList(audiences);
+
+        if (typedAudiences != null) {
+            this.typedAudiences = Collections.unmodifiableList(typedAudiences);
+        }
+        else {
+            this.typedAudiences = Collections.emptyList();
+        }
+
         this.events = Collections.unmodifiableList(events);
         if (featureFlags == null) {
             this.featureFlags = Collections.emptyList();
@@ -206,7 +217,14 @@ public class ProjectConfig {
         this.featureKeyMapping = ProjectConfigUtils.generateNameMapping(this.featureFlags);
 
         // generate audience id to audience mapping
-        this.audienceIdMapping = ProjectConfigUtils.generateIdMapping(audiences);
+        if (typedAudiences == null) {
+            this.audienceIdMapping = ProjectConfigUtils.generateIdMapping(audiences);
+        }
+        else {
+            List<Audience> combinedList = new ArrayList<>(audiences);
+            combinedList.addAll(typedAudiences);
+            this.audienceIdMapping = ProjectConfigUtils.generateIdMapping(combinedList);
+        }
         this.experimentIdMapping = ProjectConfigUtils.generateIdMapping(this.experiments);
         this.groupIdMapping = ProjectConfigUtils.generateIdMapping(groups);
         this.rolloutIdMapping = ProjectConfigUtils.generateIdMapping(this.rollouts);
@@ -384,6 +402,10 @@ public class ProjectConfig {
 
     public List<Audience> getAudiences() {
         return audiences;
+    }
+
+    public List<Audience> getTypedAudiences() {
+        return typedAudiences;
     }
 
     public Condition getAudienceConditionsFromId(String audienceId) {

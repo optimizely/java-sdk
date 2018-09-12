@@ -1101,6 +1101,7 @@ public class ValidProjectConfigV4 {
                 VERSION,
                 attributes,
                 audiences,
+                null,
                 events,
                 experiments,
                 featureFlags,

@@ -66,6 +66,14 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
         List<Audience> audiences = mapper.readValue(node.get("audiences").toString(),
                                                     new TypeReference<List<Audience>>() {});
 
+        List<Audience> typedAudiences = null;
+
+        if (node.has("typedAudiences")) {
+            typedAudiences = mapper.readValue(node.get("typedAudiences").toString(),
+                    new TypeReference<List<Audience>>() {
+                    });
+        }
+
         boolean anonymizeIP = false;
         List<LiveVariable> liveVariables = null;
         if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
@@ -95,6 +103,7 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
                 version,
                 attributes,
                 audiences,
+                typedAudiences,
                 events,
                 experiments,
                 featureFlags,

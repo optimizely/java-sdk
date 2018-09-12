@@ -69,6 +69,11 @@ final class JsonConfigParser implements ConfigParser {
 
             List<EventType> events = parseEvents(rootObject.getJSONArray("events"));
             List<Audience> audiences = parseAudiences(rootObject.getJSONArray("audiences"));
+            List<Audience> typedAudiences = null;
+            if (rootObject.has("typedAudiences")) {
+                typedAudiences = parseAudiences(rootObject.getJSONArray("typedAudiences"));
+            }
+
             List<Group> groups = parseGroups(rootObject.getJSONArray("groups"));
 
             boolean anonymizeIP = false;
@@ -98,6 +103,7 @@ final class JsonConfigParser implements ConfigParser {
                     version,
                     attributes,
                     audiences,
+                    typedAudiences,
                     events,
                     experiments,
                     featureFlags,
