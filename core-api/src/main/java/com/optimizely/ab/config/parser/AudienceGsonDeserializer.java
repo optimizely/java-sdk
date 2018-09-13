@@ -67,19 +67,23 @@ public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {
                 List<Object> objectList = (List<Object>)rawObjectList.get(i);
                 conditions.add(parseConditions(objectList));
             } else {
-                LinkedTreeMap<String, String> conditionMap = (LinkedTreeMap<String, String>)rawObjectList.get(i);
-                conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
-                        conditionMap.get("match"), conditionMap.get("value")));
+                LinkedTreeMap<String, ?> conditionMap = (LinkedTreeMap<String, ?>)rawObjectList.get(i);
+                conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
+                        (String)conditionMap.get("match"), conditionMap.get("value")));
             }
         }
 
         Condition condition;
-        if (operand.equals("and")) {
-            condition = new AndCondition(conditions);
-        } else if (operand.equals("or")) {
-            condition = new OrCondition(conditions);
-        } else {
-            condition = new NotCondition(conditions.get(0));
+        switch (operand) {
+            case "and":
+                condition = new AndCondition(conditions);
+                break;
+            case "or":
+                condition = new OrCondition(conditions);
+                break;
+            default:
+                condition = new NotCondition(conditions.get(0));
+                break;
         }
 
         return condition;

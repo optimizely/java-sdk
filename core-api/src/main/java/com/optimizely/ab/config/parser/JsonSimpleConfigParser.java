@@ -303,7 +303,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             } else {
                 JSONObject conditionMap = (JSONObject)obj;
                 conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
-                        (String)conditionMap.get("match"), (String)conditionMap.get("value")));
+                        (String)conditionMap.get("match"), conditionMap.get("value")));
             }
         }
 

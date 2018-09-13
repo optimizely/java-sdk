@@ -295,9 +295,9 @@ final class JsonConfigParser implements ConfigParser {
                 conditions.add(parseConditions(conditionJson.getJSONArray(i)));
             } else {
                 JSONObject conditionMap = (JSONObject)obj;
-                String value = null;
+                Object value = null;
                 if (conditionMap.has("value")) {
-                    value = conditionMap.getString("value");
+                    value = conditionMap.get("value");
                 }
                 conditions.add(new UserAttribute(
                         (String)conditionMap.get("name"),

@@ -59,9 +59,9 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
                 List<Object> objectList = (List<Object>)rawObjectList.get(i);
                 conditions.add(parseConditions(objectList));
             } else {
-                HashMap<String, String> conditionMap = (HashMap<String, String>)rawObjectList.get(i);
-                conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
-                        conditionMap.get("match"), conditionMap.get("value")));
+                HashMap<String, ?> conditionMap = (HashMap<String, ?>)rawObjectList.get(i);
+                conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
+                        (String)conditionMap.get("match"), conditionMap.get("value")));
             }
         }
 

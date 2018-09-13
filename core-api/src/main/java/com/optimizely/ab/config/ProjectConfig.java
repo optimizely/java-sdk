@@ -603,6 +603,7 @@ public class ProjectConfig {
                 ", botFiltering=" + botFiltering +
                 ", attributes=" + attributes +
                 ", audiences=" + audiences +
+                ", typedAudiences=" + typedAudiences +
                 ", events=" + events +
                 ", experiments=" + experiments +
                 ", featureFlags=" + featureFlags +

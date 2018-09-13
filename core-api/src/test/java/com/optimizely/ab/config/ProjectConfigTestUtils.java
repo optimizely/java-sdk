@@ -459,6 +459,7 @@ public final class ProjectConfigTestUtils {
 
         verifyAttributes(actual.getAttributes(), expected.getAttributes());
         verifyAudiences(actual.getAudiences(), expected.getAudiences());
+        verifyAudiences(actual.getTypedAudiences(), expected.getTypedAudiences());
         verifyEvents(actual.getEventTypes(), expected.getEventTypes());
         verifyExperiments(actual.getExperiments(), expected.getExperiments());
         verifyFeatureFlags(actual.getFeatureFlags(), expected.getFeatureFlags());
@@ -580,7 +581,6 @@ public final class ProjectConfigTestUtils {
 
             assertThat(actualAudience.getId(), is(expectedAudience.getId()));
             assertThat(actualAudience.getKey(), is(expectedAudience.getKey()));
-            assertThat(actualAudience.getConditions(), is(expectedAudience.getConditions()));
             assertThat(actualAudience.getConditions(), is(expectedAudience.getConditions()));
         }
     }
