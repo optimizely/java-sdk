@@ -168,12 +168,13 @@ public class EventFactory {
         List<Attribute> attributesList = new ArrayList<Attribute>();
 
         for (Map.Entry<String, ?> entry : attributes.entrySet()) {
-            //Ignore null value attribute
+            // Filters down to the types of values that are allowed.
+            // Don't allow Longs, BigIntegers, or BigDecimals - they /can/ theoretically be serialized as JSON numbers
             if (entry.getValue() == null ||
-                    (!(entry.getValue() instanceof String) &&
-                    !(entry.getValue() instanceof Integer) &&
-                    !(entry.getValue() instanceof Double) &&
-                    !(entry.getValue() instanceof Boolean))) {
+                    !((entry.getValue() instanceof String) ||
+                    (entry.getValue() instanceof Integer) ||
+                    (entry.getValue() instanceof Double) ||
+                    (entry.getValue() instanceof Boolean))) {
                 continue;
             }
 

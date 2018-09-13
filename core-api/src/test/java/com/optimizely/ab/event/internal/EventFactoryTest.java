@@ -40,6 +40,8 @@ import org.junit.runners.Parameterized;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
@@ -55,6 +57,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -251,29 +254,86 @@ public class EventFactoryTest {
      */
     @Test
     public void createImpressionEventIgnoresInvalidAttributes() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
         // use the "valid" project config and its associated experiment, variation, and attributes
         ProjectConfig projectConfig = validProjectConfig;
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
-        Attribute attribute = validProjectConfig.getAttributes().get(0);
-        List invalidAttribute = new LinkedList();
+        Attribute attribute1 = validProjectConfig.getAttributes().get(0);
+        Attribute attribute2 = validProjectConfig.getAttributes().get(1);
+        BigInteger bigInteger = new BigInteger("12323");
+        BigDecimal bigDecimal = new BigDecimal("123");
+
+        HashMap<String, Object> attributes = new HashMap<>();
+        attributes.put(attribute1.getKey(), bigInteger);
+        attributes.put(attribute2.getKey(), bigDecimal);
+
         LogEvent impressionEvent =
                 factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation, "userId",
-                        Collections.singletonMap(attribute.getKey(), invalidAttribute));
+                        attributes);
 
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
         // verify that no Feature is created for attribute.getKey() -> invalidAttribute
         for (com.optimizely.ab.event.internal.payload.Attribute feature : impression.getVisitors().get(0).getAttributes()) {
-            assertNotSame(feature.getKey(), attribute.getKey());
-            assertNotSame(feature.getValue(),  invalidAttribute);
+            assertNotSame(feature.getKey(), attribute1.getKey());
+            assertNotSame(feature.getValue(), bigInteger);
+            assertNotSame(feature.getKey(), attribute2.getKey());
+            assertNotSame(feature.getValue(), bigDecimal);
         }
+    }
+
+    /**
+     * Verify that Integer, Decimal, Bool and String variables are allowed to pass.
+     */
+    @Test
+    public void createImpressionEventWithIntegerDecimalBoolAndStringAttributes() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        // use the "valid" project config and its associated experiment, variation, and attributes
+        ProjectConfig projectConfig = validProjectConfig;
+        Experiment activatedExperiment = projectConfig.getExperiments().get(0);
+        Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+        Attribute doubleAttribute = validProjectConfig.getAttributes().get(5);
+        Attribute integerAttribute = validProjectConfig.getAttributes().get(4);
+        Attribute boolAttribute = validProjectConfig.getAttributes().get(3);
+        Attribute stringAttribute = validProjectConfig.getAttributes().get(0);
+        double validDoubleAttribute = 13.1;
+        int validIntegerAttribute = 12;
+        boolean validBoolAttribute = true;
+        String validStringAttribute = "grayfindor";
+
+        HashMap<String, Object> attributes = new HashMap<>();
+        attributes.put(doubleAttribute.getKey(), validDoubleAttribute);
+        attributes.put(integerAttribute.getKey(), validIntegerAttribute);
+        attributes.put(boolAttribute.getKey(), validBoolAttribute);
+        attributes.put(stringAttribute.getKey(), validStringAttribute);
+
+        LogEvent impressionEvent =
+                factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation, "userId",
+                        attributes);
+
+        EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
+
+
+        assertEquals(impression.getVisitors().get(0).getAttributes().get(0).getKey(), boolAttribute.getKey());
+        assertEquals(impression.getVisitors().get(0).getAttributes().get(0).getValue(), validBoolAttribute);
+
+        assertEquals(impression.getVisitors().get(0).getAttributes().get(1).getKey(), doubleAttribute.getKey());
+        assertEquals(impression.getVisitors().get(0).getAttributes().get(1).getValue(), validDoubleAttribute);
+
+        assertEquals(impression.getVisitors().get(0).getAttributes().get(2).getKey(), integerAttribute.getKey());
+        assertEquals((int) ((double) impression.getVisitors().get(0).getAttributes().get(2).getValue()), validIntegerAttribute);
+
+        assertEquals(impression.getVisitors().get(0).getAttributes().get(3).getKey(), stringAttribute.getKey());
+        assertEquals(impression.getVisitors().get(0).getAttributes().get(3).getValue(), validStringAttribute);
+
     }
 
     /**
      * Verify that passing through an null value attribute causes that attribute to be ignored, rather than
      * causing an exception to be thrown.
      */
+    @Test
     public void createImpressionEventIgnoresNullAttributes() {
         // use the "valid" project config and its associated experiment, variation, and attributes
         ProjectConfig projectConfig = validProjectConfig;
@@ -290,7 +350,7 @@ public class EventFactoryTest {
         // verify that no Feature is created for attribute.getKey() -> null
         for (com.optimizely.ab.event.internal.payload.Attribute feature : impression.getVisitors().get(0).getAttributes()) {
             assertNotSame(feature.getKey(), attribute.getKey());
-            assertNotSame(feature.getValue(),  null);
+            assertNotSame(feature.getValue(), null);
         }
     }
 
