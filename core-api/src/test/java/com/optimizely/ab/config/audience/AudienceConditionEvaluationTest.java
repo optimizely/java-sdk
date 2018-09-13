@@ -378,6 +378,72 @@ public class AudienceConditionEvaluationTest {
     }
 
     /**
+     * Verify that OrCondition.evaluate returns true when at least one of its operand conditions evaluate to true.
+     */
+    @Test
+    public void orConditionEvaluateTrueWithNullAndTrue() throws Exception {
+        UserAttribute userAttribute1 = mock(UserAttribute.class);
+        when(userAttribute1.evaluate(testUserAttributes)).thenReturn(null);
+
+        UserAttribute userAttribute2 = mock(UserAttribute.class);
+        when(userAttribute2.evaluate(testUserAttributes)).thenReturn(true);
+
+        List<Condition> conditions = new ArrayList<Condition>();
+        conditions.add(userAttribute1);
+        conditions.add(userAttribute2);
+
+        OrCondition orCondition = new OrCondition(conditions);
+        assertTrue(orCondition.evaluate(testUserAttributes));
+        verify(userAttribute1, times(1)).evaluate(testUserAttributes);
+        // shouldn't be called due to short-circuiting in 'Or' evaluation
+        verify(userAttribute2, times(1)).evaluate(testUserAttributes);
+    }
+
+    /**
+     * Verify that OrCondition.evaluate returns true when at least one of its operand conditions evaluate to true.
+     */
+    @Test
+    public void orConditionEvaluateNullWithNullAndFalse() throws Exception {
+        UserAttribute userAttribute1 = mock(UserAttribute.class);
+        when(userAttribute1.evaluate(testUserAttributes)).thenReturn(null);
+
+        UserAttribute userAttribute2 = mock(UserAttribute.class);
+        when(userAttribute2.evaluate(testUserAttributes)).thenReturn(false);
+
+        List<Condition> conditions = new ArrayList<Condition>();
+        conditions.add(userAttribute1);
+        conditions.add(userAttribute2);
+
+        OrCondition orCondition = new OrCondition(conditions);
+        assertNull(orCondition.evaluate(testUserAttributes));
+        verify(userAttribute1, times(1)).evaluate(testUserAttributes);
+        // shouldn't be called due to short-circuiting in 'Or' evaluation
+        verify(userAttribute2, times(1)).evaluate(testUserAttributes);
+    }
+
+    /**
+     * Verify that OrCondition.evaluate returns true when at least one of its operand conditions evaluate to true.
+     */
+    @Test
+    public void orConditionEvaluateFalseWithFalseAndFalse() throws Exception {
+        UserAttribute userAttribute1 = mock(UserAttribute.class);
+        when(userAttribute1.evaluate(testUserAttributes)).thenReturn(false);
+
+        UserAttribute userAttribute2 = mock(UserAttribute.class);
+        when(userAttribute2.evaluate(testUserAttributes)).thenReturn(false);
+
+        List<Condition> conditions = new ArrayList<Condition>();
+        conditions.add(userAttribute1);
+        conditions.add(userAttribute2);
+
+        OrCondition orCondition = new OrCondition(conditions);
+        assertFalse(orCondition.evaluate(testUserAttributes));
+        verify(userAttribute1, times(1)).evaluate(testUserAttributes);
+        // shouldn't be called due to short-circuiting in 'Or' evaluation
+        verify(userAttribute2, times(1)).evaluate(testUserAttributes);
+    }
+
+    /**
      * Verify that OrCondition.evaluate returns false when all of its operand conditions evaluate to false.
      */
     @Test
@@ -415,6 +481,48 @@ public class AudienceConditionEvaluationTest {
 
         AndCondition andCondition = new AndCondition(conditions);
         assertTrue(andCondition.evaluate(testUserAttributes));
+        verify(orCondition1, times(1)).evaluate(testUserAttributes);
+        verify(orCondition2, times(1)).evaluate(testUserAttributes);
+    }
+
+    /**
+     * Verify that AndCondition.evaluate returns true when all of its operand conditions evaluate to true.
+     */
+    @Test
+    public void andConditionEvaluateFalseWithNullAndFalse() throws Exception {
+        OrCondition orCondition1 = mock(OrCondition.class);
+        when(orCondition1.evaluate(testUserAttributes)).thenReturn(null);
+
+        OrCondition orCondition2 = mock(OrCondition.class);
+        when(orCondition2.evaluate(testUserAttributes)).thenReturn(false);
+
+        List<Condition> conditions = new ArrayList<Condition>();
+        conditions.add(orCondition1);
+        conditions.add(orCondition2);
+
+        AndCondition andCondition = new AndCondition(conditions);
+        assertFalse(andCondition.evaluate(testUserAttributes));
+        verify(orCondition1, times(1)).evaluate(testUserAttributes);
+        verify(orCondition2, times(1)).evaluate(testUserAttributes);
+    }
+
+    /**
+     * Verify that AndCondition.evaluate returns true when all of its operand conditions evaluate to true.
+     */
+    @Test
+    public void andConditionEvaluateNullWithNullAndTrue() throws Exception {
+        OrCondition orCondition1 = mock(OrCondition.class);
+        when(orCondition1.evaluate(testUserAttributes)).thenReturn(null);
+
+        OrCondition orCondition2 = mock(OrCondition.class);
+        when(orCondition2.evaluate(testUserAttributes)).thenReturn(true);
+
+        List<Condition> conditions = new ArrayList<Condition>();
+        conditions.add(orCondition1);
+        conditions.add(orCondition2);
+
+        AndCondition andCondition = new AndCondition(conditions);
+        assertNull(andCondition.evaluate(testUserAttributes));
         verify(orCondition1, times(1)).evaluate(testUserAttributes);
         verify(orCondition2, times(1)).evaluate(testUserAttributes);
     }
