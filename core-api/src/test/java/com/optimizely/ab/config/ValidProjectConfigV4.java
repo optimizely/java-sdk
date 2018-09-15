@@ -431,6 +431,50 @@ public class ValidProjectConfigV4 {
                     )
             )
     );
+    private static final String     LAYER_TYPEDAUDIENCE_EXPERIMENT_ID = "1630555627";
+    private static final String     EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_ID = "1323241597";
+    public  static final String     EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_KEY = "typed_audience_experiment";
+    private static final String     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A_ID = "1423767503";
+    private static final String     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A_KEY = "A";
+    private static final Variation  VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A = new Variation(
+            VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A_ID,
+            VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A_KEY,
+            Collections.<LiveVariableUsageInstance>emptyList()
+    );
+    private static final String     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_ID = "3433458315";
+    private static final String     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_KEY = "B";
+    private static final Variation  VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B = new Variation(
+            VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_ID,
+            VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_KEY,
+            Collections.<LiveVariableUsageInstance>emptyList()
+    );
+
+    private static final Experiment EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT = new Experiment(
+            EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_ID,
+            EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_KEY,
+            Experiment.ExperimentStatus.RUNNING.toString(),
+            LAYER_TYPEDAUDIENCE_EXPERIMENT_ID,
+            ProjectConfigTestUtils.createListOfObjects(
+                    AUDIENCE_BOOL_ID,
+                    AUDIENCE_INT_ID,
+                    AUDIENCE_DOUBLE_ID
+            ),
+            ProjectConfigTestUtils.createListOfObjects(
+                    VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A,
+                    VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B
+            ),
+            Collections.EMPTY_MAP,
+            ProjectConfigTestUtils.createListOfObjects(
+                    new TrafficAllocation(
+                            VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A_ID,
+                            5000
+                    ),
+                    new TrafficAllocation(
+                            VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_ID,
+                            10000
+                    )
+            )
+    );
     private static final String     LAYER_FIRST_GROUPED_EXPERIMENT_ID = "3301900159";
     private static final String     EXPERIMENT_FIRST_GROUPED_EXPERIMENT_ID = "2738374745";
     private static final String     EXPERIMENT_FIRST_GROUPED_EXPERIMENT_KEY = "first_grouped_experiment";
@@ -1140,6 +1184,7 @@ public class ValidProjectConfigV4 {
         // list experiments
         List<Experiment> experiments = new ArrayList<Experiment>();
         experiments.add(EXPERIMENT_BASIC_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT);
         experiments.add(EXPERIMENT_MULTIVARIATE_EXPERIMENT);
         experiments.add(EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT);
         experiments.add(EXPERIMENT_PAUSED_EXPERIMENT);

@@ -152,6 +152,36 @@
       }
     },
     {
+      "id": "1323241597",
+      "key": "typed_audience_experiment",
+      "layerId": "1630555627",
+      "status": "Running",
+      "variations": [
+        {
+          "id": "1423767503",
+          "key": "A",
+          "variables": []
+        },
+        {
+          "id": "3433458315",
+          "key": "B",
+          "variables": []
+        }
+      ],
+      "trafficAllocation": [
+        {
+          "entityId": "1423767503",
+          "endOfRange": 5000
+        },
+        {
+          "entityId": "3433458315",
+          "endOfRange": 10000
+        }
+      ],
+      "audienceIds": ["3468206643","3468206644","3468206645"],
+      "forcedVariations": {}
+    },
+    {
       "id": "3262035800",
       "key": "multivariate_experiment",
       "layerId": "3262035800",
