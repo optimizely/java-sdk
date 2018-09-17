@@ -247,6 +247,89 @@ public class EventFactoryTest {
         }
     }
 
+    /**
+     * Verify that passing through an list value attribute causes that attribute to be ignored, rather than
+     * causing an exception to be thrown and passing only the valid attributes.
+     */
+    @Test
+    public void createConversionEventIgnoresInvalidAndAcceptsValidAttributes() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        
+        Bucketer mockBucketAlgorithm = mock(Bucketer.class);
+        EventType eventType = validProjectConfig.getEventTypes().get(0);
+
+        List<Experiment> allExperiments = validProjectConfig.getExperiments();
+
+        // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
+        // call the bucket function.
+        for (Experiment experiment : allExperiments) {
+            when(mockBucketAlgorithm.bucket(experiment, userId))
+                    .thenReturn(experiment.getVariations().get(0));
+        }
+        Attribute attribute1 = validProjectConfig.getAttributes().get(0);
+        Attribute attribute2 = validProjectConfig.getAttributes().get(1);
+        Attribute doubleAttribute = validProjectConfig.getAttributes().get(5);
+        Attribute integerAttribute = validProjectConfig.getAttributes().get(4);
+        Attribute boolAttribute = validProjectConfig.getAttributes().get(3);
+
+        BigInteger bigInteger = new BigInteger("12323");
+        BigDecimal bigDecimal = new BigDecimal("123");
+        double validDoubleAttribute = 13.1;
+        int validIntegerAttribute = 12;
+        boolean validBoolAttribute = true;
+
+        Map<String, Object> eventTagMap = new HashMap<>();
+        eventTagMap.put("boolean_param", false);
+        eventTagMap.put("string_param", "123");
+
+        HashMap<String, Object> attributes = new HashMap<>();
+        attributes.put(attribute1.getKey(), bigInteger);
+        attributes.put(attribute2.getKey(), bigDecimal);
+        attributes.put(doubleAttribute.getKey(), validDoubleAttribute);
+        attributes.put(integerAttribute.getKey(), validIntegerAttribute);
+        attributes.put(boolAttribute.getKey(), validBoolAttribute);
+
+        DecisionService decisionService = new DecisionService(
+                mockBucketAlgorithm,
+                mock(ErrorHandler.class),
+                validProjectConfig,
+                mock(UserProfileService.class)
+        );
+        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
+                validProjectConfig,
+                decisionService,
+                eventType.getKey(),
+                userId,
+                attributes);
+        LogEvent conversionEvent = factory.createConversionEvent(
+                validProjectConfig,
+                experimentVariationMap,
+                userId,
+                eventType.getId(),
+                eventType.getKey(),
+                attributes,
+                eventTagMap);
+
+        EventBatch impression = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
+
+        //Check valid attributes are getting passed.
+        assertEquals(impression.getVisitors().get(0).getAttributes().get(0).getKey(), boolAttribute.getKey());
+        assertEquals(impression.getVisitors().get(0).getAttributes().get(0).getValue(), validBoolAttribute);
+
+        assertEquals(impression.getVisitors().get(0).getAttributes().get(1).getKey(), doubleAttribute.getKey());
+        assertEquals(impression.getVisitors().get(0).getAttributes().get(1).getValue(), validDoubleAttribute);
+
+        assertEquals(impression.getVisitors().get(0).getAttributes().get(2).getKey(), integerAttribute.getKey());
+        assertEquals((int) ((double) impression.getVisitors().get(0).getAttributes().get(2).getValue()), validIntegerAttribute);
+
+        // verify that no Feature is created for attribute.getKey() -> invalidAttribute
+        for (com.optimizely.ab.event.internal.payload.Attribute feature : impression.getVisitors().get(0).getAttributes()) {
+            assertNotSame(feature.getKey(), attribute1.getKey());
+            assertNotSame(feature.getValue(), bigInteger);
+            assertNotSame(feature.getKey(), attribute2.getKey());
+            assertNotSame(feature.getValue(), bigDecimal);
+        }
+    }
 
     /**
      * Verify that passing through an list value attribute causes that attribute to be ignored, rather than
@@ -1051,7 +1134,7 @@ public class EventFactoryTest {
                                                                           DecisionService decisionService,
                                                                           String eventName,
                                                                           String userId,
-                                                                          @Nullable Map<String, String> attributes) {
+                                                                          @Nullable Map<String, ?> attributes) {
 
         List<Experiment> eventExperiments = projectConfig.getExperimentsForEventKey(eventName);
         Map<Experiment, Variation> experimentVariationMap = new HashMap<Experiment, Variation>(eventExperiments.size());
