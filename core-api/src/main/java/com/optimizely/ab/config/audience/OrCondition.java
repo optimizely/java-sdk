@@ -37,13 +37,16 @@ public class OrCondition implements Condition {
         return conditions;
     }
 
-    // https://docs.google.com/document/d/158_83difXVXF0nb91rxzrfHZwnhsybH21ImRA_si7sg/edit#
-    // According to the matrix mentioned in the above document.
+    // According to the matrix:
+    // true returns true
+    // false or null is null
+    // false or false is false
+    // null or null is null
     public @Nullable Boolean evaluate(Map<String, ?> attributes) {
         boolean foundNull = false;
         for (Condition condition : conditions) {
             Boolean conditionEval = condition.evaluate(attributes);
-            if (conditionEval == null) {// true with falses and nulls is still true
+            if (conditionEval == null) { // true with falses and nulls is still true
                 foundNull = true;
             }
             else if (conditionEval) {

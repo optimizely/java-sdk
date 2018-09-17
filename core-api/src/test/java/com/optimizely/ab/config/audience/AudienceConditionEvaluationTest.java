@@ -111,6 +111,20 @@ public class AudienceConditionEvaluationTest {
     }
 
     /**
+     * Verify that UserAttribute.evaluate for EXIST match type returns true for known visitor
+     * attributes with non-null instances and empty string.
+     */
+    @Test
+    public void existsMatchConditionEmptyStringEvaluatesTrue() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute","exists", "firefox");
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("browser_type", "");
+        assertTrue(testInstance.evaluate(attributes));
+        attributes.put("browser_type", null);
+        assertFalse(testInstance.evaluate(attributes));
+    }
+
+    /**
      * Verify that UserAttribute.evaluate for EXIST match type returns true for known visitor 
      * attributes with non-null instances
      */

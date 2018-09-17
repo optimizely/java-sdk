@@ -245,7 +245,7 @@ public final class ProjectConfigTestUtils {
                                         new EventType("100", "no_running_experiments", singletonList("118")));
 
         List<Condition> userAttributes = new ArrayList<Condition>();
-        userAttributes.add(new UserAttribute("browser_type", "custom_attribute", null,"firefox"));
+        userAttributes.add(new UserAttribute("browser_type", "custom_attribute", null, "firefox"));
 
         OrCondition orInner = new OrCondition(userAttributes);
 

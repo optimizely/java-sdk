@@ -40,8 +40,13 @@ public class AndCondition implements Condition {
     public @Nullable
     Boolean evaluate(Map<String, ?> attributes) {
         boolean foundNull = false;
-        // https://docs.google.com/document/d/158_83difXVXF0nb91rxzrfHZwnhsybH21ImRA_si7sg/edit#
-        // According to the matrix mentioned in the above document.
+        // According to the matrix where:
+        // false and true is false
+        // false and null is false
+        // true and null is null.
+        // true and false is false
+        // true and true is true
+        // null and null is null
         for (Condition condition : conditions) {
             Boolean conditionEval = condition.evaluate(attributes);
             if (conditionEval == null) {
