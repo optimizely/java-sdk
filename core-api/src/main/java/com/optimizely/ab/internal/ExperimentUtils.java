@@ -70,7 +70,7 @@ public final class ExperimentUtils {
             Condition conditions = projectConfig.getAudienceConditionsFromId(audienceId);
             Boolean conditionEval = conditions.evaluate(attributes);
 
-            if (conditionEval != null && conditionEval){
+            if (conditionEval != null && conditionEval) {
                 return true;
             }
         }

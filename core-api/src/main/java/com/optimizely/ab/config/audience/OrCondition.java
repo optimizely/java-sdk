@@ -54,7 +54,8 @@ public class OrCondition implements Condition {
             }
         }
 
-        if (foundNull) {// if found null and false return null.  all false return false
+        // if found null and false return null.  all false return false
+        if (foundNull) {
             return null;
         }
 

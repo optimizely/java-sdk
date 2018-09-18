@@ -30,7 +30,7 @@ class LTMatch extends LeafMatch<Number> {
             return convert(otherValue).doubleValue() < value.doubleValue();
         }
         catch (Exception e) {
-            MatchType.logger.error("Less than match ", e);
+            MatchType.logger.error("Less than match failed ", e);
             return null;
         }
     }

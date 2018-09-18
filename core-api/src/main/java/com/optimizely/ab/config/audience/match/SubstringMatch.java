@@ -30,7 +30,7 @@ class SubstringMatch extends LeafMatch<String> {
             return value.contains(convert(otherValue));
         }
         catch (Exception e) {
-            MatchType.logger.error("Substring match ", e);
+            MatchType.logger.error("Substring match failed ", e);
             return null;
         }
     }
