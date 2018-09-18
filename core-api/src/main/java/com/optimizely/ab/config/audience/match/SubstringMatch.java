@@ -16,8 +16,6 @@
  */
 package com.optimizely.ab.config.audience.match;
 
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.MatchGenerator;
-
 import javax.annotation.Nullable;
 
 class SubstringMatch extends LeafMatch<String> {
