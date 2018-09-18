@@ -62,6 +62,7 @@ public class UserAttribute implements Condition {
         Object userAttributeValue = attributes.get(name);
 
         if (!"custom_attribute".equals(type)) {
+            MatchType.logger.error(String.format("condition type not equal to `custom_attribute` %s", type != null ? type : ""));
             return null; // unknown type
         }
         // check user attribute value is equal
@@ -69,6 +70,7 @@ public class UserAttribute implements Condition {
             return MatchType.getMatchType(match, value).getMatcher().eval(userAttributeValue);
         }
         catch (NullPointerException np) {
+            MatchType.logger.error(String.format("attribute or value null for match %s", match != null ? match : "legacy condition"),np);
             return null;
         }
 

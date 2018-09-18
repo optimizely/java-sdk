@@ -295,26 +295,27 @@ final class JsonConfigParser implements ConfigParser {
                 conditions.add(parseConditions(conditionJson.getJSONArray(i)));
             } else {
                 JSONObject conditionMap = (JSONObject)obj;
-                Object value = null;
-                if (conditionMap.has("value")) {
-                    value = conditionMap.get("value");
-                }
+                Object value = conditionMap.has("value") ? conditionMap.get("value") : null;
+                String match = conditionMap.has("match") ? (String) conditionMap.get("match") : null;
                 conditions.add(new UserAttribute(
                         (String)conditionMap.get("name"),
                         (String)conditionMap.get("type"),
-                        conditionMap.has("match")?(String)conditionMap.get("match"):null,
-                               value
+                        match, value
                 ));
             }
         }
 
         Condition condition;
-        if (operand.equals("and")) {
-            condition = new AndCondition(conditions);
-        } else if (operand.equals("or")) {
-            condition = new OrCondition(conditions);
-        } else {
-            condition = new NotCondition(conditions.get(0));
+        switch (operand) {
+            case "and":
+                condition = new AndCondition(conditions);
+                break;
+            case "or":
+                condition = new OrCondition(conditions);
+                break;
+            default:
+                condition = new NotCondition(conditions.get(0));
+                break;
         }
 
         return condition;

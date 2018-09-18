@@ -66,12 +66,16 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
         }
 
         Condition condition;
-        if (operand.equals("and")) {
-            condition = new AndCondition(conditions);
-        } else if (operand.equals("or")) {
-            condition = new OrCondition(conditions);
-        } else {
-            condition = new NotCondition(conditions.get(0));
+        switch (operand) {
+            case "and":
+                condition = new AndCondition(conditions);
+                break;
+            case "or":
+                condition = new OrCondition(conditions);
+                break;
+            default:
+                condition = new NotCondition(conditions.get(0));
+                break;
         }
 
         return condition;

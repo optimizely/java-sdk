@@ -27,9 +27,10 @@ class GTMatch extends LeafMatch<Number> {
     public @Nullable
     Boolean eval(Object otherValue) {
         try {
-            return ((Number) convert(otherValue)).doubleValue() > value.doubleValue();
+            return convert(otherValue).doubleValue() > value.doubleValue();
         }
         catch (Exception e) {
+            MatchType.logger.error("Greater than match ", e);
             return null;
         }
     }

@@ -20,12 +20,12 @@ import javax.annotation.Nullable;
 
 /**
  * This is a temporary class.  It mimics the current behaviour for
- * custom dimension.  This will be dropped for ExactMatch and the unit tests need to be fixed.
+ * legasy custom attributes.  This will be dropped for ExactMatch and the unit tests need to be fixed.
  * @param <T>
  */
-class CustomDimensionMatch<T> extends LeafMatch<T> {
+class DefaultMatchForLegacyAttributes<T> extends LeafMatch<T> {
     T value;
-    protected CustomDimensionMatch(T value) {
+    protected DefaultMatchForLegacyAttributes(T value) {
         this.value = value;
     }
 

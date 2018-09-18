@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config.audience.match;
 
+import com.sun.org.apache.xalan.internal.xsltc.compiler.util.MatchGenerator;
+
 import javax.annotation.Nullable;
 
 class SubstringMatch extends LeafMatch<String> {
@@ -30,6 +32,7 @@ class SubstringMatch extends LeafMatch<String> {
             return value.contains(convert(otherValue));
         }
         catch (Exception e) {
+            MatchType.logger.error("Substring match ", e);
             return null;
         }
     }

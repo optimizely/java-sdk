@@ -16,15 +16,20 @@
  */
 package com.optimizely.ab.config.audience.match;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.annotation.Nonnull;
 
 public class MatchType {
+
+    public static final Logger logger = LoggerFactory.getLogger(MatchType.class);
 
     private String type;
     private LeafMatcher matcher;
 
     public static MatchType getMatchType(String type, Object value) {
-        if (type == null) type = "custom_dimension";
+        if (type == null) type = "legacy_custom_attribute";
 
         switch (type) {
             case "exists":
@@ -55,9 +60,9 @@ public class MatchType {
                     return new MatchType(type, new LTMatch((Number) value));
                 }
                 break;
-            case "custom_dimension":
+            case "legacy_custom_attribute":
                 if (value instanceof String) {
-                    return new MatchType(type, new CustomDimensionMatch<String>((String) value));
+                    return new MatchType(type, new DefaultMatchForLegacyAttributes<String>((String) value));
                 }
                 break;
             default:
