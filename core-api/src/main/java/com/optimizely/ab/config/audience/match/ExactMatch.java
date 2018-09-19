@@ -18,7 +18,7 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
-class ExactMatch<T> extends LeafMatch<T> {
+class ExactMatch<T> extends AttributeMatch<T> {
     T value;
     protected ExactMatch(T value) {
         this.value = value;

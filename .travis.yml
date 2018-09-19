@@ -28,4 +28,3 @@ after_success:
   - ./gradlew coveralls uploadArchives --console plain
 after_failure:
   - cat /home/travis/build/optimizely/java-sdk/core-api/build/reports/findbugs/main.html
-

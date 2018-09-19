@@ -16,6 +16,6 @@
  */
 package com.optimizely.ab.config.audience.match;
 
-public interface LeafMatcher {
+public interface Match {
     Boolean eval(Object otherValue);
 }

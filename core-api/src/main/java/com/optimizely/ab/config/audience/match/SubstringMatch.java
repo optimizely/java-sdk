@@ -18,7 +18,7 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
-class SubstringMatch extends LeafMatch<String> {
+class SubstringMatch extends AttributeMatch<String> {
     String value;
     protected SubstringMatch(String value) {
         this.value = value;

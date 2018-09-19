@@ -26,7 +26,7 @@ public class MatchType {
     public static final Logger logger = LoggerFactory.getLogger(MatchType.class);
 
     private String type;
-    private LeafMatcher matcher;
+    private Match matcher;
 
     public static MatchType getMatchType(String type, Object value) {
         if (type == null) type = "legacy_custom_attribute";
@@ -73,13 +73,13 @@ public class MatchType {
     }
 
 
-    private MatchType(String type, LeafMatcher matcher) {
+    private MatchType(String type, Match matcher) {
         this.type = type;
         this.matcher = matcher;
     }
 
     public @Nonnull
-    LeafMatcher getMatcher() {
+    Match getMatcher() {
         return matcher;
     }
 

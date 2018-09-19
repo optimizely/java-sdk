@@ -20,7 +20,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import javax.annotation.Nullable;
 
-class NullMatch extends LeafMatch<Object> {
+class NullMatch extends AttributeMatch<Object> {
     @SuppressFBWarnings("URF_UNREAD_FIELD")
     Object value;
     protected NullMatch() {

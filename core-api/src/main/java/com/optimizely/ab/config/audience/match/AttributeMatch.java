@@ -16,7 +16,7 @@
  */
 package com.optimizely.ab.config.audience.match;
 
-abstract class LeafMatch<T> implements LeafMatcher {
+abstract class AttributeMatch<T> implements Match {
     T convert(Object o) {
         try {
             T rv = (T)o;

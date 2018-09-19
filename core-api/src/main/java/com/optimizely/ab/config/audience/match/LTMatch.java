@@ -18,7 +18,7 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
-class LTMatch extends LeafMatch<Number> {
+class LTMatch extends AttributeMatch<Number> {
     Number value;
     protected LTMatch(Number value) {
         this.value = value;
