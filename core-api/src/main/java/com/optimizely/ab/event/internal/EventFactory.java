@@ -171,7 +171,7 @@ public class EventFactory {
             // Filter down to the types of values we're allowed to track.
             // Don't allow Longs, BigIntegers, or BigDecimals - they /can/ theoretically be serialized as JSON numbers
             // but may take on values that can't be faithfully parsed by the backend.
-            // https://github.com/optimizely/avro-schemas/blob/baeba19a7bd227aae67026474aec239110c5801d/event_batch/src/main/avro/EventBatch.avsc#L22
+            // https://developers.optimizely.com/x/events/api/#Attribute
             if (entry.getValue() == null ||
                     !((entry.getValue() instanceof String) ||
                     (entry.getValue() instanceof Integer) ||
