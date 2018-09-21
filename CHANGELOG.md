@@ -1,5 +1,12 @@
 # Optimizely Java X SDK Changelog
 
+## 2.1.3
+
+September 21st, 2018
+
+### Bug Fixes
+* fix(attributes): Filters out attributes with null values from the event payload ([#204](https://github.com/optimizely/java-sdk/pull/204))
+
 ## 2.1.2
 
 August 1st, 2018
