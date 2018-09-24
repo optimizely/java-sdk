@@ -20,9 +20,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.List;
-
 import javax.annotation.concurrent.Immutable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents a Optimizely Group configuration
@@ -48,7 +48,24 @@ public class Group implements IdMapped {
         this.id = id;
         this.policy = policy;
         this.trafficAllocation = trafficAllocation;
-        this.experiments = experiments;
+        // populate experiment's groupId
+        this.experiments = new ArrayList<>(experiments.size());
+        for (Experiment experiment : experiments) {
+            if (id != null && !id.equals(experiment.getGroupId())) {
+                experiment = new Experiment(
+                    experiment.getId(),
+                    experiment.getKey(),
+                    experiment.getStatus(),
+                    experiment.getLayerId(),
+                    experiment.getAudienceIds(),
+                    experiment.getVariations(),
+                    experiment.getUserIdToVariationKeyMap(),
+                    experiment.getTrafficAllocation(),
+                    id
+                );
+            }
+            this.experiments.add(experiment);
+        }
     }
 
     public String getId() {
