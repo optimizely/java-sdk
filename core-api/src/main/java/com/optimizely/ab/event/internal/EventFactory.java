@@ -167,32 +167,34 @@ public class EventFactory {
     private List<Attribute> buildAttributeList(ProjectConfig projectConfig, Map<String, ?> attributes) {
         List<Attribute> attributesList = new ArrayList<Attribute>();
 
-        for (Map.Entry<String, ?> entry : attributes.entrySet()) {
-            // Filter down to the types of values we're allowed to track.
-            // Don't allow Longs, BigIntegers, or BigDecimals - they /can/ theoretically be serialized as JSON numbers
-            // but may take on values that can't be faithfully parsed by the backend.
-            // https://developers.optimizely.com/x/events/api/#Attribute
-            if (entry.getValue() == null ||
-                    !((entry.getValue() instanceof String) ||
-                    (entry.getValue() instanceof Integer) ||
-                    (entry.getValue() instanceof Double) ||
-                    (entry.getValue() instanceof Boolean))) {
-                continue;
+        if (attributes != null) {
+            for (Map.Entry<String, ?> entry : attributes.entrySet()) {
+                // Filter down to the types of values we're allowed to track.
+                // Don't allow Longs, BigIntegers, or BigDecimals - they /can/ theoretically be serialized as JSON numbers
+                // but may take on values that can't be faithfully parsed by the backend.
+                // https://developers.optimizely.com/x/events/api/#Attribute
+                if (entry.getValue() == null ||
+                        !((entry.getValue() instanceof String) ||
+                                (entry.getValue() instanceof Integer) ||
+                                (entry.getValue() instanceof Double) ||
+                                (entry.getValue() instanceof Boolean))) {
+                    continue;
+                }
+
+                String attributeId = projectConfig.getAttributeId(projectConfig, entry.getKey());
+                if (attributeId == null) {
+                    continue;
+                }
+
+                Attribute attribute = new Attribute.Builder()
+                        .setEntityId(attributeId)
+                        .setKey(entry.getKey())
+                        .setType(Attribute.CUSTOM_ATTRIBUTE_TYPE)
+                        .setValue(entry.getValue())
+                        .build();
+
+                attributesList.add(attribute);
             }
-
-            String attributeId = projectConfig.getAttributeId(projectConfig, entry.getKey());
-            if(attributeId == null) {
-                continue;
-            }
-
-            Attribute attribute = new Attribute.Builder()
-                    .setEntityId(attributeId)
-                    .setKey(entry.getKey())
-                    .setType(Attribute.CUSTOM_ATTRIBUTE_TYPE)
-                    .setValue(entry.getValue())
-                    .build();
-
-            attributesList.add(attribute);
         }
 
         //checks if botFiltering value is not set in the project config file.

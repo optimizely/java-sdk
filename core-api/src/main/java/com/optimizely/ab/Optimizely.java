@@ -209,18 +209,15 @@ public class Optimizely {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
         }
-        // determine whether all the given attributes are present in the project config. If not, filter out the unknown
-        // attributes.
-        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, attributes);
 
         // bucket the user to the given experiment and dispatch an impression event
-        Variation variation = decisionService.getVariation(experiment, userId, filteredAttributes);
+        Variation variation = decisionService.getVariation(experiment, userId, attributes);
         if (variation == null) {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
         }
 
-        sendImpression(projectConfig, experiment, userId, filteredAttributes, variation);
+        sendImpression(projectConfig, experiment, userId, attributes, variation);
 
         return variation;
     }
@@ -300,10 +297,6 @@ public class Optimizely {
             return;
         }
 
-        // determine whether all the given attributes are present in the project config. If not, filter out the unknown
-        // attributes.
-        Map<String, ?> filteredAttributes = filterAttributes(currentConfig, attributes);
-
         if (eventTags == null) {
             logger.warn("Event tags is null when non-null was expected. Defaulting to an empty event tags map.");
             eventTags = Collections.<String, String>emptyMap();
@@ -313,7 +306,7 @@ public class Optimizely {
         Map<Experiment, Variation> experimentVariationMap = new HashMap<Experiment, Variation>(experimentsForEvent.size());
         for (Experiment experiment : experimentsForEvent) {
             if (experiment.isRunning()) {
-                Variation variation = decisionService.getVariation(experiment, userId, filteredAttributes);
+                Variation variation = decisionService.getVariation(experiment, userId, attributes);
                 if (variation != null) {
                     experimentVariationMap.put(experiment, variation);
                 }
@@ -331,7 +324,7 @@ public class Optimizely {
                 userId,
                 eventType.getId(),
                 eventType.getKey(),
-                filteredAttributes,
+                attributes,
                 eventTags);
 
         if (conversionEvent == null) {
@@ -354,7 +347,7 @@ public class Optimizely {
         }
 
         notificationCenter.sendNotifications(NotificationCenter.NotificationType.Track, eventName, userId,
-                filteredAttributes, eventTags, conversionEvent);
+                attributes, eventTags, conversionEvent);
     }
 
     //======== FeatureFlag APIs ========//
@@ -407,16 +400,14 @@ public class Optimizely {
             return false;
         }
 
-        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, attributes);
-
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, attributes);
         if (featureDecision.variation != null) {
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
                 sendImpression(
                         projectConfig,
                         featureDecision.experiment,
                         userId,
-                        filteredAttributes,
+                        attributes,
                         featureDecision.variation);
             } else {
                 logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
@@ -717,9 +708,7 @@ public class Optimizely {
                            @Nonnull String userId,
                            @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
 
-        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, attributes);
-
-        return decisionService.getVariation(experiment, userId, filteredAttributes);
+        return decisionService.getVariation(experiment, userId, attributes);
     }
 
     public @Nullable
@@ -755,9 +744,7 @@ public class Optimizely {
             return null;
         }
 
-        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, attributes);
-
-        return decisionService.getVariation(experiment,userId,filteredAttributes);
+        return decisionService.getVariation(experiment, userId, attributes);
     }
 
     /**
@@ -817,50 +804,6 @@ public class Optimizely {
     }
 
     //======== Helper methods ========//
-
-    /**
-     * Helper method to verify that the given attributes map contains only keys that are present in the
-     * {@link ProjectConfig}.
-     *
-     * @param projectConfig the current project config
-     * @param attributes the attributes map to validate and potentially filter. Attributes which starts with reserved key
-     * {@link ProjectConfig#RESERVED_ATTRIBUTE_PREFIX} are kept.
-     * @return the filtered attributes map (containing only attributes that are present in the project config) or an
-     * empty map if a null attributes object is passed in
-     */
-    private Map<String, ?> filterAttributes(@Nonnull ProjectConfig projectConfig,
-                                                 @Nonnull Map<String, ?> attributes) {
-        if (attributes == null) {
-            logger.warn("Attributes is null when non-null was expected. Defaulting to an empty attributes map.");
-            return Collections.<String, String>emptyMap();
-        }
-
-        // List of attribute keys
-        List<String> unknownAttributes = null;
-
-        Map<String, Attribute> attributeKeyMapping = projectConfig.getAttributeKeyMapping();
-        for (Map.Entry<String, ?> attribute : attributes.entrySet()) {
-            if (!attributeKeyMapping.containsKey(attribute.getKey()) &&
-                    !attribute.getKey().startsWith(ProjectConfig.RESERVED_ATTRIBUTE_PREFIX)) {
-                if (unknownAttributes == null) {
-                    unknownAttributes = new ArrayList<String>();
-                }
-                unknownAttributes.add(attribute.getKey());
-            }
-        }
-
-        if (unknownAttributes != null) {
-            logger.warn("Attribute(s) {} not in the datafile.", unknownAttributes);
-            // make a copy of the passed through attributes, then remove the unknown list
-            attributes = new HashMap<>(attributes);
-            for (String unknownAttribute : unknownAttributes) {
-                attributes.remove(unknownAttribute);
-            }
-        }
-
-        return attributes;
-    }
-
     /**
      * Helper function to check that the provided userId is valid
      *

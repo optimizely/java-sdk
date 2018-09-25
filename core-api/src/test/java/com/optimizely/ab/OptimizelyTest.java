@@ -640,7 +640,7 @@ public class OptimizelyTest {
      * Verify that {@link Optimizely#activate(String, String, Map<String, String>)} handles the case
      * where an unknown attribute (i.e., not in the config) is passed through.
      *
-     * In this case, the activate call should remove the unknown attribute from the given map.
+     * In this case, the activate call should not remove the unknown attribute from the given map.
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -676,7 +676,6 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
                 activatedExperiment.getKey() + "\".");
-        logbackVerifier.expectMessage(Level.WARN, "Attribute(s) [unknownAttribute] not in the datafile.");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
                 testParams + " and payload \"\"");
 
@@ -694,14 +693,14 @@ public class OptimizelyTest {
                 eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
 
         Map<String, String> actualValue = attributeCaptor.getValue();
-        assertThat(actualValue, not(hasKey("unknownAttribute")));
+        assertThat(actualValue, hasKey("unknownAttribute"));
 
         // verify that dispatchEvent was called with the correct LogEvent object.
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
     }
 
     /**
-     * Verify that {@link Optimizely#activate(String, String, Map)} ignores null attributes.
+     * Verify that {@link Optimizely#activate(String, String, Map)} if passed null attributes than it returns null attributes.
      */
     @Test
     @SuppressFBWarnings(
@@ -720,19 +719,16 @@ public class OptimizelyTest {
                 .withConfig(noAudienceProjectConfig)
                 .withErrorHandler(mockErrorHandler)
                 .build();
-
+        Map<String, String> attributes = null;
         when(mockEventFactory.createImpressionEvent(eq(noAudienceProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
-                eq(testUserId), eq(Collections.<String, String>emptyMap())))
+                eq(testUserId), eq(attributes)))
                 .thenReturn(logEventToDispatch);
 
         when(mockBucketer.bucket(activatedExperiment, testUserId))
                 .thenReturn(bucketedVariation);
 
         // activate the experiment
-        Map<String, String> attributes = null;
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, attributes);
-
-        logbackVerifier.expectMessage(Level.WARN, "Attributes is null when non-null was expected. Defaulting to an empty attributes map.");
 
         // verify that the bucketing algorithm was called correctly
         verify(mockBucketer).bucket(activatedExperiment, testUserId);
@@ -744,7 +740,7 @@ public class OptimizelyTest {
                 eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
 
         Map<String, String> actualValue = attributeCaptor.getValue();
-        assertThat(actualValue, is(Collections.<String, String>emptyMap()));
+        assertNull(actualValue);
 
         // verify that dispatchEvent was called with the correct LogEvent object
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
@@ -1440,7 +1436,7 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify that {@link Optimizely#track(String, String)} ignores null attributes.
+     * Verify that {@link Optimizely#track(String, String)} if passed null attributes  than it returns null attributes.
      */
     @Test
     @SuppressFBWarnings(
@@ -1471,6 +1467,7 @@ public class OptimizelyTest {
                 eventType.getKey(),
                 genericUserId,
                 Collections.<String, String>emptyMap());
+        Map<String, String> attributes = null;
 
         when(mockEventFactory.createConversionEvent(
                 eq(validProjectConfig),
@@ -1478,7 +1475,7 @@ public class OptimizelyTest {
                 eq(genericUserId),
                 eq(eventType.getId()),
                 eq(eventType.getKey()),
-                eq(Collections.<String, String>emptyMap()),
+                eq(attributes),
                 eq(Collections.<String, Object>emptyMap())))
                 .thenReturn(logEventToDispatch);
 
@@ -1488,10 +1485,7 @@ public class OptimizelyTest {
                 testParams + " and payload \"\"");
 
         // call track
-        Map<String, String> attributes = null;
         optimizely.track(eventType.getKey(), genericUserId, attributes);
-
-        logbackVerifier.expectMessage(Level.WARN, "Attributes is null when non-null was expected. Defaulting to an empty attributes map.");
 
         // setup the attribute map captor (so we can verify its content)
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
@@ -1507,7 +1501,7 @@ public class OptimizelyTest {
                 eq(Collections.<String, Object>emptyMap()));
 
         Map<String, String> actualValue = attributeCaptor.getValue();
-        assertThat(actualValue, is(Collections.<String, String>emptyMap()));
+        assertEquals(actualValue, null);
 
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
     }
@@ -1548,7 +1542,7 @@ public class OptimizelyTest {
                 eq(genericUserId),
                 eq(eventType.getId()),
                 eq(eventType.getKey()),
-                eq(Collections.<String, String>emptyMap()),
+                eq(Collections.singletonMap("test", null)),
                 eq(Collections.<String, Object>emptyMap())))
                 .thenReturn(logEventToDispatch);
 
@@ -1582,7 +1576,7 @@ public class OptimizelyTest {
      * Verify that {@link Optimizely#track(String, String)} handles the case where an unknown attribute
      * (i.e., not in the config) is passed through.
      *
-     * In this case, the track event call should remove the unknown attribute from the given map.
+     * In this case, the track event call should not remove the unknown attribute from the given map but should go on and track the event successfully.
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -1618,13 +1612,12 @@ public class OptimizelyTest {
                 eq(genericUserId),
                 eq(eventType.getId()),
                 eq(eventType.getKey()),
-                anyMapOf(String.class, String.class),
+                eq(ImmutableMap.of("unknownAttribute", "attributeValue")),
                 eq(Collections.<String, Object>emptyMap())))
                 .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
                 "\" for user \"" + genericUserId + "\".");
-        logbackVerifier.expectMessage(Level.WARN, "Attribute(s) [unknownAttribute] not in the datafile.");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching conversion event to URL test_url with params " +
                 testParams + " and payload \"\"");
 
@@ -1645,7 +1638,7 @@ public class OptimizelyTest {
                 eq(Collections.<String, Object>emptyMap()));
 
         Map<String, String> actualValue = attributeCaptor.getValue();
-        assertThat(actualValue, not(hasKey("unknownAttribute")));
+        assertThat(actualValue, hasKey("unknownAttribute"));
 
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
     }
@@ -2486,9 +2479,10 @@ public class OptimizelyTest {
                 .withConfig(noAudienceProjectConfig)
                 .withErrorHandler(mockErrorHandler)
                 .build();
+        Map<String, String> attributes = null;
 
         when(mockEventFactory.createImpressionEvent(eq(noAudienceProjectConfig), eq(activatedExperiment), eq(bucketedVariation),
-                eq(testUserId), eq(Collections.<String, String>emptyMap())))
+                eq(testUserId), eq(attributes)))
                 .thenReturn(logEventToDispatch);
 
         when(mockBucketer.bucket(activatedExperiment, testUserId))
@@ -2500,7 +2494,7 @@ public class OptimizelyTest {
                 assertEquals(experiment.getKey(), activatedExperiment.getKey());
                 assertEquals(bucketedVariation.getKey(), variation.getKey());
                 assertEquals(userId, testUserId);
-                assertTrue(attributes.isEmpty());
+                assertNull(attributes);
 
                 assertEquals(event.getRequestMethod(), RequestMethod.GET);
             }
@@ -2510,12 +2504,9 @@ public class OptimizelyTest {
         int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Activate, activateNotification);
 
         // activate the experiment
-        Map<String, String> attributes = null;
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), testUserId, attributes);
 
         optimizely.notificationCenter.removeNotificationListener(notificationId);
-
-        logbackVerifier.expectMessage(Level.WARN, "Attributes is null when non-null was expected. Defaulting to an empty attributes map.");
 
         // verify that the bucketing algorithm was called correctly
         verify(mockBucketer).bucket(activatedExperiment, testUserId);
@@ -2527,7 +2518,7 @@ public class OptimizelyTest {
                 eq(bucketedVariation), eq(testUserId), attributeCaptor.capture());
 
         Map<String, String> actualValue = attributeCaptor.getValue();
-        assertThat(actualValue, is(Collections.<String, String>emptyMap()));
+        assertNull(actualValue);
 
         // verify that dispatchEvent was called with the correct LogEvent object
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
@@ -2866,7 +2857,7 @@ public class OptimizelyTest {
     }
 
     /**
-     * Track with listener and verify that {@link Optimizely#track(String, String)} ignores null attributes.
+     * Track with listener and verify that {@link Optimizely#track(String, String)} returns null attributes.
      */
     @Test
     @SuppressFBWarnings(
@@ -2896,15 +2887,16 @@ public class OptimizelyTest {
                 mockDecisionService,
                 eventType.getKey(),
                 genericUserId,
-                Collections.<String, String>emptyMap());
+                null);
 
+        Map<String, String> attributes = null;
         when(mockEventFactory.createConversionEvent(
                 eq(validProjectConfig),
                 eq(experimentVariationMap),
                 eq(genericUserId),
                 eq(eventType.getId()),
                 eq(eventType.getKey()),
-                eq(Collections.<String, String>emptyMap()),
+                eq(attributes),
                 eq(Collections.<String, Object>emptyMap())))
                 .thenReturn(logEventToDispatch);
 
@@ -2918,7 +2910,7 @@ public class OptimizelyTest {
             public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
                 assertEquals(eventType.getKey(), eventKey);
                 assertEquals(genericUserId, userId);
-                assertTrue(attributes.isEmpty());
+                assertNull(attributes.isEmpty());
                 assertTrue(eventTags.isEmpty());
             }
         };
@@ -2926,12 +2918,9 @@ public class OptimizelyTest {
         int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Track, trackNotification);
 
         // call track
-        Map<String, String> attributes = null;
         optimizely.track(eventType.getKey(), genericUserId, attributes);
 
         optimizely.notificationCenter.removeNotificationListener(notificationId);
-
-        logbackVerifier.expectMessage(Level.WARN, "Attributes is null when non-null was expected. Defaulting to an empty attributes map.");
 
         // setup the attribute map captor (so we can verify its content)
         ArgumentCaptor<Map> attributeCaptor = ArgumentCaptor.forClass(Map.class);
@@ -2947,7 +2936,7 @@ public class OptimizelyTest {
                 eq(Collections.<String, Object>emptyMap()));
 
         Map<String, String> actualValue = attributeCaptor.getValue();
-        assertThat(actualValue, is(Collections.<String, String>emptyMap()));
+        assertNull(actualValue);
 
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
     }
