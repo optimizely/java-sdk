@@ -67,7 +67,7 @@ public final class ExperimentUtils {
         }
 
         // if there are audiences, but no user attributes, the user is not in the experiment.
-        if (attributes.isEmpty()) {
+        if (attributes==null || attributes.isEmpty()) {
             return false;
         }
 
