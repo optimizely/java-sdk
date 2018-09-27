@@ -872,10 +872,6 @@ public class Optimizely {
             logger.error("The user ID parameter must be nonnull.");
             return false;
         }
-        if (userId.trim().isEmpty()) {
-            logger.error("Non-empty user ID required");
-            return false;
-        }
 
         return true;
     }

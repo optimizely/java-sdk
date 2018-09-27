@@ -537,7 +537,7 @@ public class ProjectConfig {
                                                   @Nonnull String userId) {
 
         // if the user id is invalid, return false.
-        if (userId == null || userId.trim().isEmpty()) {
+        if (userId == null) {
             logger.error("User ID is invalid");
             return null;
         }
