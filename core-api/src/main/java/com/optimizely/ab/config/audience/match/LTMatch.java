@@ -25,9 +25,9 @@ class LTMatch extends AttributeMatch<Number> {
     }
 
     public @Nullable
-    Boolean eval(Object otherValue) {
+    Boolean eval(Object attributeValue) {
         try {
-            return convert(otherValue).doubleValue() < value.doubleValue();
+            return convert(attributeValue).doubleValue() < value.doubleValue();
         }
         catch (Exception e) {
             MatchType.logger.error("Less than match failed ", e);

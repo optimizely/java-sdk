@@ -41,6 +41,7 @@ import org.json.JSONObject;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,12 @@ final class JsonConfigParser implements ConfigParser {
             attributes = parseAttributes(rootObject.getJSONArray("attributes"));
 
             List<EventType> events = parseEvents(rootObject.getJSONArray("events"));
-            List<Audience> audiences = parseAudiences(rootObject.getJSONArray("audiences"));
+            List<Audience> audiences = Collections.emptyList();
+
+            if (rootObject.has("audiences")) {
+                audiences = parseAudiences(rootObject.getJSONArray("audiences"));
+            }
+
             List<Audience> typedAudiences = null;
             if (rootObject.has("typedAudiences")) {
                 typedAudiences = parseAudiences(rootObject.getJSONArray("typedAudiences"));

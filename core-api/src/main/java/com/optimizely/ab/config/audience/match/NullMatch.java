@@ -28,7 +28,7 @@ class NullMatch extends AttributeMatch<Object> {
     }
 
     public @Nullable
-    Boolean eval(Object otherValue) {
+    Boolean eval(Object attributeValue) {
         return null;
     }
 }

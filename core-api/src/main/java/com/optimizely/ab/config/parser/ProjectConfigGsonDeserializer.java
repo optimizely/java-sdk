@@ -33,6 +33,7 @@ import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.audience.Audience;
 
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -67,8 +68,10 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
 
         List<EventType> events =
             context.deserialize(jsonObject.get("events").getAsJsonArray(), eventsType);
-        List<Audience> audiences =
-            context.deserialize(jsonObject.get("audiences").getAsJsonArray(), audienceType);
+        List<Audience> audiences = Collections.emptyList();
+        if (jsonObject.has("audiences")) {
+            audiences = context.deserialize(jsonObject.get("audiences").getAsJsonArray(), audienceType);
+        }
 
         List<Audience> typedAudiences = null;
         if (jsonObject.has("typedAudiences")) {

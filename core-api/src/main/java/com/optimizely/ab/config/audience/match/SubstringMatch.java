@@ -25,9 +25,9 @@ class SubstringMatch extends AttributeMatch<String> {
     }
 
     public @Nullable
-    Boolean eval(Object otherValue) {
+    Boolean eval(Object attributeValue) {
         try {
-            return value.contains(convert(otherValue));
+            return value.contains(convert(attributeValue));
         }
         catch (Exception e) {
             MatchType.logger.error("Substring match failed ", e);

@@ -28,7 +28,7 @@ class ExistsMatch extends AttributeMatch<Object> {
     }
 
     public @Nullable
-    Boolean eval(Object otherValue) {
-        return otherValue != null;
+    Boolean eval(Object attributeValue) {
+        return attributeValue != null;
     }
 }

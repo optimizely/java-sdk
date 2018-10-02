@@ -25,56 +25,56 @@ public class MatchType {
 
     public static final Logger logger = LoggerFactory.getLogger(MatchType.class);
 
-    private String type;
+    private String matchType;
     private Match matcher;
 
-    public static MatchType getMatchType(String type, Object value) {
-        if (type == null) type = "legacy_custom_attribute";
+    public static MatchType getMatchType(String matchType, Object conditionValue) {
+        if (matchType == null) matchType = "legacy_custom_attribute";
 
-        switch (type) {
+        switch (matchType) {
             case "exists":
-                return new MatchType(type, new ExistsMatch(value));
+                return new MatchType(matchType, new ExistsMatch(conditionValue));
             case "exact":
-                if (value instanceof String) {
-                    return new MatchType(type, new ExactMatch<String>((String) value));
+                if (conditionValue instanceof String) {
+                    return new MatchType(matchType, new ExactMatch<String>((String) conditionValue));
                 }
-                else if (value instanceof Number) {
-                    return new MatchType(type, new ExactMatch<Number>((Number) value));
+                else if (conditionValue instanceof Integer || conditionValue instanceof Double) {
+                    return new MatchType(matchType, new ExactMatch<Number>((Number) conditionValue));
                 }
-                else if (value instanceof Boolean) {
-                    return new MatchType(type, new ExactMatch<Boolean>((Boolean) value));
+                else if (conditionValue instanceof Boolean) {
+                    return new MatchType(matchType, new ExactMatch<Boolean>((Boolean) conditionValue));
                 }
                 break;
             case "substring":
-                if (value instanceof String) {
-                    return new MatchType(type, new SubstringMatch((String) value));
+                if (conditionValue instanceof String) {
+                    return new MatchType(matchType, new SubstringMatch((String) conditionValue));
                 }
                 break;
             case "gt":
-                if (value instanceof Number) {
-                    return new MatchType(type, new GTMatch((Number) value));
+                if (conditionValue instanceof Integer || conditionValue instanceof Double) {
+                    return new MatchType(matchType, new GTMatch((Number) conditionValue));
                 }
                 break;
             case "lt":
-                if (value instanceof Number) {
-                    return new MatchType(type, new LTMatch((Number) value));
+                if (conditionValue instanceof Integer || conditionValue instanceof Double) {
+                    return new MatchType(matchType, new LTMatch((Number) conditionValue));
                 }
                 break;
             case "legacy_custom_attribute":
-                if (value instanceof String) {
-                    return new MatchType(type, new DefaultMatchForLegacyAttributes<String>((String) value));
+                if (conditionValue instanceof String) {
+                    return new MatchType(matchType, new DefaultMatchForLegacyAttributes<String>((String) conditionValue));
                 }
                 break;
             default:
-                return new MatchType(type, new NullMatch());
+                return new MatchType(matchType, new NullMatch());
         }
 
-        return new MatchType(type, new NullMatch());
+        return new MatchType(matchType, new NullMatch());
     }
 
 
     private MatchType(String type, Match matcher) {
-        this.type = type;
+        this.matchType = type;
         this.matcher = matcher;
     }
 
@@ -85,6 +85,6 @@ public class MatchType {
 
     @Override
     public String toString() {
-        return type;
+        return matchType;
     }
 }

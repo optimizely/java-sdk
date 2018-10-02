@@ -34,6 +34,7 @@ import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.audience.Audience;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
@@ -63,8 +64,13 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
 
         List<EventType> events = mapper.readValue(node.get("events").toString(),
                                                   new TypeReference<List<EventType>>() {});
-        List<Audience> audiences = mapper.readValue(node.get("audiences").toString(),
-                                                    new TypeReference<List<Audience>>() {});
+
+        List<Audience> audiences = Collections.emptyList();
+
+        if (node.has("audiences")) {
+            audiences = mapper.readValue(node.get("audiences").toString(),
+                    new TypeReference<List<Audience>>() {});
+        }
 
         List<Audience> typedAudiences = null;
 

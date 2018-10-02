@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config.audience.match;
 
+import javax.annotation.Nullable;
+
 public interface Match {
-    Boolean eval(Object otherValue);
+    @Nullable Boolean eval(Object attributeValue);
 }

@@ -43,6 +43,7 @@ import org.json.simple.parser.ParseException;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,11 @@ final class JsonSimpleConfigParser implements ConfigParser {
             attributes = parseAttributes((JSONArray)rootObject.get("attributes"));
 
             List<EventType> events = parseEvents((JSONArray)rootObject.get("events"));
-            List<Audience> audiences = parseAudiences((JSONArray)parser.parse(rootObject.get("audiences").toString()));
+            List<Audience> audiences = Collections.emptyList();
+
+            if (rootObject.containsKey("audiences")) {
+                audiences = parseAudiences((JSONArray)parser.parse(rootObject.get("audiences").toString()));
+            }
 
             List<Audience> typedAudiences = null;
             if (rootObject.containsKey("typedAudiences")) {

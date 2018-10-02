@@ -25,8 +25,8 @@ class ExactMatch<T> extends AttributeMatch<T> {
     }
 
     public @Nullable
-    Boolean eval(Object otherValue) {
-        if (!value.getClass().isInstance(otherValue)) return null;
-        return value.equals(convert(otherValue));
+    Boolean eval(Object attributeValue) {
+        if (!value.getClass().isInstance(attributeValue)) return null;
+        return value.equals(convert(attributeValue));
     }
 }
