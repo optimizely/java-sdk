@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,16 +14,23 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.config.audience;
+package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
-import java.util.Map;
 
 /**
- * Interface implemented by all conditions condition objects to aid in condition evaluation.
+ * This is a temporary class.  It mimics the current behaviour for
+ * legacy custom attributes.  This will be dropped for ExactMatch and the unit tests need to be fixed.
+ * @param <T>
  */
-public interface Condition {
+class DefaultMatchForLegacyAttributes<T> extends AttributeMatch<T> {
+    T value;
+    protected DefaultMatchForLegacyAttributes(T value) {
+        this.value = value;
+    }
 
-    @Nullable
-    Boolean evaluate(Map<String, ?> attributes);
+    public @Nullable
+    Boolean eval(Object attributeValue) {
+        return value.equals(convert(attributeValue));
+    }
 }
