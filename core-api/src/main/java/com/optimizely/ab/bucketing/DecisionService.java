@@ -348,7 +348,7 @@ public class DecisionService {
     String getBucketingId(@Nonnull String userId,
                           @Nonnull Map<String, ?> filteredAttributes) {
         String bucketingId = userId;
-        if (filteredAttributes != null && filteredAttributes.containsKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())) {
+        if (filteredAttributes.containsKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())) {
             if (String.class.isInstance(filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString()))) {
                 bucketingId = (String) filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString());
                 logger.debug("BucketingId is valid: \"{}\"", bucketingId);
