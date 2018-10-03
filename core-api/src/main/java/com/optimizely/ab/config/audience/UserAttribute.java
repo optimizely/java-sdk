@@ -16,9 +16,12 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.config.audience.match.MatchType;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -29,11 +32,13 @@ public class UserAttribute implements Condition {
 
     private final String name;
     private final String type;
+    private final String match;
     private final Object value;
 
-    public UserAttribute(@Nonnull String name, @Nonnull String type, @Nullable Object value) {
+    public UserAttribute(@Nonnull String name, @Nonnull String type, @Nullable String match, @Nullable Object value) {
         this.name = name;
         this.type = type;
+        this.match = match;
         this.value = value;
     }
 
@@ -45,25 +50,34 @@ public class UserAttribute implements Condition {
         return type;
     }
 
+    public String getMatch() {
+        return match;
+    }
+
     public Object getValue() {
         return value;
     }
 
-    public boolean evaluate(Map<String, ?> attributes) {
+    public @Nullable Boolean evaluate(Map<String, ?> attributes) {
+        if (attributes == null) {
+            attributes = Collections.emptyMap();
+        }
         // Valid for primative types, but needs to change when a value is an object or an array
         Object userAttributeValue = attributes.get(name);
 
-        if (value != null) { // if there is a value in the condition
-            // check user attribute value is equal
-            return value.equals(userAttributeValue);
+        if (!"custom_attribute".equals(type)) {
+            MatchType.logger.error(String.format("condition type not equal to `custom_attribute` %s", type != null ? type : ""));
+            return null; // unknown type
         }
-        else if (userAttributeValue != null) { // if the datafile value is null but user has a value for this attribute
-            // return false since null != nonnull
-            return false;
+        // check user attribute value is equal
+        try {
+            return MatchType.getMatchType(match, value).getMatcher().eval(userAttributeValue);
         }
-        else { // both are null
-            return true;
+        catch (NullPointerException np) {
+            MatchType.logger.error(String.format("attribute or value null for match %s", match != null ? match : "legacy condition"),np);
+            return null;
         }
+
     }
 
     @Override

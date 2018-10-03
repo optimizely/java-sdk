@@ -148,8 +148,6 @@ public class DecisionServiceTest {
         // user excluded without audiences and whitelisting
         assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap()));
 
-        logbackVerifier.expectMessage(Level.INFO, "User \"" + genericUserId + "\" does not meet conditions to be in experiment \"etag1\".");
-
         // set the runtimeForcedVariation
         validProjectConfig.setForcedVariation(experiment.getKey(), whitelistedUserId, expectedVariation.getKey());
         // no attributes provided for a experiment that has an audience
@@ -176,8 +174,6 @@ public class DecisionServiceTest {
 
         // user excluded without audiences and whitelisting
         assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap()));
-
-        logbackVerifier.expectMessage(Level.INFO, "User \"" + genericUserId + "\" does not meet conditions to be in experiment \"etag1\".");
 
         // set the runtimeForcedVariation
         validProjectConfig.setForcedVariation(experiment.getKey(), genericUserId, expectedVariation.getKey());
@@ -209,10 +205,6 @@ public class DecisionServiceTest {
 
         // ensure that normal users still get excluded from the experiment when they fail audience evaluation
         assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap()));
-
-        logbackVerifier.expectMessage(Level.INFO,
-                "User \"" + genericUserId + "\" does not meet conditions to be in experiment \""
-                        + experiment.getKey() + "\".");
 
         // ensure that a user with a saved user profile, sees the same variation regardless of audience evaluation
         assertEquals(variation,
@@ -248,10 +240,6 @@ public class DecisionServiceTest {
 
         // ensure that normal users still get excluded from the experiment when they fail audience evaluation
         assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap()));
-
-        logbackVerifier.expectMessage(Level.INFO,
-                "User \"" + genericUserId + "\" does not meet conditions to be in experiment \""
-                        + experiment.getKey() + "\".");
 
         // ensure that a user with a saved user profile, sees the same variation regardless of audience evaluation
         assertEquals(variation,

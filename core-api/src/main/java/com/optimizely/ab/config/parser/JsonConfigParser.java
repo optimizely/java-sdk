@@ -41,6 +41,7 @@ import org.json.JSONObject;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,17 @@ final class JsonConfigParser implements ConfigParser {
             attributes = parseAttributes(rootObject.getJSONArray("attributes"));
 
             List<EventType> events = parseEvents(rootObject.getJSONArray("events"));
-            List<Audience> audiences = parseAudiences(rootObject.getJSONArray("audiences"));
+            List<Audience> audiences = Collections.emptyList();
+
+            if (rootObject.has("audiences")) {
+                audiences = parseAudiences(rootObject.getJSONArray("audiences"));
+            }
+
+            List<Audience> typedAudiences = null;
+            if (rootObject.has("typedAudiences")) {
+                typedAudiences = parseAudiences(rootObject.getJSONArray("typedAudiences"));
+            }
+
             List<Group> groups = parseGroups(rootObject.getJSONArray("groups"));
 
             boolean anonymizeIP = false;
@@ -98,6 +109,7 @@ final class JsonConfigParser implements ConfigParser {
                     version,
                     attributes,
                     audiences,
+                    typedAudiences,
                     events,
                     experiments,
                     featureFlags,
@@ -289,25 +301,27 @@ final class JsonConfigParser implements ConfigParser {
                 conditions.add(parseConditions(conditionJson.getJSONArray(i)));
             } else {
                 JSONObject conditionMap = (JSONObject)obj;
-                String value = null;
-                if (conditionMap.has("value")) {
-                    value = conditionMap.getString("value");
-                }
+                Object value = conditionMap.has("value") ? conditionMap.get("value") : null;
+                String match = conditionMap.has("match") ? (String) conditionMap.get("match") : null;
                 conditions.add(new UserAttribute(
                         (String)conditionMap.get("name"),
                         (String)conditionMap.get("type"),
-                               value
+                        match, value
                 ));
             }
         }
 
         Condition condition;
-        if (operand.equals("and")) {
-            condition = new AndCondition(conditions);
-        } else if (operand.equals("or")) {
-            condition = new OrCondition(conditions);
-        } else {
-            condition = new NotCondition(conditions.get(0));
+        switch (operand) {
+            case "and":
+                condition = new AndCondition(conditions);
+                break;
+            case "or":
+                condition = new OrCondition(conditions);
+                break;
+            default:
+                condition = new NotCondition(conditions.get(0));
+                break;
         }
 
         return condition;
