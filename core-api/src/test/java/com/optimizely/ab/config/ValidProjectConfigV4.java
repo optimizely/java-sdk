@@ -67,6 +67,42 @@ public class ValidProjectConfigV4 {
 
     // audiences
     private static final String     CUSTOM_ATTRIBUTE_TYPE = "custom_attribute";
+    private static final String     AUDIENCE_BOOL_ID = "3468206643";
+    private static final String     AUDIENCE_BOOL_KEY = "BOOL";
+    public  static final Boolean     AUDIENCE_BOOL_VALUE = true;
+    private static final Audience   TYPED_AUDIENCE_BOOL = new Audience(
+            AUDIENCE_BOOL_ID,
+            AUDIENCE_BOOL_KEY,
+            new AndCondition(Collections.<Condition>singletonList(
+                    new OrCondition(Collections.<Condition>singletonList(
+                            new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_BOOLEAN_KEY,
+                                    CUSTOM_ATTRIBUTE_TYPE, "exact",
+                                    AUDIENCE_BOOL_VALUE)))))))
+    );
+    private static final String     AUDIENCE_INT_ID = "3468206644";
+    private static final String     AUDIENCE_INT_KEY = "INT";
+    public  static final Number     AUDIENCE_INT_VALUE = 1.0;
+    private static final Audience   TYPED_AUDIENCE_INT = new Audience(
+            AUDIENCE_INT_ID,
+            AUDIENCE_INT_KEY,
+            new AndCondition(Collections.<Condition>singletonList(
+                    new OrCondition(Collections.<Condition>singletonList(
+                            new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_INTEGER_KEY,
+                                    CUSTOM_ATTRIBUTE_TYPE, "gt",
+                                    AUDIENCE_INT_VALUE)))))))
+    );
+    private static final String     AUDIENCE_DOUBLE_ID = "3468206645";
+    private static final String     AUDIENCE_DOUBLE_KEY = "DOUBLE";
+    public  static final Double     AUDIENCE_DOUBLE_VALUE = 100.0;
+    private static final Audience   TYPED_AUDIENCE_DOUBLE = new Audience(
+            AUDIENCE_DOUBLE_ID,
+            AUDIENCE_DOUBLE_KEY,
+            new AndCondition(Collections.<Condition>singletonList(
+                    new OrCondition(Collections.<Condition>singletonList(
+                            new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_DOUBLE_KEY,
+                                    CUSTOM_ATTRIBUTE_TYPE, "lt",
+                                    AUDIENCE_DOUBLE_VALUE)))))))
+    );
     private static final String     AUDIENCE_GRYFFINDOR_ID = "3468206642";
     private static final String     AUDIENCE_GRYFFINDOR_KEY = "Gryffindors";
     public  static final String     AUDIENCE_GRYFFINDOR_VALUE = "Gryffindor";
@@ -76,9 +112,19 @@ public class ValidProjectConfigV4 {
             new AndCondition(Collections.<Condition>singletonList(
                     new OrCondition(Collections.<Condition>singletonList(
                             new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_HOUSE_KEY,
-                                    CUSTOM_ATTRIBUTE_TYPE,
+                                    CUSTOM_ATTRIBUTE_TYPE, null,
                                     AUDIENCE_GRYFFINDOR_VALUE)))))))
     );
+    private static final Audience   TYPED_AUDIENCE_GRYFFINDOR = new Audience(
+            AUDIENCE_GRYFFINDOR_ID,
+            AUDIENCE_GRYFFINDOR_KEY,
+            new AndCondition(Collections.<Condition>singletonList(
+                    new OrCondition(Collections.<Condition>singletonList(
+                            new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_HOUSE_KEY,
+                                    CUSTOM_ATTRIBUTE_TYPE, "exact",
+                                    AUDIENCE_GRYFFINDOR_VALUE)))))))
+    );
+
     private static final String     AUDIENCE_SLYTHERIN_ID = "3988293898";
     private static final String     AUDIENCE_SLYTHERIN_KEY = "Slytherins";
     public  static final String     AUDIENCE_SLYTHERIN_VALUE = "Slytherin";
@@ -88,7 +134,17 @@ public class ValidProjectConfigV4 {
             new AndCondition(Collections.<Condition>singletonList(
                     new OrCondition(Collections.<Condition>singletonList(
                             new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_HOUSE_KEY,
-                                    CUSTOM_ATTRIBUTE_TYPE,
+                                    CUSTOM_ATTRIBUTE_TYPE, null,
+                                    AUDIENCE_SLYTHERIN_VALUE)))))))
+    );
+
+    private static final Audience   TYPED_AUDIENCE_SLYTHERIN = new Audience(
+            AUDIENCE_SLYTHERIN_ID,
+            AUDIENCE_SLYTHERIN_KEY,
+            new AndCondition(Collections.<Condition>singletonList(
+                    new OrCondition(Collections.<Condition>singletonList(
+                            new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_HOUSE_KEY,
+                                    CUSTOM_ATTRIBUTE_TYPE, "substring",
                                     AUDIENCE_SLYTHERIN_VALUE)))))))
     );
 
@@ -101,7 +157,16 @@ public class ValidProjectConfigV4 {
             new AndCondition(Collections.<Condition>singletonList(
                     new OrCondition(Collections.<Condition>singletonList(
                             new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_NATIONALITY_KEY,
-                                    CUSTOM_ATTRIBUTE_TYPE,
+                                    CUSTOM_ATTRIBUTE_TYPE, null,
+                                    AUDIENCE_ENGLISH_CITIZENS_VALUE)))))))
+    );
+    private static final Audience   TYPED_AUDIENCE_ENGLISH_CITIZENS = new Audience(
+            AUDIENCE_ENGLISH_CITIZENS_ID,
+            AUDIENCE_ENGLISH_CITIZENS_KEY,
+            new AndCondition(Collections.<Condition>singletonList(
+                    new OrCondition(Collections.<Condition>singletonList(
+                            new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_NATIONALITY_KEY,
+                                    CUSTOM_ATTRIBUTE_TYPE, "exact",
                                     AUDIENCE_ENGLISH_CITIZENS_VALUE)))))))
     );
     private static final String     AUDIENCE_WITH_MISSING_VALUE_ID = "2196265320";
@@ -109,12 +174,13 @@ public class ValidProjectConfigV4 {
     public  static final String     AUDIENCE_WITH_MISSING_VALUE_VALUE = "English";
     private static final UserAttribute ATTRIBUTE_WITH_VALUE = new UserAttribute(
             ATTRIBUTE_NATIONALITY_KEY,
-            CUSTOM_ATTRIBUTE_TYPE,
+            CUSTOM_ATTRIBUTE_TYPE, null,
             AUDIENCE_WITH_MISSING_VALUE_VALUE
     );
     private static final UserAttribute ATTRIBUTE_WITHOUT_VALUE = new UserAttribute(
             ATTRIBUTE_NATIONALITY_KEY,
             CUSTOM_ATTRIBUTE_TYPE,
+            null,
             null
     );
     private static final Audience   AUDIENCE_WITH_MISSING_VALUE = new Audience(
@@ -365,6 +431,50 @@ public class ValidProjectConfigV4 {
                     ),
                     new TrafficAllocation(
                             VARIATION_BASIC_EXPERIMENT_VARIATION_B_ID,
+                            10000
+                    )
+            )
+    );
+    private static final String     LAYER_TYPEDAUDIENCE_EXPERIMENT_ID = "1630555627";
+    private static final String     EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_ID = "1323241597";
+    public  static final String     EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_KEY = "typed_audience_experiment";
+    private static final String     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A_ID = "1423767503";
+    private static final String     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A_KEY = "A";
+    private static final Variation  VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A = new Variation(
+            VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A_ID,
+            VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A_KEY,
+            Collections.<LiveVariableUsageInstance>emptyList()
+    );
+    private static final String     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_ID = "3433458315";
+    private static final String     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_KEY = "B";
+    private static final Variation  VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B = new Variation(
+            VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_ID,
+            VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_KEY,
+            Collections.<LiveVariableUsageInstance>emptyList()
+    );
+
+    private static final Experiment EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT = new Experiment(
+            EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_ID,
+            EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_KEY,
+            Experiment.ExperimentStatus.RUNNING.toString(),
+            LAYER_TYPEDAUDIENCE_EXPERIMENT_ID,
+            ProjectConfigTestUtils.createListOfObjects(
+                    AUDIENCE_BOOL_ID,
+                    AUDIENCE_INT_ID,
+                    AUDIENCE_DOUBLE_ID
+            ),
+            ProjectConfigTestUtils.createListOfObjects(
+                    VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A,
+                    VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B
+            ),
+            Collections.EMPTY_MAP,
+            ProjectConfigTestUtils.createListOfObjects(
+                    new TrafficAllocation(
+                            VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A_ID,
+                            5000
+                    ),
+                    new TrafficAllocation(
+                            VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_ID,
                             10000
                     )
             )
@@ -1061,6 +1171,15 @@ public class ValidProjectConfigV4 {
         audiences.add(AUDIENCE_ENGLISH_CITIZENS);
         audiences.add(AUDIENCE_WITH_MISSING_VALUE);
 
+        List<Audience> typedAudiences = new ArrayList<Audience>();
+        typedAudiences.add(TYPED_AUDIENCE_BOOL);
+        typedAudiences.add(TYPED_AUDIENCE_INT);
+        typedAudiences.add(TYPED_AUDIENCE_DOUBLE);
+        typedAudiences.add(TYPED_AUDIENCE_GRYFFINDOR);
+        typedAudiences.add(TYPED_AUDIENCE_SLYTHERIN);
+        typedAudiences.add(TYPED_AUDIENCE_ENGLISH_CITIZENS);
+        typedAudiences.add(AUDIENCE_WITH_MISSING_VALUE);
+
         // list events
         List<EventType> events = new ArrayList<EventType>();
         events.add(EVENT_BASIC_EVENT);
@@ -1070,6 +1189,7 @@ public class ValidProjectConfigV4 {
         // list experiments
         List<Experiment> experiments = new ArrayList<Experiment>();
         experiments.add(EXPERIMENT_BASIC_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT);
         experiments.add(EXPERIMENT_MULTIVARIATE_EXPERIMENT);
         experiments.add(EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT);
         experiments.add(EXPERIMENT_PAUSED_EXPERIMENT);
@@ -1105,6 +1225,7 @@ public class ValidProjectConfigV4 {
                 VERSION,
                 attributes,
                 audiences,
+                typedAudiences,
                 events,
                 experiments,
                 featureFlags,
