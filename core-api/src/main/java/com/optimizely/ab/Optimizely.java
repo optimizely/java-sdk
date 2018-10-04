@@ -299,7 +299,6 @@ public class Optimizely {
 
         if (eventTags == null) {
             logger.warn("Event tags is null when non-null was expected. Defaulting to an empty event tags map.");
-            eventTags = Collections.<String, String>emptyMap();
         }
 
         List<Experiment> experimentsForEvent = projectConfig.getExperimentsForEventKey(eventName);

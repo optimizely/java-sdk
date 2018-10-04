@@ -1912,8 +1912,8 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify that {@link Optimizely#track(String, String, Map, Map)} called with null event tags will default to
-     * an empty map when calling {@link EventFactory#createConversionEvent(ProjectConfig, Map, String, String, String, Map, Map)}
+     * Verify that {@link Optimizely#track(String, String, Map, Map)} called with null event tags will return null eventTag
+     * when calling {@link EventFactory#createConversionEvent(ProjectConfig, Map, String, String, String, Map, Map)}
      */
     @Test
     @SuppressFBWarnings(
@@ -1937,7 +1937,7 @@ public class OptimizelyTest {
                 .withConfig(validProjectConfig)
                 .withErrorHandler(mockErrorHandler)
                 .build();
-
+        Map<String, ?> eventTags = null;
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
                 validProjectConfig,
                 mockDecisionService,
@@ -1952,7 +1952,7 @@ public class OptimizelyTest {
                 eq(eventType.getId()),
                 eq(eventType.getKey()),
                 eq(Collections.<String, String>emptyMap()),
-                eq(Collections.<String, String>emptyMap())))
+                eq(eventTags)))
                 .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
@@ -1971,7 +1971,7 @@ public class OptimizelyTest {
                 eq(eventType.getId()),
                 eq(eventType.getKey()),
                 eq(Collections.<String, String>emptyMap()),
-                eq(Collections.<String, String>emptyMap()));
+                eq(eventTags));
 
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
     }

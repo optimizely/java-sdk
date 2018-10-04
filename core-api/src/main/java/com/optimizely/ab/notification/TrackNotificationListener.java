@@ -40,8 +40,11 @@ public abstract class TrackNotificationListener implements NotificationListener,
             assert (args[2] instanceof java.util.Map);
             attributes = (Map<String, ?>) args[2];
         }
-        assert(args[3] instanceof java.util.Map);
-        Map<String, ?> eventTags = (Map<String, ?>) args[3];
+        Map<String, ?> eventTags = null;
+        if (args[2] != null) {
+            assert (args[3] instanceof java.util.Map);
+            eventTags = (Map<String, ?>) args[3];
+        }
         assert(args[4] instanceof LogEvent);
         LogEvent logEvent = (LogEvent) args[4];
 
