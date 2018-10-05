@@ -25,6 +25,7 @@ import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
@@ -43,7 +44,16 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
         List<Experiment> experiments = JacksonHelpers.arrayNodeToList(node.get("experiments"), Experiment.class, codec);
         List<Attribute> attributes = JacksonHelpers.arrayNodeToList(node.get("attributes"), Attribute.class, codec);
         List<EventType> events = JacksonHelpers.arrayNodeToList(node.get("events"), EventType.class, codec);
-        List<Audience> audiences = JacksonHelpers.arrayNodeToList(node.get("audiences"), Audience.class, codec);
+
+        List<Audience> audiences = Collections.emptyList();
+        if (node.has("audiences")) {
+            audiences = JacksonHelpers.arrayNodeToList(node.get("audiences"), Audience.class, codec);
+        }
+
+        List<Audience> typedAudiences = null;
+        if (node.has("typedAudiences")) {
+            typedAudiences = JacksonHelpers.arrayNodeToList(node.get("typedAudiences"), Audience.class, codec);
+        }
 
         boolean anonymizeIP = false;
         List<LiveVariable> liveVariables = null;
@@ -72,6 +82,7 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
                 version,
                 attributes,
                 audiences,
+                typedAudiences,
                 events,
                 experiments,
                 featureFlags,

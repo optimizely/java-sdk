@@ -67,6 +67,7 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
                 conditions.add(new UserAttribute(
                     subNode.get("name").textValue(),
                     subNode.get("type").textValue(),
+                    subNode.path("match").asText(null),
                     subNode.path("value").asText(null)));
             }
         }
