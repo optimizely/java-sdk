@@ -209,15 +209,15 @@ public class Optimizely {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
         }
-
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
         // bucket the user to the given experiment and dispatch an impression event
-        Variation variation = decisionService.getVariation(experiment, userId, attributes);
+        Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes);
         if (variation == null) {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
         }
 
-        sendImpression(projectConfig, experiment, userId, attributes, variation);
+        sendImpression(projectConfig, experiment, userId, copiedAttributes, variation);
 
         return variation;
     }
@@ -289,6 +289,7 @@ public class Optimizely {
         }
 
         ProjectConfig currentConfig = getProjectConfig();
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
 
         EventType eventType = currentConfig.getEventTypeForName(eventName, errorHandler);
         if (eventType == null) {
@@ -305,7 +306,7 @@ public class Optimizely {
         Map<Experiment, Variation> experimentVariationMap = new HashMap<Experiment, Variation>(experimentsForEvent.size());
         for (Experiment experiment : experimentsForEvent) {
             if (experiment.isRunning()) {
-                Variation variation = decisionService.getVariation(experiment, userId, attributes);
+                Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes);
                 if (variation != null) {
                     experimentVariationMap.put(experiment, variation);
                 }
@@ -323,7 +324,7 @@ public class Optimizely {
                 userId,
                 eventType.getId(),
                 eventType.getKey(),
-                attributes,
+                copiedAttributes,
                 eventTags);
 
         if (conversionEvent == null) {
@@ -346,7 +347,7 @@ public class Optimizely {
         }
 
         notificationCenter.sendNotifications(NotificationCenter.NotificationType.Track, eventName, userId,
-                attributes, eventTags, conversionEvent);
+                copiedAttributes, eventTags, conversionEvent);
     }
 
     //======== FeatureFlag APIs ========//
@@ -398,15 +399,15 @@ public class Optimizely {
             logger.info("No feature flag was found for key \"{}\".", featureKey);
             return false;
         }
-
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, attributes);
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
         if (featureDecision.variation != null) {
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
                 sendImpression(
                         projectConfig,
                         featureDecision.experiment,
                         userId,
-                        attributes,
+                        copiedAttributes,
                         featureDecision.variation);
             } else {
                 logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
@@ -645,8 +646,9 @@ public class Optimizely {
         }
 
         String variableValue = variable.getDefaultValue();
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
 
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, attributes);
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
         if (featureDecision.variation != null) {
             LiveVariableUsageInstance liveVariableUsageInstance =
                     featureDecision.variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
@@ -706,8 +708,9 @@ public class Optimizely {
     Variation getVariation(@Nonnull Experiment experiment,
                            @Nonnull String userId,
                            @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
 
-        return decisionService.getVariation(experiment, userId, attributes);
+        return decisionService.getVariation(experiment, userId, copiedAttributes);
     }
 
     public @Nullable
@@ -742,8 +745,8 @@ public class Optimizely {
             // if we're unable to retrieve the associated experiment, return null
             return null;
         }
-
-        return decisionService.getVariation(experiment, userId, attributes);
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
+        return decisionService.getVariation(experiment, userId, copiedAttributes);
     }
 
     /**
@@ -820,6 +823,20 @@ public class Optimizely {
         }
 
         return true;
+    }
+
+    /**
+     * Helper function to check that the provided attributes are null if not than it returns a copy
+     *
+     * @param attributes the attributes map being validated
+     * @return copy of attributes
+     */
+    private Map<String, ?> copyAttributes(Map<String, ?> attributes) {
+        Map<String, ?> copiedAttributes = null;
+        if (attributes != null) {
+            copiedAttributes = new HashMap<>(attributes);
+        }
+        return copiedAttributes;
     }
 
     //======== Builder ========//
