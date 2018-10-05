@@ -310,7 +310,17 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void substringMatchConditionEvaluatesTrue() throws Exception {
-        UserAttribute testInstanceString = new UserAttribute("browser_type",  "custom_attribute","substring", "chrome1");
+        UserAttribute testInstanceString = new UserAttribute("browser_type",  "custom_attribute","substring", "chrome");
+        assertTrue(testInstanceString.evaluate(testUserAttributes));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for SUBSTRING match type returns true if the
+     * UserAttribute's value is a substring of the condition's value.
+     */
+    @Test
+    public void substringMatchConditionPartialMatchEvaluatesTrue() throws Exception {
+        UserAttribute testInstanceString = new UserAttribute("browser_type",  "custom_attribute","substring", "chro");
         assertTrue(testInstanceString.evaluate(testUserAttributes));
     }
 
@@ -320,7 +330,7 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void substringMatchConditionEvaluatesFalse() throws Exception {
-        UserAttribute testInstanceString = new UserAttribute("browser_type",  "custom_attribute","substring", "chr");
+        UserAttribute testInstanceString = new UserAttribute("browser_type",  "custom_attribute","substring", "chr0me");
         assertFalse(testInstanceString.evaluate(testUserAttributes));
     }
 
