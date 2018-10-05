@@ -41,7 +41,7 @@ public abstract class TrackNotificationListener implements NotificationListener,
             attributes = (Map<String, ?>) args[2];
         }
         Map<String, ?> eventTags = null;
-        if (args[2] != null) {
+        if (args[3] != null) {
             assert (args[3] instanceof java.util.Map);
             eventTags = (Map<String, ?>) args[3];
         }
