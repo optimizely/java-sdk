@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.audience.match.MatchType;
 
 import javax.annotation.Nonnull;
@@ -29,10 +30,14 @@ import java.util.Map;
 @Immutable
 public class UserAttribute implements Condition {
 
-    private final String name;
-    private final String type;
-    private final String match;
-    private final Object value;
+    private String name;
+    private String type;
+    private String match;
+    private Object value;
+
+    @VisibleForTesting
+    UserAttribute() {
+    }
 
     public UserAttribute(@Nonnull String name, @Nonnull String type, @Nullable String match, @Nullable Object value) {
         this.name = name;
@@ -58,11 +63,11 @@ public class UserAttribute implements Condition {
     }
 
     public @Nullable Boolean evaluate(Map<String, ?> attributes) {
-        // Valid for primative types, but needs to change when a value is an object or an array
+        // Valid for primitive types, but needs to change when a value is an object or an array
         Object userAttributeValue = attributes.get(name);
 
         if (!"custom_attribute".equals(type)) {
-            MatchType.logger.error(String.format("condition type not equal to `custom_attribute` %s", type != null ? type : ""));
+            MatchType.logger.error(String.format("condition type not equal to `custom_attribute` %s", type));
             return null; // unknown type
         }
         // check user attribute value is equal
@@ -73,14 +78,22 @@ public class UserAttribute implements Condition {
             MatchType.logger.error(String.format("attribute or value null for match %s", match != null ? match : "legacy condition"),np);
             return null;
         }
-
     }
 
     @Override
     public String toString() {
+        final String valueStr;
+        if (value == null) {
+            valueStr = "null";
+        } else if (value instanceof String) {
+            valueStr = String.format("'%s'", value);
+        } else {
+            valueStr = value.toString();
+        }
         return "{name='" + name + "\'" +
                ", type='" + type + "\'" +
-               ", value='" + value.toString() + "\'" +
+               ", match='" + match + "\'" +
+               ", value=" + valueStr +
                "}";
     }
 
@@ -93,6 +106,8 @@ public class UserAttribute implements Condition {
 
         if (!name.equals(that.name)) return false;
         if (!type.equals(that.type)) return false;
+        //noinspection StringEquality
+        if (!(match == that.match || match != null && match.equals(that.match))) return false;
         return value != null ? value.equals(that.value) : that.value == null;
     }
 
@@ -100,6 +115,7 @@ public class UserAttribute implements Condition {
     public int hashCode() {
         int result = name.hashCode();
         result = 31 * result + type.hashCode();
+        result = 31 * result + (match != null ? match.hashCode() : 0);
         result = 31 * result + (value != null ? value.hashCode() : 0);
         return result;
     }
