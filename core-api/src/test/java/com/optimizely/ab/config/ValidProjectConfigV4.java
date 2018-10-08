@@ -281,6 +281,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             ROLLOUT_1_ID,
             Collections.<String>emptyList(),
+            null,
             Collections.singletonList(
                     ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION
             ),
@@ -323,6 +324,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             ROLLOUT_3_ID,
             Collections.<String>emptyList(),
+            null,
             Collections.singletonList(
                     ROLLOUT_3_EVERYONE_ELSE_RULE_ENABLED_VARIATION
             ),
@@ -406,6 +408,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_BASIC_EXPERIMENT_ID,
             Collections.<String>emptyList(),
+            null,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_BASIC_EXPERIMENT_VARIATION_A,
                     VARIATION_BASIC_EXPERIMENT_VARIATION_B
@@ -459,6 +462,7 @@ public class ValidProjectConfigV4 {
                     AUDIENCE_INT_ID,
                     AUDIENCE_DOUBLE_ID
             ),
+            null,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A,
                     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B
@@ -500,6 +504,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_FIRST_GROUPED_EXPERIMENT_ID,
             Collections.singletonList(AUDIENCE_GRYFFINDOR_ID),
+            null,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_FIRST_GROUPED_EXPERIMENT_A,
                     VARIATION_FIRST_GROUPED_EXPERIMENT_B
@@ -551,6 +556,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_SECOND_GROUPED_EXPERIMENT_ID,
             Collections.singletonList(AUDIENCE_GRYFFINDOR_ID),
+            null,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_SECOND_GROUPED_EXPERIMENT_A,
                     VARIATION_SECOND_GROUPED_EXPERIMENT_B
@@ -660,6 +666,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_MULTIVARIATE_EXPERIMENT_ID,
             Collections.singletonList(AUDIENCE_GRYFFINDOR_ID),
+            null,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_MULTIVARIATE_EXPERIMENT_FRED,
                     VARIATION_MULTIVARIATE_EXPERIMENT_FEORGE,
@@ -735,6 +742,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_DOUBLE_FEATURE_EXPERIMENT_ID,
             Collections.singletonList(AUDIENCE_SLYTHERIN_ID),
+            null,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_DOUBLE_FEATURE_PI_VARIATION,
                     VARIATION_DOUBLE_FEATURE_EULER_VARIATION
@@ -769,6 +777,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.PAUSED.toString(),
             LAYER_PAUSED_EXPERIMENT_ID,
             Collections.<String>emptyList(),
+            null,
             Collections.singletonList(VARIATION_PAUSED_EXPERIMENT_CONTROL),
             Collections.singletonMap(PAUSED_EXPERIMENT_FORCED_VARIATION_USER_ID_CONTROL,
                     VARIATION_PAUSED_EXPERIMENT_CONTROL_KEY),
@@ -795,6 +804,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.LAUNCHED.toString(),
             LAYER_LAUNCHED_EXPERIMENT_ID,
             Collections.<String>emptyList(),
+            null,
             Collections.singletonList(VARIATION_LAUNCHED_EXPERIMENT_CONTROL),
             Collections.<String, String>emptyMap(),
             Collections.singletonList(
@@ -827,6 +837,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_MUTEX_GROUP_EXPERIMENT_1_LAYER_ID,
             Collections.<String>emptyList(),
+            null,
             Collections.singletonList(VARIATION_MUTEX_GROUP_EXP_1_VAR_1),
             Collections.<String, String>emptyMap(),
             Collections.singletonList(
@@ -860,6 +871,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_MUTEX_GROUP_EXPERIMENT_2_LAYER_ID,
             Collections.<String>emptyList(),
+            null,
             Collections.singletonList(VARIATION_MUTEX_GROUP_EXP_2_VAR_1),
             Collections.<String, String>emptyMap(),
             Collections.singletonList(
@@ -887,6 +899,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_EXPERIMENT_WITH_MALFORMED_AUDIENCE_ID,
             Collections.singletonList(AUDIENCE_WITH_MISSING_VALUE_ID),
+            null,
             Collections.singletonList(VARIATION_EXPERIMENT_WITH_MALFORMED_AUDIENCE),
             Collections.<String, String>emptyMap(),
             Collections.singletonList(
@@ -976,6 +989,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             ROLLOUT_2_ID,
             Collections.singletonList(AUDIENCE_GRYFFINDOR_ID),
+            null,
             Collections.singletonList(
                     new Variation(
                             "521740985",
@@ -1007,6 +1021,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             ROLLOUT_2_ID,
             Collections.singletonList(AUDIENCE_SLYTHERIN_ID),
+            null,
             Collections.singletonList(
                     new Variation(
                             "180042646",
@@ -1038,6 +1053,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             ROLLOUT_2_ID,
             Collections.singletonList(AUDIENCE_ENGLISH_CITIZENS_ID),
+            null,
             Collections.singletonList(
                     new Variation(
                             "2346257680",
@@ -1069,6 +1085,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             ROLLOUT_2_ID,
             Collections.<String>emptyList(),
+            null,
             Collections.singletonList(
                     new Variation(
                             "3137445031",

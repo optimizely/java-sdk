@@ -27,6 +27,8 @@ import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Group;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.internal.ConditionUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -66,6 +68,14 @@ public class GroupJacksonDeserializer extends JsonDeserializer<Group> {
         String layerId = layerIdJson == null ? null : layerIdJson.textValue();
         List<String> audienceIds = mapper.readValue(experimentJson.get("audienceIds").toString(),
                                                     new TypeReference<List<String>>(){});
+
+        Condition conditions = null;
+        if (experimentJson.has("audienceConditions")) {
+            List<Object> rawObjectList = (List<Object>)mapper.readValue(experimentJson.get("conditions").textValue(), List.class);
+            conditions = ConditionUtils.parseConditions(rawObjectList);
+
+        }
+
         List<Variation> variations = mapper.readValue(experimentJson.get("variations").toString(),
                                                       new TypeReference<List<Variation>>(){});
         List<TrafficAllocation> trafficAllocations = mapper.readValue(experimentJson.get("trafficAllocation").toString(),
@@ -73,7 +83,7 @@ public class GroupJacksonDeserializer extends JsonDeserializer<Group> {
         Map<String, String>  userIdToVariationKeyMap = mapper.readValue(
             experimentJson.get("forcedVariations").toString(), new TypeReference<Map<String, String>>(){});
 
-        return new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
+        return new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
                               trafficAllocations, groupId);
     }
 

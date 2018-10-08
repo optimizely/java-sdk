@@ -36,6 +36,7 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
+import com.optimizely.ab.internal.ConditionUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -152,6 +153,12 @@ final class JsonSimpleConfigParser implements ConfigParser {
                 audienceIds.add((String)audienceIdObj);
             }
 
+            Condition conditions = null;
+            if (experimentObject.containsKey("audienceConditions")) {
+                JSONArray audienceConditionsJson = (JSONArray) experimentObject.get("audienceConditions");
+
+                conditions = ConditionUtils.parseConditions(audienceConditionsJson);
+            }
             // parse the child objects
             List<Variation> variations = parseVariations((JSONArray)experimentObject.get("variations"));
             Map<String, String> userIdToVariationKeyMap =
@@ -159,7 +166,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation((JSONArray)experimentObject.get("trafficAllocation"));
 
-            experiments.add(new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
+            experiments.add(new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
                                            trafficAllocations, groupId));
         }
 

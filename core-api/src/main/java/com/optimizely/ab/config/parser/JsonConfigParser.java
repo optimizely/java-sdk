@@ -36,6 +36,7 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
+import com.optimizely.ab.internal.ConditionUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -146,6 +147,15 @@ final class JsonConfigParser implements ConfigParser {
                 audienceIds.add((String)audienceIdObj);
             }
 
+            Condition conditions = null;
+            if (experimentObject.has("audienceConditions")) {
+                String conditionString = experimentObject.getString("audienceConditions");
+
+                JSONArray conditionJson = new JSONArray(conditionString);
+                conditions = ConditionUtils.parseConditions(conditionJson);
+
+            }
+
             // parse the child objects
             List<Variation> variations = parseVariations(experimentObject.getJSONArray("variations"));
             Map<String, String> userIdToVariationKeyMap =
@@ -153,7 +163,7 @@ final class JsonConfigParser implements ConfigParser {
             List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation(experimentObject.getJSONArray("trafficAllocation"));
 
-            experiments.add(new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
+            experiments.add(new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
                                            trafficAllocations, groupId));
         }
 
@@ -284,50 +294,11 @@ final class JsonConfigParser implements ConfigParser {
             String conditionString = audienceObject.getString("conditions");
 
             JSONArray conditionJson = new JSONArray(conditionString);
-            Condition conditions = parseConditions(conditionJson);
+            Condition conditions = ConditionUtils.parseConditions(conditionJson);
             audiences.add(new Audience(id, key, conditions));
         }
 
         return audiences;
-    }
-
-    private Condition parseConditions(JSONArray conditionJson) {
-        List<Condition> conditions = new ArrayList<Condition>();
-        String operand = (String)conditionJson.get(0);
-
-        for (int i = 1; i < conditionJson.length(); i++) {
-            Object obj = conditionJson.get(i);
-            if (obj instanceof JSONArray) {
-                conditions.add(parseConditions(conditionJson.getJSONArray(i)));
-            } else {
-                JSONObject conditionMap = (JSONObject)obj;
-                Object value = conditionMap.has("value") ? conditionMap.get("value") : null;
-                String match = conditionMap.has("match") ? (String) conditionMap.get("match") : null;
-                conditions.add(new UserAttribute(
-                        (String)conditionMap.get("name"),
-                        (String)conditionMap.get("type"),
-                        match, value
-                ));
-            }
-        }
-
-        Condition condition;
-        switch (operand) {
-            case "and":
-                condition = new AndCondition(conditions);
-                break;
-            case "or":
-                condition = new OrCondition(conditions);
-                break;
-            case "not":
-                condition = new NotCondition(conditions.get(0));
-                break;
-            default:
-                condition = new OrCondition(conditions);
-                break;
-        }
-
-        return condition;
     }
 
     private List<Group> parseGroups(JSONArray groupJson) {

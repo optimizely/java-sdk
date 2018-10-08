@@ -832,7 +832,7 @@ public class DecisionServiceTest {
         Map<String, String> userIdToVariationKeyMap = Collections.singletonMap(userId, invalidVariationKey);
 
         Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", Collections.<String>emptyList(),
-                variations, userIdToVariationKeyMap, trafficAllocations);
+                null, variations, userIdToVariationKeyMap, trafficAllocations);
 
         logbackVerifier.expectMessage(
                 Level.ERROR,

@@ -19,6 +19,7 @@ package com.optimizely.ab.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.config.audience.Condition;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +45,7 @@ public class Experiment implements IdKeyMapped {
     private final String groupId;
 
     private final List<String> audienceIds;
+    private final Condition audienceConditions;
     private final List<Variation> variations;
     private final List<TrafficAllocation> trafficAllocation;
 
@@ -75,10 +77,11 @@ public class Experiment implements IdKeyMapped {
                       @JsonProperty("status") String status,
                       @JsonProperty("layerId") String layerId,
                       @JsonProperty("audienceIds") List<String> audienceIds,
+                      @JsonProperty("audienceConditions") Condition audienceConditions,
                       @JsonProperty("variations") List<Variation> variations,
                       @JsonProperty("forcedVariations") Map<String, String> userIdToVariationKeyMap,
                       @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation) {
-        this(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap, trafficAllocation, "");
+        this(id, key, status, layerId, audienceIds, audienceConditions, variations, userIdToVariationKeyMap, trafficAllocation, "");
     }
 
     public Experiment(@Nonnull String id,
@@ -86,6 +89,7 @@ public class Experiment implements IdKeyMapped {
                       @Nullable String status,
                       @Nullable String layerId,
                       @Nonnull List<String> audienceIds,
+                      @Nullable Condition audienceConditions,
                       @Nonnull List<Variation> variations,
                       @Nonnull Map<String, String> userIdToVariationKeyMap,
                       @Nonnull List<TrafficAllocation> trafficAllocation,
@@ -95,6 +99,7 @@ public class Experiment implements IdKeyMapped {
         this.status = status == null ? ExperimentStatus.NOT_STARTED.toString() : status;
         this.layerId = layerId;
         this.audienceIds = Collections.unmodifiableList(audienceIds);
+        this.audienceConditions = audienceConditions;
         this.variations = Collections.unmodifiableList(variations);
         this.trafficAllocation = Collections.unmodifiableList(trafficAllocation);
         this.groupId = groupId;
@@ -121,6 +126,10 @@ public class Experiment implements IdKeyMapped {
 
     public List<String> getAudienceIds() {
         return audienceIds;
+    }
+
+    public Condition getAudienceConditions() {
+        return audienceConditions;
     }
 
     public List<Variation> getVariations() {
@@ -168,6 +177,7 @@ public class Experiment implements IdKeyMapped {
                 ", groupId='" + groupId + '\'' +
                 ", status='" + status + '\'' +
                 ", audienceIds=" + audienceIds +
+                ", audienceConditions=" + audienceConditions +
                 ", variations=" + variations +
                 ", variationKeyToVariationMap=" + variationKeyToVariationMap +
                 ", userIdToVariationKeyMap=" + userIdToVariationKeyMap +

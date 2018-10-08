@@ -4839,6 +4839,7 @@ public class OptimizelyTest {
     private Experiment createUnknownExperiment() {
         return new Experiment("0987", "unknown_experiment", "Running", "1",
                 Collections.<String>emptyList(),
+                null,
                 Collections.singletonList(
                         new Variation("8765", "unknown_variation", Collections.<LiveVariableUsageInstance>emptyList())),
                 Collections.<String, String>emptyMap(),
