@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.optimizely.ab.UnknownEventTypeException;
 import com.optimizely.ab.UnknownExperimentException;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.AudienceHolderCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.config.parser.DefaultConfigParser;
@@ -408,11 +409,7 @@ public class ProjectConfig {
         return typedAudiences;
     }
 
-    public Condition getAudienceConditionsFromId(String audienceId) {
-        Audience audience = audienceIdMapping.get(audienceId);
-
-        return audience != null ? audience.getConditions() : null;
-    }
+    public Audience getAudience(String audienceId) { return audienceIdMapping.get(audienceId); }
 
     public List<LiveVariable> getLiveVariables() {
         return liveVariables;

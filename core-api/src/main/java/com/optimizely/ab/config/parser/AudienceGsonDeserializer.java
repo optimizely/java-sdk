@@ -28,10 +28,12 @@ import com.google.gson.internal.LinkedTreeMap;
 
 import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.AudienceHolderCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
+import com.optimizely.ab.internal.ConditionUtils;
 
 import java.lang.reflect.Type;
 
@@ -52,40 +54,9 @@ public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {
 
         JsonElement conditionsElement = parser.parse(jsonObject.get("conditions").getAsString());
         List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
-        Condition conditions = parseConditions(rawObjectList);
+        Condition conditions = ConditionUtils.parseConditions(rawObjectList);
 
         return new Audience(id, name, conditions);
     }
 
-    private Condition parseConditions(List<Object> rawObjectList) {
-        List<Condition> conditions = new ArrayList<Condition>();
-        String operand = (String)rawObjectList.get(0);
-
-        for (int i = 1; i < rawObjectList.size(); i++) {
-            Object obj = rawObjectList.get(i);
-            if (obj instanceof List) {
-                List<Object> objectList = (List<Object>)rawObjectList.get(i);
-                conditions.add(parseConditions(objectList));
-            } else {
-                LinkedTreeMap<String, ?> conditionMap = (LinkedTreeMap<String, ?>)rawObjectList.get(i);
-                conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
-                        (String)conditionMap.get("match"), conditionMap.get("value")));
-            }
-        }
-
-        Condition condition;
-        switch (operand) {
-            case "and":
-                condition = new AndCondition(conditions);
-                break;
-            case "or":
-                condition = new OrCondition(conditions);
-                break;
-            default:
-                condition = new NotCondition(conditions.get(0));
-                break;
-        }
-
-        return condition;
-    }
 }

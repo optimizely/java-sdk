@@ -18,6 +18,8 @@ package com.optimizely.ab.internal;
 
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.AudienceHolderCondition;
 import com.optimizely.ab.config.audience.Condition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +69,7 @@ public final class ExperimentUtils {
         }
 
         for (String audienceId : experimentAudienceIds) {
-            Condition conditions = projectConfig.getAudienceConditionsFromId(audienceId);
+            AudienceHolderCondition conditions = new AudienceHolderCondition(projectConfig.getAudience(audienceId));
             Boolean conditionEval = conditions.evaluate(attributes);
 
             if (conditionEval != null && conditionEval) {

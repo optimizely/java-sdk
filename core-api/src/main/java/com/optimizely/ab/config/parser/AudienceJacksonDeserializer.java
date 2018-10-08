@@ -28,6 +28,7 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.UserAttribute;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
+import com.optimizely.ab.internal.ConditionUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,41 +45,10 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
         String id = node.get("id").textValue();
         String name = node.get("name").textValue();
         List<Object> rawObjectList = (List<Object>)mapper.readValue(node.get("conditions").textValue(), List.class);
-        Condition conditions = parseConditions(rawObjectList);
+        Condition conditions = ConditionUtils.parseConditions(rawObjectList);
 
         return new Audience(id, name, conditions);
     }
 
-    private Condition parseConditions(List<Object> rawObjectList) {
-        List<Condition> conditions = new ArrayList<Condition>();
-        String operand = (String)rawObjectList.get(0);
-
-        for (int i = 1; i < rawObjectList.size(); i++) {
-            Object obj = rawObjectList.get(i);
-            if (obj instanceof List) {
-                List<Object> objectList = (List<Object>)rawObjectList.get(i);
-                conditions.add(parseConditions(objectList));
-            } else {
-                HashMap<String, ?> conditionMap = (HashMap<String, ?>)rawObjectList.get(i);
-                conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
-                        (String)conditionMap.get("match"), conditionMap.get("value")));
-            }
-        }
-
-        Condition condition;
-        switch (operand) {
-            case "and":
-                condition = new AndCondition(conditions);
-                break;
-            case "or":
-                condition = new OrCondition(conditions);
-                break;
-            default:
-                condition = new NotCondition(conditions.get(0));
-                break;
-        }
-
-        return condition;
-    }
 }
 

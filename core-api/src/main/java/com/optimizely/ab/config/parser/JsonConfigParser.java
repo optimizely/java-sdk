@@ -319,8 +319,11 @@ final class JsonConfigParser implements ConfigParser {
             case "or":
                 condition = new OrCondition(conditions);
                 break;
-            default:
+            case "not":
                 condition = new NotCondition(conditions.get(0));
+                break;
+            default:
+                condition = new OrCondition(conditions);
                 break;
         }
 
