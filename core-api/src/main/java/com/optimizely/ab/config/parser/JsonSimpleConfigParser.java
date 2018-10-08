@@ -43,6 +43,7 @@ import org.json.simple.parser.ParseException;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,17 @@ final class JsonSimpleConfigParser implements ConfigParser {
             attributes = parseAttributes((JSONArray)rootObject.get("attributes"));
 
             List<EventType> events = parseEvents((JSONArray)rootObject.get("events"));
-            List<Audience> audiences = parseAudiences((JSONArray)parser.parse(rootObject.get("audiences").toString()));
+            List<Audience> audiences = Collections.emptyList();
+
+            if (rootObject.containsKey("audiences")) {
+                audiences = parseAudiences((JSONArray)parser.parse(rootObject.get("audiences").toString()));
+            }
+
+            List<Audience> typedAudiences = null;
+            if (rootObject.containsKey("typedAudiences")) {
+                typedAudiences = parseAudiences((JSONArray)parser.parse(rootObject.get("typedAudiences").toString()));
+            }
+
             List<Group> groups = parseGroups((JSONArray)rootObject.get("groups"));
 
             boolean anonymizeIP = false;
@@ -100,6 +111,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
                     version,
                     attributes,
                     audiences,
+                    typedAudiences,
                     events,
                     experiments,
                     featureFlags,
@@ -298,7 +310,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             } else {
                 JSONObject conditionMap = (JSONObject)obj;
                 conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
-                               (String)conditionMap.get("value")));
+                        (String)conditionMap.get("match"), conditionMap.get("value")));
             }
         }
 

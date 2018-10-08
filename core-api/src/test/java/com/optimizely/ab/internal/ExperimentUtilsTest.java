@@ -128,10 +128,10 @@ public class ExperimentUtilsTest {
      * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map)} should return false.
      */
     @Test
-    public void isUserInExperimentReturnsFalseIfExperimentHasAudiencesButUserHasNoAttributes() {
+    public void isUserInExperimentEvaluatesEvenIfExperimentHasAudiencesButUserHasNoAttributes() {
         Experiment experiment = projectConfig.getExperiments().get(0);
 
-        assertFalse(isUserInExperiment(projectConfig, experiment, Collections.<String, String>emptyMap()));
+        assertTrue(isUserInExperiment(projectConfig, experiment, Collections.<String, String>emptyMap()));
     }
 
     /**
@@ -171,7 +171,7 @@ public class ExperimentUtilsTest {
         Map<String, String> nonMatchingMap = Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, "American");
 
         assertTrue(isUserInExperiment(v4ProjectConfig, experiment, satisfiesFirstCondition));
-        assertTrue(isUserInExperiment(v4ProjectConfig, experiment, attributesWithNull));
+        assertFalse(isUserInExperiment(v4ProjectConfig, experiment, attributesWithNull));
         assertFalse(isUserInExperiment(v4ProjectConfig, experiment, nonMatchingMap));
 
         // It should explicitly be set to null otherwise we will return false on empty maps

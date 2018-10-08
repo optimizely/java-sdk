@@ -17,6 +17,7 @@
 package com.optimizely.ab.config.audience;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.List;
 import java.util.Map;
@@ -36,10 +37,26 @@ public class OrCondition implements Condition {
         return conditions;
     }
 
-    public boolean evaluate(Map<String, ?> attributes) {
+    // According to the matrix:
+    // true returns true
+    // false or null is null
+    // false or false is false
+    // null or null is null
+    public @Nullable Boolean evaluate(Map<String, ?> attributes) {
+        boolean foundNull = false;
         for (Condition condition : conditions) {
-            if (condition.evaluate(attributes))
+            Boolean conditionEval = condition.evaluate(attributes);
+            if (conditionEval == null) { // true with falses and nulls is still true
+                foundNull = true;
+            }
+            else if (conditionEval) {
                 return true;
+            }
+        }
+
+        // if found null and false return null.  all false return false
+        if (foundNull) {
+            return null;
         }
 
         return false;
