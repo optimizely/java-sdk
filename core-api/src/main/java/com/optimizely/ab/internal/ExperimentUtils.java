@@ -90,51 +90,10 @@ public final class ExperimentUtils {
                                             @Nonnull Experiment experiment,
                                             @Nonnull Map<String, ?> attributes) {
 
-        resolveAudienceIdConditions(projectConfig, experiment.getAudienceConditions());
+        ConditionUtils.resolveAudienceIdConditions(projectConfig, experiment.getAudienceConditions());
 
         return experiment.getAudienceConditions().evaluate(attributes);
     }
 
-    public static void resolveAudienceIdConditions(@Nonnull ProjectConfig projectConfig,
-                                                    @Nonnull Condition conditions) {
-
-        if (conditions instanceof AndCondition) {
-            AndCondition andCondition = (AndCondition) conditions;
-            for (Condition condition : andCondition.getConditions()) {
-                if (condition instanceof AudienceIdCondition) {
-                    AudienceIdCondition holder = (AudienceIdCondition) condition;
-                    holder.setAudience(projectConfig.getAudience(holder.getAudienceId()));
-                }
-                else {
-                    resolveAudienceIdConditions(projectConfig, condition);
-                }
-            }
-        }
-        else if (conditions instanceof OrCondition) {
-            OrCondition orCondition = (OrCondition) conditions;
-            for (Condition condition : orCondition.getConditions()) {
-                if (condition instanceof AudienceIdCondition) {
-                    AudienceIdCondition holder = (AudienceIdCondition) condition;
-                    holder.setAudience(projectConfig.getAudience(holder.getAudienceId()));
-                }
-                else {
-                    resolveAudienceIdConditions(projectConfig, condition);
-                }
-            }
-        }
-        else if (conditions instanceof NotCondition) {
-            NotCondition notCondition = (NotCondition) conditions;
-
-            Condition condition = notCondition.getCondition();
-            if (condition instanceof AudienceIdCondition) {
-                AudienceIdCondition holder = (AudienceIdCondition) condition;
-                holder.setAudience(projectConfig.getAudience(holder.getAudienceId()));
-            }
-            else {
-                resolveAudienceIdConditions(projectConfig, conditions);
-            }
-        }
-
-    }
 
 }

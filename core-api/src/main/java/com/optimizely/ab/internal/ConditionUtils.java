@@ -17,6 +17,7 @@
 package com.optimizely.ab.internal;
 
 import com.google.gson.internal.LinkedTreeMap;
+import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
@@ -25,6 +26,7 @@ import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
 import org.json.simple.JSONObject;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -123,5 +125,47 @@ public class ConditionUtils {
         return condition;
     }
 
+
+    public static void resolveAudienceIdConditions(@Nonnull ProjectConfig projectConfig,
+                                                   @Nonnull Condition conditions) {
+
+        if (conditions instanceof AndCondition) {
+            AndCondition andCondition = (AndCondition) conditions;
+            for (Condition condition : andCondition.getConditions()) {
+                if (condition instanceof AudienceIdCondition) {
+                    AudienceIdCondition holder = (AudienceIdCondition) condition;
+                    holder.setAudience(projectConfig.getAudience(holder.getAudienceId()));
+                }
+                else {
+                    resolveAudienceIdConditions(projectConfig, condition);
+                }
+            }
+        }
+        else if (conditions instanceof OrCondition) {
+            OrCondition orCondition = (OrCondition) conditions;
+            for (Condition condition : orCondition.getConditions()) {
+                if (condition instanceof AudienceIdCondition) {
+                    AudienceIdCondition holder = (AudienceIdCondition) condition;
+                    holder.setAudience(projectConfig.getAudience(holder.getAudienceId()));
+                }
+                else {
+                    resolveAudienceIdConditions(projectConfig, condition);
+                }
+            }
+        }
+        else if (conditions instanceof NotCondition) {
+            NotCondition notCondition = (NotCondition) conditions;
+
+            Condition condition = notCondition.getCondition();
+            if (condition instanceof AudienceIdCondition) {
+                AudienceIdCondition holder = (AudienceIdCondition) condition;
+                holder.setAudience(projectConfig.getAudience(holder.getAudienceId()));
+            }
+            else {
+                resolveAudienceIdConditions(projectConfig, conditions);
+            }
+        }
+
+    }
 
 }
