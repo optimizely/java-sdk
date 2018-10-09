@@ -18,11 +18,13 @@ package com.optimizely.ab.config;
 
 import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.AudienceHolderCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -191,6 +193,14 @@ public class ValidProjectConfigV4 {
                     ))
             ))
     );
+
+    // auditionConditions
+    private static final Condition   TYPED_AUDIENCE_CONDITION =
+            new AndCondition(Arrays.<Condition>asList(
+                    new OrCondition(Collections.<Condition>singletonList(
+                            new OrCondition(Collections.singletonList((Condition) new AudienceHolderCondition(AUDIENCE_BOOL_ID))))),
+                    new OrCondition(Collections.<Condition>singletonList(
+                            new OrCondition(Collections.singletonList((Condition) new AudienceHolderCondition(AUDIENCE_INT_ID)))))));
 
     // features
     private static final String     FEATURE_BOOLEAN_FEATURE_ID = "4195505407";
@@ -462,7 +472,7 @@ public class ValidProjectConfigV4 {
                     AUDIENCE_INT_ID,
                     AUDIENCE_DOUBLE_ID
             ),
-            null,
+            TYPED_AUDIENCE_CONDITION,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A,
                     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B

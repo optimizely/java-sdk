@@ -2,6 +2,7 @@ package com.optimizely.ab.config.audience;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.Objects;
 
 public class AudienceHolderCondition implements Condition {
     private Audience audience;
@@ -35,5 +36,22 @@ public class AudienceHolderCondition implements Condition {
             return null;
         }
         return audience.getConditions().evaluate(attributes);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AudienceHolderCondition condition = (AudienceHolderCondition) o;
+        return ((audience == null) ? (null == condition.audience) :
+                (audience.getId().equals(condition.audience!=null?condition.audience.getId():null))) &&
+                ((audienceId == null) ? (null == condition.audienceId) :
+                        (audienceId.equals(condition.audienceId)));
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(audience, audienceId);
     }
 }
