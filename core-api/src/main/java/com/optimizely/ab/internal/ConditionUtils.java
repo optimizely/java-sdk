@@ -2,12 +2,11 @@ package com.optimizely.ab.internal;
 
 import com.google.gson.internal.LinkedTreeMap;
 import com.optimizely.ab.config.audience.AndCondition;
-import com.optimizely.ab.config.audience.AudienceHolderCondition;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.ArrayList;
@@ -26,7 +25,7 @@ public class ConditionUtils {
                 conditions.add(parseConditions(objectList));
             }
             else if (obj instanceof String) {
-                conditions.add(new AudienceHolderCondition((String)obj));
+                conditions.add(new AudienceIdCondition((String)obj));
             }
             else if (obj instanceof LinkedTreeMap) { // gson
                 LinkedTreeMap<String, ?> conditionMap = (LinkedTreeMap<String, ?>)rawObjectList.get(i);
@@ -73,7 +72,7 @@ public class ConditionUtils {
             if (obj instanceof org.json.JSONArray) {
                 conditions.add(parseConditions((org.json.JSONArray) conditionJson.get(i)));
             } else if (obj instanceof String) {
-                conditions.add(new AudienceHolderCondition((String)obj));
+                conditions.add(new AudienceIdCondition((String)obj));
             } else {
                 org.json.JSONObject conditionMap = (org.json.JSONObject)obj;
                 String match = null;

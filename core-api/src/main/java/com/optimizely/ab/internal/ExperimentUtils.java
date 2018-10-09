@@ -19,8 +19,7 @@ package com.optimizely.ab.internal;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.AndCondition;
-import com.optimizely.ab.config.audience.Audience;
-import com.optimizely.ab.config.audience.AudienceHolderCondition;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
@@ -76,7 +75,7 @@ public final class ExperimentUtils {
         }
 
         for (String audienceId : experimentAudienceIds) {
-            AudienceHolderCondition conditions = new AudienceHolderCondition(projectConfig.getAudience(audienceId));
+            AudienceIdCondition conditions = new AudienceIdCondition(projectConfig.getAudience(audienceId));
             Boolean conditionEval = conditions.evaluate(attributes);
 
             if (conditionEval != null && conditionEval) {
@@ -102,8 +101,8 @@ public final class ExperimentUtils {
         if (conditions instanceof AndCondition) {
             AndCondition andCondition = (AndCondition) conditions;
             for (Condition condition : andCondition.getConditions()) {
-                if (condition instanceof AudienceHolderCondition) {
-                    AudienceHolderCondition holder = (AudienceHolderCondition) condition;
+                if (condition instanceof AudienceIdCondition) {
+                    AudienceIdCondition holder = (AudienceIdCondition) condition;
                     holder.setAudience(projectConfig.getAudience(holder.getAudienceId()));
                 }
                 else {
@@ -114,8 +113,8 @@ public final class ExperimentUtils {
         else if (conditions instanceof OrCondition) {
             OrCondition orCondition = (OrCondition) conditions;
             for (Condition condition : orCondition.getConditions()) {
-                if (condition instanceof AudienceHolderCondition) {
-                    AudienceHolderCondition holder = (AudienceHolderCondition) condition;
+                if (condition instanceof AudienceIdCondition) {
+                    AudienceIdCondition holder = (AudienceIdCondition) condition;
                     holder.setAudience(projectConfig.getAudience(holder.getAudienceId()));
                 }
                 else {
@@ -127,8 +126,8 @@ public final class ExperimentUtils {
             NotCondition notCondition = (NotCondition) conditions;
 
             Condition condition = notCondition.getCondition();
-            if (condition instanceof AudienceHolderCondition) {
-                AudienceHolderCondition holder = (AudienceHolderCondition) condition;
+            if (condition instanceof AudienceIdCondition) {
+                AudienceIdCondition holder = (AudienceIdCondition) condition;
                 holder.setAudience(projectConfig.getAudience(holder.getAudienceId()));
             }
             else {

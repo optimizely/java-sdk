@@ -24,20 +24,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonParseException;
 
-import com.google.gson.internal.LinkedTreeMap;
-
-import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Audience;
-import com.optimizely.ab.config.audience.AudienceHolderCondition;
 import com.optimizely.ab.config.audience.Condition;
-import com.optimizely.ab.config.audience.NotCondition;
-import com.optimizely.ab.config.audience.OrCondition;
-import com.optimizely.ab.config.audience.UserAttribute;
 import com.optimizely.ab.internal.ConditionUtils;
 
 import java.lang.reflect.Type;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {

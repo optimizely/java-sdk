@@ -18,7 +18,7 @@ package com.optimizely.ab.config;
 
 import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Audience;
-import com.optimizely.ab.config.audience.AudienceHolderCondition;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
@@ -198,9 +198,9 @@ public class ValidProjectConfigV4 {
     private static final Condition   TYPED_AUDIENCE_CONDITION =
             new AndCondition(Arrays.<Condition>asList(
                     new OrCondition(Arrays.<Condition>asList(
-                            new OrCondition(Collections.singletonList((Condition) new AudienceHolderCondition(AUDIENCE_BOOL_ID))),
-                            new OrCondition(Collections.singletonList((Condition) new AudienceHolderCondition(AUDIENCE_INT_ID))),
-                            new OrCondition(Collections.singletonList((Condition) new AudienceHolderCondition(AUDIENCE_DOUBLE_ID)))))));
+                            new OrCondition(Collections.singletonList((Condition) new AudienceIdCondition(AUDIENCE_BOOL_ID))),
+                            new OrCondition(Collections.singletonList((Condition) new AudienceIdCondition(AUDIENCE_INT_ID))),
+                            new OrCondition(Collections.singletonList((Condition) new AudienceIdCondition(AUDIENCE_DOUBLE_ID)))))));
 
     // features
     private static final String     FEATURE_BOOLEAN_FEATURE_ID = "4195505407";
