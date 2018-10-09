@@ -197,10 +197,10 @@ public class ValidProjectConfigV4 {
     // auditionConditions
     private static final Condition   TYPED_AUDIENCE_CONDITION =
             new AndCondition(Arrays.<Condition>asList(
-                    new OrCondition(Collections.<Condition>singletonList(
-                            new OrCondition(Collections.singletonList((Condition) new AudienceHolderCondition(AUDIENCE_BOOL_ID))))),
-                    new OrCondition(Collections.<Condition>singletonList(
-                            new OrCondition(Collections.singletonList((Condition) new AudienceHolderCondition(AUDIENCE_INT_ID)))))));
+                    new OrCondition(Arrays.<Condition>asList(
+                            new OrCondition(Collections.singletonList((Condition) new AudienceHolderCondition(AUDIENCE_BOOL_ID))),
+                            new OrCondition(Collections.singletonList((Condition) new AudienceHolderCondition(AUDIENCE_INT_ID))),
+                            new OrCondition(Collections.singletonList((Condition) new AudienceHolderCondition(AUDIENCE_DOUBLE_ID)))))));
 
     // features
     private static final String     FEATURE_BOOLEAN_FEATURE_ID = "4195505407";
