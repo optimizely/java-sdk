@@ -30,12 +30,8 @@ import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
-import com.optimizely.ab.config.audience.NotCondition;
-import com.optimizely.ab.config.audience.OrCondition;
-import com.optimizely.ab.config.audience.UserAttribute;
 import com.optimizely.ab.internal.ConditionUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -310,38 +306,11 @@ final class JsonSimpleConfigParser implements ConfigParser {
             String conditionString = (String)audienceObject.get("conditions");
 
             JSONArray conditionJson = (JSONArray)parser.parse(conditionString);
-            Condition conditions = parseConditions(conditionJson);
+            Condition conditions = ConditionUtils.parseConditions(conditionJson);
             audiences.add(new Audience(id, key, conditions));
         }
 
         return audiences;
-    }
-
-    private Condition parseConditions(JSONArray conditionJson) {
-        List<Condition> conditions = new ArrayList<Condition>();
-        String operand = (String)conditionJson.get(0);
-
-        for (int i = 1; i < conditionJson.size(); i++) {
-            Object obj = conditionJson.get(i);
-            if (obj instanceof JSONArray) {
-                conditions.add(parseConditions((JSONArray)conditionJson.get(i)));
-            } else {
-                JSONObject conditionMap = (JSONObject)obj;
-                conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
-                        (String)conditionMap.get("match"), conditionMap.get("value")));
-            }
-        }
-
-        Condition condition;
-        if (operand.equals("and")) {
-            condition = new AndCondition(conditions);
-        } else if (operand.equals("or")) {
-            condition = new OrCondition(conditions);
-        } else {
-            condition = new NotCondition(conditions.get(0));
-        }
-
-        return condition;
     }
 
     private List<Group> parseGroups(JSONArray groupJson) {
