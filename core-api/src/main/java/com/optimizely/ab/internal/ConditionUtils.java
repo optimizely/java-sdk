@@ -72,6 +72,8 @@ public class ConditionUtils {
             Object obj = conditionJson.get(i);
             if (obj instanceof org.json.JSONArray) {
                 conditions.add(parseConditions((org.json.JSONArray) conditionJson.get(i)));
+            } else if (obj instanceof String) {
+                conditions.add(new AudienceHolderCondition((String)obj));
             } else {
                 org.json.JSONObject conditionMap = (org.json.JSONObject)obj;
                 String match = null;

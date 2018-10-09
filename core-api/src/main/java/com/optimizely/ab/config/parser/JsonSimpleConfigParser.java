@@ -48,6 +48,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * {@code json-simple}-based config parser implementation.
@@ -153,11 +155,20 @@ final class JsonSimpleConfigParser implements ConfigParser {
                 audienceIds.add((String)audienceIdObj);
             }
 
+            JSONParser parser = new JSONParser();
+
             Condition conditions = null;
             if (experimentObject.containsKey("audienceConditions")) {
-                JSONArray audienceConditionsJson = (JSONArray) experimentObject.get("audienceConditions");
+                String conditionString = (String)experimentObject.get("audienceConditions");
+                try {
+                    JSONArray conditionJson = (JSONArray) parser.parse(conditionString);
 
-                conditions = ConditionUtils.parseConditions(audienceConditionsJson);
+                    conditions = ConditionUtils.parseConditions(conditionJson);
+                }
+                catch (Exception e) {
+                    // unable to parse conditions.
+                    Logger.getAnonymousLogger().log(Level.ALL, "problem parsing audience conditions", e);
+                }
             }
             // parse the child objects
             List<Variation> variations = parseVariations((JSONArray)experimentObject.get("variations"));

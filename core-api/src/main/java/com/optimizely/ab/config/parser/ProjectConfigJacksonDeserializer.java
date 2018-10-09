@@ -32,6 +32,7 @@ import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.Condition;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -45,6 +46,7 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
         SimpleModule module = new SimpleModule();
         module.addDeserializer(Audience.class, new AudienceJacksonDeserializer());
         module.addDeserializer(Group.class, new GroupJacksonDeserializer());
+        module.addDeserializer(Condition.class, new ConditionJacksonDeserializer());
         mapper.registerModule(module);
 
         JsonNode node = parser.getCodec().readTree(parser);
