@@ -16,7 +16,9 @@
  */
 package com.optimizely.ab.config.audience;
 
-import com.optimizely.ab.annotations.VisibleForTesting;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.config.audience.match.MatchType;
 
 import javax.annotation.Nonnull;
@@ -28,18 +30,19 @@ import java.util.Map;
  * Represents a user attribute instance within an audience's conditions.
  */
 @Immutable
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserAttribute implements Condition {
 
-    private String name;
-    private String type;
-    private String match;
-    private Object value;
+    private final String name;
+    private final String type;
+    private final String match;
+    private final Object value;
 
-    @VisibleForTesting
-    UserAttribute() {
-    }
-
-    public UserAttribute(@Nonnull String name, @Nonnull String type, @Nullable String match, @Nullable Object value) {
+    @JsonCreator
+    public UserAttribute(@JsonProperty("name") @Nonnull String name,
+                         @JsonProperty("type") @Nonnull String type,
+                         @JsonProperty("match") @Nullable String match,
+                         @JsonProperty("value") @Nullable Object value) {
         this.name = name;
         this.type = type;
         this.match = match;
@@ -106,8 +109,7 @@ public class UserAttribute implements Condition {
 
         if (!name.equals(that.name)) return false;
         if (!type.equals(that.type)) return false;
-        //noinspection StringEquality
-        if (!(match == that.match || match != null && match.equals(that.match))) return false;
+        if (match != null ? !match.equals(that.match) : that.match != null) return false;
         return value != null ? value.equals(that.value) : that.value == null;
     }
 
