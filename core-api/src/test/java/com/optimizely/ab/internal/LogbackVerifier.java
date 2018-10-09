@@ -81,8 +81,8 @@ public class LogbackVerifier implements TestRule {
         for (final ExpectedLogEvent expectedEvent : expectedEvents) {
             Mockito.verify(appender, expectedEvent.times).doAppend(argThat(new ArgumentMatcher<ILoggingEvent>() {
                 @Override
-                public boolean matches(final Object argument) {
-                    return expectedEvent.matches((ILoggingEvent) argument);
+                public boolean matches(final ILoggingEvent argument) {
+                    return expectedEvent.matches(argument);
                 }
             }));
         }
