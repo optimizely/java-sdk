@@ -86,7 +86,7 @@ public final class ExperimentUtils {
         return false;
     }
 
-    public static boolean resolveAudienceConditions(@Nonnull ProjectConfig projectConfig,
+    public static Boolean resolveAudienceConditions(@Nonnull ProjectConfig projectConfig,
                                             @Nonnull Experiment experiment,
                                             @Nonnull Map<String, ?> attributes) {
 
