@@ -13,6 +13,7 @@ This is the alpha release of the 3.0 SDK, which includes a number of improvement
 
 ### Breaking Changes
 * Previously, notification listeners filtered non-string attribute values from the data passed to registered listeners. To support our growing list of supported attribute values, we’ve changed this behavior. Notification listeners will now post any value type passed as an attribute. Therefore, the interface of the notification listeners has changed to accept a `Map<String, ?>`.
+* Update to use Java 1.7 ([#208](https://github.com/optimizely/java-sdk/pull/208))
 
 ### Bug Fixes
 * refactor: Performance improvements for JacksonConfigParser ([#209](https://github.com/optimizely/java-sdk/pull/209))
