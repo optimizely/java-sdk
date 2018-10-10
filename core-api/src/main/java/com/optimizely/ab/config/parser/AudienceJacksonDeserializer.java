@@ -17,51 +17,55 @@
 package com.optimizely.ab.config.parser;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.optimizely.ab.config.audience.Audience;
-import com.optimizely.ab.config.audience.AndCondition;
-import com.optimizely.ab.config.audience.Condition;
-import com.optimizely.ab.config.audience.UserAttribute;
-import com.optimizely.ab.config.audience.NotCondition;
-import com.optimizely.ab.config.audience.OrCondition;
+import com.optimizely.ab.config.audience.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
+    private ObjectMapper objectMapper;
+
+    public AudienceJacksonDeserializer() {
+        this(new ObjectMapper());
+    }
+
+    AudienceJacksonDeserializer(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public Audience deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode node = parser.getCodec().readTree(parser);
+        ObjectCodec codec = parser.getCodec();
+        JsonNode node = codec.readTree(parser);
 
         String id = node.get("id").textValue();
         String name = node.get("name").textValue();
-        List<Object> rawObjectList = (List<Object>)mapper.readValue(node.get("conditions").textValue(), List.class);
-        Condition conditions = parseConditions(rawObjectList);
+
+        String conditionsJson = node.get("conditions").textValue();
+        JsonNode conditionsTree = objectMapper.readTree(conditionsJson);
+        Condition conditions = parseConditions(conditionsTree);
 
         return new Audience(id, name, conditions);
     }
 
-    private Condition parseConditions(List<Object> rawObjectList) {
+    private Condition parseConditions(JsonNode conditionNode) throws JsonProcessingException {
         List<Condition> conditions = new ArrayList<Condition>();
-        String operand = (String)rawObjectList.get(0);
+        JsonNode opNode = conditionNode.get(0);
+        String operand = opNode.asText();
 
-        for (int i = 1; i < rawObjectList.size(); i++) {
-            Object obj = rawObjectList.get(i);
-            if (obj instanceof List) {
-                List<Object> objectList = (List<Object>)rawObjectList.get(i);
-                conditions.add(parseConditions(objectList));
-            } else {
-                HashMap<String, ?> conditionMap = (HashMap<String, ?>)rawObjectList.get(i);
-                conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
-                        (String)conditionMap.get("match"), conditionMap.get("value")));
+        for (int i = 1; i < conditionNode.size(); i++) {
+            JsonNode subNode = conditionNode.get(i);
+            if (subNode.isArray()) {
+                conditions.add(parseConditions(subNode));
+            } else if (subNode.isObject()) {
+                conditions.add(objectMapper.treeToValue(subNode, UserAttribute.class));
             }
         }
 
@@ -73,7 +77,7 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
             case "or":
                 condition = new OrCondition(conditions);
                 break;
-            default:
+            default: // this makes two assumptions: operator is "not" and conditions is non-empty...
                 condition = new NotCondition(conditions.get(0));
                 break;
         }

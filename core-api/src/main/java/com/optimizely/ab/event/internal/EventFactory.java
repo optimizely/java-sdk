@@ -169,6 +169,12 @@ public class EventFactory {
 
         if (attributes != null) {
             for (Map.Entry<String, ?> entry : attributes.entrySet()) {
+
+                // Ignore attributes with empty key
+                if (entry.getKey().isEmpty()) {
+                    continue;
+                }
+
                 // Filter down to the types of values we're allowed to track.
                 // Don't allow Longs, BigIntegers, or BigDecimals - they /can/ theoretically be serialized as JSON numbers
                 // but may take on values that can't be faithfully parsed by the backend.
@@ -194,6 +200,7 @@ public class EventFactory {
                         .build();
 
                 attributesList.add(attribute);
+
             }
         }
 
