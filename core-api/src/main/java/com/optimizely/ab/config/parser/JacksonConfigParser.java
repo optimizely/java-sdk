@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package com.optimizely.ab.config.parser;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.audience.Audience;
 
 import javax.annotation.Nonnull;
 
@@ -27,18 +27,33 @@ import javax.annotation.Nonnull;
  * {@code Jackson}-based config parser implementation.
  */
 final class JacksonConfigParser implements ConfigParser {
+    private ObjectMapper objectMapper;
+
+    public JacksonConfigParser() {
+        this(new ObjectMapper());
+    }
+
+    JacksonConfigParser(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+        this.objectMapper.registerModule(new ProjectConfigModule());
+    }
 
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
-        ObjectMapper mapper = new ObjectMapper();
-        SimpleModule module = new SimpleModule();
-        module.addDeserializer(ProjectConfig.class, new ProjectConfigJacksonDeserializer());
-        mapper.registerModule(module);
-
         try {
-            return mapper.readValue(json, ProjectConfig.class);
+            return objectMapper.readValue(json, ProjectConfig.class);
         } catch (Exception e) {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
+        }
+    }
+
+    class ProjectConfigModule extends SimpleModule {
+        private final static String NAME = "ProjectConfigModule";
+
+        public ProjectConfigModule() {
+            super(NAME);
+            addDeserializer(ProjectConfig.class, new ProjectConfigJacksonDeserializer());
+            addDeserializer(Audience.class, new AudienceJacksonDeserializer(objectMapper));
         }
     }
 }

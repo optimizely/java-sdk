@@ -271,6 +271,7 @@ public class EventFactoryTest {
         Attribute doubleAttribute = validProjectConfig.getAttributes().get(5);
         Attribute integerAttribute = validProjectConfig.getAttributes().get(4);
         Attribute boolAttribute = validProjectConfig.getAttributes().get(3);
+        Attribute emptyAttribute = validProjectConfig.getAttributes().get(6);
 
         BigInteger bigInteger = new BigInteger("12323");
         BigDecimal bigDecimal = new BigDecimal("123");
@@ -288,6 +289,7 @@ public class EventFactoryTest {
         attributes.put(doubleAttribute.getKey(), validDoubleAttribute);
         attributes.put(integerAttribute.getKey(), validIntegerAttribute);
         attributes.put(boolAttribute.getKey(), validBoolAttribute);
+        attributes.put(emptyAttribute.getKey(), validBoolAttribute);
 
         DecisionService decisionService = new DecisionService(
                 mockBucketAlgorithm,
@@ -328,6 +330,8 @@ public class EventFactoryTest {
             assertNotSame(feature.getValue(), bigInteger);
             assertNotSame(feature.getKey(), attribute2.getKey());
             assertNotSame(feature.getValue(), bigDecimal);
+            assertNotSame(feature.getKey(), emptyAttribute.getKey());
+            assertNotSame(feature.getValue(), doubleAttribute);
         }
     }
 

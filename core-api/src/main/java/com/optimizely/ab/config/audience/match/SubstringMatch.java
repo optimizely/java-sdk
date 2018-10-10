@@ -24,10 +24,15 @@ class SubstringMatch extends AttributeMatch<String> {
         this.value = value;
     }
 
+    /**
+     * This matches the same substring matching logic in the Web client.
+     * @param attributeValue
+     * @return true/false if the user attribute string value contains the condition string value
+     */
     public @Nullable
     Boolean eval(Object attributeValue) {
         try {
-            return value.contains(convert(attributeValue));
+            return convert(attributeValue).contains(value);
         }
         catch (Exception e) {
             MatchType.logger.error("Substring match failed ", e);
