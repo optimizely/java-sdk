@@ -61,6 +61,10 @@ public class ValidProjectConfigV4 {
     public  static final String     ATTRIBUTE_DOUBLE_KEY = "doubleKey";
     private static final Attribute  ATTRIBUTE_DOUBLE = new Attribute(ATTRIBUTE_DOUBLE_ID, ATTRIBUTE_DOUBLE_KEY);
 
+    private static final String     ATTRIBUTE_EMPTY_KEY_ID = "808797686";
+    public  static final String     ATTRIBUTE_EMPTY_KEY = "";
+    private static final Attribute  ATTRIBUTE_EMPTY = new Attribute(ATTRIBUTE_EMPTY_KEY_ID, ATTRIBUTE_EMPTY_KEY);
+
     // audiences
     private static final String     CUSTOM_ATTRIBUTE_TYPE = "custom_attribute";
     private static final String     AUDIENCE_BOOL_ID = "3468206643";
@@ -1158,6 +1162,7 @@ public class ValidProjectConfigV4 {
         attributes.add(ATTRIBUTE_BOOLEAN);
         attributes.add(ATTRIBUTE_INTEGER);
         attributes.add(ATTRIBUTE_DOUBLE);
+        attributes.add(ATTRIBUTE_EMPTY);
 
         // list audiences
         List<Audience> audiences = new ArrayList<Audience>();
