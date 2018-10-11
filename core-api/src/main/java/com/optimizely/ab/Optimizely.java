@@ -209,9 +209,11 @@ public class Optimizely {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
         }
+
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
         // determine whether all the given attributes are present in the project config. If not, filter out the unknown
         // attributes.
-        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, attributes);
+        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, copiedAttributes);
 
         // bucket the user to the given experiment and dispatch an impression event
         Variation variation = decisionService.getVariation(experiment, userId, filteredAttributes);
@@ -300,9 +302,11 @@ public class Optimizely {
             return;
         }
 
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
+
         // determine whether all the given attributes are present in the project config. If not, filter out the unknown
         // attributes.
-        Map<String, ?> filteredAttributes = filterAttributes(currentConfig, attributes);
+        Map<String, ?> filteredAttributes = filterAttributes(currentConfig, copiedAttributes);
 
         if (eventTags == null) {
             logger.warn("Event tags is null when non-null was expected. Defaulting to an empty event tags map.");
@@ -407,7 +411,9 @@ public class Optimizely {
             return false;
         }
 
-        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, attributes);
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
+
+        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, copiedAttributes);
 
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, filteredAttributes);
         if (featureDecision.variation != null) {
@@ -655,8 +661,8 @@ public class Optimizely {
         }
 
         String variableValue = variable.getDefaultValue();
-
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, attributes);
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
         if (featureDecision.variation != null) {
             LiveVariableUsageInstance liveVariableUsageInstance =
                     featureDecision.variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
@@ -694,9 +700,10 @@ public class Optimizely {
             return enabledFeaturesList;
         }
 
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
         for (FeatureFlag featureFlag : projectConfig.getFeatureFlags()){
             String featureKey = featureFlag.getKey();
-            if(isFeatureEnabled(featureKey, userId, attributes))
+            if(isFeatureEnabled(featureKey, userId, copiedAttributes))
                 enabledFeaturesList.add(featureKey);
         }
 
@@ -717,7 +724,8 @@ public class Optimizely {
                            @Nonnull String userId,
                            @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
 
-        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, attributes);
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
+        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, copiedAttributes);
 
         return decisionService.getVariation(experiment, userId, filteredAttributes);
     }
@@ -755,7 +763,8 @@ public class Optimizely {
             return null;
         }
 
-        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, attributes);
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
+        Map<String, ?> filteredAttributes = filterAttributes(projectConfig, copiedAttributes);
 
         return decisionService.getVariation(experiment,userId,filteredAttributes);
     }
@@ -817,6 +826,20 @@ public class Optimizely {
     }
 
     //======== Helper methods ========//
+
+    /**
+     * Helper function to check that the provided attributes are null if not than it returns a copy
+     *
+     * @param attributes the attributes map being validated
+     * @return copy of attributes
+     */
+    private Map<String, ?> copyAttributes(Map<String, ?> attributes) {
+        Map<String, ?> copiedAttributes = null;
+        if (attributes != null) {
+            copiedAttributes = new HashMap<>(attributes);
+        }
+        return copiedAttributes;
+    }
 
     /**
      * Helper method to verify that the given attributes map contains only keys that are present in the
