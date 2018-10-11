@@ -32,6 +32,11 @@ import java.util.List;
 import java.util.Map;
 
 public class ConditionUtils {
+    /**
+     * parse conditions using List and Map
+     * @param rawObjectList list of conditions
+     * @return audienceCondition
+     */
     static public Condition parseConditions(List<Object> rawObjectList) {
         List<Condition> conditions = new ArrayList<Condition>();
         String operand = (String)rawObjectList.get(0);
@@ -42,7 +47,7 @@ public class ConditionUtils {
                 List<Object> objectList = (List<Object>)rawObjectList.get(i);
                 conditions.add(parseConditions(objectList));
             }
-            else if (obj instanceof String) {
+            else if (obj instanceof String) { // looking for audience conditions in experiment
                 conditions.add(new AudienceIdCondition((String)obj));
             }
             else if (obj instanceof LinkedTreeMap) { // gson
@@ -55,7 +60,7 @@ public class ConditionUtils {
                 conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
                         (String)conditionMap.get("match"), conditionMap.get("value")));
             }
-            else {
+            else { // looking for audience conditions in audience
                 Map<String, ?> conditionMap = (Map<String, ?>)rawObjectList.get(i);
                 conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
                         (String)conditionMap.get("match"), conditionMap.get("value")));
@@ -81,6 +86,11 @@ public class ConditionUtils {
         return condition;
     }
 
+    /**
+     * Parse conditions from org.json.JsonArray
+     * @param conditionJson jsonArray to parse
+     * @return condition parsed from conditionJson.
+     */
     static public Condition parseConditions(org.json.JSONArray conditionJson) {
         List<Condition> conditions = new ArrayList<Condition>();
         String operand = (String)conditionJson.get(0);
@@ -125,16 +135,28 @@ public class ConditionUtils {
         return condition;
     }
 
-
-    public static void resolveAudienceIdConditions(@Nonnull ProjectConfig projectConfig,
-                                                   @Nonnull Condition conditions) {
+    /**
+     * resolveAudienceIdConditions walks the conditions list and fills in the audience in any AudienceIdConditions by
+     * looking up audience by id and setting the audience in the AudienceIdCondition.  It uses recursion to walk the list and find
+     * any AudienceIdCondition not set.
+     * @param projectConfig - containing the experiment and audiences to resolve audience id to audience.
+     * @param conditions conditions to be resolved.
+     */
+    public static Condition resolveAudienceIdConditions(@Nonnull ProjectConfig projectConfig,
+                                                   @Nonnull Condition conditions) throws InvalidAudienceCondition, AudienceConditionsAlreadyResolved {
 
         if (conditions instanceof AndCondition) {
             AndCondition andCondition = (AndCondition) conditions;
             for (Condition condition : andCondition.getConditions()) {
                 if (condition instanceof AudienceIdCondition) {
                     AudienceIdCondition holder = (AudienceIdCondition) condition;
+                    if (((AudienceIdCondition) condition).getAudience() != null) {
+                        throw new AudienceConditionsAlreadyResolved("audience already set");
+                    }
                     holder.setAudience(projectConfig.getAudience(holder.getAudienceId()));
+                }
+                else if (condition instanceof UserAttribute) {
+                    throw new InvalidAudienceCondition("contains user attribute condition");
                 }
                 else {
                     resolveAudienceIdConditions(projectConfig, condition);
@@ -145,8 +167,14 @@ public class ConditionUtils {
             OrCondition orCondition = (OrCondition) conditions;
             for (Condition condition : orCondition.getConditions()) {
                 if (condition instanceof AudienceIdCondition) {
+                    if (((AudienceIdCondition) condition).getAudience() != null) {
+                        throw new AudienceConditionsAlreadyResolved("audience already set");
+                    }
                     AudienceIdCondition holder = (AudienceIdCondition) condition;
                     holder.setAudience(projectConfig.getAudience(holder.getAudienceId()));
+                }
+                else if (condition instanceof UserAttribute) {
+                    throw new InvalidAudienceCondition("contains user attribute condition");
                 }
                 else {
                     resolveAudienceIdConditions(projectConfig, condition);
@@ -158,14 +186,22 @@ public class ConditionUtils {
 
             Condition condition = notCondition.getCondition();
             if (condition instanceof AudienceIdCondition) {
+                if (((AudienceIdCondition) condition).getAudience() != null) {
+                    throw new AudienceConditionsAlreadyResolved("audience already set");
+                }
                 AudienceIdCondition holder = (AudienceIdCondition) condition;
                 holder.setAudience(projectConfig.getAudience(holder.getAudienceId()));
+            }
+            else if (condition instanceof UserAttribute) {
+                throw new InvalidAudienceCondition("contains user attribute condition");
             }
             else {
                 resolveAudienceIdConditions(projectConfig, conditions);
             }
+
         }
 
+        return conditions;
     }
 
 }

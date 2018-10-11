@@ -18,15 +18,13 @@ package com.optimizely.ab.internal;
 
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
-import com.optimizely.ab.config.audience.NotCondition;
-import com.optimizely.ab.config.audience.OrCondition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 
@@ -86,11 +84,24 @@ public final class ExperimentUtils {
         return false;
     }
 
-    public static Boolean resolveAudienceConditions(@Nonnull ProjectConfig projectConfig,
-                                            @Nonnull Experiment experiment,
-                                            @Nonnull Map<String, ?> attributes) {
+    public static @Nullable Boolean resolveAudienceConditions(@Nonnull ProjectConfig projectConfig,
+                                      @Nonnull Experiment experiment,
+                                      @Nonnull Map<String, ?> attributes) {
 
-        ConditionUtils.resolveAudienceIdConditions(projectConfig, experiment.getAudienceConditions());
+        Condition conditions = experiment.getAudienceConditions();
+        if (conditions == null) return null;
+
+        try {
+            ConditionUtils.resolveAudienceIdConditions(projectConfig, conditions);
+        }
+        catch (InvalidAudienceCondition e) {
+            logger.error("Condition invalid", e);
+            return null;
+        }
+        catch (AudienceConditionsAlreadyResolved e) {
+            // no problem.  we just didn't walk the list again.  we can still pass in the conditions since
+            // they are already resolved.
+        }
 
         return experiment.getAudienceConditions().evaluate(attributes);
     }

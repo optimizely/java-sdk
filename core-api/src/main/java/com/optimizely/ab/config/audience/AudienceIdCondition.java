@@ -16,18 +16,38 @@
  */
  package com.optimizely.ab.config.audience;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * The AudienceIdCondition is a holder for the audience id in
+ * {@link com.optimizely.ab.config.Experiment#audienceConditions auienceConditions}.  The AudienceId is later
+ * resoloved to Audience before evaluation.  If you do not resolve the AudienceIdCondition before evalutating, the
+ * condition will fail.  AudienceIdCondtions are resolved using
+ * {@link com.optimizely.ab.internal.ConditionUtils#resolveAudienceIdConditions(com.optimizely.ab.config.ProjectConfig, Condition)}
+ */
 public class AudienceIdCondition implements Condition {
     private Audience audience;
     private String audienceId;
 
+    private static Logger logger = LoggerFactory.getLogger("AudienceIdCondition");
+
+    /**
+     * This is basically for testing purposes.  During json parsing the audienceId is the only thing available.
+     * @param audience The audience to be evaluated.
+     */
     public AudienceIdCondition(Audience audience) {
         this.audience = audience;
     }
 
+    /**
+     * Constructor used in json parsing to store the audienceId parsed from Experiment.audienceConditions.
+     * @param audienceId
+     */
     public AudienceIdCondition(String audienceId) {
         this.audienceId = audienceId;
     }
@@ -48,7 +68,7 @@ public class AudienceIdCondition implements Condition {
     @Override
     public Boolean evaluate(Map<String, ?> attributes) {
         if (audience == null) {
-            // throw audience not found exception?
+            logger.error(String.format("Audience not set for audienceConditions %s", audienceId));
             return null;
         }
         return audience.getConditions().evaluate(attributes);
