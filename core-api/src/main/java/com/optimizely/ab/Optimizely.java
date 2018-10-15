@@ -828,9 +828,9 @@ public class Optimizely {
     //======== Helper methods ========//
 
     /**
-     * Helper function to check that the provided attributes are null if not than it returns a copy
+     * Helper method which makes separate copy of attributesMap variable and returns it
      *
-     * @param attributes the attributes map being validated
+     * @param attributes map to copy
      * @return copy of attributes
      */
     private Map<String, ?> copyAttributes(Map<String, ?> attributes) {
