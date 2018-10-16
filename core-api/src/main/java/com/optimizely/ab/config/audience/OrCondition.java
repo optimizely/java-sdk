@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.config.ProjectConfig;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -42,10 +44,10 @@ public class OrCondition implements Condition {
     // false or null is null
     // false or false is false
     // null or null is null
-    public @Nullable Boolean evaluate(Map<String, ?> attributes) {
+    public @Nullable Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
         boolean foundNull = false;
         for (Condition condition : conditions) {
-            Boolean conditionEval = condition.evaluate(attributes);
+            Boolean conditionEval = condition.evaluate(config, attributes);
             if (conditionEval == null) { // true with falses and nulls is still true
                 foundNull = true;
             }

@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.config.ProjectConfig;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -38,7 +40,7 @@ public class AndCondition implements Condition {
     }
 
     public @Nullable
-    Boolean evaluate(Map<String, ?> attributes) {
+    Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
         boolean foundNull = false;
         // According to the matrix where:
         // false and true is false
@@ -48,7 +50,7 @@ public class AndCondition implements Condition {
         // true and true is true
         // null and null is null
         for (Condition condition : conditions) {
-            Boolean conditionEval = condition.evaluate(attributes);
+            Boolean conditionEval = condition.evaluate(config, attributes);
             if (conditionEval == null) {
                 foundNull = true;
             }

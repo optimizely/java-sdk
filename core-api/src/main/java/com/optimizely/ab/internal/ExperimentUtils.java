@@ -91,7 +91,7 @@ public final class ExperimentUtils {
 
         OrCondition implicitOr = new OrCondition(conditions);
 
-        return implicitOr.evaluate(attributes);
+        return implicitOr.evaluate(null, attributes);
 
     }
 
@@ -103,18 +103,12 @@ public final class ExperimentUtils {
         if (conditions == null) return null;
 
         try {
-            ConditionUtils.resolveAudienceIdConditions(projectConfig, conditions);
+            return conditions.evaluate(projectConfig, attributes);
         }
         catch (InvalidAudienceCondition e) {
             logger.error("Condition invalid", e);
             return null;
         }
-        catch (AudienceConditionsAlreadyResolved e) {
-            // no problem.  we just didn't walk the list again.  we can still pass in the conditions since
-            // they are already resolved.
-        }
-
-        return experiment.getAudienceConditions().evaluate(attributes);
     }
 
 

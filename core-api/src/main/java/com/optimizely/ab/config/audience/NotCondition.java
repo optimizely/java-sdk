@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.config.ProjectConfig;
+
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.Nonnull;
@@ -38,8 +40,8 @@ public class NotCondition implements Condition {
         return condition;
     }
 
-    public @Nullable Boolean evaluate(Map<String, ?> attributes) {
-        Boolean conditionEval = condition.evaluate(attributes);
+    public @Nullable Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+        Boolean conditionEval = condition.evaluate(config, attributes);
         return (conditionEval == null ? null : !conditionEval);
     }
 

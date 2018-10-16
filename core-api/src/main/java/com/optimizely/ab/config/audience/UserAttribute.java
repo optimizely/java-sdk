@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.match.MatchType;
 
 import javax.annotation.Nonnull;
@@ -57,7 +58,7 @@ public class UserAttribute implements Condition {
         return value;
     }
 
-    public @Nullable Boolean evaluate(Map<String, ?> attributes) {
+    public @Nullable Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
         // Valid for primative types, but needs to change when a value is an object or an array
         Object userAttributeValue = attributes.get(name);
 

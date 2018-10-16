@@ -16,6 +16,7 @@
  */
  package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.config.ProjectConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +27,8 @@ import java.util.Objects;
 /**
  * The AudienceIdCondition is a holder for the audience id in
  * {@link com.optimizely.ab.config.Experiment#audienceConditions auienceConditions}.  The AudienceId is later
- * resoloved to Audience before evaluation.  If you do not resolve the AudienceIdCondition before evalutating, the
- * condition will fail.  AudienceIdCondtions are resolved using
- * {@link com.optimizely.ab.internal.ConditionUtils#resolveAudienceIdConditions(com.optimizely.ab.config.ProjectConfig, Condition)}
+ * resolved to Audience before evaluation.  If you do not resolve the AudienceIdCondition before evaluating, the
+ * condition will fail.  AudienceIdConditions are resolved when the ProjectConfig is passed into evaluate.
  */
 public class AudienceIdCondition implements Condition {
     private Audience audience;
@@ -37,11 +37,12 @@ public class AudienceIdCondition implements Condition {
     private static Logger logger = LoggerFactory.getLogger("AudienceIdCondition");
 
     /**
-     * This is basically for testing purposes.  During json parsing the audienceId is the only thing available.
+     * This is for running legacy {@link com.optimizely.ab.config.Experiment#audienceIds}.  During json parsing the audienceId is the only thing available.
      * @param audience The audience to be evaluated.
      */
     public AudienceIdCondition(Audience audience) {
         this.audience = audience;
+        this.audienceId = audience.getId();
     }
 
     /**
@@ -66,12 +67,15 @@ public class AudienceIdCondition implements Condition {
 
     @Nullable
     @Override
-    public Boolean evaluate(Map<String, ?> attributes) {
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+        if (config != null) {
+            audience = config.getAudienceIdMapping().get(audienceId);
+        }
         if (audience == null) {
             logger.error(String.format("Audience not set for audienceConditions %s", audienceId));
             return null;
         }
-        return audience.getConditions().evaluate(attributes);
+        return audience.getConditions().evaluate(config, attributes);
     }
 
     @Override
@@ -89,5 +93,10 @@ public class AudienceIdCondition implements Condition {
     public int hashCode() {
 
         return Objects.hash(audience, audienceId);
+    }
+
+    @Override
+    public String toString() {
+        return audienceId;
     }
 }
