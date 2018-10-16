@@ -105,7 +105,7 @@ public final class ExperimentUtils {
         try {
             return conditions.evaluate(projectConfig, attributes);
         }
-        catch (InvalidAudienceCondition e) {
+        catch (Exception e) {
             logger.error("Condition invalid", e);
             return null;
         }
