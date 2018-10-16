@@ -37,15 +37,6 @@ public class AudienceIdCondition implements Condition {
     private static Logger logger = LoggerFactory.getLogger("AudienceIdCondition");
 
     /**
-     * This is for running legacy {@link com.optimizely.ab.config.Experiment#audienceIds}.  During json parsing the audienceId is the only thing available.
-     * @param audience The audience to be evaluated.
-     */
-    public AudienceIdCondition(Audience audience) {
-        this.audience = audience;
-        this.audienceId = audience.getId();
-    }
-
-    /**
      * Constructor used in json parsing to store the audienceId parsed from Experiment.audienceConditions.
      * @param audienceId
      */

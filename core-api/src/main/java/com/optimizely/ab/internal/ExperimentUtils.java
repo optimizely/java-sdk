@@ -85,13 +85,13 @@ public final class ExperimentUtils {
 
         List<Condition> conditions = new ArrayList<>();
         for (String audienceId : experimentAudienceIds) {
-            AudienceIdCondition condition = new AudienceIdCondition(projectConfig.getAudience(audienceId));
+            AudienceIdCondition condition = new AudienceIdCondition(audienceId);
             conditions.add(condition);
         }
 
         OrCondition implicitOr = new OrCondition(conditions);
 
-        return implicitOr.evaluate(null, attributes);
+        return implicitOr.evaluate(projectConfig, attributes);
 
     }
 
