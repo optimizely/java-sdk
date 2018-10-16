@@ -37,11 +37,9 @@ public class MatchType {
             case "exact":
                 if (conditionValue instanceof String) {
                     return new MatchType(matchType, new ExactMatch<String>((String) conditionValue));
-                }
-                else if (conditionValue instanceof Integer || conditionValue instanceof Double) {
+                } else if (isValidNumber(conditionValue)) {
                     return new MatchType(matchType, new ExactMatch<Number>((Number) conditionValue));
-                }
-                else if (conditionValue instanceof Boolean) {
+                } else if (conditionValue instanceof Boolean) {
                     return new MatchType(matchType, new ExactMatch<Boolean>((Boolean) conditionValue));
                 }
                 break;
@@ -51,12 +49,12 @@ public class MatchType {
                 }
                 break;
             case "gt":
-                if (conditionValue instanceof Integer || conditionValue instanceof Double) {
+                if (isValidNumber(conditionValue)) {
                     return new MatchType(matchType, new GTMatch((Number) conditionValue));
                 }
                 break;
             case "lt":
-                if (conditionValue instanceof Integer || conditionValue instanceof Double) {
+                if (isValidNumber(conditionValue)) {
                     return new MatchType(matchType, new LTMatch((Number) conditionValue));
                 }
                 break;
@@ -72,6 +70,16 @@ public class MatchType {
         return new MatchType(matchType, new NullMatch());
     }
 
+    private static boolean isValidNumber(Object conditionValue) {
+        if (conditionValue instanceof Integer || conditionValue instanceof Double) {
+            Double value = ((Number) conditionValue).doubleValue();
+            if (value.isNaN() || value.isInfinite()) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
 
     private MatchType(String type, Match matcher) {
         this.matchType = type;

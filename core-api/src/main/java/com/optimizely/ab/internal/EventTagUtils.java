@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -57,6 +57,10 @@ public final class EventTagUtils {
             Object rawValue = eventTags.get(ReservedEventKey.VALUE.toString());
             if (rawValue instanceof Number) {
                 eventValue = ((Number) rawValue).doubleValue();
+                if(eventValue.isInfinite() || eventValue.isNaN()) {
+                    eventValue = null;
+                    logger.warn("Failed to parse numeric metric value \"{}\" from event tags.", rawValue);
+                }
                 logger.info("Parsed numeric metric value \"{}\" from event tags.", eventValue);
             } else {
                 logger.warn("Failed to parse numeric metric value \"{}\" from event tags.", rawValue);
