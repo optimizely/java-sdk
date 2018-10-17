@@ -25,6 +25,7 @@ import com.optimizely.ab.config.audience.match.MatchType;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -67,7 +68,10 @@ public class UserAttribute implements Condition {
     }
 
     public @Nullable Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
-        // Valid for primative types, but needs to change when a value is an object or an array
+        if (attributes == null) {
+            attributes = Collections.emptyMap();
+        }
+        // Valid for primitive types, but needs to change when a value is an object or an array
         Object userAttributeValue = attributes.get(name);
 
         if (!"custom_attribute".equals(type)) {
