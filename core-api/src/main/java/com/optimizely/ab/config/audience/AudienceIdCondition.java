@@ -26,8 +26,8 @@ import java.util.Objects;
 
 /**
  * The AudienceIdCondition is a holder for the audience id in
- * {@link com.optimizely.ab.config.Experiment#audienceConditions auienceConditions}.  The AudienceId is later
- * resolved to Audience before evaluation.  If you do not resolve the AudienceIdCondition before evaluating, the
+ * {@link com.optimizely.ab.config.Experiment#audienceConditions auienceConditions}.
+ * If the audienceId is not resolved at evaluation time, the
  * condition will fail.  AudienceIdConditions are resolved when the ProjectConfig is passed into evaluate.
  */
 public class AudienceIdCondition implements Condition {

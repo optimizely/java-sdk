@@ -64,18 +64,18 @@ public final class ExperimentUtils {
                                              @Nonnull Experiment experiment,
                                              @Nonnull Map<String, ?> attributes) {
         if (experiment.getAudienceConditions() != null) {
-            Boolean resolveReturn = resolveAudienceConditions(projectConfig, experiment, attributes);
+            Boolean resolveReturn = evaluateAudienceConditions(projectConfig, experiment, attributes);
             return resolveReturn == null ? false : resolveReturn;
         }
         else {
-            Boolean resolveReturn = resolveAudience(projectConfig, experiment, attributes);
+            Boolean resolveReturn = evaluateAudience(projectConfig, experiment, attributes);
             return resolveReturn == null ? false : resolveReturn;
         }
     }
 
-    public static @Nullable Boolean resolveAudience(@Nonnull ProjectConfig projectConfig,
-                                                    @Nonnull Experiment experiment,
-                                                    @Nonnull Map<String, ?> attributes) {
+    public static @Nullable Boolean evaluateAudience(@Nonnull ProjectConfig projectConfig,
+                                                     @Nonnull Experiment experiment,
+                                                     @Nonnull Map<String, ?> attributes) {
         List<String> experimentAudienceIds = experiment.getAudienceIds();
 
         // if there are no audiences, ALL users should be part of the experiment
@@ -95,9 +95,9 @@ public final class ExperimentUtils {
 
     }
 
-    public static @Nullable Boolean resolveAudienceConditions(@Nonnull ProjectConfig projectConfig,
-                                      @Nonnull Experiment experiment,
-                                      @Nonnull Map<String, ?> attributes) {
+    public static @Nullable Boolean evaluateAudienceConditions(@Nonnull ProjectConfig projectConfig,
+                                                               @Nonnull Experiment experiment,
+                                                               @Nonnull Map<String, ?> attributes) {
 
         Condition conditions = experiment.getAudienceConditions();
         if (conditions == null) return null;
