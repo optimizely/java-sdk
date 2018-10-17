@@ -16,11 +16,15 @@
  */
  package com.optimizely.ab.config.audience;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.config.ProjectConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 import java.util.Map;
 import java.util.Objects;
 
@@ -30,16 +34,18 @@ import java.util.Objects;
  * If the audienceId is not resolved at evaluation time, the
  * condition will fail.  AudienceIdConditions are resolved when the ProjectConfig is passed into evaluate.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AudienceIdCondition implements Condition {
     private Audience audience;
-    private String audienceId;
+    final private String audienceId;
 
-    private static Logger logger = LoggerFactory.getLogger("AudienceIdCondition");
+    final private static Logger logger = LoggerFactory.getLogger("AudienceIdCondition");
 
     /**
      * Constructor used in json parsing to store the audienceId parsed from Experiment.audienceConditions.
      * @param audienceId
      */
+    @JsonCreator
     public AudienceIdCondition(String audienceId) {
         this.audienceId = audienceId;
     }

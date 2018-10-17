@@ -16,6 +16,9 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.match.MatchType;
 
@@ -28,6 +31,7 @@ import java.util.Map;
  * Represents a user attribute instance within an audience's conditions.
  */
 @Immutable
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserAttribute implements Condition {
 
     private final String name;
@@ -35,7 +39,11 @@ public class UserAttribute implements Condition {
     private final String match;
     private final Object value;
 
-    public UserAttribute(@Nonnull String name, @Nonnull String type, @Nullable String match, @Nullable Object value) {
+    @JsonCreator
+    public UserAttribute(@JsonProperty("name") @Nonnull String name,
+                         @JsonProperty("type") @Nonnull String type,
+                         @JsonProperty("match") @Nullable String match,
+                         @JsonProperty("value") @Nullable Object value) {
         this.name = name;
         this.type = type;
         this.match = match;
@@ -63,7 +71,7 @@ public class UserAttribute implements Condition {
         Object userAttributeValue = attributes.get(name);
 
         if (!"custom_attribute".equals(type)) {
-            MatchType.logger.error(String.format("condition type not equal to `custom_attribute` %s", type != null ? type : ""));
+            MatchType.logger.error(String.format("condition type not equal to `custom_attribute` %s", type));
             return null; // unknown type
         }
         // check user attribute value is equal
@@ -74,14 +82,22 @@ public class UserAttribute implements Condition {
             MatchType.logger.error(String.format("attribute or value null for match %s", match != null ? match : "legacy condition"),np);
             return null;
         }
-
     }
 
     @Override
     public String toString() {
+        final String valueStr;
+        if (value == null) {
+            valueStr = "null";
+        } else if (value instanceof String) {
+            valueStr = String.format("'%s'", value);
+        } else {
+            valueStr = value.toString();
+        }
         return "{name='" + name + "\'" +
                ", type='" + type + "\'" +
-               ", value='" + value.toString() + "\'" +
+               ", match='" + match + "\'" +
+               ", value=" + valueStr +
                "}";
     }
 
@@ -94,6 +110,7 @@ public class UserAttribute implements Condition {
 
         if (!name.equals(that.name)) return false;
         if (!type.equals(that.type)) return false;
+        if (match != null ? !match.equals(that.match) : that.match != null) return false;
         return value != null ? value.equals(that.value) : that.value == null;
     }
 
@@ -101,6 +118,7 @@ public class UserAttribute implements Condition {
     public int hashCode() {
         int result = name.hashCode();
         result = 31 * result + type.hashCode();
+        result = 31 * result + (match != null ? match.hashCode() : 0);
         result = 31 * result + (value != null ? value.hashCode() : 0);
         return result;
     }

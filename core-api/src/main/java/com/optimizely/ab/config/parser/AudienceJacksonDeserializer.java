@@ -17,35 +17,40 @@
 package com.optimizely.ab.config.parser;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.optimizely.ab.config.audience.Audience;
-import com.optimizely.ab.config.audience.AndCondition;
-import com.optimizely.ab.config.audience.Condition;
-import com.optimizely.ab.config.audience.UserAttribute;
-import com.optimizely.ab.config.audience.NotCondition;
-import com.optimizely.ab.config.audience.OrCondition;
-import com.optimizely.ab.internal.ConditionUtils;
+import com.optimizely.ab.config.audience.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
+    private ObjectMapper objectMapper;
+
+    public AudienceJacksonDeserializer() {
+        this(new ObjectMapper());
+    }
+
+    AudienceJacksonDeserializer(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     public Audience deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode node = parser.getCodec().readTree(parser);
+        ObjectCodec codec = parser.getCodec();
+        JsonNode node = codec.readTree(parser);
 
         String id = node.get("id").textValue();
         String name = node.get("name").textValue();
-        List<Object> rawObjectList = (List<Object>)mapper.readValue(node.get("conditions").textValue(), List.class);
-        Condition conditions = ConditionUtils.parseConditions(rawObjectList);
+
+        String conditionsJson = node.get("conditions").textValue();
+        JsonNode conditionsTree = objectMapper.readTree(conditionsJson);
+        Condition conditions = ConditionJacksonDeserializer.parseConditions(objectMapper, conditionsTree);
 
         return new Audience(id, name, conditions);
     }

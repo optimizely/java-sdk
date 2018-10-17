@@ -17,20 +17,11 @@
 package com.optimizely.ab.config.parser;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.optimizely.ab.config.Attribute;
-import com.optimizely.ab.config.EventType;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.FeatureFlag;
-import com.optimizely.ab.config.Group;
-import com.optimizely.ab.config.LiveVariable;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.Rollout;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
 
@@ -39,17 +30,10 @@ import java.util.Collections;
 import java.util.List;
 
 class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
-
     @Override
     public ProjectConfig deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        SimpleModule module = new SimpleModule();
-        module.addDeserializer(Audience.class, new AudienceJacksonDeserializer());
-        module.addDeserializer(Group.class, new GroupJacksonDeserializer());
-        module.addDeserializer(Condition.class, new ConditionJacksonDeserializer());
-        mapper.registerModule(module);
-
-        JsonNode node = parser.getCodec().readTree(parser);
+        ObjectCodec codec = parser.getCodec();
+        JsonNode node = codec.readTree(parser);
 
         String accountId = node.get("accountId").textValue();
         String projectId = node.get("projectId").textValue();
@@ -57,36 +41,25 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
         String version = node.get("version").textValue();
         int datafileVersion = Integer.parseInt(version);
 
-        List<Group> groups = mapper.readValue(node.get("groups").toString(), new TypeReference<List<Group>>() {});
-        List<Experiment> experiments = mapper.readValue(node.get("experiments").toString(),
-                                                        new TypeReference<List<Experiment>>() {});
-
-        List<Attribute> attributes;
-        attributes = mapper.readValue(node.get("attributes").toString(), new TypeReference<List<Attribute>>() {});
-
-        List<EventType> events = mapper.readValue(node.get("events").toString(),
-                                                  new TypeReference<List<EventType>>() {});
+        List<Group> groups = JacksonHelpers.arrayNodeToList(node.get("groups"), Group.class, codec);
+        List<Experiment> experiments = JacksonHelpers.arrayNodeToList(node.get("experiments"), Experiment.class, codec);
+        List<Attribute> attributes = JacksonHelpers.arrayNodeToList(node.get("attributes"), Attribute.class, codec);
+        List<EventType> events = JacksonHelpers.arrayNodeToList(node.get("events"), EventType.class, codec);
 
         List<Audience> audiences = Collections.emptyList();
-
         if (node.has("audiences")) {
-            audiences = mapper.readValue(node.get("audiences").toString(),
-                    new TypeReference<List<Audience>>() {});
+            audiences = JacksonHelpers.arrayNodeToList(node.get("audiences"), Audience.class, codec);
         }
 
         List<Audience> typedAudiences = null;
-
         if (node.has("typedAudiences")) {
-            typedAudiences = mapper.readValue(node.get("typedAudiences").toString(),
-                    new TypeReference<List<Audience>>() {
-                    });
+            typedAudiences = JacksonHelpers.arrayNodeToList(node.get("typedAudiences"), Audience.class, codec);
         }
 
         boolean anonymizeIP = false;
         List<LiveVariable> liveVariables = null;
         if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
-            liveVariables = mapper.readValue(node.get("variables").toString(),
-                                             new TypeReference<List<LiveVariable>>() {});
+            liveVariables = JacksonHelpers.arrayNodeToList(node.get("variables"), LiveVariable.class, codec);
             anonymizeIP = node.get("anonymizeIP").asBoolean();
         }
 
@@ -94,12 +67,11 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
         List<Rollout> rollouts = null;
         Boolean botFiltering = null;
         if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
-            featureFlags = mapper.readValue(node.get("featureFlags").toString(),
-                   new TypeReference<List<FeatureFlag>>() {});
-            rollouts = mapper.readValue(node.get("rollouts").toString(),
-                    new TypeReference<List<Rollout>>(){});
-            if (node.hasNonNull("botFiltering"))
+            featureFlags = JacksonHelpers.arrayNodeToList(node.get("featureFlags"), FeatureFlag.class, codec);
+            rollouts = JacksonHelpers.arrayNodeToList(node.get("rollouts"), Rollout.class, codec);
+            if (node.hasNonNull("botFiltering")) {
                 botFiltering = node.get("botFiltering").asBoolean();
+            }
         }
 
         return new ProjectConfig(
@@ -120,4 +92,5 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
                 rollouts
         );
     }
+
 }
