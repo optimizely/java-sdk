@@ -181,12 +181,18 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void invalidExactMatchConditionEvaluatesNull() throws Exception {
         BigInteger bigInteger = new BigInteger("33221312312312312");
-        Double infiniteDouble = 1.2/0;
+        Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
+        Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
+        Double infiniteNANDouble = Double.NaN;
         UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","exact", bigInteger);
-        UserAttribute testInstanceDouble = new UserAttribute("num_counts",  "custom_attribute","exact", infiniteDouble);
+        UserAttribute testInstancePositiveInfinite = new UserAttribute("num_counts",  "custom_attribute","exact", infinitePositiveInfiniteDouble);
+        UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts",  "custom_attribute","exact", infiniteNegativeInfiniteDouble);
+        UserAttribute testInstanceNANDouble = new UserAttribute("num_counts",  "custom_attribute","exact", infiniteNANDouble);
 
         assertNull(testInstanceInteger.evaluate(testTypedUserAttributes));
-        assertNull(testInstanceDouble.evaluate(testTypedUserAttributes));
+        assertNull(testInstancePositiveInfinite.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceNegativeInfiniteDouble.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceNANDouble.evaluate(testTypedUserAttributes));
     }
     /**
      * Verify that UserAttribute.evaluate for EXACT match type returns false for known visitor 
@@ -251,12 +257,18 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void gtMatchConditionEvaluatesNullWithInvalidAttr() throws Exception {
         BigInteger bigInteger = new BigInteger("33221312312312312");
-        Double infiniteDouble = 1.2/0;
+        Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
+        Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
+        Double infiniteNANDouble = Double.NaN;
         UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","gt", bigInteger);
-        UserAttribute testInstanceDouble = new UserAttribute("num_counts",  "custom_attribute","gt", infiniteDouble);
+        UserAttribute testInstancePositiveInfinite = new UserAttribute("num_counts",  "custom_attribute","gt", infinitePositiveInfiniteDouble);
+        UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts",  "custom_attribute","gt", infiniteNegativeInfiniteDouble);
+        UserAttribute testInstanceNANDouble = new UserAttribute("num_counts",  "custom_attribute","gt", infiniteNANDouble);
 
         assertNull(testInstanceInteger.evaluate(testTypedUserAttributes));
-        assertNull(testInstanceDouble.evaluate(testTypedUserAttributes));
+        assertNull(testInstancePositiveInfinite.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceNegativeInfiniteDouble.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceNANDouble.evaluate(testTypedUserAttributes));
     }
 
     /**
@@ -342,12 +354,18 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void ltMatchConditionEvaluatesNullWithInvalidAttributes() {
         BigInteger bigInteger = new BigInteger("33221312312312312");
-        Double infiniteDouble = 1.2/0;
+        Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
+        Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
+        Double infiniteNANDouble = Double.NaN;
         UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","lt", bigInteger);
-        UserAttribute testInstanceDouble = new UserAttribute("num_counts",  "custom_attribute","lt", infiniteDouble);
+        UserAttribute testInstancePositiveInfinite = new UserAttribute("num_counts",  "custom_attribute","lt", infinitePositiveInfiniteDouble);
+        UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts",  "custom_attribute","lt", infiniteNegativeInfiniteDouble);
+        UserAttribute testInstanceNANDouble = new UserAttribute("num_counts",  "custom_attribute","lt", infiniteNANDouble);
 
         assertNull(testInstanceInteger.evaluate(testTypedUserAttributes));
-        assertNull(testInstanceDouble.evaluate(testTypedUserAttributes));
+        assertNull(testInstancePositiveInfinite.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceNegativeInfiniteDouble.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceNANDouble.evaluate(testTypedUserAttributes));
     }
 
     /**

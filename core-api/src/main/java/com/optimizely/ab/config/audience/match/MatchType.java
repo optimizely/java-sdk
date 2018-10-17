@@ -71,7 +71,12 @@ public class MatchType {
     }
 
     private static boolean isValidNumber(Object conditionValue) {
-        if (conditionValue instanceof Integer || conditionValue instanceof Double) {
+        if (conditionValue instanceof Integer) {
+            if (Math.abs((Integer) conditionValue) > 1e53) {
+                return false;
+            }
+            return true;
+        } else if (conditionValue instanceof Double) {
             Double value = ((Number) conditionValue).doubleValue();
             if (value.isNaN() || value.isInfinite()) {
                 return false;
