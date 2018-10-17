@@ -100,7 +100,7 @@ public class ProjectConfigTest {
     }
 
     /**
-     * Asserts that getAudience returns the respective conditions for an audience, provided the
+     * Asserts that getAudience returns the respective audience, provided the
      * audience ID parameter is valid.
      */
     @Test

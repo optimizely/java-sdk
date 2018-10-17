@@ -216,7 +216,7 @@ public class ValidProjectConfigV4 {
             ))
             ));
 
-    // auditionConditions
+    // audienceConditions
     private static final Condition   TYPED_AUDIENCE_CONDITION =
             new AndCondition(Arrays.<Condition>asList(
                     new OrCondition(Arrays.<Condition>asList(

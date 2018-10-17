@@ -81,8 +81,11 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
             case "or":
                 condition = new OrCondition(conditions);
                 break;
-            default: // this makes two assumptions: operator is "not" and conditions is non-empty...
+            case "not": // this makes two assumptions: operator is "not" and conditions is non-empty...
                 condition = new NotCondition(conditions.get(0));
+                break;
+            default:
+                condition = new OrCondition(conditions);
                 break;
         }
 
