@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ public final class EventTagUtils {
      */
     public static Long getRevenueValue(@Nonnull Map<String, ?> eventTags) {
         Long eventValue = null;
-        if (eventTags.containsKey(ReservedEventKey.REVENUE.toString())) {
+        if (eventTags != null && eventTags.containsKey(ReservedEventKey.REVENUE.toString())) {
             Object rawValue = eventTags.get(ReservedEventKey.REVENUE.toString());
             if (Long.class.isInstance(rawValue)) {
                 eventValue = (Long)rawValue;
@@ -53,7 +53,7 @@ public final class EventTagUtils {
      */
     public static Double getNumericValue(@Nonnull Map<String, ?> eventTags) {
         Double eventValue = null;
-        if (eventTags.containsKey(ReservedEventKey.VALUE.toString())) {
+        if (eventTags != null && eventTags.containsKey(ReservedEventKey.VALUE.toString())) {
             Object rawValue = eventTags.get(ReservedEventKey.VALUE.toString());
             if (rawValue instanceof Number) {
                 eventValue = ((Number) rawValue).doubleValue();
