@@ -39,9 +39,16 @@ public class ConditionUtils {
      */
     static public Condition parseConditions(List<Object> rawObjectList) {
         List<Condition> conditions = new ArrayList<Condition>();
-        String operand = (String)rawObjectList.get(0);
+        int startingParseIndex = 0;
+        String operand = operand(rawObjectList.get(startingParseIndex));
+        if (operand != null) {
+            startingParseIndex = 1;
+        }
+        else {
+            operand = "or";
+        }
 
-        for (int i = 1; i < rawObjectList.size(); i++) {
+        for (int i = startingParseIndex; i < rawObjectList.size(); i++) {
             Object obj = rawObjectList.get(i);
             if (obj instanceof List) {
                 List<Object> objectList = (List<Object>)rawObjectList.get(i);
@@ -86,6 +93,22 @@ public class ConditionUtils {
         return condition;
     }
 
+    static public String operand(Object object) {
+        if (object != null && object instanceof String) {
+            String operand = (String) object;
+            switch (operand) {
+                case "or":
+                case "and":
+                case "not":
+                    return operand;
+                default:
+                    break;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Parse conditions from org.json.JsonArray
      * @param conditionJson jsonArray to parse
@@ -93,9 +116,16 @@ public class ConditionUtils {
      */
     static public Condition parseConditions(org.json.JSONArray conditionJson) {
         List<Condition> conditions = new ArrayList<Condition>();
-        String operand = (String)conditionJson.get(0);
+        int startingParseIndex = 0;
+        String operand = operand(conditionJson.get(startingParseIndex));
+        if (operand != null) {
+            startingParseIndex = 1;
+        }
+        else {
+            operand = "or";
+        }
 
-        for (int i = 1; i < conditionJson.length(); i++) {
+        for (int i = startingParseIndex; i < conditionJson.length(); i++) {
             Object obj = conditionJson.get(i);
             if (obj instanceof org.json.JSONArray) {
                 conditions.add(parseConditions((org.json.JSONArray) conditionJson.get(i)));

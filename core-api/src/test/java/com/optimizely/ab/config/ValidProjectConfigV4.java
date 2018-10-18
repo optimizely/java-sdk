@@ -199,30 +199,16 @@ public class ValidProjectConfigV4 {
     );
 
     private static final Condition   TYPED_AUDIENCE_WITH_AND_CONDITION = new AndCondition(Arrays.<Condition>asList(
-            new OrCondition(Collections.<Condition>singletonList(
-                    new OrCondition(ProjectConfigTestUtils.<Condition>createListOfObjects(
-                            new AudienceIdCondition(AUDIENCE_BOOL_ID)
-                     ))
-            )),
-            new OrCondition(Collections.<Condition>singletonList(
-                    new OrCondition(ProjectConfigTestUtils.<Condition>createListOfObjects(
-                            new AudienceIdCondition(AUDIENCE_INT_ID)
-                    ))
-            )),
-            new OrCondition(Collections.<Condition>singletonList(
-                    new OrCondition(ProjectConfigTestUtils.<Condition>createListOfObjects(
-                            new AudienceIdCondition(AUDIENCE_DOUBLE_ID)
-                    ))
-            ))
-            ));
+            new AudienceIdCondition(AUDIENCE_BOOL_ID),
+            new AudienceIdCondition(AUDIENCE_INT_ID),
+            new AudienceIdCondition(AUDIENCE_DOUBLE_ID)));
 
     // audienceConditions
     private static final Condition   TYPED_AUDIENCE_CONDITION =
-            new AndCondition(Arrays.<Condition>asList(
-                    new OrCondition(Arrays.<Condition>asList(
-                            new OrCondition(Collections.singletonList((Condition) new AudienceIdCondition(AUDIENCE_BOOL_ID))),
-                            new OrCondition(Collections.singletonList((Condition) new AudienceIdCondition(AUDIENCE_INT_ID))),
-                            new OrCondition(Collections.singletonList((Condition) new AudienceIdCondition(AUDIENCE_DOUBLE_ID)))))));
+            new OrCondition(Arrays.<Condition>asList(
+                new AudienceIdCondition(AUDIENCE_BOOL_ID),
+                new AudienceIdCondition(AUDIENCE_INT_ID),
+                new AudienceIdCondition(AUDIENCE_DOUBLE_ID)));
 
     // features
     private static final String     FEATURE_BOOLEAN_FEATURE_ID = "4195505407";

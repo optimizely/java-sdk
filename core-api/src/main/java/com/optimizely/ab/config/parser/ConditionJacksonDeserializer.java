@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config.parser;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -48,9 +49,11 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
     @Override
     public Condition deserialize(JsonParser parser, DeserializationContext context) throws IOException {
         JsonNode node = parser.getCodec().readTree(parser);
-
-        String conditionsJson = node.textValue();
-        JsonNode conditionsTree = objectMapper.readTree(conditionsJson);
+        JsonNode conditionsTree = node;
+        if (node.isTextual()) {
+            String conditionsJson = node.textValue();
+            conditionsTree = objectMapper.readTree(conditionsJson);
+        }
         Condition conditions = ConditionJacksonDeserializer.parseConditions(objectMapper, conditionsTree);
 
         return conditions;
@@ -58,10 +61,20 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
 
     protected static Condition parseConditions(ObjectMapper objectMapper, JsonNode conditionNode) throws JsonProcessingException {
         List<Condition> conditions = new ArrayList<>();
+        int startingParsingIndex = 0;
         JsonNode opNode = conditionNode.get(0);
         String operand = opNode.asText();
-
-        for (int i = 1; i < conditionNode.size(); i++) {
+        switch (operand) {
+            case "or":
+            case "and":
+            case "not":
+                startingParsingIndex = 1;
+                break;
+            default:
+                operand = "or";
+                break;
+        }
+        for (int i = startingParsingIndex; i < conditionNode.size(); i++) {
             JsonNode subNode = conditionNode.get(i);
             if (subNode.isArray()) {
                 conditions.add(ConditionJacksonDeserializer.parseConditions(objectMapper, subNode));

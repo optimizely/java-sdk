@@ -155,15 +155,23 @@ final class JsonSimpleConfigParser implements ConfigParser {
 
             Condition conditions = null;
             if (experimentObject.containsKey("audienceConditions")) {
-                String conditionString = (String)experimentObject.get("audienceConditions");
-                try {
-                    JSONArray conditionJson = (JSONArray) parser.parse(conditionString);
-
-                    conditions = ConditionUtils.parseConditions(conditionJson);
+                Object jsonCondition = experimentObject.get("audienceConditions");
+                if (jsonCondition instanceof JSONArray) {
+                    try {
+                        conditions = ConditionUtils.parseConditions((JSONArray)jsonCondition);
+                    } catch (Exception e) {
+                        // unable to parse conditions.
+                        Logger.getAnonymousLogger().log(Level.ALL, "problem parsing audience conditions", e);
+                    }
                 }
-                catch (Exception e) {
-                    // unable to parse conditions.
-                    Logger.getAnonymousLogger().log(Level.ALL, "problem parsing audience conditions", e);
+                else {
+                    try {
+                        JSONArray conditionJson = (JSONArray) parser.parse((String)jsonCondition);
+                        conditions = ConditionUtils.parseConditions(conditionJson);
+                    } catch (Exception e) {
+                        // unable to parse conditions.
+                        Logger.getAnonymousLogger().log(Level.ALL, "problem parsing audience conditions", e);
+                    }
                 }
             }
             // parse the child objects

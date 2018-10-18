@@ -106,9 +106,13 @@ final class GsonHelpers {
         Gson gson = new Gson();
         JsonParser parser = new JsonParser();
 
-        String stringConditions = experimentJson.get("audienceConditions").getAsString();
+        JsonElement conditionsElement = experimentJson.get("audienceConditions");
 
-        JsonElement conditionsElement = parser.parse(stringConditions);
+        if (!conditionsElement.isJsonArray()) {
+            String stringConditions = experimentJson.get("audienceConditions").getAsString();
+
+            conditionsElement = parser.parse(stringConditions);
+        }
 
         List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
         Condition conditions = ConditionUtils.parseConditions(rawObjectList);
