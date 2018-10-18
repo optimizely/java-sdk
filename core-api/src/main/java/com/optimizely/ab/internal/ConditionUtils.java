@@ -17,16 +17,15 @@
 package com.optimizely.ab.internal;
 
 import com.google.gson.internal.LinkedTreeMap;
-import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
+import com.optimizely.ab.config.audience.EmptyCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
 import org.json.simple.JSONObject;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +37,11 @@ public class ConditionUtils {
      * @return audienceCondition
      */
     static public Condition parseConditions(List<Object> rawObjectList) {
+
+        if (rawObjectList.size() == 0) {
+            return new EmptyCondition();
+        }
+
         List<Condition> conditions = new ArrayList<Condition>();
         int startingParseIndex = 0;
         String operand = operand(rawObjectList.get(startingParseIndex));
@@ -83,7 +87,7 @@ public class ConditionUtils {
                 condition = new OrCondition(conditions);
                 break;
             case "not":
-                condition = new NotCondition(conditions.get(0));
+                condition = new NotCondition(conditions.isEmpty() ? new EmptyCondition() : conditions.get(0));
                 break;
             default:
                 condition = new OrCondition(conditions);
@@ -115,6 +119,11 @@ public class ConditionUtils {
      * @return condition parsed from conditionJson.
      */
     static public Condition parseConditions(org.json.JSONArray conditionJson) {
+
+        if (conditionJson.length() == 0) {
+            return new EmptyCondition();
+        }
+
         List<Condition> conditions = new ArrayList<Condition>();
         int startingParseIndex = 0;
         String operand = operand(conditionJson.get(startingParseIndex));
@@ -155,7 +164,7 @@ public class ConditionUtils {
                 condition = new OrCondition(conditions);
                 break;
             case "not":
-                condition = new NotCondition(conditions.get(0));
+                condition = new NotCondition(conditions.isEmpty() ? new EmptyCondition() : conditions.get(0));
                 break;
             default:
                 condition = new OrCondition(conditions);

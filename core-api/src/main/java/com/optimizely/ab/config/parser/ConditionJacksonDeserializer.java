@@ -16,7 +16,6 @@
  */
 package com.optimizely.ab.config.parser;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -27,9 +26,9 @@ import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
+import com.optimizely.ab.config.audience.EmptyCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
-import com.optimizely.ab.internal.ConditionUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -60,6 +59,11 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
     }
 
     protected static Condition parseConditions(ObjectMapper objectMapper, JsonNode conditionNode) throws JsonProcessingException {
+
+        if (conditionNode.size() == 0) {
+            return new EmptyCondition();
+        }
+
         List<Condition> conditions = new ArrayList<>();
         int startingParsingIndex = 0;
         JsonNode opNode = conditionNode.get(0);
@@ -94,8 +98,8 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
             case "or":
                 condition = new OrCondition(conditions);
                 break;
-            case "not": // this makes two assumptions: operator is "not" and conditions is non-empty...
-                condition = new NotCondition(conditions.get(0));
+            case "not":
+                condition = new NotCondition(conditions.isEmpty() ? new EmptyCondition() : conditions.get(0));
                 break;
             default:
                 condition = new OrCondition(conditions);
