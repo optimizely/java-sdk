@@ -59,6 +59,20 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
         return conditions;
     }
 
+    private static String operand(JsonNode opNode) {
+        if (opNode != null && opNode.isTextual()) {
+            String op = opNode.asText();
+            switch (op) {
+                case "and":
+                case "or":
+                case "not":
+                    return op;
+                default:
+                    break;
+            }
+        }
+        return null;
+    }
     protected static Condition parseConditions(ObjectMapper objectMapper, JsonNode conditionNode) throws JsonProcessingException {
 
         if (conditionNode.size() == 0) {
@@ -68,17 +82,14 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
         List<Condition> conditions = new ArrayList<>();
         int startingParsingIndex = 0;
         JsonNode opNode = conditionNode.get(0);
-        String operand = opNode.asText();
-        switch (operand) {
-            case "or":
-            case "and":
-            case "not":
-                startingParsingIndex = 1;
-                break;
-            default:
-                operand = "or";
-                break;
+        String operand = operand(opNode);
+        if (operand == null) {
+            operand = "or";
         }
+        else { // the operand is valid so move to the next node.
+            startingParsingIndex = 1;
+        }
+
         for (int i = startingParsingIndex; i < conditionNode.size(); i++) {
             JsonNode subNode = conditionNode.get(i);
             if (subNode.isArray()) {

@@ -198,13 +198,13 @@ public class ValidProjectConfigV4 {
             ))
     );
 
-    private static final Condition   TYPED_AUDIENCE_WITH_AND_CONDITION = new AndCondition(Arrays.<Condition>asList(
+    private static final Condition AUDIENCE_COMBINATION_WITH_AND_CONDITION = new AndCondition(Arrays.<Condition>asList(
             new AudienceIdCondition(AUDIENCE_BOOL_ID),
             new AudienceIdCondition(AUDIENCE_INT_ID),
             new AudienceIdCondition(AUDIENCE_DOUBLE_ID)));
 
     // audienceConditions
-    private static final Condition   TYPED_AUDIENCE_CONDITION =
+    private static final Condition AUDIENCE_COMBINATION =
             new OrCondition(Arrays.<Condition>asList(
                 new AudienceIdCondition(AUDIENCE_BOOL_ID),
                 new AudienceIdCondition(AUDIENCE_INT_ID),
@@ -480,7 +480,7 @@ public class ValidProjectConfigV4 {
                     AUDIENCE_INT_ID,
                     AUDIENCE_DOUBLE_ID
             ),
-            TYPED_AUDIENCE_CONDITION,
+        AUDIENCE_COMBINATION,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A,
                     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B
@@ -525,7 +525,7 @@ public class ValidProjectConfigV4 {
                     AUDIENCE_INT_ID,
                     AUDIENCE_DOUBLE_ID
             ),
-            TYPED_AUDIENCE_WITH_AND_CONDITION,
+        AUDIENCE_COMBINATION_WITH_AND_CONDITION,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_A,
                     VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_B
