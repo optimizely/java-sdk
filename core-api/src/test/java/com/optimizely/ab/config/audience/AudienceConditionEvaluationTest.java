@@ -353,6 +353,15 @@ public class AudienceConditionEvaluationTest {
     }
 
     /**
+     * Verify that NotCondition.evaluate returns null when its condition is null.
+     */
+    @Test
+    public void notConditionEvaluateNull() throws Exception {
+        NotCondition notCondition = new NotCondition(new NullCondition());
+        assertNull(notCondition.evaluate(null, testUserAttributes));
+    }
+
+    /**
      * Verify that NotCondition.evaluate returns true when its condition operand evaluates to false.
      */
     @Test

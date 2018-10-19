@@ -27,6 +27,7 @@ import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.EmptyCondition;
+import com.optimizely.ab.config.audience.NullCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
 
@@ -99,7 +100,7 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
                 condition = new OrCondition(conditions);
                 break;
             case "not":
-                condition = new NotCondition(conditions.isEmpty() ? new EmptyCondition() : conditions.get(0));
+                condition = new NotCondition(conditions.isEmpty() ? new NullCondition() : conditions.get(0));
                 break;
             default:
                 condition = new OrCondition(conditions);
