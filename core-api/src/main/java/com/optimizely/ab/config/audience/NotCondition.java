@@ -41,7 +41,8 @@ public class NotCondition implements Condition {
     }
 
     public @Nullable Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
-        Boolean conditionEval = condition.evaluate(config, attributes);
+
+        Boolean conditionEval = condition == null ? null : condition.evaluate(config, attributes);
         return (conditionEval == null ? null : !conditionEval);
     }
 
