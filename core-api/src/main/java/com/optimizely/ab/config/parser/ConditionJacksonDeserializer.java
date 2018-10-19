@@ -49,12 +49,7 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
     @Override
     public Condition deserialize(JsonParser parser, DeserializationContext context) throws IOException {
         JsonNode node = parser.getCodec().readTree(parser);
-        JsonNode conditionsTree = node;
-        if (node.isTextual()) {
-            String conditionsJson = node.textValue();
-            conditionsTree = objectMapper.readTree(conditionsJson);
-        }
-        Condition conditions = ConditionJacksonDeserializer.parseConditions(objectMapper, conditionsTree);
+        Condition conditions = ConditionJacksonDeserializer.parseConditions(objectMapper, node);
 
         return conditions;
     }

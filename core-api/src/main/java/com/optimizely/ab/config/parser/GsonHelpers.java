@@ -104,15 +104,8 @@ final class GsonHelpers {
         if (!experimentJson.has("audienceConditions")) return null;
 
         Gson gson = new Gson();
-        JsonParser parser = new JsonParser();
 
         JsonElement conditionsElement = experimentJson.get("audienceConditions");
-
-        if (!conditionsElement.isJsonArray()) {
-            String stringConditions = experimentJson.get("audienceConditions").getAsString();
-
-            conditionsElement = parser.parse(stringConditions);
-        }
 
         List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
         Condition conditions = ConditionUtils.parseConditions(rawObjectList);
@@ -131,7 +124,7 @@ final class GsonHelpers {
         String layerId = layerIdJson == null ? null : layerIdJson.getAsString();
 
         JsonArray audienceIdsJson = experimentJson.getAsJsonArray("audienceIds");
-        List<String> audienceIds = new ArrayList<String>(audienceIdsJson.size());
+        List<String> audienceIds = new ArrayList<>(audienceIdsJson.size());
         for (JsonElement audienceIdObj : audienceIdsJson) {
             audienceIds.add(audienceIdObj.getAsString());
         }
