@@ -40,6 +40,7 @@ public class AndCondition<T> implements Condition<T> {
 
     public @Nullable
     Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+        if (conditions == null) return null;
         boolean foundNull = false;
         // According to the matrix where:
         // false and true is false
