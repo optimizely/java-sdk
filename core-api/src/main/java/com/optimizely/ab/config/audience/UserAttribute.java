@@ -33,7 +33,7 @@ import java.util.Map;
  */
 @Immutable
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UserAttribute implements Condition {
+public class UserAttribute<T> implements Condition<T> {
 
     private final String name;
     private final String type;

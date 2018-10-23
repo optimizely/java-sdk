@@ -32,6 +32,7 @@ import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.LiveVariableUsageInstance;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.internal.ConditionUtils;
 import org.json.JSONObject;
@@ -108,7 +109,7 @@ final class GsonHelpers {
         JsonElement conditionsElement = experimentJson.get("audienceConditions");
 
         List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
-        Condition conditions = ConditionUtils.parseConditions(rawObjectList);
+        Condition conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, rawObjectList);
 
         return conditions;
     }

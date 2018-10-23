@@ -27,8 +27,7 @@ import java.util.Map;
 /**
  * Represents an 'And' conditions condition operation.
  */
-@Immutable
-public class AndCondition implements Condition {
+public class AndCondition<T> implements Condition<T> {
 
     private final List<Condition> conditions;
     public AndCondition(@Nonnull List<Condition> conditions) {

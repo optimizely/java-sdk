@@ -31,7 +31,9 @@ import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.config.audience.UserAttribute;
 import com.optimizely.ab.internal.ConditionUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -156,7 +158,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
                 Object jsonCondition = experimentObject.get("audienceConditions");
                 if (jsonCondition instanceof JSONArray) {
                     try {
-                        conditions = ConditionUtils.parseConditions((JSONArray)jsonCondition);
+                        conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, (JSONArray)jsonCondition);
                     } catch (Exception e) {
                         // unable to parse conditions.
                         Logger.getAnonymousLogger().log(Level.ALL, "problem parsing audience conditions", e);
@@ -303,7 +305,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             String conditionString = (String)audienceObject.get("conditions");
 
             JSONArray conditionJson = (JSONArray)parser.parse(conditionString);
-            Condition conditions = ConditionUtils.parseConditions(conditionJson);
+            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionJson);
             audiences.add(new Audience(id, key, conditions));
         }
 

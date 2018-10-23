@@ -28,7 +28,7 @@ import java.util.Map;
  * Represents a 'Not' conditions condition operation.
  */
 @Immutable
-public class NotCondition implements Condition {
+public class NotCondition<T> implements Condition<T> {
 
     private final Condition condition;
 

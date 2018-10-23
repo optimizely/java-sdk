@@ -26,6 +26,7 @@ import com.google.gson.JsonParseException;
 
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.config.audience.UserAttribute;
 import com.optimizely.ab.internal.ConditionUtils;
 
 import java.lang.reflect.Type;
@@ -46,7 +47,7 @@ public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {
 
         JsonElement conditionsElement = parser.parse(jsonObject.get("conditions").getAsString());
         List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
-        Condition conditions = ConditionUtils.parseConditions(rawObjectList);
+        Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, rawObjectList);
 
         return new Audience(id, name, conditions);
     }

@@ -17,6 +17,7 @@
 package com.optimizely.ab.config;
 
 import com.fasterxml.jackson.annotation.*;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 
 import javax.annotation.Nonnull;
@@ -42,7 +43,7 @@ public class Experiment implements IdKeyMapped {
     private final String groupId;
 
     private final List<String> audienceIds;
-    private final Condition audienceConditions;
+    private final Condition<AudienceIdCondition> audienceConditions;
     private final List<Variation> variations;
     private final List<TrafficAllocation> trafficAllocation;
 

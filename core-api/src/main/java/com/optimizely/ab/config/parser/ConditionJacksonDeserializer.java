@@ -30,6 +30,7 @@ import com.optimizely.ab.config.audience.EmptyCondition;
 import com.optimizely.ab.config.audience.NullCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
+import com.optimizely.ab.internal.InvalidAudienceCondition;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
     @Override
     public Condition deserialize(JsonParser parser, DeserializationContext context) throws IOException {
         JsonNode node = parser.getCodec().readTree(parser);
-        Condition conditions = ConditionJacksonDeserializer.parseConditions(objectMapper, node);
+        Condition conditions = ConditionJacksonDeserializer.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, objectMapper, node);
 
         return conditions;
     }
@@ -68,7 +69,8 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
         }
         return null;
     }
-    protected static Condition parseConditions(ObjectMapper objectMapper, JsonNode conditionNode) throws JsonProcessingException {
+    protected static <T> Condition parseConditions(Class<T> clazz, ObjectMapper objectMapper, JsonNode conditionNode)
+        throws JsonProcessingException, InvalidAudienceCondition {
 
         if (conditionNode.size() == 0) {
             return new EmptyCondition();
@@ -88,11 +90,19 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
         for (int i = startingParsingIndex; i < conditionNode.size(); i++) {
             JsonNode subNode = conditionNode.get(i);
             if (subNode.isArray()) {
-                conditions.add(ConditionJacksonDeserializer.parseConditions(objectMapper, subNode));
+                conditions.add(ConditionJacksonDeserializer.<T>parseConditions(clazz, objectMapper, subNode));
             } else if (subNode.isTextual()) {
+                if (clazz != AudienceIdCondition.class) {
+                    throw new InvalidAudienceCondition(String.format("Expected AudienceIdCondition got %s", clazz.getCanonicalName()));
+
+                }
                 conditions.add(objectMapper.treeToValue(subNode, AudienceIdCondition.class));
             }
             else if (subNode.isObject()) {
+                if (clazz != UserAttribute.class) {
+                    throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
+
+                }
                 conditions.add(objectMapper.treeToValue(subNode, UserAttribute.class));
             }
         }

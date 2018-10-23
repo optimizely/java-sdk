@@ -28,7 +28,7 @@ import java.util.Map;
  * Represents an 'Or' conditions condition operation.
  */
 @Immutable
-public class OrCondition implements Condition {
+public class OrCondition<T> implements Condition<T> {
     private final List<Condition> conditions;
 
     public OrCondition(@Nonnull List<Condition> conditions) {

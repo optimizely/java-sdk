@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * Interface implemented by all conditions condition objects to aid in condition evaluation.
  */
-public interface Condition {
+public interface Condition<T> {
 
     @Nullable
     Boolean evaluate(ProjectConfig config, Map<String, ?> attributes);

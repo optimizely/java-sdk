@@ -31,7 +31,9 @@ import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.config.audience.UserAttribute;
 import com.optimizely.ab.internal.ConditionUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -147,7 +149,7 @@ final class JsonConfigParser implements ConfigParser {
             if (experimentObject.has("audienceConditions")) {
                 Object jsonCondition = experimentObject.get("audienceConditions");
                 if (jsonCondition instanceof JSONArray) {
-                    conditions = ConditionUtils.parseConditions((JSONArray) jsonCondition);
+                    conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, (JSONArray) jsonCondition);
                 }
             }
 
@@ -289,7 +291,7 @@ final class JsonConfigParser implements ConfigParser {
             String conditionString = audienceObject.getString("conditions");
 
             JSONArray conditionJson = new JSONArray(conditionString);
-            Condition conditions = ConditionUtils.parseConditions(conditionJson);
+            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionJson);
             audiences.add(new Audience(id, key, conditions));
         }
 

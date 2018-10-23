@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.internal.InvalidAudienceCondition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ import java.util.Objects;
  * condition will fail.  AudienceIdConditions are resolved when the ProjectConfig is passed into evaluate.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AudienceIdCondition implements Condition {
+public class AudienceIdCondition<T> implements Condition<T> {
     private Audience audience;
     final private String audienceId;
 
