@@ -17,7 +17,7 @@
 package com.optimizely.ab.config.audience.match;
 
 abstract class AttributeMatch<T> implements Match {
-    T convert(Object o, Object value) {
+    T castToValueType(Object o, Object value) {
         try {
             if (!o.getClass().isInstance(value) && !(o instanceof Number && value instanceof Number) ) {
                 MatchType.logger.warn(

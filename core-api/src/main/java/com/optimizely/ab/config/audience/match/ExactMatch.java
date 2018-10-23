@@ -26,7 +26,7 @@ class ExactMatch<T> extends AttributeMatch<T> {
 
     public @Nullable
     Boolean eval(Object attributeValue) {
-        T converted = convert(attributeValue, value);
+        T converted = castToValueType(attributeValue, value);
         if (value != null && converted == null) return null;
 
         return value == null ? attributeValue == null : value.equals(converted);
