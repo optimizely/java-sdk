@@ -69,7 +69,7 @@ public final class ExperimentUtils {
         }
         else {
             Boolean resolveReturn = evaluateAudience(projectConfig, experiment, attributes);
-            return resolveReturn == null ? false : resolveReturn;
+            return Boolean.TRUE.equals(resolveReturn);
         }
     }
 

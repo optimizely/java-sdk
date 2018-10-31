@@ -12,15 +12,4 @@ public class EmptyCondition<T> implements Condition<T> {
         return true;
     }
 
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof EmptyCondition) return true;
-        return false;
-    }
-
 }
