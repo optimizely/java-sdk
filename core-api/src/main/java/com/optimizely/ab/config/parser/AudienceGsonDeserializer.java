@@ -50,7 +50,10 @@ public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {
         String id = jsonObject.get("id").getAsString();
         String name = jsonObject.get("name").getAsString();
 
-        JsonElement conditionsElement = parser.parse(jsonObject.get("conditions").getAsString());
+        JsonElement conditionsElement = jsonObject.get("conditions");
+        if (!conditionsElement.isJsonArray()) {
+            conditionsElement = parser.parse(jsonObject.get("conditions").getAsString());
+        }
         List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
         Condition conditions = parseConditions(rawObjectList);
 
