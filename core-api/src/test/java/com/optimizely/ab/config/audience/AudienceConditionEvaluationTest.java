@@ -208,6 +208,10 @@ public class AudienceConditionEvaluationTest {
         assertNull(testInstanceInteger.evaluate(testTypedUserAttributes));
         assertNull(testInstanceDouble.evaluate(testTypedUserAttributes));
         assertNull(testInstanceNull.evaluate(testTypedUserAttributes));
+        Map<String,Object> attr = new HashMap<>();
+        attr.put("browser_type", "true");
+        assertNull(testInstanceString.evaluate(attr));
+
     }
 
     /**
