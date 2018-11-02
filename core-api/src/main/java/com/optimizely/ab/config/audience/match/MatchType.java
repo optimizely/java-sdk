@@ -39,7 +39,7 @@ public class MatchType {
                     return new MatchType(matchType, new ExactMatch<String>((String) conditionValue));
                 }
                 else if (conditionValue instanceof Integer || conditionValue instanceof Double) {
-                    return new MatchType(matchType, new ExactMatch<Number>((Number) conditionValue));
+                    return new MatchType(matchType, new ExactNumberMatch((Number) conditionValue));
                 }
                 else if (conditionValue instanceof Boolean) {
                     return new MatchType(matchType, new ExactMatch<Boolean>((Boolean) conditionValue));

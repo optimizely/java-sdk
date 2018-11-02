@@ -91,6 +91,18 @@ public class ValidProjectConfigV4 {
                                     CUSTOM_ATTRIBUTE_TYPE, "gt",
                                     AUDIENCE_INT_VALUE)))))))
     );
+
+    private static final String     AUDIENCE_INT_EXACT_ID = "3468206646";
+    private static final String     AUDIENCE_INT_EXACT_KEY = "INTEXACT";
+    private static final Audience   TYPED_AUDIENCE_EXACT_INT = new Audience(
+        AUDIENCE_INT_EXACT_ID,
+        AUDIENCE_INT_EXACT_KEY,
+        new AndCondition(Collections.<Condition>singletonList(
+            new OrCondition(Collections.<Condition>singletonList(
+                new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_INTEGER_KEY,
+                    CUSTOM_ATTRIBUTE_TYPE, "exact",
+                    AUDIENCE_INT_VALUE)))))))
+    );
     private static final String     AUDIENCE_DOUBLE_ID = "3468206645";
     private static final String     AUDIENCE_DOUBLE_KEY = "DOUBLE";
     public  static final Double     AUDIENCE_DOUBLE_VALUE = 100.0;
@@ -461,6 +473,7 @@ public class ValidProjectConfigV4 {
             ProjectConfigTestUtils.createListOfObjects(
                     AUDIENCE_BOOL_ID,
                     AUDIENCE_INT_ID,
+                    AUDIENCE_INT_EXACT_ID,
                     AUDIENCE_DOUBLE_ID
             ),
             ProjectConfigTestUtils.createListOfObjects(
@@ -1173,6 +1186,7 @@ public class ValidProjectConfigV4 {
 
         List<Audience> typedAudiences = new ArrayList<Audience>();
         typedAudiences.add(TYPED_AUDIENCE_BOOL);
+        typedAudiences.add(TYPED_AUDIENCE_EXACT_INT);
         typedAudiences.add(TYPED_AUDIENCE_INT);
         typedAudiences.add(TYPED_AUDIENCE_DOUBLE);
         typedAudiences.add(TYPED_AUDIENCE_GRYFFINDOR);
