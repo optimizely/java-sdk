@@ -289,9 +289,11 @@ final class JsonSimpleConfigParser implements ConfigParser {
             JSONObject audienceObject = (JSONObject)obj;
             String id = (String)audienceObject.get("id");
             String key = (String)audienceObject.get("name");
-            String conditionString = (String)audienceObject.get("conditions");
-
-            JSONArray conditionJson = (JSONArray)parser.parse(conditionString);
+            Object conditionObject = audienceObject.get("conditions");
+            // typedAudiences.conditions is a array.
+            // audience.conditions is a string.
+            JSONArray conditionJson = conditionObject instanceof String ?
+                (JSONArray)parser.parse((String)conditionObject) : (JSONArray)conditionObject;
             Condition conditions = parseConditions(conditionJson);
             audiences.add(new Audience(id, key, conditions));
         }

@@ -281,9 +281,12 @@ final class JsonConfigParser implements ConfigParser {
             JSONObject audienceObject = (JSONObject)obj;
             String id = audienceObject.getString("id");
             String key = audienceObject.getString("name");
-            String conditionString = audienceObject.getString("conditions");
+            Object conditionsObject = audienceObject.get("conditions");
+            // audience.conditions will still be a string and is parsed here.
+            // typedAudiences.conditions is not a string and is also parsed here.
+            JSONArray conditionJson = (conditionsObject instanceof String) ?
+                new JSONArray((String)conditionsObject) : (JSONArray)conditionsObject;
 
-            JSONArray conditionJson = new JSONArray(conditionString);
             Condition conditions = parseConditions(conditionJson);
             audiences.add(new Audience(id, key, conditions));
         }
