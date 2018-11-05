@@ -38,7 +38,7 @@ public class MatchType {
                 if (conditionValue instanceof String) {
                     return new MatchType(matchType, new ExactMatch<String>((String) conditionValue));
                 } else if (isValidNumber(conditionValue)) {
-                    return new MatchType(matchType, new ExactMatch<Number>((Number) conditionValue));
+                    return new MatchType(matchType, new ExactNumberMatch((Number) conditionValue));
                 } else if (conditionValue instanceof Boolean) {
                     return new MatchType(matchType, new ExactMatch<Boolean>((Boolean) conditionValue));
                 }

@@ -34,6 +34,11 @@
       "conditions": ["and", ["or", ["or", {"name": "booleanKey", "type": "custom_attribute", "match":"exact", "value":true}]]]
     },
     {
+      "id": "3468206646",
+      "name": "INTEXACT",
+      "conditions": ["and", ["or", ["or", {"name": "integerKey", "type": "custom_attribute", "match":"exact", "value":1.0}]]]
+    },
+    {
       "id": "3468206644",
       "name": "INT",
       "conditions": ["and", ["or", ["or", {"name": "integerKey", "type": "custom_attribute", "match":"gt", "value":1.0}]]]
@@ -182,7 +187,7 @@
           "endOfRange": 10000
         }
       ],
-      "audienceIds": ["3468206643", "3468206644", "3468206645"],
+      "audienceIds": ["3468206643", "3468206644", "3468206646", "3468206645"],
       "forcedVariations": {}
     },
     {
