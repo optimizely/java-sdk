@@ -16,14 +16,16 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.config.ProjectConfig;
+
 import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
  * Interface implemented by all conditions condition objects to aid in condition evaluation.
  */
-public interface Condition {
+public interface Condition<T> {
 
     @Nullable
-    Boolean evaluate(Map<String, ?> attributes);
+    Boolean evaluate(ProjectConfig config, Map<String, ?> attributes);
 }

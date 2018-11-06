@@ -19,6 +19,7 @@ package com.optimizely.ab.config.audience;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.match.MatchType;
 
 import javax.annotation.Nonnull;
@@ -32,7 +33,7 @@ import java.util.Map;
  */
 @Immutable
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UserAttribute implements Condition {
+public class UserAttribute<T> implements Condition<T> {
 
     private final String name;
     private final String type;
@@ -66,7 +67,7 @@ public class UserAttribute implements Condition {
         return value;
     }
 
-    public @Nullable Boolean evaluate(Map<String, ?> attributes) {
+    public @Nullable Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
         if (attributes == null) {
             attributes = Collections.emptyMap();
         }

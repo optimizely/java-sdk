@@ -18,7 +18,14 @@ package com.optimizely.ab.config.parser;
 
 import com.optimizely.ab.config.ProjectConfig;
 
+import com.optimizely.ab.config.audience.AudienceIdCondition;
+import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.config.audience.UserAttribute;
+import com.optimizely.ab.internal.ConditionUtils;
+import com.optimizely.ab.internal.InvalidAudienceCondition;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -30,6 +37,7 @@ import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV3;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV4;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.verifyProjectConfig;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Tests for {@link JsonConfigParser}.
@@ -64,6 +72,62 @@ public class JsonConfigParserTest {
         ProjectConfig expected = validProjectConfigV4();
 
         verifyProjectConfig(actual, expected);
+    }
+
+    @Test
+    public void parseAudience() throws Exception {
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.append("id", "123");
+        jsonObject.append("name","blah");
+        jsonObject.append("conditions",
+            "[\"and\", [\"or\", [\"or\", {\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"lt\", \"value\":100.0}]]]");
+
+        Condition<UserAttribute> condition = ConditionUtils.parseConditions(UserAttribute.class, new JSONArray("[\"and\", [\"or\", [\"or\", {\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"lt\", \"value\":100.0}]]]"));
+
+        assertNotNull(condition);
+    }
+
+    @Test
+    public void parseInvalidAudience() throws Exception {
+        thrown.expect(InvalidAudienceCondition.class);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.append("id", "123");
+        jsonObject.append("name","blah");
+        jsonObject.append("conditions",
+            "[\"and\", [\"or\", [\"or\", \"123\"]]]");
+
+        ConditionUtils.parseConditions(UserAttribute.class, new JSONArray("[\"and\", [\"or\", [\"or\", \"123\"]]]"));
+    }
+
+    @Test
+    public void parseAudienceConditions() throws Exception {
+        JSONArray conditions = new JSONArray();
+        conditions.put("and");
+        conditions.put("1");
+        conditions.put("2");
+        conditions.put("3");
+
+        Condition condition = ConditionUtils.parseConditions(AudienceIdCondition.class, conditions);
+        assertNotNull(condition);
+    }
+
+    @Test
+    public void parseInvalidAudienceConditions() throws Exception {
+        thrown.expect(InvalidAudienceCondition.class);
+
+        JSONArray conditions = new JSONArray();
+        conditions.put("and");
+        conditions.put("1");
+        conditions.put("2");
+        JSONObject userAttribute = new JSONObject();
+        userAttribute.append("match", "exact");
+        userAttribute.append("type", "custom_attribute");
+        userAttribute.append("value", "string");
+        userAttribute.append("name", "StringCondition");
+        conditions.put(userAttribute);
+
+        ConditionUtils.parseConditions(AudienceIdCondition.class, conditions);
     }
 
     /**

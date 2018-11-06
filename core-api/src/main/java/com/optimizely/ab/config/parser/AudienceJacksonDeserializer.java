@@ -52,39 +52,10 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
         if (conditionsJson.isTextual()) {
             conditionsJson = objectMapper.readTree(conditionsJson.textValue());
         }
-        Condition conditions = parseConditions(conditionsJson);
+        Condition conditions = ConditionJacksonDeserializer.<UserAttribute>parseConditions(UserAttribute.class, objectMapper, conditionsJson);
 
         return new Audience(id, name, conditions);
     }
 
-    private Condition parseConditions(JsonNode conditionNode) throws JsonProcessingException {
-        List<Condition> conditions = new ArrayList<Condition>();
-        JsonNode opNode = conditionNode.get(0);
-        String operand = opNode.asText();
-
-        for (int i = 1; i < conditionNode.size(); i++) {
-            JsonNode subNode = conditionNode.get(i);
-            if (subNode.isArray()) {
-                conditions.add(parseConditions(subNode));
-            } else if (subNode.isObject()) {
-                conditions.add(objectMapper.treeToValue(subNode, UserAttribute.class));
-            }
-        }
-
-        Condition condition;
-        switch (operand) {
-            case "and":
-                condition = new AndCondition(conditions);
-                break;
-            case "or":
-                condition = new OrCondition(conditions);
-                break;
-            default: // this makes two assumptions: operator is "not" and conditions is non-empty...
-                condition = new NotCondition(conditions.get(0));
-                break;
-        }
-
-        return condition;
-    }
 }
 

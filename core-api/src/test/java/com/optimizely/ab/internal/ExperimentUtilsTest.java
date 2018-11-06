@@ -190,6 +190,7 @@ public class ExperimentUtilsTest {
                 status.toString(),
                 "layerId",
                 Collections.<String>emptyList(),
+                null,
                 Collections.<Variation>emptyList(),
                 Collections.<String, String>emptyMap(),
                 Collections.<TrafficAllocation>emptyList()

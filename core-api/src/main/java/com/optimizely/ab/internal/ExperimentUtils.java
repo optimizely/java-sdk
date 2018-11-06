@@ -18,11 +18,15 @@ package com.optimizely.ab.internal;
 
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.config.audience.OrCondition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +63,19 @@ public final class ExperimentUtils {
     public static boolean isUserInExperiment(@Nonnull ProjectConfig projectConfig,
                                              @Nonnull Experiment experiment,
                                              @Nonnull Map<String, ?> attributes) {
+        if (experiment.getAudienceConditions() != null) {
+            Boolean resolveReturn = evaluateAudienceConditions(projectConfig, experiment, attributes);
+            return resolveReturn == null ? false : resolveReturn;
+        }
+        else {
+            Boolean resolveReturn = evaluateAudience(projectConfig, experiment, attributes);
+            return Boolean.TRUE.equals(resolveReturn);
+        }
+    }
+
+    public static @Nullable Boolean evaluateAudience(@Nonnull ProjectConfig projectConfig,
+                                                     @Nonnull Experiment experiment,
+                                                     @Nonnull Map<String, ?> attributes) {
         List<String> experimentAudienceIds = experiment.getAudienceIds();
 
         // if there are no audiences, ALL users should be part of the experiment
@@ -66,15 +83,33 @@ public final class ExperimentUtils {
             return true;
         }
 
+        List<Condition> conditions = new ArrayList<>();
         for (String audienceId : experimentAudienceIds) {
-            Condition conditions = projectConfig.getAudienceConditionsFromId(audienceId);
-            Boolean conditionEval = conditions.evaluate(attributes);
-
-            if (conditionEval != null && conditionEval) {
-                return true;
-            }
+            AudienceIdCondition condition = new AudienceIdCondition(audienceId);
+            conditions.add(condition);
         }
 
-        return false;
+        OrCondition implicitOr = new OrCondition(conditions);
+
+        return implicitOr.evaluate(projectConfig, attributes);
+
     }
+
+    public static @Nullable Boolean evaluateAudienceConditions(@Nonnull ProjectConfig projectConfig,
+                                                               @Nonnull Experiment experiment,
+                                                               @Nonnull Map<String, ?> attributes) {
+
+        Condition conditions = experiment.getAudienceConditions();
+        if (conditions == null) return null;
+
+        try {
+            return conditions.evaluate(projectConfig, attributes);
+        }
+        catch (Exception e) {
+            logger.error("Condition invalid", e);
+            return null;
+        }
+    }
+
+
 }

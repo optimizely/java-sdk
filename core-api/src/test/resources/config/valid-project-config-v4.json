@@ -188,6 +188,38 @@
         }
       ],
       "audienceIds": ["3468206643", "3468206644", "3468206646", "3468206645"],
+      "audienceConditions" : ["or", "3468206643", "3468206644", "3468206646", "3468206645" ],
+      "forcedVariations": {}
+    },
+    {
+      "id": "1323241598",
+      "key": "typed_audience_experiment_with_and",
+      "layerId": "1630555628",
+      "status": "Running",
+      "variations": [
+        {
+          "id": "1423767504",
+          "key": "A",
+          "variables": []
+        },
+        {
+          "id": "3433458316",
+          "key": "B",
+          "variables": []
+        }
+      ],
+      "trafficAllocation": [
+        {
+          "entityId": "1423767504",
+          "endOfRange": 5000
+        },
+        {
+          "entityId": "3433458316",
+          "endOfRange": 10000
+        }
+      ],
+      "audienceIds": ["3468206643", "3468206644", "3468206645"],
+      "audienceConditions" : ["and", "3468206643", "3468206644", "3468206645"],
       "forcedVariations": {}
     },
     {

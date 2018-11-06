@@ -30,12 +30,11 @@ import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
-import com.optimizely.ab.config.audience.NotCondition;
-import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
+import com.optimizely.ab.internal.ConditionUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -146,6 +145,14 @@ final class JsonConfigParser implements ConfigParser {
                 audienceIds.add((String)audienceIdObj);
             }
 
+            Condition conditions = null;
+            if (experimentObject.has("audienceConditions")) {
+                Object jsonCondition = experimentObject.get("audienceConditions");
+                if (jsonCondition instanceof JSONArray) {
+                    conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, (JSONArray) jsonCondition);
+                }
+            }
+
             // parse the child objects
             List<Variation> variations = parseVariations(experimentObject.getJSONArray("variations"));
             Map<String, String> userIdToVariationKeyMap =
@@ -153,7 +160,7 @@ final class JsonConfigParser implements ConfigParser {
             List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation(experimentObject.getJSONArray("trafficAllocation"));
 
-            experiments.add(new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
+            experiments.add(new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
                                            trafficAllocations, groupId));
         }
 
@@ -287,47 +294,11 @@ final class JsonConfigParser implements ConfigParser {
             JSONArray conditionJson = (conditionsObject instanceof String) ?
                 new JSONArray((String)conditionsObject) : (JSONArray)conditionsObject;
 
-            Condition conditions = parseConditions(conditionJson);
+            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionJson);
             audiences.add(new Audience(id, key, conditions));
         }
 
         return audiences;
-    }
-
-    private Condition parseConditions(JSONArray conditionJson) {
-        List<Condition> conditions = new ArrayList<Condition>();
-        String operand = (String)conditionJson.get(0);
-
-        for (int i = 1; i < conditionJson.length(); i++) {
-            Object obj = conditionJson.get(i);
-            if (obj instanceof JSONArray) {
-                conditions.add(parseConditions(conditionJson.getJSONArray(i)));
-            } else {
-                JSONObject conditionMap = (JSONObject)obj;
-                Object value = conditionMap.has("value") ? conditionMap.get("value") : null;
-                String match = conditionMap.has("match") ? (String) conditionMap.get("match") : null;
-                conditions.add(new UserAttribute(
-                        (String)conditionMap.get("name"),
-                        (String)conditionMap.get("type"),
-                        match, value
-                ));
-            }
-        }
-
-        Condition condition;
-        switch (operand) {
-            case "and":
-                condition = new AndCondition(conditions);
-                break;
-            case "or":
-                condition = new OrCondition(conditions);
-                break;
-            default:
-                condition = new NotCondition(conditions.get(0));
-                break;
-        }
-
-        return condition;
     }
 
     private List<Group> parseGroups(JSONArray groupJson) {

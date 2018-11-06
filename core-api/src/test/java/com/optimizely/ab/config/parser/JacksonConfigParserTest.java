@@ -16,7 +16,12 @@
  */
 package com.optimizely.ab.config.parser;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.internal.InvalidAudienceCondition;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,6 +34,7 @@ import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfig
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV4;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.verifyProjectConfig;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Tests for {@link JacksonConfigParser}.
@@ -63,6 +69,80 @@ public class JacksonConfigParserTest {
         ProjectConfig expected = validProjectConfigV4();
 
         verifyProjectConfig(actual, expected);
+    }
+
+    @Test
+    public void parseAudience() throws Exception {
+        String audienceString =
+            "{" +
+                "\"id\": \"3468206645\"," +
+            "\"name\": \"DOUBLE\"," +
+            "\"conditions\": \"[\\\"and\\\", [\\\"or\\\", [\\\"or\\\", {\\\"name\\\": \\\"doubleKey\\\", \\\"type\\\": \\\"custom_attribute\\\", \\\"match\\\":\\\"lt\\\", \\\"value\\\":100.0}]]]\"" +
+            "},";
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(Audience.class, new AudienceJacksonDeserializer(objectMapper));
+        module.addDeserializer(Condition.class, new ConditionJacksonDeserializer(objectMapper));
+        objectMapper.registerModule(module);
+
+        Audience audience = objectMapper.readValue(audienceString, Audience.class);
+        assertNotNull(audience);
+        assertNotNull(audience.getConditions());
+    }
+
+    @Test
+    public void parseInvalidAudience() throws Exception {
+        thrown.expect(InvalidAudienceCondition.class);
+        String audienceString =
+            "{" +
+            "\"id\": \"123\"," +
+            "\"name\":\"blah\"," +
+            "\"conditions\":" +
+            "\"[\\\"and\\\", [\\\"or\\\", [\\\"or\\\", \\\"123\\\"]]]\"" +
+            "}";
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(Audience.class, new AudienceJacksonDeserializer(objectMapper));
+        module.addDeserializer(Condition.class, new ConditionJacksonDeserializer(objectMapper));
+        objectMapper.registerModule(module);
+
+        Audience audience = objectMapper.readValue(audienceString, Audience.class);
+        assertNotNull(audience);
+        assertNotNull(audience.getConditions());
+    }
+
+    @Test
+    public void parseAudienceConditions() throws Exception {
+        String conditionString =
+            "[\"and\", \"12\", \"123\"]";
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(Audience.class, new AudienceJacksonDeserializer(objectMapper));
+        module.addDeserializer(Condition.class, new ConditionJacksonDeserializer(objectMapper));
+        objectMapper.registerModule(module);
+
+        Condition condition = objectMapper.readValue(conditionString, Condition.class);
+        assertNotNull(condition);
+    }
+
+    @Test
+    public void parseInvalidAudienceConditions() throws Exception {
+        thrown.expect(InvalidAudienceCondition.class);
+
+        String jsonString = "[\"and\", [\"or\", [\"or\", {\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"lt\", \"value\":100.0}]]]";
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(Audience.class, new AudienceJacksonDeserializer(objectMapper));
+        module.addDeserializer(Condition.class, new ConditionJacksonDeserializer(objectMapper));
+        objectMapper.registerModule(module);
+
+        Condition condition = objectMapper.readValue(jsonString, Condition.class);
+        assertNotNull(condition);
+
     }
 
     /**
