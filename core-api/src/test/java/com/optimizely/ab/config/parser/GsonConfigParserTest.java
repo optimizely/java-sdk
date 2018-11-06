@@ -19,6 +19,7 @@ package com.optimizely.ab.config.parser;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
@@ -27,6 +28,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.lang.reflect.Type;
+import java.util.List;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV3;
@@ -81,8 +85,9 @@ public class GsonConfigParserTest {
             "[\"and\", [\"or\", [\"or\", {\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"lt\", \"value\":100.0}]]]");
 
         AudienceGsonDeserializer deserializer = new AudienceGsonDeserializer();
+        Type audienceType = new TypeToken<List<Audience>>() {}.getType();
 
-        Audience audience = deserializer.deserialize(jsonObject, null, null);
+        Audience audience = deserializer.deserialize(jsonObject, audienceType, null);
 
         assertNotNull(audience);
         assertNotNull(audience.getConditions());
@@ -98,8 +103,9 @@ public class GsonConfigParserTest {
             "[\"and\", [\"or\", [\"or\", \"123\"]]]");
 
         AudienceGsonDeserializer deserializer = new AudienceGsonDeserializer();
+        Type audienceType = new TypeToken<List<Audience>>() {}.getType();
 
-        Audience audience = deserializer.deserialize(jsonObject, null, null);
+        Audience audience = deserializer.deserialize(jsonObject, audienceType, null);
 
         assertNotNull(audience);
         assertNotNull(audience.getConditions());

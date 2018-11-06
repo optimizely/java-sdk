@@ -76,7 +76,7 @@ final class JsonConfigParser implements ConfigParser {
 
             List<Audience> typedAudiences = null;
             if (rootObject.has("typedAudiences")) {
-                typedAudiences = parseAudiences(rootObject.getJSONArray("typedAudiences"));
+                typedAudiences = parseTypedAudiences(rootObject.getJSONArray("typedAudiences"));
             }
 
             List<Group> groups = parseGroups(rootObject.getJSONArray("groups"));
@@ -289,10 +289,24 @@ final class JsonConfigParser implements ConfigParser {
             String id = audienceObject.getString("id");
             String key = audienceObject.getString("name");
             Object conditionsObject = audienceObject.get("conditions");
-            // audience.conditions will still be a string and is parsed here.
-            // typedAudiences.conditions is not a string and is also parsed here.
-            JSONArray conditionJson = (conditionsObject instanceof String) ?
-                new JSONArray((String)conditionsObject) : (JSONArray)conditionsObject;
+            JSONArray conditionJson = new JSONArray((String)conditionsObject);
+
+            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionJson);
+            audiences.add(new Audience(id, key, conditions));
+        }
+
+        return audiences;
+    }
+
+    private List<Audience> parseTypedAudiences(JSONArray audienceJson) {
+        List<Audience> audiences = new ArrayList<Audience>(audienceJson.length());
+
+        for (Object obj : audienceJson) {
+            JSONObject audienceObject = (JSONObject)obj;
+            String id = audienceObject.getString("id");
+            String key = audienceObject.getString("name");
+            Object conditionsObject = audienceObject.get("conditions");
+            JSONArray conditionJson = (JSONArray)conditionsObject;
 
             Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionJson);
             audiences.add(new Audience(id, key, conditions));
