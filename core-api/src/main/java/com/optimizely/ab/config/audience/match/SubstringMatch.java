@@ -32,7 +32,7 @@ class SubstringMatch extends AttributeMatch<String> {
     public @Nullable
     Boolean eval(Object attributeValue) {
         try {
-            return convert(attributeValue).contains(value);
+            return castToValueType(attributeValue, value).contains(value);
         }
         catch (Exception e) {
             MatchType.logger.error("Substring match failed ", e);

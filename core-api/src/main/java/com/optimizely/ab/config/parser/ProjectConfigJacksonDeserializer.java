@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.Condition;
 
 import java.io.IOException;
 import java.util.Collections;

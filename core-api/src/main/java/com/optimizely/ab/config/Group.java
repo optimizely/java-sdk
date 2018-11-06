@@ -58,6 +58,7 @@ public class Group implements IdMapped {
                     experiment.getStatus(),
                     experiment.getLayerId(),
                     experiment.getAudienceIds(),
+                    experiment.getAudienceConditions(),
                     experiment.getVariations(),
                     experiment.getUserIdToVariationKeyMap(),
                     experiment.getTrafficAllocation(),
