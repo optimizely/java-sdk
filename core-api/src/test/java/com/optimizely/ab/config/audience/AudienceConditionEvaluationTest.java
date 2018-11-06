@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import com.optimizely.ab.config.Experiment;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -172,6 +173,27 @@ public class AudienceConditionEvaluationTest {
         assertTrue(testInstanceDouble.evaluate(testTypedUserAttributes));
     }
 
+
+    /**
+     * Verify that UserAttribute.evaluate for EXACT match type returns null if the UserAttribute's
+     * value type is invalid number.
+     */
+    @Test
+    public void invalidExactMatchConditionEvaluatesNull() throws Exception {
+        BigInteger bigInteger = new BigInteger("33221312312312312");
+        Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
+        Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
+        Double infiniteNANDouble = Double.NaN;
+        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","exact", bigInteger);
+        UserAttribute testInstancePositiveInfinite = new UserAttribute("num_counts",  "custom_attribute","exact", infinitePositiveInfiniteDouble);
+        UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts",  "custom_attribute","exact", infiniteNegativeInfiniteDouble);
+        UserAttribute testInstanceNANDouble = new UserAttribute("num_counts",  "custom_attribute","exact", infiniteNANDouble);
+
+        assertNull(testInstanceInteger.evaluate(testTypedUserAttributes));
+        assertNull(testInstancePositiveInfinite.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceNegativeInfiniteDouble.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceNANDouble.evaluate(testTypedUserAttributes));
+    }
     /**
      * Verify that UserAttribute.evaluate for EXACT match type returns false for known visitor 
      * attributes where the value's type are the same, but the values are different
@@ -208,6 +230,10 @@ public class AudienceConditionEvaluationTest {
         assertNull(testInstanceInteger.evaluate(testTypedUserAttributes));
         assertNull(testInstanceDouble.evaluate(testTypedUserAttributes));
         assertNull(testInstanceNull.evaluate(testTypedUserAttributes));
+        Map<String,Object> attr = new HashMap<>();
+        attr.put("browser_type", "true");
+        assertNull(testInstanceString.evaluate(attr));
+
     }
 
     /**
@@ -226,6 +252,27 @@ public class AudienceConditionEvaluationTest {
         Map<String,Object> badAttributes = new HashMap<>();
         badAttributes.put("num_size", "bobs burgers");
         assertNull(testInstanceInteger.evaluate(badAttributes));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for GT match type returns null if the UserAttribute's
+     * value type is invalid number.
+     */
+    @Test
+    public void gtMatchConditionEvaluatesNullWithInvalidAttr() throws Exception {
+        BigInteger bigInteger = new BigInteger("33221312312312312");
+        Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
+        Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
+        Double infiniteNANDouble = Double.NaN;
+        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","gt", bigInteger);
+        UserAttribute testInstancePositiveInfinite = new UserAttribute("num_counts",  "custom_attribute","gt", infinitePositiveInfiniteDouble);
+        UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts",  "custom_attribute","gt", infiniteNegativeInfiniteDouble);
+        UserAttribute testInstanceNANDouble = new UserAttribute("num_counts",  "custom_attribute","gt", infiniteNANDouble);
+
+        assertNull(testInstanceInteger.evaluate(testTypedUserAttributes));
+        assertNull(testInstancePositiveInfinite.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceNegativeInfiniteDouble.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceNANDouble.evaluate(testTypedUserAttributes));
     }
 
     /**
@@ -302,6 +349,27 @@ public class AudienceConditionEvaluationTest {
         assertNull(testInstanceBoolean.evaluate(testTypedUserAttributes));
         assertNull(testInstanceObject.evaluate(testTypedUserAttributes));
         assertNull(testInstanceNull.evaluate(testTypedUserAttributes));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for LT match type returns null if the UserAttribute's
+     * value type is not a number.
+     */
+    @Test
+    public void ltMatchConditionEvaluatesNullWithInvalidAttributes() {
+        BigInteger bigInteger = new BigInteger("33221312312312312");
+        Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
+        Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
+        Double infiniteNANDouble = Double.NaN;
+        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","lt", bigInteger);
+        UserAttribute testInstancePositiveInfinite = new UserAttribute("num_counts",  "custom_attribute","lt", infinitePositiveInfiniteDouble);
+        UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts",  "custom_attribute","lt", infiniteNegativeInfiniteDouble);
+        UserAttribute testInstanceNANDouble = new UserAttribute("num_counts",  "custom_attribute","lt", infiniteNANDouble);
+
+        assertNull(testInstanceInteger.evaluate(testTypedUserAttributes));
+        assertNull(testInstancePositiveInfinite.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceNegativeInfiniteDouble.evaluate(testTypedUserAttributes));
+        assertNull(testInstanceNANDouble.evaluate(testTypedUserAttributes));
     }
 
     /**
