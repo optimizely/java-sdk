@@ -57,6 +57,10 @@ public final class EventTagUtils {
             Object rawValue = eventTags.get(ReservedEventKey.VALUE.toString());
             if (rawValue instanceof Number) {
                 eventValue = ((Number) rawValue).doubleValue();
+                if(eventValue.isInfinite() || eventValue.isNaN()) {
+                    eventValue = null;
+                    logger.warn("Failed to parse numeric metric value \"{}\" from event tags.", rawValue);
+                }
                 logger.info("Parsed numeric metric value \"{}\" from event tags.", eventValue);
             } else {
                 logger.warn("Failed to parse numeric metric value \"{}\" from event tags.", rawValue);
