@@ -34,7 +34,7 @@ public class Audience implements IdKeyMapped {
 
     private final String id;
     private final String name;
-    private final Condition conditions;
+    private final Condition<UserAttribute> conditions;
 
     @JsonCreator
     public Audience(@JsonProperty("id") String id,

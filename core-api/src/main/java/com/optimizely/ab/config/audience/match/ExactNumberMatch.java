@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config.audience.match;
 
+import com.optimizely.ab.config.ProjectConfig;
+
 import javax.annotation.Nullable;
 
 // Because json number is a double in most java json parsers.  at this
@@ -32,7 +34,7 @@ public class ExactNumberMatch extends AttributeMatch<Number> {
     public @Nullable
     Boolean eval(Object attributeValue) {
         try {
-            return value.doubleValue() == convert(attributeValue).doubleValue();
+            return value.doubleValue() == castToValueType(attributeValue, value).doubleValue();
         } catch (Exception e) {
             MatchType.logger.error("Exact number match failed ", e);
         }

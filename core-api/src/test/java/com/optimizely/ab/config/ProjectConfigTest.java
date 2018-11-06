@@ -100,7 +100,7 @@ public class ProjectConfigTest {
     }
 
     /**
-     * Asserts that getAudienceConditionsFromId returns the respective conditions for an audience, provided the
+     * Asserts that getAudience returns the respective audience, provided the
      * audience ID parameter is valid.
      */
     @Test
@@ -119,16 +119,16 @@ public class ProjectConfigTest {
         andList.add(orOuter);
 
         Condition expectedConditions = new AndCondition(andList);
-        Condition actualConditions = projectConfig.getAudienceConditionsFromId("100");
+        Condition actualConditions = projectConfig.getAudience("100").getConditions();
         assertThat(actualConditions, is(expectedConditions));
     }
 
     /**
-     * Asserts that getAudienceConditionsFromId returns null given an invalid audience ID parameter.
+     * Asserts that getAudience returns null given an invalid audience ID parameter.
      */
     @Test
-    public void verifyGetAudienceConditionsFromInvalidId() throws Exception {
-        assertNull(projectConfig.getAudienceConditionsFromId("invalid_id"));
+    public void verifyGetAudienceFromInvalidId() throws Exception {
+        assertNull(projectConfig.getAudience("invalid_id"));
     }
 
     /**

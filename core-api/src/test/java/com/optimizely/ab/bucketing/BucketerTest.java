@@ -153,7 +153,7 @@ public class BucketerTest {
                 new TrafficAllocation("4", 10000)
         );
 
-        Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", audienceIds, variations,
+        Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", audienceIds, null, variations,
                 Collections.<String, String>emptyMap(), trafficAllocations, "");
 
         final AtomicInteger bucketValue = new AtomicInteger();
@@ -200,7 +200,7 @@ public class BucketerTest {
                 new TrafficAllocation("1", 999)
         );
 
-        Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", audienceIds, variations,
+        Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", audienceIds, null, variations,
                 Collections.<String, String>emptyMap(), trafficAllocations, "");
 
         final AtomicInteger bucketValue = new AtomicInteger();
