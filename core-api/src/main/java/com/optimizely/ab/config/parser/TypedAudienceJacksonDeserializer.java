@@ -32,7 +32,6 @@ public class TypedAudienceJacksonDeserializer extends JsonDeserializer<TypedAudi
         String name = node.get("name").textValue();
 
         JsonNode conditionsJson = node.get("conditions");
-        conditionsJson = objectMapper.readTree(conditionsJson.textValue());
 
         Condition conditions = ConditionJacksonDeserializer.<UserAttribute>parseConditions(UserAttribute.class, objectMapper, conditionsJson);
 
