@@ -23,6 +23,7 @@ import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.Group;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.TypedAudience;
 
 import javax.annotation.Nonnull;
 
@@ -41,6 +42,7 @@ final class GsonConfigParser implements ConfigParser {
         }
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(Audience.class, new AudienceGsonDeserializer())
+                .registerTypeAdapter(TypedAudience.class, new AudienceGsonDeserializer())
                 .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())
                 .registerTypeAdapter(FeatureFlag.class, new FeatureFlagGsonDeserializer())
                 .registerTypeAdapter(Group.class, new GroupGsonDeserializer())
