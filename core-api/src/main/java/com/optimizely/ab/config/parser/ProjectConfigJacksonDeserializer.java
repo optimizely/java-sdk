@@ -53,16 +53,9 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
             audiences = JacksonHelpers.arrayNodeToList(node.get("audiences"), Audience.class, codec);
         }
 
-        List<TypedAudience> typedAudiencesParsed = null;
-        List<Audience> typedAudiences = null;
+        List<TypedAudience> typedAudiences = null;
         if (node.has("typedAudiences")) {
-            typedAudiencesParsed = JacksonHelpers.arrayNodeToList(node.get("typedAudiences"), TypedAudience.class, codec);
-        }
-        if (typedAudiencesParsed != null) {
-            typedAudiences = new ArrayList<>();
-            for (TypedAudience typedAudience : typedAudiencesParsed) {
-                typedAudiences.add(typedAudience);
-            }
+            typedAudiences = JacksonHelpers.arrayNodeToList(node.get("typedAudiences"), TypedAudience.class, codec);
         }
 
         boolean anonymizeIP = false;
@@ -92,7 +85,7 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
                 version,
                 attributes,
                 audiences,
-                typedAudiences,
+                (List<Audience>)(List<? extends Audience>)typedAudiences,
                 events,
                 experiments,
                 featureFlags,
