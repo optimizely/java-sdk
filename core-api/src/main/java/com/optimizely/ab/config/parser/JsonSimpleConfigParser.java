@@ -80,7 +80,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
 
             List<Audience> typedAudiences = null;
             if (rootObject.containsKey("typedAudiences")) {
-                typedAudiences = parseAudiences((JSONArray)parser.parse(rootObject.get("typedAudiences").toString()));
+                typedAudiences = parseTypedAudiences((JSONArray)parser.parse(rootObject.get("typedAudiences").toString()));
             }
 
             List<Group> groups = parseGroups((JSONArray)rootObject.get("groups"));
@@ -303,10 +303,23 @@ final class JsonSimpleConfigParser implements ConfigParser {
             String id = (String)audienceObject.get("id");
             String key = (String)audienceObject.get("name");
             Object conditionObject = audienceObject.get("conditions");
-            // typedAudiences.conditions is a array.
-            // audience.conditions is a string.
-            JSONArray conditionJson = conditionObject instanceof String ?
-                (JSONArray)parser.parse((String)conditionObject) : (JSONArray)conditionObject;
+            JSONArray conditionJson = (JSONArray)parser.parse((String)conditionObject);
+            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionJson);
+            audiences.add(new Audience(id, key, conditions));
+        }
+
+        return audiences;
+    }
+
+    private List<Audience> parseTypedAudiences(JSONArray audienceJson) throws ParseException {
+        List<Audience> audiences = new ArrayList<Audience>(audienceJson.size());
+
+        for (Object obj : audienceJson) {
+            JSONObject audienceObject = (JSONObject)obj;
+            String id = (String)audienceObject.get("id");
+            String key = (String)audienceObject.get("name");
+            Object conditionObject = audienceObject.get("conditions");
+            JSONArray conditionJson = (JSONArray)conditionObject;
             Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionJson);
             audiences.add(new Audience(id, key, conditions));
         }

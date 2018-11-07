@@ -17,7 +17,6 @@
 package com.optimizely.ab.config.parser;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -26,8 +25,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.optimizely.ab.config.audience.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
     private ObjectMapper objectMapper;
@@ -49,13 +46,11 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
         String name = node.get("name").textValue();
 
         JsonNode conditionsJson = node.get("conditions");
-        if (conditionsJson.isTextual()) {
-            conditionsJson = objectMapper.readTree(conditionsJson.textValue());
-        }
+        conditionsJson = objectMapper.readTree(conditionsJson.textValue());
+
         Condition conditions = ConditionJacksonDeserializer.<UserAttribute>parseConditions(UserAttribute.class, objectMapper, conditionsJson);
 
         return new Audience(id, name, conditions);
     }
 
 }
-
