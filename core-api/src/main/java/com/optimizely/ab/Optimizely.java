@@ -399,8 +399,10 @@ public class Optimizely {
             logger.info("No feature flag was found for key \"{}\".", featureKey);
             return false;
         }
+
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
+
         if (featureDecision.variation != null) {
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
                 sendImpression(
@@ -647,7 +649,6 @@ public class Optimizely {
 
         String variableValue = variable.getDefaultValue();
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
-
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
         if (featureDecision.variation != null) {
             LiveVariableUsageInstance liveVariableUsageInstance =
@@ -686,9 +687,10 @@ public class Optimizely {
             return enabledFeaturesList;
         }
 
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
         for (FeatureFlag featureFlag : projectConfig.getFeatureFlags()){
             String featureKey = featureFlag.getKey();
-            if(isFeatureEnabled(featureKey, userId, attributes))
+            if(isFeatureEnabled(featureKey, userId, copiedAttributes))
                 enabledFeaturesList.add(featureKey);
         }
 
@@ -826,9 +828,9 @@ public class Optimizely {
     }
 
     /**
-     * Helper function to check that the provided attributes are null if not than it returns a copy
+     * Helper method which makes separate copy of attributesMap variable and returns it
      *
-     * @param attributes the attributes map being validated
+     * @param attributes map to copy
      * @return copy of attributes
      */
     private Map<String, ?> copyAttributes(Map<String, ?> attributes) {
