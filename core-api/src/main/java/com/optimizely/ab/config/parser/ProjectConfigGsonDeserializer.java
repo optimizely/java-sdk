@@ -31,6 +31,7 @@ import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.TypedAudience;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -58,6 +59,7 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
         Type attributesType = new TypeToken<List<Attribute>>() {}.getType();
         Type eventsType = new TypeToken<List<EventType>>() {}.getType();
         Type audienceType = new TypeToken<List<Audience>>() {}.getType();
+        Type typedAudienceType = new TypeToken<List<TypedAudience>>() {}.getType();
 
         List<Group> groups = context.deserialize(jsonObject.get("groups").getAsJsonArray(), groupsType);
         List<Experiment> experiments =
@@ -75,7 +77,7 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
 
         List<Audience> typedAudiences = null;
         if (jsonObject.has("typedAudiences")) {
-            typedAudiences = context.deserialize(jsonObject.get("typedAudiences").getAsJsonArray(), audienceType);
+            typedAudiences = context.deserialize(jsonObject.get("typedAudiences").getAsJsonArray(), typedAudienceType);
         }
         boolean anonymizeIP = false;
         // live variables should be null if using V2

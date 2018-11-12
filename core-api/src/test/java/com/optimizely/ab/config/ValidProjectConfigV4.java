@@ -18,11 +18,13 @@ package com.optimizely.ab.config;
 
 import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -90,6 +92,18 @@ public class ValidProjectConfigV4 {
                             new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_INTEGER_KEY,
                                     CUSTOM_ATTRIBUTE_TYPE, "gt",
                                     AUDIENCE_INT_VALUE)))))))
+    );
+
+    private static final String     AUDIENCE_INT_EXACT_ID = "3468206646";
+    private static final String     AUDIENCE_INT_EXACT_KEY = "INTEXACT";
+    private static final Audience   TYPED_AUDIENCE_EXACT_INT = new Audience(
+        AUDIENCE_INT_EXACT_ID,
+        AUDIENCE_INT_EXACT_KEY,
+        new AndCondition(Collections.<Condition>singletonList(
+            new OrCondition(Collections.<Condition>singletonList(
+                new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_INTEGER_KEY,
+                    CUSTOM_ATTRIBUTE_TYPE, "exact",
+                    AUDIENCE_INT_VALUE)))))))
     );
     private static final String     AUDIENCE_DOUBLE_ID = "3468206645";
     private static final String     AUDIENCE_DOUBLE_KEY = "DOUBLE";
@@ -196,6 +210,19 @@ public class ValidProjectConfigV4 {
             ))
     );
 
+    private static final Condition AUDIENCE_COMBINATION_WITH_AND_CONDITION = new AndCondition(Arrays.<Condition>asList(
+            new AudienceIdCondition(AUDIENCE_BOOL_ID),
+            new AudienceIdCondition(AUDIENCE_INT_ID),
+            new AudienceIdCondition(AUDIENCE_DOUBLE_ID)));
+
+    // audienceConditions
+    private static final Condition AUDIENCE_COMBINATION =
+            new OrCondition(Arrays.<Condition>asList(
+                new AudienceIdCondition(AUDIENCE_BOOL_ID),
+                new AudienceIdCondition(AUDIENCE_INT_ID),
+                new AudienceIdCondition(AUDIENCE_INT_EXACT_ID),
+                new AudienceIdCondition(AUDIENCE_DOUBLE_ID)));
+
     // features
     private static final String     FEATURE_BOOLEAN_FEATURE_ID = "4195505407";
     private static final String     FEATURE_BOOLEAN_FEATURE_KEY = "boolean_feature";
@@ -285,6 +312,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             ROLLOUT_1_ID,
             Collections.<String>emptyList(),
+            null,
             Collections.singletonList(
                     ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION
             ),
@@ -327,6 +355,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             ROLLOUT_3_ID,
             Collections.<String>emptyList(),
+            null,
             Collections.singletonList(
                     ROLLOUT_3_EVERYONE_ELSE_RULE_ENABLED_VARIATION
             ),
@@ -410,6 +439,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_BASIC_EXPERIMENT_ID,
             Collections.<String>emptyList(),
+            null,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_BASIC_EXPERIMENT_VARIATION_A,
                     VARIATION_BASIC_EXPERIMENT_VARIATION_B
@@ -461,8 +491,10 @@ public class ValidProjectConfigV4 {
             ProjectConfigTestUtils.createListOfObjects(
                     AUDIENCE_BOOL_ID,
                     AUDIENCE_INT_ID,
+                    AUDIENCE_INT_EXACT_ID,
                     AUDIENCE_DOUBLE_ID
             ),
+            AUDIENCE_COMBINATION,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A,
                     VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B
@@ -475,6 +507,51 @@ public class ValidProjectConfigV4 {
                     ),
                     new TrafficAllocation(
                             VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_ID,
+                            10000
+                    )
+            )
+    );
+    private static final String     LAYER_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_ID = "1630555628";
+    private static final String     EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_ID = "1323241598";
+    public  static final String     EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_KEY = "typed_audience_experiment_with_and";
+    private static final String     VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_A_ID = "1423767504";
+    private static final String     VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_A_KEY = "A";
+    private static final Variation  VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_A = new Variation(
+            VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_A_ID,
+            VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_A_KEY,
+            Collections.<LiveVariableUsageInstance>emptyList()
+    );
+    private static final String     VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_B_ID = "3433458316";
+    private static final String     VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_B_KEY = "B";
+    private static final Variation  VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_B = new Variation(
+            VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_B_ID,
+            VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_B_KEY,
+            Collections.<LiveVariableUsageInstance>emptyList()
+    );
+
+    private static final Experiment EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT = new Experiment(
+            EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_ID,
+            EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_KEY,
+            Experiment.ExperimentStatus.RUNNING.toString(),
+            LAYER_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_ID,
+            ProjectConfigTestUtils.createListOfObjects(
+                    AUDIENCE_BOOL_ID,
+                    AUDIENCE_INT_ID,
+                    AUDIENCE_DOUBLE_ID
+            ),
+        AUDIENCE_COMBINATION_WITH_AND_CONDITION,
+            ProjectConfigTestUtils.createListOfObjects(
+                    VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_A,
+                    VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_B
+            ),
+            Collections.EMPTY_MAP,
+            ProjectConfigTestUtils.createListOfObjects(
+                    new TrafficAllocation(
+                            VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_A_ID,
+                            5000
+                    ),
+                    new TrafficAllocation(
+                            VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_B_ID,
                             10000
                     )
             )
@@ -504,6 +581,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_FIRST_GROUPED_EXPERIMENT_ID,
             Collections.singletonList(AUDIENCE_GRYFFINDOR_ID),
+            null,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_FIRST_GROUPED_EXPERIMENT_A,
                     VARIATION_FIRST_GROUPED_EXPERIMENT_B
@@ -555,6 +633,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_SECOND_GROUPED_EXPERIMENT_ID,
             Collections.singletonList(AUDIENCE_GRYFFINDOR_ID),
+            null,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_SECOND_GROUPED_EXPERIMENT_A,
                     VARIATION_SECOND_GROUPED_EXPERIMENT_B
@@ -664,6 +743,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_MULTIVARIATE_EXPERIMENT_ID,
             Collections.singletonList(AUDIENCE_GRYFFINDOR_ID),
+            null,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_MULTIVARIATE_EXPERIMENT_FRED,
                     VARIATION_MULTIVARIATE_EXPERIMENT_FEORGE,
@@ -739,6 +819,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_DOUBLE_FEATURE_EXPERIMENT_ID,
             Collections.singletonList(AUDIENCE_SLYTHERIN_ID),
+            null,
             ProjectConfigTestUtils.createListOfObjects(
                     VARIATION_DOUBLE_FEATURE_PI_VARIATION,
                     VARIATION_DOUBLE_FEATURE_EULER_VARIATION
@@ -773,6 +854,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.PAUSED.toString(),
             LAYER_PAUSED_EXPERIMENT_ID,
             Collections.<String>emptyList(),
+            null,
             Collections.singletonList(VARIATION_PAUSED_EXPERIMENT_CONTROL),
             Collections.singletonMap(PAUSED_EXPERIMENT_FORCED_VARIATION_USER_ID_CONTROL,
                     VARIATION_PAUSED_EXPERIMENT_CONTROL_KEY),
@@ -799,6 +881,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.LAUNCHED.toString(),
             LAYER_LAUNCHED_EXPERIMENT_ID,
             Collections.<String>emptyList(),
+            null,
             Collections.singletonList(VARIATION_LAUNCHED_EXPERIMENT_CONTROL),
             Collections.<String, String>emptyMap(),
             Collections.singletonList(
@@ -831,6 +914,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_MUTEX_GROUP_EXPERIMENT_1_LAYER_ID,
             Collections.<String>emptyList(),
+            null,
             Collections.singletonList(VARIATION_MUTEX_GROUP_EXP_1_VAR_1),
             Collections.<String, String>emptyMap(),
             Collections.singletonList(
@@ -864,6 +948,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_MUTEX_GROUP_EXPERIMENT_2_LAYER_ID,
             Collections.<String>emptyList(),
+            null,
             Collections.singletonList(VARIATION_MUTEX_GROUP_EXP_2_VAR_1),
             Collections.<String, String>emptyMap(),
             Collections.singletonList(
@@ -891,6 +976,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             LAYER_EXPERIMENT_WITH_MALFORMED_AUDIENCE_ID,
             Collections.singletonList(AUDIENCE_WITH_MISSING_VALUE_ID),
+            null,
             Collections.singletonList(VARIATION_EXPERIMENT_WITH_MALFORMED_AUDIENCE),
             Collections.<String, String>emptyMap(),
             Collections.singletonList(
@@ -980,6 +1066,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             ROLLOUT_2_ID,
             Collections.singletonList(AUDIENCE_GRYFFINDOR_ID),
+            null,
             Collections.singletonList(
                     new Variation(
                             "521740985",
@@ -1011,6 +1098,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             ROLLOUT_2_ID,
             Collections.singletonList(AUDIENCE_SLYTHERIN_ID),
+            null,
             Collections.singletonList(
                     new Variation(
                             "180042646",
@@ -1042,6 +1130,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             ROLLOUT_2_ID,
             Collections.singletonList(AUDIENCE_ENGLISH_CITIZENS_ID),
+            null,
             Collections.singletonList(
                     new Variation(
                             "2346257680",
@@ -1073,6 +1162,7 @@ public class ValidProjectConfigV4 {
             Experiment.ExperimentStatus.RUNNING.toString(),
             ROLLOUT_2_ID,
             Collections.<String>emptyList(),
+            null,
             Collections.singletonList(
                     new Variation(
                             "3137445031",
@@ -1173,6 +1263,7 @@ public class ValidProjectConfigV4 {
 
         List<Audience> typedAudiences = new ArrayList<Audience>();
         typedAudiences.add(TYPED_AUDIENCE_BOOL);
+        typedAudiences.add(TYPED_AUDIENCE_EXACT_INT);
         typedAudiences.add(TYPED_AUDIENCE_INT);
         typedAudiences.add(TYPED_AUDIENCE_DOUBLE);
         typedAudiences.add(TYPED_AUDIENCE_GRYFFINDOR);
@@ -1190,6 +1281,7 @@ public class ValidProjectConfigV4 {
         List<Experiment> experiments = new ArrayList<Experiment>();
         experiments.add(EXPERIMENT_BASIC_EXPERIMENT);
         experiments.add(EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT);
         experiments.add(EXPERIMENT_MULTIVARIATE_EXPERIMENT);
         experiments.add(EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT);
         experiments.add(EXPERIMENT_PAUSED_EXPERIMENT);

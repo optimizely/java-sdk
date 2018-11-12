@@ -23,8 +23,11 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.config.audience.TypedAudience;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -50,9 +53,9 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
             audiences = JacksonHelpers.arrayNodeToList(node.get("audiences"), Audience.class, codec);
         }
 
-        List<Audience> typedAudiences = null;
+        List<TypedAudience> typedAudiences = null;
         if (node.has("typedAudiences")) {
-            typedAudiences = JacksonHelpers.arrayNodeToList(node.get("typedAudiences"), Audience.class, codec);
+            typedAudiences = JacksonHelpers.arrayNodeToList(node.get("typedAudiences"), TypedAudience.class, codec);
         }
 
         boolean anonymizeIP = false;
@@ -82,7 +85,7 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
                 version,
                 attributes,
                 audiences,
-                typedAudiences,
+                (List<Audience>)(List<? extends Audience>)typedAudiences,
                 events,
                 experiments,
                 featureFlags,

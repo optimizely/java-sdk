@@ -17,7 +17,6 @@
 package com.optimizely.ab.config.parser;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -26,8 +25,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.optimizely.ab.config.audience.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
     private ObjectMapper objectMapper;
@@ -49,42 +46,11 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
         String name = node.get("name").textValue();
 
         JsonNode conditionsJson = node.get("conditions");
-        if (conditionsJson.isTextual()) {
-            conditionsJson = objectMapper.readTree(conditionsJson.textValue());
-        }
-        Condition conditions = parseConditions(conditionsJson);
+        conditionsJson = objectMapper.readTree(conditionsJson.textValue());
+
+        Condition conditions = ConditionJacksonDeserializer.<UserAttribute>parseConditions(UserAttribute.class, objectMapper, conditionsJson);
 
         return new Audience(id, name, conditions);
     }
 
-    private Condition parseConditions(JsonNode conditionNode) throws JsonProcessingException {
-        List<Condition> conditions = new ArrayList<Condition>();
-        JsonNode opNode = conditionNode.get(0);
-        String operand = opNode.asText();
-
-        for (int i = 1; i < conditionNode.size(); i++) {
-            JsonNode subNode = conditionNode.get(i);
-            if (subNode.isArray()) {
-                conditions.add(parseConditions(subNode));
-            } else if (subNode.isObject()) {
-                conditions.add(objectMapper.treeToValue(subNode, UserAttribute.class));
-            }
-        }
-
-        Condition condition;
-        switch (operand) {
-            case "and":
-                condition = new AndCondition(conditions);
-                break;
-            case "or":
-                condition = new OrCondition(conditions);
-                break;
-            default: // this makes two assumptions: operator is "not" and conditions is non-empty...
-                condition = new NotCondition(conditions.get(0));
-                break;
-        }
-
-        return condition;
-    }
 }
-

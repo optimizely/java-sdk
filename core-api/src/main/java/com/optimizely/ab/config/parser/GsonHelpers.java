@@ -16,11 +16,13 @@
  */
 package com.optimizely.ab.config.parser;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.config.Experiment;
@@ -30,6 +32,10 @@ import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.LiveVariableUsageInstance;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
+import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.internal.ConditionUtils;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,6 +100,20 @@ final class GsonHelpers {
         return trafficAllocation;
     }
 
+    static Condition parseAudienceConditions(JsonObject experimentJson) {
+
+        if (!experimentJson.has("audienceConditions")) return null;
+
+        Gson gson = new Gson();
+
+        JsonElement conditionsElement = experimentJson.get("audienceConditions");
+
+        List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
+        Condition conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, rawObjectList);
+
+        return conditions;
+    }
+
     static Experiment parseExperiment(JsonObject experimentJson, String groupId, JsonDeserializationContext context) {
         String id = experimentJson.get("id").getAsString();
         String key = experimentJson.get("key").getAsString();
@@ -105,10 +125,12 @@ final class GsonHelpers {
         String layerId = layerIdJson == null ? null : layerIdJson.getAsString();
 
         JsonArray audienceIdsJson = experimentJson.getAsJsonArray("audienceIds");
-        List<String> audienceIds = new ArrayList<String>(audienceIdsJson.size());
+        List<String> audienceIds = new ArrayList<>(audienceIdsJson.size());
         for (JsonElement audienceIdObj : audienceIdsJson) {
             audienceIds.add(audienceIdObj.getAsString());
         }
+
+        Condition conditions = parseAudienceConditions(experimentJson);
 
         // parse the child objects
         List<Variation> variations = parseVariations(experimentJson.getAsJsonArray("variations"), context);
@@ -117,7 +139,7 @@ final class GsonHelpers {
         List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation(experimentJson.getAsJsonArray("trafficAllocation"));
 
-        return new Experiment(id, key, status, layerId, audienceIds, variations, userIdToVariationKeyMap,
+        return new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
                               trafficAllocations, groupId);
     }
 

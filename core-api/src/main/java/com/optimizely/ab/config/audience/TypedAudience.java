@@ -14,25 +14,16 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.config.audience.match;
+package com.optimizely.ab.config.audience;
 
-import javax.annotation.Nullable;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-class LTMatch extends AttributeMatch<Number> {
-    Number value;
-    protected LTMatch(Number value) {
-        this.value = value;
-    }
-
-    public @Nullable
-    Boolean eval(Object attributeValue) {
-        try {
-            return castToValueType(attributeValue, value).doubleValue() < value.doubleValue();
-        }
-        catch (Exception e) {
-            MatchType.logger.error("Less than match failed ", e);
-            return null;
-        }
+public class TypedAudience extends Audience {
+    @JsonCreator
+    public TypedAudience(@JsonProperty("id") String id,
+                         @JsonProperty("name") String name,
+                         @JsonProperty("conditions") Condition conditions) {
+        super(id, name, conditions);
     }
 }
-

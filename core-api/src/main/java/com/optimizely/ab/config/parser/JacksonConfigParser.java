@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.config.audience.TypedAudience;
 
 import javax.annotation.Nonnull;
 
@@ -54,6 +56,8 @@ final class JacksonConfigParser implements ConfigParser {
             super(NAME);
             addDeserializer(ProjectConfig.class, new ProjectConfigJacksonDeserializer());
             addDeserializer(Audience.class, new AudienceJacksonDeserializer(objectMapper));
+            addDeserializer(TypedAudience.class, new TypedAudienceJacksonDeserializer(objectMapper));
+            addDeserializer(Condition.class, new ConditionJacksonDeserializer(objectMapper));
         }
     }
 }

@@ -16,28 +16,29 @@
  */
 package com.optimizely.ab.config.audience.match;
 
+import com.optimizely.ab.config.ProjectConfig;
+
 import javax.annotation.Nullable;
 
-class SubstringMatch extends AttributeMatch<String> {
-    String value;
-    protected SubstringMatch(String value) {
+// Because json number is a double in most java json parsers.  at this
+// point we allow comparision of Integer and Double.  The instance class is Double and
+// Integer which would fail in our normal exact match.  So, we are special casing for now.  We have already filtered
+// out other Number types.
+public class ExactNumberMatch extends AttributeMatch<Number> {
+    Number value;
+
+    protected ExactNumberMatch(Number value) {
         this.value = value;
     }
 
-    /**
-     * This matches the same substring matching logic in the Web client.
-     * @param attributeValue
-     * @return true/false if the user attribute string value contains the condition string value
-     */
     public @Nullable
     Boolean eval(Object attributeValue) {
         try {
-            return castToValueType(attributeValue, value).contains(value);
+            return value.doubleValue() == castToValueType(attributeValue, value).doubleValue();
+        } catch (Exception e) {
+            MatchType.logger.error("Exact number match failed ", e);
         }
-        catch (Exception e) {
-            MatchType.logger.error("Substring match failed ", e);
-            return null;
-        }
+
+        return null;
     }
 }
-

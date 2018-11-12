@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.config.ProjectConfig;
+
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.Nonnull;
@@ -26,7 +28,7 @@ import java.util.Map;
  * Represents a 'Not' conditions condition operation.
  */
 @Immutable
-public class NotCondition implements Condition {
+public class NotCondition<T> implements Condition<T> {
 
     private final Condition condition;
 
@@ -38,8 +40,9 @@ public class NotCondition implements Condition {
         return condition;
     }
 
-    public @Nullable Boolean evaluate(Map<String, ?> attributes) {
-        Boolean conditionEval = condition.evaluate(attributes);
+    public @Nullable Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+
+        Boolean conditionEval = condition == null ? null : condition.evaluate(config, attributes);
         return (conditionEval == null ? null : !conditionEval);
     }
 

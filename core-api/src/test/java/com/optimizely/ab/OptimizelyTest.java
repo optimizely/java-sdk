@@ -280,6 +280,100 @@ public class OptimizelyTest {
     }
 
     /**
+     * Verify that activating using typed audiences works for numeric match exact using double and integer.
+     */
+    @Test
+    public void activateEndToEndWithTypedAudienceIntExactDouble() throws Exception {
+        Experiment activatedExperiment;
+        Map<String, Object> testUserAttributes = new HashMap<String, Object>();
+        String bucketingKey = testBucketingIdKey;
+        String userId = testUserId;
+        String bucketingId = testBucketingId;
+        if(datafileVersion >= 4) {
+            activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_KEY);
+            testUserAttributes.put(ATTRIBUTE_INTEGER_KEY, 1.0); // should be equal 1.
+        }
+        else {
+            return; // only test on v4 datafiles.
+        }
+        testUserAttributes.put(bucketingKey, bucketingId);
+        Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+        EventFactory mockEventFactory = mock(EventFactory.class);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withBucketing(mockBucketer)
+            .withEventBuilder(mockEventFactory)
+            .withConfig(validProjectConfig)
+            .withErrorHandler(mockErrorHandler)
+            .build();
+
+
+        when(mockEventFactory.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation, testUserId,
+            testUserAttributes))
+            .thenReturn(logEventToDispatch);
+
+        when(mockBucketer.bucket(activatedExperiment, bucketingId))
+            .thenReturn(bucketedVariation);
+
+        // activate the experiment
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, testUserAttributes);
+
+        // verify that the bucketing algorithm was called correctly
+        verify(mockBucketer).bucket(activatedExperiment, bucketingId);
+        assertThat(actualVariation, is(bucketedVariation));
+
+        // verify that dispatchEvent was called with the correct LogEvent object
+        verify(mockEventHandler).dispatchEvent(logEventToDispatch);
+    }
+
+    /**
+     * Verify that activating using typed audiences works for numeric match exact using double and integer.
+     */
+    @Test
+    public void activateEndToEndWithTypedAudienceIntExact() throws Exception {
+        Experiment activatedExperiment;
+        Map<String, Object> testUserAttributes = new HashMap<String, Object>();
+        String bucketingKey = testBucketingIdKey;
+        String userId = testUserId;
+        String bucketingId = testBucketingId;
+        if(datafileVersion >= 4) {
+            activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_KEY);
+            testUserAttributes.put(ATTRIBUTE_INTEGER_KEY, 1); // should be equal 1.
+        }
+        else {
+            return; // only test on v4 datafiles.
+        }
+        testUserAttributes.put(bucketingKey, bucketingId);
+        Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+        EventFactory mockEventFactory = mock(EventFactory.class);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withBucketing(mockBucketer)
+            .withEventBuilder(mockEventFactory)
+            .withConfig(validProjectConfig)
+            .withErrorHandler(mockErrorHandler)
+            .build();
+
+
+        when(mockEventFactory.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation, testUserId,
+            testUserAttributes))
+            .thenReturn(logEventToDispatch);
+
+        when(mockBucketer.bucket(activatedExperiment, bucketingId))
+            .thenReturn(bucketedVariation);
+
+        // activate the experiment
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, testUserAttributes);
+
+        // verify that the bucketing algorithm was called correctly
+        verify(mockBucketer).bucket(activatedExperiment, bucketingId);
+        assertThat(actualVariation, is(bucketedVariation));
+
+        // verify that dispatchEvent was called with the correct LogEvent object
+        verify(mockEventHandler).dispatchEvent(logEventToDispatch);
+    }
+
+    /**
      * Verify that the {@link Optimizely#activate(Experiment, String, Map)} call correctly builds an endpoint url and
      * request params and passes them through {@link EventHandler#dispatchEvent(LogEvent)}.
      */
@@ -353,6 +447,118 @@ public class OptimizelyTest {
         if(datafileVersion >= 4) {
             activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_KEY);
             testUserAttributes.put(ATTRIBUTE_DOUBLE_KEY, 99.9); // should be lt 100.
+        }
+        else {
+            activatedExperiment = validProjectConfig.getExperiments().get(0);
+            testUserAttributes.put("browser_type", "chrome");
+        }
+        testUserAttributes.put(bucketingKey, bucketingId);
+        Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+        EventFactory mockEventFactory = mock(EventFactory.class);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withBucketing(mockBucketer)
+                .withEventBuilder(mockEventFactory)
+                .withConfig(validProjectConfig)
+                .withErrorHandler(mockErrorHandler)
+                .build();
+
+
+        when(mockEventFactory.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation, testUserId,
+                testUserAttributes))
+                .thenReturn(logEventToDispatch);
+
+        when(mockBucketer.bucket(activatedExperiment, bucketingId))
+                .thenReturn(bucketedVariation);
+
+        logbackVerifier.expectMessage(Level.DEBUG, String.format("No variation for experiment \"%s\" mapped to user \"%s\" in the forced variation map", activatedExperiment.getKey(), testUserId));
+
+        logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
+
+        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+
+        logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
+                activatedExperiment.getKey() + "\".");
+        logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
+                testParams + " and payload \"{}\"");
+
+        // activate the experiment
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, testUserAttributes);
+
+        // verify that the bucketing algorithm was called correctly
+        verify(mockBucketer).bucket(activatedExperiment, bucketingId);
+        assertThat(actualVariation, is(bucketedVariation));
+
+        // verify that dispatchEvent was called with the correct LogEvent object
+        verify(mockEventHandler).dispatchEvent(logEventToDispatch);
+    }
+
+    /**
+     * Verify that the {@link Optimizely#activate(Experiment, String, Map)} call correctly builds an endpoint url and
+     * request params and passes them through {@link EventHandler#dispatchEvent(LogEvent)}.
+     */
+    @Test
+    public void activateEndToEndWithTypedAudienceBoolWithAndAudienceConditions() throws Exception {
+        Experiment activatedExperiment;
+        Map<String, Object> testUserAttributes = new HashMap<String, Object>();
+        String bucketingKey = testBucketingIdKey;
+        String userId = testUserId;
+        String bucketingId = testBucketingId;
+        if(datafileVersion >= 4) {
+            activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_KEY);
+            testUserAttributes.put(ATTRIBUTE_BOOLEAN_KEY, true); // should be eq true.
+        }
+        else {
+            return;
+        }
+        testUserAttributes.put(bucketingKey, bucketingId);
+        Variation bucketedVariation = activatedExperiment.getVariations().get(0);
+        EventFactory mockEventFactory = mock(EventFactory.class);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+                .withBucketing(mockBucketer)
+                .withEventBuilder(mockEventFactory)
+                .withConfig(validProjectConfig)
+                .withErrorHandler(mockErrorHandler)
+                .build();
+
+
+        when(mockEventFactory.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation, testUserId,
+                testUserAttributes))
+                .thenReturn(logEventToDispatch);
+
+        when(mockBucketer.bucket(activatedExperiment, bucketingId))
+                .thenReturn(bucketedVariation);
+
+        logbackVerifier.expectMessage(Level.ERROR, "Greater than match failed");
+
+        // activate the experiment
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, testUserAttributes);
+
+        // verify that the bucketing algorithm was called correctly
+        verifyZeroInteractions(mockBucketer);
+        assertNull(actualVariation);
+
+        // verify that dispatchEvent was called with the correct LogEvent object
+        //verify(mockEventHandler).dispatchEvent(logEventToDispatch);
+    }
+
+    /**
+     * Verify that the {@link Optimizely#activate(Experiment, String, Map)} call correctly builds an endpoint url and
+     * request params and passes them through {@link EventHandler#dispatchEvent(LogEvent)}.
+     */
+    @Test
+    public void activateEndToEndWithTypedAudienceWithAnd() throws Exception {
+        Experiment activatedExperiment;
+        Map<String, Object> testUserAttributes = new HashMap<String, Object>();
+        String bucketingKey = testBucketingIdKey;
+        String userId = testUserId;
+        String bucketingId = testBucketingId;
+        if(datafileVersion >= 4) {
+            activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_KEY);
+            testUserAttributes.put(ATTRIBUTE_DOUBLE_KEY, 99.9); // should be lt 100.
+            testUserAttributes.put(ATTRIBUTE_BOOLEAN_KEY, true); // should be eq true.
+            testUserAttributes.put(ATTRIBUTE_INTEGER_KEY, 2); // should be gt 1.
         }
         else {
             activatedExperiment = validProjectConfig.getExperiments().get(0);
@@ -4824,6 +5030,7 @@ public class OptimizelyTest {
     private Experiment createUnknownExperiment() {
         return new Experiment("0987", "unknown_experiment", "Running", "1",
                 Collections.<String>emptyList(),
+                null,
                 Collections.singletonList(
                         new Variation("8765", "unknown_variation", Collections.<LiveVariableUsageInstance>emptyList())),
                 Collections.<String, String>emptyMap(),
