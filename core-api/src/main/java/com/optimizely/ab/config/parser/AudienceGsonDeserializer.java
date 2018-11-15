@@ -25,7 +25,6 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonParseException;
 
 import com.optimizely.ab.config.audience.Audience;
-import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.UserAttribute;
 import com.optimizely.ab.internal.ConditionUtils;
