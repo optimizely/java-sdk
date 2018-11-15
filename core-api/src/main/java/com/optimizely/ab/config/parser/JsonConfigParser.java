@@ -148,9 +148,7 @@ final class JsonConfigParser implements ConfigParser {
             Condition conditions = null;
             if (experimentObject.has("audienceConditions")) {
                 Object jsonCondition = experimentObject.get("audienceConditions");
-                if (jsonCondition instanceof JSONArray) {
-                    conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, (JSONArray) jsonCondition);
-                }
+                conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, jsonCondition);
             }
 
             // parse the child objects
@@ -306,9 +304,8 @@ final class JsonConfigParser implements ConfigParser {
             String id = audienceObject.getString("id");
             String key = audienceObject.getString("name");
             Object conditionsObject = audienceObject.get("conditions");
-            JSONArray conditionJson = (JSONArray)conditionsObject;
 
-            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionJson);
+            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionsObject);
             audiences.add(new Audience(id, key, conditions));
         }
 

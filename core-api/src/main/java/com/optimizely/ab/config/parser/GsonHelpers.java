@@ -23,6 +23,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.reflect.TypeToken;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.config.Experiment;
@@ -108,10 +109,16 @@ final class GsonHelpers {
 
         JsonElement conditionsElement = experimentJson.get("audienceConditions");
 
-        List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
-        Condition conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, rawObjectList);
+        if (conditionsElement.isJsonArray()) {
+            List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
+            return ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, rawObjectList);
+        }
+        else if (conditionsElement.isJsonObject()) {
+            Object jsonObject = gson.fromJson(conditionsElement,Object.class);
+            return ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, jsonObject);
+        }
 
-        return conditions;
+        return null;
     }
 
     static Experiment parseExperiment(JsonObject experimentJson, String groupId, JsonDeserializationContext context) {
