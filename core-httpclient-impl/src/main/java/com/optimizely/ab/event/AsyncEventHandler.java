@@ -189,7 +189,7 @@ public class AsyncEventHandler implements EventHandler {
         /**
          * Helper method that generates the event request for the given {@link LogEvent}.
          */
-        private HttpGet generateGetRequest(LogEvent event) throws URISyntaxException {
+        private HttpGet generateRequest(LogEvent event) throws URISyntaxException {
 
             URIBuilder builder = new URIBuilder(event.getEndpointUrl());
             for (Map.Entry<String, String> param : event.getRequestParams().entrySet()) {
@@ -197,13 +197,6 @@ public class AsyncEventHandler implements EventHandler {
             }
 
             return new HttpGet(builder.build());
-        }
-
-        private HttpPost generatePostRequest(LogEvent event) throws UnsupportedEncodingException {
-            HttpPost post = new HttpPost(event.getEndpointUrl());
-            post.setEntity(new StringEntity(event.getBody()));
-            post.addHeader("Content-Type", "application/json");
-            return post;
         }
     }
 

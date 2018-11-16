@@ -18,6 +18,7 @@ package com.optimizely.ab.event;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
+import com.optimizely.ab.event.internal.payload.EventBatch;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -132,6 +133,6 @@ public class AsyncEventHandlerTest {
 
     private LogEvent createLogEvent() {Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
-        return new LogEvent(LogEvent.RequestMethod.GET, "test_url", testParams, "");
+        return new LogEvent(LogEvent.RequestMethod.GET, "test_url", testParams, new EventBatch());
     }
 }
