@@ -49,8 +49,15 @@ public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {
         if (!typeOfT.toString().contains("TypedAudience")) {
             conditionsElement = parser.parse(jsonObject.get("conditions").getAsString());
         }
-        List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
-        Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, rawObjectList);
+        Condition conditions = null;
+        if (conditionsElement.isJsonArray()) {
+            List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
+            conditions =  ConditionUtils.parseConditions(UserAttribute.class, rawObjectList);
+        }
+        else if (conditionsElement.isJsonObject()) {
+            Object object = gson.fromJson(conditionsElement,Object.class);
+            conditions = ConditionUtils.parseConditions(UserAttribute.class, object);
+        }
 
         return new Audience(id, name, conditions);
     }

@@ -156,13 +156,11 @@ final class JsonSimpleConfigParser implements ConfigParser {
             Condition conditions = null;
             if (experimentObject.containsKey("audienceConditions")) {
                 Object jsonCondition = experimentObject.get("audienceConditions");
-                if (jsonCondition instanceof JSONArray) {
-                    try {
-                        conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, (JSONArray)jsonCondition);
-                    } catch (Exception e) {
-                        // unable to parse conditions.
-                        Logger.getAnonymousLogger().log(Level.ALL, "problem parsing audience conditions", e);
-                    }
+                try {
+                    conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, jsonCondition);
+                } catch (Exception e) {
+                    // unable to parse conditions.
+                    Logger.getAnonymousLogger().log(Level.ALL, "problem parsing audience conditions", e);
                 }
             }
             // parse the child objects
@@ -303,7 +301,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             String id = (String)audienceObject.get("id");
             String key = (String)audienceObject.get("name");
             Object conditionObject = audienceObject.get("conditions");
-            JSONArray conditionJson = (JSONArray)parser.parse((String)conditionObject);
+            Object conditionJson = parser.parse((String)conditionObject);
             Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionJson);
             audiences.add(new Audience(id, key, conditions));
         }
@@ -319,8 +317,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             String id = (String)audienceObject.get("id");
             String key = (String)audienceObject.get("name");
             Object conditionObject = audienceObject.get("conditions");
-            JSONArray conditionJson = (JSONArray)conditionObject;
-            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionJson);
+            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionObject);
             audiences.add(new Audience(id, key, conditions));
         }
 
