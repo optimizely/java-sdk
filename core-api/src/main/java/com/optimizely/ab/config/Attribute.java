@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2017, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -35,8 +35,12 @@ public class Attribute implements IdKeyMapped {
     private final String key;
     private final String segmentId;
 
+    public Attribute(String id, String key) {
+        this(id, key, null);
+    }
+
     @JsonCreator
-    public Attribute(@JsonProperty("is") String id,
+    public Attribute(@JsonProperty("id") String id,
                      @JsonProperty("key") String key,
                      @JsonProperty("segmentId") String segmentId) {
         this.id = id;

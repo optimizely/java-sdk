@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2017, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@ package com.optimizely.ab.config.parser;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonParseException;
-
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.Group;
-import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.TypedAudience;
 
 import javax.annotation.Nonnull;
 
@@ -34,17 +34,25 @@ final class GsonConfigParser implements ConfigParser {
 
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
+        if (json == null) {
+            throw new ConfigParseException("Unable to parse null json.");
+        }
+        if (json.length() == 0) {
+            throw new ConfigParseException("Unable to parse empty json.");
+        }
         Gson gson = new GsonBuilder()
-            .registerTypeAdapter(ProjectConfig.class, new ProjectConfigGsonDeserializer())
-            .registerTypeAdapter(Audience.class, new AudienceGsonDeserializer())
-            .registerTypeAdapter(Group.class, new GroupGsonDeserializer())
-            .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())
-            .create();
+                .registerTypeAdapter(Audience.class, new AudienceGsonDeserializer())
+                .registerTypeAdapter(TypedAudience.class, new AudienceGsonDeserializer())
+                .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())
+                .registerTypeAdapter(FeatureFlag.class, new FeatureFlagGsonDeserializer())
+                .registerTypeAdapter(Group.class, new GroupGsonDeserializer())
+                .registerTypeAdapter(ProjectConfig.class, new ProjectConfigGsonDeserializer())
+                .create();
 
         try {
             return gson.fromJson(json, ProjectConfig.class);
-        } catch (JsonParseException e) {
-            throw new ConfigParseException("unable to parse project config: " + json, e);
+        } catch (Exception e) {
+            throw new ConfigParseException("Unable to parse datafile: " + json, e);
         }
     }
 }

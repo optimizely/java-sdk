@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2017, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -24,13 +24,18 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -47,6 +52,15 @@ import javax.annotation.CheckForNull;
  */
 public class AsyncEventHandler implements EventHandler {
 
+    // The following static values are public so that they can be tweaked if necessary.
+    // These are the recommended settings for http protocol.  https://hc.apache.org/httpcomponents-client-ga/tutorial/html/connmgmt.html
+    // The maximum number of connections allowed across all routes.
+    private int maxTotalConnections = 200;
+    // The maximum number of connections allowed for a route
+    private int maxPerRoute = 20;
+    // Defines period of inactivity in milliseconds after which persistent connections must be re-validated prior to being leased to the consumer.
+    private int validateAfterInactivity = 5000;
+
     private static final Logger logger = LoggerFactory.getLogger(AsyncEventHandler.class);
     private static final ProjectConfigResponseHandler EVENT_RESPONSE_HANDLER = new ProjectConfigResponseHandler();
 
@@ -54,12 +68,21 @@ public class AsyncEventHandler implements EventHandler {
     private final ExecutorService workerExecutor;
 
     public AsyncEventHandler(int queueCapacity, int numWorkers) {
+        this(queueCapacity, numWorkers, 200, 20, 5000);
+    }
+
+    public AsyncEventHandler(int queueCapacity, int numWorkers, int maxConnections, int connectionsPerRoute, int validateAfter) {
         if (queueCapacity <= 0) {
             throw new IllegalArgumentException("queue capacity must be > 0");
         }
 
-        this.httpClient = HttpClients.custom()
+        this.maxTotalConnections = maxConnections;
+        this.maxPerRoute = connectionsPerRoute;
+        this.validateAfterInactivity = validateAfter;
+
+      this.httpClient = HttpClients.custom()
             .setDefaultRequestConfig(HttpClientUtils.DEFAULT_REQUEST_CONFIG)
+                .setConnectionManager(poolingHttpClientConnectionManager())
             .disableCookieManagement()
             .build();
 
@@ -73,6 +96,15 @@ public class AsyncEventHandler implements EventHandler {
     public AsyncEventHandler(CloseableHttpClient httpClient, ExecutorService workerExecutor) {
         this.httpClient = httpClient;
         this.workerExecutor = workerExecutor;
+    }
+
+    private PoolingHttpClientConnectionManager poolingHttpClientConnectionManager()
+    {
+        PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager();
+        poolingHttpClientConnectionManager.setMaxTotal(maxTotalConnections);
+        poolingHttpClientConnectionManager.setDefaultMaxPerRoute(maxPerRoute);
+        poolingHttpClientConnectionManager.setValidateAfterInactivity(validateAfterInactivity);
+        return poolingHttpClientConnectionManager;
     }
 
     @Override
@@ -157,7 +189,7 @@ public class AsyncEventHandler implements EventHandler {
         /**
          * Helper method that generates the event request for the given {@link LogEvent}.
          */
-        private HttpGet generateRequest(LogEvent event) throws URISyntaxException {
+        private HttpGet generateGetRequest(LogEvent event) throws URISyntaxException {
 
             URIBuilder builder = new URIBuilder(event.getEndpointUrl());
             for (Map.Entry<String, String> param : event.getRequestParams().entrySet()) {
@@ -165,6 +197,13 @@ public class AsyncEventHandler implements EventHandler {
             }
 
             return new HttpGet(builder.build());
+        }
+
+        private HttpPost generatePostRequest(LogEvent event) throws UnsupportedEncodingException {
+            HttpPost post = new HttpPost(event.getEndpointUrl());
+            post.setEntity(new StringEntity(event.getBody()));
+            post.addHeader("Content-Type", "application/json");
+            return post;
         }
     }
 

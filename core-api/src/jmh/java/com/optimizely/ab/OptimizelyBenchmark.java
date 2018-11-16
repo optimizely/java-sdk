@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2017, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.event.NoopEventHandler;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -65,7 +66,7 @@ public class OptimizelyBenchmark {
 
     @Setup
     @SuppressFBWarnings(value="OBL_UNSATISFIED_OBLIGATION_EXCEPTION_EDGE", justification="stream is safely closed")
-    public void setup() throws IOException {
+    public void setup() throws IOException, ConfigParseException {
         Properties properties = new Properties();
         InputStream propertiesStream = getClass().getResourceAsStream("/benchmark.properties");
         properties.load(propertiesStream);
@@ -156,47 +157,25 @@ public class OptimizelyBenchmark {
     }
 
     @Benchmark
-    public void measureTrackWithNoAttributesAndNoRevenue() {
+    public void measureTrackWithNoAttributes() {
         optimizely.track("testEventWithMultipleExperiments", "optimizely_user" + random.nextInt());
     }
 
     @Benchmark
-    public void measureTrackWithNoAttributesAndRevenue() {
-        optimizely.track("testEventWithMultipleExperiments", "optimizely_user" + random.nextInt(), 50000);
-    }
-
-    @Benchmark
-    public void measureTrackWithAttributesAndNoRevenue() {
+    public void measureTrackWithAttributes() {
         optimizely.track("testEventWithMultipleExperiments", "optimizely_user" + random.nextInt(),
                          Collections.singletonMap("browser_type", "firefox"));
     }
 
     @Benchmark
-    public void measureTrackWithAttributesAndRevenue() {
-        optimizely.track("testEventWithMultipleExperiments", "optimizely_user" + random.nextInt(),
-                         Collections.singletonMap("browser_type", "firefox"), 50000);
-    }
-
-    @Benchmark
-    public void measureTrackWithGroupExperimentsNoAttributesNoRevenue() {
+    public void measureTrackWithGroupExperimentsNoAttributes() {
         optimizely.track("testEventWithMultipleExperiments", trackGroupExperimentUserId);
     }
 
     @Benchmark
-    public void measureTrackWithGroupExperimentsNoAttributesAndRevenue() {
-        optimizely.track("testEventWithMultipleExperiments", trackGroupExperimentUserId, 50000);
-    }
-
-    @Benchmark
-    public void measureTrackWithGroupExperimentsNoRevenueAndAttributes() {
+    public void measureTrackWithGroupExperimentsAndAttributes() {
         optimizely.track("testEventWithMultipleExperiments", trackGroupExperimentAttributesUserId,
                          Collections.singletonMap("browser_type", "chrome"));
-    }
-
-    @Benchmark
-    public void measureTrackWithGroupExperimentsAndAttributesAndRevenue() {
-        optimizely.track("testEventWithMultipleExperiments", trackGroupExperimentAttributesUserId,
-                         Collections.singletonMap("browser_type", "chrome"), 50000);
     }
 
     @Benchmark

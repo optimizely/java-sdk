@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2017, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,12 +16,10 @@
  */
 package com.optimizely.ab.event;
 
-import java.util.Map;
-
 /**
  * Implementations are responsible for dispatching event's to the Optimizely event end-point.
  */
 public interface EventHandler {
 
-    void dispatchEvent(LogEvent logEvent);
+    void dispatchEvent(LogEvent logEvent) throws Exception;
 }

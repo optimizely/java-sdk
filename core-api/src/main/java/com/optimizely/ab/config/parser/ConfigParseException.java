@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2017, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,13 +16,10 @@
  */
 package com.optimizely.ab.config.parser;
 
-import com.optimizely.ab.OptimizelyRuntimeException;
-
 /**
  * Wrapper around all types of JSON parser exceptions.
  */
-public final class ConfigParseException extends OptimizelyRuntimeException {
-
+public final class ConfigParseException extends Exception {
     public ConfigParseException(String message) {
         super(message);
     }

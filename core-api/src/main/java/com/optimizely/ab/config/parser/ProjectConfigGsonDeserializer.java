@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -22,15 +22,19 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
-
-import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.Group;
+import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.Rollout;
+import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.TypedAudience;
 
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -47,6 +51,7 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
         String projectId = jsonObject.get("projectId").getAsString();
         String revision = jsonObject.get("revision").getAsString();
         String version = jsonObject.get("version").getAsString();
+        int datafileVersion = Integer.parseInt(version);
 
         // generic list type tokens
         Type groupsType = new TypeToken<List<Group>>() {}.getType();
@@ -54,18 +59,64 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
         Type attributesType = new TypeToken<List<Attribute>>() {}.getType();
         Type eventsType = new TypeToken<List<EventType>>() {}.getType();
         Type audienceType = new TypeToken<List<Audience>>() {}.getType();
+        Type typedAudienceType = new TypeToken<List<TypedAudience>>() {}.getType();
 
         List<Group> groups = context.deserialize(jsonObject.get("groups").getAsJsonArray(), groupsType);
         List<Experiment> experiments =
             context.deserialize(jsonObject.get("experiments").getAsJsonArray(), experimentsType);
-        List<Attribute> attributes =
-            context.deserialize(jsonObject.get("dimensions").getAsJsonArray(), attributesType);
+
+        List<Attribute> attributes;
+        attributes = context.deserialize(jsonObject.get("attributes"), attributesType);
+
         List<EventType> events =
             context.deserialize(jsonObject.get("events").getAsJsonArray(), eventsType);
-        List<Audience> audiences =
-            context.deserialize(jsonObject.get("audiences").getAsJsonArray(), audienceType);
+        List<Audience> audiences = Collections.emptyList();
+        if (jsonObject.has("audiences")) {
+            audiences = context.deserialize(jsonObject.get("audiences").getAsJsonArray(), audienceType);
+        }
 
-        return new ProjectConfig(accountId, projectId, version, revision, groups, experiments, attributes, events,
-                                 audiences);
+        List<Audience> typedAudiences = null;
+        if (jsonObject.has("typedAudiences")) {
+            typedAudiences = context.deserialize(jsonObject.get("typedAudiences").getAsJsonArray(), typedAudienceType);
+        }
+        boolean anonymizeIP = false;
+        // live variables should be null if using V2
+        List<LiveVariable> liveVariables = null;
+        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
+            Type liveVariablesType = new TypeToken<List<LiveVariable>>() {}.getType();
+            liveVariables = context.deserialize(jsonObject.getAsJsonArray("variables"), liveVariablesType);
+
+            anonymizeIP = jsonObject.get("anonymizeIP").getAsBoolean();
+        }
+
+        List<FeatureFlag> featureFlags = null;
+        List<Rollout> rollouts = null;
+        Boolean botFiltering = null;
+        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
+            Type featureFlagsType = new TypeToken<List<FeatureFlag>>() {}.getType();
+            featureFlags = context.deserialize(jsonObject.getAsJsonArray("featureFlags"), featureFlagsType);
+            Type rolloutsType = new TypeToken<List<Rollout>>() {}.getType();
+            rollouts = context.deserialize(jsonObject.get("rollouts").getAsJsonArray(), rolloutsType);
+            if(jsonObject.has("botFiltering"))
+                botFiltering = jsonObject.get("botFiltering").getAsBoolean();
+        }
+
+        return new ProjectConfig(
+                accountId,
+                anonymizeIP,
+                botFiltering,
+                projectId,
+                revision,
+                version,
+                attributes,
+                audiences,
+                typedAudiences,
+                events,
+                experiments,
+                featureFlags,
+                groups,
+                liveVariables,
+                rollouts
+        );
     }
 }

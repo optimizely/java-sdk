@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,33 +16,38 @@
  */
 package com.optimizely.ab.config.parser;
 
-import com.optimizely.ab.config.audience.AndCondition;
-import com.optimizely.ab.config.audience.Audience;
-import com.optimizely.ab.config.audience.Condition;
-import com.optimizely.ab.config.audience.NotCondition;
-import com.optimizely.ab.config.audience.OrCondition;
-import com.optimizely.ab.config.audience.UserAttribute;
-
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.Experiment.ExperimentStatus;
+import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.Group;
+import com.optimizely.ab.config.LiveVariable;
+import com.optimizely.ab.config.LiveVariable.VariableStatus;
+import com.optimizely.ab.config.LiveVariable.VariableType;
+import com.optimizely.ab.config.LiveVariableUsageInstance;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
-
+import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
+import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.config.audience.UserAttribute;
+import com.optimizely.ab.internal.ConditionUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import javax.annotation.Nonnull;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * {@code json-simple}-based config parser implementation.
@@ -59,17 +64,66 @@ final class JsonSimpleConfigParser implements ConfigParser {
             String projectId = (String)rootObject.get("projectId");
             String revision = (String)rootObject.get("revision");
             String version = (String)rootObject.get("version");
+            int datafileVersion = Integer.parseInt(version);
 
             List<Experiment> experiments = parseExperiments((JSONArray)rootObject.get("experiments"));
-            List<Attribute> attributes = parseAttributes((JSONArray)rootObject.get("dimensions"));
+
+            List<Attribute> attributes;
+            attributes = parseAttributes((JSONArray)rootObject.get("attributes"));
+
             List<EventType> events = parseEvents((JSONArray)rootObject.get("events"));
-            List<Audience> audiences = parseAudiences((JSONArray)parser.parse(rootObject.get("audiences").toString()));
+            List<Audience> audiences = Collections.emptyList();
+
+            if (rootObject.containsKey("audiences")) {
+                audiences = parseAudiences((JSONArray)parser.parse(rootObject.get("audiences").toString()));
+            }
+
+            List<Audience> typedAudiences = null;
+            if (rootObject.containsKey("typedAudiences")) {
+                typedAudiences = parseTypedAudiences((JSONArray)parser.parse(rootObject.get("typedAudiences").toString()));
+            }
+
             List<Group> groups = parseGroups((JSONArray)rootObject.get("groups"));
 
-            return new ProjectConfig(accountId, projectId, version, revision, groups, experiments, attributes, events,
-                                     audiences);
-        } catch (ParseException e) {
-            throw new ConfigParseException("unable to parse project config: " + json, e);
+            boolean anonymizeIP = false;
+            List<LiveVariable> liveVariables = null;
+            if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
+                liveVariables = parseLiveVariables((JSONArray)rootObject.get("variables"));
+
+                anonymizeIP = (Boolean)rootObject.get("anonymizeIP");
+            }
+
+            List<FeatureFlag> featureFlags = null;
+            List<Rollout> rollouts = null;
+            Boolean botFiltering = null;
+            if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
+                featureFlags = parseFeatureFlags((JSONArray) rootObject.get("featureFlags"));
+                rollouts = parseRollouts((JSONArray) rootObject.get("rollouts"));
+                if(rootObject.containsKey("botFiltering"))
+                    botFiltering = (Boolean) rootObject.get("botFiltering");
+            }
+
+            return new ProjectConfig(
+                    accountId,
+                    anonymizeIP,
+                    botFiltering,
+                    projectId,
+                    revision,
+                    version,
+                    attributes,
+                    audiences,
+                    typedAudiences,
+                    events,
+                    experiments,
+                    featureFlags,
+                    groups,
+                    liveVariables,
+                    rollouts
+            );
+        } catch (RuntimeException ex){
+            throw new ConfigParseException("Unable to parse datafile: " + json, ex);
+        } catch (Exception e) {
+            throw new ConfigParseException("Unable to parse datafile: " + json, e);
         }
     }
 
@@ -86,7 +140,11 @@ final class JsonSimpleConfigParser implements ConfigParser {
             JSONObject experimentObject = (JSONObject)obj;
             String id = (String)experimentObject.get("id");
             String key = (String)experimentObject.get("key");
-            String status = (String)experimentObject.get("status");
+            Object statusJson = experimentObject.get("status");
+            String status = statusJson == null ? ExperimentStatus.NOT_STARTED.toString() :
+                    (String)experimentObject.get("status");
+            Object layerIdObject = experimentObject.get("layerId");
+            String layerId = layerIdObject == null ? null : (String)layerIdObject;
 
             JSONArray audienceIdsJson = (JSONArray)experimentObject.get("audienceIds");
             List<String> audienceIds = new ArrayList<String>(audienceIdsJson.size());
@@ -95,6 +153,16 @@ final class JsonSimpleConfigParser implements ConfigParser {
                 audienceIds.add((String)audienceIdObj);
             }
 
+            Condition conditions = null;
+            if (experimentObject.containsKey("audienceConditions")) {
+                Object jsonCondition = experimentObject.get("audienceConditions");
+                try {
+                    conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, jsonCondition);
+                } catch (Exception e) {
+                    // unable to parse conditions.
+                    Logger.getAnonymousLogger().log(Level.ALL, "problem parsing audience conditions", e);
+                }
+            }
             // parse the child objects
             List<Variation> variations = parseVariations((JSONArray)experimentObject.get("variations"));
             Map<String, String> userIdToVariationKeyMap =
@@ -102,11 +170,47 @@ final class JsonSimpleConfigParser implements ConfigParser {
             List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation((JSONArray)experimentObject.get("trafficAllocation"));
 
-            experiments.add(new Experiment(id, key, status, audienceIds, variations, userIdToVariationKeyMap,
+            experiments.add(new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
                                            trafficAllocations, groupId));
         }
 
         return experiments;
+    }
+
+    private List<String> parseExperimentIds(JSONArray experimentIdsJsonArray) {
+        List<String> experimentIds = new ArrayList<String>(experimentIdsJsonArray.size());
+
+        for (Object experimentIdObj : experimentIdsJsonArray) {
+            experimentIds.add((String)experimentIdObj);
+        }
+
+        return experimentIds;
+    }
+
+    private List<FeatureFlag> parseFeatureFlags(JSONArray featureFlagJson) {
+        List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>(featureFlagJson.size());
+
+        for (Object obj : featureFlagJson) {
+            JSONObject featureFlagObject = (JSONObject)obj;
+            String id = (String)featureFlagObject.get("id");
+            String key = (String)featureFlagObject.get("key");
+            String layerId = (String)featureFlagObject.get("rolloutId");
+
+            JSONArray experimentIdsJsonArray = (JSONArray)featureFlagObject.get("experimentIds");
+            List<String> experimentIds = parseExperimentIds(experimentIdsJsonArray);
+
+            List<LiveVariable> liveVariables = parseLiveVariables((JSONArray) featureFlagObject.get("variables"));
+
+            featureFlags.add(new FeatureFlag(
+                    id,
+                    key,
+                    layerId,
+                    experimentIds,
+                    liveVariables
+            ));
+        }
+
+        return featureFlags;
     }
 
     private List<Variation> parseVariations(JSONArray variationJson) {
@@ -116,8 +220,17 @@ final class JsonSimpleConfigParser implements ConfigParser {
             JSONObject variationObject = (JSONObject)obj;
             String id = (String)variationObject.get("id");
             String key = (String)variationObject.get("key");
+            Boolean featureEnabled = false;
 
-            variations.add(new Variation(id, key));
+            if(variationObject.containsKey("featureEnabled"))
+                featureEnabled = (Boolean)variationObject.get("featureEnabled");
+
+            List<LiveVariableUsageInstance> liveVariableUsageInstances = null;
+            if (variationObject.containsKey("variables")) {
+                liveVariableUsageInstances = parseLiveVariableInstances((JSONArray)variationObject.get("variables"));
+            }
+
+            variations.add(new Variation(id, key, featureEnabled, liveVariableUsageInstances));
         }
 
         return variations;
@@ -168,11 +281,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
         for (Object obj : eventJson) {
             JSONObject eventObject = (JSONObject)obj;
             JSONArray experimentIdsJson = (JSONArray)eventObject.get("experimentIds");
-            List<String> experimentIds = new ArrayList<String>(experimentIdsJson.size());
-
-            for (Object experimentIdObj : experimentIdsJson) {
-                experimentIds.add((String)experimentIdObj);
-            }
+            List<String> experimentIds = parseExperimentIds(experimentIdsJson);
 
             String id = (String)eventObject.get("id");
             String key = (String)eventObject.get("key");
@@ -191,41 +300,28 @@ final class JsonSimpleConfigParser implements ConfigParser {
             JSONObject audienceObject = (JSONObject)obj;
             String id = (String)audienceObject.get("id");
             String key = (String)audienceObject.get("name");
-            String conditionString = (String)audienceObject.get("conditions");
-
-            JSONArray conditionJson = (JSONArray)parser.parse(conditionString);
-            Condition conditions = parseConditions(conditionJson);
+            Object conditionObject = audienceObject.get("conditions");
+            Object conditionJson = parser.parse((String)conditionObject);
+            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionJson);
             audiences.add(new Audience(id, key, conditions));
         }
 
         return audiences;
     }
 
-    private Condition parseConditions(JSONArray conditionJson) {
-        List<Condition> conditions = new ArrayList<Condition>();
-        String operand = (String)conditionJson.get(0);
+    private List<Audience> parseTypedAudiences(JSONArray audienceJson) throws ParseException {
+        List<Audience> audiences = new ArrayList<Audience>(audienceJson.size());
 
-        for (int i = 1; i < conditionJson.size(); i++) {
-            Object obj = conditionJson.get(i);
-            if (obj instanceof JSONArray) {
-                conditions.add(parseConditions((JSONArray)conditionJson.get(i)));
-            } else {
-                JSONObject conditionMap = (JSONObject)obj;
-                conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
-                               (String)conditionMap.get("value")));
-            }
+        for (Object obj : audienceJson) {
+            JSONObject audienceObject = (JSONObject)obj;
+            String id = (String)audienceObject.get("id");
+            String key = (String)audienceObject.get("name");
+            Object conditionObject = audienceObject.get("conditions");
+            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionObject);
+            audiences.add(new Audience(id, key, conditions));
         }
 
-        Condition condition;
-        if (operand.equals("and")) {
-            condition = new AndCondition(conditions);
-        } else if (operand.equals("or")) {
-            condition = new OrCondition(conditions);
-        } else {
-            condition = new NotCondition(conditions.get(0));
-        }
-
-        return condition;
+        return audiences;
     }
 
     private List<Group> parseGroups(JSONArray groupJson) {
@@ -243,6 +339,52 @@ final class JsonSimpleConfigParser implements ConfigParser {
         }
 
         return groups;
+    }
+
+    private List<LiveVariable> parseLiveVariables(JSONArray liveVariablesJson) {
+        List<LiveVariable> liveVariables = new ArrayList<LiveVariable>(liveVariablesJson.size());
+
+        for (Object obj : liveVariablesJson) {
+            JSONObject liveVariableObject = (JSONObject)obj;
+            String id = (String)liveVariableObject.get("id");
+            String key = (String)liveVariableObject.get("key");
+            String defaultValue = (String)liveVariableObject.get("defaultValue");
+            VariableType type = VariableType.fromString((String)liveVariableObject.get("type"));
+            VariableStatus status = VariableStatus.fromString((String)liveVariableObject.get("status"));
+
+            liveVariables.add(new LiveVariable(id, key, defaultValue, status, type));
+        }
+
+        return liveVariables;
+    }
+
+    private List<LiveVariableUsageInstance> parseLiveVariableInstances(JSONArray liveVariableInstancesJson) {
+        List<LiveVariableUsageInstance> liveVariableUsageInstances =
+                new ArrayList<LiveVariableUsageInstance>(liveVariableInstancesJson.size());
+
+        for (Object obj : liveVariableInstancesJson) {
+            JSONObject liveVariableInstanceObject = (JSONObject)obj;
+            String id = (String)liveVariableInstanceObject.get("id");
+            String value = (String)liveVariableInstanceObject.get("value");
+
+            liveVariableUsageInstances.add(new LiveVariableUsageInstance(id, value));
+        }
+
+        return liveVariableUsageInstances;
+    }
+
+    private List<Rollout> parseRollouts(JSONArray rolloutsJson) {
+        List<Rollout> rollouts = new ArrayList<Rollout>(rolloutsJson.size());
+
+        for (Object obj : rolloutsJson) {
+            JSONObject rolloutObject = (JSONObject) obj;
+            String id = (String) rolloutObject.get("id");
+            List<Experiment> experiments = parseExperiments((JSONArray) rolloutObject.get("experiments"));
+
+            rollouts.add(new Rollout(id, experiments));
+        }
+
+        return rollouts;
     }
 }
 

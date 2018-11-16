@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,18 +16,19 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.config.ProjectConfig;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.concurrent.Immutable;
-import javax.annotation.Nonnull;
 
 /**
  * Represents an 'Or' conditions condition operation.
  */
 @Immutable
-public class OrCondition implements Condition {
-
+public class OrCondition<T> implements Condition<T> {
     private final List<Condition> conditions;
 
     public OrCondition(@Nonnull List<Condition> conditions) {
@@ -38,10 +39,27 @@ public class OrCondition implements Condition {
         return conditions;
     }
 
-    public boolean evaluate(Map<String, String> attributes) {
+    // According to the matrix:
+    // true returns true
+    // false or null is null
+    // false or false is false
+    // null or null is null
+    public @Nullable Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+        if (conditions == null) return null;
+        boolean foundNull = false;
         for (Condition condition : conditions) {
-            if (condition.evaluate(attributes))
+            Boolean conditionEval = condition.evaluate(config, attributes);
+            if (conditionEval == null) { // true with falses and nulls is still true
+                foundNull = true;
+            }
+            else if (conditionEval) {
                 return true;
+            }
+        }
+
+        // if found null and false return null.  all false return false
+        if (foundNull) {
+            return null;
         }
 
         return false;

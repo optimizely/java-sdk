@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2017, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -26,12 +26,10 @@ import com.optimizely.ab.config.Variation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import java.util.List;
 
 /**
  * Default Optimizely bucketing algorithm that evenly distributes users using the Murmur3 hash of some provided
@@ -47,8 +45,6 @@ public class Bucketer {
 
     private final ProjectConfig projectConfig;
 
-    @Nullable private final UserExperimentRecord userExperimentRecord;
-
     private static final Logger logger = LoggerFactory.getLogger(Bucketer.class);
 
     private static final int MURMUR_HASH_SEED = 1;
@@ -60,12 +56,7 @@ public class Bucketer {
     static final int MAX_TRAFFIC_VALUE = 10000;
 
     public Bucketer(ProjectConfig projectConfig) {
-        this(projectConfig, null);
-    }
-
-    public Bucketer(ProjectConfig projectConfig, @Nullable UserExperimentRecord userExperimentRecord) {
         this.projectConfig = projectConfig;
-        this.userExperimentRecord = userExperimentRecord;
     }
 
     private String bucketToEntity(int bucketValue, List<TrafficAllocation> trafficAllocations) {
@@ -85,15 +76,15 @@ public class Bucketer {
     }
 
     private Experiment bucketToExperiment(@Nonnull Group group,
-                                          @Nonnull String userId) {
+                                          @Nonnull String bucketingId) {
         // "salt" the bucket id using the group id
-        String bucketId = userId + group.getId();
+        String bucketKey = bucketingId + group.getId();
 
         List<TrafficAllocation> trafficAllocations = group.getTrafficAllocation();
 
-        int hashCode = MurmurHash3.murmurhash3_x86_32(bucketId, 0, bucketId.length(), MURMUR_HASH_SEED);
+        int hashCode = MurmurHash3.murmurhash3_x86_32(bucketKey, 0, bucketKey.length(), MURMUR_HASH_SEED);
         int bucketValue = generateBucketValue(hashCode);
-        logger.debug("Assigned bucket {} to user \"{}\" during experiment bucketing.", bucketValue, userId);
+        logger.debug("Assigned bucket {} to user with bucketingId \"{}\" during experiment bucketing.", bucketValue, bucketingId);
 
         String bucketedExperimentId = bucketToEntity(bucketValue, trafficAllocations);
         if (bucketedExperimentId != null) {
@@ -101,113 +92,76 @@ public class Bucketer {
         }
 
         // user was not bucketed to an experiment in the group
-        logger.info("User \"{}\" is not in any experiment of group {}.", userId, group.getId());
         return null;
     }
 
     private Variation bucketToVariation(@Nonnull Experiment experiment,
-                                        @Nonnull String userId) {
+                                        @Nonnull String bucketingId) {
         // "salt" the bucket id using the experiment id
         String experimentId = experiment.getId();
         String experimentKey = experiment.getKey();
-        String combinedBucketId = userId + experimentId;
-
-        // If a user experiment record instance is present then check it for a saved variation
-        if (userExperimentRecord != null) {
-            String variationKey = userExperimentRecord.lookup(userId, experimentKey);
-            if (variationKey != null) {
-                logger.info("Returning previously activated variation \"{}\" of experiment \"{}\" "
-                            + "for user \"{}\" from user experiment record.",
-                            variationKey, experimentKey, userId);
-                // A variation is stored for this combined bucket id
-                return projectConfig
-                    .getExperimentIdMapping()
-                    .get(experimentId)
-                    .getVariationKeyToVariationMap()
-                    .get(variationKey);
-            } else {
-                logger.info("No previously activated variation of experiment \"{}\" "
-                            + "for user \"{}\" found in user experiment record.",
-                            experimentKey, userId);
-            }
-        }
+        String combinedBucketId = bucketingId + experimentId;
 
         List<TrafficAllocation> trafficAllocations = experiment.getTrafficAllocation();
 
         int hashCode = MurmurHash3.murmurhash3_x86_32(combinedBucketId, 0, combinedBucketId.length(), MURMUR_HASH_SEED);
         int bucketValue = generateBucketValue(hashCode);
-        logger.debug("Assigned bucket {} to user \"{}\" during variation bucketing.", bucketValue, userId);
+        logger.debug("Assigned bucket {} to user with bucketingId \"{}\" when bucketing to a variation.", bucketValue, bucketingId);
 
         String bucketedVariationId = bucketToEntity(bucketValue, trafficAllocations);
         if (bucketedVariationId != null) {
             Variation bucketedVariation = experiment.getVariationIdToVariationMap().get(bucketedVariationId);
             String variationKey = bucketedVariation.getKey();
-                logger.info("User \"{}\" is in variation \"{}\" of experiment \"{}\".", userId, variationKey,
-                        experimentKey);
-
-            // If a user experiment record is present give it a variation to store
-            if (userExperimentRecord != null) {
-                boolean saved = userExperimentRecord.save(userId, experiment.getKey(), variationKey);
-                if (saved) {
-                    logger.info("Saved variation \"{}\" of experiment \"{}\" for user \"{}\".",
-                                variationKey, experimentKey, userId);
-                } else {
-                    logger.warn("Failed to save variation \"{}\" of experiment \"{}\" for user \"{}\".",
-                                variationKey, experimentKey, userId);
-                }
-            }
+            logger.info("User with bucketingId \"{}\" is in variation \"{}\" of experiment \"{}\".", bucketingId, variationKey,
+                    experimentKey);
 
             return bucketedVariation;
         }
 
         // user was not bucketed to a variation
-        logger.info("User \"{}\" is not in any variation of experiment \"{}\".", userId, experimentKey);
+        logger.info("User with bucketingId \"{}\" is not in any variation of experiment \"{}\".", bucketingId, experimentKey);
         return null;
     }
 
+    /**
+     * Assign a {@link Variation} of an {@link Experiment} to a user based on hashed value from murmurhash3.
+     * @param experiment The Experiment in which the user is to be bucketed.
+     * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
+     * @return Variation the user is bucketed into or null.
+     */
     public @Nullable Variation bucket(@Nonnull Experiment experiment,
-                                      @Nonnull String userId) {
-
-        // if a user has a forced variation mapping, return the respective variation
-        Map<String, String> userIdToVariationKeyMap = experiment.getUserIdToVariationKeyMap();
-        if (userIdToVariationKeyMap.containsKey(userId)) {
-            String forcedVariationKey = userIdToVariationKeyMap.get(userId);
-            Variation forcedVariation = experiment.getVariationKeyToVariationMap().get(forcedVariationKey);
-            if (forcedVariation != null) {
-                logger.info("User \"{}\" is forced in variation \"{}\".", userId, forcedVariationKey);
-            } else {
-                logger.error("Variation \"{}\" is not in the datafile. Not activating user \"{}\".", forcedVariationKey,
-                             userId);
-            }
-
-            return forcedVariation;
-        }
-
+                                      @Nonnull String bucketingId) {
+        // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group
         if (!groupId.isEmpty()) {
             Group experimentGroup = projectConfig.getGroupIdMapping().get(groupId);
             // bucket to an experiment only if group entities are to be mutually exclusive
             if (experimentGroup.getPolicy().equals(Group.RANDOM_POLICY)) {
-                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, userId);
+                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId);
                 if (bucketedExperiment == null) {
+                    logger.info("User with bucketingId \"{}\" is not in any experiment of group {}.", bucketingId, experimentGroup.getId());
                     return null;
+                }
+                else {
+
                 }
                 // if the experiment a user is bucketed in within a group isn't the same as the experiment provided,
                 // don't perform further bucketing within the experiment
                 if (!bucketedExperiment.getId().equals(experiment.getId())) {
-                    logger.info("User \"{}\" is not in experiment \"{}\" of group {}.", userId, experiment.getKey(),
-                                experimentGroup.getId());
+                    logger.info("User with bucketingId \"{}\" is not in experiment \"{}\" of group {}.", bucketingId, experiment.getKey(),
+                            experimentGroup.getId());
                     return null;
                 }
 
-                logger.info("User \"{}\" is in experiment \"{}\" of group {}.", userId, experiment.getKey(),
-                            experimentGroup.getId());
+                logger.info("User with bucketingId \"{}\" is in experiment \"{}\" of group {}.", bucketingId, experiment.getKey(),
+                        experimentGroup.getId());
             }
         }
 
-        return bucketToVariation(experiment, userId);
+        return bucketToVariation(experiment, bucketingId);
     }
+
 
     //======== Helper methods ========//
 
@@ -223,28 +177,5 @@ public class Bucketer {
         return (int)Math.floor(MAX_TRAFFIC_VALUE * ratio);
     }
 
-    @Nullable
-    public UserExperimentRecord getUserExperimentRecord() {
-        return userExperimentRecord;
-    }
 
-    /**
-     * Gives implementations of {@link UserExperimentRecord} a chance to remove records
-     * of experiments that are deleted or not running.
-     */
-    public void cleanUserExperimentRecords() {
-        if (userExperimentRecord != null) {
-            Map<String, Map<String,String>> records = userExperimentRecord.getAllRecords();
-            if (records != null) {
-                for (Map.Entry<String,Map<String,String>> record : records.entrySet()) {
-                    for (String experimentKey : record.getValue().keySet()) {
-                        Experiment experiment = projectConfig.getExperimentKeyMapping().get(experimentKey);
-                        if (experiment == null || !experiment.isRunning()) {
-                            userExperimentRecord.remove(record.getKey(), experimentKey);
-                        }
-                    }
-                }
-            }
-        }
-    }
 }

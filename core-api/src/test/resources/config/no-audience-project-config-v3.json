@@ -1,21 +1,24 @@
 {
   "accountId": "789",
   "projectId": "1234",
-  "version": "4",
+  "version": "2",
   "revision": "42",
   "experiments": [
     {
       "id": "223",
       "key": "etag1",
       "status": "Running",
+      "layerId": "1",
       "percentageIncluded": 9000,
       "audienceIds": [],
       "variations": [{
         "id": "276",
-        "key": "vtag1"
+        "key": "vtag1",
+        "variables": []
       }, {
         "id": "277",
-        "key": "vtag2"
+        "key": "vtag2",
+        "variables": []
       }],
       "forcedVariations": {
         "testUser1": "vtag1",
@@ -33,13 +36,16 @@
       "id": "118",
       "key": "etag2",
       "status": "Not started",
+      "layerId": "2",
       "audienceIds": [],
       "variations": [{
         "id": "278",
-        "key": "vtag3"
+        "key": "vtag3",
+        "variables": []
       }, {
         "id": "279",
-        "key": "vtag4"
+        "key": "vtag4",
+        "variables": []
       }],
       "forcedVariations": {},
       "trafficAllocation": [{
@@ -49,15 +55,36 @@
         "entityId": "279",
         "endOfRange": 9000
       }]
+    },
+    {
+      "id": "119",
+      "key": "etag3",
+      "status": "Launched",
+      "layerId": "3",
+      "audienceIds": [],
+      "variations": [{
+        "id": "280",
+        "key": "vtag5"
+      }, {
+        "id": "281",
+        "key": "vtag6"
+      }],
+      "forcedVariations": {},
+      "trafficAllocation": [{
+        "entityId": "280",
+        "endOfRange": 5000
+      }, {
+        "entityId": "281",
+        "endOfRange": 10000
+      }]
     }
   ],
   "groups": [],
   "audiences": [],
-  "dimensions": [
+  "attributes": [
     {
       "id": "134",
-      "key": "browser_type",
-      "segmentId": "185"
+      "key": "browser_type"
     }
   ],
   "events": [
@@ -82,6 +109,22 @@
         "118",
         "223"
       ]
+    },
+    {
+      "id": "100",
+      "key": "launched_exp_event",
+      "experimentIds": [
+        "119"
+      ]
+    },
+    {
+      "id": "101",
+      "key": "event_with_launched_and_running_experiments",
+      "experimentIds": [
+        "119",
+        "223"
+      ]
     }
-  ]
+  ],
+  "variables": []
 }

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,20 +16,20 @@
  */
 package com.optimizely.ab.config.audience;
 
-import java.util.List;
-import java.util.Map;
+import com.optimizely.ab.config.ProjectConfig;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents an 'And' conditions condition operation.
  */
-@Immutable
-public class AndCondition implements Condition {
+public class AndCondition<T> implements Condition<T> {
 
     private final List<Condition> conditions;
-
     public AndCondition(@Nonnull List<Condition> conditions) {
         this.conditions = conditions;
     }
@@ -38,13 +38,33 @@ public class AndCondition implements Condition {
         return conditions;
     }
 
-    public boolean evaluate(Map<String, String> attributes) {
+    public @Nullable
+    Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+        if (conditions == null) return null;
+        boolean foundNull = false;
+        // According to the matrix where:
+        // false and true is false
+        // false and null is false
+        // true and null is null.
+        // true and false is false
+        // true and true is true
+        // null and null is null
         for (Condition condition : conditions) {
-            if (!condition.evaluate(attributes))
+            Boolean conditionEval = condition.evaluate(config, attributes);
+            if (conditionEval == null) {
+                foundNull = true;
+            }
+            else if (!conditionEval) { // false with nulls or trues is false.
                 return false;
+            }
+            // true and nulls with no false will be null.
         }
 
-        return true;
+        if (foundNull) { // true and null or all null returns null
+            return null;
+        }
+
+        return true; // otherwise, return true
     }
 
     @Override

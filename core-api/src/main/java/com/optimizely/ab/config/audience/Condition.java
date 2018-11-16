@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,12 +16,16 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.config.ProjectConfig;
+
+import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
  * Interface implemented by all conditions condition objects to aid in condition evaluation.
  */
-public interface Condition {
+public interface Condition<T> {
 
-    boolean evaluate(Map<String, String> attributes);
+    @Nullable
+    Boolean evaluate(ProjectConfig config, Map<String, ?> attributes);
 }

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2017, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab;
 
+import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.NoopEventHandler;
 
@@ -68,7 +69,7 @@ public class OptimizelyBuilderBenchmark {
     }
 
     @Benchmark
-    public Optimizely measureOptimizelyCreation() throws IOException {
+    public Optimizely measureOptimizelyCreation() throws IOException, ConfigParseException {
         return Optimizely.builder(datafile, eventHandler).build();
     }
 }

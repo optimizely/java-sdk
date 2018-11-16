@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2017, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,6 +16,10 @@
  */
 package com.optimizely.ab.event;
 
+import com.optimizely.ab.event.internal.payload.EventBatch;
+import com.optimizely.ab.event.internal.serializer.DefaultJsonSerializer;
+import com.optimizely.ab.event.internal.serializer.Serializer;
+
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -30,16 +34,16 @@ public class LogEvent {
     private final RequestMethod requestMethod;
     private final String endpointUrl;
     private final Map<String, String> requestParams;
-    private final String body;
+    private final EventBatch eventBatch;
 
     public LogEvent(@Nonnull RequestMethod requestMethod,
                     @Nonnull String endpointUrl,
                     @Nonnull Map<String, String> requestParams,
-                    @Nonnull String body) {
+                    EventBatch eventBatch) {
         this.requestMethod = requestMethod;
         this.endpointUrl = endpointUrl;
         this.requestParams = requestParams;
-        this.body = body;
+        this.eventBatch = eventBatch;
     }
 
     //======== Getters ========//
@@ -57,7 +61,12 @@ public class LogEvent {
     }
 
     public String getBody() {
-        return body;
+        if (eventBatch == null) {
+            return "";
+        }
+
+        Serializer serializer = DefaultJsonSerializer.getInstance();
+        return serializer.serialize(eventBatch);
     }
 
     //======== Overriding method ========//
@@ -68,7 +77,7 @@ public class LogEvent {
                "requestMethod=" + requestMethod +
                ", endpointUrl='" + endpointUrl + '\'' +
                ", requestParams=" + requestParams +
-               ", body='" + body + '\'' +
+               ", body='" + getBody() + '\'' +
                '}';
     }
 

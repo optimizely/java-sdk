@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,15 +16,16 @@
  */
 package com.optimizely.ab.config;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
+import com.optimizely.ab.config.audience.Condition;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.concurrent.Immutable;
 
 /**
  * Represents the Optimizely Experiment configuration.
@@ -38,9 +39,11 @@ public class Experiment implements IdKeyMapped {
     private final String id;
     private final String key;
     private final String status;
+    private final String layerId;
     private final String groupId;
 
     private final List<String> audienceIds;
+    private final Condition<AudienceIdCondition> audienceConditions;
     private final List<Variation> variations;
     private final List<TrafficAllocation> trafficAllocation;
 
@@ -48,28 +51,53 @@ public class Experiment implements IdKeyMapped {
     private final Map<String, Variation> variationIdToVariationMap;
     private final Map<String, String> userIdToVariationKeyMap;
 
-    // constant storing the status of a running experiment. Other possible statuses for an experiment
-    // include 'Not started', 'Paused', and 'Archived'
-    private static final String STATUS_RUNNING = "Running";
+    public enum ExperimentStatus {
+        RUNNING ("Running"),
+        LAUNCHED ("Launched"),
+        PAUSED ("Paused"),
+        NOT_STARTED ("Not started"),
+        ARCHIVED ("Archived");
+
+        private final String experimentStatus;
+
+        ExperimentStatus(String experimentStatus) {
+            this.experimentStatus = experimentStatus;
+        }
+
+        public String toString() {
+            return experimentStatus;
+        }
+    }
 
     @JsonCreator
     public Experiment(@JsonProperty("id") String id,
                       @JsonProperty("key") String key,
                       @JsonProperty("status") String status,
+                      @JsonProperty("layerId") String layerId,
                       @JsonProperty("audienceIds") List<String> audienceIds,
+                      @JsonProperty("audienceConditions") Condition audienceConditions,
                       @JsonProperty("variations") List<Variation> variations,
                       @JsonProperty("forcedVariations") Map<String, String> userIdToVariationKeyMap,
                       @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation) {
-        this(id, key, status, audienceIds, variations, userIdToVariationKeyMap, trafficAllocation, "");
+        this(id, key, status, layerId, audienceIds, audienceConditions, variations, userIdToVariationKeyMap, trafficAllocation, "");
     }
 
-    public Experiment(String id, String key, String status, List<String> audienceIds, List<Variation> variations,
-                      Map<String, String> userIdToVariationKeyMap, List<TrafficAllocation> trafficAllocation,
-                      String groupId) {
+    public Experiment(@Nonnull String id,
+                      @Nonnull String key,
+                      @Nullable String status,
+                      @Nullable String layerId,
+                      @Nonnull List<String> audienceIds,
+                      @Nullable Condition audienceConditions,
+                      @Nonnull List<Variation> variations,
+                      @Nonnull Map<String, String> userIdToVariationKeyMap,
+                      @Nonnull List<TrafficAllocation> trafficAllocation,
+                      @Nonnull String groupId) {
         this.id = id;
         this.key = key;
-        this.status = status;
+        this.status = status == null ? ExperimentStatus.NOT_STARTED.toString() : status;
+        this.layerId = layerId;
         this.audienceIds = Collections.unmodifiableList(audienceIds);
+        this.audienceConditions = audienceConditions;
         this.variations = Collections.unmodifiableList(variations);
         this.trafficAllocation = Collections.unmodifiableList(trafficAllocation);
         this.groupId = groupId;
@@ -90,8 +118,16 @@ public class Experiment implements IdKeyMapped {
         return status;
     }
 
+    public String getLayerId() {
+        return layerId;
+    }
+
     public List<String> getAudienceIds() {
         return audienceIds;
+    }
+
+    public Condition getAudienceConditions() {
+        return audienceConditions;
     }
 
     public List<Variation> getVariations() {
@@ -118,8 +154,17 @@ public class Experiment implements IdKeyMapped {
         return groupId;
     }
 
+    public boolean isActive() {
+        return status.equals(ExperimentStatus.RUNNING.toString()) ||
+               status.equals(ExperimentStatus.LAUNCHED.toString());
+    }
+
     public boolean isRunning() {
-        return status.equals(STATUS_RUNNING);
+        return status.equals(ExperimentStatus.RUNNING.toString());
+    }
+
+    public boolean isLaunched() {
+        return status.equals(ExperimentStatus.LAUNCHED.toString());
     }
 
     @Override
@@ -130,6 +175,7 @@ public class Experiment implements IdKeyMapped {
                 ", groupId='" + groupId + '\'' +
                 ", status='" + status + '\'' +
                 ", audienceIds=" + audienceIds +
+                ", audienceConditions=" + audienceConditions +
                 ", variations=" + variations +
                 ", variationKeyToVariationMap=" + variationKeyToVariationMap +
                 ", userIdToVariationKeyMap=" + userIdToVariationKeyMap +

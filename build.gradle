@@ -7,33 +7,51 @@ buildscript {
     }
 
     dependencies {
-        classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:latest.release'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
     }
 }
 
 plugins {
-    id 'net.researchgate.release' version '2.2.1'
-    id 'nebula.optional-base' version '3.0.3'
-    id "me.champeau.gradle.jmh" version "0.3.1"
+    id 'com.github.kt3k.coveralls' version '2.8.2'
+    id 'jacoco'
+    id 'me.champeau.gradle.jmh' version '0.4.5'
+    id 'nebula.optional-base' version '3.2.0'
 }
 
 allprojects {
     group = 'com.optimizely.ab'
+    apply plugin: 'idea'
+    apply plugin: 'jacoco'
+
+    repositories {
+        jcenter()
+    }
+
+    jacoco {
+        toolVersion = '0.8.0'
+    }
 }
 
-apply from: 'gradle/license.gradle'
 apply from: 'gradle/publish.gradle'
 
-subprojects {
-    apply plugin: 'findbugs'
-    apply plugin: 'java'
-    apply plugin: 'jacoco'
-    apply plugin: 'nebula.provided-base'
-    apply plugin: 'nebula.optional-base'
-    apply plugin: 'me.champeau.gradle.jmh'
+allprojects {
+    def travis_defined_version = System.getenv('TRAVIS_TAG')
+    if (travis_defined_version != null) {
+        version = travis_defined_version
+    }
+}
 
-    sourceCompatibility = 1.6
-    targetCompatibility = 1.6
+subprojects {
+    apply plugin: 'com.jfrog.bintray'
+    apply plugin: 'findbugs'
+    apply plugin: 'jacoco'
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+    apply plugin: 'me.champeau.gradle.jmh'
+    apply plugin: 'nebula.optional-base'
+
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
 
     repositories {
         jcenter()
@@ -61,6 +79,10 @@ subprojects {
         }
     }
 
+    findbugs {
+        findbugsJmh.enabled = false
+    }
+
     test {
         useJUnit {
             excludeCategories 'com.optimizely.ab.categories.ExhaustiveTest'
@@ -86,9 +108,8 @@ subprojects {
     }
 
     dependencies {
-        afterEvaluate {
-            jmh configurations.testCompile.allDependencies
-        }
+        jmh 'org.openjdk.jmh:jmh-core:1.12'
+        jmh 'org.openjdk.jmh:jmh-generator-annprocess:1.12'
     }
 
     dependencies {
@@ -100,15 +121,112 @@ subprojects {
         // logging dependencies (logback)
         testCompile group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
         testCompile group: 'ch.qos.logback', name: 'logback-core', version: logbackVersion
+
+        testCompile group: 'com.google.code.gson', name: 'gson', version: gsonVersion
+        testCompile group: 'org.json', name: 'json', version: jsonVersion
+        testCompile group: 'com.googlecode.json-simple', name: 'json-simple', version: jsonSimpleVersion
+        testCompile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
     }
 
-    // for commits performed by the release plugin, skip the travis build (as it would attempt to bump the version)
-    release {
-        preCommitText = '[ci skip]'
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+                artifact sourcesJar
+                artifact javadocJar
+                pom.withXml {
+                    asNode().children().last() + {
+                        resolveStrategy = Closure.DELEGATE_FIRST
+                        url 'https://github.com/optimizely/java-sdk'
+                        licenses {
+                            license {
+                                name 'The Apache Software License, Version 2.0'
+                                url 'http://www.apache.org/license/LICENSE-2.0.txt'
+                                distribution 'repo'
+                            }
+                        }
+                        developers {
+                            developer {
+                                id 'optimizely'
+                                name 'Optimizely'
+                                email 'developers@optimizely.com'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    def bintrayName = 'core-api';
+    if (name.equals('core-httpclient-impl')) {
+        bintrayName = 'httpclient'
+    }
+
+    bintray {
+        user = System.getenv('BINTRAY_USER')
+        key = System.getenv('BINTRAY_KEY')
+        pkg {
+            repo = 'optimizely'
+            name = "optimizely-sdk-${bintrayName}"
+            userOrg = 'optimizely'
+            version {
+                name = rootProject.version
+            }
+            publications = ['mavenJava']
+        }
+    }
+
+    build.dependsOn('generatePomFileForMavenJavaPublication')
+
+    bintrayUpload.dependsOn 'build'
+
+    task ship() {
+        dependsOn('bintrayUpload')
+    }
+
+}
+
+task ship() {
+    dependsOn(':core-api:ship', ':core-httpclient-impl:ship')
+}
+
+// Only report code coverage for projects that are distributed
+def publishedProjects = subprojects.findAll { it.path != ':simulator' }
+
+task jacocoMerge(type: JacocoMerge) {
+    publishedProjects.each { subproject ->
+        executionData subproject.tasks.withType(Test)
+    }
+    doFirst {
+        executionData = files(executionData.findAll { it.exists() })
     }
 }
 
-// todo: remove this wrapper version once we're publishing to jcenter/maven central
-task wrapper(type: Wrapper) {
-    distributionUrl = gradleWrapperUrl
+task jacocoRootReport(type: JacocoReport, group: 'Coverage reports') {
+    description = 'Generates an aggregate report from all subprojects'
+    dependsOn publishedProjects.test, jacocoMerge
+
+    additionalSourceDirs = files(publishedProjects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories = files(publishedProjects.sourceSets.main.allSource.srcDirs)
+    classDirectories = files(publishedProjects.sourceSets.main.output)
+    executionData jacocoMerge.destinationFile
+
+    reports {
+        html.enabled = true // human readable
+        xml.enabled = true // required by coveralls
+    }
+}
+
+coveralls {
+    sourceDirs = publishedProjects.sourceSets.main.allSource.srcDirs.flatten()
+    jacocoReportPath = "${buildDir}/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
+}
+
+tasks.coveralls {
+    group = 'Coverage reports'
+    description = 'Uploads the aggregated coverage report to Coveralls'
+
+    dependsOn jacocoRootReport
+    onlyIf { System.env.'CI' && !JavaVersion.current().isJava9Compatible() }
 }

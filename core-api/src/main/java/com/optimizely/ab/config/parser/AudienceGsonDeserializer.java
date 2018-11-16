@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016-2018, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -24,18 +24,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonParseException;
 
-import com.google.gson.internal.LinkedTreeMap;
-
-import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
-import com.optimizely.ab.config.audience.NotCondition;
-import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
+import com.optimizely.ab.internal.ConditionUtils;
 
 import java.lang.reflect.Type;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {
@@ -50,38 +45,21 @@ public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {
         String id = jsonObject.get("id").getAsString();
         String name = jsonObject.get("name").getAsString();
 
-        JsonElement conditionsElement = parser.parse(jsonObject.get("conditions").getAsString());
-        List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
-        Condition conditions = parseConditions(rawObjectList);
+        JsonElement conditionsElement = jsonObject.get("conditions");
+        if (!typeOfT.toString().contains("TypedAudience")) {
+            conditionsElement = parser.parse(jsonObject.get("conditions").getAsString());
+        }
+        Condition conditions = null;
+        if (conditionsElement.isJsonArray()) {
+            List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
+            conditions =  ConditionUtils.parseConditions(UserAttribute.class, rawObjectList);
+        }
+        else if (conditionsElement.isJsonObject()) {
+            Object object = gson.fromJson(conditionsElement,Object.class);
+            conditions = ConditionUtils.parseConditions(UserAttribute.class, object);
+        }
 
         return new Audience(id, name, conditions);
     }
 
-    private Condition parseConditions(List<Object> rawObjectList) {
-        List<Condition> conditions = new ArrayList<Condition>();
-        String operand = (String)rawObjectList.get(0);
-
-        for (int i = 1; i < rawObjectList.size(); i++) {
-            Object obj = rawObjectList.get(i);
-            if (obj instanceof List) {
-                List<Object> objectList = (List<Object>)rawObjectList.get(i);
-                conditions.add(parseConditions(objectList));
-            } else {
-                LinkedTreeMap<String, String> conditionMap = (LinkedTreeMap<String, String>)rawObjectList.get(i);
-                conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
-                               conditionMap.get("value")));
-            }
-        }
-
-        Condition condition;
-        if (operand.equals("and")) {
-            condition = new AndCondition(conditions);
-        } else if (operand.equals("or")) {
-            condition = new OrCondition(conditions);
-        } else {
-            condition = new NotCondition(conditions.get(0));
-        }
-
-        return condition;
-    }
 }
