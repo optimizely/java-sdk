@@ -114,7 +114,6 @@ final class GsonHelpers {
             return ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, rawObjectList);
         }
         else {
-            System.out.println("we have a object XXX");
             Object jsonObject = gson.fromJson(conditionsElement,Object.class);
             return ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, jsonObject);
         }

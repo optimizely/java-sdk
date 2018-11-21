@@ -73,9 +73,7 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
 
     protected static <T> Condition parseCondition(Class<T> clazz, ObjectMapper objectMapper,JsonNode conditionNode)
         throws JsonProcessingException, InvalidAudienceCondition {
-        System.out.println("Inside parse condition");
-        System.out.println(conditionNode.getClass().getCanonicalName());
-        System.out.println(conditionNode.toString());
+
         if (conditionNode.isArray()) {
             return ConditionJacksonDeserializer.<T>parseConditions(clazz, objectMapper, conditionNode);
         } else if (conditionNode.isTextual()) {
