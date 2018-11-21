@@ -114,6 +114,20 @@ public class JacksonConfigParserTest {
     }
 
     @Test
+    public void parseAudienceCondition() throws Exception {
+        String conditionString = "\"123\"";
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(Audience.class, new AudienceJacksonDeserializer(objectMapper));
+        module.addDeserializer(Condition.class, new ConditionJacksonDeserializer(objectMapper));
+        objectMapper.registerModule(module);
+
+        Condition condition = objectMapper.readValue(conditionString, Condition.class);
+        assertNotNull(condition);
+    }
+
+    @Test
     public void parseAudienceConditions() throws Exception {
         String conditionString =
             "[\"and\", \"12\", \"123\"]";

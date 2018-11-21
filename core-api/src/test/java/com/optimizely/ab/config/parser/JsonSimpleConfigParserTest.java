@@ -113,6 +113,14 @@ public class JsonSimpleConfigParserTest {
     }
 
     @Test
+    public void parseAudienceCondition() throws Exception {
+        String conditions = "1";
+
+        Condition condition = ConditionUtils.parseConditions(AudienceIdCondition.class, conditions);
+        assertNotNull(condition);
+    }
+
+    @Test
     public void parseInvalidAudienceConditions() throws Exception {
         thrown.expect(InvalidAudienceCondition.class);
 

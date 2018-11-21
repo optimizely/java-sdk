@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config.parser;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -121,6 +122,21 @@ public class GsonConfigParserTest {
         conditions.add("3");
 
         jsonObject.add("audienceConditions", conditions);
+        Condition condition = GsonHelpers.parseAudienceConditions(jsonObject);
+
+        assertNotNull(condition);
+    }
+
+    @Test
+    public void parseAudienceCondition() throws Exception {
+        JsonObject jsonObject = new JsonObject();
+
+        Gson gson = new Gson();
+
+
+        JsonElement leaf = gson.toJsonTree("1");
+
+        jsonObject.add("audienceConditions", leaf);
         Condition condition = GsonHelpers.parseAudienceConditions(jsonObject);
 
         assertNotNull(condition);

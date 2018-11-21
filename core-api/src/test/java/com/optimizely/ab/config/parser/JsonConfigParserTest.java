@@ -101,6 +101,14 @@ public class JsonConfigParserTest {
     }
 
     @Test
+    public void parseAudienceCondition() throws Exception {
+        String conditions = "1";
+
+        Condition condition = ConditionUtils.parseConditions(AudienceIdCondition.class, conditions);
+        assertNotNull(condition);
+    }
+
+    @Test
     public void parseAudienceConditions() throws Exception {
         JSONArray conditions = new JSONArray();
         conditions.put("and");

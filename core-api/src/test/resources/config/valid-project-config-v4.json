@@ -223,6 +223,37 @@
       "forcedVariations": {}
     },
     {
+      "id": "1323241599",
+      "key": "typed_audience_experiment_leaf_condition",
+      "layerId": "1630555629",
+      "status": "Running",
+      "variations": [
+        {
+          "id": "1423767505",
+          "key": "A",
+          "variables": []
+        },
+        {
+          "id": "3433458317",
+          "key": "B",
+          "variables": []
+        }
+      ],
+      "trafficAllocation": [
+        {
+          "entityId": "1423767505",
+          "endOfRange": 5000
+        },
+        {
+          "entityId": "3433458317",
+          "endOfRange": 10000
+        }
+      ],
+      "audienceIds": [],
+      "audienceConditions" : "3468206643",
+      "forcedVariations": {}
+    },
+    {
       "id": "3262035800",
       "key": "multivariate_experiment",
       "layerId": "3262035800",
