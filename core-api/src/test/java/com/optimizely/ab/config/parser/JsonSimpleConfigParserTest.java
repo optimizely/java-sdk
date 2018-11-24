@@ -89,6 +89,20 @@ public class JsonSimpleConfigParserTest {
     }
 
     @Test
+    public void parseAudienceLeaf() throws Exception {
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.append("id", "123");
+        jsonObject.append("name","blah");
+        jsonObject.append("conditions",
+            "{\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"lt\", \"value\":100.0}");
+
+        Condition<UserAttribute> condition = ConditionUtils.parseConditions(UserAttribute.class, new JSONArray("[\"and\", [\"or\", [\"or\", {\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"lt\", \"value\":100.0}]]]"));
+
+        assertNotNull(condition);
+    }
+
+    @Test
     public void parseInvalidAudience() throws Exception {
         thrown.expect(InvalidAudienceCondition.class);
         JSONObject jsonObject = new JSONObject();

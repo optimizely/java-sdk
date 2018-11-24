@@ -92,6 +92,26 @@ public class JacksonConfigParserTest {
     }
 
     @Test
+    public void parseAudienceLeaf() throws Exception {
+        String audienceString =
+            "{" +
+                "\"id\": \"3468206645\"," +
+                "\"name\": \"DOUBLE\"," +
+                "\"conditions\": \"{\\\"name\\\": \\\"doubleKey\\\", \\\"type\\\": \\\"custom_attribute\\\", \\\"match\\\":\\\"lt\\\", \\\"value\\\":100.0}\"" +
+            "},";
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(Audience.class, new AudienceJacksonDeserializer(objectMapper));
+        module.addDeserializer(Condition.class, new ConditionJacksonDeserializer(objectMapper));
+        objectMapper.registerModule(module);
+
+        Audience audience = objectMapper.readValue(audienceString, Audience.class);
+        assertNotNull(audience);
+        assertNotNull(audience.getConditions());
+    }
+
+    @Test
     public void parseInvalidAudience() throws Exception {
         thrown.expect(InvalidAudienceCondition.class);
         String audienceString =

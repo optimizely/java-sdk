@@ -95,6 +95,23 @@ public class GsonConfigParserTest {
     }
 
     @Test
+    public void parseAudienceLeaf() throws Exception {
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("id", "123");
+        jsonObject.addProperty("name","blah");
+        jsonObject.addProperty("conditions",
+            "{\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"lt\", \"value\":100.0}");
+
+        AudienceGsonDeserializer deserializer = new AudienceGsonDeserializer();
+        Type audienceType = new TypeToken<List<Audience>>() {}.getType();
+
+        Audience audience = deserializer.deserialize(jsonObject, audienceType, null);
+
+        assertNotNull(audience);
+        assertNotNull(audience.getConditions());
+    }
+
+    @Test
     public void parseInvalidAudience() throws Exception {
         thrown.expect(InvalidAudienceCondition.class);
         JsonObject jsonObject = new JsonObject();
