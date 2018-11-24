@@ -24,6 +24,7 @@ import com.google.gson.reflect.TypeToken;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.config.audience.TypedAudience;
 import com.optimizely.ab.internal.InvalidAudienceCondition;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
@@ -83,7 +84,7 @@ public class GsonConfigParserTest {
         jsonObject.addProperty("id", "123");
         jsonObject.addProperty("name","blah");
         jsonObject.addProperty("conditions",
-            "[\"and\", [\"or\", [\"or\", {\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"lt\", \"value\":100.0}]]]");
+            "[\"and\", [\"or\", [\"or\", {\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"exact\", \"value\":100.0}]]]");
 
         AudienceGsonDeserializer deserializer = new AudienceGsonDeserializer();
         Type audienceType = new TypeToken<List<Audience>>() {}.getType();
@@ -100,10 +101,33 @@ public class GsonConfigParserTest {
         jsonObject.addProperty("id", "123");
         jsonObject.addProperty("name","blah");
         jsonObject.addProperty("conditions",
-            "{\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"lt\", \"value\":100.0}");
+            "{\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"exact\", \"value\":100.0}");
 
         AudienceGsonDeserializer deserializer = new AudienceGsonDeserializer();
         Type audienceType = new TypeToken<List<Audience>>() {}.getType();
+
+        Audience audience = deserializer.deserialize(jsonObject, audienceType, null);
+
+        assertNotNull(audience);
+        assertNotNull(audience.getConditions());
+    }
+
+    @Test
+    public void parseTypedAudienceLeaf() throws Exception {
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("id", "123");
+        jsonObject.addProperty("name","blah");
+
+        JsonObject userAttribute = new JsonObject();
+        userAttribute.addProperty("name","doubleKey");
+        userAttribute.addProperty("type", "custom_attribute");
+        userAttribute.addProperty("match", "lt");
+        userAttribute.addProperty("value", 100.0);
+
+        jsonObject.add("conditions", userAttribute);
+
+        AudienceGsonDeserializer deserializer = new AudienceGsonDeserializer();
+        Type audienceType = new TypeToken<List<TypedAudience>>() {}.getType();
 
         Audience audience = deserializer.deserialize(jsonObject, audienceType, null);
 

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.config.audience.TypedAudience;
 import com.optimizely.ab.internal.InvalidAudienceCondition;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
@@ -107,6 +108,26 @@ public class JacksonConfigParserTest {
         objectMapper.registerModule(module);
 
         Audience audience = objectMapper.readValue(audienceString, Audience.class);
+        assertNotNull(audience);
+        assertNotNull(audience.getConditions());
+    }
+
+    @Test
+    public void parseTypedAudienceLeaf() throws Exception {
+        String audienceString =
+            "{" +
+                "\"id\": \"3468206645\"," +
+                "\"name\": \"DOUBLE\"," +
+                "\"conditions\": {\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"lt\", \"value\":100.0}" +
+                "},";
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(TypedAudience.class, new TypedAudienceJacksonDeserializer(objectMapper));
+        module.addDeserializer(Condition.class, new ConditionJacksonDeserializer(objectMapper));
+        objectMapper.registerModule(module);
+
+        Audience audience = objectMapper.readValue(audienceString, TypedAudience.class);
         assertNotNull(audience);
         assertNotNull(audience.getConditions());
     }

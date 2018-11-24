@@ -97,7 +97,7 @@ public class JsonSimpleConfigParserTest {
         jsonObject.append("conditions",
             "{\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"lt\", \"value\":100.0}");
 
-        Condition<UserAttribute> condition = ConditionUtils.parseConditions(UserAttribute.class, new JSONArray("[\"and\", [\"or\", [\"or\", {\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"lt\", \"value\":100.0}]]]"));
+        Condition<UserAttribute> condition = ConditionUtils.parseConditions(UserAttribute.class, new JSONObject("{\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"lt\", \"value\":100.0}"));
 
         assertNotNull(condition);
     }
