@@ -34,6 +34,7 @@ import java.util.Map;
 public class ConditionUtils {
 
     static public <T> Condition parseConditions(Class<T> clazz, Object object) throws InvalidAudienceCondition {
+
         if (object instanceof List) {
             List<Object> objectList = (List<Object>)object;
             return ConditionUtils.<T>parseConditions(clazz, objectList);

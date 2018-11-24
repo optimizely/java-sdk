@@ -48,7 +48,7 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
         JsonNode conditionsJson = node.get("conditions");
         conditionsJson = objectMapper.readTree(conditionsJson.textValue());
 
-        Condition conditions = ConditionJacksonDeserializer.<UserAttribute>parseConditions(UserAttribute.class, objectMapper, conditionsJson);
+        Condition conditions = ConditionJacksonDeserializer.<UserAttribute>parseCondition(UserAttribute.class, objectMapper, conditionsJson);
 
         return new Audience(id, name, conditions);
     }
