@@ -113,12 +113,11 @@ final class GsonHelpers {
             List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
             return ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, rawObjectList);
         }
-        else if (conditionsElement.isJsonObject()) {
+        else {
             Object jsonObject = gson.fromJson(conditionsElement,Object.class);
             return ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, jsonObject);
         }
 
-        return null;
     }
 
     static Experiment parseExperiment(JsonObject experimentJson, String groupId, JsonDeserializationContext context) {
