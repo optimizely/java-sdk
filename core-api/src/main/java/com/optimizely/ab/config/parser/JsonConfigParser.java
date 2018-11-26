@@ -37,6 +37,7 @@ import com.optimizely.ab.config.audience.UserAttribute;
 import com.optimizely.ab.internal.ConditionUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -148,9 +149,7 @@ final class JsonConfigParser implements ConfigParser {
             Condition conditions = null;
             if (experimentObject.has("audienceConditions")) {
                 Object jsonCondition = experimentObject.get("audienceConditions");
-                if (jsonCondition instanceof JSONArray) {
-                    conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, (JSONArray) jsonCondition);
-                }
+                conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, jsonCondition);
             }
 
             // parse the child objects
@@ -289,9 +288,19 @@ final class JsonConfigParser implements ConfigParser {
             String id = audienceObject.getString("id");
             String key = audienceObject.getString("name");
             Object conditionsObject = audienceObject.get("conditions");
-            JSONArray conditionJson = new JSONArray((String)conditionsObject);
+            if (conditionsObject instanceof String) { // should always be true
+                JSONTokener tokener = new JSONTokener((String)conditionsObject);
+                char token = tokener.nextClean();
+                if (token =='[') {
+                    // must be an array
+                    conditionsObject = new JSONArray((String)conditionsObject);
+                }
+                else if (token =='{') {
+                    conditionsObject = new JSONObject((String)conditionsObject);
+                }
+            }
 
-            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionJson);
+            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionsObject);
             audiences.add(new Audience(id, key, conditions));
         }
 
@@ -306,9 +315,8 @@ final class JsonConfigParser implements ConfigParser {
             String id = audienceObject.getString("id");
             String key = audienceObject.getString("name");
             Object conditionsObject = audienceObject.get("conditions");
-            JSONArray conditionJson = (JSONArray)conditionsObject;
 
-            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionJson);
+            Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionsObject);
             audiences.add(new Audience(id, key, conditions));
         }
 

@@ -216,6 +216,10 @@ public class ValidProjectConfigV4 {
             new AudienceIdCondition(AUDIENCE_DOUBLE_ID)));
 
     // audienceConditions
+    private static final Condition AUDIENCE_COMBINATION_LEAF_CONDITION =
+            new AudienceIdCondition(AUDIENCE_BOOL_ID);
+
+    // audienceConditions
     private static final Condition AUDIENCE_COMBINATION =
             new OrCondition(Arrays.<Condition>asList(
                 new AudienceIdCondition(AUDIENCE_BOOL_ID),
@@ -555,6 +559,47 @@ public class ValidProjectConfigV4 {
                             10000
                     )
             )
+    );
+    private static final String     LAYER_TYPEDAUDIENCE_LEAF_EXPERIMENT_ID = "1630555629";
+    private static final String     EXPERIMENT_TYPEDAUDIENCE_LEAF_EXPERIMENT_ID = "1323241599";
+    public  static final String     EXPERIMENT_TYPEDAUDIENCE_LEAF_EXPERIMENT_KEY = "typed_audience_experiment_leaf_condition";
+    private static final String     VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_A_ID = "1423767505";
+    private static final String     VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_A_KEY = "A";
+    private static final Variation  VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_A = new Variation(
+        VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_A_ID,
+        VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_A_KEY,
+        Collections.<LiveVariableUsageInstance>emptyList()
+    );
+    private static final String     VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_B_ID = "3433458317";
+    private static final String     VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_B_KEY = "B";
+    private static final Variation  VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_B = new Variation(
+        VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_B_ID,
+        VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_B_KEY,
+        Collections.<LiveVariableUsageInstance>emptyList()
+    );
+
+    private static final Experiment EXPERIMENT_TYPEDAUDIENCE_LEAF_EXPERIMENT = new Experiment(
+        EXPERIMENT_TYPEDAUDIENCE_LEAF_EXPERIMENT_ID,
+        EXPERIMENT_TYPEDAUDIENCE_LEAF_EXPERIMENT_KEY,
+        Experiment.ExperimentStatus.RUNNING.toString(),
+        LAYER_TYPEDAUDIENCE_LEAF_EXPERIMENT_ID,
+        Collections.<String>emptyList(),
+        AUDIENCE_COMBINATION_LEAF_CONDITION,
+        ProjectConfigTestUtils.createListOfObjects(
+            VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_A,
+            VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_B
+        ),
+        Collections.EMPTY_MAP,
+        ProjectConfigTestUtils.createListOfObjects(
+            new TrafficAllocation(
+                VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_A_ID,
+                5000
+            ),
+            new TrafficAllocation(
+                VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_B_ID,
+                10000
+            )
+        )
     );
     private static final String     LAYER_FIRST_GROUPED_EXPERIMENT_ID = "3301900159";
     private static final String     EXPERIMENT_FIRST_GROUPED_EXPERIMENT_ID = "2738374745";
@@ -1282,6 +1327,7 @@ public class ValidProjectConfigV4 {
         experiments.add(EXPERIMENT_BASIC_EXPERIMENT);
         experiments.add(EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT);
         experiments.add(EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_LEAF_EXPERIMENT);
         experiments.add(EXPERIMENT_MULTIVARIATE_EXPERIMENT);
         experiments.add(EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT);
         experiments.add(EXPERIMENT_PAUSED_EXPERIMENT);

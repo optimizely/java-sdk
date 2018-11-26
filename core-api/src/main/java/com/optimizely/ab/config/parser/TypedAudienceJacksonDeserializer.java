@@ -33,7 +33,7 @@ public class TypedAudienceJacksonDeserializer extends JsonDeserializer<TypedAudi
 
         JsonNode conditionsJson = node.get("conditions");
 
-        Condition conditions = ConditionJacksonDeserializer.<UserAttribute>parseConditions(UserAttribute.class, objectMapper, conditionsJson);
+        Condition conditions = ConditionJacksonDeserializer.<UserAttribute>parseCondition(UserAttribute.class, objectMapper, conditionsJson);
 
         return new TypedAudience(id, name, conditions);
     }

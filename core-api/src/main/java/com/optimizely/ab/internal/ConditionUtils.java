@@ -32,6 +32,76 @@ import java.util.List;
 import java.util.Map;
 
 public class ConditionUtils {
+
+    static public <T> Condition parseConditions(Class<T> clazz, Object object) throws InvalidAudienceCondition {
+
+        if (object instanceof List) {
+            List<Object> objectList = (List<Object>)object;
+            return ConditionUtils.<T>parseConditions(clazz, objectList);
+        }
+        else if (object instanceof String) { // looking for audience conditions in experiment
+            AudienceIdCondition audienceIdCondition = new AudienceIdCondition<T>((String)object);
+            if (clazz.isInstance(audienceIdCondition)) {
+                return audienceIdCondition;
+            }
+            else {
+                throw new InvalidAudienceCondition(String.format("Expected AudienceIdCondition got %s", clazz.getCanonicalName()));
+            }
+        }
+        else if (object instanceof LinkedTreeMap) { // gson
+            if (clazz != UserAttribute.class) {
+                throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
+
+            }
+
+            LinkedTreeMap<String, ?> conditionMap = (LinkedTreeMap<String, ?>)object;
+            return new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
+                (String)conditionMap.get("match"), conditionMap.get("value"));
+        }
+        else if (object instanceof JSONObject) {
+            if (clazz != UserAttribute.class) {
+                throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
+
+            }
+
+            JSONObject conditionMap = (JSONObject)object;
+            return new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
+                (String)conditionMap.get("match"), conditionMap.get("value"));
+        }
+        else if (object instanceof org.json.JSONArray) {
+            return ConditionUtils.<T>parseConditions(clazz, (org.json.JSONArray) object);
+        }
+        else if (object instanceof org.json.JSONObject){
+            if (clazz != UserAttribute.class) {
+                throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
+
+            }
+            org.json.JSONObject conditionMap = (org.json.JSONObject)object;
+            String match = null;
+            Object value = null;
+            if (conditionMap.has("match")) {
+                match = (String) conditionMap.get("match");
+            }
+            if (conditionMap.has("value")) {
+                value = conditionMap.get("value");
+            }
+           return new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
+                match, value);
+        }
+
+        else { // looking for audience conditions in audience
+            if (clazz != UserAttribute.class) {
+                throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
+
+            }
+
+            Map<String, ?> conditionMap = (Map<String, ?>)object;
+            return new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
+                (String)conditionMap.get("match"), conditionMap.get("value"));
+        }
+
+    }
+
     /**
      * parse conditions using List and Map
      * @param rawObjectList list of conditions
@@ -55,49 +125,7 @@ public class ConditionUtils {
 
         for (int i = startingParseIndex; i < rawObjectList.size(); i++) {
             Object obj = rawObjectList.get(i);
-            if (obj instanceof List) {
-                List<Object> objectList = (List<Object>)rawObjectList.get(i);
-                conditions.add(ConditionUtils.<T>parseConditions(clazz, objectList));
-            }
-            else if (obj instanceof String) { // looking for audience conditions in experiment
-                AudienceIdCondition audienceIdCondition = new AudienceIdCondition<T>((String)obj);
-                if (clazz.isInstance(audienceIdCondition)) {
-                    conditions.add(new AudienceIdCondition((String) obj));
-                }
-                else {
-                    throw new InvalidAudienceCondition(String.format("Expected AudienceIdCondition got %s", clazz.getCanonicalName()));
-                }
-            }
-            else if (obj instanceof LinkedTreeMap) { // gson
-                if (clazz != UserAttribute.class) {
-                    throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
-
-                }
-
-                LinkedTreeMap<String, ?> conditionMap = (LinkedTreeMap<String, ?>)rawObjectList.get(i);
-                conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
-                        (String)conditionMap.get("match"), conditionMap.get("value")));
-            }
-            else if (obj instanceof JSONObject) {
-                if (clazz != UserAttribute.class) {
-                    throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
-
-                }
-
-                JSONObject conditionMap = (JSONObject)obj;
-                conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
-                        (String)conditionMap.get("match"), conditionMap.get("value")));
-            }
-            else { // looking for audience conditions in audience
-                if (clazz != UserAttribute.class) {
-                    throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
-
-                }
-
-                Map<String, ?> conditionMap = (Map<String, ?>)rawObjectList.get(i);
-                conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
-                        (String)conditionMap.get("match"), conditionMap.get("value")));
-            }
+            conditions.add(parseConditions(clazz, obj));
         }
 
         Condition condition;
@@ -158,33 +186,7 @@ public class ConditionUtils {
 
         for (int i = startingParseIndex; i < conditionJson.length(); i++) {
             Object obj = conditionJson.get(i);
-            if (obj instanceof org.json.JSONArray) {
-                conditions.add(ConditionUtils.<T>parseConditions(clazz, (org.json.JSONArray) conditionJson.get(i)));
-            } else if (obj instanceof String) {
-                AudienceIdCondition<T> audiencCondition = new AudienceIdCondition<T>((String)obj);
-                if (clazz.isInstance(audiencCondition)) {
-                    conditions.add(audiencCondition);
-                }
-                else {
-                    throw new InvalidAudienceCondition(String.format("Expected AudienceIdCondition got %s", clazz.getCanonicalName()));
-                }
-            } else {
-                if (clazz != UserAttribute.class) {
-                    throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
-
-                }
-                org.json.JSONObject conditionMap = (org.json.JSONObject)obj;
-                String match = null;
-                Object value = null;
-                if (conditionMap.has("match")) {
-                    match = (String) conditionMap.get("match");
-                }
-                if (conditionMap.has("value")) {
-                    value = conditionMap.get("value");
-                }
-                conditions.add(new UserAttribute((String)conditionMap.get("name"), (String)conditionMap.get("type"),
-                        match, value));
-            }
+            conditions.add(parseConditions(clazz, obj));
         }
 
         Condition condition;
@@ -205,5 +207,4 @@ public class ConditionUtils {
 
         return condition;
     }
-
 }
