@@ -31,11 +31,7 @@ import java.util.Map;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 
 import com.optimizely.ab.internal.LogbackVerifier;
@@ -244,12 +240,12 @@ public class ProjectConfigTest {
 
     @Test
     public void setForcedVariationEmptyUserId() {
-        assertFalse(projectConfig.setForcedVariation("etag1", "", "vtag1"));
+        assertTrue(projectConfig.setForcedVariation("etag1", "", "vtag1"));
     }
 
     @Test
     public void getForcedVariationEmptyUserId() {
-        assertNull(projectConfig.getForcedVariation("etag1", ""));
+        assertNotNull(projectConfig.getForcedVariation("etag1", ""));
     }
 
     /* Invalid Experiement */

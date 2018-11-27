@@ -1385,7 +1385,7 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify that {@link Optimizely#activate(String, String)} doesn't return a variation when provided an empty string.
+     * Verify that {@link Optimizely#activate(String, String)} return a variation when provided an empty string.
      */
     @Test
     public void activateWithEmptyUserId() throws Exception {
@@ -1397,9 +1397,7 @@ public class OptimizelyTest {
                 .withErrorHandler(new RaiseExceptionErrorHandler())
                 .build();
 
-        logbackVerifier.expectMessage(Level.ERROR, "Non-empty user ID required");
-        logbackVerifier.expectMessage(Level.INFO, "Not activating user for experiment \"" + experimentKey + "\".");
-        assertNull(optimizely.activate(experimentKey, ""));
+        assertNotNull(optimizely.activate(experimentKey, ""));
     }
 
     /**
@@ -2695,7 +2693,7 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify that {@link Optimizely#getVariation(String, String)} doesn't return a variation when provided an
+     * Verify that {@link Optimizely#getVariation(String, String)} return a variation when provided an
      * empty string.
      */
     @Test
@@ -2707,8 +2705,7 @@ public class OptimizelyTest {
                 .withErrorHandler(new RaiseExceptionErrorHandler())
                 .build();
 
-        logbackVerifier.expectMessage(Level.ERROR, "Non-empty user ID required");
-        assertNull(optimizely.getVariation(experiment.getKey(), ""));
+        assertNotNull(optimizely.getVariation(experiment.getKey(), ""));
     }
 
     /**
@@ -4049,8 +4046,7 @@ public class OptimizelyTest {
                 .build());
         ArrayList<String> featureFlags = (ArrayList<String>) spyOptimizely.getEnabledFeatures("",
                 new HashMap<String, String>());
-        logbackVerifier.expectMessage(Level.ERROR, "Non-empty user ID required");
-        assertTrue(featureFlags.isEmpty());
+        assertFalse(featureFlags.isEmpty());
 
     }
 
