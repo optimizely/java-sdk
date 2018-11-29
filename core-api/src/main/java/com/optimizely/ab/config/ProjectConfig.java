@@ -496,8 +496,7 @@ public class ProjectConfig {
         }
 
         // if the user id is invalid, return false.
-        if (userId == null || userId.trim().isEmpty()) {
-            logger.error("User ID is invalid");
+        if (!validateUserId(userId)) {
             return false;
         }
 
@@ -554,8 +553,7 @@ public class ProjectConfig {
                                                   @Nonnull String userId) {
 
         // if the user id is invalid, return false.
-        if (userId == null || userId.trim().isEmpty()) {
-            logger.error("User ID is invalid");
+        if (!validateUserId(userId)) {
             return null;
         }
 
@@ -585,6 +583,21 @@ public class ProjectConfig {
             }
         }
         return null;
+    }
+
+    /**
+     * Helper function to check that the provided userId is valid
+     *
+     * @param userId the userId being validated
+     * @return whether the user ID is valid
+     */
+    private boolean validateUserId(String userId) {
+        if (userId == null) {
+            logger.error("User ID is invalid");
+            return false;
+        }
+
+        return true;
     }
 
     @Override
