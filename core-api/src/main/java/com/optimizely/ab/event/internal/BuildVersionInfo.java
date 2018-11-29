@@ -37,18 +37,22 @@ public final class BuildVersionInfo {
 
     public final static String VERSION = readVersionNumber();
     private static String readVersionNumber() {
-        BufferedReader bufferedReader =
-            new BufferedReader(
-                new InputStreamReader(BuildVersionInfo.class.getResourceAsStream("/optimizely-build-version"),
-                                      Charset.forName("UTF-8")));
+        BufferedReader bufferedReader = null;
         try {
+            bufferedReader =
+                new BufferedReader(
+                    new InputStreamReader(BuildVersionInfo.class.getResourceAsStream("/optimizely-build-version"),
+                        Charset.forName("UTF-8")));
+
             return bufferedReader.readLine();
         } catch (Exception e) {
             logger.error("unable to read version number");
             return "unknown";
         } finally {
             try {
-                bufferedReader.close();
+                if (bufferedReader != null) {
+                    bufferedReader.close();
+                }
             } catch (Exception e) {
                 logger.error("unable to close reader cleanly");
             }
