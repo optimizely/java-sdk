@@ -212,22 +212,21 @@ public class AsyncEventHandler implements EventHandler {
         }
     }
 
-/**
- * Handler for the event request that returns nothing (i.e., Void)
- */
-private static final class ProjectConfigResponseHandler implements ResponseHandler<Void> {
+	/**
+	 * Handler for the event request that returns nothing (i.e., Void)
+	 */
+	private static final class ProjectConfigResponseHandler implements ResponseHandler<Void> {
 
-    @Override
-    public @CheckForNull
-    Void handleResponse(HttpResponse response) throws IOException {
-        int status = response.getStatusLine().getStatusCode();
-        if (status >= 200 && status < 300) {
-            // read the response, so we can close the connection
-            response.getEntity();
-            return null;
-        } else {
-            throw new ClientProtocolException("unexpected response from event endpoint, status: " + status);
-        }
-    }
-}
+    	@Override
+	    public @CheckForNull Void handleResponse(HttpResponse response) throws IOException {
+    	    int status = response.getStatusLine().getStatusCode();
+        	if (status >= 200 && status < 300) {
+            	// read the response, so we can close the connection
+	            response.getEntity();
+    	        return null;
+        	} else {
+            	throw new ClientProtocolException("unexpected response from event endpoint, status: " + status);
+	        }
+    	}
+	}
 }
