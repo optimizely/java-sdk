@@ -177,7 +177,12 @@ public class AsyncEventHandler implements EventHandler {
         @Override
         public void run() {
             try {
-                HttpGet request = generateRequest(logEvent);
+                HttpRequestBase request;
+                if (logEvent.getRequestMethod() == LogEvent.RequestMethod.GET) {
+                    request = generateGetRequest(logEvent);
+                } else {
+                    request = generatePostRequest(logEvent);
+                }
                 httpClient.execute(request, EVENT_RESPONSE_HANDLER);
             } catch (IOException e) {
                 logger.error("event dispatch failed", e);
@@ -189,7 +194,7 @@ public class AsyncEventHandler implements EventHandler {
         /**
          * Helper method that generates the event request for the given {@link LogEvent}.
          */
-        private HttpGet generateRequest(LogEvent event) throws URISyntaxException {
+        private HttpGet generateGetRequest(LogEvent event) throws URISyntaxException {
 
             URIBuilder builder = new URIBuilder(event.getEndpointUrl());
             for (Map.Entry<String, String> param : event.getRequestParams().entrySet()) {
@@ -198,23 +203,31 @@ public class AsyncEventHandler implements EventHandler {
 
             return new HttpGet(builder.build());
         }
-    }
 
-    /**
-     * Handler for the event request that returns nothing (i.e., Void)
-     */
-    private static final class ProjectConfigResponseHandler implements ResponseHandler<Void> {
-
-        @Override
-        public @CheckForNull Void handleResponse(HttpResponse response) throws IOException {
-            int status = response.getStatusLine().getStatusCode();
-            if (status >= 200 && status < 300) {
-                // read the response, so we can close the connection
-                response.getEntity();
-                return null;
-            } else {
-                throw new ClientProtocolException("unexpected response from event endpoint, status: " + status);
-            }
+        private HttpPost generatePostRequest(LogEvent event) throws UnsupportedEncodingException {
+            HttpPost post = new HttpPost(event.getEndpointUrl());
+            post.setEntity(new StringEntity(event.getBody()));
+            post.addHeader("Content-Type", "application/json");
+            return post;
         }
     }
+
+/**
+ * Handler for the event request that returns nothing (i.e., Void)
+ */
+private static final class ProjectConfigResponseHandler implements ResponseHandler<Void> {
+
+    @Override
+    public @CheckForNull
+    Void handleResponse(HttpResponse response) throws IOException {
+        int status = response.getStatusLine().getStatusCode();
+        if (status >= 200 && status < 300) {
+            // read the response, so we can close the connection
+            response.getEntity();
+            return null;
+        } else {
+            throw new ClientProtocolException("unexpected response from event endpoint, status: " + status);
+        }
+    }
+}
 }
