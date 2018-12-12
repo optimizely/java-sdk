@@ -163,14 +163,15 @@ public class Optimizely {
     /**
      * Activates an A/B test for a user, deciding whether they qualify for the experiment, 
      * bucketing them into a variation if they do, and sending an impression event to Optimizely.
+     * This method takes into account the user `attributes` passed in, to determine if the user
+     * is part of the audience that qualifies for the experiment.
      *
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/activate.     
      *
      * @param experimentKey The key of the experiment for which to activate the variation.
      * @param userId        The ID of the user for whom to activate the variation.
-     * @param attributes    An optional map of up to 100 custom key-value string pairs defining attributes 
-     *                      for the user. See https://docs.developers.optimizely.com/full-stack/docs/attributes-and-audiences
-     *                      for more information.
+     * @param attributes    A map of custom key-value string pairs defining attributes 
+     *                      for the user.
      *
      * @return              The variation where the visitor will be bucketed, or `null` if the 
      *                      experiment is not running, the user is not in the experiment, or the datafile is invalid.
@@ -227,14 +228,15 @@ public class Optimizely {
     /**
      * Activates an A/B test for a user, deciding whether they qualify for the experiment, 
      * bucketing them into a variation if they do, and sending an impression event to Optimizely.
+     * This method takes into account the user `attributes` passed in, to determine if the user
+     * is part of the audience that qualifies for the experiment.
      *
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/activate.
      *
      * @param experimentKey The experiment for which to activate the variation.
      * @param userId        The ID of the user for whom to activate the variation.
-     * @param attributes    An optional map of up to 100 custom key-value string pairs defining attributes 
-     *                      for the user. See https://docs.developers.optimizely.com/full-stack/docs/attributes-and-audiences
-     *                      for more information.
+     * @param attributes    A map of custom key-value string pairs defining attributes 
+     *                      for the user. 
      *
      * @return              The variation where the visitor will be bucketed, or `null` if the 
      *                      experiment is not running, the user is not in the experiment, or the datafile is invalid.
@@ -312,7 +314,8 @@ public class Optimizely {
     //======== track calls ========//
 
     /**
-     * Tracks a conversion event.
+     * Tracks a conversion event for a user who meets the default audience conditions for an experiment. 
+     * When the user does not meet those conditions, events are not tracked.
      *
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/track.
      *
@@ -325,13 +328,13 @@ public class Optimizely {
     }
 
     /**
-     * Tracks a conversion event.
+     * Tracks a conversion event for a user whose attributes meets the audience conditions for an experiment. 
+     * When the user does not meet those conditions, events are not tracked.
      *
      * @param experimentKey The key of the event to be tracked. This key must match the event key provided when the event was created in the Optimizely app.
      * @param userId        The ID of the user associated with the event being tracked.
-     * @param attributes    An optional map of up to 100 custom key-value string pairs defining attributes 
-     *                      for the user. See https://docs.developers.optimizely.com/full-stack/docs/attributes-and-audiences
-     *                      for more information.
+     * @param attributes    A map of custom key-value string pairs defining attributes 
+     *                      for the user. 
      */
     public void track(@Nonnull String eventName,
                       @Nonnull String userId,
@@ -340,15 +343,14 @@ public class Optimizely {
     }
 
     /**
-     * Tracks a conversion event.
+     * Tracks a conversion event for a user whose attributes meets the audience conditions for the experiment. 
+     * When the user does not meet those conditions, events are not tracked.
      *
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/track.
      *
      * @param experimentKey The key of the event to be tracked. This key must match the event key provided when the event was created in the Optimizely app.
      * @param userId        The ID of the user associated with the event being tracked.
-     * @param attributes    An optional map of up to 100 custom key-value string pairs defining attributes 
-     *                      for the user. See https://docs.developers.optimizely.com/full-stack/docs/attributes-and-audiences
-     *                      for more information.
+     * @param attributes    A map of custom key-value string pairs defining attributes for the user.
      * @param eventTags     A map of key-value string pairs specifying event names and their corresponding event values associated with the event.
      */
     public void track(@Nonnull String eventName,
@@ -446,11 +448,8 @@ public class Optimizely {
      *
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/is-feature-enabled.
      *
-     * @param featureKey They key of the feature on which to perform the check. The feature key is
-     *                   defined from the Features dashboard, as described in 
-     *                   https://help.optimizely.com/Build_Campaigns_and_Experiments/Feature_tests%3A_Experiment_on_features.
-     *
-     * @param userId     The ID of the user on which to perform the check. See https://docs.developers.optimizely.com/full-stack/docs/user-ids for more information.
+     * @param featureKey The key of the feature on which to perform the check. 
+     * @param userId     The ID of the user on which to perform the check. 
      * 
      * @return           `true` if the feature is enabled.
      *                   `false` if the feature is disabled or not found.
@@ -463,6 +462,8 @@ public class Optimizely {
     /**
      * Determines whether a feature test or rollout is enabled for a given user, and
      * sends an impression event if the user is bucketed into an experiment using the feature.
+     * This method takes into account the user `attributes` passed in, to determine if the user
+     * is part of the audience that qualifies for the experiment.
      *
      * The purpose of this method is to separate the process of developing and deploying
      * features from the decision to turn on a feature. Build your feature and deploy it
@@ -471,13 +472,9 @@ public class Optimizely {
      *
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/is-feature-enabled.     
      *
-     * @param featureKey They key of the feature on which to perform the check. The feature key is
-     *                   defined from the Features dashboard, as described in 
-     *                   https://help.optimizely.com/Build_Campaigns_and_Experiments/Feature_tests%3A_Experiment_on_features.
-     * @param userId     The ID of the user on which to perform the check. See https://docs.developers.optimizely.com/full-stack/docs/user-ids for more information.
-     * @param attributes An optional map of up to 100 custom key-value string pairs defining attributes 
-     *                   for the user. See https://docs.developers.optimizely.com/full-stack/docs/attributes-and-audiences
-     *                   for more information.
+     * @param featureKey The key of the feature on which to perform the check. 
+     * @param userId     The ID of the user on which to perform the check. 
+     * @param attributes A map of custom key-value string pairs defining attributes for the user.
      *
      * @return           `true` if the feature is enabled.
      *                   `false` if the feature is disabled or not found.
@@ -535,12 +532,11 @@ public class Optimizely {
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/get-feature-variable.
      * 
      * @param featureKey   The key of the feature whose variable's value is being accessed.
-     *                     The feature key is defined from the Features dashboard, as described in
-     *                     https://help.optimizely.com/Build_Campaigns_and_Experiments/Feature_tests%3A_Experiment_on_features.
      * @param variableKey  The key of the variable whose value is being accessed.
-     * @param userId       The ID of the participant in the experiment. See https://docs.developers.optimizely.com/full-stack/docs/user-ids for more information.
+     * @param userId       The ID of the participant in the experiment. 
      *
-     * @return             The value of the boolean feature variable, or null if the feature could not be found.
+     * @return             The value of the variable, or null if the feature key is invalid, the variable key is
+     *                     invalid, or there is a mismatch with the type of the variable.
      */
     public @Nullable Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
                                                        @Nonnull String variableKey,
@@ -550,18 +546,18 @@ public class Optimizely {
 
     /**
      * Evaluates the specified boolean feature variable and returns its value.
+     * This method takes into account the user `attributes` passed in, to determine if the user
+     * is part of the audience that qualifies for the experiment.
      * 
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/get-feature-variable.
      * 
      * @param featureKey   The key of the feature whose variable's value is being accessed.
-     *                     The feature key is defined from the Features dashboard, as described in
-     *                     https://help.optimizely.com/Build_Campaigns_and_Experiments/Feature_tests%3A_Experiment_on_features.
      * @param variableKey  The key of the variable whose value is being accessed.
-     * @param userId       The ID of the participant in the experiment. See https://docs.developers.optimizely.com/full-stack/docs/user-ids for more information.
-     * @param attributes   An optional map of up to 100 custom key-value string pairs defining attributes for the user. 
-     *                     See [Define audiences and attributes](https://docs.developers.optimizely.com/full-stack/docs/attributes-and-audiences) for more information.
+     * @param userId       The ID of the participant in the experiment.
+     * @param attributes   A map of custom key-value string pairs defining attributes for the user. 
      *
-     * @return             The value of the boolean feature variable, or null if the feature could not be found.
+     * @return             The value of the variable, or null if the feature key is invalid, the variable key is
+     *                     invalid, or there is a mismatch with the type of the variable.
      */
     public @Nullable Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
                                                        @Nonnull String variableKey,
@@ -591,12 +587,11 @@ public class Optimizely {
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/get-feature-variable.
      * 
      * @param featureKey   The key of the feature whose variable's value is being accessed.
-     *                     The feature key is defined from the Features dashboard, as described in
-     *                     https://help.optimizely.com/Build_Campaigns_and_Experiments/Feature_tests%3A_Experiment_on_features.
      * @param variableKey  The key of the variable whose value is being accessed.
-     * @param userId       The ID of the participant in the experiment. See https://docs.developers.optimizely.com/full-stack/docs/user-ids for more information.
+     * @param userId       The ID of the participant in the experiment.
      *
-     * @return             The value of the double feature variable, or null if the feature could not be found.
+     * @return             The value of the variable, or null if the feature key is invalid, the variable key is
+     *                     invalid, or there is a mismatch with the type of the variable.
      */
     public @Nullable Double getFeatureVariableDouble(@Nonnull String featureKey,
                                                      @Nonnull String variableKey,
@@ -606,18 +601,18 @@ public class Optimizely {
 
     /**
      * Evaluates the specified double feature variable and returns its value.
+     * This method takes into account the user `attributes` passed in, to determine if the user
+     * is part of the audience that qualifies for the experiment.
      * 
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/get-feature-variable.
      * 
      * @param featureKey   The key of the feature whose variable's value is being accessed.
-     *                     The feature key is defined from the Features dashboard, as described in
-     *                     https://help.optimizely.com/Build_Campaigns_and_Experiments/Feature_tests%3A_Experiment_on_features.
      * @param variableKey  The key of the variable whose value is being accessed.
-     * @param userId       The ID of the participant in the experiment. See https://docs.developers.optimizely.com/full-stack/docs/user-ids for more information.
-     * @param attributes   An optional map of up to 100 custom key-value string pairs defining attributes for the user. 
-     *                     See [Define audiences and attributes](https://docs.developers.optimizely.com/full-stack/docs/attributes-and-audiences) for more information.
+     * @param userId       The ID of the participant in the experiment. 
+     * @param attributes   A map of custom key-value string pairs defining attributes for the user. 
      *
-     * @return             The value of the double feature variable, or null if the feature could not be found.
+     * @return             The value of the variable, or null if the feature key is invalid, the variable key is
+     *                     invalid, or there is a mismatch with the type of the variable.
      */
     public @Nullable Double getFeatureVariableDouble(@Nonnull String featureKey,
                                                      @Nonnull String variableKey,
@@ -652,12 +647,11 @@ public class Optimizely {
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/get-feature-variable.
      * 
      * @param featureKey   The key of the feature whose variable's value is being accessed.
-     *                     The feature key is defined from the Features dashboard, as described in
-     *                     https://help.optimizely.com/Build_Campaigns_and_Experiments/Feature_tests%3A_Experiment_on_features.
      * @param variableKey  The key of the variable whose value is being accessed.
-     * @param userId       The ID of the participant in the experiment. See https://docs.developers.optimizely.com/full-stack/docs/user-ids for more information.
+     * @param userId       The ID of the participant in the experiment.
      *
-     * @return             The value of the integer feature variable, or null if the feature could not be found.
+     * @return             The value of the variable, or null if the feature key is invalid, the variable key is
+     *                     invalid, or there is a mismatch with the type of the variable.
      */
     public @Nullable Integer getFeatureVariableInteger(@Nonnull String featureKey,
                                                        @Nonnull String variableKey,
@@ -667,18 +661,18 @@ public class Optimizely {
 
     /**
      * Evaluates the specified integer feature variable and returns its value.
+     * This method takes into account the user `attributes` passed in, to determine if the user
+     * is part of the audience that qualifies for the experiment.   
      * 
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/get-feature-variable.
      * 
      * @param featureKey   The key of the feature whose variable's value is being accessed.
-     *                     The feature key is defined from the Features dashboard, as described in
-     *                     https://help.optimizely.com/Build_Campaigns_and_Experiments/Feature_tests%3A_Experiment_on_features.
      * @param variableKey  The key of the variable whose value is being accessed.
-     * @param userId       The ID of the participant in the experiment. See https://docs.developers.optimizely.com/full-stack/docs/user-ids for more information.
-     * @param attributes   An optional map of up to 100 custom key-value string pairs defining attributes for the user. 
-     *                     See [Define audiences and attributes](https://docs.developers.optimizely.com/full-stack/docs/attributes-and-audiences) for more information.
+     * @param userId       The ID of the participant in the experiment.
+     * @param attributes   A map of custom key-value string pairs defining attributes for the user. 
      *
-     * @return             The value of the integer feature variable, or null if the feature could not be found.
+     * @return             The value of the variable, or null if the feature key is invalid, the variable key is
+     *                     invalid, or there is a mismatch with the type of the variable.
      */
     public @Nullable Integer getFeatureVariableInteger(@Nonnull String featureKey,
                                                        @Nonnull String variableKey,
@@ -713,12 +707,11 @@ public class Optimizely {
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/get-feature-variable.
      * 
      * @param featureKey   The key of the feature whose variable's value is being accessed.
-     *                     The feature key is defined from the Features dashboard, as described in
-     *                     https://help.optimizely.com/Build_Campaigns_and_Experiments/Feature_tests%3A_Experiment_on_features.
      * @param variableKey  The key of the variable whose value is being accessed.
-     * @param userId       The ID of the participant in the experiment. See https://docs.developers.optimizely.com/full-stack/docs/user-ids for more information.
+     * @param userId       The ID of the participant in the experiment.
      *
-     * @return             The value of the string feature variable, or null if the feature could not be found.
+     * @return             The value of the variable, or null if the feature key is invalid, the variable key is
+     *                     invalid, or there is a mismatch with the type of the variable.
      */
     public @Nullable String getFeatureVariableString(@Nonnull String featureKey,
                                                      @Nonnull String variableKey,
@@ -728,18 +721,18 @@ public class Optimizely {
 
     /**
      * Evaluates the specified string feature variable and returns its value.
+     * This method takes into account the user `attributes` passed in, to determine if the user
+     * is part of the audience that qualifies for the experiment.     
      * 
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/get-feature-variable.
      * 
      * @param featureKey   The key of the feature whose variable's value is being accessed.
-     *                     The feature key is defined from the Features dashboard, as described in
-     *                     https://help.optimizely.com/Build_Campaigns_and_Experiments/Feature_tests%3A_Experiment_on_features.
      * @param variableKey  The key of the variable whose value is being accessed.
-     * @param userId       The ID of the participant in the experiment. See https://docs.developers.optimizely.com/full-stack/docs/user-ids for more information.
-     * @param attributes   An optional map of up to 100 custom key-value string pairs defining attributes for the user. 
-     *                     See [Define audiences and attributes](https://docs.developers.optimizely.com/full-stack/docs/attributes-and-audiences) for more information.
+     * @param userId       The ID of the participant in the experiment. 
+     * @param attributes   A map of custom key-value string pairs defining attributes for the user. 
      *
-     * @return             The value of the string feature variable, or null if the feature could not be found.
+     * @return             The value of the variable, or null if the feature key is invalid, the variable key is
+     *                     invalid, or there is a mismatch with the type of the variable.
      */
     public @Nullable String getFeatureVariableString(@Nonnull String featureKey,
                                                      @Nonnull String variableKey,
@@ -818,12 +811,14 @@ public class Optimizely {
 
     /**
      * Retrieves a list of features that are enabled for the user.
+     * Invoking this method is equivalent to running `isFeatureEnabled` for each feature in the datafile sequentially.
+     * This method takes into account the user `attributes` passed in, to determine if the user
+     * is part of the audience that qualifies for the experiment.     
      * 
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/get-enabled-features
      *
-     * @param userId      The ID of the participant in the experiment. For more information see: https://docs.developers.optimizely.com/full-stack/docs/user-ids.
-     * @param attributes  An optional map of up to 100 custom key-value string pairs defining attributes for the user. 
-     *                    See [Define audiences and attributes](https://docs.developers.optimizely.com/full-stack/docs/attributes-and-audiences) for more information.
+     * @param userId      The ID of the participant in the experiment.
+     * @param attributes  A map of custom key-value string pairs defining attributes for the user. 
      *
      * @return            A list of keys corresponding to the features that are enabled for the user. If the userId is empty, this method returns an empty list.
      */
@@ -853,9 +848,12 @@ public class Optimizely {
     /**
      * Activates an A/B test for a user and returns information about an experiment variation.
      *
-     * This method performs the same logic as Activate, in that it activates an A/B test for a user,
+     * This method performs the same logic as `activate`, in that it activates an A/B test for a user,
      * deciding whether they qualify for the experiment and bucketing them into a variation if they do.
-     * Unlike Activate, this method does not send an impression network request.
+     * Unlike `activate`, this method does not send an impression network request.
+     *
+     * Use the `getVariation` method if `activate` has been called and the current variation assignment is needed
+     * for a given experiment and user.     
      *
      * For more information see: https://dash.readme.io/project/staging-optimizely-full-stack/v2/docs/get-variation
      *
@@ -875,17 +873,21 @@ public class Optimizely {
     /**
      * Activates an A/B test for a user and returns information about an experiment variation.
      *
-     * This method performs the same logic as Activate, in that it activates an A/B test for a user,
+     * This method performs the same logic as `activate`, in that it activates an A/B test for a user,
      * deciding whether they qualify for the experiment and bucketing them into a variation if they do.
-     * Unlike Activate, this method does not send an impression network request.
+     * Unlike `activate`, this method does not send an impression network request.
+     * This method takes into account the user `attributes` passed in, to determine if the user
+     * is part of the audience that qualifies for the experiment.
      *
+     * Use the `getVariation` method if `activate` has been called and the current variation assignment is needed
+     * for a given experiment and user.
+     *     
      * For more information see: https://dash.readme.io/project/staging-optimizely-full-stack/v2/docs/get-variation
      *
      * @param experiment    The experiment for which to retrieve the forced variation.
      * @param userId        The ID of the user for whom to retrieve the forced variation.
-     * @param attributes    An optional map of up to 100 custom key-value string pairs defining attributes 
-     *                      for the user. See https://docs.developers.optimizely.com/full-stack/docs/attributes-and-audiences
-     *                      for more information.
+     * @param attributes    A map of custom key-value string pairs defining attributes 
+     *                      for the user.
      *
      * @return              The variation where the visitor will be bucketed, or `null` if the 
      *                      experiment is not running, the user is not in the experiment, or the datafile is invalid.
@@ -904,7 +906,7 @@ public class Optimizely {
      *
      * This method performs the same logic as Activate, in that it activates an A/B test for a user,
      * deciding whether they qualify for the experiment and bucketing them into a variation if they do.
-     * Unlike Activate, this method does not send an impression network request.
+     * Unlike `activate`, this method does not send an impression network request.
      *
      * For more information see: https://dash.readme.io/project/staging-optimizely-full-stack/v2/docs/get-variation
      *
@@ -926,13 +928,13 @@ public class Optimizely {
      *
      * This method performs the same logic as Activate, in that it activates an A/B test for a user,
      * deciding whether they qualify for the experiment and bucketing them into a variation if they do.
-     * Unlike Activate, this method does not send an impression network request.
+     * Unlike `activate`, this method does not send an impression network request.
      *
      * For more information see: https://dash.readme.io/project/staging-optimizely-full-stack/v2/docs/get-variation
      *
      * @param experiment    The key of the experiment for which to retrieve the forced variation.
      * @param userId        The ID of the user for whom to retrieve the forced variation.
-     * @param attributes    An optional map of up to 100 custom key-value string pairs defining attributes 
+     * @param attributes    A map of custom key-value string pairs defining attributes 
      *                      for the user. See https://docs.developers.optimizely.com/full-stack/docs/attributes-and-audiences
      *                      for more information.     
      *
@@ -970,9 +972,8 @@ public class Optimizely {
 
     /**
      * Forces a user into a variation for a given experiment for the lifetime of the Optimizely client.
-     * 
-     * If the experiment key is not in the project file, this call fails and returns false.
-     * If the variationKey is not in the experiment, this call fails.
+     * The purpose of this method is to force a user into a specific variation or personalized experience for a given experiment.
+     * The forced variation value does not persist across application launches.
      *
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/set-forced-variation.
      * 
@@ -996,10 +997,10 @@ public class Optimizely {
     }
 
     /**
-     * Returns the forced variation set by setForcedVariation(), or null if no variation was forced.
-     * 
+     * Returns the forced variation set by `setForcedVariation`, or null if no variation was forced.
      * A user can be forced into a variation for a given experiment for the lifetime of the Optimizely client.
      * This method gets the variation that the user has been forced into.
+     * The forced variation value is runtime only and does not persist across application launches.
      *
      * For more information see: https://docs.developers.optimizely.com/full-stack/docs/set-forced-variation.
      *
