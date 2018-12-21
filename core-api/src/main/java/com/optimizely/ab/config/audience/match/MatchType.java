@@ -72,10 +72,15 @@ public class MatchType {
 
     private static boolean isValidNumber(Object conditionValue) {
         if (conditionValue instanceof Integer) {
-            return Math.abs((Integer) conditionValue) <= 1e53;
+            return Math.abs((Integer) conditionValue) <= Math.pow(2, 53);
         } else if (conditionValue instanceof Double) {
             Double value = ((Number) conditionValue).doubleValue();
-            return !(value.isNaN() || value.isInfinite());
+            return !(value.isNaN() || value.isInfinite() || value > Math.pow(2, 53));
+        } else if (conditionValue instanceof Long) {
+            return Math.abs((Long) conditionValue) <= Math.pow(2, 53);
+        } else if (conditionValue instanceof Float) {
+            Float value = ((Number) conditionValue).floatValue();
+            return !(value.isNaN() || value.isInfinite() || value > Math.pow(2, 53));
         }
         return false;
     }
