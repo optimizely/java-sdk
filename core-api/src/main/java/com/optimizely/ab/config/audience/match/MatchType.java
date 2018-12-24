@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 
+import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
+
 public class MatchType {
 
     public static final Logger logger = LoggerFactory.getLogger(MatchType.class);
@@ -68,21 +70,6 @@ public class MatchType {
         }
 
         return new MatchType(matchType, new NullMatch());
-    }
-
-    private static boolean isValidNumber(Object conditionValue) {
-        if (conditionValue instanceof Integer) {
-            return Math.abs((Integer) conditionValue) <= Math.pow(2, 53);
-        } else if (conditionValue instanceof Double) {
-            Double value = ((Number) conditionValue).doubleValue();
-            return !(value.isNaN() || value.isInfinite() || value > Math.pow(2, 53));
-        } else if (conditionValue instanceof Long) {
-            return Math.abs((Long) conditionValue) <= Math.pow(2, 53);
-        } else if (conditionValue instanceof Float) {
-            Float value = ((Number) conditionValue).floatValue();
-            return !(value.isNaN() || value.isInfinite() || value > Math.pow(2, 53));
-        }
-        return false;
     }
 
     private MatchType(String type, Match matcher) {
