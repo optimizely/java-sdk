@@ -29,6 +29,11 @@ after_success:
 after_failure:
   - cat /home/travis/build/optimizely/java-sdk/core-api/build/reports/findbugs/main.html
 
+# Integration tests need to run first to reset the PR build status to pending
+stages:
+  - 'Integration tests'
+  - 'Test'
+
 jobs:
   include:
     - stage: 'Integration tests'
