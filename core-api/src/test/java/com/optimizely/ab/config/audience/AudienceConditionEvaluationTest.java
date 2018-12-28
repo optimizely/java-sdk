@@ -16,7 +16,10 @@
  */
 package com.optimizely.ab.config.audience;
 
+import ch.qos.logback.classic.Level;
+import com.optimizely.ab.internal.LogbackVerifier;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -43,6 +46,9 @@ import static org.mockito.Mockito.when;
 @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT",
     justification = "mockito verify calls do have a side-effect")
 public class AudienceConditionEvaluationTest {
+
+    @Rule
+    public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
     Map<String, String> testUserAttributes;
     Map<String, Object> testTypedUserAttributes;
@@ -108,6 +114,56 @@ public class AudienceConditionEvaluationTest {
     public void invalidMatch() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah","chrome");
         assertNull(testInstance.evaluate(null, testUserAttributes));
+        logbackVerifier.expectMessage(Level.WARN, String.format("Audience condition \"%s\" uses an unknown match type: ", testInstance.toString(), testInstance.getMatch()));
+
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on invalid attribute type.
+     */
+    @Test
+    public void unexpectedAttributeType() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt",20);
+        assertNull(testInstance.evaluate(null, testUserAttributes));
+        logbackVerifier.expectMessage(Level.WARN, String.format("Incompatible type: Attribute value Type java.lang.String, Condition value Type java.lang.Integer"));
+        logbackVerifier.expectMessage(Level.ERROR, String.format("Greater than match failed"));
+        logbackVerifier.expectMessage(Level.WARN, String.format("Audience condition \"%s\" evaluated as UNKNOWN because the value for user attribute \"browser_type\" is inapplicable: \"chrome\"", testInstance.toString()));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on invalid attribute type.
+     */
+    @Test
+    public void unexpectedAttributeTypeNull() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt",20);
+        assertNull(testInstance.evaluate(null, Collections.singletonMap("browser_type", null)));
+        logbackVerifier.expectMessage(Level.ERROR, String.format("Cannot evaluate targeting condition since the value for attribute is an incompatible type"));
+        logbackVerifier.expectMessage(Level.ERROR, String.format("Greater than match failed"));
+        logbackVerifier.expectMessage(Level.WARN, String.format("Audience condition \"%s\" evaluated as UNKNOWN because the value for user attribute \"browser_type\" is inapplicable: \"null\"", testInstance.toString()));
+    }
+
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on missing attribute value.
+     */
+    @Test
+    public void missingAttribute() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt",20);
+        assertNull(testInstance.evaluate(null, Collections.EMPTY_MAP));
+        logbackVerifier.expectMessage(Level.ERROR, String.format("Cannot evaluate targeting condition since the value for attribute is an incompatible type"));
+        logbackVerifier.expectMessage(Level.ERROR, String.format("Greater than match failed"));
+        logbackVerifier.expectMessage(Level.WARN, String.format("Audience condition \"%s\" evaluated as UNKNOWN because no value was passed for user attribute \"%s\"", testInstance.toString(), testInstance.getName()));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on unknown condition type.
+     */
+    @Test
+    public void unknownConditionType() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "blah", "exists","firefox");
+        assertNull(testInstance.evaluate(null, testUserAttributes));
+        logbackVerifier.expectMessage(Level.ERROR, String.format("Audience condition \"%s\" has an unknown condition type: %s", testInstance.toString(), testInstance.getType()));
+        logbackVerifier.expectMessage(Level.ERROR, String.format("condition type not equal to `custom_attribute` %s", testInstance.getType()));
     }
 
     /**

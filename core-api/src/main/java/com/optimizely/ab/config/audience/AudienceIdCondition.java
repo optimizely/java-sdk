@@ -73,7 +73,11 @@ public class AudienceIdCondition<T> implements Condition<T> {
             logger.error(String.format("Audience not set for audienceConditions %s", audienceId));
             return null;
         }
-        return audience.getConditions().evaluate(config, attributes);
+        logger.debug(String.format("Starting to evaluate audience %s with conditions: \"%s\"", audience.getName(), audience.getConditions()));
+        logger.debug(String.format("User attributes: %s", attributes != null ? attributes.toString() : attributes));
+        Boolean result = audience.getConditions().evaluate(config, attributes);
+        logger.info(String.format("Audience %s evaluated as " + result, audience.getName()));
+        return result;
     }
 
     @Override

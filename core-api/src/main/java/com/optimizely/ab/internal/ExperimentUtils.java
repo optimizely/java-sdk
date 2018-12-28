@@ -80,6 +80,7 @@ public final class ExperimentUtils {
 
         // if there are no audiences, ALL users should be part of the experiment
         if (experimentAudienceIds.isEmpty()) {
+            logger.debug("There is no Audience associated with experiment " + experiment.getKey());
             return true;
         }
 
@@ -91,8 +92,11 @@ public final class ExperimentUtils {
 
         OrCondition implicitOr = new OrCondition(conditions);
 
-        return implicitOr.evaluate(projectConfig, attributes);
+        Boolean result = implicitOr.evaluate(projectConfig, attributes);
 
+        logger.info(String.format("Audiences for experiment %s collectively evaluated as " + result, experiment.getKey()));
+
+        return result;
     }
 
     public static @Nullable Boolean evaluateAudienceConditions(@Nonnull ProjectConfig projectConfig,
@@ -101,9 +105,11 @@ public final class ExperimentUtils {
 
         Condition conditions = experiment.getAudienceConditions();
         if (conditions == null) return null;
-
+        logger.debug(String.format("Evaluating audiences for experiment \"%s\": \"%s\"", experiment.getKey(), conditions.toString()));
         try {
-            return conditions.evaluate(projectConfig, attributes);
+            Boolean result = conditions.evaluate(projectConfig, attributes);
+            logger.info(String.format("Audiences for experiment %s collectively evaluated as " + result, experiment.getKey()));
+            return result;
         }
         catch (Exception e) {
             logger.error("Condition invalid", e);

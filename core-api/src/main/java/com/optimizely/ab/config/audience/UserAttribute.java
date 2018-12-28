@@ -20,7 +20,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.audience.match.Match;
 import com.optimizely.ab.config.audience.match.MatchType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -35,6 +38,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserAttribute<T> implements Condition<T> {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserAttribute.class);
     private final String name;
     private final String type;
     private final String match;
@@ -75,15 +79,31 @@ public class UserAttribute<T> implements Condition<T> {
         Object userAttributeValue = attributes.get(name);
 
         if (!"custom_attribute".equals(type)) {
-            MatchType.logger.error(String.format("condition type not equal to `custom_attribute` %s", type));
+            logger.error(String.format("Audience condition \"%s\" has an unknown condition type: %s", this.toString(), type));
+            logger.error(String.format("condition type not equal to `custom_attribute` %s", type));
             return null; // unknown type
         }
         // check user attribute value is equal
         try {
-            return MatchType.getMatchType(match, value).getMatcher().eval(userAttributeValue);
+            Match matchType = MatchType.getMatchType(match, value, this).getMatcher();
+            Boolean result = matchType.eval(userAttributeValue);
+
+            if (!matchType.getClass().toString().contains("Null") && result == null) {
+                if (!attributes.containsKey(name)) {
+                    //Missing attribute value
+                    logger.warn(String.format("Audience condition \"%s\" evaluated as UNKNOWN because no value was passed for user attribute \"%s\"", this.toString(), name));
+                } else {
+                    logger.warn(
+                        String.format("Audience condition \"%s\" evaluated as UNKNOWN because the value for user attribute \"%s\" is inapplicable: \"%s\"",
+                            this.toString(),
+                            name,
+                            userAttributeValue));
+                }
+            }
+            return result;
         }
         catch (NullPointerException np) {
-            MatchType.logger.error(String.format("attribute or value null for match %s", match != null ? match : "legacy condition"),np);
+            logger.error(String.format("attribute or value null for match %s", match != null ? match : "legacy condition"),np);
             return null;
         }
     }
