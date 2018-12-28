@@ -43,7 +43,6 @@ import com.optimizely.ab.notification.ActivateNotificationListener;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.notification.TrackNotificationListener;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -68,11 +67,9 @@ import java.util.Map;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
 import static com.optimizely.ab.event.LogEvent.RequestMethod;
-import static com.optimizely.ab.event.internal.EventFactoryTest.createExperimentVariationMap;
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
@@ -1769,22 +1766,15 @@ public class OptimizelyTest {
             .build();
 
         Map<String, String> attributes = ImmutableMap.of(attribute.getKey(), "attributeValue");
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            mockDecisionService,
-            eventType.getKey(),
-            genericUserId,
-            attributes);
 
         when(mockEventFactory.createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            anyMapOf(String.class, String.class),
-            eq(Collections.<String, Object>emptyMap())))
-            .thenReturn(logEventToDispatch);
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                anyMapOf(String.class, String.class),
+                eq(Collections.<String, Object>emptyMap())))
+                .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
             "\" for user \"" + genericUserId + "\".");
@@ -1799,13 +1789,12 @@ public class OptimizelyTest {
 
         // verify that the event builder was called with the expected attributes
         verify(mockEventFactory).createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            attributeCaptor.capture(),
-            eq(Collections.<String, Object>emptyMap()));
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                attributeCaptor.capture(),
+                eq(Collections.<String, Object>emptyMap()));
 
         Map<String, String> actualValue = attributeCaptor.getValue();
         assertThat(actualValue, hasEntry(attribute.getKey(), "attributeValue"));
@@ -1838,23 +1827,16 @@ public class OptimizelyTest {
             .withErrorHandler(mockErrorHandler)
             .build();
 
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            mockDecisionService,
-            eventType.getKey(),
-            genericUserId,
-            Collections.<String, String>emptyMap());
-        Map<String, String> attributes = null;
+    Map<String, String> attributes = null;
 
         when(mockEventFactory.createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            eq(attributes),
-            eq(Collections.<String, Object>emptyMap())))
-            .thenReturn(logEventToDispatch);
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                eq(attributes),
+                eq(Collections.<String, Object>emptyMap())))
+                .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
             "\" for user \"" + genericUserId + "\".");
@@ -1869,13 +1851,12 @@ public class OptimizelyTest {
 
         // verify that the event builder was called with the expected attributes
         verify(mockEventFactory).createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            attributeCaptor.capture(),
-            eq(Collections.<String, Object>emptyMap()));
+          eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                attributeCaptor.capture(),
+                eq(Collections.<String, Object>emptyMap()));
 
         Map<String, String> actualValue = attributeCaptor.getValue();
         assertEquals(actualValue, null);
@@ -1905,22 +1886,14 @@ public class OptimizelyTest {
             .withErrorHandler(mockErrorHandler)
             .build();
 
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            mockDecisionService,
-            eventType.getKey(),
-            genericUserId,
-            Collections.<String, String>emptyMap());
-
         when(mockEventFactory.createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            eq(Collections.singletonMap("test", null)),
-            eq(Collections.<String, Object>emptyMap())))
-            .thenReturn(logEventToDispatch);
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                eq(Collections.singletonMap("test", null)),
+                eq(Collections.<String, Object>emptyMap())))
+                .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
             "\" for user \"" + genericUserId + "\".");
@@ -1937,13 +1910,12 @@ public class OptimizelyTest {
 
         // verify that the event builder was called with the expected attributes
         verify(mockEventFactory).createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            attributeCaptor.capture(),
-            eq(Collections.<String, Object>emptyMap()));
+             eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                attributeCaptor.capture(),
+                eq(Collections.<String, Object>emptyMap()));
 
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
     }
@@ -1974,22 +1946,14 @@ public class OptimizelyTest {
             .withErrorHandler(new RaiseExceptionErrorHandler())
             .build();
 
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            mockDecisionService,
-            eventType.getKey(),
-            genericUserId,
-            Collections.<String, String>emptyMap());
-
         when(mockEventFactory.createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            eq(ImmutableMap.of("unknownAttribute", "attributeValue")),
-            eq(Collections.<String, Object>emptyMap())))
-            .thenReturn(logEventToDispatch);
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                eq(ImmutableMap.of("unknownAttribute", "attributeValue")),
+                eq(Collections.<String, Object>emptyMap())))
+                .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
             "\" for user \"" + genericUserId + "\".");
@@ -2004,13 +1968,12 @@ public class OptimizelyTest {
 
         // verify that the event builder was called with the expected attributes
         verify(mockEventFactory).createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            attributeCaptor.capture(),
-            eq(Collections.<String, Object>emptyMap()));
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                attributeCaptor.capture(),
+                eq(Collections.<String, Object>emptyMap()));
 
         Map<String, String> actualValue = attributeCaptor.getValue();
         assertThat(actualValue, hasKey("unknownAttribute"));
@@ -2020,7 +1983,7 @@ public class OptimizelyTest {
 
     /**
      * Verify that {@link Optimizely#track(String, String, Map, Map)} passes event features to
-     * {@link EventFactory#createConversionEvent(ProjectConfig, Map, String, String, String, Map, Map)}
+     * {@link EventFactory#createConversionEvent(ProjectConfig, String, String, String, Map, Map)}
      */
     @Test
     public void trackEventWithEventTags() throws Exception {
@@ -2046,22 +2009,15 @@ public class OptimizelyTest {
         eventTags.put("string_param", "123");
         eventTags.put("boolean_param", false);
         eventTags.put("float_param", 12.3f);
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            mockDecisionService,
-            eventType.getKey(),
-            genericUserId,
-            Collections.<String, String>emptyMap());
 
         when(mockEventFactory.createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            anyMapOf(String.class, String.class),
-            eq(eventTags)))
-            .thenReturn(logEventToDispatch);
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                anyMapOf(String.class, String.class),
+                eq(eventTags)))
+                .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() + "\" for user \""
             + genericUserId + "\".");
@@ -2076,13 +2032,12 @@ public class OptimizelyTest {
 
         // verify that the event builder was called with the expected attributes
         verify(mockEventFactory).createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            eq(Collections.<String, String>emptyMap()),
-            eventTagCaptor.capture());
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                eq(Collections.<String, String>emptyMap()),
+                eventTagCaptor.capture());
 
         Map<String, ?> actualValue = eventTagCaptor.getValue();
         assertThat(actualValue, hasEntry("int_param", eventTags.get("int_param")));
@@ -2095,7 +2050,7 @@ public class OptimizelyTest {
 
     /**
      * Verify that {@link Optimizely#track(String, String, Map, Map)} called with null event tags will return null eventTag
-     * when calling {@link EventFactory#createConversionEvent(ProjectConfig, Map, String, String, String, Map, Map)}
+     * when calling {@link EventFactory#createConversionEvent(ProjectConfig, String, String, String, Map, Map)}
      */
     @Test
     @SuppressFBWarnings(
@@ -2119,22 +2074,15 @@ public class OptimizelyTest {
             .withErrorHandler(mockErrorHandler)
             .build();
         Map<String, ?> eventTags = null;
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            mockDecisionService,
-            eventType.getKey(),
-            genericUserId,
-            Collections.<String, String>emptyMap());
 
         when(mockEventFactory.createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            eq(Collections.<String, String>emptyMap()),
-            eq(eventTags)))
-            .thenReturn(logEventToDispatch);
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                eq(Collections.<String, String>emptyMap()),
+                eq(eventTags)))
+                .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
             "\" for user \"" + genericUserId + "\".");
@@ -2146,13 +2094,12 @@ public class OptimizelyTest {
 
         // verify that the event builder was called with the expected attributes
         verify(mockEventFactory).createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            eq(Collections.<String, String>emptyMap()),
-            eq(eventTags));
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                eq(Collections.<String, String>emptyMap()),
+                eq(eventTags));
 
         verify(mockEventHandler).dispatchEvent(logEventToDispatch);
     }
@@ -2182,22 +2129,14 @@ public class OptimizelyTest {
             .withErrorHandler(mockErrorHandler)
             .build();
 
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            mockDecisionService,
-            eventType.getKey(),
-            genericUserId,
-            Collections.<String, String>emptyMap());
-
         when(mockEventFactory.createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            eq(Collections.<String, String>emptyMap()),
-            eq(Collections.<String, String>emptyMap())))
-            .thenReturn(logEventToDispatch);
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                eq(Collections.<String, String>emptyMap()),
+                eq(Collections.<String, String>emptyMap())))
+                .thenReturn(logEventToDispatch);
 
         String userID = null;
         // call track with null event key
@@ -2231,22 +2170,14 @@ public class OptimizelyTest {
             .withErrorHandler(mockErrorHandler)
             .build();
 
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            mockDecisionService,
-            eventType.getKey(),
-            genericUserId,
-            Collections.<String, String>emptyMap());
-
         when(mockEventFactory.createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            eq(Collections.<String, String>emptyMap()),
-            eq(Collections.<String, String>emptyMap())))
-            .thenReturn(logEventToDispatch);
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                eq(Collections.<String, String>emptyMap()),
+                eq(Collections.<String, String>emptyMap())))
+                .thenReturn(logEventToDispatch);
 
         // call track with null event key
         optimizely.track(nullEventKey, genericUserId, Collections.<String, String>emptyMap(), Collections.<String, Object>emptyMap());
@@ -2384,24 +2315,13 @@ public class OptimizelyTest {
             .withEventBuilder(mockEventFactory)
             .build();
 
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            noAudienceProjectConfig,
-            client.decisionService,
-            eventType.getKey(),
-            genericUserId,
-            Collections.<String, String>emptyMap());
-
-        // Create an Argument Captor to ensure we are creating a correct experiment variation map
-        ArgumentCaptor<Map> experimentVariationMapCaptor = ArgumentCaptor.forClass(Map.class);
-
         when(mockEventFactory.createConversionEvent(
-            eq(noAudienceProjectConfig),
-            experimentVariationMapCaptor.capture(),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            eq(Collections.<String, String>emptyMap()),
-            eq(Collections.<String, Object>emptyMap())
+                eq(noAudienceProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                eq(Collections.<String, String>emptyMap()),
+                eq(Collections.<String, Object>emptyMap())
         )).thenReturn(logEventToDispatch);
 
         List<Experiment> eventExperiments = noAudienceProjectConfig.getExperimentsForEventKey(eventType.getKey());
@@ -2419,10 +2339,6 @@ public class OptimizelyTest {
         // It should send a track event with the running experiment
         client.track(eventType.getKey(), genericUserId, Collections.<String, String>emptyMap());
         verify(client.eventHandler).dispatchEvent(eq(logEventToDispatch));
-
-        // Check the argument captor got the correct arguments
-        Map<Experiment, Variation> actualExperimentVariationMap = experimentVariationMapCaptor.getValue();
-        assertEquals(experimentVariationMap, actualExperimentVariationMap);
     }
 
     /**
@@ -2949,21 +2865,14 @@ public class OptimizelyTest {
         // Check if listener is notified after an event is tracked
         String eventKey = eventType.getKey();
 
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            mockDecisionService,
-            eventType.getKey(),
-            genericUserId,
-            attributes);
         when(mockEventFactory.createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventKey),
-            eq(attributes),
-            anyMapOf(String.class, Object.class)))
-            .thenReturn(logEventToDispatch);
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventKey),
+                eq(attributes),
+                anyMapOf(String.class, Object.class)))
+                .thenReturn(logEventToDispatch);
 
         TrackNotificationListener trackNotification = mock(TrackNotificationListener.class);
 
@@ -3029,21 +2938,14 @@ public class OptimizelyTest {
         EventType eventType = validProjectConfig.getEventTypes().get(0);
         String eventKey = eventType.getKey();
 
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            mockDecisionService,
-            eventType.getKey(),
-            genericUserId,
-            attributes);
         when(mockEventFactory.createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventKey),
-            eq(attributes),
-            anyMapOf(String.class, Object.class)))
-            .thenReturn(logEventToDispatch);
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventKey),
+                eq(attributes),
+                anyMapOf(String.class, Object.class)))
+                .thenReturn(logEventToDispatch);
 
         optimizely.track(eventKey, genericUserId, attributes);
         verify(trackNotification, never())
@@ -3120,21 +3022,14 @@ public class OptimizelyTest {
         EventType eventType = validProjectConfig.getEventTypes().get(0);
         String eventKey = eventType.getKey();
 
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            mockDecisionService,
-            eventType.getKey(),
-            OptimizelyTest.genericUserId,
-            attributes);
         when(mockEventFactory.createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(OptimizelyTest.genericUserId),
-            eq(eventType.getId()),
-            eq(eventKey),
-            eq(attributes),
-            anyMapOf(String.class, Object.class)))
-            .thenReturn(logEventToDispatch);
+                eq(validProjectConfig),
+                eq(OptimizelyTest.genericUserId),
+                eq(eventType.getId()),
+                eq(eventKey),
+                eq(attributes),
+                anyMapOf(String.class, Object.class)))
+                .thenReturn(logEventToDispatch);
 
         optimizely.track(eventKey, genericUserId, attributes);
         verify(trackNotification, never())
@@ -3169,22 +3064,15 @@ public class OptimizelyTest {
             .build();
 
         final Map<String, String> attributes = ImmutableMap.of(attribute.getKey(), "attributeValue");
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            mockDecisionService,
-            eventType.getKey(),
-            genericUserId,
-            attributes);
 
         when(mockEventFactory.createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            anyMapOf(String.class, String.class),
-            eq(Collections.<String, Object>emptyMap())))
-            .thenReturn(logEventToDispatch);
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                anyMapOf(String.class, String.class),
+                eq(Collections.<String, Object>emptyMap())))
+                .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
             "\" for user \"" + genericUserId + "\".");
@@ -3214,12 +3102,11 @@ public class OptimizelyTest {
         // verify that the event builder was called with the expected attributes
         verify(mockEventFactory).createConversionEvent(
             eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            attributeCaptor.capture(),
-            eq(Collections.<String, Object>emptyMap()));
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                attributeCaptor.capture(),
+                eq(Collections.<String, Object>emptyMap()));
 
         Map<String, String> actualValue = attributeCaptor.getValue();
         assertThat(actualValue, hasEntry(attribute.getKey(), "attributeValue"));
@@ -3252,23 +3139,15 @@ public class OptimizelyTest {
             .withErrorHandler(mockErrorHandler)
             .build();
 
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            mockDecisionService,
-            eventType.getKey(),
-            genericUserId,
-            null);
-
-        Map<String, String> attributes = null;
+     Map<String, String> attributes = null;
         when(mockEventFactory.createConversionEvent(
-            eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            eq(attributes),
-            eq(Collections.<String, Object>emptyMap())))
-            .thenReturn(logEventToDispatch);
+                eq(validProjectConfig),
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                eq(attributes),
+                eq(Collections.<String, Object>emptyMap())))
+                .thenReturn(logEventToDispatch);
 
         logbackVerifier.expectMessage(Level.INFO, "Tracking event \"" + eventType.getKey() +
             "\" for user \"" + genericUserId + "\".");
@@ -3298,12 +3177,11 @@ public class OptimizelyTest {
         // verify that the event builder was called with the expected attributes
         verify(mockEventFactory).createConversionEvent(
             eq(validProjectConfig),
-            eq(experimentVariationMap),
-            eq(genericUserId),
-            eq(eventType.getId()),
-            eq(eventType.getKey()),
-            attributeCaptor.capture(),
-            eq(Collections.<String, Object>emptyMap()));
+                eq(genericUserId),
+                eq(eventType.getId()),
+                eq(eventType.getKey()),
+                attributeCaptor.capture(),
+                eq(Collections.<String, Object>emptyMap()));
 
         Map<String, String> actualValue = attributeCaptor.getValue();
         assertNull(actualValue);
