@@ -33,6 +33,7 @@ import com.optimizely.ab.event.internal.payload.Decision;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.ReservedEventKey;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -487,18 +488,6 @@ public class EventFactoryTest {
         EventType eventType = validProjectConfig.getEventTypes().get(0);
         String userId = "userId";
 
-        Bucketer mockBucketAlgorithm = mock(Bucketer.class);
-
-        List<Experiment> allExperiments = validProjectConfig.getExperiments();
-        List<Experiment> experimentsForEventKey = validProjectConfig.getExperimentsForEventKey(eventType.getKey());
-
-        // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
-        // call the bucket function.
-        for (Experiment experiment : allExperiments) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
-                .thenReturn(experiment.getVariations().get(0));
-        }
-
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), AUDIENCE_GRYFFINDOR_VALUE);
         Map<String, Object> eventTagMap = new HashMap<String, Object>();
         eventTagMap.put("boolean_param", false);
@@ -545,7 +534,6 @@ public class EventFactoryTest {
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getRevenue(), null);
         assertTrue(conversion.getVisitors().get(0).getAttributes().containsAll(expectedUserFeatures));
         assertTrue(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTags().equals(eventTagMap));
-        assertFalse(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
         assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
         assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
@@ -561,8 +549,6 @@ public class EventFactoryTest {
         Attribute attribute = validProjectConfig.getAttributes().get(0);
         EventType eventType = validProjectConfig.getEventTypes().get(0);
         String userId = "userId";
-
-        List<Experiment> experimentsForEventKey = validProjectConfig.getExperimentsForEventKey(eventType.getKey());
 
         Map<String, String> attributeMap = new HashMap<String, String>();
         attributeMap.put(attribute.getKey(), AUDIENCE_GRYFFINDOR_VALUE);
@@ -618,7 +604,6 @@ public class EventFactoryTest {
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getRevenue(), null);
         assertTrue(conversion.getVisitors().get(0).getAttributes().containsAll(expectedUserFeatures));
         assertTrue(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTags().equals(eventTagMap));
-        assertFalse(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
         assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
         assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
@@ -661,8 +646,7 @@ public class EventFactoryTest {
     }
 
     /**
-     * Verify that precedence is given to forced variation bucketing over audience evaluation when constructing a
-     * conversion event.
+     * Verify that conversion event is always created.
      */
     @Test
     public void createConversionEventForcedVariationBucketingPrecedesAudienceEval() {
@@ -684,21 +668,10 @@ public class EventFactoryTest {
                 Collections.<String, String>emptyMap(),
                 Collections.<String, Object>emptyMap());
         assertNotNull(conversionEvent);
-
-        EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
-        if (datafileVersion == 4) {
-            // 2 experiments use the event
-            // basic experiment has no audience
-            // user is whitelisted in to one audience
-            assertEquals(2, conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().size());
-        } else {
-            assertEquals(1, conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().size());
-        }
     }
 
     /**
-     * Verify that precedence is given to experiment status over forced variation bucketing when constructing a
-     * conversion event.
+     * Verify conversion event is always created.
      */
     @Test
     public void createConversionEventExperimentStatusPrecedesForcedVariation() {
@@ -718,11 +691,7 @@ public class EventFactoryTest {
                 Collections.<String, String>emptyMap(),
                 Collections.<String, Object>emptyMap());
 
-        for (Experiment experiment : validProjectConfig.getExperiments()) {
-            verify(bucketer, never()).bucket(experiment, whitelistedUserId);
-        }
-
-        assertNull(conversionEvent);
+        assertNotNull(conversionEvent);
     }
 
     /**
@@ -794,10 +763,10 @@ public class EventFactoryTest {
     /**
      * Verify that supplying an empty Experiment Variation map to
      * {@link EventFactory#createConversionEvent(ProjectConfig, String, String, String, Map, Map)}
-     * returns a null {@link LogEvent}.
+     * returns an Event {@link LogEvent}.
      */
     @Test
-    public void createConversionEventReturnsNullWhenExperimentVariationMapIsEmpty() {
+    public void createConversionEventReturnsNotNullWhenExperimentVariationMapIsEmpty() {
         EventType eventType = validProjectConfig.getEventTypes().get(0);
         EventFactory factory = new EventFactory();
 
@@ -810,7 +779,7 @@ public class EventFactoryTest {
                 Collections.<String, String>emptyMap()
         );
 
-        assertNull(conversionEvent);
+        assertNotNull(conversionEvent);
     }
 
     /**
@@ -892,18 +861,6 @@ public class EventFactoryTest {
         String userId = "userId";
         String bucketingId = "bucketingId";
 
-        Bucketer mockBucketAlgorithm = mock(Bucketer.class);
-
-        List<Experiment> allExperiments = validProjectConfig.getExperiments();
-        List<Experiment> experimentsForEventKey = validProjectConfig.getExperimentsForEventKey(eventType.getKey());
-
-        // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
-        // call the bucket function.
-        for (Experiment experiment : allExperiments) {
-            when(mockBucketAlgorithm.bucket(experiment, bucketingId))
-                .thenReturn(experiment.getVariations().get(0));
-        }
-
         Map<String, String> attributeMap = new java.util.HashMap<String, String>();
         attributeMap.put(attribute.getKey(), AUDIENCE_GRYFFINDOR_VALUE);
         attributeMap.put(ControlAttribute.BUCKETING_ATTRIBUTE.toString(), bucketingId);
@@ -921,19 +878,6 @@ public class EventFactoryTest {
                 eventTagMap);
 
         List<Decision> expectedDecisions = new ArrayList<Decision>();
-
-        for (Experiment experiment : experimentsForEventKey) {
-            if (experiment.isRunning()) {
-                Decision decision = new Decision.Builder()
-                    .setCampaignId(experiment.getLayerId())
-                    .setExperimentId(experiment.getId())
-                    .setVariationId(experiment.getVariations().get(0).getId())
-                    .setIsCampaignHoldback(false)
-                    .build();
-
-                expectedDecisions.add(decision);
-            }
-        }
 
         // verify that the request endpoint is correct
         assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
@@ -975,7 +919,6 @@ public class EventFactoryTest {
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getRevenue(), null);
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getQuantity(), null);
         assertTrue(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTags().equals(eventTagMap));
-        assertFalse(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
         assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
         assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
