@@ -25,6 +25,7 @@ import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.TypedAudience;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -148,6 +149,23 @@ public class ExperimentUtilsTest {
     }
 
     /**
+     * If the {@link Experiment} contains at least one {@link Audience}, but attributes is empty,
+     * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map)} should return false.
+     */
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
+    @Test
+    public void isUserInExperimentEvaluatesEvenIfExperimentHasAudiencesButUserSendNullAttributes() throws Exception {
+        Experiment experiment = projectConfig.getExperiments().get(0);
+        Audience audience = projectConfig.getAudience(experiment.getAudienceIds().get(0));
+        Boolean result = isUserInExperiment(projectConfig, experiment, null);
+        assertTrue(result);
+        logbackVerifier.expectMessage(Level.DEBUG, String.format("Starting to evaluate audience %s with conditions: \"%s\"", audience.getName(), audience.getConditions()));
+        logbackVerifier.expectMessage(Level.DEBUG, String.format("User attributes: null"));
+        logbackVerifier.expectMessage(Level.ERROR, String.format("Cannot evaluate targeting condition since the value for attribute is an incompatible type"));
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated as %s", audience.getName(), result));
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated as %s", experiment.getKey(), result));
+    }
+    /**
      * If the {@link Experiment} contains {@link TypedAudience}, and attributes is valid and true,
      * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map)} should return true.
      */
@@ -238,7 +256,7 @@ public class ExperimentUtilsTest {
      * Audience will evaluate null when condition value is null
      */
     @Test
-    public void isUserInExperimentHandlesNullValueMissingAttributeValue() {
+    public void isUserInExperimentHandlesNullConditionValue() {
         Experiment experiment = v4ProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY);
         Audience audience = v4ProjectConfig.getAudience(experiment.getAudienceIds().get(0));
         Map<String, String> attributesEmpty = Collections.emptyMap();

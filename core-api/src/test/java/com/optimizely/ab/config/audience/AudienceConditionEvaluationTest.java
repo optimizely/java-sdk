@@ -114,8 +114,7 @@ public class AudienceConditionEvaluationTest {
     public void invalidMatch() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah","chrome");
         assertNull(testInstance.evaluate(null, testUserAttributes));
-        logbackVerifier.expectMessage(Level.WARN, String.format("Audience condition \"%s\" uses an unknown match type: ", testInstance.toString(), testInstance.getMatch()));
-
+        logbackVerifier.expectMessage(Level.WARN, String.format("Audience condition \"%s\" uses an unknown match type: %s", testInstance.toString(), testInstance.getMatch()));
     }
 
     /**
@@ -150,6 +149,18 @@ public class AudienceConditionEvaluationTest {
     public void missingAttribute() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt",20);
         assertNull(testInstance.evaluate(null, Collections.EMPTY_MAP));
+        logbackVerifier.expectMessage(Level.ERROR, String.format("Cannot evaluate targeting condition since the value for attribute is an incompatible type"));
+        logbackVerifier.expectMessage(Level.ERROR, String.format("Greater than match failed"));
+        logbackVerifier.expectMessage(Level.DEBUG, String.format("Audience condition \"%s\" evaluated as UNKNOWN because no value was passed for user attribute \"%s\"", testInstance.toString(), testInstance.getName()));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on passing null attribute object.
+     */
+    @Test
+    public void nullAttribute() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt",20);
+        assertNull(testInstance.evaluate(null, null));
         logbackVerifier.expectMessage(Level.ERROR, String.format("Cannot evaluate targeting condition since the value for attribute is an incompatible type"));
         logbackVerifier.expectMessage(Level.ERROR, String.format("Greater than match failed"));
         logbackVerifier.expectMessage(Level.DEBUG, String.format("Audience condition \"%s\" evaluated as UNKNOWN because no value was passed for user attribute \"%s\"", testInstance.toString(), testInstance.getName()));
