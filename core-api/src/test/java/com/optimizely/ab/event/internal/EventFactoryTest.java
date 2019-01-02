@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -340,7 +340,7 @@ public class EventFactoryTest {
      * causing an exception to be thrown and passing only the valid attributes.
      */
     @Test
-    public void createConversionEventIgnoresInvalidAndAcceptsValidValueOfValidTypeAttributes() {
+    public void createConversionEventIgnoresInvalidAcceptValidValOfValidAttr() {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
