@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,18 +25,17 @@ class JsonSerializer implements Serializer {
         String jsonResponse = payloadJsonObject.toString();
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (int i = 0; i < jsonResponse.length(); i ++) {
+        for (int i = 0; i < jsonResponse.length(); i++) {
             Character ch = jsonResponse.charAt(i);
             Character nextChar = null;
-            if (i +1 < jsonResponse.length()) {
-                nextChar = jsonResponse.charAt(i+1);
+            if (i + 1 < jsonResponse.length()) {
+                nextChar = jsonResponse.charAt(i + 1);
             }
             if ((Character.isLetter(ch) || Character.isDigit(ch)) && Character.isUpperCase(ch) &&
-                    ((Character.isLetter(nextChar) || Character.isDigit(nextChar)))) {
+                ((Character.isLetter(nextChar) || Character.isDigit(nextChar)))) {
                 stringBuilder.append('_');
                 stringBuilder.append(Character.toLowerCase(ch));
-            }
-            else {
+            } else {
                 stringBuilder.append(ch);
             }
         }

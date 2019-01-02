@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -32,10 +32,10 @@ public class LiveVariable implements IdKeyMapped {
 
     public enum VariableStatus {
         @SerializedName("active")
-        ACTIVE ("active"),
+        ACTIVE("active"),
 
         @SerializedName("archived")
-        ARCHIVED ("archived");
+        ARCHIVED("archived");
 
         private final String variableStatus;
 
@@ -63,16 +63,16 @@ public class LiveVariable implements IdKeyMapped {
 
     public enum VariableType {
         @SerializedName("boolean")
-        BOOLEAN ("boolean"),
+        BOOLEAN("boolean"),
 
         @SerializedName("integer")
-        INTEGER ("integer"),
+        INTEGER("integer"),
 
         @SerializedName("string")
-        STRING ("string"),
+        STRING("string"),
 
         @SerializedName("double")
-        DOUBLE ("double");
+        DOUBLE("double");
 
         private final String variableType;
 
@@ -102,7 +102,8 @@ public class LiveVariable implements IdKeyMapped {
     private final String key;
     private final String defaultValue;
     private final VariableType type;
-    @Nullable private final VariableStatus status;
+    @Nullable
+    private final VariableStatus status;
 
     @JsonCreator
     public LiveVariable(@JsonProperty("id") String id,
@@ -117,7 +118,8 @@ public class LiveVariable implements IdKeyMapped {
         this.type = type;
     }
 
-    public @Nullable VariableStatus getStatus() {
+    public @Nullable
+    VariableStatus getStatus() {
         return status;
     }
 
@@ -140,12 +142,12 @@ public class LiveVariable implements IdKeyMapped {
     @Override
     public String toString() {
         return "LiveVariable{" +
-                "id='" + id + '\'' +
-                ", key='" + key + '\'' +
-                ", defaultValue='" + defaultValue + '\'' +
-                ", type=" + type +
-                ", status=" + status +
-                '}';
+            "id='" + id + '\'' +
+            ", key='" + key + '\'' +
+            ", defaultValue='" + defaultValue + '\'' +
+            ", type=" + type +
+            ", status=" + status +
+            '}';
     }
 
     @Override

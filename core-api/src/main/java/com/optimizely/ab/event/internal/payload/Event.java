@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018, Optimizely and contributors
+ *    Copyright 2018-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -34,7 +34,8 @@ public class Event {
     Number value;
 
     @VisibleForTesting
-    public Event() { }
+    public Event() {
+    }
 
     public Event(long timestamp, String uuid, String entityId, String key, Number quantity,
                  Number revenue, Map<String, ?> tags, String type, Number value) {

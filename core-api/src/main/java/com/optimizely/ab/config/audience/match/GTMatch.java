@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018, Optimizely and contributors
+ *    Copyright 2018-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import javax.annotation.Nullable;
 
 class GTMatch extends AttributeMatch<Number> {
     Number value;
+
     protected GTMatch(Number value) {
         this.value = value;
     }
@@ -28,8 +29,7 @@ class GTMatch extends AttributeMatch<Number> {
     Boolean eval(Object attributeValue) {
         try {
             return castToValueType(attributeValue, value).doubleValue() > value.doubleValue();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             MatchType.logger.error("Greater than match failed ", e);
             return null;
         }

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,7 +27,8 @@ public final class HttpClientUtils {
     private static final int CONNECTION_REQUEST_TIMEOUT_MS = 5000;
     private static final int SOCKET_TIMEOUT_MS = 10000;
 
-    private HttpClientUtils() { }
+    private HttpClientUtils() {
+    }
 
     public static final RequestConfig DEFAULT_REQUEST_CONFIG = RequestConfig.custom()
         .setConnectTimeout(CONNECTION_TIMEOUT_MS)

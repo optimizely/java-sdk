@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017, Optimizely and contributors
+ *    Copyright 2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,11 +25,17 @@ import java.util.Map;
  */
 public interface UserProfileService {
 
-    /** The key for the user ID. Returns a String.*/
+    /**
+     * The key for the user ID. Returns a String.
+     */
     String userIdKey = "user_id";
-    /** The key for the decisions Map. Returns a {@code Map<String, Map<String, String>>}.*/
+    /**
+     * The key for the decisions Map. Returns a {@code Map<String, Map<String, String>>}.
+     */
     String experimentBucketMapKey = "experiment_bucket_map";
-    /** The key for the variation Id within a decision Map. */
+    /**
+     * The key for the variation Id within a decision Map.
+     */
     String variationIdKey = "variation_id";
 
     /**
@@ -39,13 +45,13 @@ public interface UserProfileService {
      * @return a Map representing the user's profile.
      * The returned {@code Map<String, Object>} of the user profile will have the following structure.
      * {
-     *     userIdKey : String userId,
-     *     decisionsKey : {@code Map<String, Map<String, String>>} decisions {
-     *          String experimentId : {@code Map<String, String>} decision {
-     *              variationIdKey : String variationId
-     *          }
-     *      }
-     *  }
+     * userIdKey : String userId,
+     * decisionsKey : {@code Map<String, Map<String, String>>} decisions {
+     * String experimentId : {@code Map<String, String>} decision {
+     * variationIdKey : String variationId
+     * }
+     * }
+     * }
      * @throws Exception Passes on whatever exceptions the implementation may throw.
      */
     Map<String, Object> lookup(String userId) throws Exception;

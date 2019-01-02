@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -66,7 +66,7 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void userAttributeEvaluateTrue() throws Exception {
-        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", null,"chrome");
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", null, "chrome");
         assertTrue(testInstance.hashCode() != 0);
         assertNull(testInstance.getMatch());
         assertEquals(testInstance.getName(), "browser_type");
@@ -79,7 +79,7 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void userAttributeEvaluateFalse() throws Exception {
-        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", null,"firefox");
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", null, "firefox");
         assertFalse(testInstance.evaluate(null, testUserAttributes));
     }
 
@@ -88,7 +88,7 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void userAttributeUnknownAttribute() throws Exception {
-        UserAttribute testInstance = new UserAttribute("unknown_dim", "custom_attribute", null,"unknown");
+        UserAttribute testInstance = new UserAttribute("unknown_dim", "custom_attribute", null, "unknown");
         assertFalse(testInstance.evaluate(null, testUserAttributes));
     }
 
@@ -97,7 +97,7 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void invalidMatchCondition() throws Exception {
-        UserAttribute testInstance = new UserAttribute("browser_type", "unknown_dimension", null,"chrome");
+        UserAttribute testInstance = new UserAttribute("browser_type", "unknown_dimension", null, "chrome");
         assertNull(testInstance.evaluate(null, testUserAttributes));
     }
 
@@ -106,7 +106,7 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void invalidMatch() throws Exception {
-        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah","chrome");
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah", "chrome");
         assertNull(testInstance.evaluate(null, testUserAttributes));
     }
 
@@ -116,7 +116,7 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void existsMatchConditionEmptyStringEvaluatesTrue() throws Exception {
-        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute","exists", "firefox");
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "exists", "firefox");
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("browser_type", "");
         assertTrue(testInstance.evaluate(null, attributes));
@@ -125,18 +125,18 @@ public class AudienceConditionEvaluationTest {
     }
 
     /**
-     * Verify that UserAttribute.evaluate for EXIST match type returns true for known visitor 
+     * Verify that UserAttribute.evaluate for EXIST match type returns true for known visitor
      * attributes with non-null instances
      */
     @Test
     public void existsMatchConditionEvaluatesTrue() throws Exception {
-        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute","exists", "firefox");
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "exists", "firefox");
         assertTrue(testInstance.evaluate(null, testUserAttributes));
 
-        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox",  "custom_attribute","exists", false);
-        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","exists", 5);
-        UserAttribute testInstanceDouble = new UserAttribute("num_counts",  "custom_attribute","exists", 4.55);
-        UserAttribute testInstanceObject = new UserAttribute("meta_data",  "custom_attribute","exists", testUserAttributes);
+        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "exists", false);
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "exists", 5);
+        UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "exists", 4.55);
+        UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "exists", testUserAttributes);
         assertTrue(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
         assertTrue(testInstanceInteger.evaluate(null, testTypedUserAttributes));
         assertTrue(testInstanceDouble.evaluate(null, testTypedUserAttributes));
@@ -144,27 +144,27 @@ public class AudienceConditionEvaluationTest {
     }
 
     /**
-     * Verify that UserAttribute.evaluate for EXIST match type returns false for unknown visitor 
+     * Verify that UserAttribute.evaluate for EXIST match type returns false for unknown visitor
      * attributes OR null visitor attributes.
      */
     @Test
     public void existsMatchConditionEvaluatesFalse() throws Exception {
-        UserAttribute testInstance = new UserAttribute("bad_var",  "custom_attribute","exists", "chrome");
-        UserAttribute testInstanceNull = new UserAttribute("null_val",  "custom_attribute","exists", "chrome");
+        UserAttribute testInstance = new UserAttribute("bad_var", "custom_attribute", "exists", "chrome");
+        UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "exists", "chrome");
         assertFalse(testInstance.evaluate(null, testTypedUserAttributes));
         assertFalse(testInstanceNull.evaluate(null, testTypedUserAttributes));
     }
 
     /**
-     * Verify that UserAttribute.evaluate for EXACT match type returns true for known visitor 
+     * Verify that UserAttribute.evaluate for EXACT match type returns true for known visitor
      * attributes where the values and the value's type are the same
      */
     @Test
     public void exactMatchConditionEvaluatesTrue() throws Exception {
-        UserAttribute testInstanceString = new UserAttribute("browser_type",  "custom_attribute","exact", "chrome");
-        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox",  "custom_attribute","exact", true);
-        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","exact", 3);
-        UserAttribute testInstanceDouble = new UserAttribute("num_counts",  "custom_attribute","exact", 3.55);
+        UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "exact", "chrome");
+        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "exact", true);
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "exact", 3);
+        UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "exact", 3.55);
 
         assertTrue(testInstanceString.evaluate(null, testUserAttributes));
         assertTrue(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
@@ -183,26 +183,27 @@ public class AudienceConditionEvaluationTest {
         Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
         Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
         Double infiniteNANDouble = Double.NaN;
-        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","exact", bigInteger);
-        UserAttribute testInstancePositiveInfinite = new UserAttribute("num_counts",  "custom_attribute","exact", infinitePositiveInfiniteDouble);
-        UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts",  "custom_attribute","exact", infiniteNegativeInfiniteDouble);
-        UserAttribute testInstanceNANDouble = new UserAttribute("num_counts",  "custom_attribute","exact", infiniteNANDouble);
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "exact", bigInteger);
+        UserAttribute testInstancePositiveInfinite = new UserAttribute("num_counts", "custom_attribute", "exact", infinitePositiveInfiniteDouble);
+        UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts", "custom_attribute", "exact", infiniteNegativeInfiniteDouble);
+        UserAttribute testInstanceNANDouble = new UserAttribute("num_counts", "custom_attribute", "exact", infiniteNANDouble);
 
         assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
         assertNull(testInstancePositiveInfinite.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNegativeInfiniteDouble.evaluate(null,testTypedUserAttributes));
+        assertNull(testInstanceNegativeInfiniteDouble.evaluate(null, testTypedUserAttributes));
         assertNull(testInstanceNANDouble.evaluate(null, testTypedUserAttributes));
     }
+
     /**
-     * Verify that UserAttribute.evaluate for EXACT match type returns false for known visitor 
+     * Verify that UserAttribute.evaluate for EXACT match type returns false for known visitor
      * attributes where the value's type are the same, but the values are different
      */
     @Test
     public void exactMatchConditionEvaluatesFalse() throws Exception {
-        UserAttribute testInstanceString = new UserAttribute("browser_type",  "custom_attribute","exact", "firefox");
-        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox",  "custom_attribute","exact", false);
-        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","exact", 5);
-        UserAttribute testInstanceDouble = new UserAttribute("num_counts",  "custom_attribute","exact", 5.55);
+        UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "exact", "firefox");
+        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "exact", false);
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "exact", 5);
+        UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "exact", 5.55);
 
         assertFalse(testInstanceString.evaluate(null, testUserAttributes));
         assertFalse(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
@@ -211,17 +212,17 @@ public class AudienceConditionEvaluationTest {
     }
 
     /**
-     * Verify that UserAttribute.evaluate for EXACT match type returns null for known visitor 
+     * Verify that UserAttribute.evaluate for EXACT match type returns null for known visitor
      * attributes where the value's type are different OR for values with null and object type.
      */
     @Test
     public void exactMatchConditionEvaluatesNull() throws Exception {
-        UserAttribute testInstanceObject = new UserAttribute("meta_data",  "custom_attribute","exact", testUserAttributes);
-        UserAttribute testInstanceString = new UserAttribute("browser_type",  "custom_attribute","exact", true);
-        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox",  "custom_attribute","exact", "true");
-        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","exact", "3");
+        UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "exact", testUserAttributes);
+        UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "exact", true);
+        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "exact", "true");
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "exact", "3");
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "exact", "3.55");
-        UserAttribute testInstanceNull = new UserAttribute("null_val",  "custom_attribute","exact", "null_val");
+        UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "exact", "null_val");
 
         assertNull(testInstanceObject.evaluate(null, testTypedUserAttributes));
         assertNull(testInstanceString.evaluate(null, testUserAttributes));
@@ -229,25 +230,25 @@ public class AudienceConditionEvaluationTest {
         assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
         assertNull(testInstanceDouble.evaluate(null, testTypedUserAttributes));
         assertNull(testInstanceNull.evaluate(null, testTypedUserAttributes));
-        Map<String,Object> attr = new HashMap<>();
+        Map<String, Object> attr = new HashMap<>();
         attr.put("browser_type", "true");
         assertNull(testInstanceString.evaluate(null, attr));
     }
 
     /**
-     * Verify that UserAttribute.evaluate for GT match type returns true for known visitor 
+     * Verify that UserAttribute.evaluate for GT match type returns true for known visitor
      * attributes where the value's type is a number, and the UserAttribute's value is greater than
      * the condition's value.
      */
     @Test
     public void gtMatchConditionEvaluatesTrue() throws Exception {
-        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","gt", 2);
-        UserAttribute testInstanceDouble = new UserAttribute("num_counts",  "custom_attribute","gt", 2.55);
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "gt", 2);
+        UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "gt", 2.55);
 
         assertTrue(testInstanceInteger.evaluate(null, testTypedUserAttributes));
         assertTrue(testInstanceDouble.evaluate(null, testTypedUserAttributes));
 
-        Map<String,Object> badAttributes = new HashMap<>();
+        Map<String, Object> badAttributes = new HashMap<>();
         badAttributes.put("num_size", "bobs burgers");
         assertNull(testInstanceInteger.evaluate(null, badAttributes));
     }
@@ -262,10 +263,10 @@ public class AudienceConditionEvaluationTest {
         Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
         Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
         Double infiniteNANDouble = Double.NaN;
-        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","gt", bigInteger);
-        UserAttribute testInstancePositiveInfinite = new UserAttribute("num_counts",  "custom_attribute","gt", infinitePositiveInfiniteDouble);
-        UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts",  "custom_attribute","gt", infiniteNegativeInfiniteDouble);
-        UserAttribute testInstanceNANDouble = new UserAttribute("num_counts",  "custom_attribute","gt", infiniteNANDouble);
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "gt", bigInteger);
+        UserAttribute testInstancePositiveInfinite = new UserAttribute("num_counts", "custom_attribute", "gt", infinitePositiveInfiniteDouble);
+        UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts", "custom_attribute", "gt", infiniteNegativeInfiniteDouble);
+        UserAttribute testInstanceNANDouble = new UserAttribute("num_counts", "custom_attribute", "gt", infiniteNANDouble);
 
         assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
         assertNull(testInstancePositiveInfinite.evaluate(null, testTypedUserAttributes));
@@ -274,29 +275,29 @@ public class AudienceConditionEvaluationTest {
     }
 
     /**
-     * Verify that UserAttribute.evaluate for GT match type returns false for known visitor 
+     * Verify that UserAttribute.evaluate for GT match type returns false for known visitor
      * attributes where the value's type is a number, and the UserAttribute's value is not greater
      * than the condition's value.
      */
     @Test
     public void gtMatchConditionEvaluatesFalse() throws Exception {
-        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","gt", 5);
-        UserAttribute testInstanceDouble = new UserAttribute("num_counts",  "custom_attribute","gt", 5.55);
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "gt", 5);
+        UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "gt", 5.55);
 
         assertFalse(testInstanceInteger.evaluate(null, testTypedUserAttributes));
         assertFalse(testInstanceDouble.evaluate(null, testTypedUserAttributes));
     }
 
     /**
-     * Verify that UserAttribute.evaluate for GT match type returns null if the UserAttribute's 
+     * Verify that UserAttribute.evaluate for GT match type returns null if the UserAttribute's
      * value type is not a number.
      */
     @Test
     public void gtMatchConditionEvaluatesNull() throws Exception {
-        UserAttribute testInstanceString = new UserAttribute("browser_type",  "custom_attribute","gt", 3.5);
-        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox",  "custom_attribute","gt", 3.5);
-        UserAttribute testInstanceObject = new UserAttribute("meta_data",  "custom_attribute","gt", 3.5);
-        UserAttribute testInstanceNull = new UserAttribute("null_val",  "custom_attribute","gt", 3.5);
+        UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "gt", 3.5);
+        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "gt", 3.5);
+        UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "gt", 3.5);
+        UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "gt", 3.5);
 
         assertNull(testInstanceString.evaluate(null, testUserAttributes));
         assertNull(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
@@ -305,43 +306,43 @@ public class AudienceConditionEvaluationTest {
     }
 
     /**
-     * Verify that UserAttribute.evaluate for GT match type returns true for known visitor 
+     * Verify that UserAttribute.evaluate for GT match type returns true for known visitor
      * attributes where the value's type is a number, and the UserAttribute's value is less than
      * the condition's value.
      */
     @Test
     public void ltMatchConditionEvaluatesTrue() throws Exception {
-        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","lt", 5);
-        UserAttribute testInstanceDouble = new UserAttribute("num_counts",  "custom_attribute","lt", 5.55);
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "lt", 5);
+        UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "lt", 5.55);
 
         assertTrue(testInstanceInteger.evaluate(null, testTypedUserAttributes));
         assertTrue(testInstanceDouble.evaluate(null, testTypedUserAttributes));
     }
 
     /**
-     * Verify that UserAttribute.evaluate for GT match type returns true for known visitor 
+     * Verify that UserAttribute.evaluate for GT match type returns true for known visitor
      * attributes where the value's type is a number, and the UserAttribute's value is not less
      * than the condition's value.
      */
     @Test
     public void ltMatchConditionEvaluatesFalse() throws Exception {
-        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","lt", 2);
-        UserAttribute testInstanceDouble = new UserAttribute("num_counts",  "custom_attribute","lt", 2.55);
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "lt", 2);
+        UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "lt", 2.55);
 
         assertFalse(testInstanceInteger.evaluate(null, testTypedUserAttributes));
         assertFalse(testInstanceDouble.evaluate(null, testTypedUserAttributes));
     }
 
     /**
-     * Verify that UserAttribute.evaluate for LT match type returns null if the UserAttribute's 
+     * Verify that UserAttribute.evaluate for LT match type returns null if the UserAttribute's
      * value type is not a number.
      */
     @Test
     public void ltMatchConditionEvaluatesNull() throws Exception {
-        UserAttribute testInstanceString = new UserAttribute("browser_type",  "custom_attribute","lt", 3.5);
-        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox",  "custom_attribute","lt", 3.5);
-        UserAttribute testInstanceObject = new UserAttribute("meta_data",  "custom_attribute","lt", 3.5);
-        UserAttribute testInstanceNull = new UserAttribute("null_val",  "custom_attribute","lt", 3.5);
+        UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "lt", 3.5);
+        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "lt", 3.5);
+        UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "lt", 3.5);
+        UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "lt", 3.5);
 
         assertNull(testInstanceString.evaluate(null, testUserAttributes));
         assertNull(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
@@ -359,10 +360,10 @@ public class AudienceConditionEvaluationTest {
         Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
         Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
         Double infiniteNANDouble = Double.NaN;
-        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","lt", bigInteger);
-        UserAttribute testInstancePositiveInfinite = new UserAttribute("num_counts",  "custom_attribute","lt", infinitePositiveInfiniteDouble);
-        UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts",  "custom_attribute","lt", infiniteNegativeInfiniteDouble);
-        UserAttribute testInstanceNANDouble = new UserAttribute("num_counts",  "custom_attribute","lt", infiniteNANDouble);
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "lt", bigInteger);
+        UserAttribute testInstancePositiveInfinite = new UserAttribute("num_counts", "custom_attribute", "lt", infinitePositiveInfiniteDouble);
+        UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts", "custom_attribute", "lt", infiniteNegativeInfiniteDouble);
+        UserAttribute testInstanceNANDouble = new UserAttribute("num_counts", "custom_attribute", "lt", infiniteNANDouble);
 
         assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
         assertNull(testInstancePositiveInfinite.evaluate(null, testTypedUserAttributes));
@@ -371,12 +372,12 @@ public class AudienceConditionEvaluationTest {
     }
 
     /**
-     * Verify that UserAttribute.evaluate for SUBSTRING match type returns true if the 
+     * Verify that UserAttribute.evaluate for SUBSTRING match type returns true if the
      * UserAttribute's value is a substring of the condition's value.
      */
     @Test
     public void substringMatchConditionEvaluatesTrue() throws Exception {
-        UserAttribute testInstanceString = new UserAttribute("browser_type",  "custom_attribute","substring", "chrome");
+        UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "substring", "chrome");
         assertTrue(testInstanceString.evaluate(null, testUserAttributes));
     }
 
@@ -386,31 +387,31 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void substringMatchConditionPartialMatchEvaluatesTrue() throws Exception {
-        UserAttribute testInstanceString = new UserAttribute("browser_type",  "custom_attribute","substring", "chro");
+        UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "substring", "chro");
         assertTrue(testInstanceString.evaluate(null, testUserAttributes));
     }
 
     /**
-     * Verify that UserAttribute.evaluate for SUBSTRING match type returns true if the 
+     * Verify that UserAttribute.evaluate for SUBSTRING match type returns true if the
      * UserAttribute's value is NOT a substring of the condition's value.
      */
     @Test
     public void substringMatchConditionEvaluatesFalse() throws Exception {
-        UserAttribute testInstanceString = new UserAttribute("browser_type",  "custom_attribute","substring", "chr0me");
+        UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "substring", "chr0me");
         assertFalse(testInstanceString.evaluate(null, testUserAttributes));
     }
 
     /**
-     * Verify that UserAttribute.evaluate for SUBSTRING match type returns null if the 
+     * Verify that UserAttribute.evaluate for SUBSTRING match type returns null if the
      * UserAttribute's value type is not a string.
      */
     @Test
     public void substringMatchConditionEvaluatesNull() throws Exception {
-        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox",  "custom_attribute","substring", "chrome1");
-        UserAttribute testInstanceInteger = new UserAttribute("num_size",  "custom_attribute","substring", "chrome1");
-        UserAttribute testInstanceDouble = new UserAttribute("num_counts",  "custom_attribute","substring", "chrome1");
-        UserAttribute testInstanceObject = new UserAttribute("meta_data",  "custom_attribute","substring", "chrome1");
-        UserAttribute testInstanceNull = new UserAttribute("null_val",  "custom_attribute","substring", "chrome1");
+        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "substring", "chrome1");
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "substring", "chrome1");
+        UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "substring", "chrome1");
+        UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "substring", "chrome1");
+        UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "substring", "chrome1");
 
         assertNull(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
         assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
@@ -681,8 +682,9 @@ public class AudienceConditionEvaluationTest {
      * Verify that {@link Condition#evaluate(com.optimizely.ab.config.ProjectConfig, java.util.Map)}
      * called when its attribute value is null
      * returns True when the user's attribute value is also null
-     *          True when the attribute is not in the map
-     *          False when empty string is used.
+     * True when the attribute is not in the map
+     * False when empty string is used.
+     *
      * @throws Exception
      */
     @Test
@@ -691,10 +693,10 @@ public class AudienceConditionEvaluationTest {
         String attributeType = "attribute_type";
         String attributeValue = null;
         UserAttribute nullValueAttribute = new UserAttribute(
-                attributeName,
-                attributeType,
-                "exact",
-                attributeValue
+            attributeName,
+            attributeType,
+            "exact",
+            attributeValue
         );
 
         assertNull(nullValueAttribute.evaluate(null, Collections.<String, String>emptyMap()));

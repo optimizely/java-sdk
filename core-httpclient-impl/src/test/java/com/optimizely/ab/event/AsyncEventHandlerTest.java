@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016, Optimizely
+ *    Copyright 2016, 2019, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -57,8 +57,10 @@ public class AsyncEventHandlerTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    @Mock CloseableHttpClient mockHttpClient;
-    @Mock ExecutorService mockExecutorService;
+    @Mock
+    CloseableHttpClient mockHttpClient;
+    @Mock
+    ExecutorService mockExecutorService;
 
     @Test
     public void testQueueCapacityPreconditionCheck() throws Exception {
@@ -131,7 +133,8 @@ public class AsyncEventHandlerTest {
 
     //======== Helper methods ========//
 
-    private LogEvent createLogEvent() {Map<String, String> testParams = new HashMap<String, String>();
+    private LogEvent createLogEvent() {
+        Map<String, String> testParams = new HashMap<String, String>();
         testParams.put("test", "params");
         return new LogEvent(LogEvent.RequestMethod.GET, "test_url", testParams, new EventBatch());
     }

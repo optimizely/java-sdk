@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -46,8 +46,8 @@ public class JsonSimpleSerializerTest {
     public void serializeImpression() throws IOException, ParseException {
         EventBatch impression = generateImpression();
         // can't compare JSON strings since orders could vary so compare JSONObjects instead
-        JSONObject actual = (JSONObject)parser.parse(serializer.serialize(impression));
-        JSONObject expected = (JSONObject)parser.parse(generateImpressionJson());
+        JSONObject actual = (JSONObject) parser.parse(serializer.serialize(impression));
+        JSONObject expected = (JSONObject) parser.parse(generateImpressionJson());
 
         assertThat(actual, is(expected));
     }
@@ -56,8 +56,8 @@ public class JsonSimpleSerializerTest {
     public void serializeImpressionWithSessionId() throws IOException, ParseException {
         EventBatch impression = generateImpressionWithSessionId();
         // can't compare JSON strings since orders could vary so compare JSONObjects instead
-        JSONObject actual = (JSONObject)parser.parse(serializer.serialize(impression));
-        JSONObject expected = (JSONObject)parser.parse(generateImpressionWithSessionIdJson());
+        JSONObject actual = (JSONObject) parser.parse(serializer.serialize(impression));
+        JSONObject expected = (JSONObject) parser.parse(generateImpressionWithSessionIdJson());
 
         assertThat(actual, is(expected));
     }
@@ -66,8 +66,8 @@ public class JsonSimpleSerializerTest {
     public void serializeConversion() throws IOException, ParseException {
         EventBatch conversion = generateConversion();
         // can't compare JSON strings since orders could vary so compare JSONObjects instead
-        JSONObject actual = (JSONObject)parser.parse(serializer.serialize(conversion));
-        JSONObject expected = (JSONObject)parser.parse(generateConversionJson());
+        JSONObject actual = (JSONObject) parser.parse(serializer.serialize(conversion));
+        JSONObject expected = (JSONObject) parser.parse(generateConversionJson());
 
         assertThat(actual, is(expected));
     }
@@ -76,8 +76,8 @@ public class JsonSimpleSerializerTest {
     public void serializeConversionWithSessionId() throws IOException, ParseException {
         EventBatch conversion = generateConversionWithSessionId();
         // can't compare JSON strings since orders could vary so compare JSONObjects instead
-        JSONObject actual = (JSONObject)parser.parse(serializer.serialize(conversion));
-        JSONObject expected = (JSONObject)parser.parse(generateConversionWithSessionIdJson());
+        JSONObject actual = (JSONObject) parser.parse(serializer.serialize(conversion));
+        JSONObject expected = (JSONObject) parser.parse(generateConversionWithSessionIdJson());
 
         assertThat(actual, is(expected));
     }

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -113,7 +113,7 @@ public class Bucketer {
             Variation bucketedVariation = experiment.getVariationIdToVariationMap().get(bucketedVariationId);
             String variationKey = bucketedVariation.getKey();
             logger.info("User with bucketingId \"{}\" is in variation \"{}\" of experiment \"{}\".", bucketingId, variationKey,
-                    experimentKey);
+                experimentKey);
 
             return bucketedVariation;
         }
@@ -125,12 +125,14 @@ public class Bucketer {
 
     /**
      * Assign a {@link Variation} of an {@link Experiment} to a user based on hashed value from murmurhash3.
-     * @param experiment The Experiment in which the user is to be bucketed.
+     *
+     * @param experiment  The Experiment in which the user is to be bucketed.
      * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
      * @return Variation the user is bucketed into or null.
      */
-    public @Nullable Variation bucket(@Nonnull Experiment experiment,
-                                      @Nonnull String bucketingId) {
+    public @Nullable
+    Variation bucket(@Nonnull Experiment experiment,
+                     @Nonnull String bucketingId) {
         // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group
@@ -142,20 +144,19 @@ public class Bucketer {
                 if (bucketedExperiment == null) {
                     logger.info("User with bucketingId \"{}\" is not in any experiment of group {}.", bucketingId, experimentGroup.getId());
                     return null;
-                }
-                else {
+                } else {
 
                 }
                 // if the experiment a user is bucketed in within a group isn't the same as the experiment provided,
                 // don't perform further bucketing within the experiment
                 if (!bucketedExperiment.getId().equals(experiment.getId())) {
                     logger.info("User with bucketingId \"{}\" is not in experiment \"{}\" of group {}.", bucketingId, experiment.getKey(),
-                            experimentGroup.getId());
+                        experimentGroup.getId());
                     return null;
                 }
 
                 logger.info("User with bucketingId \"{}\" is in experiment \"{}\" of group {}.", bucketingId, experiment.getKey(),
-                        experimentGroup.getId());
+                    experimentGroup.getId());
             }
         }
 
@@ -167,14 +168,15 @@ public class Bucketer {
 
     /**
      * Map the given 32-bit hashcode into the range [0, {@link #MAX_TRAFFIC_VALUE}).
+     *
      * @param hashCode the provided hashcode
      * @return a value in the range closed-open range, [0, {@link #MAX_TRAFFIC_VALUE})
      */
     @VisibleForTesting
     int generateBucketValue(int hashCode) {
         // map the hashCode into the range [0, BucketAlgorithm.MAX_TRAFFIC_VALUE)
-        double ratio = (double)(hashCode & 0xFFFFFFFFL) / Math.pow(2, 32);
-        return (int)Math.floor(MAX_TRAFFIC_VALUE * ratio);
+        double ratio = (double) (hashCode & 0xFFFFFFFFL) / Math.pow(2, 32);
+        return (int) Math.floor(MAX_TRAFFIC_VALUE * ratio);
     }
 
 

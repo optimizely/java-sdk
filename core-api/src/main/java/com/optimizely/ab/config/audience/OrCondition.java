@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -44,15 +44,15 @@ public class OrCondition<T> implements Condition<T> {
     // false or null is null
     // false or false is false
     // null or null is null
-    public @Nullable Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    public @Nullable
+    Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
         if (conditions == null) return null;
         boolean foundNull = false;
         for (Condition condition : conditions) {
             Boolean conditionEval = condition.evaluate(config, attributes);
             if (conditionEval == null) { // true with falses and nulls is still true
                 foundNull = true;
-            }
-            else if (conditionEval) {
+            } else if (conditionEval) {
                 return true;
             }
         }
@@ -85,7 +85,7 @@ public class OrCondition<T> implements Condition<T> {
         if (!(other instanceof OrCondition))
             return false;
 
-        OrCondition otherOrCondition = (OrCondition)other;
+        OrCondition otherOrCondition = (OrCondition) other;
 
         return conditions.equals(otherOrCondition.getConditions());
     }

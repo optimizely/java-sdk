@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018, Optimizely and contributors
+ *    Copyright 2018-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -30,7 +30,8 @@ public class Decision {
     boolean isCampaignHoldback;
 
     @VisibleForTesting
-    public Decision() { }
+    public Decision() {
+    }
 
     public Decision(String campaignId, String experimentId, String variationId, boolean isCampaignHoldback) {
         this.campaignId = campaignId;

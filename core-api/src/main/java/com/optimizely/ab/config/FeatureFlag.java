@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017, Optimizely and contributors
+ *    Copyright 2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import java.util.Map;
  * Represents a FeatureFlag definition at the project level
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FeatureFlag implements IdKeyMapped{
+public class FeatureFlag implements IdKeyMapped {
 
     private final String id;
     private final String key;
@@ -77,13 +77,13 @@ public class FeatureFlag implements IdKeyMapped{
     @Override
     public String toString() {
         return "FeatureFlag{" +
-                "id='" + id + '\'' +
-                ", key='" + key + '\'' +
-                ", rolloutId='" + rolloutId + '\'' +
-                ", experimentIds=" + experimentIds +
-                ", variables=" + variables +
-                ", variableKeyToLiveVariableMap=" + variableKeyToLiveVariableMap +
-                '}';
+            "id='" + id + '\'' +
+            ", key='" + key + '\'' +
+            ", rolloutId='" + rolloutId + '\'' +
+            ", experimentIds=" + experimentIds +
+            ", variables=" + variables +
+            ", variableKeyToLiveVariableMap=" + variableKeyToLiveVariableMap +
+            '}';
     }
 
     @Override

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018, Optimizely and contributors
+ *    Copyright 2018-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,5 +19,6 @@ package com.optimizely.ab.config.audience.match;
 import javax.annotation.Nullable;
 
 public interface Match {
-    @Nullable Boolean eval(Object attributeValue);
+    @Nullable
+    Boolean eval(Object attributeValue);
 }

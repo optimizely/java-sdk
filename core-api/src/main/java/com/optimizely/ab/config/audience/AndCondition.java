@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import java.util.Map;
 public class AndCondition<T> implements Condition<T> {
 
     private final List<Condition> conditions;
+
     public AndCondition(@Nonnull List<Condition> conditions) {
         this.conditions = conditions;
     }
@@ -53,8 +54,7 @@ public class AndCondition<T> implements Condition<T> {
             Boolean conditionEval = condition.evaluate(config, attributes);
             if (conditionEval == null) {
                 foundNull = true;
-            }
-            else if (!conditionEval) { // false with nulls or trues is false.
+            } else if (!conditionEval) { // false with nulls or trues is false.
                 return false;
             }
             // true and nulls with no false will be null.
@@ -86,7 +86,7 @@ public class AndCondition<T> implements Condition<T> {
         if (!(other instanceof AndCondition))
             return false;
 
-        AndCondition otherAndCondition = (AndCondition)other;
+        AndCondition otherAndCondition = (AndCondition) other;
 
         return conditions.equals(otherAndCondition.getConditions());
     }

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -52,11 +52,11 @@ public class Experiment implements IdKeyMapped {
     private final Map<String, String> userIdToVariationKeyMap;
 
     public enum ExperimentStatus {
-        RUNNING ("Running"),
-        LAUNCHED ("Launched"),
-        PAUSED ("Paused"),
-        NOT_STARTED ("Not started"),
-        ARCHIVED ("Archived");
+        RUNNING("Running"),
+        LAUNCHED("Launched"),
+        PAUSED("Paused"),
+        NOT_STARTED("Not started"),
+        ARCHIVED("Archived");
 
         private final String experimentStatus;
 
@@ -156,7 +156,7 @@ public class Experiment implements IdKeyMapped {
 
     public boolean isActive() {
         return status.equals(ExperimentStatus.RUNNING.toString()) ||
-               status.equals(ExperimentStatus.LAUNCHED.toString());
+            status.equals(ExperimentStatus.LAUNCHED.toString());
     }
 
     public boolean isRunning() {
@@ -170,16 +170,16 @@ public class Experiment implements IdKeyMapped {
     @Override
     public String toString() {
         return "Experiment{" +
-                "id='" + id + '\'' +
-                ", key='" + key + '\'' +
-                ", groupId='" + groupId + '\'' +
-                ", status='" + status + '\'' +
-                ", audienceIds=" + audienceIds +
-                ", audienceConditions=" + audienceConditions +
-                ", variations=" + variations +
-                ", variationKeyToVariationMap=" + variationKeyToVariationMap +
-                ", userIdToVariationKeyMap=" + userIdToVariationKeyMap +
-                ", trafficAllocation=" + trafficAllocation +
-                '}';
+            "id='" + id + '\'' +
+            ", key='" + key + '\'' +
+            ", groupId='" + groupId + '\'' +
+            ", status='" + status + '\'' +
+            ", audienceIds=" + audienceIds +
+            ", audienceConditions=" + audienceConditions +
+            ", variations=" + variations +
+            ", variationKeyToVariationMap=" + variationKeyToVariationMap +
+            ", userIdToVariationKeyMap=" + userIdToVariationKeyMap +
+            ", trafficAllocation=" + trafficAllocation +
+            '}';
     }
 }
