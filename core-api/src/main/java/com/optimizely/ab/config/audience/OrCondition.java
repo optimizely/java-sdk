@@ -44,8 +44,8 @@ public class OrCondition<T> implements Condition<T> {
     // false or null is null
     // false or false is false
     // null or null is null
-    public @Nullable
-    Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    @Nullable
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
         if (conditions == null) return null;
         boolean foundNull = false;
         for (Condition condition : conditions) {

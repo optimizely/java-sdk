@@ -70,23 +70,23 @@ public class Variation implements IdKeyMapped {
         this.variableIdToLiveVariableUsageInstanceMap = ProjectConfigUtils.generateIdMapping(this.liveVariableUsageInstances);
     }
 
-    public @Nonnull
-    String getId() {
+    @Nonnull
+    public String getId() {
         return id;
     }
 
-    public @Nonnull
-    String getKey() {
+    @Nonnull
+    public String getKey() {
         return key;
     }
 
-    public @Nonnull
-    Boolean getFeatureEnabled() {
+    @Nonnull
+    public Boolean getFeatureEnabled() {
         return featureEnabled;
     }
 
-    public @Nullable
-    List<LiveVariableUsageInstance> getLiveVariableUsageInstances() {
+    @Nullable
+    public List<LiveVariableUsageInstance> getLiveVariableUsageInstances() {
         return liveVariableUsageInstances;
     }
 

@@ -31,8 +31,8 @@ class SubstringMatch extends AttributeMatch<String> {
      * @param attributeValue
      * @return true/false if the user attribute string value contains the condition string value
      */
-    public @Nullable
-    Boolean eval(Object attributeValue) {
+    @Nullable
+    public Boolean eval(Object attributeValue) {
         try {
             return castToValueType(attributeValue, value).contains(value);
         } catch (Exception e) {

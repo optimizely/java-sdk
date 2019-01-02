@@ -130,9 +130,9 @@ public class Bucketer {
      * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
      * @return Variation the user is bucketed into or null.
      */
-    public @Nullable
-    Variation bucket(@Nonnull Experiment experiment,
-                     @Nonnull String bucketingId) {
+    @Nullable
+    public Variation bucket(@Nonnull Experiment experiment,
+                            @Nonnull String bucketingId) {
         // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group

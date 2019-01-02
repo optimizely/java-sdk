@@ -25,8 +25,8 @@ class ExactMatch<T> extends AttributeMatch<T> {
         this.value = value;
     }
 
-    public @Nullable
-    Boolean eval(Object attributeValue) {
+    @Nullable
+    public Boolean eval(Object attributeValue) {
         T converted = castToValueType(attributeValue, value);
         if (value != null && converted == null) return null;
 

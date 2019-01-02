@@ -39,8 +39,8 @@ public class AndCondition<T> implements Condition<T> {
         return conditions;
     }
 
-    public @Nullable
-    Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    @Nullable
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
         if (conditions == null) return null;
         boolean foundNull = false;
         // According to the matrix where:
@@ -96,4 +96,3 @@ public class AndCondition<T> implements Condition<T> {
         return conditions.hashCode();
     }
 }
-

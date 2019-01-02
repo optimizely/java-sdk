@@ -79,10 +79,10 @@ public class DecisionService {
      * @param filteredAttributes The user's attributes. This should be filtered to just attributes in the Datafile.
      * @return The {@link Variation} the user is allocated into.
      */
-    public @Nullable
-    Variation getVariation(@Nonnull Experiment experiment,
-                           @Nonnull String userId,
-                           @Nonnull Map<String, ?> filteredAttributes) {
+    @Nullable
+    public Variation getVariation(@Nonnull Experiment experiment,
+                                  @Nonnull String userId,
+                                  @Nonnull Map<String, ?> filteredAttributes) {
 
         if (!ExperimentUtils.isExperimentActive(experiment)) {
             return null;
@@ -157,8 +157,8 @@ public class DecisionService {
      * @param filteredAttributes A map of filtered attributes.
      * @return {@link FeatureDecision}
      */
-    public @Nonnull
-    FeatureDecision getVariationForFeature(@Nonnull FeatureFlag featureFlag,
+    @Nonnull
+    public FeatureDecision getVariationForFeature(@Nonnull FeatureFlag featureFlag,
                                            @Nonnull String userId,
                                            @Nonnull Map<String, ?> filteredAttributes) {
         if (!featureFlag.getExperimentIds().isEmpty()) {

@@ -149,16 +149,16 @@ public class Optimizely {
 
     //======== activate calls ========//
 
-    public @Nullable
-    Variation activate(@Nonnull String experimentKey,
-                       @Nonnull String userId) throws UnknownExperimentException {
+    @Nullable
+    public Variation activate(@Nonnull String experimentKey,
+                              @Nonnull String userId) throws UnknownExperimentException {
         return activate(experimentKey, userId, Collections.<String, String>emptyMap());
     }
 
-    public @Nullable
-    Variation activate(@Nonnull String experimentKey,
-                       @Nonnull String userId,
-                       @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
+    @Nullable
+    public Variation activate(@Nonnull String experimentKey,
+                              @Nonnull String userId,
+                              @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
         if (!isValid) {
             logger.error("Optimizely instance is not valid, failing activate call.");
             return null;
@@ -186,24 +186,24 @@ public class Optimizely {
         return activate(currentConfig, experiment, userId, attributes);
     }
 
-    public @Nullable
-    Variation activate(@Nonnull Experiment experiment,
-                       @Nonnull String userId) {
+    @Nullable
+    public Variation activate(@Nonnull Experiment experiment,
+                              @Nonnull String userId) {
         return activate(experiment, userId, Collections.<String, String>emptyMap());
     }
 
-    public @Nullable
-    Variation activate(@Nonnull Experiment experiment,
-                       @Nonnull String userId,
-                       @Nonnull Map<String, ?> attributes) {
+    @Nullable
+    public Variation activate(@Nonnull Experiment experiment,
+                              @Nonnull String userId,
+                              @Nonnull Map<String, ?> attributes) {
 
         ProjectConfig currentConfig = getProjectConfig();
 
         return activate(currentConfig, experiment, userId, attributes);
     }
 
-    private @Nullable
-    Variation activate(@Nonnull ProjectConfig projectConfig,
+    @Nullable
+    private Variation activate(@Nonnull ProjectConfig projectConfig,
                        @Nonnull Experiment experiment,
                        @Nonnull String userId,
                        @Nonnull Map<String, ?> attributes) {
@@ -369,8 +369,8 @@ public class Optimizely {
      * False if the feature is disabled.
      * False if the feature is not found.
      */
-    public @Nonnull
-    Boolean isFeatureEnabled(@Nonnull String featureKey,
+    @Nonnull
+    public Boolean isFeatureEnabled(@Nonnull String featureKey,
                              @Nonnull String userId) {
         return isFeatureEnabled(featureKey, userId, Collections.<String, String>emptyMap());
     }
@@ -386,8 +386,8 @@ public class Optimizely {
      * False if the feature is disabled.
      * False if the feature is not found.
      */
-    public @Nonnull
-    Boolean isFeatureEnabled(@Nonnull String featureKey,
+    @Nonnull
+    public Boolean isFeatureEnabled(@Nonnull String featureKey,
                              @Nonnull String userId,
                              @Nonnull Map<String, ?> attributes) {
         if (!isValid) {
@@ -442,10 +442,10 @@ public class Optimizely {
      * @return The Boolean value of the boolean single variable feature.
      * Null if the feature could not be found.
      */
-    public @Nullable
-    Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
-                                      @Nonnull String variableKey,
-                                      @Nonnull String userId) {
+    @Nullable
+    public Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
+                                             @Nonnull String variableKey,
+                                             @Nonnull String userId) {
         return getFeatureVariableBoolean(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
     }
 
@@ -459,11 +459,11 @@ public class Optimizely {
      * @return The Boolean value of the boolean single variable feature.
      * Null if the feature or variable could not be found.
      */
-    public @Nullable
-    Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
-                                      @Nonnull String variableKey,
-                                      @Nonnull String userId,
-                                      @Nonnull Map<String, ?> attributes) {
+    @Nullable
+    public Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
+                                             @Nonnull String variableKey,
+                                             @Nonnull String userId,
+                                             @Nonnull Map<String, ?> attributes) {
         if (!isValid) {
             logger.error("Optimizely instance is not valid, failing getFeatureVariableBoolean call.");
             return null;
@@ -491,10 +491,10 @@ public class Optimizely {
      * @return The Double value of the double single variable feature.
      * Null if the feature or variable could not be found.
      */
-    public @Nullable
-    Double getFeatureVariableDouble(@Nonnull String featureKey,
-                                    @Nonnull String variableKey,
-                                    @Nonnull String userId) {
+    @Nullable
+    public Double getFeatureVariableDouble(@Nonnull String featureKey,
+                                           @Nonnull String variableKey,
+                                           @Nonnull String userId) {
         return getFeatureVariableDouble(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
     }
 
@@ -508,11 +508,11 @@ public class Optimizely {
      * @return The Double value of the double single variable feature.
      * Null if the feature or variable could not be found.
      */
-    public @Nullable
-    Double getFeatureVariableDouble(@Nonnull String featureKey,
-                                    @Nonnull String variableKey,
-                                    @Nonnull String userId,
-                                    @Nonnull Map<String, ?> attributes) {
+    @Nullable
+    public Double getFeatureVariableDouble(@Nonnull String featureKey,
+                                           @Nonnull String variableKey,
+                                           @Nonnull String userId,
+                                           @Nonnull Map<String, ?> attributes) {
         if (!isValid) {
             logger.error("Optimizely instance is not valid, failing getFeatureVariableDouble call.");
             return null;
@@ -545,10 +545,10 @@ public class Optimizely {
      * @return The Integer value of the integer single variable feature.
      * Null if the feature or variable could not be found.
      */
-    public @Nullable
-    Integer getFeatureVariableInteger(@Nonnull String featureKey,
-                                      @Nonnull String variableKey,
-                                      @Nonnull String userId) {
+    @Nullable
+    public Integer getFeatureVariableInteger(@Nonnull String featureKey,
+                                             @Nonnull String variableKey,
+                                             @Nonnull String userId) {
         return getFeatureVariableInteger(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
     }
 
@@ -562,11 +562,11 @@ public class Optimizely {
      * @return The Integer value of the integer single variable feature.
      * Null if the feature or variable could not be found.
      */
-    public @Nullable
-    Integer getFeatureVariableInteger(@Nonnull String featureKey,
-                                      @Nonnull String variableKey,
-                                      @Nonnull String userId,
-                                      @Nonnull Map<String, ?> attributes) {
+    @Nullable
+    public Integer getFeatureVariableInteger(@Nonnull String featureKey,
+                                             @Nonnull String variableKey,
+                                             @Nonnull String userId,
+                                             @Nonnull Map<String, ?> attributes) {
         if (!isValid) {
             logger.error("Optimizely instance is not valid, failing getFeatureVariableInteger call.");
             return null;
@@ -599,10 +599,10 @@ public class Optimizely {
      * @return The String value of the string single variable feature.
      * Null if the feature or variable could not be found.
      */
-    public @Nullable
-    String getFeatureVariableString(@Nonnull String featureKey,
-                                    @Nonnull String variableKey,
-                                    @Nonnull String userId) {
+    @Nullable
+    public String getFeatureVariableString(@Nonnull String featureKey,
+                                           @Nonnull String variableKey,
+                                           @Nonnull String userId) {
         return getFeatureVariableString(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
     }
 
@@ -616,11 +616,11 @@ public class Optimizely {
      * @return The String value of the string single variable feature.
      * Null if the feature or variable could not be found.
      */
-    public @Nullable
-    String getFeatureVariableString(@Nonnull String featureKey,
-                                    @Nonnull String variableKey,
-                                    @Nonnull String userId,
-                                    @Nonnull Map<String, ?> attributes) {
+    @Nullable
+    public String getFeatureVariableString(@Nonnull String featureKey,
+                                           @Nonnull String variableKey,
+                                           @Nonnull String userId,
+                                           @Nonnull Map<String, ?> attributes) {
         if (!isValid) {
             logger.error("Optimizely instance is not valid, failing getFeatureVariableString call.");
             return null;
@@ -722,33 +722,33 @@ public class Optimizely {
 
     //======== getVariation calls ========//
 
-    public @Nullable
-    Variation getVariation(@Nonnull Experiment experiment,
-                           @Nonnull String userId) throws UnknownExperimentException {
+    @Nullable
+    public Variation getVariation(@Nonnull Experiment experiment,
+                                  @Nonnull String userId) throws UnknownExperimentException {
 
         return getVariation(experiment, userId, Collections.<String, String>emptyMap());
     }
 
-    public @Nullable
-    Variation getVariation(@Nonnull Experiment experiment,
-                           @Nonnull String userId,
-                           @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
+    @Nullable
+    public Variation getVariation(@Nonnull Experiment experiment,
+                                  @Nonnull String userId,
+                                  @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
 
         return decisionService.getVariation(experiment, userId, copiedAttributes);
     }
 
-    public @Nullable
-    Variation getVariation(@Nonnull String experimentKey,
-                           @Nonnull String userId) throws UnknownExperimentException {
+    @Nullable
+    public Variation getVariation(@Nonnull String experimentKey,
+                                  @Nonnull String userId) throws UnknownExperimentException {
 
         return getVariation(experimentKey, userId, Collections.<String, String>emptyMap());
     }
 
-    public @Nullable
-    Variation getVariation(@Nonnull String experimentKey,
-                           @Nonnull String userId,
-                           @Nonnull Map<String, ?> attributes) {
+    @Nullable
+    public Variation getVariation(@Nonnull String experimentKey,
+                                  @Nonnull String userId,
+                                  @Nonnull Map<String, ?> attributes) {
         if (!isValid) {
             logger.error("Optimizely instance is not valid, failing getVariation call.");
             return null;
@@ -807,9 +807,9 @@ public class Optimizely {
      * @return The variation the user was bucketed into. This value can be null if the
      * forced variation fails.
      */
-    public @Nullable
-    Variation getForcedVariation(@Nonnull String experimentKey,
-                                 @Nonnull String userId) {
+    @Nullable
+    public Variation getForcedVariation(@Nonnull String experimentKey,
+                                        @Nonnull String userId) {
         if (!isValid) {
             logger.error("Optimizely instance is not valid, failing getForcedVariation call.");
             return null;
@@ -821,8 +821,8 @@ public class Optimizely {
     /**
      * @return the current {@link ProjectConfig} instance.
      */
-    public @Nonnull
-    ProjectConfig getProjectConfig() {
+    @Nonnull
+    public ProjectConfig getProjectConfig() {
         return projectConfig;
     }
 

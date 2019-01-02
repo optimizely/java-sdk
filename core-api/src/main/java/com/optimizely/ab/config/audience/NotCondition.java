@@ -40,8 +40,8 @@ public class NotCondition<T> implements Condition<T> {
         return condition;
     }
 
-    public @Nullable
-    Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    @Nullable
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
 
         Boolean conditionEval = condition == null ? null : condition.evaluate(config, attributes);
         return (conditionEval == null ? null : !conditionEval);

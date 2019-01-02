@@ -28,8 +28,8 @@ class NullMatch extends AttributeMatch<Object> {
         this.value = null;
     }
 
-    public @Nullable
-    Boolean eval(Object attributeValue) {
+    @Nullable
+    public Boolean eval(Object attributeValue) {
         return null;
     }
 }

@@ -25,8 +25,8 @@ class GTMatch extends AttributeMatch<Number> {
         this.value = value;
     }
 
-    public @Nullable
-    Boolean eval(Object attributeValue) {
+    @Nullable
+    public Boolean eval(Object attributeValue) {
         try {
             return castToValueType(attributeValue, value).doubleValue() > value.doubleValue();
         } catch (Exception e) {

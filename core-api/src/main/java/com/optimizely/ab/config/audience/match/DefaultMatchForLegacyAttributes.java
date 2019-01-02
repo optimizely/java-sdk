@@ -30,8 +30,8 @@ class DefaultMatchForLegacyAttributes<T> extends AttributeMatch<T> {
         this.value = value;
     }
 
-    public @Nullable
-    Boolean eval(Object attributeValue) {
+    @Nullable
+    public Boolean eval(Object attributeValue) {
         return value.equals(castToValueType(attributeValue, value));
     }
 }

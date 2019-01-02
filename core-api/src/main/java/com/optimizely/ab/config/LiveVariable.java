@@ -118,8 +118,8 @@ public class LiveVariable implements IdKeyMapped {
         this.type = type;
     }
 
-    public @Nullable
-    VariableStatus getStatus() {
+    @Nullable
+    public VariableStatus getStatus() {
         return status;
     }
 

@@ -217,8 +217,8 @@ public class AsyncEventHandler implements EventHandler {
     private static final class ProjectConfigResponseHandler implements ResponseHandler<Void> {
 
         @Override
-        public @CheckForNull
-        Void handleResponse(HttpResponse response) throws IOException {
+        @CheckForNull
+        public Void handleResponse(HttpResponse response) throws IOException {
             int status = response.getStatusLine().getStatusCode();
             if (status >= 200 && status < 300) {
                 // read the response, so we can close the connection

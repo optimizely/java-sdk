@@ -28,8 +28,8 @@ class ExistsMatch implements Match {
         this.value = value;
     }
 
-    public @Nullable
-    Boolean eval(Object attributeValue) {
+    @Nullable
+    public Boolean eval(Object attributeValue) {
         return attributeValue != null;
     }
 }

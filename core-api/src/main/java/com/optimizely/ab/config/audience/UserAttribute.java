@@ -67,8 +67,8 @@ public class UserAttribute<T> implements Condition<T> {
         return value;
     }
 
-    public @Nullable
-    Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    @Nullable
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
         if (attributes == null) {
             attributes = Collections.emptyMap();
         }

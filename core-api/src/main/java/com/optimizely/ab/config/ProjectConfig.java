@@ -278,12 +278,10 @@ public class ProjectConfig {
      * @param errorHandler the error handler to send exceptions to
      * @return the event type for the given event name
      */
-    public @CheckForNull
-    EventType getEventTypeForName(String eventName, ErrorHandler errorHandler) {
+    @CheckForNull
+    public EventType getEventTypeForName(String eventName, ErrorHandler errorHandler) {
 
-        EventType eventType =
-            getEventNameMapping()
-                .get(eventName);
+        EventType eventType = getEventNameMapping().get(eventName);
 
         // if the given event name isn't present in the config, log an exception to the error handler
         if (eventType == null) {
@@ -296,8 +294,8 @@ public class ProjectConfig {
     }
 
 
-    public @Nullable
-    Experiment getExperimentForVariationId(String variationId) {
+    @Nullable
+    public Experiment getExperimentForVariationId(String variationId) {
         return this.variationIdToExperimentMapping.get(variationId);
     }
 
@@ -547,9 +545,9 @@ public class ProjectConfig {
      * @return The variation the user was bucketed into. This value can be null if the
      * forced variation fails.
      */
-    public @Nullable
-    Variation getForcedVariation(@Nonnull String experimentKey,
-                                 @Nonnull String userId) {
+    @Nullable
+    public Variation getForcedVariation(@Nonnull String experimentKey,
+                                        @Nonnull String userId) {
 
         // if the user id is invalid, return false.
         if (!validateUserId(userId)) {
