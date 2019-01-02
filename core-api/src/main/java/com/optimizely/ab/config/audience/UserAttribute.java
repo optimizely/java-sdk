@@ -91,7 +91,7 @@ public class UserAttribute<T> implements Condition<T> {
             if (!matchType.getClass().toString().contains("Null") && result == null) {
                 if (!attributes.containsKey(name)) {
                     //Missing attribute value
-                    logger.warn(String.format("Audience condition \"%s\" evaluated as UNKNOWN because no value was passed for user attribute \"%s\"", this.toString(), name));
+                    logger.debug(String.format("Audience condition \"%s\" evaluated as UNKNOWN because no value was passed for user attribute \"%s\"", this.toString(), name));
                 } else {
                     logger.warn(
                         String.format("Audience condition \"%s\" evaluated as UNKNOWN because the value for user attribute \"%s\" is inapplicable: \"%s\"",

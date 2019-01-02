@@ -152,7 +152,7 @@ public class AudienceConditionEvaluationTest {
         assertNull(testInstance.evaluate(null, Collections.EMPTY_MAP));
         logbackVerifier.expectMessage(Level.ERROR, String.format("Cannot evaluate targeting condition since the value for attribute is an incompatible type"));
         logbackVerifier.expectMessage(Level.ERROR, String.format("Greater than match failed"));
-        logbackVerifier.expectMessage(Level.WARN, String.format("Audience condition \"%s\" evaluated as UNKNOWN because no value was passed for user attribute \"%s\"", testInstance.toString(), testInstance.getName()));
+        logbackVerifier.expectMessage(Level.DEBUG, String.format("Audience condition \"%s\" evaluated as UNKNOWN because no value was passed for user attribute \"%s\"", testInstance.toString(), testInstance.getName()));
     }
 
     /**
