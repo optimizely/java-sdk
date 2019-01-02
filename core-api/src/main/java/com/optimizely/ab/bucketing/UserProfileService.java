@@ -45,13 +45,13 @@ public interface UserProfileService {
      * @return a Map representing the user's profile.
      * The returned {@code Map<String, Object>} of the user profile will have the following structure.
      * {
-     * userIdKey : String userId,
-     * decisionsKey : {@code Map<String, Map<String, String>>} decisions {
-     * String experimentId : {@code Map<String, String>} decision {
-     * variationIdKey : String variationId
-     * }
-     * }
-     * }
+     *     userIdKey : String userId,
+     *     decisionsKey : {@code Map<String, Map<String, String>>} decisions {
+     *          String experimentId : {@code Map<String, String>} decision {
+     *              variationIdKey : String variationId
+     *          }
+     *      }
+     *  }
      * @throws Exception Passes on whatever exceptions the implementation may throw.
      */
     Map<String, Object> lookup(String userId) throws Exception;
