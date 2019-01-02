@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018, Optimizely and contributors
+ *    Copyright 2018-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import javax.annotation.Nullable;
 
-class NullMatch extends AttributeMatch<Object> {
+public class NullMatch extends AttributeMatch<Object> {
     @SuppressFBWarnings("URF_UNREAD_FIELD")
     Object value;
     protected NullMatch() {

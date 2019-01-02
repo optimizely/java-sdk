@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.match.Match;
 import com.optimizely.ab.config.audience.match.MatchType;
+import com.optimizely.ab.config.audience.match.NullMatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,11 +89,12 @@ public class UserAttribute<T> implements Condition<T> {
             Match matchType = MatchType.getMatchType(match, value, this).getMatcher();
             Boolean result = matchType.eval(userAttributeValue);
 
-            if (!matchType.getClass().toString().contains("Null") && result == null) {
+            if (!(matchType instanceof NullMatch) && result == null) {
                 if (!attributes.containsKey(name)) {
                     //Missing attribute value
-                    logger.debug(String.format("Audience condition \"%s\" evaluated as UNKNOWN because no value was passed for user attribute \"%s\"", this.toString(), name));
+                    logger.debug(String.format("Audience condition \"%s\" evaluated as UNKNOWN because no user attribute for \"%s\" key is passed", this.toString(), name));
                 } else {
+                    //if attribute value is not valid
                     logger.warn(
                         String.format("Audience condition \"%s\" evaluated as UNKNOWN because the value for user attribute \"%s\" is inapplicable: \"%s\"",
                             this.toString(),
