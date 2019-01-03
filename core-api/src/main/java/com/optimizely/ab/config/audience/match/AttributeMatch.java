@@ -21,8 +21,8 @@ abstract class AttributeMatch<T> implements Match {
         try {
             if (!o.getClass().isInstance(value) && !(o instanceof Number && value instanceof Number) ) {
                 MatchType.logger.warn(
-                    String.format("Incompatible type: Attribute value Type %s, Condition value Type %s",
-                    o.getClass().getCanonicalName(), value.getClass().getCanonicalName())
+                    "Incompatible type: Attribute value Type {}, Condition value Type {}",
+                    o.getClass().getCanonicalName(), value.getClass().getCanonicalName()
                 );
 
                 return null;

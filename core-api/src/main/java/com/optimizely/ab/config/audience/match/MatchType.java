@@ -29,7 +29,7 @@ public class MatchType {
     private String matchType;
     private Match matcher;
 
-    public static MatchType getMatchType(String matchType, Object conditionValue, UserAttribute userAttribute) {
+    public static MatchType getMatchType(String matchType, Object conditionValue, String audienceCondition) {
         if (matchType == null) matchType = "legacy_custom_attribute";
 
         switch (matchType) {
@@ -65,11 +65,13 @@ public class MatchType {
                 }
                 break;
             default:
-                logger.warn(String.format("Audience condition \"%s\" uses an unknown match type: %s", userAttribute.toString(), matchType));
+                logger.error("Audience condition \"{}\" uses an unknown match type: {}", audienceCondition, matchType);
                 return new MatchType(matchType, new NullMatch());
         }
 
-        logger.warn(String.format("Audience condition \"%s\" condition value \"%s\" data type is inapplicable", userAttribute.toString(), conditionValue));
+        logger.error("Audience condition \"{}\" condition value data type is inapplicable for match type \"{}\"",
+            audienceCondition,
+            matchType);
         return new MatchType(matchType, new NullMatch());
     }
 

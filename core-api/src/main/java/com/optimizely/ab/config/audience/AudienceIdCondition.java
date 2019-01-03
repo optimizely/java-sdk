@@ -70,13 +70,13 @@ public class AudienceIdCondition<T> implements Condition<T> {
             audience = config.getAudienceIdMapping().get(audienceId);
         }
         if (audience == null) {
-            logger.error(String.format("Audience not set for audienceConditions %s", audienceId));
+            logger.error("Audience not set for audienceConditions {}", audienceId);
             return null;
         }
-        logger.debug(String.format("Starting to evaluate audience %s with conditions: \"%s\"", audience.getName(), audience.getConditions()));
-        logger.debug(String.format("User attributes: %s", attributes));
+        logger.debug("Starting to evaluate audience {} with conditions: \"{}\"", audience.getName(), audience.getConditions());
+        logger.debug("User attributes: {}", attributes);
         Boolean result = audience.getConditions().evaluate(config, attributes);
-        logger.info(String.format("Audience %s evaluated as " + result, audience.getName()));
+        logger.info("Audience {} evaluated as {}", audience.getName(), result);
         return result;
     }
 

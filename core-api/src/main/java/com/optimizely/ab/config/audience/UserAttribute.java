@@ -80,26 +80,25 @@ public class UserAttribute<T> implements Condition<T> {
         Object userAttributeValue = attributes.get(name);
 
         if (!"custom_attribute".equals(type)) {
-            logger.error(String.format("Audience condition \"%s\" has an unknown condition type: %s", this.toString(), type));
-            logger.error(String.format("condition type not equal to `custom_attribute` %s", type));
+            logger.error("Audience condition \"{}\" has an unknown condition type: {}", this.toString(), type);
             return null; // unknown type
         }
         // check user attribute value is equal
         try {
-            Match matchType = MatchType.getMatchType(match, value, this).getMatcher();
+            Match matchType = MatchType.getMatchType(match, value, this.toString()).getMatcher();
             Boolean result = matchType.eval(userAttributeValue);
 
             if (!(matchType instanceof NullMatch) && result == null) {
                 if (!attributes.containsKey(name)) {
                     //Missing attribute value
-                    logger.debug(String.format("Audience condition \"%s\" evaluated as UNKNOWN because no user attribute for \"%s\" key is passed", this.toString(), name));
+                    logger.debug("Audience condition \"{}\" evaluated as UNKNOWN because no user attribute for \"{}\" key is passed", this.toString(), name);
                 } else {
                     //if attribute value is not valid
                     logger.warn(
-                        String.format("Audience condition \"%s\" evaluated as UNKNOWN because the value for user attribute \"%s\" is inapplicable: \"%s\"",
+                        "Audience condition \"{}\" evaluated as UNKNOWN because the value for user attribute \"{}\" is inapplicable: \"{}\"",
                             this.toString(),
                             name,
-                            userAttributeValue));
+                            userAttributeValue);
                 }
             }
             return result;

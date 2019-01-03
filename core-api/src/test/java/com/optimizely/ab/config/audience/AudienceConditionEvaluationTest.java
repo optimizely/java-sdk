@@ -114,7 +114,7 @@ public class AudienceConditionEvaluationTest {
     public void invalidMatch() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah","chrome");
         assertNull(testInstance.evaluate(null, testUserAttributes));
-        logbackVerifier.expectMessage(Level.WARN, String.format("Audience condition \"%s\" uses an unknown match type: %s", testInstance.toString(), testInstance.getMatch()));
+        logbackVerifier.expectMessage(Level.ERROR, String.format("Audience condition \"%s\" uses an unknown match type: %s", testInstance.toString(), testInstance.getMatch()));
     }
 
     /**
@@ -174,7 +174,6 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstance = new UserAttribute("browser_type", "blah", "exists","firefox");
         assertNull(testInstance.evaluate(null, testUserAttributes));
         logbackVerifier.expectMessage(Level.ERROR, String.format("Audience condition \"%s\" has an unknown condition type: %s", testInstance.toString(), testInstance.getType()));
-        logbackVerifier.expectMessage(Level.ERROR, String.format("condition type not equal to `custom_attribute` %s", testInstance.getType()));
     }
 
     /**

@@ -246,8 +246,8 @@ public class ExperimentUtilsTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, String.format("Starting to evaluate audience %s with conditions: \"%s\"", audience.getName(), audience.getConditions()));
         logbackVerifier.expectMessage(Level.DEBUG, String.format("User attributes: %s", attributesWithNull.toString()));
-        logbackVerifier.expectMessage(Level.ERROR, String.format("Cannot evaluate targeting condition since the value for attribute is an incompatible type"));
-        logbackVerifier.expectMessage(Level.WARN, String.format("Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" condition value \"null\" data type is inapplicable"));
+        logbackVerifier.expectMessage(Level.ERROR, "Cannot evaluate targeting condition since the value for attribute is an incompatible type");
+        logbackVerifier.expectMessage(Level.ERROR, "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" condition value data type is inapplicable for match type \"legacy_custom_attribute\"");
         logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated as null", audience.getName()));
         logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated as null", experiment.getKey()));
     }
@@ -266,8 +266,8 @@ public class ExperimentUtilsTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, String.format("Starting to evaluate audience %s with conditions: \"%s\"", audience.getName(), audience.getConditions()));
         logbackVerifier.expectMessage(Level.DEBUG, String.format("User attributes: %s", attributesEmpty.toString()));
-        logbackVerifier.expectMessage(Level.ERROR, String.format("Cannot evaluate targeting condition since the value for attribute is an incompatible type"));
-        logbackVerifier.expectMessage(Level.WARN, String.format("Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" condition value \"null\" data type is inapplicable"));
+        logbackVerifier.expectMessage(Level.ERROR, "Cannot evaluate targeting condition since the value for attribute is an incompatible type");
+        logbackVerifier.expectMessage(Level.ERROR, "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" condition value data type is inapplicable for match type \"legacy_custom_attribute\"");
         logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated as null", audience.getName()));
         logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated as null", experiment.getKey()));
     }
