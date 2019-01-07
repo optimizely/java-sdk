@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -30,7 +30,8 @@ public final class DefaultJsonSerializer {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultJsonSerializer.class);
 
-    private DefaultJsonSerializer() { }
+    private DefaultJsonSerializer() {
+    }
 
     public static Serializer getInstance() {
         return LazyHolder.INSTANCE;
@@ -40,6 +41,7 @@ public final class DefaultJsonSerializer {
 
     /**
      * Creates and returns a {@link Serializer} using a json library available on the classpath.
+     *
      * @return the created serializer
      * @throws MissingJsonParserException if there are no supported json libraries available on the classpath
      */
@@ -57,7 +59,7 @@ public final class DefaultJsonSerializer {
             serializer = new JsonSerializer();
         } else {
             throw new MissingJsonParserException("unable to locate a JSON parser. "
-                    + "Please see <link> for more information");
+                + "Please see <link> for more information");
         }
 
         logger.info("using json serializer: {}", serializer.getClass().getSimpleName());

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -52,9 +52,11 @@ public class OptimizelyBuilderTest {
     @Rule
     public MockitoRule rule = MockitoJUnit.rule();
 
-    @Mock private EventHandler mockEventHandler;
+    @Mock
+    private EventHandler mockEventHandler;
 
-    @Mock private ErrorHandler mockErrorHandler;
+    @Mock
+    private ErrorHandler mockErrorHandler;
 
     @Test
     public void withEventHandler() throws Exception {
@@ -112,7 +114,7 @@ public class OptimizelyBuilderTest {
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
             .build();
 
-        assertThat(((EventFactory)optimizelyClient.eventFactory).clientEngine, is(ClientEngine.JAVA_SDK));
+        assertThat(((EventFactory) optimizelyClient.eventFactory).clientEngine, is(ClientEngine.JAVA_SDK));
     }
 
     @Test
@@ -121,7 +123,7 @@ public class OptimizelyBuilderTest {
             .withClientEngine(ClientEngine.ANDROID_SDK)
             .build();
 
-        assertThat(((EventFactory)optimizelyClient.eventFactory).clientEngine, is(ClientEngine.ANDROID_SDK));
+        assertThat(((EventFactory) optimizelyClient.eventFactory).clientEngine, is(ClientEngine.ANDROID_SDK));
     }
 
     @Test
@@ -130,7 +132,7 @@ public class OptimizelyBuilderTest {
             .withClientEngine(ClientEngine.ANDROID_TV_SDK)
             .build();
 
-        assertThat(((EventFactory)optimizelyClient.eventFactory).clientEngine, is(ClientEngine.ANDROID_TV_SDK));
+        assertThat(((EventFactory) optimizelyClient.eventFactory).clientEngine, is(ClientEngine.ANDROID_TV_SDK));
     }
 
     @Test
@@ -138,7 +140,7 @@ public class OptimizelyBuilderTest {
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
             .build();
 
-        assertThat(((EventFactory)optimizelyClient.eventFactory).clientVersion, is(BuildVersionInfo.VERSION));
+        assertThat(((EventFactory) optimizelyClient.eventFactory).clientVersion, is(BuildVersionInfo.VERSION));
     }
 
     @Test
@@ -147,10 +149,10 @@ public class OptimizelyBuilderTest {
             .withClientVersion("0.0.0")
             .build();
 
-        assertThat(((EventFactory)optimizelyClient.eventFactory).clientVersion, is("0.0.0"));
+        assertThat(((EventFactory) optimizelyClient.eventFactory).clientVersion, is("0.0.0"));
     }
 
-    @SuppressFBWarnings(value="NP_NONNULL_PARAM_VIOLATION", justification="Testing nullness contract violation")
+    @SuppressFBWarnings(value = "NP_NONNULL_PARAM_VIOLATION", justification = "Testing nullness contract violation")
     @Test
     public void nullDatafileResultsInInvalidOptimizelyInstance() throws Exception {
         Optimizely optimizelyClient = Optimizely.builder(null, mockEventHandler).build();
@@ -175,7 +177,7 @@ public class OptimizelyBuilderTest {
     @Test
     public void unsupportedDatafileResultsInInvalidOptimizelyInstance() throws Exception {
         Optimizely optimizelyClient = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler)
-                .build();
+            .build();
 
         assertFalse(optimizelyClient.isValid());
     }

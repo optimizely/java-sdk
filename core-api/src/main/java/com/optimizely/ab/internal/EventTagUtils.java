@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ public final class EventTagUtils {
 
     /**
      * Grab the revenue value from the event tags. "revenue" is a reserved keyword.
+     *
      * @param eventTags
      * @return Long
      */
@@ -36,10 +37,10 @@ public final class EventTagUtils {
         if (eventTags != null && eventTags.containsKey(ReservedEventKey.REVENUE.toString())) {
             Object rawValue = eventTags.get(ReservedEventKey.REVENUE.toString());
             if (Long.class.isInstance(rawValue)) {
-                eventValue = (Long)rawValue;
+                eventValue = (Long) rawValue;
                 logger.info("Parsed revenue value \"{}\" from event tags.", eventValue);
             } else if (Integer.class.isInstance(rawValue)) {
-                eventValue = ((Integer)rawValue).longValue();
+                eventValue = ((Integer) rawValue).longValue();
                 logger.info("Parsed revenue value \"{}\" from event tags.", eventValue);
             } else {
                 logger.warn("Failed to parse revenue value \"{}\" from event tags.", rawValue);
@@ -57,7 +58,7 @@ public final class EventTagUtils {
             Object rawValue = eventTags.get(ReservedEventKey.VALUE.toString());
             if (rawValue instanceof Number) {
                 eventValue = ((Number) rawValue).doubleValue();
-                if(eventValue.isInfinite() || eventValue.isNaN()) {
+                if (eventValue.isInfinite() || eventValue.isNaN()) {
                     eventValue = null;
                     logger.warn("Failed to parse numeric metric value \"{}\" from event tags.", rawValue);
                 }

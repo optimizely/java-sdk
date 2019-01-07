@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017, Optimizely and contributors
+ *    Copyright 2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -29,9 +29,10 @@ public class UserProfileUtils {
 
     /**
      * Validate whether a {@code Map<String, Object>} can be transformed into a {@link UserProfile}.
+     *
      * @param map The map to check.
      * @return True if the map can be converted into a {@link UserProfile}.
-     *          False if the map cannot be converted.
+     * False if the map cannot be converted.
      */
     public static boolean isValidUserProfileMap(@Nonnull Map<String, Object> map) {
         // The Map must contain a value for the user ID
@@ -50,8 +51,7 @@ public class UserProfileUtils {
         Map<String, Map<String, String>> experimentBucketMap;
         try {
             experimentBucketMap = (Map<String, Map<String, String>>) map.get(UserProfileService.experimentBucketMapKey);
-        }
-        catch (ClassCastException classCastException) {
+        } catch (ClassCastException classCastException) {
             return false;
         }
 
@@ -68,6 +68,7 @@ public class UserProfileUtils {
 
     /**
      * Convert a Map to a {@link UserProfile} instance.
+     *
      * @param map The map to construct the {@link UserProfile} from.
      * @return A {@link UserProfile} instance.
      */

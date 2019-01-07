@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ public class NamedThreadFactory implements ThreadFactory {
 
     /**
      * @param nameFormat the thread name format which should include a string placeholder for the thread number
-     * @param daemon whether the threads created should be {@link Thread#daemon}s or not
+     * @param daemon     whether the threads created should be {@link Thread#daemon}s or not
      */
     public NamedThreadFactory(String nameFormat, boolean daemon) {
         this.nameFormat = nameFormat;

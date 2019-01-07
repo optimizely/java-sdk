@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -40,7 +40,8 @@ public class NotCondition<T> implements Condition<T> {
         return condition;
     }
 
-    public @Nullable Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    @Nullable
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
 
         Boolean conditionEval = condition == null ? null : condition.evaluate(config, attributes);
         return (conditionEval == null ? null : !conditionEval);
@@ -62,7 +63,7 @@ public class NotCondition<T> implements Condition<T> {
         if (!(other instanceof NotCondition))
             return false;
 
-        NotCondition otherNotCondition = (NotCondition)other;
+        NotCondition otherNotCondition = (NotCondition) other;
 
         return condition.equals(otherNotCondition.getCondition());
     }

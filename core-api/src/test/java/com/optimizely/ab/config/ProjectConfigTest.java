@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -137,7 +137,7 @@ public class ProjectConfigTest {
         Experiment groupedExpWithVariables = projectConfig.getGroups().get(0).getExperiments().get(1);
 
         Map<String, List<Experiment>> expectedLiveVariableIdToExperimentsMapping =
-                new HashMap<String, List<Experiment>>();
+            new HashMap<String, List<Experiment>>();
         expectedLiveVariableIdToExperimentsMapping.put("6", Collections.singletonList(ungroupedExpWithVariables));
         expectedLiveVariableIdToExperimentsMapping.put("2", Collections.singletonList(ungroupedExpWithVariables));
         expectedLiveVariableIdToExperimentsMapping.put("3", Collections.singletonList(ungroupedExpWithVariables));
@@ -146,7 +146,7 @@ public class ProjectConfigTest {
         expectedLiveVariableIdToExperimentsMapping.put("7", Collections.singletonList(groupedExpWithVariables));
 
         assertThat(projectConfig.getLiveVariableIdToExperimentsMapping(),
-                is(expectedLiveVariableIdToExperimentsMapping));
+            is(expectedLiveVariableIdToExperimentsMapping));
     }
 
     /**
@@ -156,10 +156,10 @@ public class ProjectConfigTest {
     @Test
     public void verifyGetVariationToLiveVariableUsageInstanceMapping() throws Exception {
         Map<String, Map<String, LiveVariableUsageInstance>> expectedVariationToLiveVariableUsageInstanceMapping =
-                new HashMap<String, Map<String, LiveVariableUsageInstance>>();
+            new HashMap<String, Map<String, LiveVariableUsageInstance>>();
 
         Map<String, LiveVariableUsageInstance> ungroupedVariation276VariableValues =
-                new HashMap<String, LiveVariableUsageInstance>();
+            new HashMap<String, LiveVariableUsageInstance>();
         ungroupedVariation276VariableValues.put("6", new LiveVariableUsageInstance("6", "True"));
         ungroupedVariation276VariableValues.put("2", new LiveVariableUsageInstance("2", "10"));
         ungroupedVariation276VariableValues.put("3", new LiveVariableUsageInstance("3", "string_var_vtag1"));
@@ -167,7 +167,7 @@ public class ProjectConfigTest {
 
 
         Map<String, LiveVariableUsageInstance> ungroupedVariation277VariableValues =
-                new HashMap<String, LiveVariableUsageInstance>();
+            new HashMap<String, LiveVariableUsageInstance>();
         ungroupedVariation277VariableValues.put("6", new LiveVariableUsageInstance("6", "False"));
         ungroupedVariation277VariableValues.put("2", new LiveVariableUsageInstance("2", "20"));
         ungroupedVariation277VariableValues.put("3", new LiveVariableUsageInstance("3", "string_var_vtag2"));
@@ -177,18 +177,18 @@ public class ProjectConfigTest {
         expectedVariationToLiveVariableUsageInstanceMapping.put("277", ungroupedVariation277VariableValues);
 
         Map<String, LiveVariableUsageInstance> groupedVariation280VariableValues =
-                new HashMap<String, LiveVariableUsageInstance>();
+            new HashMap<String, LiveVariableUsageInstance>();
         groupedVariation280VariableValues.put("7", new LiveVariableUsageInstance("7", "True"));
 
         Map<String, LiveVariableUsageInstance> groupedVariation281VariableValues =
-                new HashMap<String, LiveVariableUsageInstance>();
+            new HashMap<String, LiveVariableUsageInstance>();
         groupedVariation281VariableValues.put("7", new LiveVariableUsageInstance("7", "False"));
 
         expectedVariationToLiveVariableUsageInstanceMapping.put("280", groupedVariation280VariableValues);
         expectedVariationToLiveVariableUsageInstanceMapping.put("281", groupedVariation281VariableValues);
 
         assertThat(projectConfig.getVariationToLiveVariableUsageInstanceMapping(),
-                is(expectedVariationToLiveVariableUsageInstanceMapping));
+            is(expectedVariationToLiveVariableUsageInstanceMapping));
     }
 
     /**
@@ -205,24 +205,24 @@ public class ProjectConfigTest {
 
     /**
      * Invalid User IDs
-
-      User ID is null
-      User ID is an empty string
-      Invalid Experiment IDs
-
-      Experiment key does not exist in the datafile
-      Experiment key is null
-      Experiment key is an empty string
-      Invalid Variation IDs [set only]
-
-      Variation key does not exist in the datafile
-      Variation key is null
-      Variation key is an empty string
-      Multiple set calls [set only]
-
-      Call set variation with different variations on one user/experiment to confirm that each set is expected.
-      Set variation on multiple variations for one user.
-      Set variations for multiple users.
+     * <p>
+     * User ID is null
+     * User ID is an empty string
+     * Invalid Experiment IDs
+     * <p>
+     * Experiment key does not exist in the datafile
+     * Experiment key is null
+     * Experiment key is an empty string
+     * Invalid Variation IDs [set only]
+     * <p>
+     * Variation key does not exist in the datafile
+     * Variation key is null
+     * Variation key is an empty string
+     * Multiple set calls [set only]
+     * <p>
+     * Call set variation with different variations on one user/experiment to confirm that each set is expected.
+     * Set variation on multiple variations for one user.
+     * Set variations for multiple users.
      */
     /* UserID test */
     @Test
@@ -375,7 +375,7 @@ public class ProjectConfigTest {
         String invalidAttribute = "empty";
         String attributeID = projectConfig.getAttributeId(projectConfig, invalidAttribute);
         assertNull(attributeID);
-        logbackVerifier.expectMessage(Level.DEBUG, "Unrecognized Attribute \""+invalidAttribute+"\"");
+        logbackVerifier.expectMessage(Level.DEBUG, "Unrecognized Attribute \"" + invalidAttribute + "\"");
     }
 
     @Test
@@ -383,9 +383,9 @@ public class ProjectConfigTest {
         ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
         String attributeWithReservedPrefix = "$opt_test";
         String attributeID = projectConfig.getAttributeId(projectConfig, attributeWithReservedPrefix);
-        assertEquals(attributeID,"583394100");
-        logbackVerifier.expectMessage(Level.WARN, "Attribute "+attributeWithReservedPrefix +" unexpectedly" +
-                " has reserved prefix $opt_; using attribute ID instead of reserved attribute name.");
+        assertEquals(attributeID, "583394100");
+        logbackVerifier.expectMessage(Level.WARN, "Attribute " + attributeWithReservedPrefix + " unexpectedly" +
+            " has reserved prefix $opt_; using attribute ID instead of reserved attribute name.");
     }
 
 }

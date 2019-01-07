@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -45,9 +45,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ProjectConfig {
 
     public enum Version {
-        V2 ("2"),
-        V3 ("3"),
-        V4 ("4");
+        V2("2"),
+        V3("3"),
+        V4("4");
 
         private final String version;
 
@@ -108,7 +108,7 @@ public class ProjectConfig {
     public final static String RESERVED_ATTRIBUTE_PREFIX = "$opt_";
 
     /**
-     *  Forced variations supersede any other mappings.  They are transient and are not persistent or part of
+     * Forced variations supersede any other mappings.  They are transient and are not persistent or part of
      * the actual datafile. This contains all the forced variations
      * set by the user by calling {@link ProjectConfig#setForcedVariation(String, String, String)} (it is not the same as the
      * whitelisting forcedVariations data structure in the Experiments class).
@@ -120,7 +120,7 @@ public class ProjectConfig {
                          List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
                          List<Audience> audiences) {
         this(accountId, projectId, version, revision, groups, experiments, attributes, eventType, audiences, false,
-             null);
+            null);
     }
 
     // v3 constructor
@@ -128,21 +128,21 @@ public class ProjectConfig {
                          List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
                          List<Audience> audiences, boolean anonymizeIP, List<LiveVariable> liveVariables) {
         this(
-                accountId,
-                anonymizeIP,
-                null,
-                projectId,
-                revision,
-                version,
-                attributes,
-                audiences,
-                null,
-                eventType,
-                experiments,
-                null,
-                groups,
-                liveVariables,
-                null
+            accountId,
+            anonymizeIP,
+            null,
+            projectId,
+            revision,
+            version,
+            attributes,
+            audiences,
+            null,
+            eventType,
+            experiments,
+            null,
+            groups,
+            liveVariables,
+            null
         );
     }
 
@@ -175,22 +175,19 @@ public class ProjectConfig {
 
         if (typedAudiences != null) {
             this.typedAudiences = Collections.unmodifiableList(typedAudiences);
-        }
-        else {
+        } else {
             this.typedAudiences = Collections.emptyList();
         }
 
         this.events = Collections.unmodifiableList(events);
         if (featureFlags == null) {
             this.featureFlags = Collections.emptyList();
-        }
-        else {
+        } else {
             this.featureFlags = Collections.unmodifiableList(featureFlags);
         }
         if (rollouts == null) {
             this.rollouts = Collections.emptyList();
-        }
-        else {
+        } else {
             this.rollouts = Collections.unmodifiableList(rollouts);
         }
 
@@ -203,7 +200,7 @@ public class ProjectConfig {
 
         Map<String, Experiment> variationIdToExperimentMap = new HashMap<String, Experiment>();
         for (Experiment experiment : this.experiments) {
-            for (Variation variation: experiment.getVariations()) {
+            for (Variation variation : experiment.getVariations()) {
                 variationIdToExperimentMap.put(variation.getId(), experiment);
             }
         }
@@ -218,8 +215,7 @@ public class ProjectConfig {
         // generate audience id to audience mapping
         if (typedAudiences == null) {
             this.audienceIdMapping = ProjectConfigUtils.generateIdMapping(audiences);
-        }
-        else {
+        } else {
             List<Audience> combinedList = new ArrayList<>(audiences);
             combinedList.addAll(typedAudiences);
             this.audienceIdMapping = ProjectConfigUtils.generateIdMapping(combinedList);
@@ -237,21 +233,21 @@ public class ProjectConfig {
             this.liveVariables = Collections.unmodifiableList(liveVariables);
             this.liveVariableKeyMapping = ProjectConfigUtils.generateNameMapping(this.liveVariables);
             this.liveVariableIdToExperimentsMapping =
-                    ProjectConfigUtils.generateLiveVariableIdToExperimentsMapping(this.experiments);
+                ProjectConfigUtils.generateLiveVariableIdToExperimentsMapping(this.experiments);
             this.variationToLiveVariableUsageInstanceMapping =
-                    ProjectConfigUtils.generateVariationToLiveVariableUsageInstancesMap(this.experiments);
+                ProjectConfigUtils.generateVariationToLiveVariableUsageInstancesMap(this.experiments);
         }
     }
 
     /**
      * Helper method to retrieve the {@link Experiment} for the given experiment key.
      * If {@link RaiseExceptionErrorHandler} is provided, either an experiment is returned,
-     *  or an exception is sent to the error handler
-     *  if there are no experiments in the project config with the given experiment key.
+     * or an exception is sent to the error handler
+     * if there are no experiments in the project config with the given experiment key.
      * If {@link NoOpErrorHandler} is used, either an experiment or {@code null} is returned.
      *
      * @param experimentKey the experiment to retrieve from the current project config
-     * @param errorHandler the error handler to send exceptions to
+     * @param errorHandler  the error handler to send exceptions to
      * @return the experiment for given experiment key
      */
     @CheckForNull
@@ -259,8 +255,8 @@ public class ProjectConfig {
                                           @Nonnull ErrorHandler errorHandler) {
 
         Experiment experiment =
-                getExperimentKeyMapping()
-                        .get(experimentKey);
+            getExperimentKeyMapping()
+                .get(experimentKey);
 
         // if the given experiment key isn't present in the config, log an exception to the error handler
         if (experiment == null) {
@@ -275,18 +271,17 @@ public class ProjectConfig {
     /**
      * Helper method to retrieve the {@link EventType} for the given event name.
      * If {@link RaiseExceptionErrorHandler} is provided, either an event type is returned,
-     *  or an exception is sent to the error handler if there are no event types in the project config with the given name.
+     * or an exception is sent to the error handler if there are no event types in the project config with the given name.
      * If {@link NoOpErrorHandler} is used, either an event type or {@code null} is returned.
      *
-     * @param eventName the event type to retrieve from the current project config
+     * @param eventName    the event type to retrieve from the current project config
      * @param errorHandler the error handler to send exceptions to
      * @return the event type for the given event name
      */
-    public @CheckForNull EventType getEventTypeForName(String eventName, ErrorHandler errorHandler) {
+    @CheckForNull
+    public EventType getEventTypeForName(String eventName, ErrorHandler errorHandler) {
 
-        EventType eventType =
-                getEventNameMapping()
-                        .get(eventName);
+        EventType eventType = getEventNameMapping().get(eventName);
 
         // if the given event name isn't present in the config, log an exception to the error handler
         if (eventType == null) {
@@ -299,7 +294,8 @@ public class ProjectConfig {
     }
 
 
-    public @Nullable Experiment getExperimentForVariationId(String variationId) {
+    @Nullable
+    public Experiment getExperimentForVariationId(String variationId) {
         return this.variationIdToExperimentMapping.get(variationId);
     }
 
@@ -314,6 +310,7 @@ public class ProjectConfig {
 
     /**
      * Checks is attributeKey is reserved or not and if it exist in attributeKeyMapping
+     *
      * @param attributeKey
      * @return AttributeId corresponding to AttributeKeyMapping, AttributeKey when it's a reserved attribute and
      * null when attributeKey is equal to BOT_FILTERING_ATTRIBUTE key.
@@ -325,7 +322,7 @@ public class ProjectConfig {
         if (attribute != null) {
             if (hasReservedPrefix) {
                 logger.warn("Attribute {} unexpectedly has reserved prefix {}; using attribute ID instead of reserved attribute name.",
-                        attributeKey, RESERVED_ATTRIBUTE_PREFIX);
+                    attributeKey, RESERVED_ATTRIBUTE_PREFIX);
             }
             attributeIdOrKey = attribute.getId();
         } else if (hasReservedPrefix) {
@@ -407,7 +404,9 @@ public class ProjectConfig {
         return typedAudiences;
     }
 
-    public Audience getAudience(String audienceId) { return audienceIdMapping.get(audienceId); }
+    public Audience getAudience(String audienceId) {
+        return audienceIdMapping.get(audienceId);
+    }
 
     public List<LiveVariable> getLiveVariables() {
         return liveVariables;
@@ -457,7 +456,9 @@ public class ProjectConfig {
         return featureKeyMapping;
     }
 
-    public ConcurrentHashMap<String, ConcurrentHashMap<String, String>> getForcedVariationMapping() { return forcedVariationMapping; }
+    public ConcurrentHashMap<String, ConcurrentHashMap<String, String>> getForcedVariationMapping() {
+        return forcedVariationMapping;
+    }
 
     /**
      * Force a user into a variation for a given experiment.
@@ -465,10 +466,9 @@ public class ProjectConfig {
      * If the experiment key is not in the project file, this call fails and returns false.
      *
      * @param experimentKey The key for the experiment.
-     * @param userId The user ID to be used for bucketing.
-     * @param variationKey The variation key to force the user into.  If the variation key is null
-     *                     then the forcedVariation for that experiment is removed.
-     *
+     * @param userId        The user ID to be used for bucketing.
+     * @param variationKey  The variation key to force the user into.  If the variation key is null
+     *                      then the forcedVariation for that experiment is removed.
      * @return boolean A boolean value that indicates if the set completed successfully.
      */
     public boolean setForcedVariation(@Nonnull String experimentKey,
@@ -477,7 +477,7 @@ public class ProjectConfig {
 
         // if the experiment is not a valid experiment key, don't set it.
         Experiment experiment = getExperimentKeyMapping().get(experimentKey);
-        if (experiment == null){
+        if (experiment == null) {
             logger.error("Experiment {} does not exist in ProjectConfig for project {}", experimentKey, projectId);
             return false;
         }
@@ -514,25 +514,22 @@ public class ProjectConfig {
                 Variation removedVariation = experiment.getVariationIdToVariationMap().get(removedVariationId);
                 if (removedVariation != null) {
                     logger.debug("Variation mapped to experiment \"{}\" has been removed for user \"{}\"", experiment.getKey(), userId);
-                }
-                else {
+                } else {
                     logger.debug("Removed forced variation that did not exist in experiment");
                 }
-            }
-            else {
+            } else {
                 logger.debug("No variation for experiment {}", experimentKey);
                 retVal = false;
             }
-        }
-        else {
+        } else {
             String previous = experimentToVariation.put(experiment.getId(), variation.getId());
             logger.debug("Set variation \"{}\" for experiment \"{}\" and user \"{}\" in the forced variation map.",
-                    variation.getKey(), experiment.getKey(), userId);
+                variation.getKey(), experiment.getKey(), userId);
             if (previous != null) {
                 Variation previousVariation = experiment.getVariationIdToVariationMap().get(previous);
                 if (previousVariation != null) {
                     logger.debug("forced variation {} replaced forced variation {} in forced variation map.",
-                            variation.getKey(), previousVariation.getKey());
+                        variation.getKey(), previousVariation.getKey());
                 }
             }
         }
@@ -544,13 +541,13 @@ public class ProjectConfig {
      * Gets the forced variation for a given user and experiment.
      *
      * @param experimentKey The key for the experiment.
-     * @param userId The user ID to be used for bucketing.
-     *
+     * @param userId        The user ID to be used for bucketing.
      * @return The variation the user was bucketed into. This value can be null if the
      * forced variation fails.
      */
-    public @Nullable Variation getForcedVariation(@Nonnull String experimentKey,
-                                                  @Nonnull String userId) {
+    @Nullable
+    public Variation getForcedVariation(@Nonnull String experimentKey,
+                                        @Nonnull String userId) {
 
         // if the user id is invalid, return false.
         if (!validateUserId(userId)) {
@@ -565,20 +562,19 @@ public class ProjectConfig {
         Map<String, String> experimentToVariation = getForcedVariationMapping().get(userId);
         if (experimentToVariation != null) {
             Experiment experiment = getExperimentKeyMapping().get(experimentKey);
-            if (experiment == null)  {
+            if (experiment == null) {
                 logger.debug("No experiment \"{}\" mapped to user \"{}\" in the forced variation map ", experimentKey, userId);
                 return null;
             }
             String variationId = experimentToVariation.get(experiment.getId());
             if (variationId != null) {
-                Variation variation =  experiment.getVariationIdToVariationMap().get(variationId);
+                Variation variation = experiment.getVariationIdToVariationMap().get(variationId);
                 if (variation != null) {
                     logger.debug("Variation \"{}\" is mapped to experiment \"{}\" and user \"{}\" in the forced variation map",
-                            variation.getKey(), experimentKey, userId);
+                        variation.getKey(), experimentKey, userId);
                     return variation;
                 }
-            }
-            else {
+            } else {
                 logger.debug("No variation for experiment \"{}\" mapped to user \"{}\" in the forced variation map ", experimentKey, userId);
             }
         }
@@ -603,35 +599,35 @@ public class ProjectConfig {
     @Override
     public String toString() {
         return "ProjectConfig{" +
-                "accountId='" + accountId + '\'' +
-                ", projectId='" + projectId + '\'' +
-                ", revision='" + revision + '\'' +
-                ", version='" + version + '\'' +
-                ", anonymizeIP=" + anonymizeIP +
-                ", botFiltering=" + botFiltering +
-                ", attributes=" + attributes +
-                ", audiences=" + audiences +
-                ", typedAudiences=" + typedAudiences +
-                ", events=" + events +
-                ", experiments=" + experiments +
-                ", featureFlags=" + featureFlags +
-                ", groups=" + groups +
-                ", liveVariables=" + liveVariables +
-                ", rollouts=" + rollouts +
-                ", attributeKeyMapping=" + attributeKeyMapping +
-                ", eventNameMapping=" + eventNameMapping +
-                ", experimentKeyMapping=" + experimentKeyMapping +
-                ", featureKeyMapping=" + featureKeyMapping +
-                ", liveVariableKeyMapping=" + liveVariableKeyMapping +
-                ", audienceIdMapping=" + audienceIdMapping +
-                ", experimentIdMapping=" + experimentIdMapping +
-                ", groupIdMapping=" + groupIdMapping +
-                ", rolloutIdMapping=" + rolloutIdMapping +
-                ", liveVariableIdToExperimentsMapping=" + liveVariableIdToExperimentsMapping +
-                ", variationToLiveVariableUsageInstanceMapping=" + variationToLiveVariableUsageInstanceMapping +
-                ", forcedVariationMapping=" + forcedVariationMapping +
-                ", variationIdToExperimentMapping=" + variationIdToExperimentMapping +
-                '}';
+            "accountId='" + accountId + '\'' +
+            ", projectId='" + projectId + '\'' +
+            ", revision='" + revision + '\'' +
+            ", version='" + version + '\'' +
+            ", anonymizeIP=" + anonymizeIP +
+            ", botFiltering=" + botFiltering +
+            ", attributes=" + attributes +
+            ", audiences=" + audiences +
+            ", typedAudiences=" + typedAudiences +
+            ", events=" + events +
+            ", experiments=" + experiments +
+            ", featureFlags=" + featureFlags +
+            ", groups=" + groups +
+            ", liveVariables=" + liveVariables +
+            ", rollouts=" + rollouts +
+            ", attributeKeyMapping=" + attributeKeyMapping +
+            ", eventNameMapping=" + eventNameMapping +
+            ", experimentKeyMapping=" + experimentKeyMapping +
+            ", featureKeyMapping=" + featureKeyMapping +
+            ", liveVariableKeyMapping=" + liveVariableKeyMapping +
+            ", audienceIdMapping=" + audienceIdMapping +
+            ", experimentIdMapping=" + experimentIdMapping +
+            ", groupIdMapping=" + groupIdMapping +
+            ", rolloutIdMapping=" + rolloutIdMapping +
+            ", liveVariableIdToExperimentsMapping=" + liveVariableIdToExperimentsMapping +
+            ", variationToLiveVariableUsageInstanceMapping=" + variationToLiveVariableUsageInstanceMapping +
+            ", forcedVariationMapping=" + forcedVariationMapping +
+            ", variationIdToExperimentMapping=" + variationIdToExperimentMapping +
+            '}';
     }
 
     public static class Builder {

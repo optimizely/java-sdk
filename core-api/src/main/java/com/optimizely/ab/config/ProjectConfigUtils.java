@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -52,10 +52,10 @@ public class ProjectConfigUtils {
      * Helper method to create a map from a live variable to all the experiments using it
      */
     public static Map<String, List<Experiment>> generateLiveVariableIdToExperimentsMapping(
-            List<Experiment> experiments) {
+        List<Experiment> experiments) {
 
         Map<String, List<Experiment>> variableIdToExperiments =
-                new HashMap<String, List<Experiment>>();
+            new HashMap<String, List<Experiment>>();
         for (Experiment experiment : experiments) {
             if (!experiment.getVariations().isEmpty()) {
                 // if a live variable is used by an experiment, it will have instances in all variations so we can
@@ -82,16 +82,16 @@ public class ProjectConfigUtils {
      * Helper method to create a map from variation ID to variable ID to {@link LiveVariableUsageInstance}
      */
     public static Map<String, Map<String, LiveVariableUsageInstance>> generateVariationToLiveVariableUsageInstancesMap(
-            List<Experiment> experiments) {
+        List<Experiment> experiments) {
 
         Map<String, Map<String, LiveVariableUsageInstance>> liveVariableValueMap =
-                new HashMap<String, Map<String, LiveVariableUsageInstance>>();
+            new HashMap<String, Map<String, LiveVariableUsageInstance>>();
         for (Experiment experiment : experiments) {
             for (Variation variation : experiment.getVariations()) {
                 if (variation.getLiveVariableUsageInstances() != null) {
                     for (LiveVariableUsageInstance usageInstance : variation.getLiveVariableUsageInstances()) {
                         Map<String, LiveVariableUsageInstance> liveVariableIdToValueMap =
-                                liveVariableValueMap.get(variation.getId());
+                            liveVariableValueMap.get(variation.getId());
                         if (liveVariableIdToValueMap == null) {
                             liveVariableIdToValueMap = new HashMap<String, LiveVariableUsageInstance>();
                         }
