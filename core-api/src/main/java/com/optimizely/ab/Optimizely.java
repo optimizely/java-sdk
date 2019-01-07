@@ -148,7 +148,7 @@ public class Optimizely {
      *
      * For more information, see https://docs.developers.optimizely.com/full-stack/docs/activate.     
      *
-     * @param experimentKey The key of the variation's experiment to activate.
+     * @param experimentKey The experiment to activate.
      * @param userId        The user ID.
      *
      * @return              The key of the variation where the user is bucketed, or `null` if the 
@@ -169,7 +169,7 @@ public class Optimizely {
      *
      * For more information, see https://docs.developers.optimizely.com/full-stack/docs/activate.     
      *
-     * @param experimentKey The key of the variation's experiment to activate.
+     * @param experimentKey The experiment to activate.
      * @param userId        The user ID.
      * @param attributes    A map of custom key-value string pairs specifying attributes for the user.
      *
@@ -213,7 +213,7 @@ public class Optimizely {
      *
      * For more information, see https://docs.developers.optimizely.com/full-stack/docs/activate.
      *
-     * @param experiment    The key of the variation's experiment to activate.
+     * @param experiment    The experiment to activate.
      * @param userId        The user ID.
      *
      * @return              The key of the variation where the user is bucketed, or `null` if the 
@@ -234,7 +234,7 @@ public class Optimizely {
      *
      * For more information, see https://docs.developers.optimizely.com/full-stack/docs/activate.
      *
-     * @param experiment    The key of the variation's experiment to activate.
+     * @param experiment    The experiment to activate.
      * @param userId        The user ID.
      * @param attributes    A map of custom key-value string pairs specifying attributes for the user. 
      *
@@ -450,7 +450,10 @@ public class Optimizely {
 
     /**
      * Determines whether a feature test or rollout is enabled for a given user, and
-     * sends an impression event if the user is bucketed into an experiment using the feature.
+     * sends an impression event if the user is bucketed into a feature test using the feature. 
+     * No impression event is sent if the user is bucketed into a rollout.
+     *
+     * Note: a feature test takes priority over the rollout.
      *
      * For more information, see https://docs.developers.optimizely.com/full-stack/docs/is-feature-enabled.
      *
@@ -466,7 +469,10 @@ public class Optimizely {
 
     /**
      * Determines whether a feature test or rollout is enabled for a given user, and
-     * sends an impression event if the user is bucketed into an experiment using the feature.
+     * sends an impression event if the user is bucketed into a feature test using the feature. 
+     * No impression event is sent if the user is bucketed into a rollout.
+     *
+     * Note: a feature test takes priority over the rollout.
      *
      * This method takes into account the user `attributes` passed in, to determine if the user
      * is part of the audience that qualifies for the experiment.
@@ -822,7 +828,7 @@ public class Optimizely {
      * 
      * For more information, see https://docs.developers.optimizely.com/full-stack/docs/get-enabled-features.
      *
-     * @param userId      The ID of the user who may have features enabled in one or more experiments.
+     * @param userId      The ID of the user to check.
      * @param attributes  A map of custom key-value string pairs specifying attributes for the user. 
      *
      * @return            A list of keys corresponding to the features that are enabled for the user, or an empty list if no features could be found for the specified user.
