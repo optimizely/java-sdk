@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ public class Variation implements IdKeyMapped {
     public Variation(String id,
                      String key,
                      List<LiveVariableUsageInstance> liveVariableUsageInstances) {
-        this(id, key,false, liveVariableUsageInstances);
+        this(id, key, false, liveVariableUsageInstances);
     }
 
     @JsonCreator
@@ -58,32 +58,35 @@ public class Variation implements IdKeyMapped {
                      @JsonProperty("variables") List<LiveVariableUsageInstance> liveVariableUsageInstances) {
         this.id = id;
         this.key = key;
-        if(featureEnabled != null)
+        if (featureEnabled != null)
             this.featureEnabled = featureEnabled;
         else
             this.featureEnabled = false;
         if (liveVariableUsageInstances == null) {
             this.liveVariableUsageInstances = Collections.emptyList();
-        }
-        else {
+        } else {
             this.liveVariableUsageInstances = liveVariableUsageInstances;
         }
         this.variableIdToLiveVariableUsageInstanceMap = ProjectConfigUtils.generateIdMapping(this.liveVariableUsageInstances);
     }
 
-    public @Nonnull String getId() {
+    @Nonnull
+    public String getId() {
         return id;
     }
 
-    public @Nonnull String getKey() {
+    @Nonnull
+    public String getKey() {
         return key;
     }
 
-    public @Nonnull Boolean getFeatureEnabled() {
+    @Nonnull
+    public Boolean getFeatureEnabled() {
         return featureEnabled;
     }
 
-    public @Nullable List<LiveVariableUsageInstance> getLiveVariableUsageInstances() {
+    @Nullable
+    public List<LiveVariableUsageInstance> getLiveVariableUsageInstances() {
         return liveVariableUsageInstances;
     }
 
@@ -98,8 +101,8 @@ public class Variation implements IdKeyMapped {
     @Override
     public String toString() {
         return "Variation{" +
-               "id='" + id + '\'' +
-               ", key='" + key + '\'' +
-               '}';
+            "id='" + id + '\'' +
+            ", key='" + key + '\'' +
+            '}';
     }
 }

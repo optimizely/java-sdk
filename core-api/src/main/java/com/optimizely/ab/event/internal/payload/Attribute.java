@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018, Optimizely and contributors
+ *    Copyright 2018-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -30,7 +30,8 @@ public class Attribute {
     Object value;
 
     @VisibleForTesting
-    public Attribute() { }
+    public Attribute() {
+    }
 
     private Attribute(String entityId, String key, String type, Object value) {
         this.entityId = entityId;

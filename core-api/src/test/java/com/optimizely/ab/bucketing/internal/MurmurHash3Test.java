@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -51,19 +51,19 @@ public class MurmurHash3Test {
 
     private void doString(String s, int pre, int post) {
         byte[] utf8 = s.getBytes(utf8Charset);
-        int hash1 = MurmurHash3.murmurhash3_x86_32(utf8, pre, utf8.length-pre-post, 123456789);
-        int hash2 = MurmurHash3.murmurhash3_x86_32(s, pre, s.length()-pre-post, 123456789);
+        int hash1 = MurmurHash3.murmurhash3_x86_32(utf8, pre, utf8.length - pre - post, 123456789);
+        int hash2 = MurmurHash3.murmurhash3_x86_32(s, pre, s.length() - pre - post, 123456789);
         if (hash1 != hash2) {
             // second time for debugging...
-            hash2 = MurmurHash3.murmurhash3_x86_32(s, pre, s.length()-pre-post, 123456789);
+            hash2 = MurmurHash3.murmurhash3_x86_32(s, pre, s.length() - pre - post, 123456789);
         }
         assertEquals(hash1, hash2);
     }
 
     @Test
     @SuppressFBWarnings(
-        value={"SF_SWITCH_FALLTHROUGH","SF_SWITCH_NO_DEFAULT"},
-        justification="deliberate")
+        value = {"SF_SWITCH_FALLTHROUGH", "SF_SWITCH_NO_DEFAULT"},
+        justification = "deliberate")
     public void testStringHash() {
         doString("hello!");
         doString("ABCD");
@@ -73,41 +73,49 @@ public class MurmurHash3Test {
 
         Random r = new Random();
         StringBuilder sb = new StringBuilder(40);
-        for (int i=0; i<100000; i++) {
+        for (int i = 0; i < 100000; i++) {
             sb.setLength(0);
             int pre = r.nextInt(3);
             int post = r.nextInt(3);
             int len = r.nextInt(16);
 
-            for (int j=0; j<pre; j++) {
+            for (int j = 0; j < pre; j++) {
                 int codePoint = r.nextInt(0x80);
                 sb.appendCodePoint(codePoint);
             }
 
-            for (int j=0; j<len; j++) {
+            for (int j = 0; j < len; j++) {
                 int codePoint;
                 do {
                     int max = 0;
                     switch (r.nextInt() & 0x3) {
-                        case 0: max=0x80; break;   // 1 UTF8 bytes
-                        case 1: max=0x800; break;  // up to 2 bytes
-                        case 2: max=0xffff+1; break; // up to 3 bytes
-                        case 3: max=Character.MAX_CODE_POINT+1; // up to 4 bytes
+                        case 0:
+                            max = 0x80;
+                            break;   // 1 UTF8 bytes
+                        case 1:
+                            max = 0x800;
+                            break;  // up to 2 bytes
+                        case 2:
+                            max = 0xffff + 1;
+                            break; // up to 3 bytes
+                        case 3:
+                            max = Character.MAX_CODE_POINT + 1; // up to 4 bytes
                     }
 
                     codePoint = r.nextInt(max);
-                }  while (codePoint < 0xffff && (Character.isHighSurrogate((char)codePoint) || Character.isLowSurrogate((char)codePoint)));
+                }
+                while (codePoint < 0xffff && (Character.isHighSurrogate((char) codePoint) || Character.isLowSurrogate((char) codePoint)));
 
                 sb.appendCodePoint(codePoint);
             }
 
-            for (int j=0; j<post; j++) {
+            for (int j = 0; j < post; j++) {
                 int codePoint = r.nextInt(0x80);
                 sb.appendCodePoint(codePoint);
             }
 
             String s = sb.toString();
-            String middle = s.substring(pre, s.length()-post);
+            String middle = s.substring(pre, s.length() - post);
 
             doString(s);
             doString(middle);

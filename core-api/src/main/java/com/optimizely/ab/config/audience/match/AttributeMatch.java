@@ -19,7 +19,7 @@ package com.optimizely.ab.config.audience.match;
 abstract class AttributeMatch<T> implements Match {
     T castToValueType(Object o, Object value) {
         try {
-            if (!o.getClass().isInstance(value) && !(o instanceof Number && value instanceof Number) ) {
+            if (!o.getClass().isInstance(value) && !(o instanceof Number && value instanceof Number)) {
                 MatchType.logger.warn(
                     "Incompatible type: Attribute value Type {}, Condition value Type {}",
                     o.getClass().getCanonicalName(), value.getClass().getCanonicalName()
@@ -28,13 +28,13 @@ abstract class AttributeMatch<T> implements Match {
                 return null;
             }
 
-            T rv = (T)o;
+            T rv = (T) o;
 
             return rv;
-        } catch(Exception e) {
+        } catch (Exception e) {
             MatchType.logger.error(
-                    "Cannot evaluate targeting condition since the value for attribute is an incompatible type",
-                    e
+                "Cannot evaluate targeting condition since the value for attribute is an incompatible type",
+                e
             );
             return null;
         }

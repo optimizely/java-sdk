@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -58,39 +58,39 @@ final class JsonSimpleConfigParser implements ConfigParser {
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
         try {
             JSONParser parser = new JSONParser();
-            JSONObject rootObject = (JSONObject)parser.parse(json);
+            JSONObject rootObject = (JSONObject) parser.parse(json);
 
-            String accountId = (String)rootObject.get("accountId");
-            String projectId = (String)rootObject.get("projectId");
-            String revision = (String)rootObject.get("revision");
-            String version = (String)rootObject.get("version");
+            String accountId = (String) rootObject.get("accountId");
+            String projectId = (String) rootObject.get("projectId");
+            String revision = (String) rootObject.get("revision");
+            String version = (String) rootObject.get("version");
             int datafileVersion = Integer.parseInt(version);
 
-            List<Experiment> experiments = parseExperiments((JSONArray)rootObject.get("experiments"));
+            List<Experiment> experiments = parseExperiments((JSONArray) rootObject.get("experiments"));
 
             List<Attribute> attributes;
-            attributes = parseAttributes((JSONArray)rootObject.get("attributes"));
+            attributes = parseAttributes((JSONArray) rootObject.get("attributes"));
 
-            List<EventType> events = parseEvents((JSONArray)rootObject.get("events"));
+            List<EventType> events = parseEvents((JSONArray) rootObject.get("events"));
             List<Audience> audiences = Collections.emptyList();
 
             if (rootObject.containsKey("audiences")) {
-                audiences = parseAudiences((JSONArray)parser.parse(rootObject.get("audiences").toString()));
+                audiences = parseAudiences((JSONArray) parser.parse(rootObject.get("audiences").toString()));
             }
 
             List<Audience> typedAudiences = null;
             if (rootObject.containsKey("typedAudiences")) {
-                typedAudiences = parseTypedAudiences((JSONArray)parser.parse(rootObject.get("typedAudiences").toString()));
+                typedAudiences = parseTypedAudiences((JSONArray) parser.parse(rootObject.get("typedAudiences").toString()));
             }
 
-            List<Group> groups = parseGroups((JSONArray)rootObject.get("groups"));
+            List<Group> groups = parseGroups((JSONArray) rootObject.get("groups"));
 
             boolean anonymizeIP = false;
             List<LiveVariable> liveVariables = null;
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
-                liveVariables = parseLiveVariables((JSONArray)rootObject.get("variables"));
+                liveVariables = parseLiveVariables((JSONArray) rootObject.get("variables"));
 
-                anonymizeIP = (Boolean)rootObject.get("anonymizeIP");
+                anonymizeIP = (Boolean) rootObject.get("anonymizeIP");
             }
 
             List<FeatureFlag> featureFlags = null;
@@ -99,28 +99,28 @@ final class JsonSimpleConfigParser implements ConfigParser {
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
                 featureFlags = parseFeatureFlags((JSONArray) rootObject.get("featureFlags"));
                 rollouts = parseRollouts((JSONArray) rootObject.get("rollouts"));
-                if(rootObject.containsKey("botFiltering"))
+                if (rootObject.containsKey("botFiltering"))
                     botFiltering = (Boolean) rootObject.get("botFiltering");
             }
 
             return new ProjectConfig(
-                    accountId,
-                    anonymizeIP,
-                    botFiltering,
-                    projectId,
-                    revision,
-                    version,
-                    attributes,
-                    audiences,
-                    typedAudiences,
-                    events,
-                    experiments,
-                    featureFlags,
-                    groups,
-                    liveVariables,
-                    rollouts
+                accountId,
+                anonymizeIP,
+                botFiltering,
+                projectId,
+                revision,
+                version,
+                attributes,
+                audiences,
+                typedAudiences,
+                events,
+                experiments,
+                featureFlags,
+                groups,
+                liveVariables,
+                rollouts
             );
-        } catch (RuntimeException ex){
+        } catch (RuntimeException ex) {
             throw new ConfigParseException("Unable to parse datafile: " + json, ex);
         } catch (Exception e) {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
@@ -137,20 +137,20 @@ final class JsonSimpleConfigParser implements ConfigParser {
         List<Experiment> experiments = new ArrayList<Experiment>(experimentJson.size());
 
         for (Object obj : experimentJson) {
-            JSONObject experimentObject = (JSONObject)obj;
-            String id = (String)experimentObject.get("id");
-            String key = (String)experimentObject.get("key");
+            JSONObject experimentObject = (JSONObject) obj;
+            String id = (String) experimentObject.get("id");
+            String key = (String) experimentObject.get("key");
             Object statusJson = experimentObject.get("status");
             String status = statusJson == null ? ExperimentStatus.NOT_STARTED.toString() :
-                    (String)experimentObject.get("status");
+                (String) experimentObject.get("status");
             Object layerIdObject = experimentObject.get("layerId");
-            String layerId = layerIdObject == null ? null : (String)layerIdObject;
+            String layerId = layerIdObject == null ? null : (String) layerIdObject;
 
-            JSONArray audienceIdsJson = (JSONArray)experimentObject.get("audienceIds");
+            JSONArray audienceIdsJson = (JSONArray) experimentObject.get("audienceIds");
             List<String> audienceIds = new ArrayList<String>(audienceIdsJson.size());
 
             for (Object audienceIdObj : audienceIdsJson) {
-                audienceIds.add((String)audienceIdObj);
+                audienceIds.add((String) audienceIdObj);
             }
 
             Condition conditions = null;
@@ -164,14 +164,14 @@ final class JsonSimpleConfigParser implements ConfigParser {
                 }
             }
             // parse the child objects
-            List<Variation> variations = parseVariations((JSONArray)experimentObject.get("variations"));
+            List<Variation> variations = parseVariations((JSONArray) experimentObject.get("variations"));
             Map<String, String> userIdToVariationKeyMap =
-                parseForcedVariations((JSONObject)experimentObject.get("forcedVariations"));
+                parseForcedVariations((JSONObject) experimentObject.get("forcedVariations"));
             List<TrafficAllocation> trafficAllocations =
-                parseTrafficAllocation((JSONArray)experimentObject.get("trafficAllocation"));
+                parseTrafficAllocation((JSONArray) experimentObject.get("trafficAllocation"));
 
             experiments.add(new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
-                                           trafficAllocations, groupId));
+                trafficAllocations, groupId));
         }
 
         return experiments;
@@ -181,7 +181,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
         List<String> experimentIds = new ArrayList<String>(experimentIdsJsonArray.size());
 
         for (Object experimentIdObj : experimentIdsJsonArray) {
-            experimentIds.add((String)experimentIdObj);
+            experimentIds.add((String) experimentIdObj);
         }
 
         return experimentIds;
@@ -191,22 +191,22 @@ final class JsonSimpleConfigParser implements ConfigParser {
         List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>(featureFlagJson.size());
 
         for (Object obj : featureFlagJson) {
-            JSONObject featureFlagObject = (JSONObject)obj;
-            String id = (String)featureFlagObject.get("id");
-            String key = (String)featureFlagObject.get("key");
-            String layerId = (String)featureFlagObject.get("rolloutId");
+            JSONObject featureFlagObject = (JSONObject) obj;
+            String id = (String) featureFlagObject.get("id");
+            String key = (String) featureFlagObject.get("key");
+            String layerId = (String) featureFlagObject.get("rolloutId");
 
-            JSONArray experimentIdsJsonArray = (JSONArray)featureFlagObject.get("experimentIds");
+            JSONArray experimentIdsJsonArray = (JSONArray) featureFlagObject.get("experimentIds");
             List<String> experimentIds = parseExperimentIds(experimentIdsJsonArray);
 
             List<LiveVariable> liveVariables = parseLiveVariables((JSONArray) featureFlagObject.get("variables"));
 
             featureFlags.add(new FeatureFlag(
-                    id,
-                    key,
-                    layerId,
-                    experimentIds,
-                    liveVariables
+                id,
+                key,
+                layerId,
+                experimentIds,
+                liveVariables
             ));
         }
 
@@ -217,17 +217,17 @@ final class JsonSimpleConfigParser implements ConfigParser {
         List<Variation> variations = new ArrayList<Variation>(variationJson.size());
 
         for (Object obj : variationJson) {
-            JSONObject variationObject = (JSONObject)obj;
-            String id = (String)variationObject.get("id");
-            String key = (String)variationObject.get("key");
+            JSONObject variationObject = (JSONObject) obj;
+            String id = (String) variationObject.get("id");
+            String key = (String) variationObject.get("key");
             Boolean featureEnabled = false;
 
-            if(variationObject.containsKey("featureEnabled"))
-                featureEnabled = (Boolean)variationObject.get("featureEnabled");
+            if (variationObject.containsKey("featureEnabled"))
+                featureEnabled = (Boolean) variationObject.get("featureEnabled");
 
             List<LiveVariableUsageInstance> liveVariableUsageInstances = null;
             if (variationObject.containsKey("variables")) {
-                liveVariableUsageInstances = parseLiveVariableInstances((JSONArray)variationObject.get("variables"));
+                liveVariableUsageInstances = parseLiveVariableInstances((JSONArray) variationObject.get("variables"));
             }
 
             variations.add(new Variation(id, key, featureEnabled, liveVariableUsageInstances));
@@ -239,7 +239,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
     private Map<String, String> parseForcedVariations(JSONObject forcedVariationJson) {
         Map<String, String> userIdToVariationKeyMap = new HashMap<String, String>();
         for (Object obj : forcedVariationJson.entrySet()) {
-            Map.Entry<String, String> entry = (Map.Entry<String, String>)obj;
+            Map.Entry<String, String> entry = (Map.Entry<String, String>) obj;
             userIdToVariationKeyMap.put(entry.getKey(), entry.getValue());
         }
 
@@ -250,11 +250,11 @@ final class JsonSimpleConfigParser implements ConfigParser {
         List<TrafficAllocation> trafficAllocation = new ArrayList<TrafficAllocation>(trafficAllocationJson.size());
 
         for (Object obj : trafficAllocationJson) {
-            JSONObject allocationObject = (JSONObject)obj;
-            String entityId = (String)allocationObject.get("entityId");
-            long endOfRange = (Long)allocationObject.get("endOfRange");
+            JSONObject allocationObject = (JSONObject) obj;
+            String entityId = (String) allocationObject.get("entityId");
+            long endOfRange = (Long) allocationObject.get("endOfRange");
 
-            trafficAllocation.add(new TrafficAllocation(entityId, (int)endOfRange));
+            trafficAllocation.add(new TrafficAllocation(entityId, (int) endOfRange));
         }
 
         return trafficAllocation;
@@ -264,10 +264,10 @@ final class JsonSimpleConfigParser implements ConfigParser {
         List<Attribute> attributes = new ArrayList<Attribute>(attributeJson.size());
 
         for (Object obj : attributeJson) {
-            JSONObject attributeObject = (JSONObject)obj;
-            String id = (String)attributeObject.get("id");
-            String key = (String)attributeObject.get("key");
-            String segmentId = (String)attributeObject.get("segmentId");
+            JSONObject attributeObject = (JSONObject) obj;
+            String id = (String) attributeObject.get("id");
+            String key = (String) attributeObject.get("key");
+            String segmentId = (String) attributeObject.get("segmentId");
 
             attributes.add(new Attribute(id, key, segmentId));
         }
@@ -279,12 +279,12 @@ final class JsonSimpleConfigParser implements ConfigParser {
         List<EventType> events = new ArrayList<EventType>(eventJson.size());
 
         for (Object obj : eventJson) {
-            JSONObject eventObject = (JSONObject)obj;
-            JSONArray experimentIdsJson = (JSONArray)eventObject.get("experimentIds");
+            JSONObject eventObject = (JSONObject) obj;
+            JSONArray experimentIdsJson = (JSONArray) eventObject.get("experimentIds");
             List<String> experimentIds = parseExperimentIds(experimentIdsJson);
 
-            String id = (String)eventObject.get("id");
-            String key = (String)eventObject.get("key");
+            String id = (String) eventObject.get("id");
+            String key = (String) eventObject.get("key");
 
             events.add(new EventType(id, key, experimentIds));
         }
@@ -297,11 +297,11 @@ final class JsonSimpleConfigParser implements ConfigParser {
         List<Audience> audiences = new ArrayList<Audience>(audienceJson.size());
 
         for (Object obj : audienceJson) {
-            JSONObject audienceObject = (JSONObject)obj;
-            String id = (String)audienceObject.get("id");
-            String key = (String)audienceObject.get("name");
+            JSONObject audienceObject = (JSONObject) obj;
+            String id = (String) audienceObject.get("id");
+            String key = (String) audienceObject.get("name");
             Object conditionObject = audienceObject.get("conditions");
-            Object conditionJson = parser.parse((String)conditionObject);
+            Object conditionJson = parser.parse((String) conditionObject);
             Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionJson);
             audiences.add(new Audience(id, key, conditions));
         }
@@ -313,9 +313,9 @@ final class JsonSimpleConfigParser implements ConfigParser {
         List<Audience> audiences = new ArrayList<Audience>(audienceJson.size());
 
         for (Object obj : audienceJson) {
-            JSONObject audienceObject = (JSONObject)obj;
-            String id = (String)audienceObject.get("id");
-            String key = (String)audienceObject.get("name");
+            JSONObject audienceObject = (JSONObject) obj;
+            String id = (String) audienceObject.get("id");
+            String key = (String) audienceObject.get("name");
             Object conditionObject = audienceObject.get("conditions");
             Condition conditions = ConditionUtils.<UserAttribute>parseConditions(UserAttribute.class, conditionObject);
             audiences.add(new Audience(id, key, conditions));
@@ -328,12 +328,12 @@ final class JsonSimpleConfigParser implements ConfigParser {
         List<Group> groups = new ArrayList<Group>(groupJson.size());
 
         for (Object obj : groupJson) {
-            JSONObject groupObject = (JSONObject)obj;
-            String id = (String)groupObject.get("id");
-            String policy = (String)groupObject.get("policy");
-            List<Experiment> experiments = parseExperiments((JSONArray)groupObject.get("experiments"), id);
+            JSONObject groupObject = (JSONObject) obj;
+            String id = (String) groupObject.get("id");
+            String policy = (String) groupObject.get("policy");
+            List<Experiment> experiments = parseExperiments((JSONArray) groupObject.get("experiments"), id);
             List<TrafficAllocation> trafficAllocations =
-                    parseTrafficAllocation((JSONArray)groupObject.get("trafficAllocation"));
+                parseTrafficAllocation((JSONArray) groupObject.get("trafficAllocation"));
 
             groups.add(new Group(id, policy, experiments, trafficAllocations));
         }
@@ -345,12 +345,12 @@ final class JsonSimpleConfigParser implements ConfigParser {
         List<LiveVariable> liveVariables = new ArrayList<LiveVariable>(liveVariablesJson.size());
 
         for (Object obj : liveVariablesJson) {
-            JSONObject liveVariableObject = (JSONObject)obj;
-            String id = (String)liveVariableObject.get("id");
-            String key = (String)liveVariableObject.get("key");
-            String defaultValue = (String)liveVariableObject.get("defaultValue");
-            VariableType type = VariableType.fromString((String)liveVariableObject.get("type"));
-            VariableStatus status = VariableStatus.fromString((String)liveVariableObject.get("status"));
+            JSONObject liveVariableObject = (JSONObject) obj;
+            String id = (String) liveVariableObject.get("id");
+            String key = (String) liveVariableObject.get("key");
+            String defaultValue = (String) liveVariableObject.get("defaultValue");
+            VariableType type = VariableType.fromString((String) liveVariableObject.get("type"));
+            VariableStatus status = VariableStatus.fromString((String) liveVariableObject.get("status"));
 
             liveVariables.add(new LiveVariable(id, key, defaultValue, status, type));
         }
@@ -360,12 +360,12 @@ final class JsonSimpleConfigParser implements ConfigParser {
 
     private List<LiveVariableUsageInstance> parseLiveVariableInstances(JSONArray liveVariableInstancesJson) {
         List<LiveVariableUsageInstance> liveVariableUsageInstances =
-                new ArrayList<LiveVariableUsageInstance>(liveVariableInstancesJson.size());
+            new ArrayList<LiveVariableUsageInstance>(liveVariableInstancesJson.size());
 
         for (Object obj : liveVariableInstancesJson) {
-            JSONObject liveVariableInstanceObject = (JSONObject)obj;
-            String id = (String)liveVariableInstanceObject.get("id");
-            String value = (String)liveVariableInstanceObject.get("value");
+            JSONObject liveVariableInstanceObject = (JSONObject) obj;
+            String id = (String) liveVariableInstanceObject.get("id");
+            String value = (String) liveVariableInstanceObject.get("value");
 
             liveVariableUsageInstances.add(new LiveVariableUsageInstance(id, value));
         }

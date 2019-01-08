@@ -1,3 +1,19 @@
+/**
+ *
+ *    Copyright 2018-2019, Optimizely and contributors
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package com.optimizely.ab.notification;
 
 import ch.qos.logback.classic.Level;
@@ -36,7 +52,7 @@ public class NotificationCenterTest {
     @Test
     public void testAddWrongTrackNotificationListener() {
         int notificationId = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Activate, trackNotification);
-        logbackVerifier.expectMessage(Level.WARN,"Notification listener was the wrong type. It was not added to the notification center.");
+        logbackVerifier.expectMessage(Level.WARN, "Notification listener was the wrong type. It was not added to the notification center.");
         assertEquals(notificationId, -1);
         assertFalse(notificationCenter.removeNotificationListener(notificationId));
 
@@ -45,7 +61,7 @@ public class NotificationCenterTest {
     @Test
     public void testAddWrongActivateNotificationListener() {
         int notificationId = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Track, activateNotification);
-        logbackVerifier.expectMessage(Level.WARN,"Notification listener was the wrong type. It was not added to the notification center.");
+        logbackVerifier.expectMessage(Level.WARN, "Notification listener was the wrong type. It was not added to the notification center.");
         assertEquals(notificationId, -1);
         assertFalse(notificationCenter.removeNotificationListener(notificationId));
     }
@@ -60,7 +76,7 @@ public class NotificationCenterTest {
         };
         int notificationId = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Activate, listener);
         int notificationId2 = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Activate, listener);
-        logbackVerifier.expectMessage(Level.WARN,"Notificication listener was already added");
+        logbackVerifier.expectMessage(Level.WARN, "Notificication listener was already added");
         assertEquals(notificationId2, -1);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
         notificationCenter.clearAllNotificationListeners();
@@ -95,7 +111,7 @@ public class NotificationCenterTest {
     @Test
     public void testNotificationTypeClasses() {
         assertEquals(NotificationCenter.NotificationType.Activate.getNotificationTypeClass(),
-                ActivateNotificationListener.class);
+            ActivateNotificationListener.class);
         assertEquals(NotificationCenter.NotificationType.Track.getNotificationTypeClass(), TrackNotificationListener.class);
     }
 

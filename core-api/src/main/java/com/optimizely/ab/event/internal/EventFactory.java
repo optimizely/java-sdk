@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ import java.util.UUID;
 public class EventFactory {
     private static final Logger logger = LoggerFactory.getLogger(EventFactory.class);
     static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";  // Should be part of the datafile
-    static final String  ACTIVATE_EVENT_KEY = "campaign_activated";
+    static final String ACTIVATE_EVENT_KEY = "campaign_activated";
 
     @VisibleForTesting
     public final String clientVersion;
@@ -65,40 +65,40 @@ public class EventFactory {
                                           @Nonnull Map<String, ?> attributes) {
 
         Decision decision = new Decision.Builder()
-                .setCampaignId(activatedExperiment.getLayerId())
-                .setExperimentId(activatedExperiment.getId())
-                .setVariationId(variation.getId())
-                .setIsCampaignHoldback(false)
-                .build();
+            .setCampaignId(activatedExperiment.getLayerId())
+            .setExperimentId(activatedExperiment.getId())
+            .setVariationId(variation.getId())
+            .setIsCampaignHoldback(false)
+            .build();
 
         Event impressionEvent = new Event.Builder()
-                .setTimestamp(System.currentTimeMillis())
-                .setUuid(UUID.randomUUID().toString())
-                .setEntityId(activatedExperiment.getLayerId())
-                .setKey(ACTIVATE_EVENT_KEY)
-                .setType(ACTIVATE_EVENT_KEY)
-                .build();
+            .setTimestamp(System.currentTimeMillis())
+            .setUuid(UUID.randomUUID().toString())
+            .setEntityId(activatedExperiment.getLayerId())
+            .setKey(ACTIVATE_EVENT_KEY)
+            .setType(ACTIVATE_EVENT_KEY)
+            .build();
 
         Snapshot snapshot = new Snapshot.Builder()
-                .setDecisions(Collections.singletonList(decision))
-                .setEvents(Collections.singletonList(impressionEvent))
-                .build();
+            .setDecisions(Collections.singletonList(decision))
+            .setEvents(Collections.singletonList(impressionEvent))
+            .build();
 
         Visitor visitor = new Visitor.Builder()
-                .setVisitorId(userId)
-                .setAttributes(buildAttributeList(projectConfig, attributes))
-                .setSnapshots(Collections.singletonList((snapshot)))
-                .build();
+            .setVisitorId(userId)
+            .setAttributes(buildAttributeList(projectConfig, attributes))
+            .setSnapshots(Collections.singletonList((snapshot)))
+            .build();
 
         EventBatch eventBatch = new EventBatch.Builder()
-                .setClientName(clientEngine.getClientEngineValue())
-                .setClientVersion(clientVersion)
-                .setAccountId(projectConfig.getAccountId())
-                .setVisitors(Collections.singletonList(visitor))
-                .setAnonymizeIp(projectConfig.getAnonymizeIP())
-                .setProjectId(projectConfig.getProjectId())
-                .setRevision(projectConfig.getRevision())
-                .build();
+            .setClientName(clientEngine.getClientEngineValue())
+            .setClientVersion(clientVersion)
+            .setAccountId(projectConfig.getAccountId())
+            .setVisitors(Collections.singletonList(visitor))
+            .setAnonymizeIp(projectConfig.getAnonymizeIP())
+            .setProjectId(projectConfig.getProjectId())
+            .setRevision(projectConfig.getRevision())
+            .build();
 
         return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), eventBatch);
     }
@@ -118,11 +118,11 @@ public class EventFactory {
         ArrayList<Decision> decisions = new ArrayList<Decision>(experimentVariationMap.size());
         for (Map.Entry<Experiment, Variation> entry : experimentVariationMap.entrySet()) {
             Decision decision = new Decision.Builder()
-                    .setCampaignId(entry.getKey().getLayerId())
-                    .setExperimentId(entry.getKey().getId())
-                    .setVariationId(entry.getValue().getId())
-                    .setIsCampaignHoldback(false)
-                    .build();
+                .setCampaignId(entry.getKey().getLayerId())
+                .setExperimentId(entry.getKey().getId())
+                .setVariationId(entry.getValue().getId())
+                .setIsCampaignHoldback(false)
+                .build();
 
             decisions.add(decision);
         }
@@ -130,36 +130,36 @@ public class EventFactory {
         EventType eventType = projectConfig.getEventNameMapping().get(eventName);
 
         Event conversionEvent = new Event.Builder()
-                .setTimestamp(System.currentTimeMillis())
-                .setUuid(UUID.randomUUID().toString())
-                .setEntityId(eventType.getId())
-                .setKey(eventType.getKey())
-                .setRevenue(EventTagUtils.getRevenueValue(eventTags))
-                .setTags(eventTags)
-                .setType(eventType.getKey())
-                .setValue(EventTagUtils.getNumericValue(eventTags))
-                .build();
+            .setTimestamp(System.currentTimeMillis())
+            .setUuid(UUID.randomUUID().toString())
+            .setEntityId(eventType.getId())
+            .setKey(eventType.getKey())
+            .setRevenue(EventTagUtils.getRevenueValue(eventTags))
+            .setTags(eventTags)
+            .setType(eventType.getKey())
+            .setValue(EventTagUtils.getNumericValue(eventTags))
+            .build();
 
         Snapshot snapshot = new Snapshot.Builder()
-                .setDecisions(decisions)
-                .setEvents(Collections.singletonList((conversionEvent)))
-                .build();
+            .setDecisions(decisions)
+            .setEvents(Collections.singletonList((conversionEvent)))
+            .build();
 
         Visitor visitor = new Visitor.Builder()
-                .setVisitorId(userId)
-                .setAttributes(buildAttributeList(projectConfig, attributes))
-                .setSnapshots(Collections.singletonList(snapshot))
-                .build();
+            .setVisitorId(userId)
+            .setAttributes(buildAttributeList(projectConfig, attributes))
+            .setSnapshots(Collections.singletonList(snapshot))
+            .build();
 
         EventBatch eventBatch = new EventBatch.Builder()
-                .setClientName(clientEngine.getClientEngineValue())
-                .setClientVersion(clientVersion)
-                .setAccountId(projectConfig.getAccountId())
-                .setVisitors(Collections.singletonList(visitor))
-                .setAnonymizeIp(projectConfig.getAnonymizeIP())
-                .setProjectId(projectConfig.getProjectId())
-                .setRevision(projectConfig.getRevision())
-                .build();
+            .setClientName(clientEngine.getClientEngineValue())
+            .setClientVersion(clientVersion)
+            .setAccountId(projectConfig.getAccountId())
+            .setVisitors(Collections.singletonList(visitor))
+            .setAnonymizeIp(projectConfig.getAnonymizeIP())
+            .setProjectId(projectConfig.getProjectId())
+            .setRevision(projectConfig.getRevision())
+            .build();
 
         return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), eventBatch);
     }
@@ -180,10 +180,10 @@ public class EventFactory {
                 // but may take on values that can't be faithfully parsed by the backend.
                 // https://developers.optimizely.com/x/events/api/#Attribute
                 if (entry.getValue() == null ||
-                        !((entry.getValue() instanceof String) ||
-                                (entry.getValue() instanceof Integer) ||
-                                (entry.getValue() instanceof Double) ||
-                                (entry.getValue() instanceof Boolean))) {
+                    !((entry.getValue() instanceof String) ||
+                        (entry.getValue() instanceof Integer) ||
+                        (entry.getValue() instanceof Double) ||
+                        (entry.getValue() instanceof Boolean))) {
                     continue;
                 }
 
@@ -193,11 +193,11 @@ public class EventFactory {
                 }
 
                 Attribute attribute = new Attribute.Builder()
-                        .setEntityId(attributeId)
-                        .setKey(entry.getKey())
-                        .setType(Attribute.CUSTOM_ATTRIBUTE_TYPE)
-                        .setValue(entry.getValue())
-                        .build();
+                    .setEntityId(attributeId)
+                    .setKey(entry.getKey())
+                    .setType(Attribute.CUSTOM_ATTRIBUTE_TYPE)
+                    .setValue(entry.getValue())
+                    .build();
 
                 attributesList.add(attribute);
 
@@ -205,13 +205,13 @@ public class EventFactory {
         }
 
         //checks if botFiltering value is not set in the project config file.
-        if(projectConfig.getBotFiltering() != null) {
+        if (projectConfig.getBotFiltering() != null) {
             Attribute attribute = new Attribute.Builder()
-                    .setEntityId(ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString())
-                    .setKey(ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString())
-                    .setType(Attribute.CUSTOM_ATTRIBUTE_TYPE)
-                    .setValue(projectConfig.getBotFiltering())
-                    .build();
+                .setEntityId(ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString())
+                .setKey(ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString())
+                .setType(Attribute.CUSTOM_ATTRIBUTE_TYPE)
+                .setValue(projectConfig.getBotFiltering())
+                .build();
 
             attributesList.add(attribute);
         }

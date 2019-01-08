@@ -44,6 +44,7 @@ public class AudienceIdCondition<T> implements Condition<T> {
 
     /**
      * Constructor used in json parsing to store the audienceId parsed from Experiment.audienceConditions.
+     *
      * @param audienceId
      */
     @JsonCreator
@@ -86,9 +87,9 @@ public class AudienceIdCondition<T> implements Condition<T> {
         if (o == null || getClass() != o.getClass()) return false;
         AudienceIdCondition condition = (AudienceIdCondition) o;
         return ((audience == null) ? (null == condition.audience) :
-                (audience.getId().equals(condition.audience!=null?condition.audience.getId():null))) &&
-                ((audienceId == null) ? (null == condition.audienceId) :
-                        (audienceId.equals(condition.audienceId)));
+            (audience.getId().equals(condition.audience != null ? condition.audience.getId() : null))) &&
+            ((audienceId == null) ? (null == condition.audienceId) :
+                (audienceId.equals(condition.audienceId)));
     }
 
     @Override

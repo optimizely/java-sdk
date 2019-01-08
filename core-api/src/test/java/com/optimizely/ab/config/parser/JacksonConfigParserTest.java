@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -77,9 +77,9 @@ public class JacksonConfigParserTest {
         String audienceString =
             "{" +
                 "\"id\": \"3468206645\"," +
-            "\"name\": \"DOUBLE\"," +
-            "\"conditions\": \"[\\\"and\\\", [\\\"or\\\", [\\\"or\\\", {\\\"name\\\": \\\"doubleKey\\\", \\\"type\\\": \\\"custom_attribute\\\", \\\"match\\\":\\\"lt\\\", \\\"value\\\":100.0}]]]\"" +
-            "},";
+                "\"name\": \"DOUBLE\"," +
+                "\"conditions\": \"[\\\"and\\\", [\\\"or\\\", [\\\"or\\\", {\\\"name\\\": \\\"doubleKey\\\", \\\"type\\\": \\\"custom_attribute\\\", \\\"match\\\":\\\"lt\\\", \\\"value\\\":100.0}]]]\"" +
+                "},";
 
         ObjectMapper objectMapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
@@ -99,7 +99,7 @@ public class JacksonConfigParserTest {
                 "\"id\": \"3468206645\"," +
                 "\"name\": \"DOUBLE\"," +
                 "\"conditions\": \"{\\\"name\\\": \\\"doubleKey\\\", \\\"type\\\": \\\"custom_attribute\\\", \\\"match\\\":\\\"lt\\\", \\\"value\\\":100.0}\"" +
-            "},";
+                "},";
 
         ObjectMapper objectMapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
@@ -137,11 +137,11 @@ public class JacksonConfigParserTest {
         thrown.expect(InvalidAudienceCondition.class);
         String audienceString =
             "{" +
-            "\"id\": \"123\"," +
-            "\"name\":\"blah\"," +
-            "\"conditions\":" +
-            "\"[\\\"and\\\", [\\\"or\\\", [\\\"or\\\", \\\"123\\\"]]]\"" +
-            "}";
+                "\"id\": \"123\"," +
+                "\"name\":\"blah\"," +
+                "\"conditions\":" +
+                "\"[\\\"and\\\", [\\\"or\\\", [\\\"or\\\", \\\"123\\\"]]]\"" +
+                "}";
 
         ObjectMapper objectMapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
@@ -237,7 +237,7 @@ public class JacksonConfigParserTest {
      * Verify that null JSON results in a {@link ConfigParseException} being thrown.
      */
     @Test
-    @SuppressFBWarnings(value="NP_NONNULL_PARAM_VIOLATION", justification="Testing nullness contract violation")
+    @SuppressFBWarnings(value = "NP_NONNULL_PARAM_VIOLATION", justification = "Testing nullness contract violation")
     public void nullJsonExceptionWrapping() throws Exception {
         thrown.expect(ConfigParseException.class);
 

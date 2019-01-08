@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -54,12 +54,18 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
         int datafileVersion = Integer.parseInt(version);
 
         // generic list type tokens
-        Type groupsType = new TypeToken<List<Group>>() {}.getType();
-        Type experimentsType = new TypeToken<List<Experiment>>() {}.getType();
-        Type attributesType = new TypeToken<List<Attribute>>() {}.getType();
-        Type eventsType = new TypeToken<List<EventType>>() {}.getType();
-        Type audienceType = new TypeToken<List<Audience>>() {}.getType();
-        Type typedAudienceType = new TypeToken<List<TypedAudience>>() {}.getType();
+        Type groupsType = new TypeToken<List<Group>>() {
+        }.getType();
+        Type experimentsType = new TypeToken<List<Experiment>>() {
+        }.getType();
+        Type attributesType = new TypeToken<List<Attribute>>() {
+        }.getType();
+        Type eventsType = new TypeToken<List<EventType>>() {
+        }.getType();
+        Type audienceType = new TypeToken<List<Audience>>() {
+        }.getType();
+        Type typedAudienceType = new TypeToken<List<TypedAudience>>() {
+        }.getType();
 
         List<Group> groups = context.deserialize(jsonObject.get("groups").getAsJsonArray(), groupsType);
         List<Experiment> experiments =
@@ -83,7 +89,8 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
         // live variables should be null if using V2
         List<LiveVariable> liveVariables = null;
         if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
-            Type liveVariablesType = new TypeToken<List<LiveVariable>>() {}.getType();
+            Type liveVariablesType = new TypeToken<List<LiveVariable>>() {
+            }.getType();
             liveVariables = context.deserialize(jsonObject.getAsJsonArray("variables"), liveVariablesType);
 
             anonymizeIP = jsonObject.get("anonymizeIP").getAsBoolean();
@@ -93,30 +100,32 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
         List<Rollout> rollouts = null;
         Boolean botFiltering = null;
         if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
-            Type featureFlagsType = new TypeToken<List<FeatureFlag>>() {}.getType();
+            Type featureFlagsType = new TypeToken<List<FeatureFlag>>() {
+            }.getType();
             featureFlags = context.deserialize(jsonObject.getAsJsonArray("featureFlags"), featureFlagsType);
-            Type rolloutsType = new TypeToken<List<Rollout>>() {}.getType();
+            Type rolloutsType = new TypeToken<List<Rollout>>() {
+            }.getType();
             rollouts = context.deserialize(jsonObject.get("rollouts").getAsJsonArray(), rolloutsType);
-            if(jsonObject.has("botFiltering"))
+            if (jsonObject.has("botFiltering"))
                 botFiltering = jsonObject.get("botFiltering").getAsBoolean();
         }
 
         return new ProjectConfig(
-                accountId,
-                anonymizeIP,
-                botFiltering,
-                projectId,
-                revision,
-                version,
-                attributes,
-                audiences,
-                typedAudiences,
-                events,
-                experiments,
-                featureFlags,
-                groups,
-                liveVariables,
-                rollouts
+            accountId,
+            anonymizeIP,
+            botFiltering,
+            projectId,
+            revision,
+            version,
+            attributes,
+            audiences,
+            typedAudiences,
+            events,
+            experiments,
+            featureFlags,
+            groups,
+            liveVariables,
+            rollouts
         );
     }
 }

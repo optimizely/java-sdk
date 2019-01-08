@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018, Optimizely and contributors
+ *    Copyright 2018-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,9 +25,9 @@ import java.util.List;
 
 public class EventBatch {
     public enum ClientEngine {
-        JAVA_SDK ("java-sdk"),
-        ANDROID_SDK ("android-sdk"),
-        ANDROID_TV_SDK ("android-tv-sdk");
+        JAVA_SDK("java-sdk"),
+        ANDROID_SDK("android-sdk"),
+        ANDROID_TV_SDK("android-tv-sdk");
 
         private final String clientEngineValue;
 
@@ -55,7 +55,8 @@ public class EventBatch {
     String revision;
 
     @VisibleForTesting
-    public EventBatch() { }
+    public EventBatch() {
+    }
 
     private EventBatch(String clientName, String clientVersion, String accountId, List<Visitor> visitors, Boolean anonymizeIp, String projectId, String revision) {
         this.accountId = accountId;

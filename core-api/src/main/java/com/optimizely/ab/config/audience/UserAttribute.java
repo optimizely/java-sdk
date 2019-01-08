@@ -72,7 +72,8 @@ public class UserAttribute<T> implements Condition<T> {
         return value;
     }
 
-    public @Nullable Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    @Nullable
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
         if (attributes == null) {
             attributes = Collections.emptyMap();
         }
@@ -96,15 +97,14 @@ public class UserAttribute<T> implements Condition<T> {
                     //if attribute value is not valid
                     logger.warn(
                         "Audience condition \"{}\" evaluated as UNKNOWN because the value for user attribute \"{}\" is inapplicable: \"{}\"",
-                            this.toString(),
-                            name,
-                            userAttributeValue);
+                        this.toString(),
+                        name,
+                        userAttributeValue);
                 }
             }
             return result;
-        }
-        catch (NullPointerException np) {
-            logger.error(String.format("attribute or value null for match %s", match != null ? match : "legacy condition"),np);
+        } catch (NullPointerException np) {
+            logger.error(String.format("attribute or value null for match %s", match != null ? match : "legacy condition"), np);
             return null;
         }
     }
@@ -120,10 +120,10 @@ public class UserAttribute<T> implements Condition<T> {
             valueStr = value.toString();
         }
         return "{name='" + name + "\'" +
-               ", type='" + type + "\'" +
-               ", match='" + match + "\'" +
-               ", value=" + valueStr +
-               "}";
+            ", type='" + type + "\'" +
+            ", match='" + match + "\'" +
+            ", value=" + valueStr +
+            "}";
     }
 
     @Override

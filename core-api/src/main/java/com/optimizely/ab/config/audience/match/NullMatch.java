@@ -23,12 +23,13 @@ import javax.annotation.Nullable;
 public class NullMatch extends AttributeMatch<Object> {
     @SuppressFBWarnings("URF_UNREAD_FIELD")
     Object value;
+
     protected NullMatch() {
         this.value = null;
     }
 
-    public @Nullable
-    Boolean eval(Object attributeValue) {
+    @Nullable
+    public Boolean eval(Object attributeValue) {
         return null;
     }
 }

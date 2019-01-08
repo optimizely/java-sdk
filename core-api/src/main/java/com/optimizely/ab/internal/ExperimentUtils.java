@@ -34,7 +34,8 @@ public final class ExperimentUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(ExperimentUtils.class);
 
-    private ExperimentUtils() {}
+    private ExperimentUtils() {
+    }
 
     /**
      * Helper method to validate all pre-conditions before bucketing a user.
@@ -56,8 +57,8 @@ public final class ExperimentUtils {
      * Determines whether a user satisfies audience conditions for the experiment.
      *
      * @param projectConfig the current projectConfig
-     * @param experiment the experiment we are evaluating audiences for
-     * @param attributes the attributes of the user
+     * @param experiment    the experiment we are evaluating audiences for
+     * @param attributes    the attributes of the user
      * @return whether the user meets the criteria for the experiment
      */
     public static boolean isUserInExperiment(@Nonnull ProjectConfig projectConfig,
@@ -66,16 +67,16 @@ public final class ExperimentUtils {
         if (experiment.getAudienceConditions() != null) {
             Boolean resolveReturn = evaluateAudienceConditions(projectConfig, experiment, attributes);
             return resolveReturn == null ? false : resolveReturn;
-        }
-        else {
+        } else {
             Boolean resolveReturn = evaluateAudience(projectConfig, experiment, attributes);
             return Boolean.TRUE.equals(resolveReturn);
         }
     }
 
-    public static @Nullable Boolean evaluateAudience(@Nonnull ProjectConfig projectConfig,
-                                                     @Nonnull Experiment experiment,
-                                                     @Nonnull Map<String, ?> attributes) {
+    @Nullable
+    public static Boolean evaluateAudience(@Nonnull ProjectConfig projectConfig,
+                             @Nonnull Experiment experiment,
+                             @Nonnull Map<String, ?> attributes) {
         List<String> experimentAudienceIds = experiment.getAudienceIds();
 
         // if there are no audiences, ALL users should be part of the experiment
@@ -99,9 +100,10 @@ public final class ExperimentUtils {
         return result;
     }
 
-    public static @Nullable Boolean evaluateAudienceConditions(@Nonnull ProjectConfig projectConfig,
-                                                               @Nonnull Experiment experiment,
-                                                               @Nonnull Map<String, ?> attributes) {
+    @Nullable
+    public static Boolean evaluateAudienceConditions(@Nonnull ProjectConfig projectConfig,
+                                       @Nonnull Experiment experiment,
+                                       @Nonnull Map<String, ?> attributes) {
 
         Condition conditions = experiment.getAudienceConditions();
         if (conditions == null) return null;
@@ -110,8 +112,7 @@ public final class ExperimentUtils {
             Boolean result = conditions.evaluate(projectConfig, attributes);
             logger.info("Audiences for experiment {} collectively evaluated as {}", experiment.getKey(), result);
             return result;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Condition invalid", e);
             return null;
         }
