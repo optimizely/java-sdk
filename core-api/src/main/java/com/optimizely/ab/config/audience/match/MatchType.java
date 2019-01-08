@@ -16,7 +16,6 @@
  */
 package com.optimizely.ab.config.audience.match;
 
-import com.optimizely.ab.config.audience.UserAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +28,7 @@ public class MatchType {
     private String matchType;
     private Match matcher;
 
-    public static MatchType getMatchType(String matchType, Object conditionValue, String audienceCondition) {
+    public static MatchType getMatchType(String matchType, Object conditionValue) {
         if (matchType == null) matchType = "legacy_custom_attribute";
 
         switch (matchType) {
@@ -65,14 +64,10 @@ public class MatchType {
                 }
                 break;
             default:
-                logger.error("Audience condition \"{}\" uses an unknown match type: {}", audienceCondition, matchType);
-                return new MatchType(matchType, new NullMatch());
+                return new MatchType(matchType, new NullMatch(MatchTypeError.UNKNOWN_MATCH_TYPE));
         }
 
-        logger.error("Audience condition \"{}\" condition value data type is inapplicable for match type \"{}\"",
-            audienceCondition,
-            matchType);
-        return new MatchType(matchType, new NullMatch());
+        return new MatchType(matchType, new NullMatch(MatchTypeError.INAPPLICABLE_CONDITION_VALUE));
     }
 
     private static boolean isValidNumber(Object conditionValue) {

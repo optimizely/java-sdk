@@ -86,7 +86,7 @@ public class UserAttribute<T> implements Condition<T> {
         }
         // check user attribute value is equal
         try {
-            Match matchType = MatchType.getMatchType(match, value, this.toString()).getMatcher();
+            Match matchType = MatchType.getMatchType(match, value).getMatcher();
             Boolean result = matchType.eval(userAttributeValue);
 
             if (!(matchType instanceof NullMatch) && result == null) {
@@ -101,6 +101,10 @@ public class UserAttribute<T> implements Condition<T> {
                         name,
                         userAttributeValue);
                 }
+            } else if (matchType instanceof NullMatch) {
+                logger.error("Audience condition \"{}\" " + ((NullMatch) matchType).getMatchTypeError().toString(),
+                    this.toString(),
+                    match == null ? "legacy_custom_attribute" : match);
             }
             return result;
         } catch (NullPointerException np) {
