@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -80,16 +80,16 @@ public class AsyncEventHandler implements EventHandler {
         this.maxPerRoute = connectionsPerRoute;
         this.validateAfterInactivity = validateAfter;
 
-      this.httpClient = HttpClients.custom()
+        this.httpClient = HttpClients.custom()
             .setDefaultRequestConfig(HttpClientUtils.DEFAULT_REQUEST_CONFIG)
-                .setConnectionManager(poolingHttpClientConnectionManager())
+            .setConnectionManager(poolingHttpClientConnectionManager())
             .disableCookieManagement()
             .build();
 
         this.workerExecutor = new ThreadPoolExecutor(numWorkers, numWorkers,
-                                                     0L, TimeUnit.MILLISECONDS,
-                                                     new ArrayBlockingQueue<Runnable>(queueCapacity),
-                                                     new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true));
+            0L, TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<Runnable>(queueCapacity),
+            new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true));
     }
 
     @VisibleForTesting
@@ -98,8 +98,7 @@ public class AsyncEventHandler implements EventHandler {
         this.workerExecutor = workerExecutor;
     }
 
-    private PoolingHttpClientConnectionManager poolingHttpClientConnectionManager()
-    {
+    private PoolingHttpClientConnectionManager poolingHttpClientConnectionManager() {
         PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager();
         poolingHttpClientConnectionManager.setMaxTotal(maxTotalConnections);
         poolingHttpClientConnectionManager.setDefaultMaxPerRoute(maxPerRoute);
@@ -120,11 +119,11 @@ public class AsyncEventHandler implements EventHandler {
     /**
      * Attempts to gracefully terminate all event dispatch workers and close all resources.
      * This method blocks, awaiting the completion of any queued or ongoing event dispatches.
-     *
+     * <p>
      * Note: termination of ongoing event dispatching is best-effort.
      *
      * @param timeout maximum time to wait for event dispatches to complete
-     * @param unit the time unit of the timeout argument
+     * @param unit    the time unit of the timeout argument
      */
     public void shutdownAndAwaitTermination(long timeout, TimeUnit unit) {
 
@@ -137,8 +136,8 @@ public class AsyncEventHandler implements EventHandler {
             if (!workerExecutor.awaitTermination(timeout, unit)) {
                 int unprocessedCount = workerExecutor.shutdownNow().size();
                 logger.warn("timed out waiting for previously submitted events to be dispatched. "
-                            + "{} events were dropped. "
-                            + "Interrupting dispatch worker(s)", unprocessedCount);
+                    + "{} events were dropped. "
+                    + "Interrupting dispatch worker(s)", unprocessedCount);
                 // Cancel currently executing tasks
                 // Wait a while for tasks to respond to being cancelled
                 if (!workerExecutor.awaitTermination(timeout, unit)) {
@@ -177,7 +176,12 @@ public class AsyncEventHandler implements EventHandler {
         @Override
         public void run() {
             try {
-                HttpGet request = generateRequest(logEvent);
+                HttpRequestBase request;
+                if (logEvent.getRequestMethod() == LogEvent.RequestMethod.GET) {
+                    request = generateGetRequest(logEvent);
+                } else {
+                    request = generatePostRequest(logEvent);
+                }
                 httpClient.execute(request, EVENT_RESPONSE_HANDLER);
             } catch (IOException e) {
                 logger.error("event dispatch failed", e);
@@ -189,7 +193,7 @@ public class AsyncEventHandler implements EventHandler {
         /**
          * Helper method that generates the event request for the given {@link LogEvent}.
          */
-        private HttpGet generateRequest(LogEvent event) throws URISyntaxException {
+        private HttpGet generateGetRequest(LogEvent event) throws URISyntaxException {
 
             URIBuilder builder = new URIBuilder(event.getEndpointUrl());
             for (Map.Entry<String, String> param : event.getRequestParams().entrySet()) {
@@ -197,6 +201,13 @@ public class AsyncEventHandler implements EventHandler {
             }
 
             return new HttpGet(builder.build());
+        }
+
+        private HttpPost generatePostRequest(LogEvent event) throws UnsupportedEncodingException {
+            HttpPost post = new HttpPost(event.getEndpointUrl());
+            post.setEntity(new StringEntity(event.getBody()));
+            post.addHeader("Content-Type", "application/json");
+            return post;
         }
     }
 
@@ -206,7 +217,8 @@ public class AsyncEventHandler implements EventHandler {
     private static final class ProjectConfigResponseHandler implements ResponseHandler<Void> {
 
         @Override
-        public @CheckForNull Void handleResponse(HttpResponse response) throws IOException {
+        @CheckForNull
+        public Void handleResponse(HttpResponse response) throws IOException {
             int status = response.getStatusLine().getStatusCode();
             if (status >= 200 && status < 300) {
                 // read the response, so we can close the connection

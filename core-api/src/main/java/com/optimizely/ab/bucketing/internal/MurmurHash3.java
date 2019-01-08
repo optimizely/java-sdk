@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,18 +20,19 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public final class MurmurHash3 {
 
-    private MurmurHash3() { }
+    private MurmurHash3() {
+    }
 
     /**
-     * @param data the origin data
+     * @param data   the origin data
      * @param offset the offset into the data array
-     * @param len the length of the data array to use
-     * @param seed the murmur hash seed
+     * @param len    the length of the data array to use
+     * @param seed   the murmur hash seed
      * @return the MurmurHash3_x86_32 hash
      */
     @SuppressFBWarnings(
-        value={"SF_SWITCH_FALLTHROUGH","SF_SWITCH_NO_DEFAULT"},
-        justification="deliberate")
+        value = {"SF_SWITCH_FALLTHROUGH", "SF_SWITCH_NO_DEFAULT"},
+        justification = "deliberate")
     public static int murmurhash3_x86_32(byte[] data, int offset, int len, int seed) {
 
         final int c1 = 0xcc9e2d51;
@@ -40,22 +41,22 @@ public final class MurmurHash3 {
         int h1 = seed;
         int roundedEnd = offset + (len & 0xfffffffc);  // round down to 4 byte block
 
-        for (int i=offset; i<roundedEnd; i+=4) {
+        for (int i = offset; i < roundedEnd; i += 4) {
             // little endian load order
-            int k1 = (data[i] & 0xff) | ((data[i+1] & 0xff) << 8) | ((data[i+2] & 0xff) << 16) | (data[i+3] << 24);
+            int k1 = (data[i] & 0xff) | ((data[i + 1] & 0xff) << 8) | ((data[i + 2] & 0xff) << 16) | (data[i + 3] << 24);
             k1 *= c1;
             k1 = (k1 << 15) | (k1 >>> 17);  // ROTL32(k1,15);
             k1 *= c2;
 
             h1 ^= k1;
             h1 = (h1 << 13) | (h1 >>> 19);  // ROTL32(h1,13);
-            h1 = h1*5+0xe6546b64;
+            h1 = h1 * 5 + 0xe6546b64;
         }
 
         // tail
         int k1 = 0;
 
-        switch(len & 0x03) {
+        switch (len & 0x03) {
             case 3:
                 k1 = (data[roundedEnd + 2] & 0xff) << 16;
                 // fallthrough
@@ -87,10 +88,10 @@ public final class MurmurHash3 {
     /**
      * This is more than 2x faster than hashing the result of String.getBytes().
      *
-     * @param data the origin data
+     * @param data   the origin data
      * @param offset the offset into the data array
-     * @param len the length of the data array to use
-     * @param seed the murmur hash seed
+     * @param len    the length of the data array to use
+     * @param seed   the murmur hash seed
      * @return the MurmurHash3_x86_32 hash of the UTF-8 bytes of the String without actually encoding
      * the string to a temporary buffer
      */
@@ -139,17 +140,15 @@ public final class MurmurHash3 {
                  continue;
                  ***/
 
-            }
-            else if (code < 0x800) {
+            } else if (code < 0x800) {
                 k2 = (0xC0 | (code >> 6))
-                     | ((0x80 | (code & 0x3F)) << 8);
+                    | ((0x80 | (code & 0x3F)) << 8);
                 bits = 16;
-            }
-            else if (code < 0xD800 || code > 0xDFFF || pos>=end) {
+            } else if (code < 0xD800 || code > 0xDFFF || pos >= end) {
                 // we check for pos>=end to encode an unpaired surrogate as 3 bytes.
                 k2 = (0xE0 | (code >> 12))
-                     | ((0x80 | ((code >> 6) & 0x3F)) << 8)
-                     | ((0x80 | (code & 0x3F)) << 16);
+                    | ((0x80 | ((code >> 6) & 0x3F)) << 8)
+                    | ((0x80 | (code & 0x3F)) << 16);
                 bits = 24;
             } else {
                 // surrogate pair
@@ -157,9 +156,9 @@ public final class MurmurHash3 {
                 int utf32 = (int) data.charAt(pos++);
                 utf32 = ((code - 0xD7C0) << 10) + (utf32 & 0x3FF);
                 k2 = (0xff & (0xF0 | (utf32 >> 18)))
-                     | ((0x80 | ((utf32 >> 12) & 0x3F))) << 8
-                     | ((0x80 | ((utf32 >> 6) & 0x3F))) << 16
-                     |  (0x80 | (utf32 & 0x3F)) << 24;
+                    | ((0x80 | ((utf32 >> 12) & 0x3F))) << 8
+                    | ((0x80 | ((utf32 >> 6) & 0x3F))) << 16
+                    | (0x80 | (utf32 & 0x3F)) << 24;
                 bits = 32;
             }
 
@@ -179,12 +178,12 @@ public final class MurmurHash3 {
 
                 h1 ^= k1;
                 h1 = (h1 << 13) | (h1 >>> 19);  // ROTL32(h1,13);
-                h1 = h1*5+0xe6546b64;
+                h1 = h1 * 5 + 0xe6546b64;
 
                 shift -= 32;
                 // unfortunately, java won't let you shift 32 bits off, so we need to check for 0
                 if (shift != 0) {
-                    k1 = k2 >>> (bits-shift);   // bits used == bits - newshift
+                    k1 = k2 >>> (bits - shift);   // bits used == bits - newshift
                 } else {
                     k1 = 0;
                 }

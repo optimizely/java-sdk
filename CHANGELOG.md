@@ -1,5 +1,12 @@
 # Optimizely Java X SDK Changelog
 
+## 2.1.4
+
+December 6th, 2018
+
+### Bug Fixes
+* fix/wrap in try catch for getting build version in static init which might crash ([#241](https://github.com/optimizely/java-sdk/pull/241))
+
 ## 3.0.0-RC2
 
 November 20th, 2018

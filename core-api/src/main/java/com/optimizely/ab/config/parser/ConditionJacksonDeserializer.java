@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018, Optimizely and contributors
+ *    Copyright 2018-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
     private ObjectMapper objectMapper;
 
@@ -71,7 +72,7 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
         return null;
     }
 
-    protected static <T> Condition parseCondition(Class<T> clazz, ObjectMapper objectMapper,JsonNode conditionNode)
+    protected static <T> Condition parseCondition(Class<T> clazz, ObjectMapper objectMapper, JsonNode conditionNode)
         throws JsonProcessingException, InvalidAudienceCondition {
 
         if (conditionNode.isArray()) {
@@ -82,8 +83,7 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
 
             }
             return objectMapper.treeToValue(conditionNode, AudienceIdCondition.class);
-        }
-        else if (conditionNode.isObject()) {
+        } else if (conditionNode.isObject()) {
             if (clazz != UserAttribute.class) {
                 throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
 
@@ -93,6 +93,7 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
 
         return null;
     }
+
     protected static <T> Condition parseConditions(Class<T> clazz, ObjectMapper objectMapper, JsonNode conditionNode)
         throws JsonProcessingException, InvalidAudienceCondition {
 
@@ -106,8 +107,7 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
         String operand = operand(opNode);
         if (operand == null) {
             operand = "or";
-        }
-        else { // the operand is valid so move to the next node.
+        } else { // the operand is valid so move to the next node.
             startingParsingIndex = 1;
         }
 

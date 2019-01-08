@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -24,5 +24,6 @@ import com.optimizely.ab.OptimizelyRuntimeException;
 public class NoOpErrorHandler implements ErrorHandler {
 
     @Override
-    public <T extends OptimizelyRuntimeException> void handleError(T exception) {}
+    public <T extends OptimizelyRuntimeException> void handleError(T exception) {
+    }
 }
