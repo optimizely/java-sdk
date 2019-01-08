@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -67,7 +67,8 @@ public class UserAttribute<T> implements Condition<T> {
         return value;
     }
 
-    public @Nullable Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    @Nullable
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
         if (attributes == null) {
             attributes = Collections.emptyMap();
         }
@@ -81,9 +82,8 @@ public class UserAttribute<T> implements Condition<T> {
         // check user attribute value is equal
         try {
             return MatchType.getMatchType(match, value).getMatcher().eval(userAttributeValue);
-        }
-        catch (NullPointerException np) {
-            MatchType.logger.error(String.format("attribute or value null for match %s", match != null ? match : "legacy condition"),np);
+        } catch (NullPointerException np) {
+            MatchType.logger.error(String.format("attribute or value null for match %s", match != null ? match : "legacy condition"), np);
             return null;
         }
     }
@@ -99,10 +99,10 @@ public class UserAttribute<T> implements Condition<T> {
             valueStr = value.toString();
         }
         return "{name='" + name + "\'" +
-               ", type='" + type + "\'" +
-               ", match='" + match + "\'" +
-               ", value=" + valueStr +
-               "}";
+            ", type='" + type + "\'" +
+            ", match='" + match + "\'" +
+            ", value=" + valueStr +
+            "}";
     }
 
     @Override

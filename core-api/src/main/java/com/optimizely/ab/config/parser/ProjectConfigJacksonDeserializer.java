@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -77,21 +77,21 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
         }
 
         return new ProjectConfig(
-                accountId,
-                anonymizeIP,
-                botFiltering,
-                projectId,
-                revision,
-                version,
-                attributes,
-                audiences,
-                (List<Audience>)(List<? extends Audience>)typedAudiences,
-                events,
-                experiments,
-                featureFlags,
-                groups,
-                liveVariables,
-                rollouts
+            accountId,
+            anonymizeIP,
+            botFiltering,
+            projectId,
+            revision,
+            version,
+            attributes,
+            audiences,
+            (List<Audience>) (List<? extends Audience>) typedAudiences,
+            events,
+            experiments,
+            featureFlags,
+            groups,
+            liveVariables,
+            rollouts
         );
     }
 

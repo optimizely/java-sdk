@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -50,35 +50,36 @@ import static org.junit.Assert.assertThat;
 public final class ProjectConfigTestUtils {
 
     private static final ProjectConfig VALID_PROJECT_CONFIG_V2 = generateValidProjectConfigV2();
+
     private static ProjectConfig generateValidProjectConfigV2() {
         List<Experiment> experiments = asList(
             new Experiment("223", "etag1", "Running", "1",
-                           singletonList("100"),
-                           null,
-                           asList(new Variation("276", "vtag1"),
-                                  new Variation("277", "vtag2")),
-                           Collections.singletonMap("testUser1", "vtag1"),
-                           asList(new TrafficAllocation("276", 3500),
-                                  new TrafficAllocation("277", 9000)),
-                           ""),
+                singletonList("100"),
+                null,
+                asList(new Variation("276", "vtag1"),
+                    new Variation("277", "vtag2")),
+                Collections.singletonMap("testUser1", "vtag1"),
+                asList(new TrafficAllocation("276", 3500),
+                    new TrafficAllocation("277", 9000)),
+                ""),
             new Experiment("118", "etag2", "Not started", "2",
-                           singletonList("100"),
-                 null,
-                           asList(new Variation("278", "vtag3"),
-                                  new Variation("279", "vtag4")),
-                           Collections.singletonMap("testUser3", "vtag3"),
-                           asList(new TrafficAllocation("278", 4500),
-                                  new TrafficAllocation("279", 9000)),
-                           ""),
+                singletonList("100"),
+                null,
+                asList(new Variation("278", "vtag3"),
+                    new Variation("279", "vtag4")),
+                Collections.singletonMap("testUser3", "vtag3"),
+                asList(new TrafficAllocation("278", 4500),
+                    new TrafficAllocation("279", 9000)),
+                ""),
             new Experiment("119", "etag3", "Not started", null,
-                           singletonList("100"),
-                 null,
-                           asList(new Variation("280", "vtag5"),
-                                  new Variation("281", "vtag6")),
-                           Collections.singletonMap("testUser4", "vtag5"),
-                           asList(new TrafficAllocation("280", 4500),
-                                  new TrafficAllocation("281", 9000)),
-                           "")
+                singletonList("100"),
+                null,
+                asList(new Variation("280", "vtag5"),
+                    new Variation("281", "vtag6")),
+                Collections.singletonMap("testUser4", "vtag5"),
+                asList(new TrafficAllocation("280", 4500),
+                    new TrafficAllocation("281", 9000)),
+                "")
         );
 
         List<Attribute> attributes = singletonList(new Attribute("134", "browser_type"));
@@ -86,9 +87,9 @@ public final class ProjectConfigTestUtils {
         List<String> singleExperimentId = singletonList("223");
         List<String> multipleExperimentIds = asList("118", "223");
         List<EventType> events = asList(new EventType("971", "clicked_cart", singleExperimentId),
-                                        new EventType("098", "Total Revenue", singleExperimentId),
-                                        new EventType("099", "clicked_purchase", multipleExperimentIds),
-                                        new EventType("100", "no_running_experiments", singletonList("118")));
+            new EventType("098", "Total Revenue", singleExperimentId),
+            new EventType("099", "clicked_purchase", multipleExperimentIds),
+            new EventType("100", "no_running_experiments", singletonList("118")));
 
         List<Condition> userAttributes = new ArrayList<Condition>();
         userAttributes.add(new UserAttribute("browser_type", "custom_attribute", null, "firefox"));
@@ -113,51 +114,52 @@ public final class ProjectConfigTestUtils {
 
         List<Experiment> randomGroupExperiments = asList(
             new Experiment("301", "group_etag2", "Running", "3",
-                           singletonList("100"),
-                           null,
-                           asList(new Variation("282", "e2_vtag1"),
-                                  new Variation("283", "e2_vtag2")),
-                           Collections.<String, String>emptyMap(),
-                           asList(new TrafficAllocation("282", 5000),
-                                  new TrafficAllocation("283", 10000)),
-                           "42"),
+                singletonList("100"),
+                null,
+                asList(new Variation("282", "e2_vtag1"),
+                    new Variation("283", "e2_vtag2")),
+                Collections.<String, String>emptyMap(),
+                asList(new TrafficAllocation("282", 5000),
+                    new TrafficAllocation("283", 10000)),
+                "42"),
             new Experiment("300", "group_etag1", "Running", "4",
-                           singletonList("100"),
-                           null,
-                           asList(new Variation("280", "e1_vtag1"),
-                                  new Variation("281", "e1_vtag2")),
-                           userIdToVariationKeyMap,
-                           asList(new TrafficAllocation("280", 3000),
-                                  new TrafficAllocation("281", 10000)),
-                           "42")
+                singletonList("100"),
+                null,
+                asList(new Variation("280", "e1_vtag1"),
+                    new Variation("281", "e1_vtag2")),
+                userIdToVariationKeyMap,
+                asList(new TrafficAllocation("280", 3000),
+                    new TrafficAllocation("281", 10000)),
+                "42")
         );
 
         List<Experiment> overlappingGroupExperiments = asList(
             new Experiment("302", "overlapping_etag1", "Running", "5",
-                           singletonList("100"),
-                           null,
-                           asList(new Variation("284", "e1_vtag1"),
-                                  new Variation("285", "e1_vtag2")),
-                           userIdToVariationKeyMap,
-                           asList(new TrafficAllocation("284", 1500),
-                                  new TrafficAllocation("285", 3000)),
-                           "43")
+                singletonList("100"),
+                null,
+                asList(new Variation("284", "e1_vtag1"),
+                    new Variation("285", "e1_vtag2")),
+                userIdToVariationKeyMap,
+                asList(new TrafficAllocation("284", 1500),
+                    new TrafficAllocation("285", 3000)),
+                "43")
         );
 
         Group randomPolicyGroup = new Group("42", "random",
-                                            randomGroupExperiments,
-                                            asList(new TrafficAllocation("300", 3000),
-                                                   new TrafficAllocation("301", 9000),
-                                                   new TrafficAllocation("", 10000)));
+            randomGroupExperiments,
+            asList(new TrafficAllocation("300", 3000),
+                new TrafficAllocation("301", 9000),
+                new TrafficAllocation("", 10000)));
         Group overlappingPolicyGroup = new Group("43", "overlapping",
-                                                 overlappingGroupExperiments,
-                                                 Collections.<TrafficAllocation>emptyList());
+            overlappingGroupExperiments,
+            Collections.<TrafficAllocation>emptyList());
         List<Group> groups = asList(randomPolicyGroup, overlappingPolicyGroup);
 
         return new ProjectConfig("789", "1234", "2", "42", groups, experiments, attributes, events, audiences);
     }
 
     private static final ProjectConfig NO_AUDIENCE_PROJECT_CONFIG_V2 = generateNoAudienceProjectConfigV2();
+
     private static ProjectConfig generateNoAudienceProjectConfigV2() {
         Map<String, String> userIdToVariationKeyMap = new HashMap<String, String>();
         userIdToVariationKeyMap.put("testUser1", "vtag1");
@@ -165,32 +167,32 @@ public final class ProjectConfigTestUtils {
 
         List<Experiment> experiments = asList(
             new Experiment("223", "etag1", "Running", "1",
-                           Collections.<String>emptyList(),
-                           null,
-                           asList(new Variation("276", "vtag1"),
-                                  new Variation("277", "vtag2")),
-                           userIdToVariationKeyMap,
-                           asList(new TrafficAllocation("276", 3500),
-                                  new TrafficAllocation("277", 9000)),
-                           ""),
+                Collections.<String>emptyList(),
+                null,
+                asList(new Variation("276", "vtag1"),
+                    new Variation("277", "vtag2")),
+                userIdToVariationKeyMap,
+                asList(new TrafficAllocation("276", 3500),
+                    new TrafficAllocation("277", 9000)),
+                ""),
             new Experiment("118", "etag2", "Not started", "2",
-                           Collections.<String>emptyList(),
-                           null,
-                           asList(new Variation("278", "vtag3"),
-                                  new Variation("279", "vtag4")),
-                           Collections.<String, String>emptyMap(),
-                           asList(new TrafficAllocation("278", 4500),
-                                  new TrafficAllocation("279", 9000)),
-                           ""),
+                Collections.<String>emptyList(),
+                null,
+                asList(new Variation("278", "vtag3"),
+                    new Variation("279", "vtag4")),
+                Collections.<String, String>emptyMap(),
+                asList(new TrafficAllocation("278", 4500),
+                    new TrafficAllocation("279", 9000)),
+                ""),
             new Experiment("119", "etag3", "Launched", "3",
-                           Collections.<String>emptyList(),
-                           null,
-                           asList(new Variation("280", "vtag5"),
-                                  new Variation("281", "vtag6")),
-                           Collections.<String, String>emptyMap(),
-                           asList(new TrafficAllocation("280", 5000),
-                                  new TrafficAllocation("281", 10000)),
-                           "")
+                Collections.<String>emptyList(),
+                null,
+                asList(new Variation("280", "vtag5"),
+                    new Variation("281", "vtag6")),
+                Collections.<String, String>emptyMap(),
+                asList(new TrafficAllocation("280", 5000),
+                    new TrafficAllocation("281", 10000)),
+                "")
         );
 
         List<Attribute> attributes = singletonList(new Attribute("134", "browser_type"));
@@ -198,18 +200,19 @@ public final class ProjectConfigTestUtils {
         List<String> singleExperimentId = singletonList("223");
         List<String> multipleExperimentIds = asList("118", "223");
         List<EventType> events = asList(
-                new EventType("971", "clicked_cart", singleExperimentId),
-                new EventType("098", "Total Revenue", singleExperimentId),
-                new EventType("099", "clicked_purchase", multipleExperimentIds),
-                new EventType("100", "launched_exp_event", singletonList("119")),
-                new EventType("101", "event_with_launched_and_running_experiments", Arrays.asList("119", "223"))
+            new EventType("971", "clicked_cart", singleExperimentId),
+            new EventType("098", "Total Revenue", singleExperimentId),
+            new EventType("099", "clicked_purchase", multipleExperimentIds),
+            new EventType("100", "launched_exp_event", singletonList("119")),
+            new EventType("101", "event_with_launched_and_running_experiments", Arrays.asList("119", "223"))
         );
 
         return new ProjectConfig("789", "1234", "2", "42", Collections.<Group>emptyList(), experiments, attributes,
-                                 events, Collections.<Audience>emptyList());
+            events, Collections.<Audience>emptyList());
     }
 
     private static final ProjectConfig VALID_PROJECT_CONFIG_V3 = generateValidProjectConfigV3();
+
     private static ProjectConfig generateValidProjectConfigV3() {
         List<LiveVariableUsageInstance> variationVtag1VariableUsageInstances = asList(
             new LiveVariableUsageInstance("6", "True"),
@@ -227,23 +230,23 @@ public final class ProjectConfigTestUtils {
 
         List<Experiment> experiments = asList(
             new Experiment("223", "etag1", "Running", "1",
-                           singletonList("100"),
-                           null,
-                           asList(new Variation("276", "vtag1", variationVtag1VariableUsageInstances),
-                                  new Variation("277", "vtag2", variationVtag2VariableUsageInstances)),
-                           Collections.singletonMap("testUser1", "vtag1"),
-                           asList(new TrafficAllocation("276", 3500),
-                                  new TrafficAllocation("277", 9000)),
-                           ""),
+                singletonList("100"),
+                null,
+                asList(new Variation("276", "vtag1", variationVtag1VariableUsageInstances),
+                    new Variation("277", "vtag2", variationVtag2VariableUsageInstances)),
+                Collections.singletonMap("testUser1", "vtag1"),
+                asList(new TrafficAllocation("276", 3500),
+                    new TrafficAllocation("277", 9000)),
+                ""),
             new Experiment("118", "etag2", "Not started", "2",
-                           singletonList("100"),
-                           null,
-                           asList(new Variation("278", "vtag3", Collections.<LiveVariableUsageInstance>emptyList()),
-                                  new Variation("279", "vtag4", Collections.<LiveVariableUsageInstance>emptyList())),
-                           Collections.singletonMap("testUser3", "vtag3"),
-                           asList(new TrafficAllocation("278", 4500),
-                                  new TrafficAllocation("279", 9000)),
-                           "")
+                singletonList("100"),
+                null,
+                asList(new Variation("278", "vtag3", Collections.<LiveVariableUsageInstance>emptyList()),
+                    new Variation("279", "vtag4", Collections.<LiveVariableUsageInstance>emptyList())),
+                Collections.singletonMap("testUser3", "vtag3"),
+                asList(new TrafficAllocation("278", 4500),
+                    new TrafficAllocation("279", 9000)),
+                "")
         );
 
         List<Attribute> attributes = singletonList(new Attribute("134", "browser_type"));
@@ -251,9 +254,9 @@ public final class ProjectConfigTestUtils {
         List<String> singleExperimentId = singletonList("223");
         List<String> multipleExperimentIds = asList("118", "223");
         List<EventType> events = asList(new EventType("971", "clicked_cart", singleExperimentId),
-                                        new EventType("098", "Total Revenue", singleExperimentId),
-                                        new EventType("099", "clicked_purchase", multipleExperimentIds),
-                                        new EventType("100", "no_running_experiments", singletonList("118")));
+            new EventType("098", "Total Revenue", singleExperimentId),
+            new EventType("099", "clicked_purchase", multipleExperimentIds),
+            new EventType("100", "no_running_experiments", singletonList("118")));
 
         List<Condition> userAttributes = new ArrayList<Condition>();
         userAttributes.add(new UserAttribute("browser_type", "custom_attribute", null, "firefox"));
@@ -278,106 +281,107 @@ public final class ProjectConfigTestUtils {
 
         List<Experiment> randomGroupExperiments = asList(
             new Experiment("301", "group_etag2", "Running", "3",
-                           singletonList("100"),
-                           null,
-                           asList(new Variation("282", "e2_vtag1", Collections.<LiveVariableUsageInstance>emptyList()),
-                                  new Variation("283", "e2_vtag2", Collections.<LiveVariableUsageInstance>emptyList())),
-                           Collections.<String, String>emptyMap(),
-                           asList(new TrafficAllocation("282", 5000),
-                                  new TrafficAllocation("283", 10000)),
-                           "42"),
+                singletonList("100"),
+                null,
+                asList(new Variation("282", "e2_vtag1", Collections.<LiveVariableUsageInstance>emptyList()),
+                    new Variation("283", "e2_vtag2", Collections.<LiveVariableUsageInstance>emptyList())),
+                Collections.<String, String>emptyMap(),
+                asList(new TrafficAllocation("282", 5000),
+                    new TrafficAllocation("283", 10000)),
+                "42"),
             new Experiment("300", "group_etag1", "Running", "4",
-                           singletonList("100"),
-                           null,
-                           asList(new Variation("280", "e1_vtag1",
-                                                Collections.singletonList(new LiveVariableUsageInstance("7", "True"))),
-                                  new Variation("281", "e1_vtag2",
-                                                Collections.singletonList(new LiveVariableUsageInstance("7", "False")))),
-                           userIdToVariationKeyMap,
-                           asList(new TrafficAllocation("280", 3000),
-                                  new TrafficAllocation("281", 10000)),
-                           "42")
+                singletonList("100"),
+                null,
+                asList(new Variation("280", "e1_vtag1",
+                        Collections.singletonList(new LiveVariableUsageInstance("7", "True"))),
+                    new Variation("281", "e1_vtag2",
+                        Collections.singletonList(new LiveVariableUsageInstance("7", "False")))),
+                userIdToVariationKeyMap,
+                asList(new TrafficAllocation("280", 3000),
+                    new TrafficAllocation("281", 10000)),
+                "42")
         );
 
         List<Experiment> overlappingGroupExperiments = asList(
             new Experiment("302", "overlapping_etag1", "Running", "5",
-                           singletonList("100"),
-                           null,
-                           asList(new Variation("284", "e1_vtag1", Collections.<LiveVariableUsageInstance>emptyList()),
-                                  new Variation("285", "e1_vtag2", Collections.<LiveVariableUsageInstance>emptyList())),
-                           userIdToVariationKeyMap,
-                           asList(new TrafficAllocation("284", 1500),
-                                  new TrafficAllocation("285", 3000)),
-                           "43")
+                singletonList("100"),
+                null,
+                asList(new Variation("284", "e1_vtag1", Collections.<LiveVariableUsageInstance>emptyList()),
+                    new Variation("285", "e1_vtag2", Collections.<LiveVariableUsageInstance>emptyList())),
+                userIdToVariationKeyMap,
+                asList(new TrafficAllocation("284", 1500),
+                    new TrafficAllocation("285", 3000)),
+                "43")
         );
 
         Group randomPolicyGroup = new Group("42", "random",
-                                            randomGroupExperiments,
-                                            asList(new TrafficAllocation("300", 3000),
-                                                   new TrafficAllocation("301", 9000),
-                                                   new TrafficAllocation("", 10000)));
+            randomGroupExperiments,
+            asList(new TrafficAllocation("300", 3000),
+                new TrafficAllocation("301", 9000),
+                new TrafficAllocation("", 10000)));
         Group overlappingPolicyGroup = new Group("43", "overlapping",
-                                                 overlappingGroupExperiments,
-                                                 Collections.<TrafficAllocation>emptyList());
+            overlappingGroupExperiments,
+            Collections.<TrafficAllocation>emptyList());
         List<Group> groups = asList(randomPolicyGroup, overlappingPolicyGroup);
 
         List<LiveVariable> liveVariables = asList(
             new LiveVariable("1", "boolean_variable", "False", LiveVariable.VariableStatus.ACTIVE,
-                             LiveVariable.VariableType.BOOLEAN),
+                LiveVariable.VariableType.BOOLEAN),
             new LiveVariable("2", "integer_variable", "5", LiveVariable.VariableStatus.ACTIVE,
-                             LiveVariable.VariableType.INTEGER),
+                LiveVariable.VariableType.INTEGER),
             new LiveVariable("3", "string_variable", "string_live_variable", LiveVariable.VariableStatus.ACTIVE,
-                             LiveVariable.VariableType.STRING),
+                LiveVariable.VariableType.STRING),
             new LiveVariable("4", "double_variable", "13.37", LiveVariable.VariableStatus.ACTIVE,
-                             LiveVariable.VariableType.DOUBLE),
+                LiveVariable.VariableType.DOUBLE),
             new LiveVariable("5", "archived_variable", "True", LiveVariable.VariableStatus.ARCHIVED,
-                             LiveVariable.VariableType.BOOLEAN),
+                LiveVariable.VariableType.BOOLEAN),
             new LiveVariable("6", "etag1_variable", "False", LiveVariable.VariableStatus.ACTIVE,
-                             LiveVariable.VariableType.BOOLEAN),
+                LiveVariable.VariableType.BOOLEAN),
             new LiveVariable("7", "group_etag1_variable", "False", LiveVariable.VariableStatus.ACTIVE,
-                             LiveVariable.VariableType.BOOLEAN),
+                LiveVariable.VariableType.BOOLEAN),
             new LiveVariable("8", "unused_string_variable", "unused_variable", LiveVariable.VariableStatus.ACTIVE,
-                             LiveVariable.VariableType.STRING)
+                LiveVariable.VariableType.STRING)
         );
 
         return new ProjectConfig("789", "1234", "3", "42", groups, experiments, attributes, events, audiences,
-                                 true, liveVariables);
+            true, liveVariables);
     }
 
     private static final ProjectConfig NO_AUDIENCE_PROJECT_CONFIG_V3 = generateNoAudienceProjectConfigV3();
+
     private static ProjectConfig generateNoAudienceProjectConfigV3() {
         Map<String, String> userIdToVariationKeyMap = new HashMap<String, String>();
         userIdToVariationKeyMap.put("testUser1", "vtag1");
         userIdToVariationKeyMap.put("testUser2", "vtag2");
 
         List<Experiment> experiments = asList(
-                new Experiment("223", "etag1", "Running", "1",
-                        Collections.<String>emptyList(),
-                        null,
-                        asList(new Variation("276", "vtag1", Collections.<LiveVariableUsageInstance>emptyList()),
-                                new Variation("277", "vtag2", Collections.<LiveVariableUsageInstance>emptyList())),
-                        userIdToVariationKeyMap,
-                        asList(new TrafficAllocation("276", 3500),
-                                new TrafficAllocation("277", 9000)),
-                        ""),
-                new Experiment("118", "etag2", "Not started", "2",
-                        Collections.<String>emptyList(),
-                        null,
-                        asList(new Variation("278", "vtag3", Collections.<LiveVariableUsageInstance>emptyList()),
-                                new Variation("279", "vtag4", Collections.<LiveVariableUsageInstance>emptyList())),
-                        Collections.<String, String>emptyMap(),
-                        asList(new TrafficAllocation("278", 4500),
-                                new TrafficAllocation("279", 9000)),
-                        ""),
-                new Experiment("119", "etag3", "Launched", "3",
-                        Collections.<String>emptyList(),
-                        null,
-                        asList(new Variation("280", "vtag5"),
-                                new Variation("281", "vtag6")),
-                        Collections.<String, String>emptyMap(),
-                        asList(new TrafficAllocation("280", 5000),
-                                new TrafficAllocation("281", 10000)),
-                        "")
+            new Experiment("223", "etag1", "Running", "1",
+                Collections.<String>emptyList(),
+                null,
+                asList(new Variation("276", "vtag1", Collections.<LiveVariableUsageInstance>emptyList()),
+                    new Variation("277", "vtag2", Collections.<LiveVariableUsageInstance>emptyList())),
+                userIdToVariationKeyMap,
+                asList(new TrafficAllocation("276", 3500),
+                    new TrafficAllocation("277", 9000)),
+                ""),
+            new Experiment("118", "etag2", "Not started", "2",
+                Collections.<String>emptyList(),
+                null,
+                asList(new Variation("278", "vtag3", Collections.<LiveVariableUsageInstance>emptyList()),
+                    new Variation("279", "vtag4", Collections.<LiveVariableUsageInstance>emptyList())),
+                Collections.<String, String>emptyMap(),
+                asList(new TrafficAllocation("278", 4500),
+                    new TrafficAllocation("279", 9000)),
+                ""),
+            new Experiment("119", "etag3", "Launched", "3",
+                Collections.<String>emptyList(),
+                null,
+                asList(new Variation("280", "vtag5"),
+                    new Variation("281", "vtag6")),
+                Collections.<String, String>emptyMap(),
+                asList(new TrafficAllocation("280", 5000),
+                    new TrafficAllocation("281", 10000)),
+                "")
         );
 
         List<Attribute> attributes = singletonList(new Attribute("134", "browser_type"));
@@ -385,23 +389,25 @@ public final class ProjectConfigTestUtils {
         List<String> singleExperimentId = singletonList("223");
         List<String> multipleExperimentIds = asList("118", "223");
         List<EventType> events = asList(
-                new EventType("971", "clicked_cart", singleExperimentId),
-                new EventType("098", "Total Revenue", singleExperimentId),
-                new EventType("099", "clicked_purchase", multipleExperimentIds),
-                new EventType("100", "launched_exp_event", singletonList("119")),
-                new EventType("101", "event_with_launched_and_running_experiments", Arrays.asList("119", "223"))
+            new EventType("971", "clicked_cart", singleExperimentId),
+            new EventType("098", "Total Revenue", singleExperimentId),
+            new EventType("099", "clicked_purchase", multipleExperimentIds),
+            new EventType("100", "launched_exp_event", singletonList("119")),
+            new EventType("101", "event_with_launched_and_running_experiments", Arrays.asList("119", "223"))
         );
 
         return new ProjectConfig("789", "1234", "3", "42", Collections.<Group>emptyList(), experiments, attributes,
-                                 events, Collections.<Audience>emptyList(), true, Collections.<LiveVariable>emptyList());
+            events, Collections.<Audience>emptyList(), true, Collections.<LiveVariable>emptyList());
     }
 
     private static final ProjectConfig VALID_PROJECT_CONFIG_V4 = generateValidProjectConfigV4();
+
     private static ProjectConfig generateValidProjectConfigV4() {
         return ValidProjectConfigV4.generateValidProjectConfigV4();
     }
 
-    private ProjectConfigTestUtils() { }
+    private ProjectConfigTestUtils() {
+    }
 
     public static String validConfigJsonV2() throws IOException {
         return Resources.toString(Resources.getResource("config/valid-project-config-v2.json"), Charsets.UTF_8);
@@ -502,17 +508,17 @@ public final class ProjectConfigTestUtils {
             assertThat(actualExperiment.getAudienceIds(), is(expectedExperiment.getAudienceIds()));
             assertThat(actualExperiment.getAudienceConditions(), is(expectedExperiment.getAudienceConditions()));
             assertThat(actualExperiment.getUserIdToVariationKeyMap(),
-                       is(expectedExperiment.getUserIdToVariationKeyMap()));
+                is(expectedExperiment.getUserIdToVariationKeyMap()));
 
             verifyVariations(actualExperiment.getVariations(), expectedExperiment.getVariations());
             verifyTrafficAllocations(actualExperiment.getTrafficAllocation(),
-                                     expectedExperiment.getTrafficAllocation());
+                expectedExperiment.getTrafficAllocation());
         }
     }
 
     private static void verifyFeatureFlags(List<FeatureFlag> actual, List<FeatureFlag> expected) {
         assertEquals(expected.size(), actual.size());
-        for (int i = 0; i < actual.size(); i ++) {
+        for (int i = 0; i < actual.size(); i++) {
             FeatureFlag actualFeatureFlag = actual.get(i);
             FeatureFlag expectedFeatureFlag = expected.get(i);
 
@@ -533,7 +539,7 @@ public final class ProjectConfigTestUtils {
             assertThat(actualVariation.getId(), is(expectedVariation.getId()));
             assertThat(actualVariation.getKey(), is(expectedVariation.getKey()));
             verifyLiveVariableInstances(actualVariation.getLiveVariableUsageInstances(),
-                                        expectedVariation.getLiveVariableUsageInstances());
+                expectedVariation.getLiveVariableUsageInstances());
         }
     }
 
@@ -541,7 +547,7 @@ public final class ProjectConfigTestUtils {
      * Asserts that the provided traffic allocation configs are equivalent.
      */
     private static void verifyTrafficAllocations(List<TrafficAllocation> actual,
-                                          List<TrafficAllocation> expected) {
+                                                 List<TrafficAllocation> expected) {
         assertThat(actual.size(), is(expected.size()));
 
         for (int i = 0; i < actual.size(); i++) {
@@ -550,8 +556,8 @@ public final class ProjectConfigTestUtils {
 
             assertThat(actualDistribution.getEntityId(), is(expectedDistribution.getEntityId()));
             assertEquals("expectedDistribution: " + expectedDistribution.toString() +
-                            "is not equal to the actualDistribution: " + actualDistribution.toString(),
-                    expectedDistribution.getEndOfRange(), actualDistribution.getEndOfRange());
+                    "is not equal to the actualDistribution: " + actualDistribution.toString(),
+                expectedDistribution.getEndOfRange(), actualDistribution.getEndOfRange());
         }
     }
 
@@ -646,8 +652,7 @@ public final class ProjectConfigTestUtils {
     private static void verifyRollouts(List<Rollout> actual, List<Rollout> expected) {
         if (expected == null) {
             assertNull(actual);
-        }
-        else {
+        } else {
             assertEquals(expected.size(), actual.size());
 
             for (int i = 0; i < actual.size(); i++) {
@@ -681,7 +686,7 @@ public final class ProjectConfigTestUtils {
         }
     }
 
-    public static <T> List<T> createListOfObjects(T ... elements) {
+    public static <T> List<T> createListOfObjects(T... elements) {
         ArrayList<T> list = new ArrayList<T>(elements.length);
         for (T element : elements) {
             list.add(element);
@@ -689,7 +694,7 @@ public final class ProjectConfigTestUtils {
         return list;
     }
 
-    public static <K, V> Map<K, V> createMapOfObjects(List<K>keys, List<V>values) {
+    public static <K, V> Map<K, V> createMapOfObjects(List<K> keys, List<V> values) {
         HashMap<K, V> map = new HashMap<K, V>(keys.size());
         if (keys.size() == values.size()) {
             Iterator<K> keysIterator = keys.iterator();

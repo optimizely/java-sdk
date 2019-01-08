@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,7 +28,8 @@ public final class DefaultConfigParser {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultConfigParser.class);
 
-    private DefaultConfigParser() { }
+    private DefaultConfigParser() {
+    }
 
     public static ConfigParser getInstance() {
         return LazyHolder.INSTANCE;
@@ -38,10 +39,12 @@ public final class DefaultConfigParser {
 
     /**
      * Creates and returns a {@link ConfigParser} using a json parser available on the classpath.
+     *
      * @return the created config parser
      * @throws MissingJsonParserException if there are no supported json parsers available on the classpath
      */
-    private static @Nonnull ConfigParser create() {
+    private static @Nonnull
+    ConfigParser create() {
         ConfigParser configParser;
 
         if (isPresent("com.fasterxml.jackson.databind.ObjectMapper")) {
@@ -54,7 +57,7 @@ public final class DefaultConfigParser {
             configParser = new JsonConfigParser();
         } else {
             throw new MissingJsonParserException("unable to locate a JSON parser. "
-                                                 + "Please see <link> for more information");
+                + "Please see <link> for more information");
         }
 
         logger.info("using json parser: {}", configParser.getClass().getSimpleName());

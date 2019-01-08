@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ public class BucketerTest {
         Bucketer algorithm = new Bucketer(validProjectConfigV2());
         int actual = algorithm.generateBucketValue(-1);
         assertTrue("generated bucket value is not in range: " + actual,
-                actual > 0 && actual < Bucketer.MAX_TRAFFIC_VALUE);
+            actual > 0 && actual < Bucketer.MAX_TRAFFIC_VALUE);
     }
 
     /**
@@ -126,7 +126,7 @@ public class BucketerTest {
         assertThat(algorithm.generateBucketValue(hashCode), is(5439));
 
         combinedBucketId = "a very very very very very very very very very very very very very very very long ppd " +
-                "string" + experimentId;
+            "string" + experimentId;
         hashCode = MurmurHash3.murmurhash3_x86_32(combinedBucketId, 0, combinedBucketId.length(), MURMUR_HASH_SEED);
         assertThat(algorithm.generateBucketValue(hashCode), is(6128));
     }
@@ -140,21 +140,21 @@ public class BucketerTest {
 
         // create an experiment with 4 variations using ranges: [0 -> 999, 1000 -> 4999, 5000 -> 5999, 6000 -> 9999]
         List<Variation> variations = Arrays.asList(
-                new Variation("1", "var1"),
-                new Variation("2", "var2"),
-                new Variation("3", "var3"),
-                new Variation("4", "var4")
+            new Variation("1", "var1"),
+            new Variation("2", "var2"),
+            new Variation("3", "var3"),
+            new Variation("4", "var4")
         );
 
         List<TrafficAllocation> trafficAllocations = Arrays.asList(
-                new TrafficAllocation("1", 1000),
-                new TrafficAllocation("2", 5000),
-                new TrafficAllocation("3", 6000),
-                new TrafficAllocation("4", 10000)
+            new TrafficAllocation("1", 1000),
+            new TrafficAllocation("2", 5000),
+            new TrafficAllocation("3", 6000),
+            new TrafficAllocation("4", 10000)
         );
 
         Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", audienceIds, null, variations,
-                Collections.<String, String>emptyMap(), trafficAllocations, "");
+            Collections.<String, String>emptyMap(), trafficAllocations, "");
 
         final AtomicInteger bucketValue = new AtomicInteger();
         Bucketer algorithm = mockBucketAlgorithm(bucketValue);
@@ -193,15 +193,15 @@ public class BucketerTest {
         List<String> audienceIds = Collections.emptyList();
 
         List<Variation> variations = Collections.singletonList(
-                new Variation("1", "var1")
+            new Variation("1", "var1")
         );
 
         List<TrafficAllocation> trafficAllocations = Collections.singletonList(
-                new TrafficAllocation("1", 999)
+            new TrafficAllocation("1", 999)
         );
 
         Experiment experiment = new Experiment("1234", "exp_key", "Running", "1", audienceIds, null, variations,
-                Collections.<String, String>emptyMap(), trafficAllocations, "");
+            Collections.<String, String>emptyMap(), trafficAllocations, "");
 
         final AtomicInteger bucketValue = new AtomicInteger();
         Bucketer algorithm = mockBucketAlgorithm(bucketValue);
@@ -238,11 +238,11 @@ public class BucketerTest {
         List<Experiment> groupExperiments = projectConfig.getGroups().get(0).getExperiments();
         Experiment groupExperiment = groupExperiments.get(0);
         logbackVerifier.expectMessage(Level.DEBUG,
-                "Assigned bucket 3000 to user with bucketingId \"blah\" during experiment bucketing.");
+            "Assigned bucket 3000 to user with bucketingId \"blah\" during experiment bucketing.");
         logbackVerifier.expectMessage(Level.INFO, "User with bucketingId \"blah\" is in experiment \"group_etag2\" of group 42.");
         logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 3000 to user with bucketingId \"blah\" when bucketing to a variation.");
         logbackVerifier.expectMessage(Level.INFO,
-                "User with bucketingId \"blah\" is in variation \"e2_vtag1\" of experiment \"group_etag2\".");
+            "User with bucketingId \"blah\" is in variation \"e2_vtag1\" of experiment \"group_etag2\".");
         assertThat(algorithm.bucket(groupExperiment, "blah"), is(groupExperiment.getVariations().get(0)));
     }
 
@@ -262,9 +262,9 @@ public class BucketerTest {
         // the user should be bucketed to a different experiment than the one provided, resulting in no variation being
         // returned.
         logbackVerifier.expectMessage(Level.DEBUG,
-                "Assigned bucket 3000 to user with bucketingId \"blah\" during experiment bucketing.");
+            "Assigned bucket 3000 to user with bucketingId \"blah\" during experiment bucketing.");
         logbackVerifier.expectMessage(Level.INFO,
-                "User with bucketingId \"blah\" is not in experiment \"group_etag1\" of group 42");
+            "User with bucketingId \"blah\" is not in experiment \"group_etag1\" of group 42");
         assertNull(algorithm.bucket(groupExperiment, "blah"));
     }
 
@@ -304,8 +304,8 @@ public class BucketerTest {
         Variation expectedVariation = groupExperiment.getVariations().get(0);
 
         logbackVerifier.expectMessage(
-                Level.INFO,
-                "User with bucketingId \"blah\" is in variation \"e1_vtag1\" of experiment \"overlapping_etag1\".");
+            Level.INFO,
+            "User with bucketingId \"blah\" is in variation \"e1_vtag1\" of experiment \"overlapping_etag1\".");
         assertThat(algorithm.bucket(groupExperiment, "blah"), is(expectedVariation));
     }
 
@@ -324,7 +324,7 @@ public class BucketerTest {
         Experiment groupExperiment = groupExperiments.get(0);
 
         logbackVerifier.expectMessage(Level.INFO,
-                "User with bucketingId \"blah\" is not in any variation of experiment \"overlapping_etag1\".");
+            "User with bucketingId \"blah\" is not in any variation of experiment \"overlapping_etag1\".");
 
         assertNull(algorithm.bucket(groupExperiment, "blah"));
     }
@@ -343,8 +343,8 @@ public class BucketerTest {
         Variation expectedVariation = groupExperiment.getVariations().get(0);
 
         logbackVerifier.expectMessage(
-                Level.INFO,
-                "User with bucketingId \"" + bucketingId + "\" is in variation \"e1_vtag1\" of experiment \"overlapping_etag1\".");
+            Level.INFO,
+            "User with bucketingId \"" + bucketingId + "\" is in variation \"e1_vtag1\" of experiment \"overlapping_etag1\".");
         assertThat(algorithm.bucket(groupExperiment, bucketingId), is(expectedVariation));
 
     }
@@ -362,8 +362,7 @@ public class BucketerTest {
 
         try {
             algorithm.bucket(groupExperiment, null);
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             assertNotNull(e);
         }
     }

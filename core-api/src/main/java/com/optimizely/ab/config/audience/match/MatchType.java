@@ -77,8 +77,8 @@ public class MatchType {
         this.matcher = matcher;
     }
 
-    public @Nonnull
-    Match getMatcher() {
+    @Nonnull
+    public Match getMatcher() {
         return matcher;
     }
 

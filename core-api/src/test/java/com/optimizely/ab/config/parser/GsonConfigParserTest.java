@@ -82,12 +82,13 @@ public class GsonConfigParserTest {
     public void parseAudience() throws Exception {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("id", "123");
-        jsonObject.addProperty("name","blah");
+        jsonObject.addProperty("name", "blah");
         jsonObject.addProperty("conditions",
             "[\"and\", [\"or\", [\"or\", {\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"exact\", \"value\":100.0}]]]");
 
         AudienceGsonDeserializer deserializer = new AudienceGsonDeserializer();
-        Type audienceType = new TypeToken<List<Audience>>() {}.getType();
+        Type audienceType = new TypeToken<List<Audience>>() {
+        }.getType();
 
         Audience audience = deserializer.deserialize(jsonObject, audienceType, null);
 
@@ -99,12 +100,13 @@ public class GsonConfigParserTest {
     public void parseAudienceLeaf() throws Exception {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("id", "123");
-        jsonObject.addProperty("name","blah");
+        jsonObject.addProperty("name", "blah");
         jsonObject.addProperty("conditions",
             "{\"name\": \"doubleKey\", \"type\": \"custom_attribute\", \"match\":\"exact\", \"value\":100.0}");
 
         AudienceGsonDeserializer deserializer = new AudienceGsonDeserializer();
-        Type audienceType = new TypeToken<List<Audience>>() {}.getType();
+        Type audienceType = new TypeToken<List<Audience>>() {
+        }.getType();
 
         Audience audience = deserializer.deserialize(jsonObject, audienceType, null);
 
@@ -116,10 +118,10 @@ public class GsonConfigParserTest {
     public void parseTypedAudienceLeaf() throws Exception {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("id", "123");
-        jsonObject.addProperty("name","blah");
+        jsonObject.addProperty("name", "blah");
 
         JsonObject userAttribute = new JsonObject();
-        userAttribute.addProperty("name","doubleKey");
+        userAttribute.addProperty("name", "doubleKey");
         userAttribute.addProperty("type", "custom_attribute");
         userAttribute.addProperty("match", "lt");
         userAttribute.addProperty("value", 100.0);
@@ -127,7 +129,8 @@ public class GsonConfigParserTest {
         jsonObject.add("conditions", userAttribute);
 
         AudienceGsonDeserializer deserializer = new AudienceGsonDeserializer();
-        Type audienceType = new TypeToken<List<TypedAudience>>() {}.getType();
+        Type audienceType = new TypeToken<List<TypedAudience>>() {
+        }.getType();
 
         Audience audience = deserializer.deserialize(jsonObject, audienceType, null);
 
@@ -140,12 +143,13 @@ public class GsonConfigParserTest {
         thrown.expect(InvalidAudienceCondition.class);
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("id", "123");
-        jsonObject.addProperty("name","blah");
+        jsonObject.addProperty("name", "blah");
         jsonObject.addProperty("conditions",
             "[\"and\", [\"or\", [\"or\", \"123\"]]]");
 
         AudienceGsonDeserializer deserializer = new AudienceGsonDeserializer();
-        Type audienceType = new TypeToken<List<Audience>>() {}.getType();
+        Type audienceType = new TypeToken<List<Audience>>() {
+        }.getType();
 
         Audience audience = deserializer.deserialize(jsonObject, audienceType, null);
 
@@ -241,7 +245,7 @@ public class GsonConfigParserTest {
      * Verify that null JSON results in a {@link ConfigParseException} being thrown.
      */
     @Test
-    @SuppressFBWarnings(value="NP_NONNULL_PARAM_VIOLATION", justification="Testing nullness contract violation")
+    @SuppressFBWarnings(value = "NP_NONNULL_PARAM_VIOLATION", justification = "Testing nullness contract violation")
     public void nullJsonExceptionWrapping() throws Exception {
         thrown.expect(ConfigParseException.class);
 

@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2017, Optimizely, Inc. and contributors                        *
+ * Copyright 2017, 2019, Optimizely, Inc. and contributors                        *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -24,11 +24,15 @@ import java.util.Map;
  */
 public class Decision {
 
-    /** The ID of the {@link com.optimizely.ab.config.Variation} the user was bucketed into. */
-    @Nonnull public String variationId;
+    /**
+     * The ID of the {@link com.optimizely.ab.config.Variation} the user was bucketed into.
+     */
+    @Nonnull
+    public String variationId;
 
     /**
      * Initialize a Decision object.
+     *
      * @param variationId The ID of the variation the user was bucketed into.
      */
     public Decision(@Nonnull String variationId) {

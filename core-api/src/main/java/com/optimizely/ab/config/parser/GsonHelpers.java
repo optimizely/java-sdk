@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ final class GsonHelpers {
     private static List<Variation> parseVariations(JsonArray variationJson, JsonDeserializationContext context) {
         List<Variation> variations = new ArrayList<Variation>(variationJson.size());
         for (Object obj : variationJson) {
-            JsonObject variationObject = (JsonObject)obj;
+            JsonObject variationObject = (JsonObject) obj;
             String id = variationObject.get("id").getAsString();
             String key = variationObject.get("key").getAsString();
             Boolean featureEnabled = false;
@@ -65,10 +65,11 @@ final class GsonHelpers {
             // this is an existence check rather than a version check since it's difficult to pass data
             // across deserializers.
             if (variationObject.has("variables")) {
-                Type liveVariableUsageInstancesType = new TypeToken<List<LiveVariableUsageInstance>>() {}.getType();
+                Type liveVariableUsageInstancesType = new TypeToken<List<LiveVariableUsageInstance>>() {
+                }.getType();
                 variableUsageInstances =
-                        context.deserialize(variationObject.getAsJsonArray("variables"),
-                                            liveVariableUsageInstancesType);
+                    context.deserialize(variationObject.getAsJsonArray("variables"),
+                        liveVariableUsageInstancesType);
             }
 
             variations.add(new Variation(id, key, featureEnabled, variableUsageInstances));
@@ -91,7 +92,7 @@ final class GsonHelpers {
         List<TrafficAllocation> trafficAllocation = new ArrayList<TrafficAllocation>(trafficAllocationJson.size());
 
         for (Object obj : trafficAllocationJson) {
-            JsonObject allocationObject = (JsonObject)obj;
+            JsonObject allocationObject = (JsonObject) obj;
             String entityId = allocationObject.get("entityId").getAsString();
             int endOfRange = allocationObject.get("endOfRange").getAsInt();
 
@@ -112,9 +113,8 @@ final class GsonHelpers {
         if (conditionsElement.isJsonArray()) {
             List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
             return ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, rawObjectList);
-        }
-        else {
-            Object jsonObject = gson.fromJson(conditionsElement,Object.class);
+        } else {
+            Object jsonObject = gson.fromJson(conditionsElement, Object.class);
             return ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, jsonObject);
         }
 
@@ -125,7 +125,7 @@ final class GsonHelpers {
         String key = experimentJson.get("key").getAsString();
         JsonElement experimentStatusJson = experimentJson.get("status");
         String status = experimentStatusJson.isJsonNull() ?
-                ExperimentStatus.NOT_STARTED.toString() : experimentStatusJson.getAsString();
+            ExperimentStatus.NOT_STARTED.toString() : experimentStatusJson.getAsString();
 
         JsonElement layerIdJson = experimentJson.get("layerId");
         String layerId = layerIdJson == null ? null : layerIdJson.getAsString();
@@ -141,12 +141,12 @@ final class GsonHelpers {
         // parse the child objects
         List<Variation> variations = parseVariations(experimentJson.getAsJsonArray("variations"), context);
         Map<String, String> userIdToVariationKeyMap =
-                parseForcedVariations(experimentJson.getAsJsonObject("forcedVariations"));
+            parseForcedVariations(experimentJson.getAsJsonObject("forcedVariations"));
         List<TrafficAllocation> trafficAllocations =
-                parseTrafficAllocation(experimentJson.getAsJsonArray("trafficAllocation"));
+            parseTrafficAllocation(experimentJson.getAsJsonArray("trafficAllocation"));
 
         return new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
-                              trafficAllocations, groupId);
+            trafficAllocations, groupId);
     }
 
     static Experiment parseExperiment(JsonObject experimentJson, JsonDeserializationContext context) {
@@ -166,21 +166,21 @@ final class GsonHelpers {
 
         List<LiveVariable> liveVariables = new ArrayList<LiveVariable>();
         try {
-            Type liveVariableType = new TypeToken<List<LiveVariable>>() {}.getType();
+            Type liveVariableType = new TypeToken<List<LiveVariable>>() {
+            }.getType();
             liveVariables = context.deserialize(featureFlagJson.getAsJsonArray("variables"),
-                    liveVariableType);
-        }
-        catch (JsonParseException exception) {
+                liveVariableType);
+        } catch (JsonParseException exception) {
             logger.warn("Unable to parse variables for feature \"" + key
-                    + "\". JsonParseException: " + exception);
+                + "\". JsonParseException: " + exception);
         }
 
         return new FeatureFlag(
-                id,
-                key,
-                layerId,
-                experimentIds,
-                liveVariables
+            id,
+            key,
+            layerId,
+            experimentIds,
+            liveVariables
         );
     }
 }

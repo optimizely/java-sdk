@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018, Optimizely and contributors
+ *    Copyright 2018-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -30,7 +30,8 @@ public class Visitor {
     List<Snapshot> snapshots;
 
     @VisibleForTesting
-    public Visitor() { }
+    public Visitor() {
+    }
 
     private Visitor(String visitorId, String sessionId, List<Attribute> attributes, List<Snapshot> snapshots) {
         this.visitorId = visitorId;
