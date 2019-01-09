@@ -110,8 +110,6 @@ public class EventFactory {
                                           @Nonnull Map<String, ?> attributes,
                                           @Nonnull Map<String, ?> eventTags) {
 
-        ArrayList<Decision> decisions = new ArrayList<Decision>();
-
         EventType eventType = projectConfig.getEventNameMapping().get(eventName);
 
         Event conversionEvent = new Event.Builder()
@@ -126,9 +124,8 @@ public class EventFactory {
             .build();
 
         Snapshot snapshot = new Snapshot.Builder()
-            .setDecisions(decisions)
-            .setEvents(Collections.singletonList((conversionEvent)))
-            .build();
+                .setEvents(Collections.singletonList((conversionEvent)))
+                .build();
 
         Visitor visitor = new Visitor.Builder()
             .setVisitorId(userId)

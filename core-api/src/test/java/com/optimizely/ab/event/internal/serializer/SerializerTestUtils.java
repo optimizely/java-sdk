@@ -102,12 +102,24 @@ public class SerializerTestUtils {
     }
 
     static EventBatch generateConversion() {
-        EventBatch conversion = generateImpression();
-        conversion.setClientVersion("0.1.1");
-        conversion.setAnonymizeIp(true);
-        conversion.setRevision(revision);
+        Snapshot snapshot = new Snapshot.Builder()
+            .setEvents(events)
+            .build();
 
-        return conversion;
+        Visitor visitor = new Visitor.Builder()
+            .setVisitorId(visitorId)
+            .setAttributes(userFeatures)
+            .setSnapshots(Collections.singletonList(snapshot))
+            .build();
+
+        return new EventBatch.Builder()
+            .setClientVersion("0.1.1")
+            .setAccountId(accountId)
+            .setVisitors(Collections.singletonList(visitor))
+            .setAnonymizeIp(true)
+            .setProjectId(projectId)
+            .setRevision(revision)
+            .build();
     }
 
     static EventBatch generateConversionWithSessionId() {

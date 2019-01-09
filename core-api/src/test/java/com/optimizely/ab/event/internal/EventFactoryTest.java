@@ -500,8 +500,6 @@ public class EventFactoryTest {
                 attributeMap,
                 eventTagMap);
 
-        List<Decision> expectedDecisions = new ArrayList<Decision>();
-
         // verify that the request endpoint is correct
         assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
 
@@ -528,7 +526,6 @@ public class EventFactoryTest {
         }
 
         assertEquals(conversion.getVisitors().get(0).getAttributes(), expectedUserFeatures);
-        assertThat(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions(), containsInAnyOrder(expectedDecisions.toArray()));
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getEntityId(), eventType.getId());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getKey(), eventType.getKey());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getRevenue(), null);
@@ -564,8 +561,6 @@ public class EventFactoryTest {
                 attributeMap,
                 eventTagMap);
 
-        List<Decision> expectedDecisions = new ArrayList<Decision>();
-
         // verify that the request endpoint is correct
         assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
 
@@ -598,7 +593,6 @@ public class EventFactoryTest {
         }
 
         assertEquals(conversion.getVisitors().get(0).getAttributes(), expectedUserFeatures);
-        assertThat(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions(), containsInAnyOrder(expectedDecisions.toArray()));
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getEntityId(), eventType.getId());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getKey(), eventType.getKey());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getRevenue(), null);
@@ -877,8 +871,6 @@ public class EventFactoryTest {
                 attributeMap,
                 eventTagMap);
 
-        List<Decision> expectedDecisions = new ArrayList<Decision>();
-
         // verify that the request endpoint is correct
         assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
 
@@ -912,7 +904,6 @@ public class EventFactoryTest {
         }
 
         assertEquals(conversion.getVisitors().get(0).getAttributes(), expectedUserFeatures);
-        assertThat(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions(), containsInAnyOrder(expectedDecisions.toArray()));
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getEntityId(), eventType.getId());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getType(), eventType.getKey());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getKey(), eventType.getKey());
