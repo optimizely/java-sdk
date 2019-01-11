@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2016-2018, Optimizely, Inc. and contributors                   *
+ * Copyright 2016-2019, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -79,15 +79,21 @@ public class Optimizely {
 
     private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
 
-    @VisibleForTesting DecisionService decisionService;
-    @VisibleForTesting final EventFactory eventFactory;
-    @VisibleForTesting ProjectConfig projectConfig;
-    @VisibleForTesting final EventHandler eventHandler;
-    @VisibleForTesting final ErrorHandler errorHandler;
+    @VisibleForTesting
+    DecisionService decisionService;
+    @VisibleForTesting
+    final EventFactory eventFactory;
+    @VisibleForTesting
+    ProjectConfig projectConfig;
+    @VisibleForTesting
+    final EventHandler eventHandler;
+    @VisibleForTesting
+    final ErrorHandler errorHandler;
     private boolean isValid;
     public final NotificationCenter notificationCenter = new NotificationCenter();
 
-    @Nullable private final UserProfileService userProfileService;
+    @Nullable
+    private final UserProfileService userProfileService;
 
     private Optimizely(@Nonnull EventHandler eventHandler,
                        @Nonnull EventFactory eventFactory,
@@ -110,8 +116,8 @@ public class Optimizely {
         if (projectConfig == null) {
             try {
                 projectConfig = new ProjectConfig.Builder()
-                        .withDatafile(datafile)
-                        .build();
+                    .withDatafile(datafile)
+                    .build();
                 isValid = true;
                 logger.info("Datafile is valid");
             } catch (ConfigParseException ex) {
@@ -251,8 +257,8 @@ public class Optimizely {
         return activate(currentConfig, experiment, userId, attributes);
     }
 
-    private @Nullable
-    Variation activate(@Nonnull ProjectConfig projectConfig,
+    @Nullable
+    private Variation activate(@Nonnull ProjectConfig projectConfig,
                        @Nonnull Experiment experiment,
                        @Nonnull String userId,
                        @Nonnull Map<String, ?> attributes) {
@@ -261,7 +267,7 @@ public class Optimizely {
             return null;
         }
 
-        if (!validateUserId(userId)){
+        if (!validateUserId(userId)) {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
         }
@@ -285,17 +291,17 @@ public class Optimizely {
                                 @Nonnull Variation variation) {
         if (experiment.isRunning()) {
             LogEvent impressionEvent = eventFactory.createImpressionEvent(
-                    projectConfig,
-                    experiment,
-                    variation,
-                    userId,
-                    filteredAttributes);
+                projectConfig,
+                experiment,
+                variation,
+                userId,
+                filteredAttributes);
             logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
 
             if (logger.isDebugEnabled()) {
                 logger.debug(
-                        "Dispatching impression event to URL {} with params {} and payload \"{}\".",
-                        impressionEvent.getEndpointUrl(), impressionEvent.getRequestParams(), impressionEvent.getBody());
+                    "Dispatching impression event to URL {} with params {} and payload \"{}\".",
+                    impressionEvent.getEndpointUrl(), impressionEvent.getRequestParams(), impressionEvent.getBody());
             }
 
             try {
@@ -305,7 +311,7 @@ public class Optimizely {
             }
 
             notificationCenter.sendNotifications(NotificationCenter.NotificationType.Activate, experiment, userId,
-                    filteredAttributes, variation, impressionEvent);
+                filteredAttributes, variation, impressionEvent);
         } else {
             logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
         }
@@ -378,7 +384,7 @@ public class Optimizely {
             return;
         }
 
-        if (eventName == null || eventName.trim().isEmpty()){
+        if (eventName == null || eventName.trim().isEmpty()) {
             logger.error("Event Key is null or empty when non-null and non-empty String was expected.");
             logger.info("Not tracking event for user \"{}\".", userId);
             return;
@@ -408,20 +414,20 @@ public class Optimizely {
                 }
             } else {
                 logger.info(
-                        "Not tracking event \"{}\" for experiment \"{}\" because experiment has status \"Launched\".",
-                        eventType.getKey(), experiment.getKey());
+                    "Not tracking event \"{}\" for experiment \"{}\" because experiment has status \"Launched\".",
+                    eventType.getKey(), experiment.getKey());
             }
         }
 
         // create the conversion event request parameters, then dispatch
         LogEvent conversionEvent = eventFactory.createConversionEvent(
-                projectConfig,
-                experimentVariationMap,
-                userId,
-                eventType.getId(),
-                eventType.getKey(),
-                copiedAttributes,
-                eventTags);
+            projectConfig,
+            experimentVariationMap,
+            userId,
+            eventType.getId(),
+            eventType.getKey(),
+            copiedAttributes,
+            eventTags);
 
         if (conversionEvent == null) {
             logger.info("There are no valid experiments for event \"{}\" to track.", eventName);
@@ -433,7 +439,7 @@ public class Optimizely {
 
         if (logger.isDebugEnabled()) {
             logger.debug("Dispatching conversion event to URL {} with params {} and payload \"{}\".",
-                    conversionEvent.getEndpointUrl(), conversionEvent.getRequestParams(), conversionEvent.getBody());
+                conversionEvent.getEndpointUrl(), conversionEvent.getRequestParams(), conversionEvent.getBody());
         }
 
         try {
@@ -443,7 +449,7 @@ public class Optimizely {
         }
 
         notificationCenter.sendNotifications(NotificationCenter.NotificationType.Track, eventName, userId,
-                copiedAttributes, eventTags, conversionEvent);
+            copiedAttributes, eventTags, conversionEvent);
     }
 
     //======== FeatureFlag APIs ========//
@@ -462,8 +468,9 @@ public class Optimizely {
      * 
      * @return           `true` if the feature is enabled, or `false` if the feature is disabled or couldn't be found.
      */
-    public @Nonnull Boolean isFeatureEnabled(@Nonnull String featureKey,
-                                              @Nonnull String userId) {
+    @Nonnull
+    public Boolean isFeatureEnabled(@Nonnull String featureKey,
+                             @Nonnull String userId) {
         return isFeatureEnabled(featureKey, userId, Collections.<String, String>emptyMap());
     }
 
@@ -485,9 +492,10 @@ public class Optimizely {
      *
      * @return           `true` if the feature is enabled, or `false` if the feature is disabled or couldn't be found.
      */
-    public @Nonnull Boolean isFeatureEnabled(@Nonnull String featureKey,
-                                              @Nonnull String userId,
-                                              @Nonnull Map<String, ?> attributes) {
+    @Nonnull
+    public Boolean isFeatureEnabled(@Nonnull String featureKey,
+                             @Nonnull String userId,
+                             @Nonnull Map<String, ?> attributes) {
         if (!isValid) {
             logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
             return false;
@@ -496,8 +504,7 @@ public class Optimizely {
         if (featureKey == null) {
             logger.warn("The featureKey parameter must be nonnull.");
             return false;
-        }
-        else if (userId == null) {
+        } else if (userId == null) {
             logger.warn("The userId parameter must be nonnull.");
             return false;
         }
@@ -513,14 +520,14 @@ public class Optimizely {
         if (featureDecision.variation != null) {
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
                 sendImpression(
-                        projectConfig,
-                        featureDecision.experiment,
-                        userId,
-                        copiedAttributes,
-                        featureDecision.variation);
+                    projectConfig,
+                    featureDecision.experiment,
+                    userId,
+                    copiedAttributes,
+                    featureDecision.variation);
             } else {
                 logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
-                        userId, featureKey);
+                    userId, featureKey);
             }
             if (featureDecision.variation.getFeatureEnabled()) {
                 logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
@@ -544,9 +551,10 @@ public class Optimizely {
      * @return             The value of the variable, or `null` if the feature key is invalid, the variable key is
      *                     invalid, or there is a mismatch with the type of the variable.
      */
-    public @Nullable Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
-                                                       @Nonnull String variableKey,
-                                                       @Nonnull String userId) {
+    @Nullable
+    public Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
+                                             @Nonnull String variableKey,
+                                             @Nonnull String userId) {
         return getFeatureVariableBoolean(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
     }
 
@@ -566,21 +574,22 @@ public class Optimizely {
      * @return             The value of the variable, or `null` if the feature key is invalid, the variable key is
      *                     invalid, or there is a mismatch with the type of the variable.
      */
-    public @Nullable Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
-                                                       @Nonnull String variableKey,
-                                                       @Nonnull String userId,
-                                                       @Nonnull Map<String, ?> attributes) {
+    @Nullable
+    public Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
+                                             @Nonnull String variableKey,
+                                             @Nonnull String userId,
+                                             @Nonnull Map<String, ?> attributes) {
         if (!isValid) {
             logger.error("Optimizely instance is not valid, failing getFeatureVariableBoolean call.");
             return null;
         }
 
         String variableValue = getFeatureVariableValueForType(
-                featureKey,
-                variableKey,
-                userId,
-                attributes,
-                LiveVariable.VariableType.BOOLEAN
+            featureKey,
+            variableKey,
+            userId,
+            attributes,
+            LiveVariable.VariableType.BOOLEAN
         );
         if (variableValue != null) {
             return Boolean.parseBoolean(variableValue);
@@ -600,9 +609,10 @@ public class Optimizely {
      * @return             The value of the variable, or `null` if the feature key is invalid, the variable key is
      *                     invalid, or there is a mismatch with the type of the variable.
      */
-    public @Nullable Double getFeatureVariableDouble(@Nonnull String featureKey,
-                                                     @Nonnull String variableKey,
-                                                     @Nonnull String userId) {
+    @Nullable
+    public Double getFeatureVariableDouble(@Nonnull String featureKey,
+                                           @Nonnull String variableKey,
+                                           @Nonnull String userId) {
         return getFeatureVariableDouble(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
     }
 
@@ -622,28 +632,29 @@ public class Optimizely {
      * @return             The value of the variable, or `null` if the feature key is invalid, the variable key is
      *                     invalid, or there is a mismatch with the type of the variable.
      */
-    public @Nullable Double getFeatureVariableDouble(@Nonnull String featureKey,
-                                                     @Nonnull String variableKey,
-                                                     @Nonnull String userId,
-                                                     @Nonnull Map<String, ?> attributes) {
+    @Nullable
+    public Double getFeatureVariableDouble(@Nonnull String featureKey,
+                                           @Nonnull String variableKey,
+                                           @Nonnull String userId,
+                                           @Nonnull Map<String, ?> attributes) {
         if (!isValid) {
             logger.error("Optimizely instance is not valid, failing getFeatureVariableDouble call.");
             return null;
         }
 
         String variableValue = getFeatureVariableValueForType(
-                featureKey,
-                variableKey,
-                userId,
-                attributes,
-                LiveVariable.VariableType.DOUBLE
+            featureKey,
+            variableKey,
+            userId,
+            attributes,
+            LiveVariable.VariableType.DOUBLE
         );
         if (variableValue != null) {
             try {
                 return Double.parseDouble(variableValue);
             } catch (NumberFormatException exception) {
                 logger.error("NumberFormatException while trying to parse \"" + variableValue +
-                        "\" as Double. " + exception);
+                    "\" as Double. " + exception);
             }
         }
         return null;
@@ -661,9 +672,10 @@ public class Optimizely {
      * @return             The value of the variable, or `null` if the feature key is invalid, the variable key is
      *                     invalid, or there is a mismatch with the type of the variable.
      */
-    public @Nullable Integer getFeatureVariableInteger(@Nonnull String featureKey,
-                                                       @Nonnull String variableKey,
-                                                       @Nonnull String userId) {
+    @Nullable
+    public Integer getFeatureVariableInteger(@Nonnull String featureKey,
+                                             @Nonnull String variableKey,
+                                             @Nonnull String userId) {
         return getFeatureVariableInteger(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
     }
 
@@ -683,28 +695,29 @@ public class Optimizely {
      * @return             The value of the variable, or `null` if the feature key is invalid, the variable key is
      *                     invalid, or there is a mismatch with the type of the variable.
      */
-    public @Nullable Integer getFeatureVariableInteger(@Nonnull String featureKey,
-                                                       @Nonnull String variableKey,
-                                                       @Nonnull String userId,
-                                                       @Nonnull Map<String, ?> attributes) {
+    @Nullable
+    public Integer getFeatureVariableInteger(@Nonnull String featureKey,
+                                             @Nonnull String variableKey,
+                                             @Nonnull String userId,
+                                             @Nonnull Map<String, ?> attributes) {
         if (!isValid) {
             logger.error("Optimizely instance is not valid, failing getFeatureVariableInteger call.");
             return null;
         }
 
         String variableValue = getFeatureVariableValueForType(
-                featureKey,
-                variableKey,
-                userId,
-                attributes,
-                LiveVariable.VariableType.INTEGER
+            featureKey,
+            variableKey,
+            userId,
+            attributes,
+            LiveVariable.VariableType.INTEGER
         );
         if (variableValue != null) {
             try {
                 return Integer.parseInt(variableValue);
             } catch (NumberFormatException exception) {
                 logger.error("NumberFormatException while trying to parse \"" + variableValue +
-                        "\" as Integer. " + exception.toString());
+                    "\" as Integer. " + exception.toString());
             }
         }
         return null;
@@ -722,9 +735,10 @@ public class Optimizely {
      * @return             The value of the variable, or `null` if the feature key is invalid, the variable key is
      *                     invalid, or there is a mismatch with the type of the variable.
      */
-    public @Nullable String getFeatureVariableString(@Nonnull String featureKey,
-                                                     @Nonnull String variableKey,
-                                                     @Nonnull String userId) {
+    @Nullable
+    public String getFeatureVariableString(@Nonnull String featureKey,
+                                           @Nonnull String variableKey,
+                                           @Nonnull String userId) {
         return getFeatureVariableString(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
     }
 
@@ -744,38 +758,37 @@ public class Optimizely {
      * @return             The value of the variable, or `null` if the feature key is invalid, the variable key is
      *                     invalid, or there is a mismatch with the type of the variable.
      */
-    public @Nullable String getFeatureVariableString(@Nonnull String featureKey,
-                                                     @Nonnull String variableKey,
-                                                     @Nonnull String userId,
-                                                     @Nonnull Map<String, ?> attributes) {
+    @Nullable
+    public String getFeatureVariableString(@Nonnull String featureKey,
+                                           @Nonnull String variableKey,
+                                           @Nonnull String userId,
+                                           @Nonnull Map<String, ?> attributes) {
         if (!isValid) {
             logger.error("Optimizely instance is not valid, failing getFeatureVariableString call.");
             return null;
         }
 
         return getFeatureVariableValueForType(
-                featureKey,
-                variableKey,
-                userId,
-                attributes,
-                LiveVariable.VariableType.STRING);
+            featureKey,
+            variableKey,
+            userId,
+            attributes,
+            LiveVariable.VariableType.STRING);
     }
 
     @VisibleForTesting
     String getFeatureVariableValueForType(@Nonnull String featureKey,
-                                                  @Nonnull String variableKey,
-                                                  @Nonnull String userId,
-                                                  @Nonnull Map<String, ?> attributes,
-                                                  @Nonnull LiveVariable.VariableType variableType) {
+                                          @Nonnull String variableKey,
+                                          @Nonnull String userId,
+                                          @Nonnull Map<String, ?> attributes,
+                                          @Nonnull LiveVariable.VariableType variableType) {
         if (featureKey == null) {
             logger.warn("The featureKey parameter must be nonnull.");
             return null;
-        }
-        else if (variableKey == null) {
+        } else if (variableKey == null) {
             logger.warn("The variableKey parameter must be nonnull.");
             return null;
-        }
-        else if (userId == null) {
+        } else if (userId == null) {
             logger.warn("The userId parameter must be nonnull.");
             return null;
         }
@@ -788,13 +801,13 @@ public class Optimizely {
         LiveVariable variable = featureFlag.getVariableKeyToLiveVariableMap().get(variableKey);
         if (variable == null) {
             logger.info("No feature variable was found for key \"{}\" in feature flag \"{}\".",
-                    variableKey, featureKey);
+                variableKey, featureKey);
             return null;
         } else if (!variable.getType().equals(variableType)) {
             logger.info("The feature variable \"" + variableKey +
-                    "\" is actually of type \"" + variable.getType().toString() +
-                    "\" type. You tried to access it as type \"" + variableType.toString() +
-                    "\". Please use the appropriate feature variable accessor.");
+                "\" is actually of type \"" + variable.getType().toString() +
+                "\" type. You tried to access it as type \"" + variableType.toString() +
+                "\". Please use the appropriate feature variable accessor.");
             return null;
         }
 
@@ -803,7 +816,7 @@ public class Optimizely {
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
         if (featureDecision.variation != null) {
             LiveVariableUsageInstance liveVariableUsageInstance =
-                    featureDecision.variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
+                featureDecision.variation.getVariableIdToLiveVariableUsageInstanceMap().get(variable.getId());
             if (liveVariableUsageInstance != null) {
                 variableValue = liveVariableUsageInstance.getValue();
             } else {
@@ -811,8 +824,8 @@ public class Optimizely {
             }
         } else {
             logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
-                            "The default value \"{}\" for \"{}\" is being returned.",
-                    userId, featureKey, variableValue, variableKey
+                    "The default value \"{}\" for \"{}\" is being returned.",
+                userId, featureKey, variableValue, variableKey
             );
         }
 
@@ -841,14 +854,14 @@ public class Optimizely {
             return enabledFeaturesList;
         }
 
-        if (!validateUserId(userId)){
+        if (!validateUserId(userId)) {
             return enabledFeaturesList;
         }
 
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
-        for (FeatureFlag featureFlag : projectConfig.getFeatureFlags()){
+        for (FeatureFlag featureFlag : projectConfig.getFeatureFlags()) {
             String featureKey = featureFlag.getKey();
-            if(isFeatureEnabled(featureKey, userId, copiedAttributes))
+            if (isFeatureEnabled(featureKey, userId, copiedAttributes))
                 enabledFeaturesList.add(featureKey);
         }
 
@@ -956,7 +969,7 @@ public class Optimizely {
             return null;
         }
 
-        if (experimentKey == null || experimentKey.trim().isEmpty()){
+        if (experimentKey == null || experimentKey.trim().isEmpty()) {
             logger.error("The experimentKey parameter must be nonnull.");
             return null;
         }
@@ -1010,7 +1023,8 @@ public class Optimizely {
      * @return                The variation the user was bucketed into, or `null` if `setForcedVariation` 
      *                        failed to force the user into the variation.
      */
-    public @Nullable Variation getForcedVariation(@Nonnull String experimentKey,
+    @Nullable
+    public Variation getForcedVariation(@Nonnull String experimentKey,
                                         @Nonnull String userId) {
         if (!isValid) {
             logger.error("Optimizely instance is not valid, failing getForcedVariation call.");
@@ -1023,7 +1037,8 @@ public class Optimizely {
     /**
      * @return the current {@link ProjectConfig} instance.
      */
-    public @Nonnull ProjectConfig getProjectConfig() {
+    @Nonnull
+    public ProjectConfig getProjectConfig() {
         return projectConfig;
     }
 
@@ -1033,6 +1048,7 @@ public class Optimizely {
     }
 
     //======== Helper methods ========//
+
     /**
      * Helper function to check that the provided userId is valid
      *

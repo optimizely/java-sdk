@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import java.util.Map;
 class JsonSimpleSerializer implements Serializer {
 
     public <T> String serialize(T payload) {
-        JSONObject payloadJsonObj = serializeEventBatch((EventBatch)payload);
+        JSONObject payloadJsonObj = serializeEventBatch((EventBatch) payload);
 
         return payloadJsonObj.toJSONString();
     }
@@ -56,7 +56,7 @@ class JsonSimpleSerializer implements Serializer {
     private JSONArray serializeVisitors(List<Visitor> visitors) {
         JSONArray jsonArray = new JSONArray();
 
-        for (Visitor v: visitors) {
+        for (Visitor v : visitors) {
             jsonArray.add(serializeVisitor(v));
         }
 
@@ -109,16 +109,16 @@ class JsonSimpleSerializer implements Serializer {
     private JSONObject serializeEvent(Event eventV3) {
         JSONObject jsonObject = new JSONObject();
 
-        jsonObject.put("timestamp",eventV3.getTimestamp());
-        jsonObject.put("uuid",eventV3.getUuid());
+        jsonObject.put("timestamp", eventV3.getTimestamp());
+        jsonObject.put("uuid", eventV3.getUuid());
         jsonObject.put("key", eventV3.getKey());
 
-        if (eventV3.getEntityId() != null)  jsonObject.put("entity_id",eventV3.getEntityId());
-        if (eventV3.getQuantity() != null)  jsonObject.put("quantity",eventV3.getQuantity());
-        if (eventV3.getRevenue() != null)   jsonObject.put("revenue",eventV3.getRevenue());
-        if (eventV3.getTags() != null)  jsonObject.put("tags",serializeTags(eventV3.getTags()));
-        if (eventV3.getType() != null)  jsonObject.put("type",eventV3.getType());
-        if (eventV3.getValue() != null)  jsonObject.put("value",eventV3.getValue());
+        if (eventV3.getEntityId() != null) jsonObject.put("entity_id", eventV3.getEntityId());
+        if (eventV3.getQuantity() != null) jsonObject.put("quantity", eventV3.getQuantity());
+        if (eventV3.getRevenue() != null) jsonObject.put("revenue", eventV3.getRevenue());
+        if (eventV3.getTags() != null) jsonObject.put("tags", serializeTags(eventV3.getTags()));
+        if (eventV3.getType() != null) jsonObject.put("type", eventV3.getType());
+        if (eventV3.getValue() != null) jsonObject.put("value", eventV3.getValue());
 
         return jsonObject;
     }

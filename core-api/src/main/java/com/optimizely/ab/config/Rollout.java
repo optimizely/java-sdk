@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017, Optimizely and contributors
+ *    Copyright 2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -54,8 +54,8 @@ public class Rollout implements IdMapped {
     @Override
     public String toString() {
         return "Rollout{" +
-                "id='" + id + '\'' +
-                ", experiments=" + experiments +
-                '}';
+            "id='" + id + '\'' +
+            ", experiments=" + experiments +
+            '}';
     }
 }

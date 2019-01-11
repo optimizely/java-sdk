@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017, Optimizely and contributors
+ *    Copyright 2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -166,7 +166,7 @@ public class ExperimentUtilsTest {
     public void isUserInExperimentHandlesNullValue() {
         Experiment experiment = v4ProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY);
         Map<String, String> satisfiesFirstCondition = Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY,
-                AUDIENCE_WITH_MISSING_VALUE_VALUE);
+            AUDIENCE_WITH_MISSING_VALUE_VALUE);
         Map<String, String> attributesWithNull = Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, null);
         Map<String, String> nonMatchingMap = Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, "American");
 
@@ -186,14 +186,14 @@ public class ExperimentUtilsTest {
      */
     private Experiment makeMockExperimentWithStatus(ExperimentStatus status) {
         return new Experiment("12345",
-                "mockExperimentKey",
-                status.toString(),
-                "layerId",
-                Collections.<String>emptyList(),
-                null,
-                Collections.<Variation>emptyList(),
-                Collections.<String, String>emptyMap(),
-                Collections.<TrafficAllocation>emptyList()
-                );
+            "mockExperimentKey",
+            status.toString(),
+            "layerId",
+            Collections.<String>emptyList(),
+            null,
+            Collections.<Variation>emptyList(),
+            Collections.<String, String>emptyMap(),
+            Collections.<TrafficAllocation>emptyList()
+        );
     }
 }

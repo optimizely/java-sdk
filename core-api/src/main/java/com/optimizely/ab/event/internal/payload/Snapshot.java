@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018, Optimizely and contributors
+ *    Copyright 2018-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,7 +28,8 @@ public class Snapshot {
     Long activationTimestamp;
 
     @VisibleForTesting
-    public Snapshot() { }
+    public Snapshot() {
+    }
 
     public Snapshot(List<Decision> decisions, List<Event> events) {
         this.decisions = decisions;
@@ -68,8 +69,8 @@ public class Snapshot {
         Snapshot snapshot = (Snapshot) o;
 
         if (activationTimestamp != null ?
-                !activationTimestamp.equals(snapshot.activationTimestamp) :
-                snapshot.activationTimestamp != null) return false;
+            !activationTimestamp.equals(snapshot.activationTimestamp) :
+            snapshot.activationTimestamp != null) return false;
         if (!decisions.equals(snapshot.decisions)) return false;
         return events.equals(snapshot.events);
     }

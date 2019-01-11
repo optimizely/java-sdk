@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -42,56 +42,56 @@ public class SerializerTestUtils {
     private static final String sessionId = "sessionid";
     private static final String revision = "1";
     private static final Decision decision = new Decision.Builder()
-            .setCampaignId(layerId)
-            .setExperimentId(experimentId)
-            .setVariationId(variationId)
-            .setIsCampaignHoldback(isLayerHoldback)
-            .build();
+        .setCampaignId(layerId)
+        .setExperimentId(experimentId)
+        .setVariationId(variationId)
+        .setIsCampaignHoldback(isLayerHoldback)
+        .build();
 
     private static final String featureId = "6";
     private static final String featureName = "testfeature";
     private static final String featureType = "custom";
     private static final String featureValue = "testfeaturevalue";
     private static final List<Attribute> userFeatures = Collections.singletonList(new Attribute.Builder()
-            .setEntityId(featureId)
-            .setKey(featureName)
-            .setType(featureType)
-            .setValue(featureValue)
-            .build());
+        .setEntityId(featureId)
+        .setKey(featureName)
+        .setType(featureType)
+        .setValue(featureValue)
+        .build());
 
     private static final String eventEntityId = "7";
     private static final String eventName = "testevent";
 
     private static final List<Event> events = Collections.singletonList(new Event.Builder()
-            .setTimestamp(timestamp)
-            .setUuid("uuid")
-            .setEntityId(eventEntityId)
-            .setKey(eventName)
-            .setRevenue(5000L)
-            .setType(eventName)
-            .build()
+        .setTimestamp(timestamp)
+        .setUuid("uuid")
+        .setEntityId(eventEntityId)
+        .setKey(eventName)
+        .setRevenue(5000L)
+        .setType(eventName)
+        .build()
     );
 
     static EventBatch generateImpression() {
         Snapshot snapshot = new Snapshot.Builder()
-                .setDecisions(Collections.singletonList(decision))
-                .setEvents(events)
-                .build();
+            .setDecisions(Collections.singletonList(decision))
+            .setEvents(events)
+            .build();
 
         Visitor visitor = new Visitor.Builder()
-                .setVisitorId(visitorId)
-                .setAttributes(userFeatures)
-                .setSnapshots(Collections.singletonList(snapshot))
-                .build();
+            .setVisitorId(visitorId)
+            .setAttributes(userFeatures)
+            .setSnapshots(Collections.singletonList(snapshot))
+            .build();
 
         return new EventBatch.Builder()
-                .setClientVersion("0.1.1")
-                .setAccountId(accountId)
-                .setVisitors(Collections.singletonList(visitor))
-                .setAnonymizeIp(true)
-                .setProjectId(projectId)
-                .setRevision(revision)
-                .build();
+            .setClientVersion("0.1.1")
+            .setAccountId(accountId)
+            .setVisitors(Collections.singletonList(visitor))
+            .setAnonymizeIp(true)
+            .setProjectId(projectId)
+            .setRevision(revision)
+            .build();
     }
 
     static EventBatch generateImpressionWithSessionId() {
@@ -124,7 +124,7 @@ public class SerializerTestUtils {
 
     static String generateImpressionWithSessionIdJson() throws IOException {
         String impressionJson = Resources.toString(Resources.getResource("serializer/impression-session-id.json"),
-                                                   Charsets.UTF_8);
+            Charsets.UTF_8);
         return impressionJson.replaceAll("\\s+", "");
     }
 
@@ -135,7 +135,7 @@ public class SerializerTestUtils {
 
     static String generateConversionWithSessionIdJson() throws IOException {
         String conversionJson = Resources.toString(Resources.getResource("serializer/conversion-session-id.json"),
-                                                   Charsets.UTF_8);
+            Charsets.UTF_8);
         return conversionJson.replaceAll("\\s+", "");
     }
 }

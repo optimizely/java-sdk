@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018, Optimizely and contributors
+ *    Copyright 2018-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ public class AudienceIdCondition<T> implements Condition<T> {
 
     /**
      * Constructor used in json parsing to store the audienceId parsed from Experiment.audienceConditions.
+     *
      * @param audienceId
      */
     @JsonCreator
@@ -82,9 +83,9 @@ public class AudienceIdCondition<T> implements Condition<T> {
         if (o == null || getClass() != o.getClass()) return false;
         AudienceIdCondition condition = (AudienceIdCondition) o;
         return ((audience == null) ? (null == condition.audience) :
-                (audience.getId().equals(condition.audience!=null?condition.audience.getId():null))) &&
-                ((audienceId == null) ? (null == condition.audienceId) :
-                        (audienceId.equals(condition.audienceId)));
+            (audience.getId().equals(condition.audience != null ? condition.audience.getId() : null))) &&
+            ((audienceId == null) ? (null == condition.audienceId) :
+                (audienceId.equals(condition.audienceId)));
     }
 
     @Override

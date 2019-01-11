@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -64,9 +64,9 @@ public class Audience implements IdKeyMapped {
     @Override
     public String toString() {
         return "Audience{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", conditions=" + conditions +
-                '}';
+            "id='" + id + '\'' +
+            ", name='" + name + '\'' +
+            ", conditions=" + conditions +
+            '}';
     }
 }

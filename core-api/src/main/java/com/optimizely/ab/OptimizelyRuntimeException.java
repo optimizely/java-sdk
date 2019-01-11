@@ -21,7 +21,8 @@ package com.optimizely.ab;
  */
 public class OptimizelyRuntimeException extends RuntimeException {
 
-    public OptimizelyRuntimeException() { }
+    public OptimizelyRuntimeException() {
+    }
 
     public OptimizelyRuntimeException(Exception exception) {
         super(exception);

@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2017, Optimizely, Inc. and contributors                        *
+ * Copyright 2017, 2019, Optimizely, Inc. and contributors                        *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -21,14 +21,23 @@ import com.optimizely.ab.config.Variation;
 import javax.annotation.Nullable;
 
 public class FeatureDecision {
-    /** The {@link Experiment} the Feature is associated with. */
-    @Nullable public Experiment experiment;
+    /**
+     * The {@link Experiment} the Feature is associated with.
+     */
+    @Nullable
+    public Experiment experiment;
 
-    /** The {@link Variation} the user was bucketed into. */
-    @Nullable public Variation variation;
+    /**
+     * The {@link Variation} the user was bucketed into.
+     */
+    @Nullable
+    public Variation variation;
 
-    /** The source of the {@link Variation}. */
-    @Nullable public DecisionSource decisionSource;
+    /**
+     * The source of the {@link Variation}.
+     */
+    @Nullable
+    public DecisionSource decisionSource;
 
     public enum DecisionSource {
         EXPERIMENT,
@@ -37,8 +46,9 @@ public class FeatureDecision {
 
     /**
      * Initialize a FeatureDecision object.
-     * @param experiment The {@link Experiment} the Feature is associated with.
-     * @param variation The {@link Variation} the user was bucketed into.
+     *
+     * @param experiment     The {@link Experiment} the Feature is associated with.
+     * @param variation      The {@link Variation} the user was bucketed into.
      * @param decisionSource The source of the variation.
      */
     public FeatureDecision(@Nullable Experiment experiment, @Nullable Variation variation,

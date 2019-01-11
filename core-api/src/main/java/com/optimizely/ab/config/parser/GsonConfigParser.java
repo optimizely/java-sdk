@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -41,13 +41,13 @@ final class GsonConfigParser implements ConfigParser {
             throw new ConfigParseException("Unable to parse empty json.");
         }
         Gson gson = new GsonBuilder()
-                .registerTypeAdapter(Audience.class, new AudienceGsonDeserializer())
-                .registerTypeAdapter(TypedAudience.class, new AudienceGsonDeserializer())
-                .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())
-                .registerTypeAdapter(FeatureFlag.class, new FeatureFlagGsonDeserializer())
-                .registerTypeAdapter(Group.class, new GroupGsonDeserializer())
-                .registerTypeAdapter(ProjectConfig.class, new ProjectConfigGsonDeserializer())
-                .create();
+            .registerTypeAdapter(Audience.class, new AudienceGsonDeserializer())
+            .registerTypeAdapter(TypedAudience.class, new AudienceGsonDeserializer())
+            .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())
+            .registerTypeAdapter(FeatureFlag.class, new FeatureFlagGsonDeserializer())
+            .registerTypeAdapter(Group.class, new GroupGsonDeserializer())
+            .registerTypeAdapter(ProjectConfig.class, new ProjectConfigGsonDeserializer())
+            .create();
 
         try {
             return gson.fromJson(json, ProjectConfig.class);

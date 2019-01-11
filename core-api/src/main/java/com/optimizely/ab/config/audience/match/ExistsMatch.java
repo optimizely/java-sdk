@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018, Optimizely and contributors
+ *    Copyright 2018-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,12 +23,13 @@ import javax.annotation.Nullable;
 class ExistsMatch implements Match {
     @SuppressFBWarnings("URF_UNREAD_FIELD")
     Object value;
+
     protected ExistsMatch(Object value) {
         this.value = value;
     }
 
-    public @Nullable
-    Boolean eval(Object attributeValue) {
+    @Nullable
+    public Boolean eval(Object attributeValue) {
         return attributeValue != null;
     }
 }

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -69,21 +69,21 @@ public class EventFactoryTest {
 
     @Parameterized.Parameters
     public static Collection<Object[]> data() throws IOException {
-        return Arrays.asList(new Object[][] {
-                {
-                        2,
-                        validProjectConfigV2()
-                },
-                {
-                        4,
-                        validProjectConfigV4()
-                }
+        return Arrays.asList(new Object[][]{
+            {
+                2,
+                validProjectConfigV2()
+            },
+            {
+                4,
+                validProjectConfigV4()
+            }
         });
     }
 
     private Gson gson = new GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .create();
+        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+        .create();
     private EventFactory factory = new EventFactory();
 
     private static String userId = "userId";
@@ -111,37 +111,37 @@ public class EventFactoryTest {
         attributeMap.put(ControlAttribute.USER_AGENT_ATTRIBUTE.toString(), "Chrome");
 
         Decision expectedDecision = new Decision.Builder()
-                .setCampaignId(activatedExperiment.getLayerId())
-                .setExperimentId(activatedExperiment.getId())
-                .setVariationId(bucketedVariation.getId())
-                .setIsCampaignHoldback(false)
-                .build();
+            .setCampaignId(activatedExperiment.getLayerId())
+            .setExperimentId(activatedExperiment.getId())
+            .setVariationId(bucketedVariation.getId())
+            .setIsCampaignHoldback(false)
+            .build();
 
         com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute.Builder()
-                .setEntityId(attribute.getId())
-                .setKey(attribute.getKey())
-                .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
-                .setValue("value")
-                .build();
+            .setEntityId(attribute.getId())
+            .setKey(attribute.getKey())
+            .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
+            .setValue("value")
+            .build();
 
         com.optimizely.ab.event.internal.payload.Attribute userAgentFeature = new com.optimizely.ab.event.internal.payload.Attribute.Builder()
-                .setEntityId(ControlAttribute.USER_AGENT_ATTRIBUTE.toString())
-                .setKey(ControlAttribute.USER_AGENT_ATTRIBUTE.toString())
-                .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
-                .setValue("Chrome")
-                .build();
+            .setEntityId(ControlAttribute.USER_AGENT_ATTRIBUTE.toString())
+            .setKey(ControlAttribute.USER_AGENT_ATTRIBUTE.toString())
+            .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
+            .setValue("Chrome")
+            .build();
 
         com.optimizely.ab.event.internal.payload.Attribute botFilteringFeature = getBotFilteringAttribute();
 
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
 
-        if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
+        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
             expectedUserFeatures = Arrays.asList(userAgentFeature, feature, botFilteringFeature);
         else
             expectedUserFeatures = Arrays.asList(userAgentFeature, feature);
 
         LogEvent impressionEvent = factory.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation,
-                userId, attributeMap);
+            userId, attributeMap);
 
         // verify that request endpoint is correct
         assertThat(impressionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
@@ -150,13 +150,13 @@ public class EventFactoryTest {
 
         // verify payload information
         assertThat(eventBatch.getVisitors().get(0).getVisitorId(), is(userId));
-        assertThat((double) eventBatch.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double)System.currentTimeMillis(), 1000.0));
+        assertThat((double) eventBatch.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double) System.currentTimeMillis(), 1000.0));
         assertFalse(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertThat(eventBatch.getAnonymizeIp(), is(validProjectConfig.getAnonymizeIP()));
         assertThat(eventBatch.getProjectId(), is(validProjectConfig.getProjectId()));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0), is(expectedDecision));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getCampaignId(),
-                is(activatedExperiment.getLayerId()));
+            is(activatedExperiment.getLayerId()));
         assertThat(eventBatch.getAccountId(), is(validProjectConfig.getAccountId()));
         assertThat(eventBatch.getVisitors().get(0).getAttributes(), is(expectedUserFeatures));
         assertThat(eventBatch.getClientName(), is(EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue()));
@@ -177,30 +177,30 @@ public class EventFactoryTest {
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
 
         Decision expectedDecision = new Decision.Builder()
-                .setCampaignId(activatedExperiment.getLayerId())
-                .setExperimentId(activatedExperiment.getId())
-                .setVariationId(bucketedVariation.getId())
-                .setIsCampaignHoldback(false)
-                .build();
+            .setCampaignId(activatedExperiment.getLayerId())
+            .setExperimentId(activatedExperiment.getId())
+            .setVariationId(bucketedVariation.getId())
+            .setIsCampaignHoldback(false)
+            .build();
 
         com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute.Builder()
-                .setEntityId(attribute.getId())
-                .setKey(attribute.getKey())
-                .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
-                .setValue("value")
-                .build();
+            .setEntityId(attribute.getId())
+            .setKey(attribute.getKey())
+            .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
+            .setValue("value")
+            .build();
 
         com.optimizely.ab.event.internal.payload.Attribute botFilteringFeature = getBotFilteringAttribute();
 
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures;
 
-        if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
+        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()))
             expectedUserFeatures = Arrays.asList(feature, botFilteringFeature);
         else
             expectedUserFeatures = Arrays.asList(feature);
 
         LogEvent impressionEvent = factory.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation,
-                userId, attributeMap);
+            userId, attributeMap);
 
         // verify that request endpoint is correct
         assertThat(impressionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
@@ -209,13 +209,13 @@ public class EventFactoryTest {
 
         // verify payload information
         assertThat(eventBatch.getVisitors().get(0).getVisitorId(), is(userId));
-        assertThat((double) eventBatch.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double)System.currentTimeMillis(), 1000.0));
+        assertThat((double) eventBatch.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double) System.currentTimeMillis(), 1000.0));
         assertFalse(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertThat(eventBatch.getAnonymizeIp(), is(validProjectConfig.getAnonymizeIP()));
         assertThat(eventBatch.getProjectId(), is(validProjectConfig.getProjectId()));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0), is(expectedDecision));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getCampaignId(),
-                is(activatedExperiment.getLayerId()));
+            is(activatedExperiment.getLayerId()));
         assertThat(eventBatch.getAccountId(), is(validProjectConfig.getAccountId()));
         assertThat(eventBatch.getVisitors().get(0).getAttributes(), is(expectedUserFeatures));
         assertThat(eventBatch.getClientName(), is(EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue()));
@@ -235,8 +235,8 @@ public class EventFactoryTest {
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
 
         LogEvent impressionEvent =
-                factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation, "userId",
-                        Collections.singletonMap("unknownAttribute", "blahValue"));
+            factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation, "userId",
+                Collections.singletonMap("unknownAttribute", "blahValue"));
 
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
@@ -254,7 +254,7 @@ public class EventFactoryTest {
     @Test
     public void createConversionEventIgnoresInvalidAndAcceptsValidAttributes() {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
-        
+
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         EventType eventType = validProjectConfig.getEventTypes().get(0);
 
@@ -264,7 +264,7 @@ public class EventFactoryTest {
         // call the bucket function.
         for (Experiment experiment : allExperiments) {
             when(mockBucketAlgorithm.bucket(experiment, userId))
-                    .thenReturn(experiment.getVariations().get(0));
+                .thenReturn(experiment.getVariations().get(0));
         }
         Attribute attribute1 = validProjectConfig.getAttributes().get(0);
         Attribute attribute2 = validProjectConfig.getAttributes().get(1);
@@ -292,25 +292,25 @@ public class EventFactoryTest {
         attributes.put(emptyAttribute.getKey(), validBoolAttribute);
 
         DecisionService decisionService = new DecisionService(
-                mockBucketAlgorithm,
-                mock(ErrorHandler.class),
-                validProjectConfig,
-                mock(UserProfileService.class)
+            mockBucketAlgorithm,
+            mock(ErrorHandler.class),
+            validProjectConfig,
+            mock(UserProfileService.class)
         );
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-                validProjectConfig,
-                decisionService,
-                eventType.getKey(),
-                userId,
-                attributes);
+            validProjectConfig,
+            decisionService,
+            eventType.getKey(),
+            userId,
+            attributes);
         LogEvent conversionEvent = factory.createConversionEvent(
-                validProjectConfig,
-                experimentVariationMap,
-                userId,
-                eventType.getId(),
-                eventType.getKey(),
-                attributes,
-                eventTagMap);
+            validProjectConfig,
+            experimentVariationMap,
+            userId,
+            eventType.getId(),
+            eventType.getKey(),
+            attributes,
+            eventTagMap);
 
         EventBatch impression = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
@@ -356,8 +356,8 @@ public class EventFactoryTest {
         attributes.put(attribute2.getKey(), bigDecimal);
 
         LogEvent impressionEvent =
-                factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation, "userId",
-                        attributes);
+            factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation, "userId",
+                attributes);
 
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
@@ -396,8 +396,8 @@ public class EventFactoryTest {
         attributes.put(stringAttribute.getKey(), validStringAttribute);
 
         LogEvent impressionEvent =
-                factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation, "userId",
-                        attributes);
+            factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation, "userId",
+                attributes);
 
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
@@ -429,8 +429,8 @@ public class EventFactoryTest {
         Attribute attribute = validProjectConfig.getAttributes().get(0);
 
         LogEvent impressionEvent =
-                factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation, "userId",
-                        Collections.singletonMap(attribute.getKey(), null));
+            factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation, "userId",
+                Collections.singletonMap(attribute.getKey(), null));
 
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
@@ -456,7 +456,7 @@ public class EventFactoryTest {
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
 
         LogEvent impressionEvent = factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation,
-                userId, attributeMap);
+            userId, attributeMap);
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
         assertThat(impression.getClientName(), is(EventBatch.ClientEngine.ANDROID_SDK.getClientEngineValue()));
@@ -479,7 +479,7 @@ public class EventFactoryTest {
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
 
         LogEvent impressionEvent = factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation,
-                userId, attributeMap);
+            userId, attributeMap);
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
         assertThat(impression.getClientName(), is(EventBatch.ClientEngine.ANDROID_TV_SDK.getClientEngineValue()));
@@ -505,13 +505,13 @@ public class EventFactoryTest {
         // call the bucket function.
         for (Experiment experiment : allExperiments) {
             when(mockBucketAlgorithm.bucket(experiment, userId))
-                    .thenReturn(experiment.getVariations().get(0));
+                .thenReturn(experiment.getVariations().get(0));
         }
         DecisionService decisionService = new DecisionService(
-                mockBucketAlgorithm,
-                mock(ErrorHandler.class),
-                validProjectConfig,
-                mock(UserProfileService.class)
+            mockBucketAlgorithm,
+            mock(ErrorHandler.class),
+            validProjectConfig,
+            mock(UserProfileService.class)
         );
 
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), AUDIENCE_GRYFFINDOR_VALUE);
@@ -519,30 +519,30 @@ public class EventFactoryTest {
         eventTagMap.put("boolean_param", false);
         eventTagMap.put("string_param", "123");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-                validProjectConfig,
-                decisionService,
-                eventType.getKey(),
-                userId,
-                attributeMap);
+            validProjectConfig,
+            decisionService,
+            eventType.getKey(),
+            userId,
+            attributeMap);
         LogEvent conversionEvent = factory.createConversionEvent(
-                validProjectConfig,
-                experimentVariationMap,
-                userId,
-                eventType.getId(),
-                eventType.getKey(),
-                attributeMap,
-                eventTagMap);
+            validProjectConfig,
+            experimentVariationMap,
+            userId,
+            eventType.getId(),
+            eventType.getKey(),
+            attributeMap,
+            eventTagMap);
 
         List<Decision> expectedDecisions = new ArrayList<Decision>();
 
         for (Experiment experiment : experimentsForEventKey) {
             if (experiment.isRunning()) {
                 Decision layerState = new Decision.Builder()
-                        .setCampaignId(experiment.getLayerId())
-                        .setExperimentId(experiment.getId())
-                        .setVariationId(experiment.getVariations().get(0).getId())
-                        .setIsCampaignHoldback(false)
-                        .build();
+                    .setCampaignId(experiment.getLayerId())
+                    .setExperimentId(experiment.getId())
+                    .setVariationId(experiment.getVariations().get(0).getId())
+                    .setIsCampaignHoldback(false)
+                    .build();
 
                 expectedDecisions.add(layerState);
             }
@@ -555,21 +555,21 @@ public class EventFactoryTest {
 
         // verify payload information
         assertThat(conversion.getVisitors().get(0).getVisitorId(), is(userId));
-        assertThat((double)conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(),
-                closeTo((double)System.currentTimeMillis(), 120.0));
+        assertThat((double) conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(),
+            closeTo((double) System.currentTimeMillis(), 120.0));
         assertThat(conversion.getProjectId(), is(validProjectConfig.getProjectId()));
         assertThat(conversion.getAccountId(), is(validProjectConfig.getAccountId()));
 
         com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute.Builder()
-                .setEntityId(attribute.getId()).setKey(attribute.getKey())
-                .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
-                .setValue(AUDIENCE_GRYFFINDOR_VALUE)
-                .build();
+            .setEntityId(attribute.getId()).setKey(attribute.getKey())
+            .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
+            .setValue(AUDIENCE_GRYFFINDOR_VALUE)
+            .build();
 
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = new ArrayList<com.optimizely.ab.event.internal.payload.Attribute>();
         expectedUserFeatures.add(feature);
 
-        if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
+        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
             expectedUserFeatures.add(getBotFilteringAttribute());
         }
 
@@ -606,13 +606,13 @@ public class EventFactoryTest {
         // call the bucket function.
         for (Experiment experiment : allExperiments) {
             when(mockBucketAlgorithm.bucket(experiment, userId))
-                    .thenReturn(experiment.getVariations().get(0));
+                .thenReturn(experiment.getVariations().get(0));
         }
         DecisionService decisionService = new DecisionService(
-                mockBucketAlgorithm,
-                mock(ErrorHandler.class),
-                validProjectConfig,
-                mock(UserProfileService.class)
+            mockBucketAlgorithm,
+            mock(ErrorHandler.class),
+            validProjectConfig,
+            mock(UserProfileService.class)
         );
 
         Map<String, String> attributeMap = new HashMap<String, String>();
@@ -622,30 +622,30 @@ public class EventFactoryTest {
         eventTagMap.put("boolean_param", false);
         eventTagMap.put("string_param", "123");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-                validProjectConfig,
-                decisionService,
-                eventType.getKey(),
-                userId,
-                attributeMap);
+            validProjectConfig,
+            decisionService,
+            eventType.getKey(),
+            userId,
+            attributeMap);
         LogEvent conversionEvent = factory.createConversionEvent(
-                validProjectConfig,
-                experimentVariationMap,
-                userId,
-                eventType.getId(),
-                eventType.getKey(),
-                attributeMap,
-                eventTagMap);
+            validProjectConfig,
+            experimentVariationMap,
+            userId,
+            eventType.getId(),
+            eventType.getKey(),
+            attributeMap,
+            eventTagMap);
 
         List<Decision> expectedDecisions = new ArrayList<Decision>();
 
         for (Experiment experiment : experimentsForEventKey) {
             if (experiment.isRunning()) {
                 Decision layerState = new Decision.Builder()
-                        .setCampaignId(experiment.getLayerId())
-                        .setExperimentId(experiment.getId())
-                        .setVariationId(experiment.getVariations().get(0).getId())
-                        .setIsCampaignHoldback(false)
-                        .build();
+                    .setCampaignId(experiment.getLayerId())
+                    .setExperimentId(experiment.getId())
+                    .setVariationId(experiment.getVariations().get(0).getId())
+                    .setIsCampaignHoldback(false)
+                    .build();
 
                 expectedDecisions.add(layerState);
             }
@@ -662,23 +662,23 @@ public class EventFactoryTest {
         assertThat(conversion.getAccountId(), is(validProjectConfig.getAccountId()));
 
         com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute.Builder()
-                .setEntityId(attribute.getId()).setKey(attribute.getKey())
-                .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
-                .setValue(AUDIENCE_GRYFFINDOR_VALUE)
-                .build();
+            .setEntityId(attribute.getId()).setKey(attribute.getKey())
+            .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
+            .setValue(AUDIENCE_GRYFFINDOR_VALUE)
+            .build();
 
         com.optimizely.ab.event.internal.payload.Attribute userAgentFeature = new com.optimizely.ab.event.internal.payload.Attribute.Builder()
-                .setEntityId(ControlAttribute.USER_AGENT_ATTRIBUTE.toString())
-                .setKey(ControlAttribute.USER_AGENT_ATTRIBUTE.toString())
-                .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
-                .setValue("Chrome")
-                .build();
+            .setEntityId(ControlAttribute.USER_AGENT_ATTRIBUTE.toString())
+            .setKey(ControlAttribute.USER_AGENT_ATTRIBUTE.toString())
+            .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
+            .setValue("Chrome")
+            .build();
 
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = new ArrayList<com.optimizely.ab.event.internal.payload.Attribute>();
         expectedUserFeatures.add(userAgentFeature);
         expectedUserFeatures.add(feature);
 
-        if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
+        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
             expectedUserFeatures.add(getBotFilteringAttribute());
         }
 
@@ -713,13 +713,13 @@ public class EventFactoryTest {
         // Bucket to the first variation for all experiments.
         for (Experiment experiment : validProjectConfig.getExperiments()) {
             when(mockBucketAlgorithm.bucket(experiment, userId))
-                    .thenReturn(experiment.getVariations().get(0));
+                .thenReturn(experiment.getVariations().get(0));
         }
         DecisionService decisionService = new DecisionService(
-                mockBucketAlgorithm,
-                mock(ErrorHandler.class),
-                validProjectConfig,
-                mock(UserProfileService.class)
+            mockBucketAlgorithm,
+            mock(ErrorHandler.class),
+            validProjectConfig,
+            mock(UserProfileService.class)
         );
 
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
@@ -727,15 +727,15 @@ public class EventFactoryTest {
         eventTagMap.put(ReservedEventKey.REVENUE.toString(), revenue);
         eventTagMap.put(ReservedEventKey.VALUE.toString(), value);
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-                validProjectConfig,
-                decisionService,
-                eventType.getKey(),
-                userId,
-                attributeMap);
+            validProjectConfig,
+            decisionService,
+            eventType.getKey(),
+            userId,
+            attributeMap);
 
         LogEvent conversionEvent = factory.createConversionEvent(validProjectConfig, experimentVariationMap, userId,
-                eventType.getId(), eventType.getKey(), attributeMap,
-                eventTagMap);
+            eventType.getId(), eventType.getKey(), attributeMap,
+            eventTagMap);
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
         // we're not going to verify everything, only the event metrics
@@ -754,35 +754,34 @@ public class EventFactoryTest {
         if (datafileVersion == 4) {
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_BASIC_EVENT_KEY);
             whitelistedUserId = MULTIVARIATE_EXPERIMENT_FORCED_VARIATION_USER_ID_GRED;
-        }
-        else {
+        } else {
             eventType = validProjectConfig.getEventTypes().get(0);
             whitelistedUserId = "testUser1";
         }
 
         DecisionService decisionService = new DecisionService(
-                new Bucketer(validProjectConfig),
-                new NoOpErrorHandler(),
-                validProjectConfig,
-                mock(UserProfileService.class)
+            new Bucketer(validProjectConfig),
+            new NoOpErrorHandler(),
+            validProjectConfig,
+            mock(UserProfileService.class)
         );
 
         // attributes are empty so user won't be in the audience for experiment using the event, but bucketing
         // will still take place
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-                validProjectConfig,
-                decisionService,
-                eventType.getKey(),
-                whitelistedUserId,
-                Collections.<String, String>emptyMap());
+            validProjectConfig,
+            decisionService,
+            eventType.getKey(),
+            whitelistedUserId,
+            Collections.<String, String>emptyMap());
         LogEvent conversionEvent = factory.createConversionEvent(
-                validProjectConfig,
-                experimentVariationMap,
-                whitelistedUserId,
-                eventType.getId(),
-                eventType.getKey(),
-                Collections.<String, String>emptyMap(),
-                Collections.<String, Object>emptyMap());
+            validProjectConfig,
+            experimentVariationMap,
+            whitelistedUserId,
+            eventType.getId(),
+            eventType.getKey(),
+            Collections.<String, String>emptyMap(),
+            Collections.<String, Object>emptyMap());
         assertNotNull(conversionEvent);
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
@@ -791,8 +790,7 @@ public class EventFactoryTest {
             // basic experiment has no audience
             // user is whitelisted in to one audience
             assertEquals(2, conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().size());
-        }
-        else {
+        } else {
             assertEquals(1, conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().size());
         }
     }
@@ -806,34 +804,33 @@ public class EventFactoryTest {
         EventType eventType;
         if (datafileVersion == 4) {
             eventType = validProjectConfig.getEventNameMapping().get(EVENT_PAUSED_EXPERIMENT_KEY);
-        }
-        else {
+        } else {
             eventType = validProjectConfig.getEventTypes().get(3);
         }
         String whitelistedUserId = PAUSED_EXPERIMENT_FORCED_VARIATION_USER_ID_CONTROL;
 
         Bucketer bucketer = spy(new Bucketer(validProjectConfig));
         DecisionService decisionService = new DecisionService(
-                bucketer,
-                mock(ErrorHandler.class),
-                validProjectConfig,
-                mock(UserProfileService.class)
+            bucketer,
+            mock(ErrorHandler.class),
+            validProjectConfig,
+            mock(UserProfileService.class)
         );
 
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-                validProjectConfig,
-                decisionService,
-                eventType.getKey(),
-                whitelistedUserId,
-                Collections.<String, String>emptyMap());
+            validProjectConfig,
+            decisionService,
+            eventType.getKey(),
+            whitelistedUserId,
+            Collections.<String, String>emptyMap());
         LogEvent conversionEvent = factory.createConversionEvent(
-                validProjectConfig,
-                experimentVariationMap,
-                whitelistedUserId,
-                eventType.getId(),
-                eventType.getKey(),
-                Collections.<String, String>emptyMap(),
-                Collections.<String, Object>emptyMap());
+            validProjectConfig,
+            experimentVariationMap,
+            whitelistedUserId,
+            eventType.getId(),
+            eventType.getKey(),
+            Collections.<String, String>emptyMap(),
+            Collections.<String, Object>emptyMap());
 
         for (Experiment experiment : validProjectConfig.getExperiments()) {
             verify(bucketer, never()).bucket(experiment, whitelistedUserId);
@@ -855,31 +852,31 @@ public class EventFactoryTest {
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         for (Experiment experiment : validProjectConfig.getExperiments()) {
             when(mockBucketAlgorithm.bucket(experiment, userId))
-                    .thenReturn(experiment.getVariations().get(0));
+                .thenReturn(experiment.getVariations().get(0));
         }
         DecisionService decisionService = new DecisionService(
-                mockBucketAlgorithm,
-                mock(ErrorHandler.class),
-                validProjectConfig,
-                mock(UserProfileService.class)
+            mockBucketAlgorithm,
+            mock(ErrorHandler.class),
+            validProjectConfig,
+            mock(UserProfileService.class)
         );
 
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-                validProjectConfig,
-                decisionService,
-                eventType.getKey(),
-                userId,
-                attributeMap);
+            validProjectConfig,
+            decisionService,
+            eventType.getKey(),
+            userId,
+            attributeMap);
 
         LogEvent conversionEvent = factory.createConversionEvent(
-                validProjectConfig,
-                experimentVariationMap,
-                userId,
-                eventType.getId(),
-                eventType.getKey(),
-                attributeMap,
-                Collections.<String, Object>emptyMap());
+            validProjectConfig,
+            experimentVariationMap,
+            userId,
+            eventType.getId(),
+            eventType.getKey(),
+            attributeMap,
+            Collections.<String, Object>emptyMap());
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
@@ -903,7 +900,7 @@ public class EventFactoryTest {
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         for (Experiment experiment : projectConfig.getExperiments()) {
             when(mockBucketAlgorithm.bucket(experiment, userId))
-                    .thenReturn(experiment.getVariations().get(0));
+                .thenReturn(experiment.getVariations().get(0));
         }
 
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
@@ -914,13 +911,13 @@ public class EventFactoryTest {
         }
 
         LogEvent conversionEvent = factory.createConversionEvent(
-                projectConfig,
-                experimentVariationMap,
-                userId,
-                eventType.getId(),
-                eventType.getKey(),
-                attributeMap,
-                Collections.<String, Object>emptyMap());
+            projectConfig,
+            experimentVariationMap,
+            userId,
+            eventType.getId(),
+            eventType.getKey(),
+            attributeMap,
+            Collections.<String, Object>emptyMap());
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
         assertThat(conversion.getClientName(), is(EventBatch.ClientEngine.ANDROID_TV_SDK.getClientEngineValue()));
@@ -938,13 +935,13 @@ public class EventFactoryTest {
         EventFactory factory = new EventFactory();
 
         LogEvent conversionEvent = factory.createConversionEvent(
-                validProjectConfig,
-                Collections.<Experiment, Variation>emptyMap(),
-                userId,
-                eventType.getId(),
-                eventType.getKey(),
-                Collections.<String, String>emptyMap(),
-                Collections.<String, String>emptyMap()
+            validProjectConfig,
+            Collections.<Experiment, Variation>emptyMap(),
+            userId,
+            eventType.getId(),
+            eventType.getKey(),
+            Collections.<String, String>emptyMap(),
+            Collections.<String, String>emptyMap()
         );
 
         assertNull(conversionEvent);
@@ -967,35 +964,35 @@ public class EventFactoryTest {
         attributeMap.put(ControlAttribute.BUCKETING_ATTRIBUTE.toString(), "variation");
 
         Decision expectedDecision = new Decision.Builder()
-                .setCampaignId(activatedExperiment.getLayerId())
-                .setExperimentId(activatedExperiment.getId())
-                .setVariationId(bucketedVariation.getId())
-                .setIsCampaignHoldback(false)
-                .build();
+            .setCampaignId(activatedExperiment.getLayerId())
+            .setExperimentId(activatedExperiment.getId())
+            .setVariationId(bucketedVariation.getId())
+            .setIsCampaignHoldback(false)
+            .build();
 
         com.optimizely.ab.event.internal.payload.Attribute feature = new com.optimizely.ab.event.internal.payload.Attribute.Builder()
-                .setEntityId(attribute.getId()).setKey(attribute.getKey())
-                .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
-                .setValue("value")
-                .build();
+            .setEntityId(attribute.getId()).setKey(attribute.getKey())
+            .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
+            .setValue("value")
+            .build();
 
         com.optimizely.ab.event.internal.payload.Attribute feature1 = new com.optimizely.ab.event.internal.payload.Attribute.Builder()
-                .setEntityId(ControlAttribute.BUCKETING_ATTRIBUTE.toString())
-                .setKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())
-                .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
-                .setValue("variation")
-                .build();
+            .setEntityId(ControlAttribute.BUCKETING_ATTRIBUTE.toString())
+            .setKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())
+            .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
+            .setValue("variation")
+            .build();
 
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = new ArrayList<com.optimizely.ab.event.internal.payload.Attribute>();
         expectedUserFeatures.add(feature);
         expectedUserFeatures.add(feature1);
 
-        if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
+        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
             expectedUserFeatures.add(getBotFilteringAttribute());
         }
 
         LogEvent impressionEvent = factory.createImpressionEvent(projectConfig, activatedExperiment, bucketedVariation,
-                userId, attributeMap);
+            userId, attributeMap);
 
         // verify that request endpoint is correct
         assertThat(impressionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
@@ -1004,7 +1001,7 @@ public class EventFactoryTest {
 
         // verify payload information
         assertThat(impression.getVisitors().get(0).getVisitorId(), is(userId));
-        assertThat((double)impression.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double)System.currentTimeMillis(), 1000.0));
+        assertThat((double) impression.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double) System.currentTimeMillis(), 1000.0));
         assertFalse(impression.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertThat(impression.getAnonymizeIp(), is(projectConfig.getAnonymizeIP()));
         assertThat(impression.getProjectId(), is(projectConfig.getProjectId()));
@@ -1038,13 +1035,13 @@ public class EventFactoryTest {
         // call the bucket function.
         for (Experiment experiment : allExperiments) {
             when(mockBucketAlgorithm.bucket(experiment, bucketingId))
-                    .thenReturn(experiment.getVariations().get(0));
+                .thenReturn(experiment.getVariations().get(0));
         }
         DecisionService decisionService = new DecisionService(
-                mockBucketAlgorithm,
-                mock(ErrorHandler.class),
-                validProjectConfig,
-                mock(UserProfileService.class)
+            mockBucketAlgorithm,
+            mock(ErrorHandler.class),
+            validProjectConfig,
+            mock(UserProfileService.class)
         );
 
         Map<String, String> attributeMap = new java.util.HashMap<String, String>();
@@ -1056,31 +1053,31 @@ public class EventFactoryTest {
         eventTagMap.put("string_param", "123");
 
         Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-                validProjectConfig,
-                decisionService,
-                eventType.getKey(),
-                userId,
-                attributeMap);
+            validProjectConfig,
+            decisionService,
+            eventType.getKey(),
+            userId,
+            attributeMap);
 
         LogEvent conversionEvent = factory.createConversionEvent(
-                validProjectConfig,
-                experimentVariationMap,
-                userId,
-                eventType.getId(),
-                eventType.getKey(),
-                attributeMap,
-                eventTagMap);
+            validProjectConfig,
+            experimentVariationMap,
+            userId,
+            eventType.getId(),
+            eventType.getKey(),
+            attributeMap,
+            eventTagMap);
 
         List<Decision> expectedDecisions = new ArrayList<Decision>();
 
         for (Experiment experiment : experimentsForEventKey) {
             if (experiment.isRunning()) {
                 Decision decision = new Decision.Builder()
-                        .setCampaignId(experiment.getLayerId())
-                        .setExperimentId(experiment.getId())
-                        .setVariationId(experiment.getVariations().get(0).getId())
-                        .setIsCampaignHoldback(false)
-                        .build();
+                    .setCampaignId(experiment.getLayerId())
+                    .setExperimentId(experiment.getId())
+                    .setVariationId(experiment.getVariations().get(0).getId())
+                    .setIsCampaignHoldback(false)
+                    .build();
 
                 expectedDecisions.add(decision);
             }
@@ -1093,28 +1090,28 @@ public class EventFactoryTest {
 
         // verify payload information
         assertThat(conversion.getVisitors().get(0).getVisitorId(), is(userId));
-        assertThat((double)conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double)System.currentTimeMillis(), 1000.0));
+        assertThat((double) conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double) System.currentTimeMillis(), 1000.0));
         assertThat(conversion.getProjectId(), is(validProjectConfig.getProjectId()));
         assertThat(conversion.getAccountId(), is(validProjectConfig.getAccountId()));
 
         com.optimizely.ab.event.internal.payload.Attribute attribute1 = new com.optimizely.ab.event.internal.payload.Attribute.Builder()
-                .setEntityId(attribute.getId()).setKey(attribute.getKey())
-                .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
-                .setValue(AUDIENCE_GRYFFINDOR_VALUE)
-                .build();
+            .setEntityId(attribute.getId()).setKey(attribute.getKey())
+            .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
+            .setValue(AUDIENCE_GRYFFINDOR_VALUE)
+            .build();
 
         com.optimizely.ab.event.internal.payload.Attribute attribute2 = new com.optimizely.ab.event.internal.payload.Attribute.Builder()
-                .setEntityId(ControlAttribute.BUCKETING_ATTRIBUTE.toString())
-                .setKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())
-                .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
-                .setValue(bucketingId)
-                .build();
+            .setEntityId(ControlAttribute.BUCKETING_ATTRIBUTE.toString())
+            .setKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())
+            .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
+            .setValue(bucketingId)
+            .build();
 
         List<com.optimizely.ab.event.internal.payload.Attribute> expectedUserFeatures = new ArrayList<com.optimizely.ab.event.internal.payload.Attribute>();
         expectedUserFeatures.add(attribute1);
         expectedUserFeatures.add(attribute2);
 
-        if(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
+        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
             expectedUserFeatures.add(getBotFilteringAttribute());
         }
 
@@ -1156,11 +1153,10 @@ public class EventFactoryTest {
 
     private com.optimizely.ab.event.internal.payload.Attribute getBotFilteringAttribute() {
         return new com.optimizely.ab.event.internal.payload.Attribute.Builder()
-                .setEntityId(ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString())
-                .setKey(ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString())
-                .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
-                .setValue(validProjectConfig.getBotFiltering())
-                .build();
+            .setEntityId(ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString())
+            .setKey(ControlAttribute.BOT_FILTERING_ATTRIBUTE.toString())
+            .setType(com.optimizely.ab.event.internal.payload.Attribute.CUSTOM_ATTRIBUTE_TYPE)
+            .setValue(validProjectConfig.getBotFiltering())
+            .build();
     }
 }
-
