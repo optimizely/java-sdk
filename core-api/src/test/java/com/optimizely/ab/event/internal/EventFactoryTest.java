@@ -20,14 +20,11 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.optimizely.ab.bucketing.Bucketer;
-import com.optimizely.ab.bucketing.DecisionService;
-import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.Decision;
 import com.optimizely.ab.event.internal.payload.EventBatch;
@@ -147,6 +144,7 @@ public class EventFactoryTest {
         assertThat((double) eventBatch.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double) System.currentTimeMillis(), 1000.0));
         assertFalse(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertThat(eventBatch.getAnonymizeIp(), is(validProjectConfig.getAnonymizeIP()));
+        assertTrue(eventBatch.getEnrichDecisions());
         assertThat(eventBatch.getProjectId(), is(validProjectConfig.getProjectId()));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0), is(expectedDecision));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getCampaignId(),
@@ -206,6 +204,7 @@ public class EventFactoryTest {
         assertThat((double) eventBatch.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double) System.currentTimeMillis(), 1000.0));
         assertFalse(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertThat(eventBatch.getAnonymizeIp(), is(validProjectConfig.getAnonymizeIP()));
+        assertTrue(eventBatch.getEnrichDecisions());
         assertThat(eventBatch.getProjectId(), is(validProjectConfig.getProjectId()));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0), is(expectedDecision));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getCampaignId(),
@@ -521,6 +520,7 @@ public class EventFactoryTest {
         assertTrue(conversion.getVisitors().get(0).getAttributes().containsAll(expectedUserFeatures));
         assertTrue(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTags().equals(eventTagMap));
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
+        assertTrue(conversion.getEnrichDecisions());
         assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
         assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
     }
@@ -588,6 +588,7 @@ public class EventFactoryTest {
         assertTrue(conversion.getVisitors().get(0).getAttributes().containsAll(expectedUserFeatures));
         assertTrue(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTags().equals(eventTagMap));
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
+        assertTrue(conversion.getEnrichDecisions());
         assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
         assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
     }
@@ -822,6 +823,7 @@ public class EventFactoryTest {
         assertThat((double) impression.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double) System.currentTimeMillis(), 1000.0));
         assertFalse(impression.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertThat(impression.getAnonymizeIp(), is(projectConfig.getAnonymizeIP()));
+        assertTrue(impression.getEnrichDecisions());
         assertThat(impression.getProjectId(), is(projectConfig.getProjectId()));
         assertThat(impression.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0), is(expectedDecision));
         assertThat(impression.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getCampaignId(), is(activatedExperiment.getLayerId()));
@@ -900,6 +902,7 @@ public class EventFactoryTest {
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getQuantity(), null);
         assertTrue(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTags().equals(eventTagMap));
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
+        assertTrue(conversion.getEnrichDecisions());
         assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
         assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
     }
