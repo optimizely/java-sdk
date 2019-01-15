@@ -285,12 +285,6 @@ public class EventFactoryTest {
         attributes.put(boolAttribute.getKey(), validBoolAttribute);
         attributes.put(emptyAttribute.getKey(), validBoolAttribute);
 
-        DecisionService decisionService = new DecisionService(
-            mockBucketAlgorithm,
-            mock(ErrorHandler.class),
-            validProjectConfig,
-            mock(UserProfileService.class)
-        );
         LogEvent conversionEvent = factory.createConversionEvent(
                 validProjectConfig,
                 userId,
