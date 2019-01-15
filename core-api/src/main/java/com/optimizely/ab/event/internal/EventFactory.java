@@ -124,7 +124,7 @@ public class EventFactory {
             .build();
 
         Snapshot snapshot = new Snapshot.Builder()
-                .setEvents(Collections.singletonList((conversionEvent)))
+                .setEvents(Collections.singletonList(conversionEvent))
                 .build();
 
         Visitor visitor = new Visitor.Builder()
