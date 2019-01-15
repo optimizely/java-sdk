@@ -81,7 +81,7 @@ public class UserAttribute<T> implements Condition<T> {
         Object userAttributeValue = attributes.get(name);
 
         if (!"custom_attribute".equals(type)) {
-            logger.error("Audience condition \"{}\" has an unknown condition type: {}", this.toString(), type);
+            logger.warn("Audience condition \"{}\" has an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK", this.toString(), type);
             return null; // unknown type
         }
         // check user attribute value is equal
@@ -92,19 +92,25 @@ public class UserAttribute<T> implements Condition<T> {
             if (!(matchType instanceof NullMatch) && result == null) {
                 if (!attributes.containsKey(name)) {
                     //Missing attribute value
-                    logger.debug("Audience condition \"{}\" evaluated as UNKNOWN because no user attribute for \"{}\" key is passed", this.toString(), name);
+                    logger.debug("Audience condition \"{}\" evaluated to UNKNOWN because no value was passed for user attribute \"{}\"", this.toString(), name);
                 } else {
                     //if attribute value is not valid
-                    logger.warn(
-                        "Audience condition \"{}\" evaluated as UNKNOWN because the value for user attribute \"{}\" is inapplicable: \"{}\"",
-                        this.toString(),
-                        name,
-                        userAttributeValue);
+                    if (userAttributeValue != null) {
+                        logger.warn(
+                            "Audience condition \"{}\" evaluated to UNKNOWN because a value of type \"{}\" was passed for user attribute \"{}\"",
+                            this.toString(),
+                            userAttributeValue.getClass().getCanonicalName(),
+                            name);
+                    } else {
+                        logger.warn(
+                            "Audience condition \"{}\" evaluated to UNKNOWN because a null value was passed for user attribute \"{}\"",
+                            this.toString(),
+                            name);
+                    }
                 }
             } else if (matchType instanceof NullMatch) {
-                logger.error("Audience condition \"{}\" " + ((NullMatch) matchType).getMatchTypeError().toString(),
-                    this.toString(),
-                    match == null ? "legacy_custom_attribute" : match);
+                logger.warn("Audience condition \"{}\" " + ((NullMatch) matchType).getMatchTypeError().toString(),
+                    this.toString());
             }
             return result;
         } catch (NullPointerException np) {

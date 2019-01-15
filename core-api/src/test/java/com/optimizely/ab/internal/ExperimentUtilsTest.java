@@ -130,9 +130,7 @@ public class ExperimentUtilsTest {
     @Test
     public void isUserInExperimentReturnsTrueIfExperimentHasNoAudiences() {
         Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
-
         assertTrue(isUserInExperiment(noAudienceProjectConfig, experiment, Collections.<String, String>emptyMap()));
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("There is no Audience associated with experiment %s", experiment.getKey()));
     }
 
     /**
@@ -145,11 +143,11 @@ public class ExperimentUtilsTest {
         Audience audience = projectConfig.getAudience(experiment.getAudienceIds().get(0));
         Boolean result = isUserInExperiment(projectConfig, experiment, Collections.<String, String>emptyMap());
         assertTrue(result);
+        logbackVerifier.expectMessage(Level.DEBUG, String.format("Evaluating audiences for experiment \"%s\": \"[100]\"", experiment.getKey()));
         logbackVerifier.expectMessage(Level.DEBUG, String.format("Starting to evaluate audience %s with conditions: \"%s\"", audience.getName(), audience.getConditions()));
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("User attributes: {}"));
         logbackVerifier.expectMessage(Level.ERROR, String.format("Cannot evaluate targeting condition since the value for attribute is an incompatible type"));
-        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated as %s", audience.getName(), result));
-        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated as %s", experiment.getKey(), result));
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated to %s", audience.getName(), result));
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated to %s", experiment.getKey(), result));
     }
 
     /**
@@ -163,12 +161,13 @@ public class ExperimentUtilsTest {
         Audience audience = projectConfig.getAudience(experiment.getAudienceIds().get(0));
         Boolean result = isUserInExperiment(projectConfig, experiment, null);
         assertTrue(result);
+        logbackVerifier.expectMessage(Level.DEBUG, String.format("Evaluating audiences for experiment \"%s\": \"[100]\"", experiment.getKey()));
         logbackVerifier.expectMessage(Level.DEBUG, String.format("Starting to evaluate audience %s with conditions: \"%s\"", audience.getName(), audience.getConditions()));
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("User attributes: null"));
         logbackVerifier.expectMessage(Level.ERROR, String.format("Cannot evaluate targeting condition since the value for attribute is an incompatible type"));
-        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated as %s", audience.getName(), result));
-        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated as %s", experiment.getKey(), result));
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated to %s", audience.getName(), result));
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated to %s", experiment.getKey(), result));
     }
+
     /**
      * If the {@link Experiment} contains {@link TypedAudience}, and attributes is valid and true,
      * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map)} should return true.
@@ -182,9 +181,8 @@ public class ExperimentUtilsTest {
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG, String.format("Evaluating audiences for experiment \"%s\": \"%s\"", experiment.getKey(), experiment.getAudienceConditions().toString()));
         logbackVerifier.expectMessage(Level.DEBUG, String.format("Starting to evaluate audience %s with conditions: \"%s\"", audience.getName(), audience.getConditions()));
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("User attributes: %s", attribute.toString()));
-        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated as %s", audience.getName(), result));
-        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated as %s", experiment.getKey(), result));
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated to %s", audience.getName(), result));
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated to %s", experiment.getKey(), result));
     }
 
     /**
@@ -198,10 +196,10 @@ public class ExperimentUtilsTest {
         Map<String, String> attributes = Collections.singletonMap("browser_type", "chrome");
         Boolean result = isUserInExperiment(projectConfig, experiment, attributes);
         assertTrue(result);
+        logbackVerifier.expectMessage(Level.DEBUG, String.format("Evaluating audiences for experiment \"%s\": \"[100]\"", experiment.getKey()));
         logbackVerifier.expectMessage(Level.DEBUG, String.format("Starting to evaluate audience %s with conditions: \"%s\"", audience.getName(), audience.getConditions()));
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("User attributes: %s", attributes.toString()));
-        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated as %s", audience.getName(), result));
-        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated as %s", experiment.getKey(), result));
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated to %s", audience.getName(), result));
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated to %s", experiment.getKey(), result));
     }
 
     /**
@@ -215,11 +213,10 @@ public class ExperimentUtilsTest {
         Map<String, String> attributes = Collections.singletonMap("browser_type", "firefox");
         Boolean result = isUserInExperiment(projectConfig, experiment, attributes);
         assertFalse(result);
-
+        logbackVerifier.expectMessage(Level.DEBUG, String.format("Evaluating audiences for experiment \"%s\": \"[100]\"", experiment.getKey()));
         logbackVerifier.expectMessage(Level.DEBUG, String.format("Starting to evaluate audience %s with conditions: \"%s\"", audience.getName(), audience.getConditions()));
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("User attributes: %s", attributes.toString()));
-        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated as %s", audience.getName(), result));
-        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated as %s", experiment.getKey(), result));
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated to %s", audience.getName(), result));
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated to %s", experiment.getKey(), result));
 
     }
 
@@ -249,11 +246,10 @@ public class ExperimentUtilsTest {
         assertFalse(isUserInExperiment(v4ProjectConfig, experiment, attributesWithNull));
 
         logbackVerifier.expectMessage(Level.DEBUG, String.format("Starting to evaluate audience %s with conditions: \"%s\"", audience.getName(), audience.getConditions()));
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("User attributes: %s", attributesWithNull.toString()));
         logbackVerifier.expectMessage(Level.ERROR, "Cannot evaluate targeting condition since the value for attribute is an incompatible type");
-        logbackVerifier.expectMessage(Level.ERROR, "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" condition value data type is inapplicable for match type \"legacy_custom_attribute\"");
-        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated as null", audience.getName()));
-        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated as null", experiment.getKey()));
+        logbackVerifier.expectMessage(Level.WARN, "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unknown condition value type. You may need to upgrade to a newer release of the Optimizely SDK");
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated to null", audience.getName()));
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated to null", experiment.getKey()));
     }
 
     /**
@@ -269,11 +265,10 @@ public class ExperimentUtilsTest {
         assertFalse(isUserInExperiment(v4ProjectConfig, experiment, attributesEmpty));
 
         logbackVerifier.expectMessage(Level.DEBUG, String.format("Starting to evaluate audience %s with conditions: \"%s\"", audience.getName(), audience.getConditions()));
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("User attributes: %s", attributesEmpty.toString()));
         logbackVerifier.expectMessage(Level.ERROR, "Cannot evaluate targeting condition since the value for attribute is an incompatible type");
-        logbackVerifier.expectMessage(Level.ERROR, "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" condition value data type is inapplicable for match type \"legacy_custom_attribute\"");
-        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated as null", audience.getName()));
-        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated as null", experiment.getKey()));
+        logbackVerifier.expectMessage(Level.WARN, "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unknown condition value type. You may need to upgrade to a newer release of the Optimizely SDK");
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated to null", audience.getName()));
+        logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated to null", experiment.getKey()));
     }
 
     /**

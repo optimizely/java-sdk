@@ -75,8 +75,8 @@ public final class ExperimentUtils {
 
     @Nullable
     public static Boolean evaluateAudience(@Nonnull ProjectConfig projectConfig,
-                             @Nonnull Experiment experiment,
-                             @Nonnull Map<String, ?> attributes) {
+                                           @Nonnull Experiment experiment,
+                                           @Nonnull Map<String, ?> attributes) {
         List<String> experimentAudienceIds = experiment.getAudienceIds();
 
         // if there are no audiences, ALL users should be part of the experiment
@@ -93,24 +93,26 @@ public final class ExperimentUtils {
 
         OrCondition implicitOr = new OrCondition(conditions);
 
+        logger.debug("Evaluating audiences for experiment \"{}\": \"{}\"", experiment.getKey(), conditions);
+
         Boolean result = implicitOr.evaluate(projectConfig, attributes);
 
-        logger.info("Audiences for experiment {} collectively evaluated as {}" , experiment.getKey(), result);
+        logger.info("Audiences for experiment {} collectively evaluated to {}", experiment.getKey(), result);
 
         return result;
     }
 
     @Nullable
     public static Boolean evaluateAudienceConditions(@Nonnull ProjectConfig projectConfig,
-                                       @Nonnull Experiment experiment,
-                                       @Nonnull Map<String, ?> attributes) {
+                                                     @Nonnull Experiment experiment,
+                                                     @Nonnull Map<String, ?> attributes) {
 
         Condition conditions = experiment.getAudienceConditions();
         if (conditions == null) return null;
         logger.debug("Evaluating audiences for experiment \"{}\": \"{}\"", experiment.getKey(), conditions.toString());
         try {
             Boolean result = conditions.evaluate(projectConfig, attributes);
-            logger.info("Audiences for experiment {} collectively evaluated as {}", experiment.getKey(), result);
+            logger.info("Audiences for experiment {} collectively evaluated to {}", experiment.getKey(), result);
             return result;
         } catch (Exception e) {
             logger.error("Condition invalid", e);
