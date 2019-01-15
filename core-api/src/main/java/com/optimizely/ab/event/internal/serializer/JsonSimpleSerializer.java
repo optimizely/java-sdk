@@ -42,6 +42,7 @@ class JsonSimpleSerializer implements Serializer {
         JSONObject jsonObject = new JSONObject();
 
         jsonObject.put("account_id", eventBatch.getAccountId());
+        jsonObject.put("enrich_decisions", eventBatch.getEnrichDecisions());
         jsonObject.put("visitors", serializeVisitors(eventBatch.getVisitors()));
         if (eventBatch.getAnonymizeIp() != null) jsonObject.put("anonymize_ip", eventBatch.getAnonymizeIp());
         if (eventBatch.getClientName() != null) jsonObject.put("client_name", eventBatch.getClientName());
@@ -50,7 +51,6 @@ class JsonSimpleSerializer implements Serializer {
         if (eventBatch.getRevision() != null) jsonObject.put("revision", eventBatch.getRevision());
 
         return jsonObject;
-
     }
 
     private JSONArray serializeVisitors(List<Visitor> visitors) {
@@ -90,7 +90,7 @@ class JsonSimpleSerializer implements Serializer {
     private JSONObject serializeSnapshot(Snapshot snapshot) {
         JSONObject jsonObject = new JSONObject();
 
-        jsonObject.put("decisions", serializeDecisions(snapshot.getDecisions()));
+        if (snapshot.getDecisions() != null) jsonObject.put("decisions", serializeDecisions(snapshot.getDecisions()));
         jsonObject.put("events", serializeEvents(snapshot.getEvents()));
 
         return jsonObject;

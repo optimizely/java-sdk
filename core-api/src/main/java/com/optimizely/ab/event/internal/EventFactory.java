@@ -104,28 +104,11 @@ public class EventFactory {
     }
 
     public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
-                                          @Nonnull Map<Experiment, Variation> experimentVariationMap,
                                           @Nonnull String userId,
                                           @Nonnull String eventId, // Why is this not used?
                                           @Nonnull String eventName,
                                           @Nonnull Map<String, ?> attributes,
                                           @Nonnull Map<String, ?> eventTags) {
-
-        if (experimentVariationMap.isEmpty()) {
-            return null;
-        }
-
-        ArrayList<Decision> decisions = new ArrayList<Decision>(experimentVariationMap.size());
-        for (Map.Entry<Experiment, Variation> entry : experimentVariationMap.entrySet()) {
-            Decision decision = new Decision.Builder()
-                .setCampaignId(entry.getKey().getLayerId())
-                .setExperimentId(entry.getKey().getId())
-                .setVariationId(entry.getValue().getId())
-                .setIsCampaignHoldback(false)
-                .build();
-
-            decisions.add(decision);
-        }
 
         EventType eventType = projectConfig.getEventNameMapping().get(eventName);
 
@@ -141,9 +124,8 @@ public class EventFactory {
             .build();
 
         Snapshot snapshot = new Snapshot.Builder()
-            .setDecisions(decisions)
-            .setEvents(Collections.singletonList((conversionEvent)))
-            .build();
+                .setEvents(Collections.singletonList(conversionEvent))
+                .build();
 
         Visitor visitor = new Visitor.Builder()
             .setVisitorId(userId)
