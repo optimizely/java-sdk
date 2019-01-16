@@ -69,9 +69,11 @@ public class Snapshot {
         Snapshot snapshot = (Snapshot) o;
 
         if (activationTimestamp != null ?
-            !activationTimestamp.equals(snapshot.activationTimestamp) :
-            snapshot.activationTimestamp != null) return false;
-        if (!decisions.equals(snapshot.decisions)) return false;
+                !activationTimestamp.equals(snapshot.activationTimestamp) :
+                snapshot.activationTimestamp != null) return false;
+        if (decisions != null ?
+               !decisions.equals(snapshot.decisions) :
+               snapshot.decisions != null) return false;
         return events.equals(snapshot.events);
     }
 
