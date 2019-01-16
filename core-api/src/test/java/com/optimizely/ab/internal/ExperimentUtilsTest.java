@@ -247,7 +247,7 @@ public class ExperimentUtilsTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, String.format("Starting to evaluate audience %s with conditions: \"%s\"", audience.getName(), audience.getConditions()));
         logbackVerifier.expectMessage(Level.ERROR, "Cannot evaluate targeting condition since the value for attribute is an incompatible type");
-        logbackVerifier.expectMessage(Level.WARN, "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unknown condition value type. You may need to upgrade to a newer release of the Optimizely SDK");
+        logbackVerifier.expectMessage(Level.WARN, "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unexpected value type. You may need to upgrade to a newer release of the Optimizely SDK");
         logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated to null", audience.getName()));
         logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated to null", experiment.getKey()));
     }
@@ -266,7 +266,7 @@ public class ExperimentUtilsTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, String.format("Starting to evaluate audience %s with conditions: \"%s\"", audience.getName(), audience.getConditions()));
         logbackVerifier.expectMessage(Level.ERROR, "Cannot evaluate targeting condition since the value for attribute is an incompatible type");
-        logbackVerifier.expectMessage(Level.WARN, "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unknown condition value type. You may need to upgrade to a newer release of the Optimizely SDK");
+        logbackVerifier.expectMessage(Level.WARN, "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unexpected value type. You may need to upgrade to a newer release of the Optimizely SDK");
         logbackVerifier.expectMessage(Level.INFO, String.format("Audience %s evaluated to null", audience.getName()));
         logbackVerifier.expectMessage(Level.INFO, String.format("Audiences for experiment %s collectively evaluated to null", experiment.getKey()));
     }

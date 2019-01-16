@@ -81,7 +81,7 @@ public class UserAttribute<T> implements Condition<T> {
         Object userAttributeValue = attributes.get(name);
 
         if (!"custom_attribute".equals(type)) {
-            logger.warn("Audience condition \"{}\" has an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK", this.toString(), type);
+            logger.warn("Audience condition \"{}\" has an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK", this.toString());
             return null; // unknown type
         }
         // check user attribute value is equal

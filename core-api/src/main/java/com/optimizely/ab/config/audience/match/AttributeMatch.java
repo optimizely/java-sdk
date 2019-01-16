@@ -20,11 +20,6 @@ abstract class AttributeMatch<T> implements Match {
     T castToValueType(Object o, Object value) {
         try {
             if (!o.getClass().isInstance(value) && !(o instanceof Number && value instanceof Number)) {
-                MatchType.logger.warn(
-                    "Incompatible type: Attribute value Type {}, Condition value Type {}",
-                    o.getClass().getCanonicalName(), value.getClass().getCanonicalName()
-                );
-
                 return null;
             }
 

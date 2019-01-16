@@ -124,7 +124,6 @@ public class AudienceConditionEvaluationTest {
     public void unexpectedAttributeType() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
         assertNull(testInstance.evaluate(null, testUserAttributes));
-        logbackVerifier.expectMessage(Level.WARN, "Incompatible type: Attribute value Type java.lang.String, Condition value Type java.lang.Integer");
         logbackVerifier.expectMessage(Level.ERROR, "Greater than match failed");
         logbackVerifier.expectMessage(Level.WARN, String.format("Audience condition \"%s\" evaluated to UNKNOWN because a value of type \"java.lang.String\" was passed for user attribute \"browser_type\"", testInstance.toString()));
     }
