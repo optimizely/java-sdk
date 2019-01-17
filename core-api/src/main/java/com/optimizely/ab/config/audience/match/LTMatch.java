@@ -30,7 +30,6 @@ class LTMatch extends AttributeMatch<Number> {
         try {
             return castToValueType(attributeValue, value).doubleValue() < value.doubleValue();
         } catch (Exception e) {
-            MatchType.logger.error("Less than match failed ", e);
             return null;
         }
     }

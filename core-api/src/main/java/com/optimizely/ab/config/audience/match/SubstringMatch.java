@@ -36,7 +36,6 @@ class SubstringMatch extends AttributeMatch<String> {
         try {
             return castToValueType(attributeValue, value).contains(value);
         } catch (Exception e) {
-            MatchType.logger.error("Substring match failed ", e);
             return null;
         }
     }

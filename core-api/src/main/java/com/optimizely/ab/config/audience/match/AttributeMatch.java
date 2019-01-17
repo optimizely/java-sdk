@@ -27,10 +27,6 @@ abstract class AttributeMatch<T> implements Match {
 
             return rv;
         } catch (Exception e) {
-            MatchType.logger.error(
-                "Cannot evaluate targeting condition since the value for attribute is an incompatible type",
-                e
-            );
             return null;
         }
     }
