@@ -113,11 +113,9 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void invalidMatch() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah", "chrome");
-        String expectedAudience = testInstance.toString();
         assertNull(testInstance.evaluate(null, testUserAttributes));
         logbackVerifier.expectMessage(Level.WARN,
-            String.format("Audience condition \"%s\" uses an unknown match type. You may need to upgrade to a newer release of the Optimizely SDK",
-                expectedAudience));
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='blah', value='chrome'}\" uses an unknown match type. You may need to upgrade to a newer release of the Optimizely SDK");
     }
 
     /**
@@ -126,15 +124,9 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void unexpectedAttributeType() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
-        String expectedAudience = testInstance.toString();
-        String expectedType = "java.lang.String";
-        String expectedAttributeKey = "browser_type";
         assertNull(testInstance.evaluate(null, testUserAttributes));
         logbackVerifier.expectMessage(Level.WARN,
-            String.format("Audience condition \"%s\" evaluated to UNKNOWN because a value of type \"%s\" was passed for user attribute \"%s\"",
-                expectedAudience,
-                expectedType,
-                expectedAttributeKey));
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because a value of type \"java.lang.String\" was passed for user attribute \"browser_type\"");
     }
 
     /**
@@ -143,13 +135,9 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void unexpectedAttributeTypeNull() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
-        String expectedAudience = testInstance.toString();
-        String expectedAttributeKey = "browser_type";
         assertNull(testInstance.evaluate(null, Collections.singletonMap("browser_type", null)));
         logbackVerifier.expectMessage(Level.WARN,
-            String.format("Audience condition \"%s\" evaluated to UNKNOWN because a null value was passed for user attribute \"%s\"",
-                expectedAudience,
-                expectedAttributeKey));
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because a null value was passed for user attribute \"browser_type\"");
     }
 
 
@@ -159,13 +147,9 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void missingAttribute() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
-        String expectedAudience = testInstance.toString();
-        String expectedAttributeKey = testInstance.getName();
         assertNull(testInstance.evaluate(null, Collections.EMPTY_MAP));
         logbackVerifier.expectMessage(Level.DEBUG,
-            String.format("Audience condition \"%s\" evaluated to UNKNOWN because no value was passed for user attribute \"%s\"",
-                expectedAudience,
-                expectedAttributeKey));
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because no value was passed for user attribute \"browser_type\"");
     }
 
     /**
@@ -174,13 +158,9 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void nullAttribute() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
-        String expectedAudience = testInstance.toString();
-        String expectedAttributeKey = testInstance.getName();
         assertNull(testInstance.evaluate(null, null));
         logbackVerifier.expectMessage(Level.DEBUG,
-            String.format("Audience condition \"%s\" evaluated to UNKNOWN because no value was passed for user attribute \"%s\"",
-                expectedAudience,
-                expectedAttributeKey));
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because no value was passed for user attribute \"browser_type\"");
     }
 
     /**
@@ -189,11 +169,9 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void unknownConditionType() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "blah", "exists", "firefox");
-        String expectedAudience = testInstance.toString();
         assertNull(testInstance.evaluate(null, testUserAttributes));
         logbackVerifier.expectMessage(Level.WARN,
-            String.format("Audience condition \"%s\" has an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK",
-                expectedAudience));
+            "Audience condition \"{name='browser_type', type='blah', match='exists', value='firefox'}\" has an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK");
     }
 
     /**

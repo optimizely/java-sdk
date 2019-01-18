@@ -81,7 +81,7 @@ public class UserAttribute<T> implements Condition<T> {
         Object userAttributeValue = attributes.get(name);
 
         if (!"custom_attribute".equals(type)) {
-            logger.warn("Audience condition \"{}\" has an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK", this.toString());
+            logger.warn("Audience condition \"{}\" has an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK", this);
             return null; // unknown type
         }
         // check user attribute value is equal
@@ -92,29 +92,29 @@ public class UserAttribute<T> implements Condition<T> {
             if (!(matchType instanceof NullMatch) && result == null) {
                 if (!attributes.containsKey(name)) {
                     //Missing attribute value
-                    logger.debug("Audience condition \"{}\" evaluated to UNKNOWN because no value was passed for user attribute \"{}\"", this.toString(), name);
+                    logger.debug("Audience condition \"{}\" evaluated to UNKNOWN because no value was passed for user attribute \"{}\"", this, name);
                 } else {
                     //if attribute value is not valid
                     if (userAttributeValue != null) {
                         logger.warn(
                             "Audience condition \"{}\" evaluated to UNKNOWN because a value of type \"{}\" was passed for user attribute \"{}\"",
-                            this.toString(),
+                            this,
                             userAttributeValue.getClass().getCanonicalName(),
                             name);
                     } else {
                         logger.warn(
                             "Audience condition \"{}\" evaluated to UNKNOWN because a null value was passed for user attribute \"{}\"",
-                            this.toString(),
+                            this,
                             name);
                     }
                 }
             } else if (matchType instanceof NullMatch) {
-                logger.warn("Audience condition \"{}\" " + ((NullMatch) matchType).getMatchTypeError().toString(),
-                    this.toString());
+                logger.warn("Audience condition \"{}\" " + ((NullMatch) matchType).getNullMatchTypeErrors().toString(),
+                    this);
             }
             return result;
         } catch (NullPointerException np) {
-            logger.error(String.format("attribute or value null for match %s", match != null ? match : "legacy condition"), np);
+            logger.error("attribute or value null for match {}", match != null ? match : "legacy condition", np);
             return null;
         }
     }

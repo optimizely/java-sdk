@@ -139,30 +139,16 @@ public class ExperimentUtilsTest {
     @Test
     public void isUserInExperimentEvaluatesEvenIfExperimentHasAudiencesButUserHasNoAttributes() {
         Experiment experiment = projectConfig.getExperiments().get(0);
-        Audience audience = projectConfig.getAudience(experiment.getAudienceIds().get(0));
-        String expectedExperimentKey = experiment.getKey();
-        String expectedAudience = "[100]";
-        String expectedAudienceName = audience.getName();
-        String expectedAudienceConditions = audience.getConditions().toString();
-
         Boolean result = isUserInExperiment(projectConfig, experiment, Collections.<String, String>emptyMap());
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
-            String.format("Evaluating audiences for experiment \"%s\": \"%s\"",
-                expectedExperimentKey,
-                expectedAudience));
+            "Evaluating audiences for experiment \"etag1\": \"[100]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            String.format("Starting to evaluate audience %s with conditions: \"%s\"",
-                expectedAudienceName,
-                expectedAudienceConditions));
+            "Starting to evaluate audience not_firefox_users with conditions: \"[and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]\"");
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Audience %s evaluated to %s",
-                expectedAudienceName,
-                result));
+            "Audience not_firefox_users evaluated to true");
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Audiences for experiment %s collectively evaluated to %s",
-                expectedExperimentKey,
-                result));
+            "Audiences for experiment etag1 collectively evaluated to true");
     }
 
     /**
@@ -173,30 +159,17 @@ public class ExperimentUtilsTest {
     @Test
     public void isUserInExperimentEvaluatesEvenIfExperimentHasAudiencesButUserSendNullAttributes() throws Exception {
         Experiment experiment = projectConfig.getExperiments().get(0);
-        Audience audience = projectConfig.getAudience(experiment.getAudienceIds().get(0));
         Boolean result = isUserInExperiment(projectConfig, experiment, null);
-        String expectedExperimentKey = experiment.getKey();
-        String expectedAudience = "[100]";
-        String expectedAudienceName = audience.getName();
-        String expectedAudienceConditions = audience.getConditions().toString();
 
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
-            String.format("Evaluating audiences for experiment \"%s\": \"%s\"",
-                expectedExperimentKey,
-                expectedAudience));
+            "Evaluating audiences for experiment \"etag1\": \"[100]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            String.format("Starting to evaluate audience %s with conditions: \"%s\"",
-                expectedAudienceName,
-                expectedAudienceConditions));
+            "Starting to evaluate audience not_firefox_users with conditions: \"[and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]\"");
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Audience %s evaluated to %s",
-                expectedAudienceName,
-                result));
+            "Audience not_firefox_users evaluated to true");
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Audiences for experiment %s collectively evaluated to %s",
-                expectedExperimentKey,
-                result));
+            "Audiences for experiment etag1 collectively evaluated to true");
     }
 
     /**
@@ -206,31 +179,18 @@ public class ExperimentUtilsTest {
     @Test
     public void isUserInExperimentEvaluatesExperimentHasTypedAudiences() {
         Experiment experiment = v4ProjectConfig.getExperiments().get(1);
-        Audience audience = v4ProjectConfig.getAudience(experiment.getAudienceIds().get(0));
         Map<String, Boolean> attribute = Collections.singletonMap("booleanKey", true);
         Boolean result = isUserInExperiment(v4ProjectConfig, experiment, attribute);
-        String expectedExperimentKey = experiment.getKey();
-        String expectedAudience = experiment.getAudienceConditions().toString();
-        String expectedAudienceName = audience.getName();
-        String expectedAudienceConditions = audience.getConditions().toString();
 
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
-            String.format("Evaluating audiences for experiment \"%s\": \"%s\"",
-                expectedExperimentKey,
-                expectedAudience));
+            "Evaluating audiences for experiment \"typed_audience_experiment\": \"[or, 3468206643, 3468206644, 3468206646, 3468206645]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            String.format("Starting to evaluate audience %s with conditions: \"%s\"",
-                expectedAudienceName,
-                expectedAudienceConditions));
+            "Starting to evaluate audience BOOL with conditions: \"[and, [or, [or, {name='booleanKey', type='custom_attribute', match='exact', value=true}]]]\"");
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Audience %s evaluated to %s",
-                expectedAudienceName,
-                result));
+            "Audience BOOL evaluated to true");
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Audiences for experiment %s collectively evaluated to %s",
-                expectedExperimentKey,
-                result));
+            "Audiences for experiment typed_audience_experiment collectively evaluated to true");
     }
 
     /**
@@ -240,31 +200,18 @@ public class ExperimentUtilsTest {
     @Test
     public void isUserInExperimentReturnsTrueIfUserSatisfiesAnAudience() {
         Experiment experiment = projectConfig.getExperiments().get(0);
-        Audience audience = projectConfig.getAudience(experiment.getAudienceIds().get(0));
         Map<String, String> attributes = Collections.singletonMap("browser_type", "chrome");
         Boolean result = isUserInExperiment(projectConfig, experiment, attributes);
-        String expectedExperimentKey = experiment.getKey();
-        String expectedAudience = "[100]";
-        String expectedAudienceName = audience.getName();
-        String expectedAudienceConditions = audience.getConditions().toString();
 
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
-            String.format("Evaluating audiences for experiment \"%s\": \"%s\"",
-                expectedExperimentKey,
-                expectedAudience));
+            "Evaluating audiences for experiment \"etag1\": \"[100]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            String.format("Starting to evaluate audience %s with conditions: \"%s\"",
-                expectedAudienceName,
-                expectedAudienceConditions));
+            "Starting to evaluate audience not_firefox_users with conditions: \"[and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]\"");
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Audience %s evaluated to %s",
-                expectedAudienceName,
-                result));
+            "Audience not_firefox_users evaluated to true");
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Audiences for experiment %s collectively evaluated to %s",
-                expectedExperimentKey,
-                result));
+            "Audiences for experiment etag1 collectively evaluated to true");
     }
 
     /**
@@ -274,31 +221,18 @@ public class ExperimentUtilsTest {
     @Test
     public void isUserInExperimentReturnsTrueIfUserDoesNotSatisfyAnyAudiences() {
         Experiment experiment = projectConfig.getExperiments().get(0);
-        Audience audience = projectConfig.getAudience(experiment.getAudienceIds().get(0));
         Map<String, String> attributes = Collections.singletonMap("browser_type", "firefox");
         Boolean result = isUserInExperiment(projectConfig, experiment, attributes);
-        String expectedExperimentKey = experiment.getKey();
-        String expectedAudience = "[100]";
-        String expectedAudienceName = audience.getName();
-        String expectedAudienceConditions = audience.getConditions().toString();
 
         assertFalse(result);
         logbackVerifier.expectMessage(Level.DEBUG,
-            String.format("Evaluating audiences for experiment \"%s\": \"%s\"",
-                expectedExperimentKey,
-                expectedAudience));
+            "Evaluating audiences for experiment \"etag1\": \"[100]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            String.format("Starting to evaluate audience %s with conditions: \"%s\"",
-                expectedAudienceName,
-                expectedAudienceConditions));
+            "Starting to evaluate audience not_firefox_users with conditions: \"[and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]\"");
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Audience %s evaluated to %s",
-                expectedAudienceName,
-                result));
+            "Audience not_firefox_users evaluated to false");
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Audiences for experiment %s collectively evaluated to %s",
-                expectedExperimentKey,
-                result));
+            "Audiences for experiment etag1 collectively evaluated to false");
 
     }
 
@@ -323,26 +257,18 @@ public class ExperimentUtilsTest {
     @Test
     public void isUserInExperimentHandlesNullValueAttributesWithNull() {
         Experiment experiment = v4ProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY);
-        Audience audience = v4ProjectConfig.getAudience(experiment.getAudienceIds().get(0));
         Map<String, String> attributesWithNull = Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, null);
-        String expectedExperimentKey = experiment.getKey();
-        String expectedAudienceName = audience.getName();
-        String expectedAudienceConditions = audience.getConditions().toString();
 
         assertFalse(isUserInExperiment(v4ProjectConfig, experiment, attributesWithNull));
 
         logbackVerifier.expectMessage(Level.DEBUG,
-            String.format("Starting to evaluate audience %s with conditions: \"%s\"",
-                expectedAudienceName,
-                expectedAudienceConditions));
+            "Starting to evaluate audience audience_with_missing_value with conditions: \"[and, [or, [or, {name='nationality', type='custom_attribute', match='null', value='English'}, {name='nationality', type='custom_attribute', match='null', value=null}]]]\"");
         logbackVerifier.expectMessage(Level.WARN,
             "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unexpected value type. You may need to upgrade to a newer release of the Optimizely SDK");
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Audience %s evaluated to null",
-                expectedAudienceName));
+            "Audience audience_with_missing_value evaluated to null");
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Audiences for experiment %s collectively evaluated to null",
-                expectedExperimentKey));
+            "Audiences for experiment experiment_with_malformed_audience collectively evaluated to null");
     }
 
     /**
@@ -351,26 +277,19 @@ public class ExperimentUtilsTest {
     @Test
     public void isUserInExperimentHandlesNullConditionValue() {
         Experiment experiment = v4ProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY);
-        Audience audience = v4ProjectConfig.getAudience(experiment.getAudienceIds().get(0));
         Map<String, String> attributesEmpty = Collections.emptyMap();
-        String expectedExperimentKey = experiment.getKey();
-        String expectedAudienceName = audience.getName();
-        String expectedAudienceConditions = audience.getConditions().toString();
 
         // It should explicitly be set to null otherwise we will return false on empty maps
         assertFalse(isUserInExperiment(v4ProjectConfig, experiment, attributesEmpty));
 
         logbackVerifier.expectMessage(Level.DEBUG,
-            String.format("Starting to evaluate audience %s with conditions: \"%s\"",
-                expectedAudienceName,
-                expectedAudienceConditions));
-        logbackVerifier.expectMessage(Level.WARN, "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unexpected value type. You may need to upgrade to a newer release of the Optimizely SDK");
+            "Starting to evaluate audience audience_with_missing_value with conditions: \"[and, [or, [or, {name='nationality', type='custom_attribute', match='null', value='English'}, {name='nationality', type='custom_attribute', match='null', value=null}]]]\"");
+        logbackVerifier.expectMessage(Level.WARN,
+            "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unexpected value type. You may need to upgrade to a newer release of the Optimizely SDK");
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Audience %s evaluated to null",
-                expectedAudienceName));
+            "Audience audience_with_missing_value evaluated to null");
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Audiences for experiment %s collectively evaluated to null",
-                expectedExperimentKey));
+            "Audiences for experiment experiment_with_malformed_audience collectively evaluated to null");
     }
 
     /**

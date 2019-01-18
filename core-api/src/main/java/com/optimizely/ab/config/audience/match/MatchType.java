@@ -64,10 +64,10 @@ public class MatchType {
                 }
                 break;
             default:
-                return new MatchType(matchType, new NullMatch(MatchTypeError.UNKNOWN_MATCH_TYPE));
+                return new MatchType(matchType, new NullMatch(NullMatchTypeErrors.UNKNOWN_MATCH_TYPE));
         }
 
-        return new MatchType(matchType, new NullMatch(MatchTypeError.INAPPLICABLE_CONDITION_VALUE));
+        return new MatchType(matchType, new NullMatch(NullMatchTypeErrors.INAPPLICABLE_CONDITION_VALUE));
     }
 
     private static boolean isValidNumber(Object conditionValue) {
