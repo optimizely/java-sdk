@@ -359,21 +359,8 @@ public class EventFactoryTest {
         attributes.put(boolAttribute.getKey(), validBoolAttribute);
         attributes.put(emptyAttribute.getKey(), validBoolAttribute);
 
-        DecisionService decisionService = new DecisionService(
-            mockBucketAlgorithm,
-            mock(ErrorHandler.class),
-            validProjectConfig,
-            mock(UserProfileService.class)
-        );
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            decisionService,
-            eventType.getKey(),
-            userId,
-            attributes);
         LogEvent conversionEvent = factory.createConversionEvent(
             validProjectConfig,
-            experimentVariationMap,
             userId,
             eventType.getId(),
             eventType.getKey(),
@@ -442,21 +429,8 @@ public class EventFactoryTest {
         attributes.put(doubleAttribute.getKey(), invalidDoubleAttribute);
         attributes.put(integerAttribute.getKey(), validLongAttribute);
 
-        DecisionService decisionService = new DecisionService(
-            mockBucketAlgorithm,
-            mock(ErrorHandler.class),
-            validProjectConfig,
-            mock(UserProfileService.class)
-        );
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            decisionService,
-            eventType.getKey(),
-            userId,
-            attributes);
         LogEvent conversionEvent = factory.createConversionEvent(
             validProjectConfig,
-            experimentVariationMap,
             userId,
             eventType.getId(),
             eventType.getKey(),
