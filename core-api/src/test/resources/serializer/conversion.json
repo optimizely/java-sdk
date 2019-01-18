@@ -4,14 +4,6 @@
     {
       "snapshots": [
         {
-          "decisions": [
-            {
-              "variation_id": "4",
-              "campaign_id": "2",
-              "experiment_id": "5",
-              "is_campaign_holdback": false
-            }
-          ],
           "events": [
             {
               "revenue": 5000,
@@ -38,6 +30,7 @@
   "client_name": "java-sdk",
   "client_version": "0.1.1",
   "anonymize_ip": true,
+  "enrich_decisions": true,
   "project_id": "1",
   "revision": "1"
 }

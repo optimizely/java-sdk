@@ -20,7 +20,6 @@ import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfileService;
-import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.FeatureFlag;
@@ -309,36 +308,14 @@ public class Optimizely {
             logger.warn("Event tags is null when non-null was expected. Defaulting to an empty event tags map.");
         }
 
-        List<Experiment> experimentsForEvent = projectConfig.getExperimentsForEventKey(eventName);
-        Map<Experiment, Variation> experimentVariationMap = new HashMap<Experiment, Variation>(experimentsForEvent.size());
-        for (Experiment experiment : experimentsForEvent) {
-            if (experiment.isRunning()) {
-                Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes);
-                if (variation != null) {
-                    experimentVariationMap.put(experiment, variation);
-                }
-            } else {
-                logger.info(
-                    "Not tracking event \"{}\" for experiment \"{}\" because experiment has status \"Launched\".",
-                    eventType.getKey(), experiment.getKey());
-            }
-        }
-
         // create the conversion event request parameters, then dispatch
         LogEvent conversionEvent = eventFactory.createConversionEvent(
-            projectConfig,
-            experimentVariationMap,
-            userId,
-            eventType.getId(),
-            eventType.getKey(),
-            copiedAttributes,
-            eventTags);
-
-        if (conversionEvent == null) {
-            logger.info("There are no valid experiments for event \"{}\" to track.", eventName);
-            logger.info("Not tracking event \"{}\" for user \"{}\".", eventName, userId);
-            return;
-        }
+                projectConfig,
+                userId,
+                eventType.getId(),
+                eventType.getKey(),
+                copiedAttributes,
+                eventTags);
 
         logger.info("Tracking event \"{}\" for user \"{}\".", eventName, userId);
 

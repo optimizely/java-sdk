@@ -44,6 +44,8 @@ public class EventBatch {
     @JsonProperty("account_id")
     String accountId;
     List<Visitor> visitors;
+    @JsonProperty("enrich_decisions")
+    Boolean enrichDecisions;
     @JsonProperty("anonymize_ip")
     Boolean anonymizeIp;
     @JsonProperty("client_name")
@@ -61,6 +63,7 @@ public class EventBatch {
     private EventBatch(String clientName, String clientVersion, String accountId, List<Visitor> visitors, Boolean anonymizeIp, String projectId, String revision) {
         this.accountId = accountId;
         this.visitors = visitors;
+        this.enrichDecisions = true;
         this.anonymizeIp = anonymizeIp;
         this.clientName = clientName;
         this.clientVersion = clientVersion;
@@ -82,6 +85,12 @@ public class EventBatch {
 
     public void setVisitors(List<Visitor> visitors) {
         this.visitors = visitors;
+    }
+
+    public Boolean getEnrichDecisions() { return enrichDecisions; }
+
+    public void setEnrichDecisions(Boolean enrichDecisions) {
+        this.enrichDecisions = enrichDecisions;
     }
 
     public Boolean getAnonymizeIp() {
