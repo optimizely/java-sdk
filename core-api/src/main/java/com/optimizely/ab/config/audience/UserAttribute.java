@@ -89,7 +89,7 @@ public class UserAttribute<T> implements Condition<T> {
             Match matchType = MatchType.getMatchType(match, value).getMatcher();
             Boolean result = matchType.eval(userAttributeValue);
 
-            if (!(matchType instanceof NullMatch) && result == null) {
+            if (result == null) {
                 if (!attributes.containsKey(name)) {
                     //Missing attribute value
                     logger.debug("Audience condition \"{}\" evaluated to UNKNOWN because no value was passed for user attribute \"{}\"", this, name);
@@ -108,13 +108,14 @@ public class UserAttribute<T> implements Condition<T> {
                             name);
                     }
                 }
-            } else if (matchType instanceof NullMatch) {
-                logger.warn("Audience condition \"{}\" " + ((NullMatch) matchType).getNullMatchTypeErrors().toString(),
-                    this);
             }
             return result;
         } catch (NullPointerException np) {
             logger.error("attribute or value null for match {}", match != null ? match : "legacy condition", np);
+            return null;
+        } catch (NullMatch nm) {
+            logger.warn("Audience condition \"{}\" " + nm.getNullMatchTypeErrors().toString(),
+                this);
             return null;
         }
     }

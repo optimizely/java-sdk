@@ -16,22 +16,11 @@
  */
 package com.optimizely.ab.config.audience.match;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import javax.annotation.Nullable;
-
-public class NullMatch extends AttributeMatch<Object> {
-    @SuppressFBWarnings("URF_UNREAD_FIELD")
-    Object value;
+public class NullMatch extends Throwable {
     NullMatchTypeErrors nullMatchTypeErrors;
+
     protected NullMatch(NullMatchTypeErrors nullMatchTypeErrors) {
         this.nullMatchTypeErrors = nullMatchTypeErrors;
-        this.value = null;
-    }
-
-    @Nullable
-    public Boolean eval(Object attributeValue) {
-        return null;
     }
 
     public NullMatchTypeErrors getNullMatchTypeErrors() {
