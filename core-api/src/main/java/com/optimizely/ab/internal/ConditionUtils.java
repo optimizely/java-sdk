@@ -26,12 +26,16 @@ import com.optimizely.ab.config.audience.NullCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
 import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class ConditionUtils {
+
+    static Logger logger = LoggerFactory.getLogger("ConditionUtil");
 
     static public <T> Condition parseConditions(Class<T> clazz, Object object) throws InvalidAudienceCondition {
 
@@ -45,43 +49,64 @@ public class ConditionUtils {
             } else {
                 throw new InvalidAudienceCondition(String.format("Expected AudienceIdCondition got %s", clazz.getCanonicalName()));
             }
-        } else if (object instanceof LinkedTreeMap) { // gson
-            if (clazz != UserAttribute.class) {
-                throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
+        } else {
+            try {
+                if (object instanceof LinkedTreeMap) { // gson
+                    if (clazz != UserAttribute.class) {
+                        throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
 
+                    }
+
+                    LinkedTreeMap<String, ?> conditionMap = (LinkedTreeMap<String, ?>) object;
+                    return new UserAttribute((String) conditionMap.get("name"), (String) conditionMap.get("type"),
+                        (String) conditionMap.get("match"), conditionMap.get("value"));
+                }
+            }
+            catch (NoClassDefFoundError ex) {
+                // no gson loaded... not sure we need to log this if they don't use gson.
+                logger.info("parser: gson library not loaded");
             }
 
-            LinkedTreeMap<String, ?> conditionMap = (LinkedTreeMap<String, ?>) object;
-            return new UserAttribute((String) conditionMap.get("name"), (String) conditionMap.get("type"),
-                (String) conditionMap.get("match"), conditionMap.get("value"));
-        } else if (object instanceof JSONObject) {
-            if (clazz != UserAttribute.class) {
-                throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
+            try {
+                if (object instanceof JSONObject) { // simple json
+                    if (clazz != UserAttribute.class) {
+                        throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
 
+                    }
+
+                    JSONObject conditionMap = (JSONObject) object;
+                    return new UserAttribute((String) conditionMap.get("name"), (String) conditionMap.get("type"),
+                        (String) conditionMap.get("match"), conditionMap.get("value"));
+                }
+            }
+            catch (NoClassDefFoundError ex) {
+                logger.info("parser: simple json not found");
             }
 
-            JSONObject conditionMap = (JSONObject) object;
-            return new UserAttribute((String) conditionMap.get("name"), (String) conditionMap.get("type"),
-                (String) conditionMap.get("match"), conditionMap.get("value"));
-        } else if (object instanceof org.json.JSONArray) {
-            return ConditionUtils.<T>parseConditions(clazz, (org.json.JSONArray) object);
-        } else if (object instanceof org.json.JSONObject) {
-            if (clazz != UserAttribute.class) {
-                throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
+            try {
+                if (object instanceof org.json.JSONArray) { // json
+                    return ConditionUtils.<T>parseConditions(clazz, (org.json.JSONArray) object);
+                } else if (object instanceof org.json.JSONObject){ //json
+                    if (clazz != UserAttribute.class) {
+                        throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
 
+                    }
+                    org.json.JSONObject conditionMap = (org.json.JSONObject) object;
+                    String match = null;
+                    Object value = null;
+                    if (conditionMap.has("match")) {
+                        match = (String) conditionMap.get("match");
+                    }
+                    if (conditionMap.has("value")) {
+                        value = conditionMap.get("value");
+                    }
+                    return new UserAttribute((String) conditionMap.get("name"), (String) conditionMap.get("type"),
+                        match, value);
+                }
             }
-            org.json.JSONObject conditionMap = (org.json.JSONObject) object;
-            String match = null;
-            Object value = null;
-            if (conditionMap.has("match")) {
-                match = (String) conditionMap.get("match");
+            catch (NoClassDefFoundError ex) {
+                logger.info("parser: json package not found.");
             }
-            if (conditionMap.has("value")) {
-                value = conditionMap.get("value");
-            }
-            return new UserAttribute((String) conditionMap.get("name"), (String) conditionMap.get("type"),
-                match, value);
-        } else { // looking for audience conditions in audience
             if (clazz != UserAttribute.class) {
                 throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));
 
