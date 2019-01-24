@@ -28,7 +28,7 @@ public class MatchType {
     private String matchType;
     private Match matcher;
 
-    public static MatchType getMatchType(String matchType, Object conditionValue) {
+    public static MatchType getMatchType(String matchType, Object conditionValue) throws UnexpectedValueTypeException, UnknownMatchTypeException {
         if (matchType == null) matchType = "legacy_custom_attribute";
 
         switch (matchType) {
@@ -64,10 +64,10 @@ public class MatchType {
                 }
                 break;
             default:
-                return new MatchType(matchType, new NullMatch());
+                throw new UnknownMatchTypeException();
         }
 
-        return new MatchType(matchType, new NullMatch());
+        throw new UnexpectedValueTypeException();
     }
 
     private static boolean isValidNumber(Object conditionValue) {

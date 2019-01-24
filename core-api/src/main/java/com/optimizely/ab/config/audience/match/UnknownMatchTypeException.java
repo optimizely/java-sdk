@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,23 +14,13 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
 package com.optimizely.ab.config.audience.match;
 
-import javax.annotation.Nullable;
+public class UnknownMatchTypeException extends Exception {
+    private static String message = "uses an unknown match type. You may need to upgrade to a newer release of the Optimizely SDK";
 
-class GTMatch extends AttributeMatch<Number> {
-    Number value;
-
-    protected GTMatch(Number value) {
-        this.value = value;
-    }
-
-    @Nullable
-    public Boolean eval(Object attributeValue) {
-        try {
-            return castToValueType(attributeValue, value).doubleValue() > value.doubleValue();
-        } catch (Exception e) {
-            return null;
-        }
+    public UnknownMatchTypeException() {
+        super(message);
     }
 }

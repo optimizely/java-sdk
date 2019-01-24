@@ -36,7 +36,6 @@ public class ExactNumberMatch extends AttributeMatch<Number> {
         try {
             return value.doubleValue() == castToValueType(attributeValue, value).doubleValue();
         } catch (Exception e) {
-            MatchType.logger.error("Exact number match failed ", e);
         }
 
         return null;

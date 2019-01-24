@@ -524,8 +524,6 @@ public class OptimizelyTest {
         when(mockBucketer.bucket(activatedExperiment, bucketingId))
             .thenReturn(bucketedVariation);
 
-        logbackVerifier.expectMessage(Level.ERROR, "Greater than match failed");
-
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, testUserAttributes);
 
