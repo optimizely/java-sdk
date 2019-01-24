@@ -210,8 +210,9 @@ final class JsonConfigParser implements ConfigParser {
             String key = variationObject.getString("key");
             Boolean featureEnabled = false;
 
-            if (variationObject.has("featureEnabled"))
+            if (variationObject.has("featureEnabled") && !variationObject.isNull("featureEnabled")) {
                 featureEnabled = variationObject.getBoolean("featureEnabled");
+            }
 
             List<LiveVariableUsageInstance> liveVariableUsageInstances = null;
             if (variationObject.has("variables")) {

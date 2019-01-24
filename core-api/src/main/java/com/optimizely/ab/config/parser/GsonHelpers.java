@@ -58,8 +58,9 @@ final class GsonHelpers {
             String id = variationObject.get("id").getAsString();
             String key = variationObject.get("key").getAsString();
             Boolean featureEnabled = false;
-            if (variationObject.has("featureEnabled"))
+            if (variationObject.has("featureEnabled") && !variationObject.get("featureEnabled").isJsonNull()) {
                 featureEnabled = variationObject.get("featureEnabled").getAsBoolean();
+            }
 
             List<LiveVariableUsageInstance> variableUsageInstances = null;
             // this is an existence check rather than a version check since it's difficult to pass data
