@@ -22,7 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.match.Match;
 import com.optimizely.ab.config.audience.match.MatchType;
-import com.optimizely.ab.config.audience.match.NullMatch;
+import com.optimizely.ab.config.audience.match.UnexpectedValueTypeException;
+import com.optimizely.ab.config.audience.match.UnknownMatchTypeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,14 +111,13 @@ public class UserAttribute<T> implements Condition<T> {
                 }
             }
             return result;
+        } catch (UnknownMatchTypeException | UnexpectedValueTypeException ex) {
+            logger.warn("Audience condition \"{}\" " + ex.getMessage(),
+                this);
         } catch (NullPointerException np) {
             logger.error("attribute or value null for match {}", match != null ? match : "legacy condition", np);
-            return null;
-        } catch (NullMatch nm) {
-            logger.warn("Audience condition \"{}\" " + nm.getNullMatchTypeErrors().toString(),
-                this);
-            return null;
         }
+        return null;
     }
 
     @Override

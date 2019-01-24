@@ -17,19 +17,10 @@
 
 package com.optimizely.ab.config.audience.match;
 
-public enum NullMatchTypeErrors {
-    UNKNOWN_MATCH_TYPE("uses an unknown match type. You may need to upgrade to a newer release of the Optimizely SDK"),
-    INAPPLICABLE_CONDITION_VALUE("has an unexpected value type. You may need to upgrade to a newer release of the Optimizely SDK");
+public class UnexpectedValueTypeException extends Exception {
+    private static String message = "has an unexpected value type. You may need to upgrade to a newer release of the Optimizely SDK";
 
-    private final String key;
-
-    NullMatchTypeErrors(String key) {
-        this.key = key;
-    }
-
-    @Override
-    public String toString() {
-        return key;
+    public UnexpectedValueTypeException() {
+        super(message);
     }
 }
-
