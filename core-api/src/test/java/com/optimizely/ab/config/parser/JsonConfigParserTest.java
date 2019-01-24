@@ -30,6 +30,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import static com.optimizely.ab.config.ProjectConfigTestUtils.nullFeatureEnabledConfigJsonV4;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV4;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
@@ -72,6 +73,19 @@ public class JsonConfigParserTest {
         ProjectConfig expected = validProjectConfigV4();
 
         verifyProjectConfig(actual, expected);
+    }
+
+    @Test
+    public void parseNullFeatureEnabledProjectConfigV4() throws Exception {
+        JsonConfigParser parser = new JsonConfigParser();
+        ProjectConfig actual = parser.parseProjectConfig(nullFeatureEnabledConfigJsonV4());
+
+        assertNotNull(actual);
+
+        assertNotNull(actual.getExperiments());
+
+        assertNotNull(actual.getFeatureFlags());
+
     }
 
     @Test
