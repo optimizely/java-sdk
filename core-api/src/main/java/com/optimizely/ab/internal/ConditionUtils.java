@@ -64,7 +64,7 @@ public class ConditionUtils {
             }
             catch (NoClassDefFoundError ex) {
                 // no gson loaded... not sure we need to log this if they don't use gson.
-                logger.info("parser: gson library not loaded");
+                logger.debug("parser: gson library not loaded");
             }
 
             try {
@@ -80,7 +80,7 @@ public class ConditionUtils {
                 }
             }
             catch (NoClassDefFoundError ex) {
-                logger.info("parser: simple json not found");
+                logger.debug("parser: simple json not found");
             }
 
             try {
@@ -105,7 +105,7 @@ public class ConditionUtils {
                 }
             }
             catch (NoClassDefFoundError ex) {
-                logger.info("parser: json package not found.");
+                logger.debug("parser: json package not found.");
             }
             if (clazz != UserAttribute.class) {
                 throw new InvalidAudienceCondition(String.format("Expected UserAttributes got %s", clazz.getCanonicalName()));

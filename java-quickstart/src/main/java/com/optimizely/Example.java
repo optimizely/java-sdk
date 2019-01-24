@@ -26,7 +26,7 @@ public class Example {
             String user = String.valueOf(random.nextInt());
             Map<String,String> attributes = new HashMap<>();
             attributes.put("browser_type", "chrome");
-/*            Variation v = optimizely.activate("background_experiment", user, attributes);
+            Variation v = optimizely.activate("background_experiment", user, attributes);
 
             if (v != null) {
                 optimizely.track("sample_conversion", user, null);
@@ -36,7 +36,7 @@ public class Example {
             else {
                 System.out.println("didn't get a variation");
             }
-*/
+
             if (optimizely.isFeatureEnabled("eet_feature", user, attributes)) {
                 optimizely.track("eet_conversion", user, null);
                 System.out.println("feature enabled");
