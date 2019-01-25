@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,22 +14,13 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
 package com.optimizely.ab.config.audience.match;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+public class UnexpectedValueTypeException extends Exception {
+    private static String message = "has an unexpected value type. You may need to upgrade to a newer release of the Optimizely SDK";
 
-import javax.annotation.Nullable;
-
-class NullMatch extends AttributeMatch<Object> {
-    @SuppressFBWarnings("URF_UNREAD_FIELD")
-    Object value;
-
-    protected NullMatch() {
-        this.value = null;
-    }
-
-    @Nullable
-    public Boolean eval(Object attributeValue) {
-        return null;
+    public UnexpectedValueTypeException() {
+        super(message);
     }
 }

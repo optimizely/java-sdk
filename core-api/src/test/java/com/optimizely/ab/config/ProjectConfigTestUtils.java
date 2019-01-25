@@ -429,6 +429,10 @@ public final class ProjectConfigTestUtils {
         return Resources.toString(Resources.getResource("config/valid-project-config-v4.json"), Charsets.UTF_8);
     }
 
+    public static String nullFeatureEnabledConfigJsonV4()  throws IOException {
+        return Resources.toString(Resources.getResource("config/null-featureEnabled-config-v4.json"), Charsets.UTF_8);
+    }
+
     /**
      * @return the expected {@link ProjectConfig} for the json produced by {@link #validConfigJsonV2()} ()}
      */

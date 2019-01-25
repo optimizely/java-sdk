@@ -34,7 +34,7 @@ class GTMatch extends AttributeMatch<Number> {
                 return castToValueType(attributeValue, value).doubleValue() > value.doubleValue();
             }
         } catch (Exception e) {
-            MatchType.logger.error("Greater than match failed ", e);
+            return null;
         }
         return null;
     }

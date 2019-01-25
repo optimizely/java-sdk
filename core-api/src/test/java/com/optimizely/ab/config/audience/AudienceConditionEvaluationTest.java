@@ -16,7 +16,10 @@
  */
 package com.optimizely.ab.config.audience;
 
+import ch.qos.logback.classic.Level;
+import com.optimizely.ab.internal.LogbackVerifier;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -43,6 +46,9 @@ import static org.mockito.Mockito.when;
 @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT",
     justification = "mockito verify calls do have a side-effect")
 public class AudienceConditionEvaluationTest {
+
+    @Rule
+    public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
     Map<String, String> testUserAttributes;
     Map<String, Object> testTypedUserAttributes;
@@ -108,6 +114,64 @@ public class AudienceConditionEvaluationTest {
     public void invalidMatch() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah", "chrome");
         assertNull(testInstance.evaluate(null, testUserAttributes));
+        logbackVerifier.expectMessage(Level.WARN,
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='blah', value='chrome'}\" uses an unknown match type. You may need to upgrade to a newer release of the Optimizely SDK");
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on invalid attribute type.
+     */
+    @Test
+    public void unexpectedAttributeType() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
+        assertNull(testInstance.evaluate(null, testUserAttributes));
+        logbackVerifier.expectMessage(Level.WARN,
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because a value of type \"java.lang.String\" was passed for user attribute \"browser_type\"");
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on invalid attribute type.
+     */
+    @Test
+    public void unexpectedAttributeTypeNull() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
+        assertNull(testInstance.evaluate(null, Collections.singletonMap("browser_type", null)));
+        logbackVerifier.expectMessage(Level.WARN,
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because a null value was passed for user attribute \"browser_type\"");
+    }
+
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on missing attribute value.
+     */
+    @Test
+    public void missingAttribute() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
+        assertNull(testInstance.evaluate(null, Collections.EMPTY_MAP));
+        logbackVerifier.expectMessage(Level.DEBUG,
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because no value was passed for user attribute \"browser_type\"");
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on passing null attribute object.
+     */
+    @Test
+    public void nullAttribute() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
+        assertNull(testInstance.evaluate(null, null));
+        logbackVerifier.expectMessage(Level.DEBUG,
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because no value was passed for user attribute \"browser_type\"");
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on unknown condition type.
+     */
+    @Test
+    public void unknownConditionType() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "blah", "exists", "firefox");
+        assertNull(testInstance.evaluate(null, testUserAttributes));
+        logbackVerifier.expectMessage(Level.WARN,
+            "Audience condition \"{name='browser_type', type='blah', match='exists', value='firefox'}\" has an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK");
     }
 
     /**
