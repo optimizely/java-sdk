@@ -18,6 +18,8 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
+import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
+
 class LTMatch extends AttributeMatch<Number> {
     Number value;
 
@@ -28,10 +30,13 @@ class LTMatch extends AttributeMatch<Number> {
     @Nullable
     public Boolean eval(Object attributeValue) {
         try {
-            return castToValueType(attributeValue, value).doubleValue() < value.doubleValue();
+            if(isValidNumber(attributeValue)) {
+                return castToValueType(attributeValue, value).doubleValue() < value.doubleValue();
+            }
         } catch (Exception e) {
             return null;
         }
+        return null;
     }
 }
 

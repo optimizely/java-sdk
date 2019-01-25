@@ -39,6 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
+
 public class EventFactory {
     private static final Logger logger = LoggerFactory.getLogger(EventFactory.class);
     static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";  // Should be part of the datafile
@@ -163,9 +165,8 @@ public class EventFactory {
                 // https://developers.optimizely.com/x/events/api/#Attribute
                 if (entry.getValue() == null ||
                     !((entry.getValue() instanceof String) ||
-                        (entry.getValue() instanceof Integer) ||
-                        (entry.getValue() instanceof Double) ||
-                        (entry.getValue() instanceof Boolean))) {
+                        (entry.getValue() instanceof Boolean) ||
+                        (isValidNumber(entry.getValue())))) {
                     continue;
                 }
 

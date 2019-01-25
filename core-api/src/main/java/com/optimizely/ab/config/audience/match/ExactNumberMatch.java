@@ -20,6 +20,8 @@ import com.optimizely.ab.config.ProjectConfig;
 
 import javax.annotation.Nullable;
 
+import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
+
 // Because json number is a double in most java json parsers.  at this
 // point we allow comparision of Integer and Double.  The instance class is Double and
 // Integer which would fail in our normal exact match.  So, we are special casing for now.  We have already filtered
@@ -34,7 +36,9 @@ public class ExactNumberMatch extends AttributeMatch<Number> {
     @Nullable
     public Boolean eval(Object attributeValue) {
         try {
-            return value.doubleValue() == castToValueType(attributeValue, value).doubleValue();
+            if(isValidNumber(attributeValue)) {
+                return value.doubleValue() == castToValueType(attributeValue, value).doubleValue();
+            }
         } catch (Exception e) {
         }
 
