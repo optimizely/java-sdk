@@ -248,17 +248,8 @@ public class EventFactoryTest {
     public void createConversionEventIgnoresInvalidAndAcceptsValidAttributes() {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
-        Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         EventType eventType = validProjectConfig.getEventTypes().get(0);
 
-        List<Experiment> allExperiments = validProjectConfig.getExperiments();
-
-        // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
-        // call the bucket function.
-        for (Experiment experiment : allExperiments) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
-                .thenReturn(experiment.getVariations().get(0));
-        }
         Attribute attribute1 = validProjectConfig.getAttributes().get(0);
         Attribute attribute2 = validProjectConfig.getAttributes().get(1);
         Attribute doubleAttribute = validProjectConfig.getAttributes().get(5);
@@ -292,20 +283,20 @@ public class EventFactoryTest {
                 attributes,
                 eventTagMap);
 
-        EventBatch impression = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
+        EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
         //Check valid attributes are getting passed.
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(0).getKey(), boolAttribute.getKey());
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(0).getValue(), validBoolAttribute);
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(0).getKey(), boolAttribute.getKey());
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(0).getValue(), validBoolAttribute);
 
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(1).getKey(), doubleAttribute.getKey());
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(1).getValue(), validDoubleAttribute);
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(1).getKey(), doubleAttribute.getKey());
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(1).getValue(), validDoubleAttribute);
 
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(2).getKey(), integerAttribute.getKey());
-        assertEquals((int) ((double) impression.getVisitors().get(0).getAttributes().get(2).getValue()), validIntegerAttribute);
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(2).getKey(), integerAttribute.getKey());
+        assertEquals((int) ((double) conversion.getVisitors().get(0).getAttributes().get(2).getValue()), validIntegerAttribute);
 
         // verify that no Feature is created for attribute.getKey() -> invalidAttribute
-        for (com.optimizely.ab.event.internal.payload.Attribute feature : impression.getVisitors().get(0).getAttributes()) {
+        for (com.optimizely.ab.event.internal.payload.Attribute feature : conversion.getVisitors().get(0).getAttributes()) {
             assertNotSame(feature.getKey(), attribute1.getKey());
             assertNotSame(feature.getValue(), bigInteger);
             assertNotSame(feature.getKey(), attribute2.getKey());
@@ -323,17 +314,8 @@ public class EventFactoryTest {
     public void createConversionEventIgnoresInvalidAcceptValidValOfValidAttr() {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
-        Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         EventType eventType = validProjectConfig.getEventTypes().get(0);
 
-        List<Experiment> allExperiments = validProjectConfig.getExperiments();
-
-        // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
-        // call the bucket function.
-        for (Experiment experiment : allExperiments) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
-                .thenReturn(experiment.getVariations().get(0));
-        }
         Attribute validFloatAttribute = validProjectConfig.getAttributes().get(0);
         Attribute invalidFloatAttribute = validProjectConfig.getAttributes().get(1);
         Attribute doubleAttribute = validProjectConfig.getAttributes().get(5);
@@ -367,19 +349,19 @@ public class EventFactoryTest {
             attributes,
             eventTagMap);
 
-        EventBatch impression = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
+        EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
         //Check valid attributes are getting passed.
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(0).getKey(), boolAttribute.getKey());
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(0).getValue(), validBoolAttribute);
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(1).getKey(), validFloatAttribute.getKey());
-        //In below condition I am checking Value of float with double value because impression gets visitors from json so that converts it into double
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(1).getValue(), 2.1);
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(2).getKey(), integerAttribute.getKey());
-        assertEquals((long) ((double) impression.getVisitors().get(0).getAttributes().get(2).getValue()), validLongAttribute);
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(0).getKey(), boolAttribute.getKey());
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(0).getValue(), validBoolAttribute);
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(1).getKey(), validFloatAttribute.getKey());
+        //In the condition below we are checking Value of float with double value because impression gets visitors from JSON so that converts it into double
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(1).getValue(), 2.1);
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(2).getKey(), integerAttribute.getKey());
+        assertEquals((long) ((double) conversion.getVisitors().get(0).getAttributes().get(2).getValue()), validLongAttribute);
 
         // verify that no Feature is created for attribute.getKey() -> invalidAttribute
-        for (com.optimizely.ab.event.internal.payload.Attribute feature : impression.getVisitors().get(0).getAttributes()) {
+        for (com.optimizely.ab.event.internal.payload.Attribute feature : conversion.getVisitors().get(0).getAttributes()) {
             assertNotSame(feature.getKey(), invalidFloatAttribute.getKey());
             assertNotSame(feature.getValue(), invalidFloatValue);
             assertNotSame(feature.getKey(), doubleAttribute.getKey());
@@ -397,17 +379,8 @@ public class EventFactoryTest {
     public void createConversionEventIgnoresNegativeInvalidAndAcceptsValidValueOfValidTypeAttributes() {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
-        Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         EventType eventType = validProjectConfig.getEventTypes().get(0);
 
-        List<Experiment> allExperiments = validProjectConfig.getExperiments();
-
-        // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
-        // call the bucket function.
-        for (Experiment experiment : allExperiments) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
-                .thenReturn(experiment.getVariations().get(0));
-        }
         Attribute validFloatAttribute = validProjectConfig.getAttributes().get(0);
         Attribute invalidFloatAttribute = validProjectConfig.getAttributes().get(1);
         Attribute doubleAttribute = validProjectConfig.getAttributes().get(5);
@@ -437,17 +410,17 @@ public class EventFactoryTest {
             attributes,
             eventTagMap);
 
-        EventBatch impression = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
+        EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
         //Check valid attributes are getting passed.
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(0).getKey(), validFloatAttribute.getKey());
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(0).getKey(), validFloatAttribute.getKey());
         //In below condition I am checking Value of float with double value because impression gets visitors from json so that converts it into double
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(0).getValue(), -2.1);
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(1).getKey(), integerAttribute.getKey());
-        assertEquals((long) ((double) impression.getVisitors().get(0).getAttributes().get(1).getValue()), validLongAttribute);
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(0).getValue(), -2.1);
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(1).getKey(), integerAttribute.getKey());
+        assertEquals((long) ((double) conversion.getVisitors().get(0).getAttributes().get(1).getValue()), validLongAttribute);
 
         // verify that no Feature is created for attribute.getKey() -> invalidAttribute
-        for (com.optimizely.ab.event.internal.payload.Attribute feature : impression.getVisitors().get(0).getAttributes()) {
+        for (com.optimizely.ab.event.internal.payload.Attribute feature : conversion.getVisitors().get(0).getAttributes()) {
             assertNotSame(feature.getKey(), invalidFloatAttribute.getKey());
             assertNotSame(feature.getValue(), invalidFloatValue);
             assertNotSame(feature.getKey(), doubleAttribute.getKey());
