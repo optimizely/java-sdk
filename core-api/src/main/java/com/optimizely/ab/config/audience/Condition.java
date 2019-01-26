@@ -23,9 +23,14 @@ import java.util.Map;
 
 /**
  * Interface implemented by all conditions condition objects to aid in condition evaluation.
+ *
+ * TODO(llinn) remove unused generic type T
  */
 public interface Condition<T> {
 
+    /**
+     * TODO(llinn) pass single ConditionContext argument for extensibility
+     */
     @Nullable
     Boolean evaluate(ProjectConfig config, Map<String, ?> attributes);
 }

@@ -17,25 +17,26 @@
 package com.optimizely.ab.internal;
 
 import com.google.gson.internal.LinkedTreeMap;
-import com.optimizely.ab.config.audience.AndCondition;
-import com.optimizely.ab.config.audience.AudienceIdCondition;
-import com.optimizely.ab.config.audience.Condition;
-import com.optimizely.ab.config.audience.NotCondition;
-import com.optimizely.ab.config.audience.EmptyCondition;
-import com.optimizely.ab.config.audience.NullCondition;
-import com.optimizely.ab.config.audience.OrCondition;
-import com.optimizely.ab.config.audience.UserAttribute;
+import com.optimizely.ab.config.audience.*;
+import com.optimizely.ab.config.audience.match.*;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class ConditionUtils {
+    private static final Logger logger = LoggerFactory.getLogger(ConditionUtils.class);
 
-    static Logger logger = LoggerFactory.getLogger("ConditionUtil");
+    private static final String CUSTOM_ATTRIBUTE = "custom_attribute";
+    private static final String MATCH_EXISTS = "exists";
+    private static final String MATCH_EXACT = "exact";
+    private static final String MATCH_SUBSTRING = "substring";
+    private static final String MATCH_GREATER_THAN = "gt";
+    private static final String MATCH_LESS_THAN = "lt";
 
     static public <T> Condition parseConditions(Class<T> clazz, Object object) throws InvalidAudienceCondition {
 
@@ -50,6 +51,7 @@ public class ConditionUtils {
                 throw new InvalidAudienceCondition(String.format("Expected AudienceIdCondition got %s", clazz.getCanonicalName()));
             }
         } else {
+            // TODO(llinn) this and subsequent logic that checks for for JSONObject can be combined because both are types of Map
             try {
                 if (object instanceof LinkedTreeMap) { // gson
                     if (clazz != UserAttribute.class) {
@@ -122,6 +124,8 @@ public class ConditionUtils {
     /**
      * parse conditions using List and Map
      *
+     * TODO(llinn) consolidate with {@link #parseConditions(Class, org.json.JSONArray)} by generalizing to {@link Iterable}
+     *
      * @param rawObjectList list of conditions
      * @return audienceCondition
      */
@@ -165,8 +169,8 @@ public class ConditionUtils {
     }
 
     static public String operand(Object object) {
-        if (object != null && object instanceof String) {
-            String operand = (String) object;
+        if (object instanceof CharSequence) {
+            String operand = object.toString();
             switch (operand) {
                 case "or":
                 case "and":
@@ -182,6 +186,8 @@ public class ConditionUtils {
 
     /**
      * Parse conditions from org.json.JsonArray
+     *
+     * TODO(llinn) consolidate with {@link #parseConditions(Class, List)} by generalizing to {@link Iterable}
      *
      * @param conditionJson jsonArray to parse
      * @return condition parsed from conditionJson.
@@ -224,4 +230,106 @@ public class ConditionUtils {
 
         return condition;
     }
+
+    /**
+     * @return a {@link Condition} that always evaluates to UNKNOWN, i.e. {@code null}
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> Condition<T> voidCondition() {
+        return (Condition<T>) VoidCondition.INSTANCE;
+    }
+
+    /**
+     * Creates a {@link Condition} instance for a leaf node of audience condition AST.
+     *
+     * A leaf node is an expression in audience condition that is represented by an object, while
+     * an internal node is an expression in audience condition that is represented by array (boolean operators).
+     *
+     * Only supports "custom_attribute" for {@code type}.
+     *
+     * Supported values for {@code match}:
+     * <ul>
+     *   <li>{@code null}</li>
+     *   <li>{@code "exists"}</li>
+     *   <li>{@code "exact"}</li>
+     *   <li>{@code "substring"}</li>
+     *   <li>{@code "gt"}</li>
+     *   <li>{@code "lt"}</li>
+     * </ul>
+     *
+     * TODO(llinn) move this to an abstract factory object that contains registry of concrete factories based on type/match fields
+     *
+     * @param match specifies the matching operation
+     * @param name key in attributes map to extract input when condition evaluated
+     * @param value the fixed operand to a matching operator; required type depends on match
+     * @throws InvalidAudienceCondition if type is not equal to "custom_attribute"
+     * @throws InvalidAudienceCondition if name is null
+     * @throws InvalidAudienceCondition if match is not a supported
+     * @throws InvalidAudienceCondition if type is not supported by implementation for {@code match}
+     */
+    public static Condition<?> leafCondition(
+        String type,
+        String match,
+        String name,
+        @Nullable Object value
+    ) throws InvalidAudienceCondition {
+        if (!CUSTOM_ATTRIBUTE.equals(type)) {
+            throw new InvalidAudienceCondition("unknown type");
+        }
+
+        if (name == null) {
+            throw new InvalidAudienceCondition("name is required");
+        }
+
+        // create condition for valid match + value, otherwise falls through
+        if (match == null) {
+            // legacy conditions do not have match specified and require string value
+            if (value instanceof CharSequence) {
+                return new EqualsAttributeCondition<>(
+                    "legacy_custom_attribute",
+                    name,
+                    value.toString(),
+                    Object.class,
+                    true);
+            }
+        } else {
+            switch (match) {
+                case MATCH_EXISTS:
+                    // TODO(llinn) log if value != null?
+                    return new ExistsAttributeCondition(match, name);
+                case MATCH_EXACT:
+                    if (value instanceof CharSequence) {
+                        return new StringAttributeCondition(match, name, value.toString());
+                    } else if (value instanceof Boolean) {
+                        return new EqualsAttributeCondition<>(match, name, (Boolean) value, Boolean.class, false);
+                    } else if (value instanceof Number) {
+                        return new NumericAttributeCondition.EqualTo(match, name, (Number) value);
+                    }
+                    // TODO(llinn) fallback? new EqualsAttributeCondition<>(name, value, Object.class)?
+                case MATCH_SUBSTRING:
+                    if (value instanceof CharSequence) {
+                        return new SubstringAttributeCondition(match, name, (CharSequence) value);
+                    }
+                    // TODO(llinn) convert to String?
+                case MATCH_GREATER_THAN:
+                    if (value instanceof Number) {
+                        return new NumericAttributeCondition.GreaterThan(match, name, (Number) value);
+                    }
+                    // TODO(llinn) convert to Number?
+                    break;
+                case MATCH_LESS_THAN:
+                    if (value instanceof Number) {
+                        return new NumericAttributeCondition.LessThan(match, name, (Number) value);
+                    }
+                    // TODO(llinn) convert to Number?
+                    break;
+                default:
+                    throw new InvalidAudienceCondition("unknown match type");
+            }
+        }
+
+        throw new InvalidAudienceCondition(String.format("unexpected value for %s match",
+            match != null ? String.format("'%s'", match) : "legacy"));
+    }
+
 }

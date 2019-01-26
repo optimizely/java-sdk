@@ -34,12 +34,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
-import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV4;
-import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_NATIONALITY_KEY;
-import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_WITH_MISSING_VALUE_VALUE;
-import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY;
+import static com.optimizely.ab.config.ProjectConfigTestUtils.*;
+import static com.optimizely.ab.config.ValidProjectConfigV4.*;
 import static com.optimizely.ab.internal.ExperimentUtils.isExperimentActive;
 import static com.optimizely.ab.internal.ExperimentUtils.isUserInExperiment;
 import static org.junit.Assert.assertFalse;
@@ -261,7 +257,7 @@ public class ExperimentUtilsTest {
         logbackVerifier.expectMessage(Level.DEBUG,
             "Starting to evaluate audience audience_with_missing_value with conditions: \"[and, [or, [or, {name='nationality', type='custom_attribute', match='null', value='English'}, {name='nationality', type='custom_attribute', match='null', value=null}]]]\"");
         logbackVerifier.expectMessage(Level.WARN,
-            "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unexpected value type. You may need to upgrade to a newer release of the Optimizely SDK");
+            "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" is invalid: unexpected value for legacy match. You may need to upgrade to a newer release of the Optimizely SDK");
         logbackVerifier.expectMessage(Level.INFO,
             "Audience audience_with_missing_value evaluated to null");
         logbackVerifier.expectMessage(Level.INFO,
@@ -282,7 +278,7 @@ public class ExperimentUtilsTest {
         logbackVerifier.expectMessage(Level.DEBUG,
             "Starting to evaluate audience audience_with_missing_value with conditions: \"[and, [or, [or, {name='nationality', type='custom_attribute', match='null', value='English'}, {name='nationality', type='custom_attribute', match='null', value=null}]]]\"");
         logbackVerifier.expectMessage(Level.WARN,
-            "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unexpected value type. You may need to upgrade to a newer release of the Optimizely SDK");
+            "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" is invalid: unexpected value for legacy match. You may need to upgrade to a newer release of the Optimizely SDK");
         logbackVerifier.expectMessage(Level.INFO,
             "Audience audience_with_missing_value evaluated to null");
         logbackVerifier.expectMessage(Level.INFO,

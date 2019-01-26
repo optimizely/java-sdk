@@ -18,6 +18,10 @@ package com.optimizely.ab.internal;
 
 import com.optimizely.ab.OptimizelyRuntimeException;
 
+/**
+ * Thrown to indicate that a method was passed an illegal or inappropriate configuration
+ * for attribute audience condition.
+ */
 public class InvalidAudienceCondition extends OptimizelyRuntimeException {
 
     public InvalidAudienceCondition(String message) {

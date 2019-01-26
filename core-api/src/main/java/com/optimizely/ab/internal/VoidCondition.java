@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,11 +14,23 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.config.audience.match;
+package com.optimizely.ab.internal;
+
+import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.audience.Condition;
 
 import javax.annotation.Nullable;
+import java.util.Map;
 
-public interface Match {
+/**
+ * Dummy condition that always evaluates to {@code null}
+ */
+public final class VoidCondition<T> implements Condition<T> {
+    static final VoidCondition INSTANCE = new VoidCondition();
+
     @Nullable
-    Boolean eval(Object attributeValue);
+    @Override
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+        return null;
+    }
 }

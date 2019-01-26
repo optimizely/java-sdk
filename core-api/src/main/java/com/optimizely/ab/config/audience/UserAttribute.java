@@ -20,27 +20,33 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.audience.match.Match;
-import com.optimizely.ab.config.audience.match.MatchType;
-import com.optimizely.ab.config.audience.match.UnexpectedValueTypeException;
-import com.optimizely.ab.config.audience.match.UnknownMatchTypeException;
+import com.optimizely.ab.internal.ConditionUtils;
+import com.optimizely.ab.internal.InvalidAudienceCondition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-import java.util.Collections;
 import java.util.Map;
 
 /**
- * Represents a user attribute instance within an audience's conditions.
+ * Represents a leaf node in audience condition AST.
+ *
+ * Defines a matching operation to evaluate on a specific attribute.
+ * The behavior of {@link #evaluate(ProjectConfig, Map)} is determined by specified
+ * match operation.
+ *
+ * If the given match type and value are not compatible, i.e. a substring match with non-string value,
+ * this class will always evaluate to UNKNOWN by returning {@code null}.
+ *
+ * TODO(llinn) convert this to a POJO and separate from {@link Condition} evaluation
  */
 @Immutable
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserAttribute<T> implements Condition<T> {
-
     private static final Logger logger = LoggerFactory.getLogger(UserAttribute.class);
+
     private final String name;
     private final String type;
     private final String match;
@@ -75,66 +81,55 @@ public class UserAttribute<T> implements Condition<T> {
 
     @Nullable
     public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
-        if (attributes == null) {
-            attributes = Collections.emptyMap();
-        }
-        // Valid for primitive types, but needs to change when a value is an object or an array
-        Object userAttributeValue = attributes.get(name);
-
-        if (!"custom_attribute".equals(type)) {
-            logger.warn("Audience condition \"{}\" has an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK", this);
-            return null; // unknown type
-        }
-        // check user attribute value is equal
+        // TODO(llinn) don't create inner condition every evaluation
+        Condition<?> delegate = getCondition();
         try {
-            Match matchType = MatchType.getMatchType(match, value).getMatcher();
-            Boolean result = matchType.eval(userAttributeValue);
-
-            if (result == null) {
-                if (!attributes.containsKey(name)) {
-                    //Missing attribute value
-                    logger.debug("Audience condition \"{}\" evaluated to UNKNOWN because no value was passed for user attribute \"{}\"", this, name);
-                } else {
-                    //if attribute value is not valid
-                    if (userAttributeValue != null) {
-                        logger.warn(
-                            "Audience condition \"{}\" evaluated to UNKNOWN because a value of type \"{}\" was passed for user attribute \"{}\"",
-                            this,
-                            userAttributeValue.getClass().getCanonicalName(),
-                            name);
-                    } else {
-                        logger.warn(
-                            "Audience condition \"{}\" evaluated to UNKNOWN because a null value was passed for user attribute \"{}\"",
-                            this,
-                            name);
-                    }
-                }
-            }
-            return result;
-        } catch (UnknownMatchTypeException | UnexpectedValueTypeException ex) {
-            logger.warn("Audience condition \"{}\" " + ex.getMessage(),
-                this);
-        } catch (NullPointerException np) {
-            logger.error("attribute or value null for match {}", match != null ? match : "legacy condition", np);
+            return delegate.evaluate(config, attributes);
+        } catch (Exception e) {
+            logger.error("Evaluation failed for '{}' match condition on '{}' attribute", match, name, e);
         }
         return null;
     }
 
+    /**
+     * Provides a {@link Condition} that implements match-specific behavior.
+     *
+     * If this object does hold a valid configuration for a leaf condition,
+     * i.e. an unknown {@link #match} type or {@link #value} that is not compatible
+     * with {@link #match}, this will return a {@link Condition} that always evaluates
+     * to UNKNOWN.
+     */
+    private Condition<?> getCondition() {
+        Condition<?> condition;
+        try {
+            condition = ConditionUtils.leafCondition(type, match, name, value);
+        } catch (InvalidAudienceCondition e) {
+            logger.warn(
+                "Audience condition \"{}\" is invalid: {}. You may need to upgrade to a newer release of the Optimizely SDK",
+                this,
+                e.getMessage());
+
+            condition = ConditionUtils.voidCondition();
+        }
+
+        logger.debug("Audience condition \"{}\" will be evaluated using: {}", this, condition);
+
+        return condition;
+    }
+
     @Override
     public String toString() {
-        final String valueStr;
-        if (value == null) {
-            valueStr = "null";
-        } else if (value instanceof String) {
-            valueStr = String.format("'%s'", value);
+        final StringBuilder sb = new StringBuilder();
+        sb.append("{name='").append(name).append('\'');
+        sb.append(", type='").append(type).append('\'');
+        sb.append(", match='").append(match).append('\'');
+        if (value instanceof CharSequence) {
+            sb.append(", value='").append(value).append('\'');
         } else {
-            valueStr = value.toString();
+            sb.append(", value=").append(value);
         }
-        return "{name='" + name + "\'" +
-            ", type='" + type + "\'" +
-            ", match='" + match + "\'" +
-            ", value=" + valueStr +
-            "}";
+        sb.append('}');
+        return sb.toString();
     }
 
     @Override

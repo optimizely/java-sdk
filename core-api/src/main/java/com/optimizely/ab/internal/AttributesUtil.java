@@ -14,16 +14,24 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 package com.optimizely.ab.internal;
 
-public class AttributesUtil {
+public final class AttributesUtil {
+    private AttributesUtil() {
+    }
 
     /**
-     * Validate that value is not infinite, NAN or greater than Math.pow(2, 53).
+     * Checks whether an object is a supported number value for attribute conditions.
      *
-     * @param value attribute value or condition value.
-     * @return boolean value of is valid or not.
+     * Returns true iff given {@link Object} is instance of {@link Number}.
+     *
+     * A supported number is defined as: a finite number with absolute value less than 2<sup>53</sup> (9.0071993e+15)
+     * and one of the following types: {@link Integer}, {@link Long}, {@link Float}, {@link Double}.
+     *
+     * TODO(llinn) be should either be less restrictive or provide stronger rationale for these constraints.
+     *
+     * @param value attribute value or condition value
+     * @return true if value is valid and can safely be casted to {@link Number}, otherwise false
      */
     public static boolean isValidNumber(Object value) {
         if (value instanceof Integer) {
@@ -36,5 +44,4 @@ public class AttributesUtil {
         }
         return false;
     }
-
 }
