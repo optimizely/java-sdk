@@ -1,6 +1,5 @@
 dependencies {
     compile project(':core-api')
-    testCompile project(':core-api').sourceSets.test.output
 
     compileOnly group: 'com.google.code.gson', name: 'gson', version: gsonVersion
 
