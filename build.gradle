@@ -84,18 +84,8 @@ subprojects {
     }
 
     test {
-        useJUnit {
-            excludeCategories 'com.optimizely.ab.categories.ExhaustiveTest'
-        }
-
         testLogging {
             showStandardStreams = false
-        }
-    }
-
-    task exhaustiveTest(type: Test) {
-        useJUnit {
-            includeCategories 'com.optimizely.ab.categories.ExhaustiveTest'
         }
     }
 
