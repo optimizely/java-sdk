@@ -235,43 +235,43 @@ public class ValidProjectConfigV4 {
         FEATURE_BOOLEAN_FEATURE_KEY,
         "",
         Collections.<String>emptyList(),
-        Collections.<LiveVariable>emptyList()
+        Collections.<FeatureVariable>emptyList()
     );
     private static final String FEATURE_SINGLE_VARIABLE_DOUBLE_ID = "3926744821";
     public static final String FEATURE_SINGLE_VARIABLE_DOUBLE_KEY = "double_single_variable_feature";
     private static final String VARIABLE_DOUBLE_VARIABLE_ID = "4111654444";
     public static final String VARIABLE_DOUBLE_VARIABLE_KEY = "double_variable";
     public static final String VARIABLE_DOUBLE_DEFAULT_VALUE = "14.99";
-    private static final LiveVariable VARIABLE_DOUBLE_VARIABLE = new LiveVariable(
+    private static final FeatureVariable VARIABLE_DOUBLE_VARIABLE = new FeatureVariable(
         VARIABLE_DOUBLE_VARIABLE_ID,
         VARIABLE_DOUBLE_VARIABLE_KEY,
         VARIABLE_DOUBLE_DEFAULT_VALUE,
         null,
-        LiveVariable.VariableType.DOUBLE
+        FeatureVariable.VariableType.DOUBLE
     );
     private static final String FEATURE_SINGLE_VARIABLE_INTEGER_ID = "3281420120";
     public static final String FEATURE_SINGLE_VARIABLE_INTEGER_KEY = "integer_single_variable_feature";
     private static final String VARIABLE_INTEGER_VARIABLE_ID = "593964691";
     public static final String VARIABLE_INTEGER_VARIABLE_KEY = "integer_variable";
     private static final String VARIABLE_INTEGER_DEFAULT_VALUE = "7";
-    private static final LiveVariable VARIABLE_INTEGER_VARIABLE = new LiveVariable(
+    private static final FeatureVariable VARIABLE_INTEGER_VARIABLE = new FeatureVariable(
         VARIABLE_INTEGER_VARIABLE_ID,
         VARIABLE_INTEGER_VARIABLE_KEY,
         VARIABLE_INTEGER_DEFAULT_VALUE,
         null,
-        LiveVariable.VariableType.INTEGER
+        FeatureVariable.VariableType.INTEGER
     );
     private static final String FEATURE_SINGLE_VARIABLE_BOOLEAN_ID = "2591051011";
     public static final String FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY = "boolean_single_variable_feature";
     private static final String VARIABLE_BOOLEAN_VARIABLE_ID = "3974680341";
     public static final String VARIABLE_BOOLEAN_VARIABLE_KEY = "boolean_variable";
     public static final String VARIABLE_BOOLEAN_VARIABLE_DEFAULT_VALUE = "true";
-    private static final LiveVariable VARIABLE_BOOLEAN_VARIABLE = new LiveVariable(
+    private static final FeatureVariable VARIABLE_BOOLEAN_VARIABLE = new FeatureVariable(
         VARIABLE_BOOLEAN_VARIABLE_ID,
         VARIABLE_BOOLEAN_VARIABLE_KEY,
         VARIABLE_BOOLEAN_VARIABLE_DEFAULT_VALUE,
         null,
-        LiveVariable.VariableType.BOOLEAN
+        FeatureVariable.VariableType.BOOLEAN
     );
     private static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_BOOLEAN = new FeatureFlag(
         FEATURE_SINGLE_VARIABLE_BOOLEAN_ID,
@@ -287,12 +287,12 @@ public class ValidProjectConfigV4 {
     private static final String VARIABLE_STRING_VARIABLE_ID = "2077511132";
     public static final String VARIABLE_STRING_VARIABLE_KEY = "string_variable";
     public static final String VARIABLE_STRING_VARIABLE_DEFAULT_VALUE = "wingardium leviosa";
-    private static final LiveVariable VARIABLE_STRING_VARIABLE = new LiveVariable(
+    private static final FeatureVariable VARIABLE_STRING_VARIABLE = new FeatureVariable(
         VARIABLE_STRING_VARIABLE_ID,
         VARIABLE_STRING_VARIABLE_KEY,
         VARIABLE_STRING_VARIABLE_DEFAULT_VALUE,
         null,
-        LiveVariable.VariableType.STRING
+        FeatureVariable.VariableType.STRING
     );
     private static final String ROLLOUT_1_ID = "1058508303";
     private static final String ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_ID = "1785077004";
@@ -304,7 +304,7 @@ public class ValidProjectConfigV4 {
         ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
         ROLLOUT_1_FEATURE_ENABLED_VALUE,
         Collections.singletonList(
-            new LiveVariableUsageInstance(
+            new FeatureVariableUsageInstance(
                 VARIABLE_STRING_VARIABLE_ID,
                 ROLLOUT_1_EVERYONE_ELSE_RULE_ENABLED_VARIATION_STRING_VALUE
             )
@@ -351,7 +351,7 @@ public class ValidProjectConfigV4 {
         ROLLOUT_3_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
         ROLLOUT_3_EVERYONE_ELSE_RULE_ENABLED_VARIATION_ID,
         ROLLOUT_3_FEATURE_ENABLED_VALUE,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
     public static final Experiment ROLLOUT_3_EVERYONE_ELSE_RULE = new Experiment(
         ROLLOUT_3_EVERYONE_ELSE_EXPERIMENT_ID,
@@ -383,34 +383,34 @@ public class ValidProjectConfigV4 {
     private static final String VARIABLE_FIRST_LETTER_ID = "675244127";
     public static final String VARIABLE_FIRST_LETTER_KEY = "first_letter";
     public static final String VARIABLE_FIRST_LETTER_DEFAULT_VALUE = "H";
-    private static final LiveVariable VARIABLE_FIRST_LETTER_VARIABLE = new LiveVariable(
+    private static final FeatureVariable VARIABLE_FIRST_LETTER_VARIABLE = new FeatureVariable(
         VARIABLE_FIRST_LETTER_ID,
         VARIABLE_FIRST_LETTER_KEY,
         VARIABLE_FIRST_LETTER_DEFAULT_VALUE,
         null,
-        LiveVariable.VariableType.STRING
+        FeatureVariable.VariableType.STRING
     );
     private static final String VARIABLE_REST_OF_NAME_ID = "4052219963";
     private static final String VARIABLE_REST_OF_NAME_KEY = "rest_of_name";
     private static final String VARIABLE_REST_OF_NAME_DEFAULT_VALUE = "arry";
-    private static final LiveVariable VARIABLE_REST_OF_NAME_VARIABLE = new LiveVariable(
+    private static final FeatureVariable VARIABLE_REST_OF_NAME_VARIABLE = new FeatureVariable(
         VARIABLE_REST_OF_NAME_ID,
         VARIABLE_REST_OF_NAME_KEY,
         VARIABLE_REST_OF_NAME_DEFAULT_VALUE,
         null,
-        LiveVariable.VariableType.STRING
+        FeatureVariable.VariableType.STRING
     );
     private static final String FEATURE_MUTEX_GROUP_FEATURE_ID = "3263342226";
     public static final String FEATURE_MUTEX_GROUP_FEATURE_KEY = "mutex_group_feature";
     private static final String VARIABLE_CORRELATING_VARIATION_NAME_ID = "2059187672";
     private static final String VARIABLE_CORRELATING_VARIATION_NAME_KEY = "correlating_variation_name";
     private static final String VARIABLE_CORRELATING_VARIATION_NAME_DEFAULT_VALUE = "null";
-    private static final LiveVariable VARIABLE_CORRELATING_VARIATION_NAME_VARIABLE = new LiveVariable(
+    private static final FeatureVariable VARIABLE_CORRELATING_VARIATION_NAME_VARIABLE = new FeatureVariable(
         VARIABLE_CORRELATING_VARIATION_NAME_ID,
         VARIABLE_CORRELATING_VARIATION_NAME_KEY,
         VARIABLE_CORRELATING_VARIATION_NAME_DEFAULT_VALUE,
         null,
-        LiveVariable.VariableType.STRING
+        FeatureVariable.VariableType.STRING
     );
 
     // group IDs
@@ -426,14 +426,14 @@ public class ValidProjectConfigV4 {
     private static final Variation VARIATION_BASIC_EXPERIMENT_VARIATION_A = new Variation(
         VARIATION_BASIC_EXPERIMENT_VARIATION_A_ID,
         VARIATION_BASIC_EXPERIMENT_VARIATION_A_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
     private static final String VARIATION_BASIC_EXPERIMENT_VARIATION_B_ID = "3433458314";
     private static final String VARIATION_BASIC_EXPERIMENT_VARIATION_B_KEY = "B";
     private static final Variation VARIATION_BASIC_EXPERIMENT_VARIATION_B = new Variation(
         VARIATION_BASIC_EXPERIMENT_VARIATION_B_ID,
         VARIATION_BASIC_EXPERIMENT_VARIATION_B_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
     private static final String BASIC_EXPERIMENT_FORCED_VARIATION_USER_ID_VARIATION_A = "Harry Potter";
     private static final String BASIC_EXPERIMENT_FORCED_VARIATION_USER_ID_VARIATION_B = "Tom Riddle";
@@ -477,14 +477,14 @@ public class ValidProjectConfigV4 {
     private static final Variation VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A = new Variation(
         VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A_ID,
         VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
     private static final String VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_ID = "3433458315";
     private static final String VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_KEY = "B";
     private static final Variation VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B = new Variation(
         VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_ID,
         VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
 
     private static final Experiment EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT = new Experiment(
@@ -523,14 +523,14 @@ public class ValidProjectConfigV4 {
     private static final Variation VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_A = new Variation(
         VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_A_ID,
         VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_A_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
     private static final String VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_B_ID = "3433458316";
     private static final String VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_B_KEY = "B";
     private static final Variation VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_B = new Variation(
         VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_B_ID,
         VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_B_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
 
     private static final Experiment EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT = new Experiment(
@@ -568,14 +568,14 @@ public class ValidProjectConfigV4 {
     private static final Variation VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_A = new Variation(
         VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_A_ID,
         VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_A_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
     private static final String VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_B_ID = "3433458317";
     private static final String VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_B_KEY = "B";
     private static final Variation VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_B = new Variation(
         VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_B_ID,
         VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_B_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
 
     private static final Experiment EXPERIMENT_TYPEDAUDIENCE_LEAF_EXPERIMENT = new Experiment(
@@ -609,14 +609,14 @@ public class ValidProjectConfigV4 {
     private static final Variation VARIATION_FIRST_GROUPED_EXPERIMENT_A = new Variation(
         VARIATION_FIRST_GROUPED_EXPERIMENT_A_ID,
         VARIATION_FIRST_GROUPED_EXPERIMENT_A_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
     private static final String VARIATION_FIRST_GROUPED_EXPERIMENT_B_ID = "1179171250";
     private static final String VARIATION_FIRST_GROUPED_EXPERIMENT_B_KEY = "B";
     private static final Variation VARIATION_FIRST_GROUPED_EXPERIMENT_B = new Variation(
         VARIATION_FIRST_GROUPED_EXPERIMENT_B_ID,
         VARIATION_FIRST_GROUPED_EXPERIMENT_B_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
     private static final String FIRST_GROUPED_EXPERIMENT_FORCED_VARIATION_USER_ID_VARIATION_A = "Harry Potter";
     private static final String FIRST_GROUPED_EXPERIMENT_FORCED_VARIATION_USER_ID_VARIATION_B = "Tom Riddle";
@@ -661,14 +661,14 @@ public class ValidProjectConfigV4 {
     private static final Variation VARIATION_SECOND_GROUPED_EXPERIMENT_A = new Variation(
         VARIATION_SECOND_GROUPED_EXPERIMENT_A_ID,
         VARIATION_SECOND_GROUPED_EXPERIMENT_A_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
     private static final String VARIATION_SECOND_GROUPED_EXPERIMENT_B_ID = "2142748370";
     private static final String VARIATION_SECOND_GROUPED_EXPERIMENT_B_KEY = "B";
     private static final Variation VARIATION_SECOND_GROUPED_EXPERIMENT_B = new Variation(
         VARIATION_SECOND_GROUPED_EXPERIMENT_B_ID,
         VARIATION_SECOND_GROUPED_EXPERIMENT_B_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
     private static final String SECOND_GROUPED_EXPERIMENT_FORCED_VARIATION_USER_ID_VARIATION_A = "Hermione Granger";
     private static final String SECOND_GROUPED_EXPERIMENT_FORCED_VARIATION_USER_ID_VARIATION_B = "Ronald Weasley";
@@ -716,11 +716,11 @@ public class ValidProjectConfigV4 {
         VARIATION_MULTIVARIATE_EXPERIMENT_FRED_KEY,
         VARIATION_MULTIVARIATE_FEATURE_ENABLED_VALUE,
         ProjectConfigTestUtils.createListOfObjects(
-            new LiveVariableUsageInstance(
+            new FeatureVariableUsageInstance(
                 VARIABLE_FIRST_LETTER_ID,
                 "F"
             ),
-            new LiveVariableUsageInstance(
+            new FeatureVariableUsageInstance(
                 VARIABLE_REST_OF_NAME_ID,
                 "red"
             )
@@ -733,11 +733,11 @@ public class ValidProjectConfigV4 {
         VARIATION_MULTIVARIATE_EXPERIMENT_FEORGE_KEY,
         VARIATION_MULTIVARIATE_FEATURE_ENABLED_VALUE,
         ProjectConfigTestUtils.createListOfObjects(
-            new LiveVariableUsageInstance(
+            new FeatureVariableUsageInstance(
                 VARIABLE_FIRST_LETTER_ID,
                 "F"
             ),
-            new LiveVariableUsageInstance(
+            new FeatureVariableUsageInstance(
                 VARIABLE_REST_OF_NAME_ID,
                 "eorge"
             )
@@ -751,11 +751,11 @@ public class ValidProjectConfigV4 {
         VARIATION_MULTIVARIATE_EXPERIMENT_GRED_KEY,
         VARIATION_MULTIVARIATE_VARIATION_FEATURE_ENABLED_GRED_KEY,
         ProjectConfigTestUtils.createListOfObjects(
-            new LiveVariableUsageInstance(
+            new FeatureVariableUsageInstance(
                 VARIABLE_FIRST_LETTER_ID,
                 "G"
             ),
-            new LiveVariableUsageInstance(
+            new FeatureVariableUsageInstance(
                 VARIABLE_REST_OF_NAME_ID,
                 "red"
             )
@@ -768,11 +768,11 @@ public class ValidProjectConfigV4 {
         VARIATION_MULTIVARIATE_EXPERIMENT_GEORGE_KEY,
         VARIATION_MULTIVARIATE_FEATURE_ENABLED_VALUE,
         ProjectConfigTestUtils.createListOfObjects(
-            new LiveVariableUsageInstance(
+            new FeatureVariableUsageInstance(
                 VARIABLE_FIRST_LETTER_ID,
                 "G"
             ),
-            new LiveVariableUsageInstance(
+            new FeatureVariableUsageInstance(
                 VARIABLE_REST_OF_NAME_ID,
                 "eorge"
             )
@@ -840,7 +840,7 @@ public class ValidProjectConfigV4 {
         VARIATION_DOUBLE_FEATURE_PI_VARIATION_KEY,
         VARIATION_DOUBLE_FEATURE_ENABLED_VALUE,
         Collections.singletonList(
-            new LiveVariableUsageInstance(
+            new FeatureVariableUsageInstance(
                 VARIABLE_DOUBLE_VARIABLE_ID,
                 "3.14"
             )
@@ -852,7 +852,7 @@ public class ValidProjectConfigV4 {
         VARIATION_DOUBLE_FEATURE_EULER_VARIATION_ID,
         VARIATION_DOUBLE_FEATURE_EULER_VARIATION_KEY,
         Collections.singletonList(
-            new LiveVariableUsageInstance(
+            new FeatureVariableUsageInstance(
                 VARIABLE_DOUBLE_VARIABLE_ID,
                 "2.718"
             )
@@ -890,7 +890,7 @@ public class ValidProjectConfigV4 {
     private static final Variation VARIATION_PAUSED_EXPERIMENT_CONTROL = new Variation(
         VARIATION_PAUSED_EXPERIMENT_CONTROL_ID,
         VARIATION_PAUSED_EXPERIMENT_CONTROL_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
     public static final String PAUSED_EXPERIMENT_FORCED_VARIATION_USER_ID_CONTROL = "Harry Potter";
     private static final Experiment EXPERIMENT_PAUSED_EXPERIMENT = new Experiment(
@@ -918,7 +918,7 @@ public class ValidProjectConfigV4 {
     private static final Variation VARIATION_LAUNCHED_EXPERIMENT_CONTROL = new Variation(
         VARIATION_LAUNCHED_EXPERIMENT_CONTROL_ID,
         VARIATION_LAUNCHED_EXPERIMENT_CONTROL_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
     private static final Experiment EXPERIMENT_LAUNCHED_EXPERIMENT = new Experiment(
         EXPERIMENT_LAUNCHED_EXPERIMENT_ID,
@@ -947,7 +947,7 @@ public class ValidProjectConfigV4 {
         VARIATION_MUTEX_GROUP_EXP_1_VAR_1_KEY,
         VARIATION_MUTEX_GROUP_EXP_FEATURE_ENABLED_VALUE,
         Collections.singletonList(
-            new LiveVariableUsageInstance(
+            new FeatureVariableUsageInstance(
                 VARIABLE_CORRELATING_VARIATION_NAME_ID,
                 VARIATION_MUTEX_GROUP_EXP_1_VAR_1_KEY
             )
@@ -981,7 +981,7 @@ public class ValidProjectConfigV4 {
         VARIATION_MUTEX_GROUP_EXP_2_VAR_1_KEY,
         VARIATION_MUTEX_GROUP_EXP_2_FEATURE_ENABLED_VALUE,
         Collections.singletonList(
-            new LiveVariableUsageInstance(
+            new FeatureVariableUsageInstance(
                 VARIABLE_CORRELATING_VARIATION_NAME_ID,
                 VARIATION_MUTEX_GROUP_EXP_2_VAR_1_KEY
             )
@@ -1013,7 +1013,7 @@ public class ValidProjectConfigV4 {
     private static final Variation VARIATION_EXPERIMENT_WITH_MALFORMED_AUDIENCE = new Variation(
         VARIATION_EXPERIMENT_WITH_MALFORMED_AUDIENCE_ID,
         VARIATION_EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY,
-        Collections.<LiveVariableUsageInstance>emptyList()
+        Collections.<FeatureVariableUsageInstance>emptyList()
     );
     private static final Experiment EXPERIMENT_WITH_MALFORMED_AUDIENCE = new Experiment(
         EXPERIMENT_WITH_MALFORMED_AUDIENCE_ID,
@@ -1118,11 +1118,11 @@ public class ValidProjectConfigV4 {
                 "521740985",
                 true,
                 ProjectConfigTestUtils.createListOfObjects(
-                    new LiveVariableUsageInstance(
+                    new FeatureVariableUsageInstance(
                         "675244127",
                         "G"
                     ),
-                    new LiveVariableUsageInstance(
+                    new FeatureVariableUsageInstance(
                         "4052219963",
                         "odric"
                     )
@@ -1150,11 +1150,11 @@ public class ValidProjectConfigV4 {
                 "180042646",
                 true,
                 ProjectConfigTestUtils.createListOfObjects(
-                    new LiveVariableUsageInstance(
+                    new FeatureVariableUsageInstance(
                         "675244127",
                         "S"
                     ),
-                    new LiveVariableUsageInstance(
+                    new FeatureVariableUsageInstance(
                         "4052219963",
                         "alazar"
                     )
@@ -1182,11 +1182,11 @@ public class ValidProjectConfigV4 {
                 "2346257680",
                 true,
                 ProjectConfigTestUtils.createListOfObjects(
-                    new LiveVariableUsageInstance(
+                    new FeatureVariableUsageInstance(
                         "675244127",
                         "D"
                     ),
-                    new LiveVariableUsageInstance(
+                    new FeatureVariableUsageInstance(
                         "4052219963",
                         "udley"
                     )
@@ -1214,11 +1214,11 @@ public class ValidProjectConfigV4 {
                 "3137445031",
                 true,
                 ProjectConfigTestUtils.createListOfObjects(
-                    new LiveVariableUsageInstance(
+                    new FeatureVariableUsageInstance(
                         "675244127",
                         "M"
                     ),
-                    new LiveVariableUsageInstance(
+                    new FeatureVariableUsageInstance(
                         "4052219963",
                         "uggle"
                     )
@@ -1368,7 +1368,6 @@ public class ValidProjectConfigV4 {
             experiments,
             featureFlags,
             groups,
-            Collections.<LiveVariable>emptyList(),
             rollouts
         );
     }

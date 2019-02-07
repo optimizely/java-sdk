@@ -214,18 +214,18 @@ public final class ProjectConfigTestUtils {
     private static final ProjectConfig VALID_PROJECT_CONFIG_V3 = generateValidProjectConfigV3();
 
     private static ProjectConfig generateValidProjectConfigV3() {
-        List<LiveVariableUsageInstance> variationVtag1VariableUsageInstances = asList(
-            new LiveVariableUsageInstance("6", "True"),
-            new LiveVariableUsageInstance("2", "10"),
-            new LiveVariableUsageInstance("3", "string_var_vtag1"),
-            new LiveVariableUsageInstance("4", "5.3")
+        List<FeatureVariableUsageInstance> variationVtag1VariableUsageInstances = asList(
+            new FeatureVariableUsageInstance("6", "True"),
+            new FeatureVariableUsageInstance("2", "10"),
+            new FeatureVariableUsageInstance("3", "string_var_vtag1"),
+            new FeatureVariableUsageInstance("4", "5.3")
         );
 
-        List<LiveVariableUsageInstance> variationVtag2VariableUsageInstances = asList(
-            new LiveVariableUsageInstance("6", "False"),
-            new LiveVariableUsageInstance("2", "20"),
-            new LiveVariableUsageInstance("3", "string_var_vtag2"),
-            new LiveVariableUsageInstance("4", "6.3")
+        List<FeatureVariableUsageInstance> variationVtag2VariableUsageInstances = asList(
+            new FeatureVariableUsageInstance("6", "False"),
+            new FeatureVariableUsageInstance("2", "20"),
+            new FeatureVariableUsageInstance("3", "string_var_vtag2"),
+            new FeatureVariableUsageInstance("4", "6.3")
         );
 
         List<Experiment> experiments = asList(
@@ -241,8 +241,8 @@ public final class ProjectConfigTestUtils {
             new Experiment("118", "etag2", "Not started", "2",
                 singletonList("100"),
                 null,
-                asList(new Variation("278", "vtag3", Collections.<LiveVariableUsageInstance>emptyList()),
-                    new Variation("279", "vtag4", Collections.<LiveVariableUsageInstance>emptyList())),
+                asList(new Variation("278", "vtag3", Collections.<FeatureVariableUsageInstance>emptyList()),
+                    new Variation("279", "vtag4", Collections.<FeatureVariableUsageInstance>emptyList())),
                 Collections.singletonMap("testUser3", "vtag3"),
                 asList(new TrafficAllocation("278", 4500),
                     new TrafficAllocation("279", 9000)),
@@ -283,8 +283,8 @@ public final class ProjectConfigTestUtils {
             new Experiment("301", "group_etag2", "Running", "3",
                 singletonList("100"),
                 null,
-                asList(new Variation("282", "e2_vtag1", Collections.<LiveVariableUsageInstance>emptyList()),
-                    new Variation("283", "e2_vtag2", Collections.<LiveVariableUsageInstance>emptyList())),
+                asList(new Variation("282", "e2_vtag1", Collections.<FeatureVariableUsageInstance>emptyList()),
+                    new Variation("283", "e2_vtag2", Collections.<FeatureVariableUsageInstance>emptyList())),
                 Collections.<String, String>emptyMap(),
                 asList(new TrafficAllocation("282", 5000),
                     new TrafficAllocation("283", 10000)),
@@ -293,9 +293,9 @@ public final class ProjectConfigTestUtils {
                 singletonList("100"),
                 null,
                 asList(new Variation("280", "e1_vtag1",
-                        Collections.singletonList(new LiveVariableUsageInstance("7", "True"))),
+                        Collections.singletonList(new FeatureVariableUsageInstance("7", "True"))),
                     new Variation("281", "e1_vtag2",
-                        Collections.singletonList(new LiveVariableUsageInstance("7", "False")))),
+                        Collections.singletonList(new FeatureVariableUsageInstance("7", "False")))),
                 userIdToVariationKeyMap,
                 asList(new TrafficAllocation("280", 3000),
                     new TrafficAllocation("281", 10000)),
@@ -306,8 +306,8 @@ public final class ProjectConfigTestUtils {
             new Experiment("302", "overlapping_etag1", "Running", "5",
                 singletonList("100"),
                 null,
-                asList(new Variation("284", "e1_vtag1", Collections.<LiveVariableUsageInstance>emptyList()),
-                    new Variation("285", "e1_vtag2", Collections.<LiveVariableUsageInstance>emptyList())),
+                asList(new Variation("284", "e1_vtag1", Collections.<FeatureVariableUsageInstance>emptyList()),
+                    new Variation("285", "e1_vtag2", Collections.<FeatureVariableUsageInstance>emptyList())),
                 userIdToVariationKeyMap,
                 asList(new TrafficAllocation("284", 1500),
                     new TrafficAllocation("285", 3000)),
@@ -324,27 +324,8 @@ public final class ProjectConfigTestUtils {
             Collections.<TrafficAllocation>emptyList());
         List<Group> groups = asList(randomPolicyGroup, overlappingPolicyGroup);
 
-        List<LiveVariable> liveVariables = asList(
-            new LiveVariable("1", "boolean_variable", "False", LiveVariable.VariableStatus.ACTIVE,
-                LiveVariable.VariableType.BOOLEAN),
-            new LiveVariable("2", "integer_variable", "5", LiveVariable.VariableStatus.ACTIVE,
-                LiveVariable.VariableType.INTEGER),
-            new LiveVariable("3", "string_variable", "string_live_variable", LiveVariable.VariableStatus.ACTIVE,
-                LiveVariable.VariableType.STRING),
-            new LiveVariable("4", "double_variable", "13.37", LiveVariable.VariableStatus.ACTIVE,
-                LiveVariable.VariableType.DOUBLE),
-            new LiveVariable("5", "archived_variable", "True", LiveVariable.VariableStatus.ARCHIVED,
-                LiveVariable.VariableType.BOOLEAN),
-            new LiveVariable("6", "etag1_variable", "False", LiveVariable.VariableStatus.ACTIVE,
-                LiveVariable.VariableType.BOOLEAN),
-            new LiveVariable("7", "group_etag1_variable", "False", LiveVariable.VariableStatus.ACTIVE,
-                LiveVariable.VariableType.BOOLEAN),
-            new LiveVariable("8", "unused_string_variable", "unused_variable", LiveVariable.VariableStatus.ACTIVE,
-                LiveVariable.VariableType.STRING)
-        );
-
         return new ProjectConfig("789", "1234", "3", "42", groups, experiments, attributes, events, audiences,
-            true, liveVariables);
+            true);
     }
 
     private static final ProjectConfig NO_AUDIENCE_PROJECT_CONFIG_V3 = generateNoAudienceProjectConfigV3();
@@ -358,8 +339,8 @@ public final class ProjectConfigTestUtils {
             new Experiment("223", "etag1", "Running", "1",
                 Collections.<String>emptyList(),
                 null,
-                asList(new Variation("276", "vtag1", Collections.<LiveVariableUsageInstance>emptyList()),
-                    new Variation("277", "vtag2", Collections.<LiveVariableUsageInstance>emptyList())),
+                asList(new Variation("276", "vtag1", Collections.<FeatureVariableUsageInstance>emptyList()),
+                    new Variation("277", "vtag2", Collections.<FeatureVariableUsageInstance>emptyList())),
                 userIdToVariationKeyMap,
                 asList(new TrafficAllocation("276", 3500),
                     new TrafficAllocation("277", 9000)),
@@ -367,8 +348,8 @@ public final class ProjectConfigTestUtils {
             new Experiment("118", "etag2", "Not started", "2",
                 Collections.<String>emptyList(),
                 null,
-                asList(new Variation("278", "vtag3", Collections.<LiveVariableUsageInstance>emptyList()),
-                    new Variation("279", "vtag4", Collections.<LiveVariableUsageInstance>emptyList())),
+                asList(new Variation("278", "vtag3", Collections.<FeatureVariableUsageInstance>emptyList()),
+                    new Variation("279", "vtag4", Collections.<FeatureVariableUsageInstance>emptyList())),
                 Collections.<String, String>emptyMap(),
                 asList(new TrafficAllocation("278", 4500),
                     new TrafficAllocation("279", 9000)),
@@ -397,7 +378,7 @@ public final class ProjectConfigTestUtils {
         );
 
         return new ProjectConfig("789", "1234", "3", "42", Collections.<Group>emptyList(), experiments, attributes,
-            events, Collections.<Audience>emptyList(), true, Collections.<LiveVariable>emptyList());
+            events, Collections.<Audience>emptyList(), true);
     }
 
     private static final ProjectConfig VALID_PROJECT_CONFIG_V4 = generateValidProjectConfigV4();
@@ -490,7 +471,6 @@ public final class ProjectConfigTestUtils {
         verifyEvents(actual.getEventTypes(), expected.getEventTypes());
         verifyExperiments(actual.getExperiments(), expected.getExperiments());
         verifyFeatureFlags(actual.getFeatureFlags(), expected.getFeatureFlags());
-        verifyLiveVariables(actual.getLiveVariables(), expected.getLiveVariables());
         verifyGroups(actual.getGroups(), expected.getGroups());
         verifyRollouts(actual.getRollouts(), expected.getRollouts());
     }
@@ -542,8 +522,8 @@ public final class ProjectConfigTestUtils {
 
             assertThat(actualVariation.getId(), is(expectedVariation.getId()));
             assertThat(actualVariation.getKey(), is(expectedVariation.getKey()));
-            verifyLiveVariableInstances(actualVariation.getLiveVariableUsageInstances(),
-                expectedVariation.getLiveVariableUsageInstances());
+            verifyFeatureVariableInstances(actualVariation.getFeatureVariableUsageInstances(),
+                expectedVariation.getFeatureVariableUsageInstances());
         }
     }
 
@@ -630,29 +610,6 @@ public final class ProjectConfigTestUtils {
         }
     }
 
-    /**
-     * Verify that the provided live variable definitions are equivalent.
-     */
-    private static void verifyLiveVariables(List<LiveVariable> actual, List<LiveVariable> expected) {
-        // if using V2, live variables will be null
-        if (expected == null) {
-            assertNull(actual);
-        } else {
-            assertThat(actual.size(), is(expected.size()));
-
-            for (int i = 0; i < actual.size(); i++) {
-                LiveVariable actualLiveVariable = actual.get(i);
-                LiveVariable expectedLiveVariable = expected.get(i);
-
-                assertThat(actualLiveVariable.getId(), is(expectedLiveVariable.getId()));
-                assertThat(actualLiveVariable.getKey(), is(expectedLiveVariable.getKey()));
-                assertThat(actualLiveVariable.getDefaultValue(), is(expectedLiveVariable.getDefaultValue()));
-                assertThat(actualLiveVariable.getType(), is(expectedLiveVariable.getType()));
-                assertThat(actualLiveVariable.getStatus(), is(expectedLiveVariable.getStatus()));
-            }
-        }
-    }
-
     private static void verifyRollouts(List<Rollout> actual, List<Rollout> expected) {
         if (expected == null) {
             assertNull(actual);
@@ -670,22 +627,22 @@ public final class ProjectConfigTestUtils {
     }
 
     /**
-     * Verify that the provided variation-level live variable usage instances are equivalent.
+     * Verify that the provided variation-level feature variable usage instances are equivalent.
      */
-    private static void verifyLiveVariableInstances(List<LiveVariableUsageInstance> actual,
-                                                    List<LiveVariableUsageInstance> expected) {
-        // if using V2, live variable instances will be null
+    private static void verifyFeatureVariableInstances(List<FeatureVariableUsageInstance> actual,
+                                                    List<FeatureVariableUsageInstance> expected) {
+        // if using V2, feature variable instances will be null
         if (expected == null) {
             assertNull(actual);
         } else {
             assertThat(actual.size(), is(expected.size()));
 
             for (int i = 0; i < actual.size(); i++) {
-                LiveVariableUsageInstance actualLiveVariableUsageInstance = actual.get(i);
-                LiveVariableUsageInstance expectedLiveVariableUsageInstance = expected.get(i);
+                FeatureVariableUsageInstance actualFeatureVariableUsageInstance = actual.get(i);
+                FeatureVariableUsageInstance expectedFeatureVariableUsageInstance = expected.get(i);
 
-                assertThat(actualLiveVariableUsageInstance.getId(), is(expectedLiveVariableUsageInstance.getId()));
-                assertThat(actualLiveVariableUsageInstance.getValue(), is(expectedLiveVariableUsageInstance.getValue()));
+                assertThat(actualFeatureVariableUsageInstance.getId(), is(expectedFeatureVariableUsageInstance.getId()));
+                assertThat(actualFeatureVariableUsageInstance.getValue(), is(expectedFeatureVariableUsageInstance.getValue()));
             }
         }
     }

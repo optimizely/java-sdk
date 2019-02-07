@@ -32,7 +32,6 @@
   "typedAudiences": [],
   "anonymizeIP": true,
   "projectId": "13135560574",
-  "variables": [],
   "featureFlags": [
     {
       "experimentIds": [

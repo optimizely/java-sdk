@@ -33,21 +33,21 @@ public class FeatureFlag implements IdKeyMapped {
     private final String key;
     private final String rolloutId;
     private final List<String> experimentIds;
-    private final List<LiveVariable> variables;
-    private final Map<String, LiveVariable> variableKeyToLiveVariableMap;
+    private final List<FeatureVariable> variables;
+    private final Map<String, FeatureVariable> variableKeyToFeatureVariableMap;
 
     @JsonCreator
     public FeatureFlag(@JsonProperty("id") String id,
                        @JsonProperty("key") String key,
                        @JsonProperty("rolloutId") String rolloutId,
                        @JsonProperty("experimentIds") List<String> experimentIds,
-                       @JsonProperty("variables") List<LiveVariable> variables) {
+                       @JsonProperty("variables") List<FeatureVariable> variables) {
         this.id = id;
         this.key = key;
         this.rolloutId = rolloutId;
         this.experimentIds = experimentIds;
         this.variables = variables;
-        this.variableKeyToLiveVariableMap = ProjectConfigUtils.generateNameMapping(variables);
+        this.variableKeyToFeatureVariableMap = ProjectConfigUtils.generateNameMapping(variables);
     }
 
     public String getId() {
@@ -66,12 +66,12 @@ public class FeatureFlag implements IdKeyMapped {
         return experimentIds;
     }
 
-    public List<LiveVariable> getVariables() {
+    public List<FeatureVariable> getVariables() {
         return variables;
     }
 
-    public Map<String, LiveVariable> getVariableKeyToLiveVariableMap() {
-        return variableKeyToLiveVariableMap;
+    public Map<String, FeatureVariable> getVariableKeyToFeatureVariableMap() {
+        return variableKeyToFeatureVariableMap;
     }
 
     @Override
@@ -82,7 +82,7 @@ public class FeatureFlag implements IdKeyMapped {
             ", rolloutId='" + rolloutId + '\'' +
             ", experimentIds=" + experimentIds +
             ", variables=" + variables +
-            ", variableKeyToLiveVariableMap=" + variableKeyToLiveVariableMap +
+            ", variableKeyToFeatureVariableMap=" + variableKeyToFeatureVariableMap +
             '}';
     }
 
@@ -98,7 +98,7 @@ public class FeatureFlag implements IdKeyMapped {
         if (!rolloutId.equals(that.rolloutId)) return false;
         if (!experimentIds.equals(that.experimentIds)) return false;
         if (!variables.equals(that.variables)) return false;
-        return variableKeyToLiveVariableMap.equals(that.variableKeyToLiveVariableMap);
+        return variableKeyToFeatureVariableMap.equals(that.variableKeyToFeatureVariableMap);
     }
 
     @Override
@@ -108,7 +108,7 @@ public class FeatureFlag implements IdKeyMapped {
         result = 31 * result + rolloutId.hashCode();
         result = 31 * result + experimentIds.hashCode();
         result = 31 * result + variables.hashCode();
-        result = 31 * result + variableKeyToLiveVariableMap.hashCode();
+        result = 31 * result + variableKeyToFeatureVariableMap.hashCode();
         return result;
     }
 }

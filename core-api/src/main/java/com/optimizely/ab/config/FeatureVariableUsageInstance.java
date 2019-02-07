@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -21,17 +21,17 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Represents the value of a live variable for a variation
+ * Represents the value of a feature variable for a variation
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class LiveVariableUsageInstance implements IdMapped {
+public class FeatureVariableUsageInstance implements IdMapped {
 
     private final String id;
     private final String value;
 
     @JsonCreator
-    public LiveVariableUsageInstance(@JsonProperty("id") String id,
-                                     @JsonProperty("value") String value) {
+    public FeatureVariableUsageInstance(@JsonProperty("id") String id,
+                                        @JsonProperty("value") String value) {
         this.id = id;
         this.value = value;
     }
@@ -49,7 +49,7 @@ public class LiveVariableUsageInstance implements IdMapped {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        LiveVariableUsageInstance that = (LiveVariableUsageInstance) o;
+        FeatureVariableUsageInstance that = (FeatureVariableUsageInstance) o;
 
         return id.equals(that.id) && value.equals(that.value);
     }

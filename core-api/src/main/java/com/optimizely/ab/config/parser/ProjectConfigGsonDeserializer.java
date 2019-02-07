@@ -27,7 +27,6 @@ import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.Group;
-import com.optimizely.ab.config.LiveVariable;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.audience.Audience;
@@ -86,13 +85,7 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
             typedAudiences = context.deserialize(jsonObject.get("typedAudiences").getAsJsonArray(), typedAudienceType);
         }
         boolean anonymizeIP = false;
-        // live variables should be null if using V2
-        List<LiveVariable> liveVariables = null;
         if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
-            Type liveVariablesType = new TypeToken<List<LiveVariable>>() {
-            }.getType();
-            liveVariables = context.deserialize(jsonObject.getAsJsonArray("variables"), liveVariablesType);
-
             anonymizeIP = jsonObject.get("anonymizeIP").getAsBoolean();
         }
 
@@ -124,7 +117,6 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
             experiments,
             featureFlags,
             groups,
-            liveVariables,
             rollouts
         );
     }
