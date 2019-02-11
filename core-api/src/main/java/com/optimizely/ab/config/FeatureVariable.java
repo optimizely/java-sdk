@@ -25,10 +25,10 @@ import com.google.gson.annotations.SerializedName;
 import javax.annotation.Nullable;
 
 /**
- * Represents a live variable definition at the project level
+ * Represents a feature variable definition at the project level
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class LiveVariable implements IdKeyMapped {
+public class FeatureVariable implements IdKeyMapped {
 
     public enum VariableStatus {
         @SerializedName("active")
@@ -106,11 +106,11 @@ public class LiveVariable implements IdKeyMapped {
     private final VariableStatus status;
 
     @JsonCreator
-    public LiveVariable(@JsonProperty("id") String id,
-                        @JsonProperty("key") String key,
-                        @JsonProperty("defaultValue") String defaultValue,
-                        @JsonProperty("status") VariableStatus status,
-                        @JsonProperty("type") VariableType type) {
+    public FeatureVariable(@JsonProperty("id") String id,
+                           @JsonProperty("key") String key,
+                           @JsonProperty("defaultValue") String defaultValue,
+                           @JsonProperty("status") VariableStatus status,
+                           @JsonProperty("type") VariableType type) {
         this.id = id;
         this.key = key;
         this.defaultValue = defaultValue;
@@ -141,7 +141,7 @@ public class LiveVariable implements IdKeyMapped {
 
     @Override
     public String toString() {
-        return "LiveVariable{" +
+        return "FeatureVariable{" +
             "id='" + id + '\'' +
             ", key='" + key + '\'' +
             ", defaultValue='" + defaultValue + '\'' +
@@ -155,7 +155,7 @@ public class LiveVariable implements IdKeyMapped {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        LiveVariable variable = (LiveVariable) o;
+        FeatureVariable variable = (FeatureVariable) o;
 
         if (!id.equals(variable.id)) return false;
         if (!key.equals(variable.key)) return false;

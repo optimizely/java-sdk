@@ -38,8 +38,8 @@ public class Variation implements IdKeyMapped {
     private final String id;
     private final String key;
     private final Boolean featureEnabled;
-    private final List<LiveVariableUsageInstance> liveVariableUsageInstances;
-    private final Map<String, LiveVariableUsageInstance> variableIdToLiveVariableUsageInstanceMap;
+    private final List<FeatureVariableUsageInstance> featureVariableUsageInstances;
+    private final Map<String, FeatureVariableUsageInstance> variableIdToFeatureVariableUsageInstanceMap;
 
     public Variation(String id, String key) {
         this(id, key, null);
@@ -47,27 +47,27 @@ public class Variation implements IdKeyMapped {
 
     public Variation(String id,
                      String key,
-                     List<LiveVariableUsageInstance> liveVariableUsageInstances) {
-        this(id, key, false, liveVariableUsageInstances);
+                     List<FeatureVariableUsageInstance> featureVariableUsageInstances) {
+        this(id, key, false, featureVariableUsageInstances);
     }
 
     @JsonCreator
     public Variation(@JsonProperty("id") String id,
                      @JsonProperty("key") String key,
                      @JsonProperty("featureEnabled") Boolean featureEnabled,
-                     @JsonProperty("variables") List<LiveVariableUsageInstance> liveVariableUsageInstances) {
+                     @JsonProperty("variables") List<FeatureVariableUsageInstance> featureVariableUsageInstances) {
         this.id = id;
         this.key = key;
         if (featureEnabled != null)
             this.featureEnabled = featureEnabled;
         else
             this.featureEnabled = false;
-        if (liveVariableUsageInstances == null) {
-            this.liveVariableUsageInstances = Collections.emptyList();
+        if (featureVariableUsageInstances == null) {
+            this.featureVariableUsageInstances = Collections.emptyList();
         } else {
-            this.liveVariableUsageInstances = liveVariableUsageInstances;
+            this.featureVariableUsageInstances = featureVariableUsageInstances;
         }
-        this.variableIdToLiveVariableUsageInstanceMap = ProjectConfigUtils.generateIdMapping(this.liveVariableUsageInstances);
+        this.variableIdToFeatureVariableUsageInstanceMap = ProjectConfigUtils.generateIdMapping(this.featureVariableUsageInstances);
     }
 
     @Nonnull
@@ -86,12 +86,12 @@ public class Variation implements IdKeyMapped {
     }
 
     @Nullable
-    public List<LiveVariableUsageInstance> getLiveVariableUsageInstances() {
-        return liveVariableUsageInstances;
+    public List<FeatureVariableUsageInstance> getFeatureVariableUsageInstances() {
+        return featureVariableUsageInstances;
     }
 
-    public Map<String, LiveVariableUsageInstance> getVariableIdToLiveVariableUsageInstanceMap() {
-        return variableIdToLiveVariableUsageInstanceMap;
+    public Map<String, FeatureVariableUsageInstance> getVariableIdToFeatureVariableUsageInstanceMap() {
+        return variableIdToFeatureVariableUsageInstanceMap;
     }
 
     public boolean is(String otherKey) {

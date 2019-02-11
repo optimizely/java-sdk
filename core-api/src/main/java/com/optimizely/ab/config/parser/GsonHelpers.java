@@ -22,21 +22,18 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
-import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.reflect.TypeToken;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Experiment.ExperimentStatus;
 import com.optimizely.ab.config.FeatureFlag;
-import com.optimizely.ab.config.LiveVariable;
-import com.optimizely.ab.config.LiveVariableUsageInstance;
+import com.optimizely.ab.config.FeatureVariable;
+import com.optimizely.ab.config.FeatureVariableUsageInstance;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.internal.ConditionUtils;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,15 +59,15 @@ final class GsonHelpers {
                 featureEnabled = variationObject.get("featureEnabled").getAsBoolean();
             }
 
-            List<LiveVariableUsageInstance> variableUsageInstances = null;
+            List<FeatureVariableUsageInstance> variableUsageInstances = null;
             // this is an existence check rather than a version check since it's difficult to pass data
             // across deserializers.
             if (variationObject.has("variables")) {
-                Type liveVariableUsageInstancesType = new TypeToken<List<LiveVariableUsageInstance>>() {
+                Type featureVariableUsageInstancesType = new TypeToken<List<FeatureVariableUsageInstance>>() {
                 }.getType();
                 variableUsageInstances =
                     context.deserialize(variationObject.getAsJsonArray("variables"),
-                        liveVariableUsageInstancesType);
+                        featureVariableUsageInstancesType);
             }
 
             variations.add(new Variation(id, key, featureEnabled, variableUsageInstances));
@@ -165,12 +162,12 @@ final class GsonHelpers {
             experimentIds.add(experimentIdObj.getAsString());
         }
 
-        List<LiveVariable> liveVariables = new ArrayList<LiveVariable>();
+        List<FeatureVariable> FeatureVariables = new ArrayList<>();
         try {
-            Type liveVariableType = new TypeToken<List<LiveVariable>>() {
+            Type FeatureVariableType = new TypeToken<List<FeatureVariable>>() {
             }.getType();
-            liveVariables = context.deserialize(featureFlagJson.getAsJsonArray("variables"),
-                liveVariableType);
+            FeatureVariables = context.deserialize(featureFlagJson.getAsJsonArray("variables"),
+                FeatureVariableType);
         } catch (JsonParseException exception) {
             logger.warn("Unable to parse variables for feature \"" + key
                 + "\". JsonParseException: " + exception);
@@ -181,7 +178,7 @@ final class GsonHelpers {
             key,
             layerId,
             experimentIds,
-            liveVariables
+            FeatureVariables
         );
     }
 }

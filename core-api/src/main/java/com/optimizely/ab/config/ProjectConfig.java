@@ -84,7 +84,6 @@ public class ProjectConfig {
     private final List<Experiment> experiments;
     private final List<FeatureFlag> featureFlags;
     private final List<Group> groups;
-    private final List<LiveVariable> liveVariables;
     private final List<Rollout> rollouts;
 
     // key to entity mappings
@@ -92,7 +91,6 @@ public class ProjectConfig {
     private final Map<String, EventType> eventNameMapping;
     private final Map<String, Experiment> experimentKeyMapping;
     private final Map<String, FeatureFlag> featureKeyMapping;
-    private final Map<String, LiveVariable> liveVariableKeyMapping;
 
     // id to entity mappings
     private final Map<String, Audience> audienceIdMapping;
@@ -101,8 +99,6 @@ public class ProjectConfig {
     private final Map<String, Rollout> rolloutIdMapping;
 
     // other mappings
-    private final Map<String, List<Experiment>> liveVariableIdToExperimentsMapping;
-    private final Map<String, Map<String, LiveVariableUsageInstance>> variationToLiveVariableUsageInstanceMapping;
     private final Map<String, Experiment> variationIdToExperimentMapping;
 
     public final static String RESERVED_ATTRIBUTE_PREFIX = "$opt_";
@@ -119,14 +115,13 @@ public class ProjectConfig {
     public ProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
                          List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
                          List<Audience> audiences) {
-        this(accountId, projectId, version, revision, groups, experiments, attributes, eventType, audiences, false,
-            null);
+        this(accountId, projectId, version, revision, groups, experiments, attributes, eventType, audiences, false);
     }
 
     // v3 constructor
     public ProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
                          List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
-                         List<Audience> audiences, boolean anonymizeIP, List<LiveVariable> liveVariables) {
+                         List<Audience> audiences, boolean anonymizeIP) {
         this(
             accountId,
             anonymizeIP,
@@ -141,7 +136,6 @@ public class ProjectConfig {
             experiments,
             null,
             groups,
-            liveVariables,
             null
         );
     }
@@ -160,7 +154,6 @@ public class ProjectConfig {
                          List<Experiment> experiments,
                          List<FeatureFlag> featureFlags,
                          List<Group> groups,
-                         List<LiveVariable> liveVariables,
                          List<Rollout> rollouts) {
 
         this.accountId = accountId;
@@ -223,20 +216,6 @@ public class ProjectConfig {
         this.experimentIdMapping = ProjectConfigUtils.generateIdMapping(this.experiments);
         this.groupIdMapping = ProjectConfigUtils.generateIdMapping(groups);
         this.rolloutIdMapping = ProjectConfigUtils.generateIdMapping(this.rollouts);
-
-        if (liveVariables == null) {
-            this.liveVariables = null;
-            this.liveVariableKeyMapping = Collections.emptyMap();
-            this.liveVariableIdToExperimentsMapping = Collections.emptyMap();
-            this.variationToLiveVariableUsageInstanceMapping = Collections.emptyMap();
-        } else {
-            this.liveVariables = Collections.unmodifiableList(liveVariables);
-            this.liveVariableKeyMapping = ProjectConfigUtils.generateNameMapping(this.liveVariables);
-            this.liveVariableIdToExperimentsMapping =
-                ProjectConfigUtils.generateLiveVariableIdToExperimentsMapping(this.experiments);
-            this.variationToLiveVariableUsageInstanceMapping =
-                ProjectConfigUtils.generateVariationToLiveVariableUsageInstancesMap(this.experiments);
-        }
     }
 
     /**
@@ -408,10 +387,6 @@ public class ProjectConfig {
         return audienceIdMapping.get(audienceId);
     }
 
-    public List<LiveVariable> getLiveVariables() {
-        return liveVariables;
-    }
-
     public Map<String, Experiment> getExperimentKeyMapping() {
         return experimentKeyMapping;
     }
@@ -438,18 +413,6 @@ public class ProjectConfig {
 
     public Map<String, Rollout> getRolloutIdMapping() {
         return rolloutIdMapping;
-    }
-
-    public Map<String, LiveVariable> getLiveVariableKeyMapping() {
-        return liveVariableKeyMapping;
-    }
-
-    public Map<String, List<Experiment>> getLiveVariableIdToExperimentsMapping() {
-        return liveVariableIdToExperimentsMapping;
-    }
-
-    public Map<String, Map<String, LiveVariableUsageInstance>> getVariationToLiveVariableUsageInstanceMapping() {
-        return variationToLiveVariableUsageInstanceMapping;
     }
 
     public Map<String, FeatureFlag> getFeatureKeyMapping() {
@@ -612,19 +575,15 @@ public class ProjectConfig {
             ", experiments=" + experiments +
             ", featureFlags=" + featureFlags +
             ", groups=" + groups +
-            ", liveVariables=" + liveVariables +
             ", rollouts=" + rollouts +
             ", attributeKeyMapping=" + attributeKeyMapping +
             ", eventNameMapping=" + eventNameMapping +
             ", experimentKeyMapping=" + experimentKeyMapping +
             ", featureKeyMapping=" + featureKeyMapping +
-            ", liveVariableKeyMapping=" + liveVariableKeyMapping +
             ", audienceIdMapping=" + audienceIdMapping +
             ", experimentIdMapping=" + experimentIdMapping +
             ", groupIdMapping=" + groupIdMapping +
             ", rolloutIdMapping=" + rolloutIdMapping +
-            ", liveVariableIdToExperimentsMapping=" + liveVariableIdToExperimentsMapping +
-            ", variationToLiveVariableUsageInstanceMapping=" + variationToLiveVariableUsageInstanceMapping +
             ", forcedVariationMapping=" + forcedVariationMapping +
             ", variationIdToExperimentMapping=" + variationIdToExperimentMapping +
             '}';

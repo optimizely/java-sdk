@@ -22,10 +22,8 @@ import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Experiment.ExperimentStatus;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.Group;
-import com.optimizely.ab.config.LiveVariable;
-import com.optimizely.ab.config.LiveVariable.VariableStatus;
-import com.optimizely.ab.config.LiveVariable.VariableType;
-import com.optimizely.ab.config.LiveVariableUsageInstance;
+import com.optimizely.ab.config.FeatureVariable;
+import com.optimizely.ab.config.FeatureVariableUsageInstance;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.TrafficAllocation;
@@ -83,10 +81,7 @@ final class JsonConfigParser implements ConfigParser {
             List<Group> groups = parseGroups(rootObject.getJSONArray("groups"));
 
             boolean anonymizeIP = false;
-            List<LiveVariable> liveVariables = null;
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
-                liveVariables = parseLiveVariables(rootObject.getJSONArray("variables"));
-
                 anonymizeIP = rootObject.getBoolean("anonymizeIP");
             }
 
@@ -114,7 +109,6 @@ final class JsonConfigParser implements ConfigParser {
                 experiments,
                 featureFlags,
                 groups,
-                liveVariables,
                 rollouts
             );
         } catch (Exception e) {
@@ -187,7 +181,7 @@ final class JsonConfigParser implements ConfigParser {
 
             List<String> experimentIds = parseExperimentIds(featureFlagObject.getJSONArray("experimentIds"));
 
-            List<LiveVariable> variables = parseLiveVariables(featureFlagObject.getJSONArray("variables"));
+            List<FeatureVariable> variables = parseFeatureVariables(featureFlagObject.getJSONArray("variables"));
 
             featureFlags.add(new FeatureFlag(
                 id,
@@ -214,13 +208,13 @@ final class JsonConfigParser implements ConfigParser {
                 featureEnabled = variationObject.getBoolean("featureEnabled");
             }
 
-            List<LiveVariableUsageInstance> liveVariableUsageInstances = null;
+            List<FeatureVariableUsageInstance> featureVariableUsageInstances = null;
             if (variationObject.has("variables")) {
-                liveVariableUsageInstances =
-                    parseLiveVariableInstances(variationObject.getJSONArray("variables"));
+                featureVariableUsageInstances =
+                    parseFeatureVariableInstances(variationObject.getJSONArray("variables"));
             }
 
-            variations.add(new Variation(id, key, featureEnabled, liveVariableUsageInstances));
+            variations.add(new Variation(id, key, featureEnabled, featureVariableUsageInstances));
         }
 
         return variations;
@@ -340,38 +334,38 @@ final class JsonConfigParser implements ConfigParser {
         return groups;
     }
 
-    private List<LiveVariable> parseLiveVariables(JSONArray liveVariablesJson) {
-        List<LiveVariable> liveVariables = new ArrayList<LiveVariable>(liveVariablesJson.length());
+    private List<FeatureVariable> parseFeatureVariables(JSONArray FeatureVariablesJson) {
+        List<FeatureVariable> FeatureVariables = new ArrayList<FeatureVariable>(FeatureVariablesJson.length());
 
-        for (Object obj : liveVariablesJson) {
-            JSONObject liveVariableObject = (JSONObject) obj;
-            String id = liveVariableObject.getString("id");
-            String key = liveVariableObject.getString("key");
-            String defaultValue = liveVariableObject.getString("defaultValue");
-            VariableType type = VariableType.fromString(liveVariableObject.getString("type"));
-            VariableStatus status = null;
-            if (liveVariableObject.has("status")) {
-                status = VariableStatus.fromString(liveVariableObject.getString("status"));
+        for (Object obj : FeatureVariablesJson) {
+            JSONObject FeatureVariableObject = (JSONObject) obj;
+            String id = FeatureVariableObject.getString("id");
+            String key = FeatureVariableObject.getString("key");
+            String defaultValue = FeatureVariableObject.getString("defaultValue");
+            FeatureVariable.VariableType type = FeatureVariable.VariableType.fromString(FeatureVariableObject.getString("type"));
+            FeatureVariable.VariableStatus status = null;
+            if (FeatureVariableObject.has("status")) {
+                status = FeatureVariable.VariableStatus.fromString(FeatureVariableObject.getString("status"));
             }
 
-            liveVariables.add(new LiveVariable(id, key, defaultValue, status, type));
+            FeatureVariables.add(new FeatureVariable(id, key, defaultValue, status, type));
         }
 
-        return liveVariables;
+        return FeatureVariables;
     }
 
-    private List<LiveVariableUsageInstance> parseLiveVariableInstances(JSONArray liveVariableInstancesJson) {
-        List<LiveVariableUsageInstance> liveVariableUsageInstances = new ArrayList<LiveVariableUsageInstance>(liveVariableInstancesJson.length());
+    private List<FeatureVariableUsageInstance> parseFeatureVariableInstances(JSONArray FeatureVariableInstancesJson) {
+        List<FeatureVariableUsageInstance> featureVariableUsageInstances = new ArrayList<FeatureVariableUsageInstance>(FeatureVariableInstancesJson.length());
 
-        for (Object obj : liveVariableInstancesJson) {
-            JSONObject liveVariableInstanceObject = (JSONObject) obj;
-            String id = liveVariableInstanceObject.getString("id");
-            String value = liveVariableInstanceObject.getString("value");
+        for (Object obj : FeatureVariableInstancesJson) {
+            JSONObject FeatureVariableInstanceObject = (JSONObject) obj;
+            String id = FeatureVariableInstanceObject.getString("id");
+            String value = FeatureVariableInstanceObject.getString("value");
 
-            liveVariableUsageInstances.add(new LiveVariableUsageInstance(id, value));
+            featureVariableUsageInstances.add(new FeatureVariableUsageInstance(id, value));
         }
 
-        return liveVariableUsageInstances;
+        return featureVariableUsageInstances;
     }
 
     private List<Rollout> parseRollouts(JSONArray rolloutsJson) {
