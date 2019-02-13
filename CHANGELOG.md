@@ -1,7 +1,7 @@
 # Optimizely Java X SDK Changelog
 
 ## 3.0.0
-February 11, 2019
+February 13, 2019
 
 The 3.0 release improves event tracking and supports additional audience targeting functionality.
 ### New Features:
