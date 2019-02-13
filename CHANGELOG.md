@@ -1,9 +1,11 @@
 # Optimizely Java X SDK Changelog
 
 ## 3.0.0
+
 February 13, 2019
 
 The 3.0 release improves event tracking and supports additional audience targeting functionality.
+
 ### New Features:
 * Event tracking:
     * The Track method now dispatches its conversion event _unconditionally_, without first determining whether the user is targeted by a known experiment that uses the event. This may increase outbound network traffic.
@@ -25,14 +27,18 @@ The 3.0 release improves event tracking and supports additional audience targeti
 * Updated Pull Request template and commit message guidelines.
 * When given an invalid datafile, the Optimizely client object now instantiates into a no-op state instead of throwing a `ConfigParseException`. This matches the behavior of the other Optimizely SDKs.
 * Support for graceful shutdown in the default, async event dispatcher.
+
 ### Breaking Changes:
 * Java 7 is no longer supported.
 * Previously, notification listeners were only given string-valued user attributes because only strings could be passed into various method calls. That is no longer the case. The `ActivateNotificationListener` and `TrackNotificationListener` interfaces now receive user attributes as `Map<String, ?>` instead of `Map<String, String>`.
+
 ### Bug Fixes:
 * Experiments and features can no longer activate when a negatively targeted attribute has a missing, null, or malformed value.
 * Audience conditions (except for the new `exists` matcher) no longer resolve to `false` when they fail to find an legitimate value for the targeted user attribute. The result remains `null` (unknown). Therefore, an audience that negates such a condition (using the `"not"` operator) can no longer resolve to `true` unless there is an unrelated branch in the condition tree that itself resolves to `true`.
 * Support for empty user IDs.
-* Wrap the buffer reader in try...catch.
+* Wrap buffer reader for version info. There can be a condition where the buffer reader fails to create for the version resource.
+* Sourceclear flagged jackson-databind 2.9.4 fixed in 2.9.8
+* Fix the quick-start app to create a unique user for every impression/conversion
 
 ## 2.1.4
 
