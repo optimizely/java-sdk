@@ -34,7 +34,7 @@ The 3.0 release improves event tracking and supports additional audience targeti
 
 ### Bug Fixes:
 * Experiments and features can no longer activate when a negatively targeted attribute has a missing, null, or malformed value.
-* Audience conditions (except for the new `exists` matcher) no longer resolve to `false` when they fail to find an legitimate value for the targeted user attribute. The result remains `null` (unknown). Therefore, an audience that negates such a condition (using the `"not"` operator) can no longer resolve to `true` unless there is an unrelated branch in the condition tree that itself resolves to `true`.
+  * Audience conditions (except for the new `exists` matcher) no longer resolve to `false` when they fail to find an legitimate value for the targeted user attribute. The result remains `null` (unknown). Therefore, an audience that negates such a condition (using the `"not"` operator) can no longer resolve to `true` unless there is an unrelated branch in the condition tree that itself resolves to `true`.
 * Support for empty user IDs.
 * Wrap buffer reader for version info. There can be a condition where the buffer reader fails to create for the version resource.
 * Sourceclear flagged jackson-databind 2.9.4 fixed in 2.9.8
