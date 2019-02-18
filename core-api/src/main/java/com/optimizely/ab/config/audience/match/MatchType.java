@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 
+import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
+
 public class MatchType {
 
     public static final Logger logger = LoggerFactory.getLogger(MatchType.class);
@@ -28,7 +30,7 @@ public class MatchType {
     private String matchType;
     private Match matcher;
 
-    public static MatchType getMatchType(String matchType, Object conditionValue) {
+    public static MatchType getMatchType(String matchType, Object conditionValue) throws UnexpectedValueTypeException, UnknownMatchTypeException {
         if (matchType == null) matchType = "legacy_custom_attribute";
 
         switch (matchType) {
@@ -64,20 +66,10 @@ public class MatchType {
                 }
                 break;
             default:
-                return new MatchType(matchType, new NullMatch());
+                throw new UnknownMatchTypeException();
         }
 
-        return new MatchType(matchType, new NullMatch());
-    }
-
-    private static boolean isValidNumber(Object conditionValue) {
-        if (conditionValue instanceof Integer) {
-            return Math.abs((Integer) conditionValue) <= 1e53;
-        } else if (conditionValue instanceof Double) {
-            Double value = ((Number) conditionValue).doubleValue();
-            return !(value.isNaN() || value.isInfinite());
-        }
-        return false;
+        throw new UnexpectedValueTypeException();
     }
 
     private MatchType(String type, Match matcher) {

@@ -20,15 +20,11 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.optimizely.ab.bucketing.Bucketer;
-import com.optimizely.ab.bucketing.DecisionService;
-import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.error.ErrorHandler;
-import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.Decision;
 import com.optimizely.ab.event.internal.payload.EventBatch;
@@ -38,7 +34,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -51,7 +46,6 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNotSame;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.closeTo;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -59,9 +53,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(Parameterized.class)
@@ -153,6 +144,7 @@ public class EventFactoryTest {
         assertThat((double) eventBatch.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double) System.currentTimeMillis(), 1000.0));
         assertFalse(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertThat(eventBatch.getAnonymizeIp(), is(validProjectConfig.getAnonymizeIP()));
+        assertTrue(eventBatch.getEnrichDecisions());
         assertThat(eventBatch.getProjectId(), is(validProjectConfig.getProjectId()));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0), is(expectedDecision));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getCampaignId(),
@@ -212,6 +204,7 @@ public class EventFactoryTest {
         assertThat((double) eventBatch.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double) System.currentTimeMillis(), 1000.0));
         assertFalse(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertThat(eventBatch.getAnonymizeIp(), is(validProjectConfig.getAnonymizeIP()));
+        assertTrue(eventBatch.getEnrichDecisions());
         assertThat(eventBatch.getProjectId(), is(validProjectConfig.getProjectId()));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0), is(expectedDecision));
         assertThat(eventBatch.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getCampaignId(),
@@ -255,17 +248,8 @@ public class EventFactoryTest {
     public void createConversionEventIgnoresInvalidAndAcceptsValidAttributes() {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
-        Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         EventType eventType = validProjectConfig.getEventTypes().get(0);
 
-        List<Experiment> allExperiments = validProjectConfig.getExperiments();
-
-        // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
-        // call the bucket function.
-        for (Experiment experiment : allExperiments) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
-                .thenReturn(experiment.getVariations().get(0));
-        }
         Attribute attribute1 = validProjectConfig.getAttributes().get(0);
         Attribute attribute2 = validProjectConfig.getAttributes().get(1);
         Attribute doubleAttribute = validProjectConfig.getAttributes().get(5);
@@ -291,45 +275,156 @@ public class EventFactoryTest {
         attributes.put(boolAttribute.getKey(), validBoolAttribute);
         attributes.put(emptyAttribute.getKey(), validBoolAttribute);
 
-        DecisionService decisionService = new DecisionService(
-            mockBucketAlgorithm,
-            mock(ErrorHandler.class),
-            validProjectConfig,
-            mock(UserProfileService.class)
-        );
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            decisionService,
-            eventType.getKey(),
-            userId,
-            attributes);
+        LogEvent conversionEvent = factory.createConversionEvent(
+                validProjectConfig,
+                userId,
+                eventType.getId(),
+                eventType.getKey(),
+                attributes,
+                eventTagMap);
+
+        EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
+
+        //Check valid attributes are getting passed.
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(0).getKey(), boolAttribute.getKey());
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(0).getValue(), validBoolAttribute);
+
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(1).getKey(), doubleAttribute.getKey());
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(1).getValue(), validDoubleAttribute);
+
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(2).getKey(), integerAttribute.getKey());
+        assertEquals((int) ((double) conversion.getVisitors().get(0).getAttributes().get(2).getValue()), validIntegerAttribute);
+
+        // verify that no Feature is created for attribute.getKey() -> invalidAttribute
+        for (com.optimizely.ab.event.internal.payload.Attribute feature : conversion.getVisitors().get(0).getAttributes()) {
+            assertNotSame(feature.getKey(), attribute1.getKey());
+            assertNotSame(feature.getValue(), bigInteger);
+            assertNotSame(feature.getKey(), attribute2.getKey());
+            assertNotSame(feature.getValue(), bigDecimal);
+            assertNotSame(feature.getKey(), emptyAttribute.getKey());
+            assertNotSame(feature.getValue(), doubleAttribute);
+        }
+    }
+
+    /**
+     * Verify that passing through an list of invalid value attribute causes that attribute to be ignored, rather than
+     * causing an exception to be thrown and passing only the valid attributes.
+     */
+    @Test
+    public void createConversionEventIgnoresInvalidAcceptValidValOfValidAttr() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        EventType eventType = validProjectConfig.getEventTypes().get(0);
+
+        Attribute validFloatAttribute = validProjectConfig.getAttributes().get(0);
+        Attribute invalidFloatAttribute = validProjectConfig.getAttributes().get(1);
+        Attribute doubleAttribute = validProjectConfig.getAttributes().get(5);
+        Attribute integerAttribute = validProjectConfig.getAttributes().get(4);
+        Attribute boolAttribute = validProjectConfig.getAttributes().get(3);
+        Attribute emptyAttribute = validProjectConfig.getAttributes().get(6);
+
+        float validFloatValue = 2.1f;
+        float invalidFloatValue = (float) (Math.pow(2, 53) + 2000000000);
+        double invalidDoubleAttribute = Math.pow(2, 53) + 2;
+        long validLongAttribute = 12;
+        boolean validBoolAttribute = true;
+
+        Map<String, Object> eventTagMap = new HashMap<>();
+        eventTagMap.put("boolean_param", false);
+        eventTagMap.put("string_param", "123");
+
+        HashMap<String, Object> attributes = new HashMap<>();
+        attributes.put(validFloatAttribute.getKey(), validFloatValue);
+        attributes.put(invalidFloatAttribute.getKey(), invalidFloatValue);
+        attributes.put(doubleAttribute.getKey(), invalidDoubleAttribute);
+        attributes.put(integerAttribute.getKey(), validLongAttribute);
+        attributes.put(boolAttribute.getKey(), validBoolAttribute);
+        attributes.put(emptyAttribute.getKey(), validBoolAttribute);
+
         LogEvent conversionEvent = factory.createConversionEvent(
             validProjectConfig,
-            experimentVariationMap,
             userId,
             eventType.getId(),
             eventType.getKey(),
             attributes,
             eventTagMap);
 
-        EventBatch impression = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
+        EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
         //Check valid attributes are getting passed.
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(0).getKey(), boolAttribute.getKey());
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(0).getValue(), validBoolAttribute);
-
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(1).getKey(), doubleAttribute.getKey());
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(1).getValue(), validDoubleAttribute);
-
-        assertEquals(impression.getVisitors().get(0).getAttributes().get(2).getKey(), integerAttribute.getKey());
-        assertEquals((int) ((double) impression.getVisitors().get(0).getAttributes().get(2).getValue()), validIntegerAttribute);
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(0).getKey(), boolAttribute.getKey());
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(0).getValue(), validBoolAttribute);
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(1).getKey(), validFloatAttribute.getKey());
+        //In the condition below we are checking Value of float with double value because impression gets visitors from JSON so that converts it into double
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(1).getValue(), 2.1);
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(2).getKey(), integerAttribute.getKey());
+        assertEquals((long) ((double) conversion.getVisitors().get(0).getAttributes().get(2).getValue()), validLongAttribute);
 
         // verify that no Feature is created for attribute.getKey() -> invalidAttribute
-        for (com.optimizely.ab.event.internal.payload.Attribute feature : impression.getVisitors().get(0).getAttributes()) {
-            assertNotSame(feature.getKey(), attribute1.getKey());
-            assertNotSame(feature.getValue(), bigInteger);
-            assertNotSame(feature.getKey(), attribute2.getKey());
-            assertNotSame(feature.getValue(), bigDecimal);
+        for (com.optimizely.ab.event.internal.payload.Attribute feature : conversion.getVisitors().get(0).getAttributes()) {
+            assertNotSame(feature.getKey(), invalidFloatAttribute.getKey());
+            assertNotSame(feature.getValue(), invalidFloatValue);
+            assertNotSame(feature.getKey(), doubleAttribute.getKey());
+            assertNotSame(feature.getValue(), invalidDoubleAttribute);
+            assertNotSame(feature.getKey(), emptyAttribute.getKey());
+            assertNotSame(feature.getValue(), doubleAttribute);
+        }
+    }
+
+    /**
+     * Verify that passing through an list of -ve invalid attribute value causes that attribute to be ignored, rather than
+     * causing an exception to be thrown and passing only the valid attributes.
+     */
+    @Test
+    public void createConversionEventIgnoresNegativeInvalidAndAcceptsValidValueOfValidTypeAttributes() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        EventType eventType = validProjectConfig.getEventTypes().get(0);
+
+        Attribute validFloatAttribute = validProjectConfig.getAttributes().get(0);
+        Attribute invalidFloatAttribute = validProjectConfig.getAttributes().get(1);
+        Attribute doubleAttribute = validProjectConfig.getAttributes().get(5);
+        Attribute integerAttribute = validProjectConfig.getAttributes().get(4);
+        Attribute emptyAttribute = validProjectConfig.getAttributes().get(6);
+
+        float validFloatValue = -2.1f;
+        float invalidFloatValue = -((float) (Math.pow(2, 53) + 2000000000));
+        double invalidDoubleAttribute = -(Math.pow(2, 53) + 2);
+        long validLongAttribute = -12;
+
+        Map<String, Object> eventTagMap = new HashMap<>();
+        eventTagMap.put("boolean_param", false);
+        eventTagMap.put("string_param", "123");
+
+        HashMap<String, Object> attributes = new HashMap<>();
+        attributes.put(validFloatAttribute.getKey(), validFloatValue);
+        attributes.put(invalidFloatAttribute.getKey(), invalidFloatValue);
+        attributes.put(doubleAttribute.getKey(), invalidDoubleAttribute);
+        attributes.put(integerAttribute.getKey(), validLongAttribute);
+
+        LogEvent conversionEvent = factory.createConversionEvent(
+            validProjectConfig,
+            userId,
+            eventType.getId(),
+            eventType.getKey(),
+            attributes,
+            eventTagMap);
+
+        EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
+
+        //Check valid attributes are getting passed.
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(0).getKey(), validFloatAttribute.getKey());
+        //In below condition I am checking Value of float with double value because impression gets visitors from json so that converts it into double
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(0).getValue(), -2.1);
+        assertEquals(conversion.getVisitors().get(0).getAttributes().get(1).getKey(), integerAttribute.getKey());
+        assertEquals((long) ((double) conversion.getVisitors().get(0).getAttributes().get(1).getValue()), validLongAttribute);
+
+        // verify that no Feature is created for attribute.getKey() -> invalidAttribute
+        for (com.optimizely.ab.event.internal.payload.Attribute feature : conversion.getVisitors().get(0).getAttributes()) {
+            assertNotSame(feature.getKey(), invalidFloatAttribute.getKey());
+            assertNotSame(feature.getValue(), invalidFloatValue);
+            assertNotSame(feature.getKey(), doubleAttribute.getKey());
+            assertNotSame(feature.getValue(), invalidDoubleAttribute);
             assertNotSame(feature.getKey(), emptyAttribute.getKey());
             assertNotSame(feature.getValue(), doubleAttribute);
         }
@@ -496,57 +591,17 @@ public class EventFactoryTest {
         EventType eventType = validProjectConfig.getEventTypes().get(0);
         String userId = "userId";
 
-        Bucketer mockBucketAlgorithm = mock(Bucketer.class);
-
-        List<Experiment> allExperiments = validProjectConfig.getExperiments();
-        List<Experiment> experimentsForEventKey = validProjectConfig.getExperimentsForEventKey(eventType.getKey());
-
-        // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
-        // call the bucket function.
-        for (Experiment experiment : allExperiments) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
-                .thenReturn(experiment.getVariations().get(0));
-        }
-        DecisionService decisionService = new DecisionService(
-            mockBucketAlgorithm,
-            mock(ErrorHandler.class),
-            validProjectConfig,
-            mock(UserProfileService.class)
-        );
-
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), AUDIENCE_GRYFFINDOR_VALUE);
         Map<String, Object> eventTagMap = new HashMap<String, Object>();
         eventTagMap.put("boolean_param", false);
         eventTagMap.put("string_param", "123");
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            decisionService,
-            eventType.getKey(),
-            userId,
-            attributeMap);
         LogEvent conversionEvent = factory.createConversionEvent(
-            validProjectConfig,
-            experimentVariationMap,
-            userId,
-            eventType.getId(),
-            eventType.getKey(),
-            attributeMap,
-            eventTagMap);
-
-        List<Decision> expectedDecisions = new ArrayList<Decision>();
-
-        for (Experiment experiment : experimentsForEventKey) {
-            if (experiment.isRunning()) {
-                Decision layerState = new Decision.Builder()
-                    .setCampaignId(experiment.getLayerId())
-                    .setExperimentId(experiment.getId())
-                    .setVariationId(experiment.getVariations().get(0).getId())
-                    .setIsCampaignHoldback(false)
-                    .build();
-
-                expectedDecisions.add(layerState);
-            }
-        }
+                validProjectConfig,
+                userId,
+                eventType.getId(),
+                eventType.getKey(),
+                attributeMap,
+                eventTagMap);
 
         // verify that the request endpoint is correct
         assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
@@ -574,14 +629,13 @@ public class EventFactoryTest {
         }
 
         assertEquals(conversion.getVisitors().get(0).getAttributes(), expectedUserFeatures);
-        assertThat(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions(), containsInAnyOrder(expectedDecisions.toArray()));
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getEntityId(), eventType.getId());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getKey(), eventType.getKey());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getRevenue(), null);
         assertTrue(conversion.getVisitors().get(0).getAttributes().containsAll(expectedUserFeatures));
         assertTrue(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTags().equals(eventTagMap));
-        assertFalse(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
+        assertTrue(conversion.getEnrichDecisions());
         assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
         assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
     }
@@ -597,59 +651,19 @@ public class EventFactoryTest {
         EventType eventType = validProjectConfig.getEventTypes().get(0);
         String userId = "userId";
 
-        Bucketer mockBucketAlgorithm = mock(Bucketer.class);
-
-        List<Experiment> allExperiments = validProjectConfig.getExperiments();
-        List<Experiment> experimentsForEventKey = validProjectConfig.getExperimentsForEventKey(eventType.getKey());
-
-        // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
-        // call the bucket function.
-        for (Experiment experiment : allExperiments) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
-                .thenReturn(experiment.getVariations().get(0));
-        }
-        DecisionService decisionService = new DecisionService(
-            mockBucketAlgorithm,
-            mock(ErrorHandler.class),
-            validProjectConfig,
-            mock(UserProfileService.class)
-        );
-
         Map<String, String> attributeMap = new HashMap<String, String>();
         attributeMap.put(attribute.getKey(), AUDIENCE_GRYFFINDOR_VALUE);
         attributeMap.put(ControlAttribute.USER_AGENT_ATTRIBUTE.toString(), "Chrome");
         Map<String, Object> eventTagMap = new HashMap<String, Object>();
         eventTagMap.put("boolean_param", false);
         eventTagMap.put("string_param", "123");
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            decisionService,
-            eventType.getKey(),
-            userId,
-            attributeMap);
         LogEvent conversionEvent = factory.createConversionEvent(
-            validProjectConfig,
-            experimentVariationMap,
-            userId,
-            eventType.getId(),
-            eventType.getKey(),
-            attributeMap,
-            eventTagMap);
-
-        List<Decision> expectedDecisions = new ArrayList<Decision>();
-
-        for (Experiment experiment : experimentsForEventKey) {
-            if (experiment.isRunning()) {
-                Decision layerState = new Decision.Builder()
-                    .setCampaignId(experiment.getLayerId())
-                    .setExperimentId(experiment.getId())
-                    .setVariationId(experiment.getVariations().get(0).getId())
-                    .setIsCampaignHoldback(false)
-                    .build();
-
-                expectedDecisions.add(layerState);
-            }
-        }
+                validProjectConfig,
+                userId,
+                eventType.getId(),
+                eventType.getKey(),
+                attributeMap,
+                eventTagMap);
 
         // verify that the request endpoint is correct
         assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
@@ -683,14 +697,13 @@ public class EventFactoryTest {
         }
 
         assertEquals(conversion.getVisitors().get(0).getAttributes(), expectedUserFeatures);
-        assertThat(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions(), containsInAnyOrder(expectedDecisions.toArray()));
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getEntityId(), eventType.getId());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getKey(), eventType.getKey());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getRevenue(), null);
         assertTrue(conversion.getVisitors().get(0).getAttributes().containsAll(expectedUserFeatures));
         assertTrue(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTags().equals(eventTagMap));
-        assertFalse(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
+        assertTrue(conversion.getEnrichDecisions());
         assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
         assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
     }
@@ -715,27 +728,15 @@ public class EventFactoryTest {
             when(mockBucketAlgorithm.bucket(experiment, userId))
                 .thenReturn(experiment.getVariations().get(0));
         }
-        DecisionService decisionService = new DecisionService(
-            mockBucketAlgorithm,
-            mock(ErrorHandler.class),
-            validProjectConfig,
-            mock(UserProfileService.class)
-        );
 
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
         Map<String, Object> eventTagMap = new HashMap<String, Object>();
         eventTagMap.put(ReservedEventKey.REVENUE.toString(), revenue);
         eventTagMap.put(ReservedEventKey.VALUE.toString(), value);
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            decisionService,
-            eventType.getKey(),
-            userId,
-            attributeMap);
 
-        LogEvent conversionEvent = factory.createConversionEvent(validProjectConfig, experimentVariationMap, userId,
-            eventType.getId(), eventType.getKey(), attributeMap,
-            eventTagMap);
+        LogEvent conversionEvent = factory.createConversionEvent(validProjectConfig, userId,
+                eventType.getId(), eventType.getKey(), attributeMap,
+                eventTagMap);
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
         // we're not going to verify everything, only the event metrics
@@ -744,8 +745,7 @@ public class EventFactoryTest {
     }
 
     /**
-     * Verify that precedence is given to forced variation bucketing over audience evaluation when constructing a
-     * conversion event.
+     * Verify that conversion event is always created.
      */
     @Test
     public void createConversionEventForcedVariationBucketingPrecedesAudienceEval() {
@@ -759,45 +759,18 @@ public class EventFactoryTest {
             whitelistedUserId = "testUser1";
         }
 
-        DecisionService decisionService = new DecisionService(
-            new Bucketer(validProjectConfig),
-            new NoOpErrorHandler(),
-            validProjectConfig,
-            mock(UserProfileService.class)
-        );
-
-        // attributes are empty so user won't be in the audience for experiment using the event, but bucketing
-        // will still take place
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            decisionService,
-            eventType.getKey(),
-            whitelistedUserId,
-            Collections.<String, String>emptyMap());
         LogEvent conversionEvent = factory.createConversionEvent(
-            validProjectConfig,
-            experimentVariationMap,
-            whitelistedUserId,
-            eventType.getId(),
-            eventType.getKey(),
-            Collections.<String, String>emptyMap(),
-            Collections.<String, Object>emptyMap());
+                validProjectConfig,
+                whitelistedUserId,
+                eventType.getId(),
+                eventType.getKey(),
+                Collections.<String, String>emptyMap(),
+                Collections.<String, Object>emptyMap());
         assertNotNull(conversionEvent);
-
-        EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
-        if (datafileVersion == 4) {
-            // 2 experiments use the event
-            // basic experiment has no audience
-            // user is whitelisted in to one audience
-            assertEquals(2, conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().size());
-        } else {
-            assertEquals(1, conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().size());
-        }
     }
 
     /**
-     * Verify that precedence is given to experiment status over forced variation bucketing when constructing a
-     * conversion event.
+     * Verify conversion event is always created.
      */
     @Test
     public void createConversionEventExperimentStatusPrecedesForcedVariation() {
@@ -809,34 +782,15 @@ public class EventFactoryTest {
         }
         String whitelistedUserId = PAUSED_EXPERIMENT_FORCED_VARIATION_USER_ID_CONTROL;
 
-        Bucketer bucketer = spy(new Bucketer(validProjectConfig));
-        DecisionService decisionService = new DecisionService(
-            bucketer,
-            mock(ErrorHandler.class),
-            validProjectConfig,
-            mock(UserProfileService.class)
-        );
-
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            decisionService,
-            eventType.getKey(),
-            whitelistedUserId,
-            Collections.<String, String>emptyMap());
         LogEvent conversionEvent = factory.createConversionEvent(
-            validProjectConfig,
-            experimentVariationMap,
-            whitelistedUserId,
-            eventType.getId(),
-            eventType.getKey(),
-            Collections.<String, String>emptyMap(),
-            Collections.<String, Object>emptyMap());
+                validProjectConfig,
+                whitelistedUserId,
+                eventType.getId(),
+                eventType.getKey(),
+                Collections.<String, String>emptyMap(),
+                Collections.<String, Object>emptyMap());
 
-        for (Experiment experiment : validProjectConfig.getExperiments()) {
-            verify(bucketer, never()).bucket(experiment, whitelistedUserId);
-        }
-
-        assertNull(conversionEvent);
+        assertNotNull(conversionEvent);
     }
 
     /**
@@ -854,29 +808,16 @@ public class EventFactoryTest {
             when(mockBucketAlgorithm.bucket(experiment, userId))
                 .thenReturn(experiment.getVariations().get(0));
         }
-        DecisionService decisionService = new DecisionService(
-            mockBucketAlgorithm,
-            mock(ErrorHandler.class),
-            validProjectConfig,
-            mock(UserProfileService.class)
-        );
 
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            decisionService,
-            eventType.getKey(),
-            userId,
-            attributeMap);
 
         LogEvent conversionEvent = factory.createConversionEvent(
-            validProjectConfig,
-            experimentVariationMap,
-            userId,
-            eventType.getId(),
-            eventType.getKey(),
-            attributeMap,
-            Collections.<String, Object>emptyMap());
+                validProjectConfig,
+                userId,
+                eventType.getId(),
+                eventType.getKey(),
+                attributeMap,
+                Collections.<String, Object>emptyMap());
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
@@ -904,20 +845,14 @@ public class EventFactoryTest {
         }
 
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
-        List<Experiment> experimentList = projectConfig.getExperimentsForEventKey(eventType.getKey());
-        Map<Experiment, Variation> experimentVariationMap = new HashMap<Experiment, Variation>(experimentList.size());
-        for (Experiment experiment : experimentList) {
-            experimentVariationMap.put(experiment, experiment.getVariations().get(0));
-        }
 
         LogEvent conversionEvent = factory.createConversionEvent(
-            projectConfig,
-            experimentVariationMap,
-            userId,
-            eventType.getId(),
-            eventType.getKey(),
-            attributeMap,
-            Collections.<String, Object>emptyMap());
+                projectConfig,
+                userId,
+                eventType.getId(),
+                eventType.getKey(),
+                attributeMap,
+                Collections.<String, Object>emptyMap());
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
         assertThat(conversion.getClientName(), is(EventBatch.ClientEngine.ANDROID_TV_SDK.getClientEngineValue()));
@@ -926,25 +861,24 @@ public class EventFactoryTest {
 
     /**
      * Verify that supplying an empty Experiment Variation map to
-     * {@link EventFactory#createConversionEvent(ProjectConfig, Map, String, String, String, Map, Map)}
-     * returns a null {@link LogEvent}.
+     * {@link EventFactory#createConversionEvent(ProjectConfig, String, String, String, Map, Map)}
+     * returns an Event {@link LogEvent}.
      */
     @Test
-    public void createConversionEventReturnsNullWhenExperimentVariationMapIsEmpty() {
+    public void createConversionEventReturnsNotNullWhenExperimentVariationMapIsEmpty() {
         EventType eventType = validProjectConfig.getEventTypes().get(0);
         EventFactory factory = new EventFactory();
 
         LogEvent conversionEvent = factory.createConversionEvent(
-            validProjectConfig,
-            Collections.<Experiment, Variation>emptyMap(),
-            userId,
-            eventType.getId(),
-            eventType.getKey(),
-            Collections.<String, String>emptyMap(),
-            Collections.<String, String>emptyMap()
+                validProjectConfig,
+                userId,
+                eventType.getId(),
+                eventType.getKey(),
+                Collections.<String, String>emptyMap(),
+                Collections.<String, String>emptyMap()
         );
 
-        assertNull(conversionEvent);
+        assertNotNull(conversionEvent);
     }
 
     /**
@@ -1004,6 +938,7 @@ public class EventFactoryTest {
         assertThat((double) impression.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double) System.currentTimeMillis(), 1000.0));
         assertFalse(impression.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertThat(impression.getAnonymizeIp(), is(projectConfig.getAnonymizeIP()));
+        assertTrue(impression.getEnrichDecisions());
         assertThat(impression.getProjectId(), is(projectConfig.getProjectId()));
         assertThat(impression.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0), is(expectedDecision));
         assertThat(impression.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getCampaignId(), is(activatedExperiment.getLayerId()));
@@ -1026,24 +961,6 @@ public class EventFactoryTest {
         String userId = "userId";
         String bucketingId = "bucketingId";
 
-        Bucketer mockBucketAlgorithm = mock(Bucketer.class);
-
-        List<Experiment> allExperiments = validProjectConfig.getExperiments();
-        List<Experiment> experimentsForEventKey = validProjectConfig.getExperimentsForEventKey(eventType.getKey());
-
-        // Bucket to the first variation for all experiments. However, only a subset of the experiments will actually
-        // call the bucket function.
-        for (Experiment experiment : allExperiments) {
-            when(mockBucketAlgorithm.bucket(experiment, bucketingId))
-                .thenReturn(experiment.getVariations().get(0));
-        }
-        DecisionService decisionService = new DecisionService(
-            mockBucketAlgorithm,
-            mock(ErrorHandler.class),
-            validProjectConfig,
-            mock(UserProfileService.class)
-        );
-
         Map<String, String> attributeMap = new java.util.HashMap<String, String>();
         attributeMap.put(attribute.getKey(), AUDIENCE_GRYFFINDOR_VALUE);
         attributeMap.put(ControlAttribute.BUCKETING_ATTRIBUTE.toString(), bucketingId);
@@ -1052,36 +969,13 @@ public class EventFactoryTest {
         eventTagMap.put("boolean_param", false);
         eventTagMap.put("string_param", "123");
 
-        Map<Experiment, Variation> experimentVariationMap = createExperimentVariationMap(
-            validProjectConfig,
-            decisionService,
-            eventType.getKey(),
-            userId,
-            attributeMap);
-
         LogEvent conversionEvent = factory.createConversionEvent(
-            validProjectConfig,
-            experimentVariationMap,
-            userId,
-            eventType.getId(),
-            eventType.getKey(),
-            attributeMap,
-            eventTagMap);
-
-        List<Decision> expectedDecisions = new ArrayList<Decision>();
-
-        for (Experiment experiment : experimentsForEventKey) {
-            if (experiment.isRunning()) {
-                Decision decision = new Decision.Builder()
-                    .setCampaignId(experiment.getLayerId())
-                    .setExperimentId(experiment.getId())
-                    .setVariationId(experiment.getVariations().get(0).getId())
-                    .setIsCampaignHoldback(false)
-                    .build();
-
-                expectedDecisions.add(decision);
-            }
-        }
+                validProjectConfig,
+                userId,
+                eventType.getId(),
+                eventType.getKey(),
+                attributeMap,
+                eventTagMap);
 
         // verify that the request endpoint is correct
         assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
@@ -1116,40 +1010,18 @@ public class EventFactoryTest {
         }
 
         assertEquals(conversion.getVisitors().get(0).getAttributes(), expectedUserFeatures);
-        assertThat(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions(), containsInAnyOrder(expectedDecisions.toArray()));
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getEntityId(), eventType.getId());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getType(), eventType.getKey());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getKey(), eventType.getKey());
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getRevenue(), null);
         assertEquals(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getQuantity(), null);
         assertTrue(conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTags().equals(eventTagMap));
-        assertFalse(conversion.getVisitors().get(0).getSnapshots().get(0).getDecisions().get(0).getIsCampaignHoldback());
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
+        assertTrue(conversion.getEnrichDecisions());
         assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
         assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
     }
 
-
-    //========== helper methods =========//
-    public static Map<Experiment, Variation> createExperimentVariationMap(ProjectConfig projectConfig,
-                                                                          DecisionService decisionService,
-                                                                          String eventName,
-                                                                          String userId,
-                                                                          @Nullable Map<String, ?> attributes) {
-
-        List<Experiment> eventExperiments = projectConfig.getExperimentsForEventKey(eventName);
-        Map<Experiment, Variation> experimentVariationMap = new HashMap<Experiment, Variation>(eventExperiments.size());
-        for (Experiment experiment : eventExperiments) {
-            if (experiment.isRunning()) {
-                Variation variation = decisionService.getVariation(experiment, userId, attributes);
-                if (variation != null) {
-                    experimentVariationMap.put(experiment, variation);
-                }
-            }
-        }
-
-        return experimentVariationMap;
-    }
 
     private com.optimizely.ab.event.internal.payload.Attribute getBotFilteringAttribute() {
         return new com.optimizely.ab.event.internal.payload.Attribute.Builder()

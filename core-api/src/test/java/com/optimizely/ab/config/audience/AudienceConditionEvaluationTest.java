@@ -16,7 +16,10 @@
  */
 package com.optimizely.ab.config.audience;
 
+import ch.qos.logback.classic.Level;
+import com.optimizely.ab.internal.LogbackVerifier;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -43,6 +46,9 @@ import static org.mockito.Mockito.when;
 @SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT",
     justification = "mockito verify calls do have a side-effect")
 public class AudienceConditionEvaluationTest {
+
+    @Rule
+    public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
     Map<String, String> testUserAttributes;
     Map<String, Object> testTypedUserAttributes;
@@ -108,6 +114,64 @@ public class AudienceConditionEvaluationTest {
     public void invalidMatch() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah", "chrome");
         assertNull(testInstance.evaluate(null, testUserAttributes));
+        logbackVerifier.expectMessage(Level.WARN,
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='blah', value='chrome'}\" uses an unknown match type. You may need to upgrade to a newer release of the Optimizely SDK");
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on invalid attribute type.
+     */
+    @Test
+    public void unexpectedAttributeType() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
+        assertNull(testInstance.evaluate(null, testUserAttributes));
+        logbackVerifier.expectMessage(Level.WARN,
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because a value of type \"java.lang.String\" was passed for user attribute \"browser_type\"");
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on invalid attribute type.
+     */
+    @Test
+    public void unexpectedAttributeTypeNull() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
+        assertNull(testInstance.evaluate(null, Collections.singletonMap("browser_type", null)));
+        logbackVerifier.expectMessage(Level.WARN,
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because a null value was passed for user attribute \"browser_type\"");
+    }
+
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on missing attribute value.
+     */
+    @Test
+    public void missingAttribute() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
+        assertNull(testInstance.evaluate(null, Collections.EMPTY_MAP));
+        logbackVerifier.expectMessage(Level.DEBUG,
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because no value was passed for user attribute \"browser_type\"");
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on passing null attribute object.
+     */
+    @Test
+    public void nullAttribute() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
+        assertNull(testInstance.evaluate(null, null));
+        logbackVerifier.expectMessage(Level.DEBUG,
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because no value was passed for user attribute \"browser_type\"");
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate returns null on unknown condition type.
+     */
+    @Test
+    public void unknownConditionType() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "blah", "exists", "firefox");
+        assertNull(testInstance.evaluate(null, testUserAttributes));
+        logbackVerifier.expectMessage(Level.WARN,
+            "Audience condition \"{name='browser_type', type='blah', match='exists', value='firefox'}\" has an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK");
     }
 
     /**
@@ -160,25 +224,74 @@ public class AudienceConditionEvaluationTest {
      * attributes where the values and the value's type are the same
      */
     @Test
-    public void exactMatchConditionEvaluatesTrue() throws Exception {
+    public void exactMatchConditionEvaluatesTrue() {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "exact", "chrome");
         UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "exact", true);
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "exact", 3);
+        UserAttribute testInstanceFloat = new UserAttribute("num_size", "custom_attribute", "exact", (float) 3);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "exact", 3.55);
 
         assertTrue(testInstanceString.evaluate(null, testUserAttributes));
         assertTrue(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
         assertTrue(testInstanceInteger.evaluate(null, testTypedUserAttributes));
+        assertTrue(testInstanceFloat.evaluate(null, Collections.singletonMap("num_size", (float) 3)));
         assertTrue(testInstanceDouble.evaluate(null, testTypedUserAttributes));
     }
 
-
     /**
      * Verify that UserAttribute.evaluate for EXACT match type returns null if the UserAttribute's
+     * value type is not a valid number.
+     */
+    @Test
+    public void exactMatchConditionEvaluatesNullWithInvalidUserAttr() {
+        BigInteger bigInteger = new BigInteger("33221312312312312");
+        Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
+        Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
+        Double infiniteNANDouble = Double.NaN;
+        Double largeDouble = Math.pow(2,53) + 2;
+        float invalidFloatValue = (float) (Math.pow(2, 53) + 2000000000);
+        UserAttribute testInstanceInteger = new UserAttribute(
+            "num_size",
+            "custom_attribute",
+            "exact",
+            5);
+        UserAttribute testInstanceFloat = new UserAttribute(
+            "num_size",
+            "custom_attribute",
+            "exact",
+            (float) 5);
+        UserAttribute testInstanceDouble = new UserAttribute(
+            "num_counts",
+            "custom_attribute",
+            "exact",
+            5.2);
+
+        assertNull(testInstanceInteger.evaluate(
+            null,
+            Collections.singletonMap("num_size", bigInteger)));
+        assertNull(testInstanceFloat.evaluate(
+            null,
+            Collections.singletonMap("num_size", invalidFloatValue)));
+        assertNull(testInstanceDouble.evaluate(
+            null,
+            Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble)));
+        assertNull(testInstanceDouble.evaluate(
+            null,
+            Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble)));
+        assertNull(testInstanceDouble.evaluate(
+            null, Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", infiniteNANDouble))));
+        assertNull(testInstanceDouble.evaluate(
+            null, Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", largeDouble))));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for EXACT match type returns null if the UserAttribute's condition
      * value type is invalid number.
      */
     @Test
-    public void invalidExactMatchConditionEvaluatesNull() throws Exception {
+    public void invalidExactMatchConditionEvaluatesNull() {
         BigInteger bigInteger = new BigInteger("33221312312312312");
         Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
         Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
@@ -199,7 +312,7 @@ public class AudienceConditionEvaluationTest {
      * attributes where the value's type are the same, but the values are different
      */
     @Test
-    public void exactMatchConditionEvaluatesFalse() throws Exception {
+    public void exactMatchConditionEvaluatesFalse() {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "exact", "firefox");
         UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "exact", false);
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "exact", 5);
@@ -216,7 +329,7 @@ public class AudienceConditionEvaluationTest {
      * attributes where the value's type are different OR for values with null and object type.
      */
     @Test
-    public void exactMatchConditionEvaluatesNull() throws Exception {
+    public void exactMatchConditionEvaluatesNull() {
         UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "exact", testUserAttributes);
         UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "exact", true);
         UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "exact", "true");
@@ -241,11 +354,13 @@ public class AudienceConditionEvaluationTest {
      * the condition's value.
      */
     @Test
-    public void gtMatchConditionEvaluatesTrue() throws Exception {
+    public void gtMatchConditionEvaluatesTrue() {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "gt", 2);
+        UserAttribute testInstanceFloat = new UserAttribute("num_size", "custom_attribute", "gt", (float) 2);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "gt", 2.55);
 
         assertTrue(testInstanceInteger.evaluate(null, testTypedUserAttributes));
+        assertTrue(testInstanceFloat.evaluate(null, Collections.singletonMap("num_size", (float) 3)));
         assertTrue(testInstanceDouble.evaluate(null, testTypedUserAttributes));
 
         Map<String, Object> badAttributes = new HashMap<>();
@@ -258,7 +373,56 @@ public class AudienceConditionEvaluationTest {
      * value type is invalid number.
      */
     @Test
-    public void gtMatchConditionEvaluatesNullWithInvalidAttr() throws Exception {
+    public void gtMatchConditionEvaluatesNullWithInvalidUserAttr() {
+        BigInteger bigInteger = new BigInteger("33221312312312312");
+        Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
+        Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
+        Double infiniteNANDouble = Double.NaN;
+        Double largeDouble = Math.pow(2, 53) + 2;
+        float invalidFloatValue = (float) (Math.pow(2, 53) + 2000000000);
+
+        UserAttribute testInstanceInteger = new UserAttribute(
+            "num_size",
+            "custom_attribute",
+            "gt",
+            5);
+        UserAttribute testInstanceFloat = new UserAttribute(
+            "num_size",
+            "custom_attribute",
+            "gt",
+            (float) 5);
+        UserAttribute testInstanceDouble = new UserAttribute(
+            "num_counts",
+            "custom_attribute",
+            "gt",
+            5.2);
+
+        assertNull(testInstanceInteger.evaluate(
+            null,
+            Collections.singletonMap("num_size", bigInteger)));
+        assertNull(testInstanceFloat.evaluate(
+            null,
+            Collections.singletonMap("num_size", invalidFloatValue)));
+        assertNull(testInstanceDouble.evaluate(
+            null,
+            Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble)));
+        assertNull(testInstanceDouble.evaluate(
+            null,
+            Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble)));
+        assertNull(testInstanceDouble.evaluate(
+            null, Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", infiniteNANDouble))));
+        assertNull(testInstanceDouble.evaluate(
+            null, Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", largeDouble))));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for GT match type returns null if the UserAttribute's
+     * value type is invalid number.
+     */
+    @Test
+    public void gtMatchConditionEvaluatesNullWithInvalidAttr() {
         BigInteger bigInteger = new BigInteger("33221312312312312");
         Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
         Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
@@ -280,7 +444,7 @@ public class AudienceConditionEvaluationTest {
      * than the condition's value.
      */
     @Test
-    public void gtMatchConditionEvaluatesFalse() throws Exception {
+    public void gtMatchConditionEvaluatesFalse()  {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "gt", 5);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "gt", 5.55);
 
@@ -293,7 +457,7 @@ public class AudienceConditionEvaluationTest {
      * value type is not a number.
      */
     @Test
-    public void gtMatchConditionEvaluatesNull() throws Exception {
+    public void gtMatchConditionEvaluatesNull()  {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "gt", 3.5);
         UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "gt", 3.5);
         UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "gt", 3.5);
@@ -311,7 +475,7 @@ public class AudienceConditionEvaluationTest {
      * the condition's value.
      */
     @Test
-    public void ltMatchConditionEvaluatesTrue() throws Exception {
+    public void ltMatchConditionEvaluatesTrue()  {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "lt", 5);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "lt", 5.55);
 
@@ -325,7 +489,7 @@ public class AudienceConditionEvaluationTest {
      * than the condition's value.
      */
     @Test
-    public void ltMatchConditionEvaluatesFalse() throws Exception {
+    public void ltMatchConditionEvaluatesFalse()  {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "lt", 2);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "lt", 2.55);
 
@@ -338,7 +502,7 @@ public class AudienceConditionEvaluationTest {
      * value type is not a number.
      */
     @Test
-    public void ltMatchConditionEvaluatesNull() throws Exception {
+    public void ltMatchConditionEvaluatesNull()  {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "lt", 3.5);
         UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "lt", 3.5);
         UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "lt", 3.5);
@@ -352,7 +516,56 @@ public class AudienceConditionEvaluationTest {
 
     /**
      * Verify that UserAttribute.evaluate for LT match type returns null if the UserAttribute's
-     * value type is not a number.
+     * value type is not a valid number.
+     */
+    @Test
+    public void ltMatchConditionEvaluatesNullWithInvalidUserAttr() {
+        BigInteger bigInteger = new BigInteger("33221312312312312");
+        Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
+        Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
+        Double infiniteNANDouble = Double.NaN;
+        Double largeDouble = Math.pow(2,53) + 2;
+        float invalidFloatValue = (float) (Math.pow(2, 53) + 2000000000);
+
+        UserAttribute testInstanceInteger = new UserAttribute(
+            "num_size",
+            "custom_attribute",
+            "lt",
+            5);
+        UserAttribute testInstanceFloat = new UserAttribute(
+            "num_size",
+            "custom_attribute",
+            "lt",
+            (float) 5);
+        UserAttribute testInstanceDouble = new UserAttribute(
+            "num_counts",
+            "custom_attribute",
+            "lt",
+            5.2);
+
+        assertNull(testInstanceInteger.evaluate(
+            null,
+            Collections.singletonMap("num_size", bigInteger)));
+        assertNull(testInstanceFloat.evaluate(
+            null,
+            Collections.singletonMap("num_size", invalidFloatValue)));
+        assertNull(testInstanceDouble.evaluate(
+            null,
+            Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble)));
+        assertNull(testInstanceDouble.evaluate(
+            null,
+            Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble)));
+        assertNull(testInstanceDouble.evaluate(
+            null, Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", infiniteNANDouble))));
+        assertNull(testInstanceDouble.evaluate(
+            null, Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", largeDouble))));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for LT match type returns null if the condition
+     * value type is not a valid number.
      */
     @Test
     public void ltMatchConditionEvaluatesNullWithInvalidAttributes() {
@@ -376,7 +589,7 @@ public class AudienceConditionEvaluationTest {
      * UserAttribute's value is a substring of the condition's value.
      */
     @Test
-    public void substringMatchConditionEvaluatesTrue() throws Exception {
+    public void substringMatchConditionEvaluatesTrue()  {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "substring", "chrome");
         assertTrue(testInstanceString.evaluate(null, testUserAttributes));
     }
@@ -386,7 +599,7 @@ public class AudienceConditionEvaluationTest {
      * UserAttribute's value is a substring of the condition's value.
      */
     @Test
-    public void substringMatchConditionPartialMatchEvaluatesTrue() throws Exception {
+    public void substringMatchConditionPartialMatchEvaluatesTrue()  {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "substring", "chro");
         assertTrue(testInstanceString.evaluate(null, testUserAttributes));
     }
@@ -396,7 +609,7 @@ public class AudienceConditionEvaluationTest {
      * UserAttribute's value is NOT a substring of the condition's value.
      */
     @Test
-    public void substringMatchConditionEvaluatesFalse() throws Exception {
+    public void substringMatchConditionEvaluatesFalse()  {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "substring", "chr0me");
         assertFalse(testInstanceString.evaluate(null, testUserAttributes));
     }
@@ -406,7 +619,7 @@ public class AudienceConditionEvaluationTest {
      * UserAttribute's value type is not a string.
      */
     @Test
-    public void substringMatchConditionEvaluatesNull() throws Exception {
+    public void substringMatchConditionEvaluatesNull()  {
         UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "substring", "chrome1");
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "substring", "chrome1");
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "substring", "chrome1");
@@ -424,7 +637,7 @@ public class AudienceConditionEvaluationTest {
      * Verify that NotCondition.evaluate returns null when its condition is null.
      */
     @Test
-    public void notConditionEvaluateNull() throws Exception {
+    public void notConditionEvaluateNull()  {
         NotCondition notCondition = new NotCondition(new NullCondition());
         assertNull(notCondition.evaluate(null, testUserAttributes));
     }
@@ -433,7 +646,7 @@ public class AudienceConditionEvaluationTest {
      * Verify that NotCondition.evaluate returns true when its condition operand evaluates to false.
      */
     @Test
-    public void notConditionEvaluateTrue() throws Exception {
+    public void notConditionEvaluateTrue()  {
         UserAttribute userAttribute = mock(UserAttribute.class);
         when(userAttribute.evaluate(null, testUserAttributes)).thenReturn(false);
 
@@ -446,7 +659,7 @@ public class AudienceConditionEvaluationTest {
      * Verify that NotCondition.evaluate returns false when its condition operand evaluates to true.
      */
     @Test
-    public void notConditionEvaluateFalse() throws Exception {
+    public void notConditionEvaluateFalse()  {
         UserAttribute userAttribute = mock(UserAttribute.class);
         when(userAttribute.evaluate(null, testUserAttributes)).thenReturn(true);
 
@@ -459,7 +672,7 @@ public class AudienceConditionEvaluationTest {
      * Verify that OrCondition.evaluate returns true when at least one of its operand conditions evaluate to true.
      */
     @Test
-    public void orConditionEvaluateTrue() throws Exception {
+    public void orConditionEvaluateTrue()  {
         UserAttribute userAttribute1 = mock(UserAttribute.class);
         when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(true);
 
@@ -481,7 +694,7 @@ public class AudienceConditionEvaluationTest {
      * Verify that OrCondition.evaluate returns true when at least one of its operand conditions evaluate to true.
      */
     @Test
-    public void orConditionEvaluateTrueWithNullAndTrue() throws Exception {
+    public void orConditionEvaluateTrueWithNullAndTrue()  {
         UserAttribute userAttribute1 = mock(UserAttribute.class);
         when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(null);
 
@@ -503,7 +716,7 @@ public class AudienceConditionEvaluationTest {
      * Verify that OrCondition.evaluate returns true when at least one of its operand conditions evaluate to true.
      */
     @Test
-    public void orConditionEvaluateNullWithNullAndFalse() throws Exception {
+    public void orConditionEvaluateNullWithNullAndFalse()  {
         UserAttribute userAttribute1 = mock(UserAttribute.class);
         when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(null);
 
@@ -525,7 +738,7 @@ public class AudienceConditionEvaluationTest {
      * Verify that OrCondition.evaluate returns true when at least one of its operand conditions evaluate to true.
      */
     @Test
-    public void orConditionEvaluateFalseWithFalseAndFalse() throws Exception {
+    public void orConditionEvaluateFalseWithFalseAndFalse()  {
         UserAttribute userAttribute1 = mock(UserAttribute.class);
         when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(false);
 
@@ -547,7 +760,7 @@ public class AudienceConditionEvaluationTest {
      * Verify that OrCondition.evaluate returns false when all of its operand conditions evaluate to false.
      */
     @Test
-    public void orConditionEvaluateFalse() throws Exception {
+    public void orConditionEvaluateFalse()  {
         UserAttribute userAttribute1 = mock(UserAttribute.class);
         when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(false);
 
@@ -568,7 +781,7 @@ public class AudienceConditionEvaluationTest {
      * Verify that AndCondition.evaluate returns true when all of its operand conditions evaluate to true.
      */
     @Test
-    public void andConditionEvaluateTrue() throws Exception {
+    public void andConditionEvaluateTrue()  {
         OrCondition orCondition1 = mock(OrCondition.class);
         when(orCondition1.evaluate(null, testUserAttributes)).thenReturn(true);
 
@@ -589,7 +802,7 @@ public class AudienceConditionEvaluationTest {
      * Verify that AndCondition.evaluate returns true when all of its operand conditions evaluate to true.
      */
     @Test
-    public void andConditionEvaluateFalseWithNullAndFalse() throws Exception {
+    public void andConditionEvaluateFalseWithNullAndFalse()  {
         OrCondition orCondition1 = mock(OrCondition.class);
         when(orCondition1.evaluate(null, testUserAttributes)).thenReturn(null);
 
@@ -610,7 +823,7 @@ public class AudienceConditionEvaluationTest {
      * Verify that AndCondition.evaluate returns true when all of its operand conditions evaluate to true.
      */
     @Test
-    public void andConditionEvaluateNullWithNullAndTrue() throws Exception {
+    public void andConditionEvaluateNullWithNullAndTrue()  {
         OrCondition orCondition1 = mock(OrCondition.class);
         when(orCondition1.evaluate(null, testUserAttributes)).thenReturn(null);
 
@@ -631,7 +844,7 @@ public class AudienceConditionEvaluationTest {
      * Verify that AndCondition.evaluate returns false when any one of its operand conditions evaluate to false.
      */
     @Test
-    public void andConditionEvaluateFalse() throws Exception {
+    public void andConditionEvaluateFalse()  {
         OrCondition orCondition1 = mock(OrCondition.class);
         when(orCondition1.evaluate(null, testUserAttributes)).thenReturn(false);
 
@@ -674,7 +887,7 @@ public class AudienceConditionEvaluationTest {
      * Verify that AndCondition.evaluate returns null when any one of its operand conditions evaluate to false.
      */
     // @Test
-    // public void andConditionEvaluateNull() throws Exception {
+    // public void andConditionEvaluateNull()  {
 
     // }
 
@@ -685,10 +898,10 @@ public class AudienceConditionEvaluationTest {
      * True when the attribute is not in the map
      * False when empty string is used.
      *
-     * @throws Exception
+     * @
      */
     @Test
-    public void nullValueEvaluate() throws Exception {
+    public void nullValueEvaluate()  {
         String attributeName = "attribute_name";
         String attributeType = "attribute_type";
         String attributeValue = null;

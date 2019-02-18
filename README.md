@@ -11,7 +11,7 @@ This repository houses the Java SDK for Optimizely's Full Stack product.
 
 #### Gradle
 
-The SDK is available through Bintray and is created with source and target compatibility of 1.7. The core-api and httpclient Bintray packages are [optimizely-sdk-core-api](https://bintray.com/optimizely/optimizely/optimizely-sdk-core-api)
+The SDK is available through Bintray and is created with source and target compatibility of 1.8. The core-api and httpclient Bintray packages are [optimizely-sdk-core-api](https://bintray.com/optimizely/optimizely/optimizely-sdk-core-api)
 and [optimizely-sdk-httpclient](https://bintray.com/optimizely/optimizely/optimizely-sdk-httpclient) respectively. To install, place the
 following in your `build.gradle` and substitute `VERSION` for the latest SDK version available via Bintray:
 

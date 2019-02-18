@@ -73,14 +73,15 @@ public final class ExperimentUtils {
         }
     }
 
-    public static @Nullable
-    Boolean evaluateAudience(@Nonnull ProjectConfig projectConfig,
-                             @Nonnull Experiment experiment,
-                             @Nonnull Map<String, ?> attributes) {
+    @Nullable
+    public static Boolean evaluateAudience(@Nonnull ProjectConfig projectConfig,
+                                           @Nonnull Experiment experiment,
+                                           @Nonnull Map<String, ?> attributes) {
         List<String> experimentAudienceIds = experiment.getAudienceIds();
 
         // if there are no audiences, ALL users should be part of the experiment
         if (experimentAudienceIds.isEmpty()) {
+            logger.debug("There is no Audience associated with experiment {}", experiment.getKey());
             return true;
         }
 
@@ -92,20 +93,27 @@ public final class ExperimentUtils {
 
         OrCondition implicitOr = new OrCondition(conditions);
 
-        return implicitOr.evaluate(projectConfig, attributes);
+        logger.debug("Evaluating audiences for experiment \"{}\": \"{}\"", experiment.getKey(), conditions);
 
+        Boolean result = implicitOr.evaluate(projectConfig, attributes);
+
+        logger.info("Audiences for experiment {} collectively evaluated to {}", experiment.getKey(), result);
+
+        return result;
     }
 
-    public static @Nullable
-    Boolean evaluateAudienceConditions(@Nonnull ProjectConfig projectConfig,
-                                       @Nonnull Experiment experiment,
-                                       @Nonnull Map<String, ?> attributes) {
+    @Nullable
+    public static Boolean evaluateAudienceConditions(@Nonnull ProjectConfig projectConfig,
+                                                     @Nonnull Experiment experiment,
+                                                     @Nonnull Map<String, ?> attributes) {
 
         Condition conditions = experiment.getAudienceConditions();
         if (conditions == null) return null;
-
+        logger.debug("Evaluating audiences for experiment \"{}\": \"{}\"", experiment.getKey(), conditions.toString());
         try {
-            return conditions.evaluate(projectConfig, attributes);
+            Boolean result = conditions.evaluate(projectConfig, attributes);
+            logger.info("Audiences for experiment {} collectively evaluated to {}", experiment.getKey(), result);
+            return result;
         } catch (Exception e) {
             logger.error("Condition invalid", e);
             return null;

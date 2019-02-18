@@ -71,10 +71,13 @@ public class AudienceIdCondition<T> implements Condition<T> {
             audience = config.getAudienceIdMapping().get(audienceId);
         }
         if (audience == null) {
-            logger.error(String.format("Audience not set for audienceConditions %s", audienceId));
+            logger.error("Audience {} could not be found.", audienceId);
             return null;
         }
-        return audience.getConditions().evaluate(config, attributes);
+        logger.debug("Starting to evaluate audience {} with conditions: \"{}\"", audience.getName(), audience.getConditions());
+        Boolean result = audience.getConditions().evaluate(config, attributes);
+        logger.info("Audience {} evaluated to {}", audience.getName(), result);
+        return result;
     }
 
     @Override

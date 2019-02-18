@@ -59,9 +59,7 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
         }
 
         boolean anonymizeIP = false;
-        List<LiveVariable> liveVariables = null;
         if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
-            liveVariables = JacksonHelpers.arrayNodeToList(node.get("variables"), LiveVariable.class, codec);
             anonymizeIP = node.get("anonymizeIP").asBoolean();
         }
 
@@ -90,7 +88,6 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
             experiments,
             featureFlags,
             groups,
-            liveVariables,
             rollouts
         );
     }

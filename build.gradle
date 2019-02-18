@@ -50,8 +50,8 @@ subprojects {
     apply plugin: 'me.champeau.gradle.jmh'
     apply plugin: 'nebula.optional-base'
 
-    sourceCompatibility = 1.7
-    targetCompatibility = 1.7
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
 
     repositories {
         jcenter()
@@ -84,18 +84,8 @@ subprojects {
     }
 
     test {
-        useJUnit {
-            excludeCategories 'com.optimizely.ab.categories.ExhaustiveTest'
-        }
-
         testLogging {
             showStandardStreams = false
-        }
-    }
-
-    task exhaustiveTest(type: Test) {
-        useJUnit {
-            includeCategories 'com.optimizely.ab.categories.ExhaustiveTest'
         }
     }
 

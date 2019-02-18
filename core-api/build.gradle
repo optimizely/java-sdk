@@ -12,6 +12,18 @@ dependencies {
     compileOnly group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion, optional
 }
 
+test {
+    useJUnit {
+        excludeCategories 'com.optimizely.ab.categories.ExhaustiveTest'
+    }
+}
+
+task exhaustiveTest(type: Test) {
+    useJUnit {
+        includeCategories 'com.optimizely.ab.categories.ExhaustiveTest'
+    }
+}
+
 task generateVersionFile {
     // add the build version information into a file that'll go into the distribution
     ext.buildVersion = new File(projectDir, "src/main/resources/optimizely-build-version")

@@ -12,6 +12,8 @@ import org.apache.http.util.EntityUtils;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.util.Random;
+
 public class Example {
     public static void main(String[] args) {
 
@@ -20,16 +22,24 @@ public class Example {
         try {
             Optimizely optimizely = Optimizely.builder(datafile, new AsyncEventHandler(100,2)).build();
             System.out.println("hello world");
-            Map<String,String> attributes = null;//new HashMap<>();
-            //attributes.put("browser_type", "crome");
-            Variation v = optimizely.activate("background_experiment", "testuserid", attributes);
+            Random random = new Random();
+            String user = String.valueOf(random.nextInt());
+            Map<String,String> attributes = new HashMap<>();
+            attributes.put("browser_type", "chrome");
+            Variation v = optimizely.activate("background_experiment", user, attributes);
+
             if (v != null) {
+                optimizely.track("sample_conversion", user, null);
                 System.out.println(String.format("Found variation %s", v.getKey()));
-                optimizely.track("sample_conversion", "testuserid", attributes);
                 Thread.sleep(10000);
             }
             else {
                 System.out.println("didn't get a variation");
+            }
+
+            if (optimizely.isFeatureEnabled("eet_feature", user, attributes)) {
+                optimizely.track("eet_conversion", user, null);
+                System.out.println("feature enabled");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -40,7 +50,7 @@ public class Example {
 
     public static String getDatafile() {
         try {
-            String url = "https://cdn.optimizely.com/datafiles/FCnSegiEkRry9rhVMroit4.json";
+            String url = "https://cdn.optimizely.com/datafiles/BX9Y3bTa4YErpHZEMpAwHm.json";
             CloseableHttpClient httpclient = HttpClients.createDefault();
             HttpGet httpget = new HttpGet(url);
             String datafile = EntityUtils.toString(

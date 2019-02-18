@@ -39,6 +39,7 @@
   "client_name": "java-sdk",
   "client_version": "0.1.1",
   "anonymize_ip": true,
+  "enrich_decisions": true,
   "project_id": "1",
   "revision": "1"
 }
