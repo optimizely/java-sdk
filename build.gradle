@@ -91,9 +91,6 @@ subprojects {
         }
     }
 
-    check.finalizedBy licenseMain
-    check.finalizedBy licenseTest
-
     jmh {
         duplicateClassesStrategy = 'warn'
     }
