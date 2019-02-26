@@ -76,7 +76,7 @@ public class NotificationCenterTest {
         };
         int notificationId = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Activate, listener);
         int notificationId2 = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Activate, listener);
-        logbackVerifier.expectMessage(Level.WARN, "Notificication listener was already added");
+        logbackVerifier.expectMessage(Level.WARN, "Notification listener was already added");
         assertEquals(notificationId2, -1);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
         notificationCenter.clearAllNotificationListeners();
@@ -109,6 +109,19 @@ public class NotificationCenterTest {
     }
 
     @Test
+    public void testAddIsFeatureEnabledNotification() {
+        int notificationId = notificationCenter.addIsFeatureEnabledNotificationListener(new IsFeatureEnabledNotificationListenerInterface() {
+            @Override
+            public void onIsFeatureEnabled(@Nonnull String featureKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> featureInfo) {
+
+            }
+        });
+        assertNotSame(notificationId, -1);
+        assertTrue(notificationCenter.removeNotificationListener(notificationId));
+        notificationCenter.clearAllNotificationListeners();
+    }
+
+    @Test
     public void testNotificationTypeClasses() {
         assertEquals(NotificationCenter.NotificationType.Activate.getNotificationTypeClass(),
             ActivateNotificationListener.class);
@@ -120,6 +133,19 @@ public class NotificationCenterTest {
         int notificationId = notificationCenter.addTrackNotificationListener(new TrackNotificationListenerInterface() {
             @Override
             public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
+
+            }
+        });
+        assertNotSame(notificationId, -1);
+        assertTrue(notificationCenter.removeNotificationListener(notificationId));
+        notificationCenter.clearAllNotificationListeners();
+    }
+
+    @Test
+    public void testAddIsFeatureEnabledNotificationInterface() {
+        int notificationId = notificationCenter.addIsFeatureEnabledNotificationListener(new IsFeatureEnabledNotificationListenerInterface() {
+            @Override
+            public void onIsFeatureEnabled(@Nonnull String featureKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> featureInfo) {
 
             }
         });

@@ -35,6 +35,7 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
+import com.optimizely.ab.internal.FeatureInfoAttributeKeys;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -223,18 +224,23 @@ public class Optimizely {
             return null;
         }
 
-        sendImpression(projectConfig, experiment, userId, copiedAttributes, variation);
+        LogEvent impressionEvent = sendImpression(projectConfig, experiment, userId, copiedAttributes, variation);
+        if (experiment.isRunning()) {
+            notificationCenter.sendNotifications(NotificationCenter.NotificationType.Activate, experiment, userId,
+                copiedAttributes, variation, impressionEvent);
+        }
 
         return variation;
     }
 
-    private void sendImpression(@Nonnull ProjectConfig projectConfig,
+    private LogEvent sendImpression(@Nonnull ProjectConfig projectConfig,
                                 @Nonnull Experiment experiment,
                                 @Nonnull String userId,
                                 @Nonnull Map<String, ?> filteredAttributes,
                                 @Nonnull Variation variation) {
+        LogEvent impressionEvent = null;
         if (experiment.isRunning()) {
-            LogEvent impressionEvent = eventFactory.createImpressionEvent(
+            impressionEvent = eventFactory.createImpressionEvent(
                 projectConfig,
                 experiment,
                 variation,
@@ -254,11 +260,10 @@ public class Optimizely {
                 logger.error("Unexpected exception in event dispatcher", e);
             }
 
-            notificationCenter.sendNotifications(NotificationCenter.NotificationType.Activate, experiment, userId,
-                filteredAttributes, variation, impressionEvent);
         } else {
             logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
         }
+        return impressionEvent;
     }
 
     //======== track calls ========//
@@ -371,11 +376,11 @@ public class Optimizely {
             logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
             return false;
         }
-
         if (featureKey == null) {
             logger.warn("The featureKey parameter must be nonnull.");
             return false;
-        } else if (userId == null) {
+        }
+        else if (userId == null) {
             logger.warn("The userId parameter must be nonnull.");
             return false;
         }
@@ -388,13 +393,74 @@ public class Optimizely {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
 
+        LogEvent logEvent = null;
+        Boolean featureEnabled = false;
+        if (featureDecision.variation != null) {
+            if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
+                    logEvent = sendImpression(
+                        projectConfig,
+                        featureDecision.experiment,
+                        userId,
+                        copiedAttributes,
+                        featureDecision.variation);
+            } else {
+                logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
+                    userId, featureKey);
+            }
+            if (featureDecision.variation.getFeatureEnabled()) {
+                logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
+                featureEnabled = true;
+            }
+        }
+
+        //Prepare featureInfo map
+        Map<String, Object> featureInfo = new HashMap<>();
+        featureInfo.put(FeatureInfoAttributeKeys.ENABLED.toString(), featureEnabled);
+        featureInfo.put(FeatureInfoAttributeKeys.SOURCE.toString(), featureDecision.decisionSource);
+        featureInfo.put(FeatureInfoAttributeKeys.EVENT.toString(), logEvent);
+
+        //Send isFeatureEnabled Notification
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.IsFeatureEnabled, featureKey, userId,
+            copiedAttributes, featureInfo);
+
+        logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
+        return featureEnabled;
+    }
+
+    /**
+     * Helper method that Determine whether a boolean feature is enabled.
+     * Send an impression event if the user is bucketed into an experiment using the feature.
+     *
+     * @param featureKey The unique key of the feature.
+     * @param userId     The ID of the user.
+     * @param attributes The user's attributes.
+     * @return True if the feature is enabled.
+     * False if the feature is disabled.
+     * False if the feature is not found.
+     */
+    @Nonnull
+    protected Boolean evaluateIsFeatureEnabled(@Nonnull String featureKey,
+                                             @Nonnull String userId,
+                                             @Nonnull Map<String, ?> attributes) {
+        if (featureKey == null) {
+            logger.warn("The featureKey parameter must be nonnull.");
+            return false;
+        }
+        FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
+        if (featureFlag == null) {
+            logger.info("No feature flag was found for key \"{}\".", featureKey);
+            return false;
+        }
+
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, attributes);
+
         if (featureDecision.variation != null) {
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
                 sendImpression(
                     projectConfig,
                     featureDecision.experiment,
                     userId,
-                    copiedAttributes,
+                    attributes,
                     featureDecision.variation);
             } else {
                 logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
@@ -409,7 +475,6 @@ public class Optimizely {
         logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
         return false;
     }
-
     /**
      * Get the Boolean value of the specified variable in the feature.
      *
@@ -690,7 +755,7 @@ public class Optimizely {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         for (FeatureFlag featureFlag : projectConfig.getFeatureFlags()) {
             String featureKey = featureFlag.getKey();
-            if (isFeatureEnabled(featureKey, userId, copiedAttributes))
+            if (evaluateIsFeatureEnabled(featureKey, userId, copiedAttributes))
                 enabledFeaturesList.add(featureKey);
         }
 

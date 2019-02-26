@@ -39,7 +39,8 @@ public class NotificationCenter {
     public enum NotificationType {
 
         Activate(ActivateNotificationListener.class), // Activate was called. Track an impression event
-        Track(TrackNotificationListener.class); // Track was called.  Track a conversion event
+        Track(TrackNotificationListener.class), // Track was called.  Track a conversion event
+        IsFeatureEnabled(IsFeatureEnabledNotificationListener.class); // IsFeatureEnabled was called.
 
         private Class notificationTypeClass;
 
@@ -77,6 +78,7 @@ public class NotificationCenter {
     public NotificationCenter() {
         notificationsListeners.put(NotificationType.Activate, new ArrayList<NotificationHolder>());
         notificationsListeners.put(NotificationType.Track, new ArrayList<NotificationHolder>());
+        notificationsListeners.put(NotificationType.IsFeatureEnabled, new ArrayList<NotificationHolder>());
     }
 
     // private list of notification by notification type.
@@ -110,12 +112,31 @@ public class NotificationCenter {
      */
     public int addTrackNotificationListener(final TrackNotificationListenerInterface trackNotificationListenerInterface) {
         if (trackNotificationListenerInterface instanceof TrackNotificationListener) {
-            return addNotificationListener(NotificationType.Activate, (NotificationListener) trackNotificationListenerInterface);
+            return addNotificationListener(NotificationType.Track, (NotificationListener) trackNotificationListenerInterface);
         } else {
             return addNotificationListener(NotificationType.Track, new TrackNotificationListener() {
                 @Override
                 public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
                     trackNotificationListenerInterface.onTrack(eventKey, userId, attributes, eventTags, event);
+                }
+            });
+        }
+    }
+
+    /**
+     * Convenience method to support lambdas as callbacks in later versions of Java (8+)
+     *
+     * @param isFeatureEnabledNotificationListenerInterface
+     * @return greater than zero if added.
+     */
+    public int addIsFeatureEnabledNotificationListener(final IsFeatureEnabledNotificationListenerInterface isFeatureEnabledNotificationListenerInterface) {
+        if (isFeatureEnabledNotificationListenerInterface instanceof IsFeatureEnabledNotificationListener) {
+            return addNotificationListener(NotificationType.IsFeatureEnabled, (NotificationListener) isFeatureEnabledNotificationListenerInterface);
+        } else {
+            return addNotificationListener(NotificationType.IsFeatureEnabled, new IsFeatureEnabledNotificationListener() {
+                @Override
+                public void onIsFeatureEnabled(@Nonnull String featureKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> featureInfo) {
+                    isFeatureEnabledNotificationListenerInterface.onIsFeatureEnabled(featureKey, userId, attributes, featureInfo);
                 }
             });
         }
@@ -138,7 +159,7 @@ public class NotificationCenter {
 
         for (NotificationHolder holder : notificationsListeners.get(notificationType)) {
             if (holder.notificationListener == notificationListener) {
-                logger.warn("Notificication listener was already added");
+                logger.warn("Notification listener was already added");
                 return -1;
             }
         }
