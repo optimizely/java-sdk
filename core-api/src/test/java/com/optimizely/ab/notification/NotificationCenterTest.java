@@ -109,6 +109,19 @@ public class NotificationCenterTest {
     }
 
     @Test
+    public void testAddGetFeatureVariableNotification() {
+        int notificationId = notificationCenter.addGetFeatureVariableNotificationListener(new GetFeatureVariableNotificationListener() {
+            @Override
+            public void onGetFeatureVariable(@Nonnull String featureKey, @Nonnull String variableKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> featureInfo) {
+
+            }
+        });
+        assertNotSame(notificationId, -1);
+        assertTrue(notificationCenter.removeNotificationListener(notificationId));
+        notificationCenter.clearAllNotificationListeners();
+    }
+
+    @Test
     public void testNotificationTypeClasses() {
         assertEquals(NotificationCenter.NotificationType.Activate.getNotificationTypeClass(),
             ActivateNotificationListener.class);
@@ -133,6 +146,19 @@ public class NotificationCenterTest {
         int notificationId = notificationCenter.addActivateNotificationListener(new ActivateNotificationListenerInterface() {
             @Override
             public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+
+            }
+        });
+        assertNotSame(notificationId, -1);
+        assertTrue(notificationCenter.removeNotificationListener(notificationId));
+        notificationCenter.clearAllNotificationListeners();
+    }
+
+    @Test
+    public void testAddGetFeatureVariableNotificationInterface() {
+        int notificationId = notificationCenter.addGetFeatureVariableNotificationListener(new GetFeatureVariableNotificationListenerInterface() {
+            @Override
+            public void onGetFeatureVariable(@Nonnull String featureKey, @Nonnull String variableKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> featureInfo) {
 
             }
         });

@@ -35,6 +35,7 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
+import com.optimizely.ab.internal.FeatureVariableInfoKeys;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -649,6 +650,7 @@ public class Optimizely {
         String variableValue = variable.getDefaultValue();
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
+        Boolean featureEnabled = false;
         if (featureDecision.variation != null) {
             FeatureVariableUsageInstance featureVariableUsageInstance =
                 featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
@@ -657,12 +659,24 @@ public class Optimizely {
             } else {
                 variableValue = variable.getDefaultValue();
             }
+            featureEnabled = featureDecision.variation.getFeatureEnabled();
         } else {
             logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
                     "The default value \"{}\" for \"{}\" is being returned.",
                 userId, featureKey, variableValue, variableKey
             );
         }
+
+        //Prepare featureVariableInfo map
+        Map<String, Object> featureVariableInfo = new HashMap<>();
+        featureVariableInfo.put(FeatureVariableInfoKeys.FEATURE_ENABLED.toString(), featureEnabled);
+        featureVariableInfo.put(FeatureVariableInfoKeys.FEATURE_ENABLED_SOURCE.toString(), featureDecision.decisionSource);
+        featureVariableInfo.put(FeatureVariableInfoKeys.VARIABLE_TYPE.toString(), variableType);
+        featureVariableInfo.put(FeatureVariableInfoKeys.VARIABLE_VALUE.toString(), variableValue);
+
+        //Send isFeatureEnabled Notification
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.GetFeatureVariable, featureKey, variableKey, userId,
+            copiedAttributes, featureVariableInfo);
 
         return variableValue;
     }

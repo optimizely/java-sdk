@@ -39,7 +39,8 @@ public class NotificationCenter {
     public enum NotificationType {
 
         Activate(ActivateNotificationListener.class), // Activate was called. Track an impression event
-        Track(TrackNotificationListener.class); // Track was called.  Track a conversion event
+        Track(TrackNotificationListener.class), // Track was called.  Track a conversion event
+        GetFeatureVariable(GetFeatureVariableNotificationListener.class); // GetFeatureVariable was called.
 
         private Class notificationTypeClass;
 
@@ -77,6 +78,7 @@ public class NotificationCenter {
     public NotificationCenter() {
         notificationsListeners.put(NotificationType.Activate, new ArrayList<NotificationHolder>());
         notificationsListeners.put(NotificationType.Track, new ArrayList<NotificationHolder>());
+        notificationsListeners.put(NotificationType.GetFeatureVariable, new ArrayList<NotificationHolder>());
     }
 
     // private list of notification by notification type.
@@ -97,6 +99,25 @@ public class NotificationCenter {
                 @Override
                 public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
                     activateNotificationListenerInterface.onActivate(experiment, userId, attributes, variation, event);
+                }
+            });
+        }
+    }
+
+    /**
+     * Convenience method to support lambdas as callbacks in later version of Java (8+).
+     *
+     * @param getFeatureVariableNotificationListenerInterface
+     * @return greater than zero if added.
+     */
+    public int addGetFeatureVariableNotificationListener(final GetFeatureVariableNotificationListenerInterface getFeatureVariableNotificationListenerInterface) {
+        if (getFeatureVariableNotificationListenerInterface instanceof GetFeatureVariableNotificationListener) {
+            return addNotificationListener(NotificationType.GetFeatureVariable, (NotificationListener) getFeatureVariableNotificationListenerInterface);
+        } else {
+            return addNotificationListener(NotificationType.GetFeatureVariable, new GetFeatureVariableNotificationListener() {
+                @Override
+                public void onGetFeatureVariable(@Nonnull String featureKey, @Nonnull String variableKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> featureInfo) {
+                    getFeatureVariableNotificationListenerInterface.onGetFeatureVariable(featureKey, variableKey, userId, attributes, featureInfo);
                 }
             });
         }
