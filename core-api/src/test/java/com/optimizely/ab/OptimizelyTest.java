@@ -2656,7 +2656,7 @@ public class OptimizelyTest {
                     assertEquals(testUserAttributes.get(entry.getKey()), entry.getValue());
                 }
 
-                assertEquals(((LogEvent)featureInfo.get(FeatureInfoAttributeKeys.EVENT.toString())).getRequestMethod(), RequestMethod.POST);
+                assertEquals(((LogEvent) featureInfo.get(FeatureInfoAttributeKeys.EVENT.toString())).getRequestMethod(), RequestMethod.POST);
                 assertEquals(featureInfo.get(FeatureInfoAttributeKeys.ENABLED.toString()), true);
                 assertEquals(featureInfo.get(FeatureInfoAttributeKeys.SOURCE.toString()), FeatureDecision.DecisionSource.EXPERIMENT);
             }
@@ -2709,7 +2709,7 @@ public class OptimizelyTest {
                     assertEquals(testUserAttributes.get(entry.getKey()), entry.getValue());
                 }
 
-                assertEquals(((LogEvent)featureInfo.get(FeatureInfoAttributeKeys.EVENT.toString())).getRequestMethod(), RequestMethod.POST);
+                assertEquals(((LogEvent) featureInfo.get(FeatureInfoAttributeKeys.EVENT.toString())).getRequestMethod(), RequestMethod.POST);
                 assertEquals(featureInfo.get(FeatureInfoAttributeKeys.ENABLED.toString()), false);
                 assertEquals(featureInfo.get(FeatureInfoAttributeKeys.SOURCE.toString()), FeatureDecision.DecisionSource.EXPERIMENT);
             }
