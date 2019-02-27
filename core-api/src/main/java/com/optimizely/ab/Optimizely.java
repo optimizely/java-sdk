@@ -455,17 +455,6 @@ public class Optimizely {
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, attributes);
 
         if (featureDecision.variation != null) {
-            if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
-                sendImpression(
-                    projectConfig,
-                    featureDecision.experiment,
-                    userId,
-                    attributes,
-                    featureDecision.variation);
-            } else {
-                logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
-                    userId, featureKey);
-            }
             if (featureDecision.variation.getFeatureEnabled()) {
                 logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
                 return true;
