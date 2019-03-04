@@ -319,7 +319,7 @@ public class DecisionServiceTest {
             genericUserId,
             Collections.<String, String>emptyMap());
         assertNull(featureDecision.variation);
-        assertNull(featureDecision.decisionSource);
+        assertEquals(featureDecision.decisionSource, FeatureDecision.DecisionSource.ROLLOUT);
 
         verify(emptyFeatureFlag, times(1)).getExperimentIds();
         verify(emptyFeatureFlag, times(1)).getRolloutId();
@@ -573,7 +573,7 @@ public class DecisionServiceTest {
             Collections.<String, String>emptyMap()
         );
         assertNull(featureDecision.variation);
-        assertNull(featureDecision.decisionSource);
+        assertEquals(featureDecision.decisionSource, FeatureDecision.DecisionSource.ROLLOUT);
 
         logbackVerifier.expectMessage(
             Level.INFO,

@@ -35,6 +35,7 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
+import com.optimizely.ab.notification.DecisionInfoEnums;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -387,7 +388,7 @@ public class Optimizely {
 
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
-
+        Boolean featureEnabled = false;
         if (featureDecision.variation != null) {
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
                 sendImpression(
@@ -402,12 +403,23 @@ public class Optimizely {
             }
             if (featureDecision.variation.getFeatureEnabled()) {
                 logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
-                return true;
+                featureEnabled = true;
             }
         }
 
+        Map<String, Object> decisionInfo = new HashMap<>();
+        decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_KEY.toString(), featureKey);
+        decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_ENABLED.toString(), featureEnabled);
+        decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), featureDecision.decisionSource);
+
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.DECISION,
+            NotificationCenter.DecisionNotificationType.IS_FEATURE_ENABLED,
+            userId,
+            copiedAttributes,
+            decisionInfo);
+
         logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
-        return false;
+        return featureEnabled;
     }
 
     /**
@@ -649,6 +661,7 @@ public class Optimizely {
         String variableValue = variable.getDefaultValue();
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
+        Boolean featureEnabled = false;
         if (featureDecision.variation != null) {
             FeatureVariableUsageInstance featureVariableUsageInstance =
                 featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
@@ -657,12 +670,27 @@ public class Optimizely {
             } else {
                 variableValue = variable.getDefaultValue();
             }
+            featureEnabled = featureDecision.variation.getFeatureEnabled();
         } else {
             logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
                     "The default value \"{}\" for \"{}\" is being returned.",
                 userId, featureKey, variableValue, variableKey
             );
         }
+
+        Map<String, Object> decisionInfo = new HashMap<>();
+        decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_KEY.toString(), featureKey);
+        decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_ENABLED.toString(), featureEnabled);
+        decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_KEY.toString(), variableKey);
+        decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_TYPE.toString(), variableType);
+        decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), variableValue);
+        decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), featureDecision.decisionSource);
+
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.DECISION,
+            NotificationCenter.DecisionNotificationType.GET_FEATURE_VARIABLE,
+            userId,
+            copiedAttributes,
+            decisionInfo);
 
         return variableValue;
     }
@@ -711,8 +739,19 @@ public class Optimizely {
                                   @Nonnull String userId,
                                   @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
+        Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes);
 
-        return decisionService.getVariation(experiment, userId, copiedAttributes);
+        Map<String, Object> decisionInfo = new HashMap<>();
+        decisionInfo.put(DecisionInfoEnums.ActivateVariationDecisionInfo.EXPERIMENT_KEY.toString(), experiment.getKey());
+        decisionInfo.put(DecisionInfoEnums.ActivateVariationDecisionInfo.VARIATION_KEY.toString(), variation != null ? variation.getKey() : null);
+
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.DECISION,
+            NotificationCenter.DecisionNotificationType.GET_FEATURE_VARIABLE,
+            userId,
+            copiedAttributes,
+            decisionInfo);
+
+        return variation;
     }
 
     @Nullable
@@ -747,8 +786,8 @@ public class Optimizely {
             // if we're unable to retrieve the associated experiment, return null
             return null;
         }
-        Map<String, ?> copiedAttributes = copyAttributes(attributes);
-        return decisionService.getVariation(experiment, userId, copiedAttributes);
+
+        return getVariation(experiment, userId, attributes);
     }
 
     /**
