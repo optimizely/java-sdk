@@ -413,7 +413,7 @@ public class Optimizely {
         decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), featureDecision.decisionSource);
 
         notificationCenter.sendNotifications(NotificationCenter.NotificationType.DECISION,
-            NotificationCenter.DecisionNotificationType.IS_FEATURE_ENABLED,
+            NotificationCenter.DecisionNotificationType.IS_FEATURE_ENABLED.toString(),
             userId,
             copiedAttributes,
             decisionInfo);
@@ -687,7 +687,7 @@ public class Optimizely {
         decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), featureDecision.decisionSource);
 
         notificationCenter.sendNotifications(NotificationCenter.NotificationType.DECISION,
-            NotificationCenter.DecisionNotificationType.GET_FEATURE_VARIABLE,
+            NotificationCenter.DecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
             userId,
             copiedAttributes,
             decisionInfo);
@@ -746,7 +746,7 @@ public class Optimizely {
         decisionInfo.put(DecisionInfoEnums.ActivateVariationDecisionInfo.VARIATION_KEY.toString(), variation != null ? variation.getKey() : null);
 
         notificationCenter.sendNotifications(NotificationCenter.NotificationType.DECISION,
-            NotificationCenter.DecisionNotificationType.GET_FEATURE_VARIABLE,
+            NotificationCenter.DecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
             userId,
             copiedAttributes,
             decisionInfo);

@@ -111,7 +111,7 @@ public class NotificationCenter {
      */
     public int addDecisionNotificationListener(final DecisionNotificationListenerInterface decisionNotificationListenerInterface) {
         if (decisionNotificationListenerInterface instanceof DecisionNotificationListener) {
-            return addNotificationListener(NotificationType.Activate, (NotificationListener) decisionNotificationListenerInterface);
+            return addNotificationListener(NotificationType.DECISION, (NotificationListener) decisionNotificationListenerInterface);
         } else {
             return addNotificationListener(NotificationType.DECISION, new DecisionNotificationListener() {
                 @Override
@@ -149,7 +149,7 @@ public class NotificationCenter {
      */
     public int addTrackNotificationListener(final TrackNotificationListenerInterface trackNotificationListenerInterface) {
         if (trackNotificationListenerInterface instanceof TrackNotificationListener) {
-            return addNotificationListener(NotificationType.Activate, (NotificationListener) trackNotificationListenerInterface);
+            return addNotificationListener(NotificationType.Track, (NotificationListener) trackNotificationListenerInterface);
         } else {
             return addNotificationListener(NotificationType.Track, new TrackNotificationListener() {
                 @Override
@@ -176,7 +176,7 @@ public class NotificationCenter {
         }
         for (NotificationHolder holder : notificationsListeners.get(notificationType)) {
             if (holder.notificationListener == notificationListener ) {
-                logger.warn("Notificication listener was already added");
+                logger.warn("Notification listener was already added");
                 return -1;
             }
         }
