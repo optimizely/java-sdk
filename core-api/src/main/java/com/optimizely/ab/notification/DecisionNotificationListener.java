@@ -37,11 +37,9 @@ public abstract class DecisionNotificationListener implements NotificationListen
             assert (args[2] instanceof java.util.Map);
             attributes = (Map<String, ?>) args[2];
         }
-        Map<String, ?> decisionInfo = null;
-        if (args[3] != null) {
-            assert (args[3] instanceof java.util.Map);
-            decisionInfo = (Map<String, ?>) args[3];
-        }
+        ;
+        assert (args[3] instanceof java.util.Map);
+        Map<String, ?> decisionInfo = (Map<String, ?>) args[3];
         onDecision(type, userId, attributes, decisionInfo);
     }
 

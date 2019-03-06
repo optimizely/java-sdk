@@ -36,8 +36,8 @@ public class NotificationCenter {
     public enum DecisionNotificationType {
         IS_FEATURE_ENABLED("feature"),
         GET_FEATURE_VARIABLE("feature_variable"),
-        ACTIVATE("experiment_variation"),
-        GET_VARIATION("experiment_variation");
+        EXPERIMENT_VARIATION("experiment_variation");
+
         private final String key;
 
         DecisionNotificationType(String key) {
@@ -128,6 +128,7 @@ public class NotificationCenter {
      * @param activateNotificationListenerInterface
      * @return greater than zero if added.
      */
+    @Deprecated
     public int addActivateNotificationListener(final ActivateNotificationListenerInterface activateNotificationListenerInterface) {
         if (activateNotificationListenerInterface instanceof ActivateNotificationListener) {
             return addNotificationListener(NotificationType.Activate, (NotificationListener) activateNotificationListenerInterface);

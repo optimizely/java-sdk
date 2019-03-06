@@ -218,22 +218,26 @@ public class Optimizely {
         }
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         // bucket the user to the given experiment and dispatch an impression event
-        Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes);
+        Variation variation = getVariation(experiment, userId, copiedAttributes);
         if (variation == null) {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
         }
 
-        sendImpression(projectConfig, experiment, userId, copiedAttributes, variation);
+        LogEvent impressionEvent = sendImpression(projectConfig, experiment, userId, copiedAttributes, variation);
+        if (impressionEvent != null) {
+            notificationCenter.sendNotifications(NotificationCenter.NotificationType.Activate, experiment, userId,
+                copiedAttributes, variation, impressionEvent);
+        }
 
         return variation;
     }
 
-    private void sendImpression(@Nonnull ProjectConfig projectConfig,
-                                @Nonnull Experiment experiment,
-                                @Nonnull String userId,
-                                @Nonnull Map<String, ?> filteredAttributes,
-                                @Nonnull Variation variation) {
+    private LogEvent sendImpression(@Nonnull ProjectConfig projectConfig,
+                                    @Nonnull Experiment experiment,
+                                    @Nonnull String userId,
+                                    @Nonnull Map<String, ?> filteredAttributes,
+                                    @Nonnull Variation variation) {
         if (experiment.isRunning()) {
             LogEvent impressionEvent = eventFactory.createImpressionEvent(
                 projectConfig,
@@ -254,12 +258,11 @@ public class Optimizely {
             } catch (Exception e) {
                 logger.error("Unexpected exception in event dispatcher", e);
             }
-
-            notificationCenter.sendNotifications(NotificationCenter.NotificationType.Activate, experiment, userId,
-                filteredAttributes, variation, impressionEvent);
+            return impressionEvent;
         } else {
             logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
         }
+        return null;
     }
 
     //======== track calls ========//
@@ -410,8 +413,11 @@ public class Optimizely {
         Map<String, Object> decisionInfo = new HashMap<>();
         decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_KEY.toString(), featureKey);
         decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_ENABLED.toString(), featureEnabled);
-        decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), featureDecision.decisionSource);
-
+        if (featureDecision.decisionSource != null && featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
+            decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), featureDecision.decisionSource + " {" + featureDecision.experiment.getKey() + "}");
+        } else {
+            decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
+        }
         notificationCenter.sendNotifications(NotificationCenter.NotificationType.DECISION,
             NotificationCenter.DecisionNotificationType.IS_FEATURE_ENABLED.toString(),
             userId,
@@ -662,7 +668,7 @@ public class Optimizely {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
         Boolean featureEnabled = false;
-        if (featureDecision.variation != null) {
+        if (featureDecision.variation != null && featureDecision.variation.getFeatureEnabled()) {
             FeatureVariableUsageInstance featureVariableUsageInstance =
                 featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
             if (featureVariableUsageInstance != null) {
@@ -684,8 +690,11 @@ public class Optimizely {
         decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_KEY.toString(), variableKey);
         decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_TYPE.toString(), variableType);
         decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), variableValue);
-        decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), featureDecision.decisionSource);
-
+        if (featureDecision.decisionSource != null && featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
+            decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), featureDecision.decisionSource + " {" + featureDecision.experiment.getKey()+ "}" );
+        } else {
+            decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
+        }
         notificationCenter.sendNotifications(NotificationCenter.NotificationType.DECISION,
             NotificationCenter.DecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
             userId,
@@ -746,7 +755,7 @@ public class Optimizely {
         decisionInfo.put(DecisionInfoEnums.ActivateVariationDecisionInfo.VARIATION_KEY.toString(), variation != null ? variation.getKey() : null);
 
         notificationCenter.sendNotifications(NotificationCenter.NotificationType.DECISION,
-            NotificationCenter.DecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
+            NotificationCenter.DecisionNotificationType.EXPERIMENT_VARIATION.toString(),
             userId,
             copiedAttributes,
             decisionInfo);

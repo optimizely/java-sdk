@@ -202,13 +202,13 @@ public class DecisionService {
         // use rollout to get variation for feature
         if (featureFlag.getRolloutId().isEmpty()) {
             logger.info("The feature flag \"{}\" is not used in a rollout.", featureFlag.getKey());
-            return new FeatureDecision(null, null, FeatureDecision.DecisionSource.ROLLOUT);
+            return new FeatureDecision(null, null, null);
         }
         Rollout rollout = projectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
         if (rollout == null) {
             logger.error("The rollout with id \"{}\" was not found in the datafile for feature flag \"{}\".",
                 featureFlag.getRolloutId(), featureFlag.getKey());
-            return new FeatureDecision(null, null, FeatureDecision.DecisionSource.ROLLOUT);
+            return new FeatureDecision(null, null, null);
         }
 
         // for all rules before the everyone else rule
