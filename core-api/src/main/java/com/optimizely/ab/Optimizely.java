@@ -224,20 +224,16 @@ public class Optimizely {
             return null;
         }
 
-        LogEvent impressionEvent = sendImpression(projectConfig, experiment, userId, copiedAttributes, variation);
-        if (impressionEvent != null) {
-            notificationCenter.sendNotifications(NotificationCenter.NotificationType.Activate, experiment, userId,
-                copiedAttributes, variation, impressionEvent);
-        }
+        sendImpression(projectConfig, experiment, userId, copiedAttributes, variation);
 
         return variation;
     }
 
-    private LogEvent sendImpression(@Nonnull ProjectConfig projectConfig,
-                                    @Nonnull Experiment experiment,
-                                    @Nonnull String userId,
-                                    @Nonnull Map<String, ?> filteredAttributes,
-                                    @Nonnull Variation variation) {
+    private void sendImpression(@Nonnull ProjectConfig projectConfig,
+                                @Nonnull Experiment experiment,
+                                @Nonnull String userId,
+                                @Nonnull Map<String, ?> filteredAttributes,
+                                @Nonnull Variation variation) {
         if (experiment.isRunning()) {
             LogEvent impressionEvent = eventFactory.createImpressionEvent(
                 projectConfig,
@@ -258,11 +254,12 @@ public class Optimizely {
             } catch (Exception e) {
                 logger.error("Unexpected exception in event dispatcher", e);
             }
-            return impressionEvent;
+            notificationCenter.sendNotifications(NotificationCenter.NotificationType.Activate, experiment, userId,
+                filteredAttributes, variation, impressionEvent);
+
         } else {
             logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
         }
-        return null;
     }
 
     //======== track calls ========//
