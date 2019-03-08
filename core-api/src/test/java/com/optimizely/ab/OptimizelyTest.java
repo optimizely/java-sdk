@@ -2651,6 +2651,74 @@ public class OptimizelyTest {
         };
     }
 
+    //======GetEnabledFeatures Notification TESTS======//
+
+    /**
+     * Verify that the {@link Optimizely#getEnabledFeatures(String, Map)}
+     * notification listener of getEnabledFeatures is called with multiple FeatureEnabled
+     */
+    @Test
+    public void getEnabledFeaturesWithListenerMultipleFeatureEnabled() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+            new DecisionNotificationListener() {
+                @Override
+                public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
+                    assertEquals(type, NotificationCenter.OnDecisionNotificationType.IS_FEATURE_ENABLED.toString());
+                }
+            });
+
+        ArrayList<String> featureFlags = (ArrayList<String>) optimizely.getEnabledFeatures(testUserId,
+            new HashMap<String, String>());
+        assertEquals(2, featureFlags.size());
+
+        verify(mockEventHandler, times(2)).dispatchEvent(any(LogEvent.class));
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify {@link Optimizely#getEnabledFeatures(String, Map)} calls into
+     * {@link Optimizely#isFeatureEnabled(String, String, Map)} for each featureFlag sending
+     * userId and emptyMap and Mocked {@link Optimizely#isFeatureEnabled(String, String, Map)}
+     * to return false so {@link Optimizely#getEnabledFeatures(String, Map)} will
+     * return empty List of FeatureFlags and no notification listener will get called.
+     */
+    @Test
+    public void getEnabledFeaturesWithNoFeatureEnabled() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build());
+        doReturn(false).when(spyOptimizely).isFeatureEnabled(
+            any(String.class),
+            eq(genericUserId),
+            eq(Collections.<String, String>emptyMap())
+        );
+
+        int notificationId = spyOptimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+            new DecisionNotificationListener() {
+                @Override
+                public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
+
+                }
+            });
+
+        ArrayList<String> featureFlags = (ArrayList<String>) spyOptimizely.getEnabledFeatures(genericUserId,
+            Collections.<String, String>emptyMap());
+        assertTrue(featureFlags.isEmpty());
+
+        verify(mockEventHandler, times(0)).dispatchEvent(any(LogEvent.class));
+
+        assertTrue(spyOptimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
     //======IsFeatureEnabled Notification TESTS======//
 
     /**
