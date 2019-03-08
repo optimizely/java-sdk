@@ -2874,12 +2874,12 @@ public class OptimizelyTest {
             .withConfig(validProjectConfig)
             .build();
 
-        final Map<String, String> testUserAttributes = new HashMap<String, String>();
+        final Map<String, String> testUserAttributes = new HashMap<>();
         testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
         testUserAttributes.put(testBucketingIdKey, testBucketingId);
 
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_VARIATION_KEY.toString(), "589640735");
+        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_VARIATION_KEY.toString(), null);
         testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
         testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_ENABLED.toString(), true);
         testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);

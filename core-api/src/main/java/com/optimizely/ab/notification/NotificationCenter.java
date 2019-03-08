@@ -128,7 +128,6 @@ public class NotificationCenter {
      * @param activateNotificationListenerInterface
      * @return greater than zero if added.
      */
-    @Deprecated
     public int addActivateNotificationListener(final ActivateNotificationListenerInterface activateNotificationListenerInterface) {
         if (activateNotificationListenerInterface instanceof ActivateNotificationListener) {
             return addNotificationListener(NotificationType.Activate, (NotificationListener) activateNotificationListenerInterface);

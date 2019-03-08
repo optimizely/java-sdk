@@ -394,7 +394,6 @@ public class Optimizely {
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
         Boolean featureEnabled = false;
         if (featureDecision.variation != null) {
-            sourceVariationKey = featureDecision.variation.getKey();
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
                 sendImpression(
                     projectConfig,
@@ -403,6 +402,7 @@ public class Optimizely {
                     copiedAttributes,
                     featureDecision.variation);
                 decisionSource = featureDecision.decisionSource;
+                sourceVariationKey = featureDecision.variation.getKey();
                 sourceExperimentKey = featureDecision.experiment.getKey();
             } else {
                 logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
