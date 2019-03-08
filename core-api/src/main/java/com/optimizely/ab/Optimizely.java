@@ -411,13 +411,13 @@ public class Optimizely {
         decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_KEY.toString(), featureKey);
         decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_ENABLED.toString(), featureEnabled);
         if (featureDecision.decisionSource != null && featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
-            decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.EXPERIMENT_KEY.toString(), featureDecision.experiment.getKey());
+            decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), featureDecision.experiment.getKey());
             decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), featureDecision.decisionSource);
         } else {
             decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
         }
-        notificationCenter.sendNotifications(NotificationCenter.NotificationType.DECISION,
-            NotificationCenter.DecisionNotificationType.IS_FEATURE_ENABLED.toString(),
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.OnDecision,
+            NotificationCenter.OnDecisionNotificationType.IS_FEATURE_ENABLED.toString(),
             userId,
             copiedAttributes,
             decisionInfo);
@@ -689,14 +689,14 @@ public class Optimizely {
         decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_TYPE.toString(), variableType);
         decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), variableValue);
         if (featureDecision.decisionSource != null && featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
-            decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.EXPERIMENT_KEY.toString(), featureDecision.experiment.getKey());
+            decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), featureDecision.experiment.getKey());
             decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), featureDecision.decisionSource);
         } else {
-            decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.EXPERIMENT_KEY.toString(), null);
+            decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), null);
             decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
         }
-        notificationCenter.sendNotifications(NotificationCenter.NotificationType.DECISION,
-            NotificationCenter.DecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.OnDecision,
+            NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
             userId,
             copiedAttributes,
             decisionInfo);
@@ -754,8 +754,8 @@ public class Optimizely {
         decisionInfo.put(DecisionInfoEnums.ActivateVariationDecisionInfo.EXPERIMENT_KEY.toString(), experiment.getKey());
         decisionInfo.put(DecisionInfoEnums.ActivateVariationDecisionInfo.VARIATION_KEY.toString(), variation != null ? variation.getKey() : null);
 
-        notificationCenter.sendNotifications(NotificationCenter.NotificationType.DECISION,
-            NotificationCenter.DecisionNotificationType.EXPERIMENT_VARIATION.toString(),
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.OnDecision,
+            NotificationCenter.OnDecisionNotificationType.EXPERIMENT.toString(),
             userId,
             copiedAttributes,
             decisionInfo);

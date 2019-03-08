@@ -17,7 +17,6 @@
 package com.optimizely.ab.notification;
 
 import ch.qos.logback.classic.Level;
-import com.optimizely.ab.bucketing.Decision;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
@@ -75,8 +74,8 @@ public class NotificationCenterTest {
 
             }
         };
-        int notificationId = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.DECISION, listener);
-        int notificationId2 = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.DECISION, listener);
+        int notificationId = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision, listener);
+        int notificationId2 = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision, listener);
         logbackVerifier.expectMessage(Level.WARN, "Notification listener was already added");
         assertEquals(notificationId2, -1);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));

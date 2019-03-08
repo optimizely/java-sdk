@@ -33,14 +33,14 @@ import java.util.Map;
  * more flexible.
  */
 public class NotificationCenter {
-    public enum DecisionNotificationType {
+    public enum OnDecisionNotificationType {
         IS_FEATURE_ENABLED("feature"),
         GET_FEATURE_VARIABLE("feature_variable"),
-        EXPERIMENT_VARIATION("experiment_variation");
+        EXPERIMENT("experiment");
 
         private final String key;
 
-        DecisionNotificationType(String key) {
+        OnDecisionNotificationType(String key) {
             this.key = key;
         }
 
@@ -58,7 +58,7 @@ public class NotificationCenter {
 
         Activate(ActivateNotificationListener.class), // Activate was called. Track an impression event
         Track(TrackNotificationListener.class), // Track was called.  Track a conversion event
-        DECISION(DecisionNotificationListener.class); // Decision was made.
+        OnDecision(DecisionNotificationListener.class); // Decision was made.
 
         private Class notificationTypeClass;
 
@@ -96,7 +96,7 @@ public class NotificationCenter {
     public NotificationCenter() {
         notificationsListeners.put(NotificationType.Activate, new ArrayList<NotificationHolder>());
         notificationsListeners.put(NotificationType.Track, new ArrayList<NotificationHolder>());
-        notificationsListeners.put(NotificationType.DECISION, new ArrayList<NotificationHolder>());
+        notificationsListeners.put(NotificationType.OnDecision, new ArrayList<NotificationHolder>());
     }
 
     // private list of notification by notification type.
@@ -111,9 +111,9 @@ public class NotificationCenter {
      */
     public int addDecisionNotificationListener(final DecisionNotificationListenerInterface decisionNotificationListenerInterface) {
         if (decisionNotificationListenerInterface instanceof DecisionNotificationListener) {
-            return addNotificationListener(NotificationType.DECISION, (NotificationListener) decisionNotificationListenerInterface);
+            return addNotificationListener(NotificationType.OnDecision, (NotificationListener) decisionNotificationListenerInterface);
         } else {
-            return addNotificationListener(NotificationType.DECISION, new DecisionNotificationListener() {
+            return addNotificationListener(NotificationType.OnDecision, new DecisionNotificationListener() {
                 @Override
                 public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
                     decisionNotificationListenerInterface.onDecision(type, userId, attributes, decisionInfo);
