@@ -33,13 +33,32 @@ import java.util.Map;
  * more flexible.
  */
 public class NotificationCenter {
+    public enum OnDecisionNotificationType {
+        IS_FEATURE_ENABLED("feature"),
+        GET_FEATURE_VARIABLE("feature_variable"),
+        EXPERIMENT("experiment");
+
+        private final String key;
+
+        OnDecisionNotificationType(String key) {
+            this.key = key;
+        }
+
+        @Override
+        public String toString() {
+            return key;
+        }
+
+    }
+
     /**
      * NotificationType is used for the notification types supported.
      */
     public enum NotificationType {
 
         Activate(ActivateNotificationListener.class), // Activate was called. Track an impression event
-        Track(TrackNotificationListener.class); // Track was called.  Track a conversion event
+        Track(TrackNotificationListener.class), // Track was called.  Track a conversion event
+        OnDecision(DecisionNotificationListener.class); // Decision was made.
 
         private Class notificationTypeClass;
 
@@ -77,6 +96,7 @@ public class NotificationCenter {
     public NotificationCenter() {
         notificationsListeners.put(NotificationType.Activate, new ArrayList<NotificationHolder>());
         notificationsListeners.put(NotificationType.Track, new ArrayList<NotificationHolder>());
+        notificationsListeners.put(NotificationType.OnDecision, new ArrayList<NotificationHolder>());
     }
 
     // private list of notification by notification type.
@@ -86,9 +106,29 @@ public class NotificationCenter {
     /**
      * Convenience method to support lambdas as callbacks in later version of Java (8+).
      *
+     * @param decisionNotificationListenerInterface
+     * @return greater than zero if added.
+     */
+    public int addDecisionNotificationListener(final DecisionNotificationListenerInterface decisionNotificationListenerInterface) {
+        if (decisionNotificationListenerInterface instanceof DecisionNotificationListener) {
+            return addNotificationListener(NotificationType.OnDecision, (NotificationListener) decisionNotificationListenerInterface);
+        } else {
+            return addNotificationListener(NotificationType.OnDecision, new DecisionNotificationListener() {
+                @Override
+                public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
+                    decisionNotificationListenerInterface.onDecision(type, userId, attributes, decisionInfo);
+                }
+            });
+        }
+    }
+
+    /**
+     * Convenience method to support lambdas as callbacks in later version of Java (8+).
+     *
      * @param activateNotificationListenerInterface
      * @return greater than zero if added.
      */
+    @Deprecated
     public int addActivateNotificationListener(final ActivateNotificationListenerInterface activateNotificationListenerInterface) {
         if (activateNotificationListenerInterface instanceof ActivateNotificationListener) {
             return addNotificationListener(NotificationType.Activate, (NotificationListener) activateNotificationListenerInterface);
@@ -110,7 +150,7 @@ public class NotificationCenter {
      */
     public int addTrackNotificationListener(final TrackNotificationListenerInterface trackNotificationListenerInterface) {
         if (trackNotificationListenerInterface instanceof TrackNotificationListener) {
-            return addNotificationListener(NotificationType.Activate, (NotificationListener) trackNotificationListenerInterface);
+            return addNotificationListener(NotificationType.Track, (NotificationListener) trackNotificationListenerInterface);
         } else {
             return addNotificationListener(NotificationType.Track, new TrackNotificationListener() {
                 @Override
@@ -135,10 +175,9 @@ public class NotificationCenter {
             logger.warn("Notification listener was the wrong type. It was not added to the notification center.");
             return -1;
         }
-
         for (NotificationHolder holder : notificationsListeners.get(notificationType)) {
-            if (holder.notificationListener == notificationListener) {
-                logger.warn("Notificication listener was already added");
+            if (holder.notificationListener == notificationListener ) {
+                logger.warn("Notification listener was already added");
                 return -1;
             }
         }

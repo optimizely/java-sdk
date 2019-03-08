@@ -35,6 +35,7 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
+import com.optimizely.ab.notification.DecisionInfoEnums;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -386,9 +387,14 @@ public class Optimizely {
         }
 
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
+        FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
+        String sourceExperimentKey = null;
+        String sourceVariationKey = null;
 
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
+        Boolean featureEnabled = false;
         if (featureDecision.variation != null) {
+            sourceVariationKey = featureDecision.variation.getKey();
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
                 sendImpression(
                     projectConfig,
@@ -396,18 +402,32 @@ public class Optimizely {
                     userId,
                     copiedAttributes,
                     featureDecision.variation);
+                decisionSource = featureDecision.decisionSource;
+                sourceExperimentKey = featureDecision.experiment.getKey();
             } else {
                 logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
                     userId, featureKey);
             }
             if (featureDecision.variation.getFeatureEnabled()) {
                 logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
-                return true;
+                featureEnabled = true;
             }
         }
 
+        Map<String, Object> decisionInfo = new HashMap<>();
+        decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_KEY.toString(), featureKey);
+        decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_ENABLED.toString(), featureEnabled);
+        decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), sourceExperimentKey);
+        decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_VARIATION_KEY.toString(), sourceVariationKey);
+        decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), decisionSource);
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.OnDecision,
+            NotificationCenter.OnDecisionNotificationType.IS_FEATURE_ENABLED.toString(),
+            userId,
+            copiedAttributes,
+            decisionInfo);
+
         logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
-        return false;
+        return featureEnabled;
     }
 
     /**
