@@ -2905,7 +2905,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_ENABLED.toString(), true);
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_KEY.toString(), validVariableKey);
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_TYPE.toString(), FeatureVariable.VariableType.DOUBLE);
-        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), String.valueOf(3.14));
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), "3.14");
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.EXPERIMENT);
 
         int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
@@ -2919,7 +2919,7 @@ public class OptimizelyTest {
             validVariableKey,
             genericUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_SLYTHERIN_VALUE)),
-            3.14, 2);
+            Math.PI, 2);
 
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
