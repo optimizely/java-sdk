@@ -42,6 +42,8 @@ import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.notification.ActivateNotificationListener;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.notification.TrackNotificationListener;
+import com.optimizely.ab.notification.DecisionNotificationListener;
+import com.optimizely.ab.notification.DecisionInfoEnums;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
 import org.junit.Test;
@@ -2628,6 +2630,301 @@ public class OptimizelyTest {
     //======== Notification listeners ========//
 
     /**
+     * Helper method to return decisionListener
+     **/
+    private DecisionNotificationListener getDecisionListener(final String testType,
+                                                             final String testUserId,
+                                                             final Map<String, ?> testUserAttributes,
+                                                             final Map<String, ?> testDecisionInfo) {
+        return new DecisionNotificationListener() {
+            @Override
+            public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
+                assertEquals(type, testType);
+                assertEquals(userId, testUserId);
+                for (Map.Entry<String, ?> entry : attributes.entrySet()) {
+                    assertEquals(testUserAttributes.get(entry.getKey()), entry.getValue());
+                }
+                for (Map.Entry<String, ?> entry : decisionInfo.entrySet()) {
+                    assertEquals(testDecisionInfo.get(entry.getKey()), entry.getValue());
+                }
+            }
+        };
+    }
+
+
+    //======GetFeatureVariable Notification TESTS======//
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
+     * notification listener of getFeatureVariableString is called when feature is in experiment and feature is true
+     */
+    @Test
+    public void getFeatureVariableWithListenerUserInExperimentFeatureOn() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+        String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
+        String expectedValue = "F";
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), "multivariate_experiment");
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_VARIATION_KEY.toString(), "Fred");
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_ENABLED.toString(), true);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_KEY.toString(), validVariableKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_TYPE.toString(), FeatureVariable.VariableType.STRING);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), expectedValue);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.EXPERIMENT);
+
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+            getDecisionListener(NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
+                testUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertEquals(optimizely.getFeatureVariableString(
+            validFeatureKey,
+            validVariableKey,
+            testUserId,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+            expectedValue);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
+     * notification listener of getFeatureVariableString is called when feature is in experiment and feature enabled is false
+     * than default value will get returned
+     */
+    @Test
+    public void getFeatureVariableWithListenerUserInExperimentFeatureOff() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+        String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
+        String expectedValue = "H";
+        String userID = "Gred";
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), "multivariate_experiment");
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_VARIATION_KEY.toString(), "Gred");
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_ENABLED.toString(), false);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_KEY.toString(), validVariableKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_TYPE.toString(), FeatureVariable.VariableType.STRING);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), expectedValue);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.EXPERIMENT);
+
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+            getDecisionListener(NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
+                userID,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertEquals(optimizely.getFeatureVariableString(
+            validFeatureKey,
+            validVariableKey,
+            userID,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+            expectedValue);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
+     * notification listener of getFeatureVariableString is called when feature is in rollout and feature enabled is true
+     */
+    @Test
+    public void getFeatureVariableWithListenerUserInRollOutFeatureOn() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        final String validFeatureKey = FEATURE_SINGLE_VARIABLE_STRING_KEY;
+        String validVariableKey = VARIABLE_STRING_VARIABLE_KEY;
+        String expectedValue = "lumos";
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), null);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_ENABLED.toString(), true);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_KEY.toString(), validVariableKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_TYPE.toString(), FeatureVariable.VariableType.STRING);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), expectedValue);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
+
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+            getDecisionListener(NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
+                genericUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertEquals(optimizely.getFeatureVariableString(
+            validFeatureKey,
+            validVariableKey,
+            genericUserId,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+            expectedValue);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableBoolean(String, String, String, Map)}
+     * notification listener of getFeatureVariableBoolean is called when feature is not in rollout and feature enabled is true
+     */
+    @Test
+    public void getFeatureVariableWithListenerUserNotInRollOutFeatureOff() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        final String validFeatureKey = FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY;
+        String validVariableKey = VARIABLE_BOOLEAN_VARIABLE_KEY;
+        Boolean expectedValue = true;
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), null);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_ENABLED.toString(), false);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_KEY.toString(), validVariableKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_TYPE.toString(), FeatureVariable.VariableType.BOOLEAN);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), String.valueOf(expectedValue));
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
+
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+            getDecisionListener(NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
+                genericUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertEquals(optimizely.getFeatureVariableBoolean(
+            validFeatureKey,
+            validVariableKey,
+            genericUserId,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+            expectedValue);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableInteger(String, String, String, Map)}
+     * notification listener of getFeatureVariableInteger is called when feature is in rollout and feature enabled is true
+     */
+    @Test
+    public void getFeatureVariableIntegerWithListenerUserInRollOutFeatureOn() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        final String validFeatureKey = FEATURE_SINGLE_VARIABLE_INTEGER_KEY;
+        String validVariableKey = VARIABLE_INTEGER_VARIABLE_KEY;
+        int expectedValue = 7;
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), null);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_ENABLED.toString(), true);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_KEY.toString(), validVariableKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_TYPE.toString(), FeatureVariable.VariableType.INTEGER);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), String.valueOf(expectedValue));
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
+
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+            getDecisionListener(NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
+                genericUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertEquals((long) optimizely.getFeatureVariableInteger(
+            validFeatureKey,
+            validVariableKey,
+            genericUserId,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+            (long) expectedValue);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableDouble(String, String, String, Map)}
+     * notification listener of getFeatureVariableDouble is called when feature is in experiment and feature enabled is true
+     */
+    @Test
+    public void getFeatureVariableDoubleWithListenerUserInExperimentFeatureOn() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        final String validFeatureKey = FEATURE_SINGLE_VARIABLE_DOUBLE_KEY;
+        String validVariableKey = VARIABLE_DOUBLE_VARIABLE_KEY;
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_SLYTHERIN_VALUE);
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), "double_single_variable_feature_experiment");
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_VARIATION_KEY.toString(), "pi_variation");
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_ENABLED.toString(), true);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_KEY.toString(), validVariableKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_TYPE.toString(), FeatureVariable.VariableType.DOUBLE);
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), String.valueOf(3.14));
+        testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.EXPERIMENT);
+
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+            getDecisionListener(NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
+                genericUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertEquals(optimizely.getFeatureVariableDouble(
+            validFeatureKey,
+            validVariableKey,
+            genericUserId,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_SLYTHERIN_VALUE)),
+            3.14, 2);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
      * Verify that the {@link Optimizely#activate(String, String, Map<String, String>)} call
      * correctly builds an endpoint url and request params
      * and passes them through {@link EventHandler#dispatchEvent(LogEvent)}.
@@ -3340,7 +3637,7 @@ public class OptimizelyTest {
     /**
      * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}
      * returns the variable value of the variation the user is bucketed into
-     * if the variation is not null and the variable has a usage within the variation.
+     * if the variation is not null and the variable has a usage within the variation but featureEnabled is false than returns default value.
      *
      * @throws ConfigParseException
      */
@@ -3350,8 +3647,7 @@ public class OptimizelyTest {
 
         String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
         String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
-        FeatureVariable variable = FEATURE_FLAG_MULTI_VARIATE_FEATURE.getVariableKeyToFeatureVariableMap().get(validVariableKey);
-        String expectedValue = VARIATION_MULTIVARIATE_EXPERIMENT_GRED.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId()).getValue();
+        String expectedValue = VARIABLE_FIRST_LETTER_DEFAULT_VALUE;
         Experiment multivariateExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
@@ -4794,7 +5090,7 @@ public class OptimizelyTest {
 
     /**
      * Verify that {@link Optimizely#getVariation(String, String)} returns a variation when given an experiment
-     * with no audiences and no user attributes.
+     * with no audiences and no user attributes and verify that listener is getting called.
      */
     @Test
     public void getVariationBucketingIdAttribute() throws Exception {

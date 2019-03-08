@@ -35,6 +35,7 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
+import com.optimizely.ab.notification.DecisionInfoEnums;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -649,7 +650,8 @@ public class Optimizely {
         String variableValue = variable.getDefaultValue();
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
-        if (featureDecision.variation != null) {
+        Boolean featureEnabled = false;
+        if (featureDecision.variation != null && featureDecision.variation.getFeatureEnabled()) {
             FeatureVariableUsageInstance featureVariableUsageInstance =
                 featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
             if (featureVariableUsageInstance != null) {
@@ -657,12 +659,34 @@ public class Optimizely {
             } else {
                 variableValue = variable.getDefaultValue();
             }
+            featureEnabled = featureDecision.variation.getFeatureEnabled();
         } else {
             logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
                     "The default value \"{}\" for \"{}\" is being returned.",
                 userId, featureKey, variableValue, variableKey
             );
         }
+
+        Map<String, Object> decisionInfo = new HashMap<>();
+        decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_KEY.toString(), featureKey);
+        decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_ENABLED.toString(), featureEnabled);
+        decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_KEY.toString(), variableKey);
+        decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_TYPE.toString(), variableType);
+        decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), variableValue);
+        if (featureDecision.decisionSource != null && featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
+            decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), featureDecision.experiment.getKey());
+            decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_VARIATION_KEY.toString(), featureDecision.variation.getKey());
+            decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), featureDecision.decisionSource);
+        } else {
+            decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), null);
+            decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_VARIATION_KEY.toString(), null);
+            decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
+        }
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.OnDecision,
+            NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
+            userId,
+            copiedAttributes,
+            decisionInfo);
 
         return variableValue;
     }
