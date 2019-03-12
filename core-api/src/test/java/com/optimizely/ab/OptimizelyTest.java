@@ -2683,7 +2683,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), expectedValue);
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.EXPERIMENT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
             getDecisionListener(NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
                 testUserId,
                 testUserAttributes,
@@ -2730,7 +2730,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), expectedValue);
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.EXPERIMENT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
             getDecisionListener(NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
                 userID,
                 testUserAttributes,
@@ -2775,7 +2775,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), expectedValue);
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
             getDecisionListener(NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -2820,7 +2820,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), String.valueOf(expectedValue));
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
             getDecisionListener(NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -2864,7 +2864,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), String.valueOf(expectedValue));
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
             getDecisionListener(NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -2908,7 +2908,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), "3.14");
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.EXPERIMENT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
             getDecisionListener(NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
                 genericUserId,
                 testUserAttributes,

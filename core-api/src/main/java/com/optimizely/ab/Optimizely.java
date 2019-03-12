@@ -682,7 +682,7 @@ public class Optimizely {
             decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_VARIATION_KEY.toString(), null);
             decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
         }
-        notificationCenter.sendNotifications(NotificationCenter.NotificationType.OnDecision,
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.Decision,
             NotificationCenter.OnDecisionNotificationType.GET_FEATURE_VARIABLE.toString(),
             userId,
             copiedAttributes,
