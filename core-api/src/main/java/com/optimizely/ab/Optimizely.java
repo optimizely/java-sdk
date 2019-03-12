@@ -718,7 +718,7 @@ public class Optimizely {
         decisionInfo.put(DecisionInfoEnums.ActivateVariationDecisionInfo.EXPERIMENT_KEY.toString(), experiment.getKey());
         decisionInfo.put(DecisionInfoEnums.ActivateVariationDecisionInfo.VARIATION_KEY.toString(), variation != null ? variation.getKey() : null);
 
-        notificationCenter.sendNotifications(NotificationCenter.NotificationType.OnDecision,
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.Decision,
             NotificationCenter.OnDecisionNotificationType.EXPERIMENT.toString(),
             userId,
             copiedAttributes,

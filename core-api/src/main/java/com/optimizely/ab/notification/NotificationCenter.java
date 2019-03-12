@@ -58,7 +58,7 @@ public class NotificationCenter {
 
         Activate(ActivateNotificationListener.class), // Activate was called. Track an impression event
         Track(TrackNotificationListener.class), // Track was called.  Track a conversion event
-        OnDecision(DecisionNotificationListener.class); // Decision was made.
+        Decision(DecisionNotificationListener.class); // Decision was made.
 
         private Class notificationTypeClass;
 
@@ -96,7 +96,7 @@ public class NotificationCenter {
     public NotificationCenter() {
         notificationsListeners.put(NotificationType.Activate, new ArrayList<NotificationHolder>());
         notificationsListeners.put(NotificationType.Track, new ArrayList<NotificationHolder>());
-        notificationsListeners.put(NotificationType.OnDecision, new ArrayList<NotificationHolder>());
+        notificationsListeners.put(NotificationType.Decision, new ArrayList<NotificationHolder>());
     }
 
     // private list of notification by notification type.
@@ -111,9 +111,9 @@ public class NotificationCenter {
      */
     public int addDecisionNotificationListener(final DecisionNotificationListenerInterface decisionNotificationListenerInterface) {
         if (decisionNotificationListenerInterface instanceof DecisionNotificationListener) {
-            return addNotificationListener(NotificationType.OnDecision, (NotificationListener) decisionNotificationListenerInterface);
+            return addNotificationListener(NotificationType.Decision, (NotificationListener) decisionNotificationListenerInterface);
         } else {
-            return addNotificationListener(NotificationType.OnDecision, new DecisionNotificationListener() {
+            return addNotificationListener(NotificationType.Decision, new DecisionNotificationListener() {
                 @Override
                 public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
                     decisionNotificationListenerInterface.onDecision(type, userId, attributes, decisionInfo);
