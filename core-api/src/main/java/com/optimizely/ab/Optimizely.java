@@ -667,12 +667,13 @@ public class Optimizely {
             );
         }
 
+        Object convertedValue = convertStringToType(variableValue, variableType);
         Map<String, Object> decisionInfo = new HashMap<>();
         decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_KEY.toString(), featureKey);
         decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.FEATURE_ENABLED.toString(), featureEnabled);
         decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_KEY.toString(), variableKey);
         decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_TYPE.toString(), variableType);
-        decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), variableValue);
+        decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.VARIABLE_VALUE.toString(), convertedValue);
         if (featureDecision.decisionSource != null && featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
             decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), featureDecision.experiment.getKey());
             decisionInfo.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_VARIATION_KEY.toString(), featureDecision.variation.getKey());
@@ -689,6 +690,35 @@ public class Optimizely {
             decisionInfo);
 
         return variableValue;
+    }
+
+    // Helper method which takes type and variable value and convert it to object to use in Listener DecisionInfo object variable value
+    private Object convertStringToType(String variableValue, FeatureVariable.VariableType type) {
+        if(variableValue != null) {
+            switch (type) {
+                case DOUBLE:
+                    try {
+                        return Double.parseDouble(variableValue);
+                    } catch (NumberFormatException exception) {
+                        logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                            "\" as Double. " + exception);
+                    }
+                    break;
+                case STRING:
+                    return variableValue;
+                case BOOLEAN:
+                    return Boolean.parseBoolean(variableValue);
+                case INTEGER:
+                    try {
+                        return Integer.parseInt(variableValue);
+                    } catch (NumberFormatException exception) {
+                        logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                            "\" as Integer. " + exception.toString());
+                    }
+                    break;
+            }
+        }
+        return null;
     }
 
     /**
