@@ -420,7 +420,7 @@ public class Optimizely {
         decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), sourceExperimentKey);
         decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_VARIATION_KEY.toString(), sourceVariationKey);
         decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), decisionSource);
-        notificationCenter.sendNotifications(NotificationCenter.NotificationType.OnDecision,
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.Decision,
             NotificationCenter.OnDecisionNotificationType.IS_FEATURE_ENABLED.toString(),
             userId,
             copiedAttributes,

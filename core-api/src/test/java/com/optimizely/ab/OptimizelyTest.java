@@ -2665,7 +2665,7 @@ public class OptimizelyTest {
             .withConfig(validProjectConfig)
             .build();
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
             new DecisionNotificationListener() {
                 @Override
                 public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
@@ -2702,7 +2702,7 @@ public class OptimizelyTest {
             eq(Collections.<String, String>emptyMap())
         );
 
-        int notificationId = spyOptimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+        int notificationId = spyOptimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
             new DecisionNotificationListener() {
                 @Override
                 public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
@@ -2746,7 +2746,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_ENABLED.toString(), true);
         testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.EXPERIMENT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
             getDecisionListener(NotificationCenter.OnDecisionNotificationType.IS_FEATURE_ENABLED.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -2794,7 +2794,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_ENABLED.toString(), false);
         testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.EXPERIMENT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
             getDecisionListener(NotificationCenter.OnDecisionNotificationType.IS_FEATURE_ENABLED.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -2843,7 +2843,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_ENABLED.toString(), false);
         testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
             getDecisionListener(NotificationCenter.OnDecisionNotificationType.IS_FEATURE_ENABLED.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -2884,7 +2884,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_ENABLED.toString(), true);
         testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.OnDecision,
+        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
             getDecisionListener(NotificationCenter.OnDecisionNotificationType.IS_FEATURE_ENABLED.toString(),
                 genericUserId,
                 testUserAttributes,
