@@ -18,6 +18,7 @@ package com.optimizely.ab.config.parser;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.optimizely.ab.config.DatafileProjectConfig;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
@@ -43,7 +44,7 @@ final class JacksonConfigParser implements ConfigParser {
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
         try {
-            return objectMapper.readValue(json, ProjectConfig.class);
+            return objectMapper.readValue(json, DatafileProjectConfig.class);
         } catch (Exception e) {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
         }
@@ -54,7 +55,7 @@ final class JacksonConfigParser implements ConfigParser {
 
         public ProjectConfigModule() {
             super(NAME);
-            addDeserializer(ProjectConfig.class, new ProjectConfigJacksonDeserializer());
+            addDeserializer(DatafileProjectConfig.class, new DatafileJacksonDeserializer());
             addDeserializer(Audience.class, new AudienceJacksonDeserializer(objectMapper));
             addDeserializer(TypedAudience.class, new TypedAudienceJacksonDeserializer(objectMapper));
             addDeserializer(Condition.class, new ConditionJacksonDeserializer(objectMapper));

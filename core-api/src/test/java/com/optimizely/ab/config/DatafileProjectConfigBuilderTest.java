@@ -21,23 +21,23 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static com.optimizely.ab.config.ProjectConfigTestUtils.invalidProjectConfigV5;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV4;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.invalidProjectConfigV5;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV4;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 /**
- * Tests for {@link com.optimizely.ab.config.ProjectConfig.Builder}.
+ * Tests for {@link DatafileProjectConfig.Builder}.
  */
-public class ProjectConfigBuilderTest {
+public class DatafileProjectConfigBuilderTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void withNullDatafile() throws Exception {
         thrown.expect(ConfigParseException.class);
-        new ProjectConfig.Builder()
+        new DatafileProjectConfig.Builder()
             .withDatafile(null)
             .build();
     }
@@ -45,14 +45,14 @@ public class ProjectConfigBuilderTest {
     @Test
     public void withEmptyDatafile() throws Exception {
         thrown.expect(ConfigParseException.class);
-        new ProjectConfig.Builder()
+        new DatafileProjectConfig.Builder()
             .withDatafile("")
             .build();
     }
 
     @Test
     public void withValidDatafile() throws Exception {
-        ProjectConfig projectConfig = new ProjectConfig.Builder()
+        ProjectConfig projectConfig = new DatafileProjectConfig.Builder()
             .withDatafile(validConfigJsonV4())
             .build();
         assertNotNull(projectConfig);
@@ -62,7 +62,7 @@ public class ProjectConfigBuilderTest {
     @Test
     public void withUnsupportedDatafile() throws Exception {
         thrown.expect(ConfigParseException.class);
-        new ProjectConfig.Builder()
+        new DatafileProjectConfig.Builder()
             .withDatafile(invalidProjectConfigV5())
             .build();
     }

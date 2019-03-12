@@ -18,10 +18,7 @@ package com.optimizely.ab.config.parser;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.FeatureFlag;
-import com.optimizely.ab.config.Group;
-import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.TypedAudience;
 
@@ -46,11 +43,11 @@ final class GsonConfigParser implements ConfigParser {
             .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())
             .registerTypeAdapter(FeatureFlag.class, new FeatureFlagGsonDeserializer())
             .registerTypeAdapter(Group.class, new GroupGsonDeserializer())
-            .registerTypeAdapter(ProjectConfig.class, new ProjectConfigGsonDeserializer())
+            .registerTypeAdapter(DatafileProjectConfig.class, new DatafileGsonDeserializer())
             .create();
 
         try {
-            return gson.fromJson(json, ProjectConfig.class);
+            return gson.fromJson(json, DatafileProjectConfig.class);
         } catch (Exception e) {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
         }

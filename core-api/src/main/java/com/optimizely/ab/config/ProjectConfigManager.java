@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,22 +14,14 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab;
+package com.optimizely.ab.config;
 
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.EventType;
-
-/**
- * Exception thrown when attempting to use/refer to an {@link EventType} that isn't present in the current
- * {@link ProjectConfig}.
- */
-public class UnknownEventTypeException extends OptimizelyRuntimeException {
-
-    public UnknownEventTypeException(String message) {
-        super(message);
-    }
-
-    public UnknownEventTypeException(String message, Throwable cause) {
-        super(message, cause);
-    }
+public interface ProjectConfigManager {
+    /**
+     * Implementations of this method should block until a datafile is available.
+     *
+     * @return ProjectConfig
+     */
+    ProjectConfig getConfig();
 }
+

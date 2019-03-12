@@ -17,7 +17,7 @@
 package com.optimizely.ab.config.parser;
 
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.ProjectConfigTestUtils;
+import com.optimizely.ab.config.DatafileProjectConfigTestUtils;
 import org.openjdk.jmh.annotations.*;
 
 import java.io.IOException;
@@ -38,9 +38,9 @@ public class JacksonConfigParserBenchmark {
     @Setup
     public void setUp() throws IOException {
         parser = new JacksonConfigParser();
-        jsonV2 = ProjectConfigTestUtils.validConfigJsonV2();
-        jsonV3 = ProjectConfigTestUtils.validConfigJsonV3();
-        jsonV4 = ProjectConfigTestUtils.validConfigJsonV4();
+        jsonV2 = DatafileProjectConfigTestUtils.validConfigJsonV2();
+        jsonV3 = DatafileProjectConfigTestUtils.validConfigJsonV3();
+        jsonV4 = DatafileProjectConfigTestUtils.validConfigJsonV4();
     }
 
     @Benchmark

@@ -26,6 +26,7 @@ import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.internal.LogbackVerifier;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,7 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV2;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
@@ -55,12 +56,20 @@ public class BucketerTest {
     @Rule
     public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
+    private Bucketer algorithm;
+    private ProjectConfig projectConfig;
+
+    @Before
+    public void setUp() {
+        algorithm = new Bucketer();
+        projectConfig = validProjectConfigV2();
+    }
+
     /**
      * Verify that {@link Bucketer#generateBucketValue(int)} correctly handles negative hashCodes.
      */
     @Test
     public void generateBucketValueForNegativeHashCodes() throws Exception {
-        Bucketer algorithm = new Bucketer(validProjectConfigV2());
         int actual = algorithm.generateBucketValue(-1);
         assertTrue("generated bucket value is not in range: " + actual,
             actual > 0 && actual < Bucketer.MAX_TRAFFIC_VALUE);
@@ -78,7 +87,6 @@ public class BucketerTest {
         long totalCount = 0;
         int outOfRangeCount = 0;
 
-        Bucketer algorithm = new Bucketer(validProjectConfigV2());
         for (int i = Integer.MIN_VALUE; i < Integer.MAX_VALUE; i++) {
             int bucketValue = algorithm.generateBucketValue(i);
 
@@ -104,8 +112,6 @@ public class BucketerTest {
         int MURMUR_HASH_SEED = 1;
         int experimentId = 1886780721;
         int hashCode;
-
-        Bucketer algorithm = new Bucketer(validProjectConfigV2());
 
         String combinedBucketId;
 
@@ -157,29 +163,29 @@ public class BucketerTest {
             Collections.<String, String>emptyMap(), trafficAllocations, "");
 
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
+        Bucketer algorithm = testBucketAlgorithm(bucketValue);
 
         // verify bucketing to the first variation
         bucketValue.set(0);
-        assertThat(algorithm.bucket(experiment, "user1"), is(variations.get(0)));
+        assertThat(algorithm.bucket(experiment, "user1", projectConfig), is(variations.get(0)));
         bucketValue.set(500);
-        assertThat(algorithm.bucket(experiment, "user2"), is(variations.get(0)));
+        assertThat(algorithm.bucket(experiment, "user2", projectConfig), is(variations.get(0)));
         bucketValue.set(999);
-        assertThat(algorithm.bucket(experiment, "user3"), is(variations.get(0)));
+        assertThat(algorithm.bucket(experiment, "user3", projectConfig), is(variations.get(0)));
 
         // verify the second variation
         bucketValue.set(1000);
-        assertThat(algorithm.bucket(experiment, "user4"), is(variations.get(1)));
+        assertThat(algorithm.bucket(experiment, "user4", projectConfig), is(variations.get(1)));
         bucketValue.set(4000);
-        assertThat(algorithm.bucket(experiment, "user5"), is(variations.get(1)));
+        assertThat(algorithm.bucket(experiment, "user5", projectConfig), is(variations.get(1)));
         bucketValue.set(4999);
-        assertThat(algorithm.bucket(experiment, "user6"), is(variations.get(1)));
+        assertThat(algorithm.bucket(experiment, "user6", projectConfig), is(variations.get(1)));
 
         // ...and the rest
         bucketValue.set(5100);
-        assertThat(algorithm.bucket(experiment, "user7"), is(variations.get(2)));
+        assertThat(algorithm.bucket(experiment, "user7", projectConfig), is(variations.get(2)));
         bucketValue.set(6500);
-        assertThat(algorithm.bucket(experiment, "user8"), is(variations.get(3)));
+        assertThat(algorithm.bucket(experiment, "user8", projectConfig), is(variations.get(3)));
     }
 
     /**
@@ -204,34 +210,34 @@ public class BucketerTest {
             Collections.<String, String>emptyMap(), trafficAllocations, "");
 
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
+        Bucketer algorithm = testBucketAlgorithm(bucketValue);
 
         logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 0 to user with bucketingId \"" + bucketingId + "\" when bucketing to a variation.");
         logbackVerifier.expectMessage(Level.INFO, "User with bucketingId \"" + bucketingId + "\" is in variation \"var1\" of experiment \"exp_key\".");
 
         // verify bucketing to the first variation
         bucketValue.set(0);
-        assertThat(algorithm.bucket(experiment, bucketingId), is(variations.get(0)));
+        assertThat(algorithm.bucket(experiment, bucketingId, projectConfig), is(variations.get(0)));
 
         logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 1000 to user with bucketingId \"" + bucketingId + "\" when bucketing to a variation.");
         logbackVerifier.expectMessage(Level.INFO, "User with bucketingId \"" + bucketingId + "\" is not in any variation of experiment \"exp_key\".");
 
         // verify bucketing to no variation (null)
         bucketValue.set(1000);
-        assertNull(algorithm.bucket(experiment, bucketingId));
+        assertNull(algorithm.bucket(experiment, bucketingId, projectConfig));
     }
 
 
     //========== Tests for Grouped experiments ==========//
 
     /**
-     * Verify that {@link Bucketer#bucket(Experiment, String)} returns the proper variation when a user is
+     * Verify that {@link Bucketer#bucket(Experiment, String, ProjectConfig)} returns the proper variation when a user is
      * in the group experiment.
      */
     @Test
     public void bucketUserInExperiment() throws Exception {
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
+        Bucketer algorithm = testBucketAlgorithm(bucketValue);
         bucketValue.set(3000);
 
         ProjectConfig projectConfig = validProjectConfigV2();
@@ -243,17 +249,17 @@ public class BucketerTest {
         logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 3000 to user with bucketingId \"blah\" when bucketing to a variation.");
         logbackVerifier.expectMessage(Level.INFO,
             "User with bucketingId \"blah\" is in variation \"e2_vtag1\" of experiment \"group_etag2\".");
-        assertThat(algorithm.bucket(groupExperiment, "blah"), is(groupExperiment.getVariations().get(0)));
+        assertThat(algorithm.bucket(groupExperiment, "blah", projectConfig), is(groupExperiment.getVariations().get(0)));
     }
 
     /**
-     * Verify that {@link Bucketer#bucket(Experiment, String)} doesn't return a variation when a user isn't bucketed
+     * Verify that {@link Bucketer#bucket(Experiment, String, ProjectConfig)} doesn't return a variation when a user isn't bucketed
      * into the group experiment.
      */
     @Test
     public void bucketUserNotInExperiment() throws Exception {
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
+        Bucketer algorithm = testBucketAlgorithm(bucketValue);
         bucketValue.set(3000);
 
         ProjectConfig projectConfig = validProjectConfigV2();
@@ -265,18 +271,18 @@ public class BucketerTest {
             "Assigned bucket 3000 to user with bucketingId \"blah\" during experiment bucketing.");
         logbackVerifier.expectMessage(Level.INFO,
             "User with bucketingId \"blah\" is not in experiment \"group_etag1\" of group 42");
-        assertNull(algorithm.bucket(groupExperiment, "blah"));
+        assertNull(algorithm.bucket(groupExperiment, "blah", projectConfig));
     }
 
     /**
-     * Verify that {@link Bucketer#bucket(Experiment, String)} doesn't return a variation when the user is bucketed to
+     * Verify that {@link Bucketer#bucket(Experiment, String, ProjectConfig)} doesn't return a variation when the user is bucketed to
      * the traffic space of a deleted experiment within a random group.
      */
     @Test
     public void bucketUserToDeletedExperimentSpace() throws Exception {
         final AtomicInteger bucketValue = new AtomicInteger();
         final int bucketIntVal = 9000;
-        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
+        Bucketer algorithm = testBucketAlgorithm(bucketValue);
         bucketValue.set(bucketIntVal);
 
         ProjectConfig projectConfig = validProjectConfigV2();
@@ -285,17 +291,17 @@ public class BucketerTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket " + bucketIntVal + " to user with bucketingId \"blah\" during experiment bucketing.");
         logbackVerifier.expectMessage(Level.INFO, "User with bucketingId \"blah\" is not in any experiment of group 42.");
-        assertNull(algorithm.bucket(groupExperiment, "blah"));
+        assertNull(algorithm.bucket(groupExperiment, "blah", projectConfig));
     }
 
     /**
-     * Verify that {@link Bucketer#bucket(Experiment, String)} returns a variation when the user falls into an
+     * Verify that {@link Bucketer#bucket(Experiment, String, ProjectConfig)} returns a variation when the user falls into an
      * experiment within an overlapping group.
      */
     @Test
     public void bucketUserToVariationInOverlappingGroupExperiment() throws Exception {
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
+        Bucketer algorithm = testBucketAlgorithm(bucketValue);
         bucketValue.set(0);
 
         ProjectConfig projectConfig = validProjectConfigV2();
@@ -306,17 +312,17 @@ public class BucketerTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "User with bucketingId \"blah\" is in variation \"e1_vtag1\" of experiment \"overlapping_etag1\".");
-        assertThat(algorithm.bucket(groupExperiment, "blah"), is(expectedVariation));
+        assertThat(algorithm.bucket(groupExperiment, "blah", projectConfig), is(expectedVariation));
     }
 
     /**
-     * Verify that {@link Bucketer#bucket(Experiment, String)} doesn't return a variation when the user doesn't fall
+     * Verify that {@link Bucketer#bucket(Experiment, String, ProjectConfig)} doesn't return a variation when the user doesn't fall
      * into an experiment within an overlapping group.
      */
     @Test
     public void bucketUserNotInOverlappingGroupExperiment() throws Exception {
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
+        Bucketer algorithm = testBucketAlgorithm(bucketValue);
         bucketValue.set(3000);
 
         ProjectConfig projectConfig = validProjectConfigV2();
@@ -326,13 +332,13 @@ public class BucketerTest {
         logbackVerifier.expectMessage(Level.INFO,
             "User with bucketingId \"blah\" is not in any variation of experiment \"overlapping_etag1\".");
 
-        assertNull(algorithm.bucket(groupExperiment, "blah"));
+        assertNull(algorithm.bucket(groupExperiment, "blah", projectConfig));
     }
 
     @Test
     public void testBucketWithBucketingId() {
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
+        Bucketer algorithm = testBucketAlgorithm(bucketValue);
         bucketValue.set(0);
         String bucketingId = "blah";
         String userId = "blahUser";
@@ -345,7 +351,7 @@ public class BucketerTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "User with bucketingId \"" + bucketingId + "\" is in variation \"e1_vtag1\" of experiment \"overlapping_etag1\".");
-        assertThat(algorithm.bucket(groupExperiment, bucketingId), is(expectedVariation));
+        assertThat(algorithm.bucket(groupExperiment, bucketingId, projectConfig), is(expectedVariation));
 
     }
 
@@ -353,15 +359,14 @@ public class BucketerTest {
     @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     public void testBucketWithNullBucketingId() {
         final AtomicInteger bucketValue = new AtomicInteger();
-        Bucketer algorithm = mockBucketAlgorithm(bucketValue);
+        Bucketer algorithm = testBucketAlgorithm(bucketValue);
         bucketValue.set(0);
 
-        ProjectConfig projectConfig = validProjectConfigV2();
         List<Experiment> groupExperiments = projectConfig.getGroups().get(1).getExperiments();
         Experiment groupExperiment = groupExperiments.get(0);
 
         try {
-            algorithm.bucket(groupExperiment, null);
+            algorithm.bucket(groupExperiment, null, projectConfig);
         } catch (IllegalArgumentException e) {
             assertNotNull(e);
         }
@@ -375,8 +380,8 @@ public class BucketerTest {
      * @param bucketValue the expected bucket value holder
      * @return the mock bucket algorithm
      */
-    private static Bucketer mockBucketAlgorithm(final AtomicInteger bucketValue) {
-        return new Bucketer(validProjectConfigV2()) {
+    private static Bucketer testBucketAlgorithm(final AtomicInteger bucketValue) {
+        return new Bucketer() {
             @Override
             int generateBucketValue(int hashCode) {
                 return bucketValue.get();
