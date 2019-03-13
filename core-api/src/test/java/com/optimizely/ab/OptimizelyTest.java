@@ -2641,6 +2641,7 @@ public class OptimizelyTest {
             public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
                 assertEquals(type, testType);
                 assertEquals(userId, testUserId);
+                assertEquals(attributes, testUserAttributes);
                 for (Map.Entry<String, ?> entry : attributes.entrySet()) {
                     assertEquals(testUserAttributes.get(entry.getKey()), entry.getValue());
                 }
@@ -2702,7 +2703,7 @@ public class OptimizelyTest {
     /**
      * Verify that the {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
      * notification listener of getFeatureVariableString is called when feature is in experiment and feature enabled is false
-     * than default value will get returned
+     * than default value will get returned and passing null attribute will send empty map instead of null
      */
     @Test
     public void getFeatureVariableWithListenerUserInExperimentFeatureOff() {
@@ -2718,7 +2719,6 @@ public class OptimizelyTest {
             .build();
 
         final Map<String, String> testUserAttributes = new HashMap<>();
-        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
 
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
         testDecisionInfoMap.put(DecisionInfoEnums.GetFeatureVariableDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), "multivariate_experiment");
@@ -2740,7 +2740,7 @@ public class OptimizelyTest {
             validFeatureKey,
             validVariableKey,
             userID,
-            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+            null),
             expectedValue);
 
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
