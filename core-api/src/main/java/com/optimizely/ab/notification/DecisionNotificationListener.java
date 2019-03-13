@@ -17,6 +17,7 @@
 package com.optimizely.ab.notification;
 
 import javax.annotation.Nonnull;
+import java.util.HashMap;
 import java.util.Map;
 
 public abstract class DecisionNotificationListener implements NotificationListener, DecisionNotificationListenerInterface {
@@ -36,8 +37,10 @@ public abstract class DecisionNotificationListener implements NotificationListen
         if (args[2] != null) {
             assert (args[2] instanceof java.util.Map);
             attributes = (Map<String, ?>) args[2];
+        } else {
+            attributes = new HashMap<>();
         }
-        ;
+        
         assert (args[3] instanceof java.util.Map);
         Map<String, ?> decisionInfo = (Map<String, ?>) args[3];
         onDecision(type, userId, attributes, decisionInfo);

@@ -2641,6 +2641,7 @@ public class OptimizelyTest {
             public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
                 assertEquals(type, testType);
                 assertEquals(userId, testUserId);
+                assertEquals(attributes, testUserAttributes);
                 for (Map.Entry<String, ?> entry : attributes.entrySet()) {
                     assertEquals(testUserAttributes.get(entry.getKey()), entry.getValue());
                 }
@@ -2737,7 +2738,6 @@ public class OptimizelyTest {
 
         final Map<String, String> testUserAttributes = new HashMap<>();
         testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
-        testUserAttributes.put(testBucketingIdKey, testBucketingId);
 
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
         testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_VARIATION_KEY.toString(), "George");
@@ -2836,7 +2836,6 @@ public class OptimizelyTest {
             .withConfig(validProjectConfig)
             .build();
         final Map<String, String> testUserAttributes = new HashMap<>();
-        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
 
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
         testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
@@ -2849,7 +2848,7 @@ public class OptimizelyTest {
                 testUserAttributes,
                 testDecisionInfoMap));
 
-        assertFalse(optimizely.isFeatureEnabled(validFeatureKey, genericUserId, testUserAttributes));
+        assertFalse(optimizely.isFeatureEnabled(validFeatureKey, genericUserId, null));
 
         logbackVerifier.expectMessage(
             Level.INFO,
