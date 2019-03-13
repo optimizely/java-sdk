@@ -16,11 +16,13 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.api.ConversionEvent;
+import com.optimizely.ab.api.Event;
+import com.optimizely.ab.api.ImpressionEvent;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfileService;
-import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.FeatureVariable;
@@ -36,6 +38,7 @@ import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
 import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.processor.EventChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +50,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Top-level container class for Optimizely functionality.
@@ -91,6 +95,8 @@ public class Optimizely {
     private boolean isValid;
     public final NotificationCenter notificationCenter = new NotificationCenter();
 
+    private Consumer<Event> eventProcessor;
+
     @Nullable
     private final UserProfileService userProfileService;
 
@@ -104,6 +110,54 @@ public class Optimizely {
         this.eventFactory = eventFactory;
         this.errorHandler = errorHandler;
         this.userProfileService = userProfileService;
+        this.eventProcessor = (Event event) -> {
+            final LogEvent logEvent = eventFactory.createLogEvent(event);
+
+            // logging preserved from previous releases
+            event.getType().handle(event, new Event.EventType.EventConsumer() {
+                @Override
+                public void acceptConversion(ConversionEvent conversion) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Dispatching conversion event to URL {} with params {} and payload \"{}\".",
+                            logEvent.getEndpointUrl(), logEvent.getRequestParams(), logEvent.getBody());
+                    }
+                }
+
+                @Override
+                public void acceptImpression(ImpressionEvent impression) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug(
+                            "Dispatching impression event to URL {} with params {} and payload \"{}\".",
+                            logEvent.getEndpointUrl(), logEvent.getRequestParams(), logEvent.getBody());
+                    }
+                }
+            });
+
+            try {
+                eventHandler.dispatchEvent(logEvent);
+            } catch (Exception e) {
+                logger.error("Failed to dispatch event", e);
+                throw new RuntimeException(e); // TODO temp fix to get tests working
+            }
+        };
+    }
+
+    private Optimizely(
+        EventHandler eventHandler,
+        EventFactory eventFactory,
+        ErrorHandler errorHandler,
+        DecisionService decisionService,
+        UserProfileService userProfileService,
+        EventChannel<Event> eventProcessor
+    ) {
+        this.eventHandler = eventHandler;
+        this.eventFactory = eventFactory;
+        this.errorHandler = errorHandler;
+        this.decisionService = decisionService;
+        this.userProfileService = userProfileService;
+        this.eventProcessor = eventProcessor::put;
+
+        eventProcessor.onStart();
     }
 
     /**
@@ -234,26 +288,22 @@ public class Optimizely {
                                 @Nonnull Map<String, ?> filteredAttributes,
                                 @Nonnull Variation variation) {
         if (experiment.isRunning()) {
-            LogEvent impressionEvent = eventFactory.createImpressionEvent(
+            ImpressionEvent impressionEvent = eventFactory.createImpression(
                 projectConfig,
                 experiment,
                 variation,
                 userId,
                 filteredAttributes);
+
             logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
 
-            if (logger.isDebugEnabled()) {
-                logger.debug(
-                    "Dispatching impression event to URL {} with params {} and payload \"{}\".",
-                    impressionEvent.getEndpointUrl(), impressionEvent.getRequestParams(), impressionEvent.getBody());
-            }
-
             try {
-                eventHandler.dispatchEvent(impressionEvent);
+                eventProcessor.accept(impressionEvent);
             } catch (Exception e) {
                 logger.error("Unexpected exception in event dispatcher", e);
             }
 
+            // TODO(llinn) move to interceptor
             notificationCenter.sendNotifications(NotificationCenter.NotificationType.Activate, experiment, userId,
                 filteredAttributes, variation, impressionEvent);
         } else {
@@ -297,7 +347,7 @@ public class Optimizely {
         ProjectConfig currentConfig = getProjectConfig();
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
 
-        EventType eventType = currentConfig.getEventTypeForName(eventName, errorHandler);
+        com.optimizely.ab.config.EventType eventType = currentConfig.getEventTypeForName(eventName, errorHandler);
         if (eventType == null) {
             // if no matching event type could be found, do not dispatch an event
             logger.info("Not tracking event \"{}\" for user \"{}\".", eventName, userId);
@@ -309,27 +359,22 @@ public class Optimizely {
         }
 
         // create the conversion event request parameters, then dispatch
-        LogEvent conversionEvent = eventFactory.createConversionEvent(
+        ConversionEvent conversionEvent = eventFactory.createConversion(
             projectConfig,
             userId,
-            eventType.getId(),
-            eventType.getKey(),
+            eventName,
             copiedAttributes,
             eventTags);
 
         logger.info("Tracking event \"{}\" for user \"{}\".", eventName, userId);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Dispatching conversion event to URL {} with params {} and payload \"{}\".",
-                conversionEvent.getEndpointUrl(), conversionEvent.getRequestParams(), conversionEvent.getBody());
-        }
-
         try {
-            eventHandler.dispatchEvent(conversionEvent);
+            eventProcessor.accept(conversionEvent);
         } catch (Exception e) {
             logger.error("Unexpected exception in event dispatcher", e);
         }
 
+        // TODO(llinn) move to interceptor
         notificationCenter.sendNotifications(NotificationCenter.NotificationType.Track, eventName, userId,
             copiedAttributes, eventTags, conversionEvent);
     }

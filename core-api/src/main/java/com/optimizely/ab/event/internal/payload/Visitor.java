@@ -19,6 +19,7 @@ package com.optimizely.ab.event.internal.payload;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.annotations.VisibleForTesting;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Visitor {
@@ -87,11 +88,22 @@ public class Visitor {
 
     @Override
     public int hashCode() {
-        int result = visitorId.hashCode();
+        int result = (visitorId != null ? visitorId.hashCode() : 0);
         result = 31 * result + (sessionId != null ? sessionId.hashCode() : 0);
         result = 31 * result + (attributes != null ? attributes.hashCode() : 0);
-        result = 31 * result + snapshots.hashCode();
+        result = 31 * result + (snapshots != null ? snapshots.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("Visitor{");
+        sb.append("visitorId='").append(visitorId).append('\'');
+        sb.append(", sessionId='").append(sessionId).append('\'');
+        sb.append(", attributes=").append(attributes);
+        sb.append(", snapshots=").append(snapshots);
+        sb.append('}');
+        return sb.toString();
     }
 
     public static class Builder {
@@ -113,6 +125,14 @@ public class Visitor {
 
         public Builder setAttributes(List<Attribute> attributes) {
             this.attributes = attributes;
+            return this;
+        }
+
+        public Builder addSnapshot(Snapshot snapshot) {
+            if (this.snapshots == null) {
+                this.snapshots = new ArrayList<>();
+            }
+            this.snapshots.add(snapshot);
             return this;
         }
 

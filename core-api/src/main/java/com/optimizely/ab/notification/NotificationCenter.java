@@ -189,6 +189,7 @@ public class NotificationCenter {
     }
 
     // fire a notificaiton of a certain type.  The arg list changes depending on the type of notification sent.
+    // TODO: Remove this untyped invocation of handlers. A simple solution would be to have this class implement ActivateNotificationListenerInterface and TrackNotificationListenerInterface and forward to handlers.
     public void sendNotifications(NotificationType notificationType, Object... args) {
         ArrayList<NotificationHolder> holders = notificationsListeners.get(notificationType);
         for (NotificationHolder holder : holders) {

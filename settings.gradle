@@ -1,4 +1,8 @@
 rootProject.name = 'ab-sdk'
 
 include 'core-api'
+include 'core-common'
+include 'core-event-processor'
 include 'core-httpclient-impl'
+include 'event-processor-disruptor'
+

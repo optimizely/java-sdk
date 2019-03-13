@@ -537,10 +537,9 @@ public class ProjectConfig {
                         variation.getKey(), experimentKey, userId);
                     return variation;
                 }
-            } else {
-                logger.debug("No variation for experiment \"{}\" mapped to user \"{}\" in the forced variation map ", experimentKey, userId);
             }
         }
+        logger.debug("No variation for experiment \"{}\" mapped to user \"{}\" in the forced variation map ", experimentKey, userId);
         return null;
     }
 

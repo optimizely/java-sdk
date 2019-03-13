@@ -19,9 +19,13 @@ package com.optimizely.ab.event.internal.payload;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.api.EventContext;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 public class EventBatch {
     public enum ClientEngine {
@@ -55,6 +59,35 @@ public class EventBatch {
     @JsonProperty("project_id")
     String projectId;
     String revision;
+
+    public static EventBatch.Builder builder() {
+        return new Builder();
+    }
+
+    public static EventBatch.Builder builder(EventContext context) {
+        return builder().context(context);
+    }
+
+    public static EventBatch.Builder builder(EventBatch eventBatch) {
+        return new Builder(eventBatch);
+    }
+
+    public static EventBatch concat(List<EventBatch> eventBatches) {
+        if (eventBatches == null || eventBatches.isEmpty()) {
+            return null;
+        }
+        EventBatch first = eventBatches.get(0);
+        if (eventBatches.size() == 1) {
+            return first;
+        }
+        Builder builder = builder(first);
+        ListIterator<EventBatch> it = eventBatches.listIterator(1);
+        do {
+            EventBatch next = it.next();
+            builder.addVisitors(next.getVisitors());
+        } while (it.hasNext());
+        return builder.build();
+    }
 
     @VisibleForTesting
     public EventBatch() {
@@ -162,15 +195,56 @@ public class EventBatch {
         return result;
     }
 
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("EventBatch{");
+        sb.append("accountId='").append(accountId).append('\'');
+        sb.append(", visitors=").append(visitors);
+        sb.append(", enrichDecisions=").append(enrichDecisions);
+        sb.append(", anonymizeIp=").append(anonymizeIp);
+        sb.append(", clientName='").append(clientName).append('\'');
+        sb.append(", clientVersion='").append(clientVersion).append('\'');
+        sb.append(", projectId='").append(projectId).append('\'');
+        sb.append(", revision='").append(revision).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
     public static class Builder {
 
-        private String clientName = ClientEngine.JAVA_SDK.getClientEngineValue();
-        private String clientVersion = BuildVersionInfo.VERSION;
+        private String clientName;
+        private String clientVersion;
         private String accountId;
         private List<Visitor> visitors;
         private Boolean anonymizeIp;
         private String projectId;
         private String revision;
+
+        public Builder() {
+            this.clientName = ClientEngine.JAVA_SDK.getClientEngineValue();
+            this.clientVersion = BuildVersionInfo.VERSION;
+        }
+
+        Builder(EventBatch instance) {
+            from(instance);
+        }
+
+        public Builder from(EventBatch instance) {
+            return setAccountId(instance.getAccountId())
+                .setProjectId(instance.getProjectId())
+                .setClientVersion(instance.getClientVersion())
+                .setClientName(instance.getClientName())
+                .setRevision(instance.getRevision())
+                .setAnonymizeIp(instance.getAnonymizeIp())
+                .setVisitors(new ArrayList<>(instance.getVisitors()));
+        }
+
+        public Builder context(EventContext context) {
+            return setAccountId(context.getAccountId())
+                .setProjectId(context.getProjectId())
+                .setRevision(context.getRevision())
+                .setAnonymizeIp(context.getAnonymizeIp());
+        }
 
         public Builder setClientName(String clientName) {
             this.clientName = clientName;
@@ -192,6 +266,22 @@ public class EventBatch {
             return this;
         }
 
+        public Builder addVisitor(Visitor visitor) {
+            if (this.visitors == null) {
+                this.visitors = new ArrayList<>();
+            }
+            this.visitors.add(visitor);
+            return this;
+        }
+
+        public Builder addVisitors(List<Visitor> visitors) {
+            if (this.visitors == null) {
+                this.visitors = new ArrayList<>();
+            }
+            this.visitors.addAll(visitors);
+            return this;
+        }
+
         public Builder setAnonymizeIp(Boolean anonymizeIp) {
             this.anonymizeIp = anonymizeIp;
             return this;
@@ -207,6 +297,7 @@ public class EventBatch {
             return this;
         }
 
+        @Nonnull
         public EventBatch build() {
             return new EventBatch(clientName, clientVersion, accountId, visitors, anonymizeIp, projectId, revision);
         }

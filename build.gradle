@@ -100,6 +100,11 @@ subprojects {
     }
 
     dependencies {
+        compile group: 'com.google.code.findbugs', name: 'annotations', version: findbugsAnnotationVersion
+        compile group: 'com.google.code.findbugs', name: 'jsr305', version: findbugsJsrVersion
+    }
+
+    dependencies {
         jmh 'org.openjdk.jmh:jmh-core:1.12'
         jmh 'org.openjdk.jmh:jmh-generator-annprocess:1.12'
     }
@@ -108,6 +113,7 @@ subprojects {
         testCompile group: 'junit', name: 'junit', version: junitVersion
         testCompile group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
         testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: hamcrestVersion
+        testCompile group: 'org.awaitility', name: 'awaitility', version: '3.1.6'
         testCompile group: 'com.google.guava', name: 'guava', version: guavaVersion
 
         // logging dependencies (logback)
@@ -118,6 +124,17 @@ subprojects {
         testCompile group: 'org.json', name: 'json', version: jsonVersion
         testCompile group: 'com.googlecode.json-simple', name: 'json-simple', version: jsonSimpleVersion
         testCompile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
+    }
+
+    configurations.all {
+        // Ensure that there's only one version of JUnit on the classpath to
+        // avoid pulling in hamcrest as transitiev dependency.
+        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'junit') {
+                details.useVersion junitVersion
+                details.because 'API breakage in lower versions'
+            }
+        }
     }
 
     publishing {

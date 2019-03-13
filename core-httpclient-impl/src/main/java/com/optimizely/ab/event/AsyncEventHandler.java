@@ -19,8 +19,9 @@ package com.optimizely.ab.event;
 import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.NamedThreadFactory;
 import com.optimizely.ab.annotations.VisibleForTesting;
-
+import com.optimizely.ab.common.LifecycleAware;
 import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -31,26 +32,24 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.CheckForNull;
+import java.util.concurrent.*;
+import java.util.function.Supplier;
 
 /**
  * {@link EventHandler} implementation that queues events and has a separate pool of threads responsible
  * for the dispatch.
  */
-public class AsyncEventHandler implements EventHandler {
+public class AsyncEventHandler implements EventHandler, LifecycleAware {
 
     // The following static values are public so that they can be tweaked if necessary.
     // These are the recommended settings for http protocol.  https://hc.apache.org/httpcomponents-client-ga/tutorial/html/connmgmt.html
@@ -62,7 +61,6 @@ public class AsyncEventHandler implements EventHandler {
     private int validateAfterInactivity = 5000;
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncEventHandler.class);
-    private static final ProjectConfigResponseHandler EVENT_RESPONSE_HANDLER = new ProjectConfigResponseHandler();
 
     private final CloseableHttpClient httpClient;
     private final ExecutorService workerExecutor;
@@ -116,6 +114,27 @@ public class AsyncEventHandler implements EventHandler {
         }
     }
 
+    @Override
+    public void onStart() {
+        // no-op
+    }
+
+    @Override
+    public boolean onStop(long timeout, TimeUnit unit) {
+        workerExecutor.shutdown();
+        try {
+            workerExecutor.awaitTermination(timeout, unit);
+        } catch (InterruptedException e) {
+            if (!workerExecutor.isTerminated()) {
+                logger.warn("Interrupting worker tasks");
+                List<Runnable> r = workerExecutor.shutdownNow();
+                logger.warn("{} workers did not execute", r.size());
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Attempts to gracefully terminate all event dispatch workers and close all resources.
      * This method blocks, awaiting the completion of any queued or ongoing event dispatches.
@@ -165,16 +184,20 @@ public class AsyncEventHandler implements EventHandler {
     /**
      * Wrapper runnable for the actual event dispatch.
      */
-    private class EventDispatcher implements Runnable {
-
+    private class EventDispatcher implements Runnable, ResponseHandler<Boolean>, Supplier<Boolean> {
         private final LogEvent logEvent;
 
-        EventDispatcher(LogEvent logEvent) {
+        public EventDispatcher(LogEvent logEvent) {
             this.logEvent = logEvent;
         }
 
         @Override
         public void run() {
+            get();
+        }
+
+        @Override
+        public Boolean get() {
             try {
                 HttpRequestBase request;
                 if (logEvent.getRequestMethod() == LogEvent.RequestMethod.GET) {
@@ -182,12 +205,34 @@ public class AsyncEventHandler implements EventHandler {
                 } else {
                     request = generatePostRequest(logEvent);
                 }
-                httpClient.execute(request, EVENT_RESPONSE_HANDLER);
+                return httpClient.execute(request, this);
             } catch (IOException e) {
                 logger.error("event dispatch failed", e);
             } catch (URISyntaxException e) {
                 logger.error("unable to parse generated URI", e);
             }
+            return false;
+        }
+
+        @Override
+        public Boolean handleResponse(HttpResponse response) throws IOException {
+            StatusLine statusLine = response.getStatusLine();
+            int status = statusLine.getStatusCode();
+
+            // release resources
+            EntityUtils.consumeQuietly(response.getEntity());
+
+            if (200 > status || status > 299) {
+                // HttpResponseException would be a better exception type to throw here,
+                // but throwing ClientProtocolException here to maintain original behavior.
+                ClientProtocolException ex = new ClientProtocolException("unexpected response from event endpoint, status: " + status);
+                logEvent.markFailure(ex);
+                throw ex;
+            }
+
+            logEvent.markSuccess();
+
+            return true;
         }
 
         /**

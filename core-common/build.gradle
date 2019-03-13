@@ -1,0 +1,4 @@
+dependencies {
+    compile group: 'com.google.code.findbugs', name: 'annotations', version: findbugsAnnotationVersion
+    compile group: 'com.google.code.findbugs', name: 'jsr305', version: findbugsJsrVersion
+}

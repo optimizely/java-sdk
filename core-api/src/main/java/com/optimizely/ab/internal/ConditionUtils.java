@@ -17,14 +17,7 @@
 package com.optimizely.ab.internal;
 
 import com.google.gson.internal.LinkedTreeMap;
-import com.optimizely.ab.config.audience.AndCondition;
-import com.optimizely.ab.config.audience.AudienceIdCondition;
-import com.optimizely.ab.config.audience.Condition;
-import com.optimizely.ab.config.audience.NotCondition;
-import com.optimizely.ab.config.audience.EmptyCondition;
-import com.optimizely.ab.config.audience.NullCondition;
-import com.optimizely.ab.config.audience.OrCondition;
-import com.optimizely.ab.config.audience.UserAttribute;
+import com.optimizely.ab.config.audience.*;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

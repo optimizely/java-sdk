@@ -19,8 +19,6 @@ package com.optimizely.ab.event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
 /**
  * {@link EventHandler} that logs events but <b>does not</b> perform any dispatching.
  */
@@ -30,7 +28,10 @@ public class NoopEventHandler implements EventHandler {
 
     @Override
     public void dispatchEvent(LogEvent logEvent) {
-        logger.debug("Called dispatchEvent with URL: {} and params: {}", logEvent.getEndpointUrl(),
+        logger.debug("Called dispatchEvent with URL: {} and params: {}",
+            logEvent.getEndpointUrl(),
             logEvent.getRequestParams());
+
+        logEvent.markSuccess();
     }
 }

@@ -16,25 +16,27 @@
  */
 package com.optimizely.ab.event;
 
+import com.optimizely.ab.common.Callback;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.serializer.DefaultJsonSerializer;
 import com.optimizely.ab.event.internal.serializer.Serializer;
-
-import java.util.Map;
+import com.optimizely.ab.common.message.Message;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
+import java.util.Map;
 
 /**
  * Represents Optimizely tracking and activation events.
  */
 @Immutable
-public class LogEvent {
+public class LogEvent implements Message<EventBatch> {
 
     private final RequestMethod requestMethod;
     private final String endpointUrl;
     private final Map<String, String> requestParams;
     private final EventBatch eventBatch;
+    private transient Callback<EventBatch> callback;
 
     public LogEvent(@Nonnull RequestMethod requestMethod,
                     @Nonnull String endpointUrl,
@@ -44,6 +46,10 @@ public class LogEvent {
         this.endpointUrl = endpointUrl;
         this.requestParams = requestParams;
         this.eventBatch = eventBatch;
+    }
+
+    public void setCallback(Callback<EventBatch> callback) {
+        this.callback = callback;
     }
 
     //======== Getters ========//
@@ -58,6 +64,10 @@ public class LogEvent {
 
     public Map<String, String> getRequestParams() {
         return requestParams;
+    }
+
+    public EventBatch getEventBatch() {
+        return eventBatch;
     }
 
     public String getBody() {
@@ -79,6 +89,25 @@ public class LogEvent {
             ", requestParams=" + requestParams +
             ", body='" + getBody() + '\'' +
             '}';
+    }
+
+    @Override
+    public EventBatch getValue() {
+        return eventBatch;
+    }
+
+    @Override
+    public void markSuccess() {
+        if (callback != null) {
+            callback.success(getValue());
+        }
+    }
+
+    @Override
+    public void markFailure(@Nonnull Throwable ex) {
+        if (callback != null) {
+            callback.failure(getValue(), ex);
+        }
     }
 
     //======== Helper classes ========//
