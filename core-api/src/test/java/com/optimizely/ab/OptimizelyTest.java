@@ -2664,7 +2664,6 @@ public class OptimizelyTest {
         Experiment activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
         Map<String, String> testUserAttributes = new HashMap<>();
         String userId = "Gred";
-        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
             .withConfig(validProjectConfig)
@@ -2681,7 +2680,7 @@ public class OptimizelyTest {
                 testDecisionInfoMap));
 
         // activate the experiment
-        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, testUserAttributes);
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, null);
 
         // verify that the bucketing algorithm was called correctly
         assertThat(actualVariation.getKey(), is("Gred"));
