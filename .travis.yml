@@ -23,6 +23,11 @@ branches:
   - master
   - /^\d+\.\d+\.(\d|[x])+(-SNAPSHOT|-alpha|-beta)?\d*$/ # trigger builds on tags which are semantically versioned to ship the SDK.
 
+# Integration tests need to run first to reset the PR build status to pending
+stages:
+  - 'Integration tests'
+  - 'Test'
+
 jobs:
   include:
     - stage: 'Integration tests'
