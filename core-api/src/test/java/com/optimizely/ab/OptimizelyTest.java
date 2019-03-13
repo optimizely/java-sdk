@@ -199,7 +199,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
             testParams + " and payload \"{}\"");
 
-        // HACK to fix test. Not sure if the logging varifier is even neccesary.
+        // Force variation to null to get expected log output.
         optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, null);
 
         // activate the experiment
@@ -261,7 +261,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
             testParams + " and payload \"{}\"");
 
-        // HACK to fix test. Not sure if the logging varifier is even neccesary.
+        // Force variation to null to get expected log output.
         optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, null);
 
         // activate the experiment
@@ -415,7 +415,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
             testParams + " and payload \"{}\"");
 
-        // HACK to fix test. Not sure if the logging varifier is even neccesary.
+        // Force variation to null to get expected log output.
         optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, null);
 
         // activate the experiment
@@ -477,7 +477,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
             testParams + " and payload \"{}\"");
 
-        // HACK to fix test. Not sure if the logging varifier is even neccesary.
+        // Force variation to null to get expected log output.
         optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, null);
 
         // activate the experiment
@@ -588,7 +588,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
             testParams + " and payload \"{}\"");
 
-        // HACK to fix test. Not sure if the logging varifier is even neccesary.
+        // Force variation to null to get expected log output.
         optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, null);
 
         // activate the experiment
@@ -1544,7 +1544,7 @@ public class OptimizelyTest {
         when(mockBucketer.bucket(launchedExperiment, testUserId))
             .thenReturn(launchedExperiment.getVariations().get(0));
 
-        // HACK to fix test. Not sure if the logging verifier is even necessary.
+        // Force variation to launched experiment.
         optimizely.setForcedVariation(launchedExperiment.getKey(), testUserId, expectedVariation.getKey());
 
         logbackVerifier.expectMessage(Level.INFO,
