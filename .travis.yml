@@ -22,3 +22,14 @@ branches:
   only:
   - master
   - /^\d+\.\d+\.(\d|[x])+(-SNAPSHOT|-alpha|-beta)?\d*$/ # trigger builds on tags which are semantically versioned to ship the SDK.
+
+jobs:
+  include:
+    - stage: 'Integration tests'
+      env: SDK=java
+      cache: false
+      language: minimal
+      install:
+        - mkdir $HOME/travisci-tools && pushd $HOME/travisci-tools && git init && git pull https://$CI_USER_TOKEN@github.com/optimizely/travisci-tools.git && popd
+      script:
+        - "$HOME/travisci-tools/fsc-trigger/trigger_fullstack-sdk-compat.sh"
