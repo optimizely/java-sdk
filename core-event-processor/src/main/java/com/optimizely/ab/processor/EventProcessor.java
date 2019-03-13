@@ -100,11 +100,12 @@ public class EventProcessor<T, U, R, S extends EventProcessor<T, U, R, S>> imple
         return self();
     }
 
+    // EventProcessor.java
     public EventChannel<T> build() {
         return getTransformStage()
             .andThen(getConverterStage())
             .andThen(getInterceptStage())
-            .andThen(getBufferStage())
+            .andThen(getBatchStage())
             .createSource(getSink());
     }
 
@@ -120,7 +121,7 @@ public class EventProcessor<T, U, R, S extends EventProcessor<T, U, R, S>> imple
         return EventStage.interceptors(interceptors);
     }
 
-    protected EventStage<U, R> getBufferStage() {
+    protected EventStage<U, R> getBatchStage() {
         // consider returning default buffer?
         return channelFactory;
     }

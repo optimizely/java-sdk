@@ -18,14 +18,14 @@ import java.util.concurrent.ThreadFactory;
  * It uses the <a href="https://lmax-exchange.github.io/disruptor/">LMAX Disruptor</a> library
  * for inter-thread communication without locks.
  */
-class DisruptorBufferStage<T> implements EventStage<T, T> {
+class EventBufferStage<T> implements EventStage<T, T> {
     static final int DEFAULT_BUFFER_CAPACITY = 1024;
     static final int DEFAULT_MAX_BATCH_SIZE = 50;
 
     // TODO extract an interface
     private LogEventProcessor<?> config;
 
-    DisruptorBufferStage(final LogEventProcessor<?> config) {
+    EventBufferStage(final LogEventProcessor<?> config) {
         this.config = Assert.notNull(config, "config");
     }
 

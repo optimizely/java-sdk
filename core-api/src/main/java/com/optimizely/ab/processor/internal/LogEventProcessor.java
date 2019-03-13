@@ -52,20 +52,16 @@ public class LogEventProcessor<T> extends EventProcessor<T, EventBatch, LogEvent
     };
 
     @Override
-    public EventStage<EventBatch, LogEvent> getBufferStage() {
-        EventStage<EventBatch, LogEvent> custom = super.getBufferStage();
-        if (custom != null) {
-            return custom;
-        }
-
+    public EventStage<EventBatch, LogEvent> getBatchStage() {
         // Default to legacy behavior
         if (batchMaxSize == null || batchMaxSize <= 1) {
             logger.info("Batching is not configured. Events will be dispatched individually"); // TODO warn
             return sink -> new LegacyEventChannel(sink, eventFactory, this::getCallback);
         }
 
-        return new DisruptorBufferStage<EventBatch>(this)
-            .andThen(new BatchCollapseStage(getEventFactory(), this::getCallback));
+        EventBufferStage<EventBatch> bufferStage = new EventBufferStage<>(this);
+        BatchCollapseStage batchFormatStage = new BatchCollapseStage(getEventFactory(), this::getCallback);
+        return bufferStage.andThen(batchFormatStage);
     }
 
     Function<EventBatch, LogEvent> getEventFactory() {
