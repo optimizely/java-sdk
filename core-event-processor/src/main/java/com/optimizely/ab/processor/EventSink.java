@@ -18,18 +18,50 @@ package com.optimizely.ab.processor;
 import javax.annotation.Nonnull;
 import java.util.Collection;
 
+/**
+ * Receives elements in a processing flow.
+ *
+ * This provides a uniform interface for:
+ * <ul>
+ *   <li>Internal or terminal operations</li>
+ *   <li>Synchronous or asynchronous operations</li>
+ * </ul>
+ *
+ * An internal operation will usually have reference to another {@link EventSink} for
+ * the downstream operation.
+ *
+ * @param <T> the type of input elements
+ * @see BaseEventOperator
+ */
 public interface EventSink<T> {
     /**
-     * Pushes a single item to the sink
+     * Sends a single element
      *
-     * @param item the item to push
+     * @param element the element to push
      */
-    void put(@Nonnull T item);
+    void send(@Nonnull T element);
 
     /**
-     * Push a collection of events to the sink
+     * Sends a batch of elements
      *
-     * @param events the events to put
+     * @param elements the elements to put
      */
-    void putBatch(@Nonnull Collection<? extends T> events);
+    void sendBatch(@Nonnull Collection<? extends T> elements);
+
+    // TODO boolean close()
+    // TODO boolean isClosed()
+
+//    static <T> EventSink<T> collection(Collection<? super T> collection) {
+//        return new EventSink<T>() {
+//            @Override
+//            public void send(@Nonnull T element) {
+//                collection.add(element);
+//            }
+//
+//            @Override
+//            public void sendBatch(@Nonnull Collection<? extends T> elements) {
+//                collection.addAll(elements);
+//            }
+//        };
+//    }
 }

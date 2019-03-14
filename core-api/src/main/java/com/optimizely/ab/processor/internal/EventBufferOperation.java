@@ -4,34 +4,34 @@ import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.util.DaemonThreadFactory;
 import com.optimizely.ab.common.internal.Assert;
-import com.optimizely.ab.processor.EventChannel;
+import com.optimizely.ab.processor.EventOperator;
 import com.optimizely.ab.processor.EventSink;
-import com.optimizely.ab.processor.EventStage;
-import com.optimizely.ab.processor.disruptor.DisruptorEventChannel;
+import com.optimizely.ab.processor.EventOperation;
+import com.optimizely.ab.processor.disruptor.DisruptorBufferOperator;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.ThreadFactory;
 
 /**
- * Buffering stage designed for high throughput and low latency.
+ * Buffering operation designed for high throughput and low latency.
  *
  * It uses the <a href="https://lmax-exchange.github.io/disruptor/">LMAX Disruptor</a> library
  * for inter-thread communication without locks.
  */
-class EventBufferStage<T> implements EventStage<T, T> {
+class EventBufferOperation<T> implements EventOperation<T, T> {
     static final int DEFAULT_BUFFER_CAPACITY = 1024;
     static final int DEFAULT_MAX_BATCH_SIZE = 50;
 
     // TODO extract an interface
     private LogEventProcessor<?> config;
 
-    EventBufferStage(final LogEventProcessor<?> config) {
+    EventBufferOperation(final LogEventProcessor<?> config) {
         this.config = Assert.notNull(config, "config");
     }
 
     @Nonnull
     @Override
-    public EventChannel<T> createSource(@Nonnull EventSink<T> sink) {
+    public EventOperator<T> create(@Nonnull EventSink<T> sink) {
         ThreadFactory threadFactory = config.getThreadFactory();
         if (threadFactory == null) {
             threadFactory = DaemonThreadFactory.INSTANCE;
@@ -52,13 +52,13 @@ class EventBufferStage<T> implements EventStage<T, T> {
             bufferCapacity = DEFAULT_BUFFER_CAPACITY;
         }
 
-        return new DisruptorEventChannel<>(
+        return new DisruptorBufferOperator<>(
             sink,
             batchMaxSize,
             bufferCapacity,
             threadFactory,
             waitStrategy,
-            DisruptorEventChannel.LoggingExceptionHandler.getInstance()
+            DisruptorBufferOperator.LoggingExceptionHandler.getInstance()
         );
     }
 }

@@ -11,34 +11,34 @@ import java.util.List;
  *
  * Catches any {@link RuntimeException} thrown from an action, logs it, then continues
  *
- * @param <T> the type of input items
+ * @param <T> the type of input elements
  */
-public class EventTransformChannel<T> extends AbstractEventChannel<T, T> {
-    public static final String logLabel = EventTransformChannel.class.getSimpleName();
+public class EventTransformOperator<T> extends BaseEventOperator<T, T> {
+    public static final String logLabel = EventTransformOperator.class.getSimpleName();
 
     private final List<EventTransformer<T>> actions;
 
-    public EventTransformChannel(EventTransformer<T> action, EventSink<T> sink) {
+    public EventTransformOperator(EventTransformer<T> action, EventSink<T> sink) {
         this(Collections.singletonList(Assert.notNull(action, "action")), sink);
     }
 
-    public EventTransformChannel(List<EventTransformer<T>> actions, EventSink<T> sink) {
+    public EventTransformOperator(List<EventTransformer<T>> actions, EventSink<T> sink) {
         super(sink);
         this.actions = Assert.notNull(actions, "actions");
     }
 
     @Override
-    public void put(@Nonnull T item) {
+    public void send(@Nonnull T element) {
         logger.trace("[{}] Invoking {} EventTransformer", logLabel, actions.size());
 
         for (final EventTransformer<T> action : actions) {
             try {
-                action.transform(item);
+                action.transform(element);
             } catch (RuntimeException e) {
                 logger.warn("[{}] Skipping EventTransformer", logLabel, e);
             }
         }
 
-        emitItemIfPresent(item);
+        emitElementIfPresent(element);
     }
 }

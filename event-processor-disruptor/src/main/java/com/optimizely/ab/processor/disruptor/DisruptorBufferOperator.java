@@ -12,7 +12,7 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.optimizely.ab.common.LifecycleAware;
 import com.optimizely.ab.common.internal.Assert;
-import com.optimizely.ab.processor.EventChannel;
+import com.optimizely.ab.processor.EventOperator;
 import com.optimizely.ab.processor.EventSink;
 import com.optimizely.ab.common.message.MutableMessage;
 import org.slf4j.Logger;
@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-public class DisruptorEventChannel<U> implements EventChannel<U>, LifecycleAware {
-    private static final Logger logger = LoggerFactory.getLogger(DisruptorEventChannel.class);
+public class DisruptorBufferOperator<U> implements EventOperator<U>, LifecycleAware {
+    private static final Logger logger = LoggerFactory.getLogger(DisruptorBufferOperator.class);
     private static final int MIN_RINGBUFFER_SIZE = 128;
     private static final int SLEEP_MILLIS_BETWEEN_DRAIN_ATTEMPTS = 50;
     private static final int MAX_DRAIN_ATTEMPTS_BEFORE_SHUTDOWN = 200;
@@ -41,7 +41,7 @@ public class DisruptorEventChannel<U> implements EventChannel<U>, LifecycleAware
     /**
      * @param waitStrategy strategy used by consumer when buffer is empty
      */
-    public DisruptorEventChannel(
+    public DisruptorBufferOperator(
         EventSink<U> sink,
         int batchMaxSize,
         int ringBufferSize,
@@ -129,42 +129,30 @@ public class DisruptorEventChannel<U> implements EventChannel<U>, LifecycleAware
     }
 
 
-    @Override
-    public boolean isBlocking() {
-        return true;
-    }
-
-    @Override
-    public boolean isFull() {
-        Disruptor<?> disruptor = this.disruptor;
-        Assert.state(disruptor != null, "not started");
-        return this.disruptor.getRingBuffer().hasAvailableCapacity(1);
-    }
-
     /**
      * Delivers the specified message to the channel, waiting if necessary for space to become available.
      * <p>
      * This method is thread-safe; it can be called from any thread.
      */
     @Override
-    public void put(@Nonnull U item) {
+    public void send(@Nonnull U element) {
         Disruptor<MutableMessage<U>> disruptor = this.disruptor;
         if (disruptor == null) {
-            logger.warn("Ignoring event (not initialized or has been stopped): {}", item);
+            logger.warn("Ignoring event (not initialized or has been stopped): {}", element);
             return;
         }
 
         //noinspection ConstantConditions
-        if (item == null) {
+        if (element == null) {
             logger.trace("Ignoring null from publish()");
             return;
         }
 
-        disruptor.publishEvent(translator, item);
+        disruptor.publishEvent(translator, element);
     }
 
     @Override
-    public void putBatch(@Nonnull Collection<? extends U> items) {
+    public void sendBatch(@Nonnull Collection<? extends U> elements) {
         Disruptor<MutableMessage<U>> disruptor = this.disruptor;
         if (disruptor == null) {
             logger.warn("Ignoring events. Not initialized or has been stopped");
@@ -172,9 +160,9 @@ public class DisruptorEventChannel<U> implements EventChannel<U>, LifecycleAware
         }
 
         ArrayList<U> arr = new ArrayList<>();
-        for (final U item : items) {
-            if (item != null) {
-                arr.add(item);
+        for (final U element : elements) {
+            if (element != null) {
+                arr.add(element);
             }
         }
 
@@ -190,14 +178,14 @@ public class DisruptorEventChannel<U> implements EventChannel<U>, LifecycleAware
     }
 
     /**
-     * Mutable batch of items that flushes to a sink at the specified size limit.
+     * Mutable batch of elements that flushes to a sink at the specified size limit.
      * Operations are not thread-safe and should only be
      */
     private static class BufferBatch<E> implements Flushable {
         private final EventSink<E> sink;
         private final int limit;
 
-        private List<E> items;
+        private List<E> elements;
 
         private BufferBatch(EventSink<E> sink, int limit) {
             this.sink = sink;
@@ -205,30 +193,30 @@ public class DisruptorEventChannel<U> implements EventChannel<U>, LifecycleAware
         }
 
         public void init(int sizeHint) {
-            Assert.state(items == null, "items is non-null");
-            logger.trace("Initializing a buffer for {} items", sizeHint);
-            items = new ArrayList<>(sizeHint);
+            Assert.state(elements == null, "elements is non-null");
+            logger.trace("Initializing a buffer for {} elements", sizeHint);
+            elements = new ArrayList<>(sizeHint);
         }
 
-        public boolean add(E item) {
-            if (items == null) {
+        public boolean add(E element) {
+            if (elements == null) {
                 logger.trace("Starting new batch");
-                items = new ArrayList<>(limit);
+                elements = new ArrayList<>(limit);
             }
 
-            if (item == null) {
+            if (element == null) {
                 return false;
             }
 
-            return items.add(item);
+            return elements.add(element);
         }
 
         public int remaining() {
-            return limit - items.size();
+            return limit - elements.size();
         }
 
         public boolean shouldFlush() {
-            return items != null && remaining() <= 0;
+            return elements != null && remaining() <= 0;
         }
 
         @Override
@@ -237,13 +225,13 @@ public class DisruptorEventChannel<U> implements EventChannel<U>, LifecycleAware
                 return;
             }
 
-            logger.trace("Flushing {} items", items.size());
-            sink.putBatch(items);
-            items = null;
+            logger.trace("Flushing {} elements", elements.size());
+            sink.sendBatch(elements);
+            elements = null;
         }
 
         public int size() {
-            return items != null ? items.size() : 0;
+            return elements != null ? elements.size() : 0;
         }
     }
 
@@ -281,7 +269,7 @@ public class DisruptorEventChannel<U> implements EventChannel<U>, LifecycleAware
 
         @Override
         public void onBatchStart(long batchSize) {
-            logger.trace("Starting to process {} items in buffer", batchSize);
+            logger.trace("Starting to process {} elements in buffer", batchSize);
             try {
                 batch.init(Math.toIntExact(batchSize));
             } catch (ArithmeticException | IllegalStateException e) {

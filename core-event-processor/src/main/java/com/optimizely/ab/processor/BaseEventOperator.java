@@ -25,15 +25,15 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public abstract class AbstractEventChannel<T, R> implements EventChannel<T>, Consumer<T> {
+public abstract class BaseEventOperator<T, R> implements EventOperator<T>, EventSink<T>, LifecycleAware, Consumer<T> {
     /**
      * Share with subclasses
      */
-    protected static final Logger logger = LoggerFactory.getLogger(AbstractEventChannel.class);
+    protected static final Logger logger = LoggerFactory.getLogger(BaseEventOperator.class);
 
     private final EventSink<R> sink;
 
-    public AbstractEventChannel(EventSink<R> sink) {
+    public BaseEventOperator(EventSink<R> sink) {
         this.sink = Assert.notNull(sink, "sink");
     }
 
@@ -49,44 +49,34 @@ public abstract class AbstractEventChannel<T, R> implements EventChannel<T>, Con
 
     @Override
     public void accept(T event) {
-        put(event);
+        send(event);
     }
 
     @Override
-    public void putBatch(Collection<? extends T> events) {
-        for (final T item : events) {
-            put(item);
+    public void sendBatch(Collection<? extends T> events) {
+        for (final T element : events) {
+            send(element);
         }
-    }
-
-    @Override
-    public boolean isBlocking() {
-        return false;
-    }
-
-    @Override
-    public boolean isFull() {
-        return false;
     }
 
     /**
-     * @param item object to emit if non-null
+     * @param element object to emit if non-null
      */
-    protected void emitItemIfPresent(R item) {
-        if (item == null) {
-            logger.debug("Prevented null item from being emitted");
+    protected void emitElementIfPresent(R element) {
+        if (element == null) {
+            logger.debug("Prevented null element from being emitted");
             return;
         }
 
-        emitItem(item);
+        emitElement(element);
     }
 
-    protected void emitItem(@Nonnull R item) {
-        sink.put(item);
+    protected void emitElement(@Nonnull R element) {
+        sink.send(element);
     }
 
-    protected void emitBatch(@Nonnull Collection<? extends R> items) {
-        sink.putBatch(items);
+    protected void emitBatch(@Nonnull Collection<? extends R> elements) {
+        sink.sendBatch(elements);
     }
 
     protected EventSink<R> getSink() {

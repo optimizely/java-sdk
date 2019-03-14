@@ -15,9 +15,9 @@
  */
 package com.optimizely.ab.processor;
 
+import com.optimizely.ab.common.Callback;
 import com.optimizely.ab.common.Plugin;
 import com.optimizely.ab.common.PluginSupport;
-import com.optimizely.ab.common.Callback;
 import com.optimizely.ab.common.internal.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,12 +32,32 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+/**
+ * @param <T>
+ * @param <U>
+ * @param <R>
+ * @param <S>
+ */
 public class EventProcessor<T, U, R, S extends EventProcessor<T, U, R, S>> implements PluginSupport {
-    private EventStage<U, R> channelFactory;
     private List<EventTransformer<T>> transformers;
+
     private List<EventInterceptor<U>> interceptors;
-    private EventCallbackChain<U> callbacks;
+
+    /**
+     * Converts output elements of {@link EventTransformer} to input elements of {@link EventInterceptor}.
+     */
     private Function<? super T, ? extends U> converter;
+
+    private EventOperation<U, R> queue;
+
+    /**
+     *
+     */
+    private EventCallbackChain<U> callbacks;
+
+    /**
+     * Terminal receiver of the processed output elements.
+     */
     private EventSink<R> sink;
 
     public EventProcessor() {
@@ -84,8 +104,8 @@ public class EventProcessor<T, U, R, S extends EventProcessor<T, U, R, S>> imple
         return callback(Callback.from(success, (c, ex) -> {}));
     }
 
-    public S channelFactory(EventStage<U, R> channelFactory) {
-        this.channelFactory = Assert.notNull(channelFactory, "channelFactory");
+    public S channelFactory(EventOperation<U, R> channelFactory) {
+        this.queue = Assert.notNull(channelFactory, "queue");
         return self();
     }
 
@@ -101,29 +121,29 @@ public class EventProcessor<T, U, R, S extends EventProcessor<T, U, R, S>> imple
     }
 
     // EventProcessor.java
-    public EventChannel<T> build() {
+    public EventOperator<T> build() {
         return getTransformStage()
             .andThen(getConverterStage())
             .andThen(getInterceptStage())
             .andThen(getBatchStage())
-            .createSource(getSink());
+            .create(getSink());
     }
 
-    protected EventStage<T, T> getTransformStage() {
-        return EventStage.transformers(transformers);
+    protected EventOperation<T, T> getTransformStage() {
+        return EventOperation.transformers(transformers);
     }
 
-    protected EventStage<T, U> getConverterStage() {
-        return EventStage.mapper(converter);
+    protected EventOperation<T, U> getConverterStage() {
+        return EventOperation.mapper(converter);
     }
 
-    protected EventStage<U, U> getInterceptStage() {
-        return EventStage.interceptors(interceptors);
+    protected EventOperation<U, U> getInterceptStage() {
+        return EventOperation.interceptors(interceptors);
     }
 
-    protected EventStage<U, R> getBatchStage() {
+    protected EventOperation<U, R> getBatchStage() {
         // consider returning default buffer?
-        return channelFactory;
+        return queue;
     }
 
     protected EventSink<R> getSink() {

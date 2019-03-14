@@ -18,12 +18,10 @@ package com.optimizely.ab.processor;
 import com.optimizely.ab.common.LifecycleAware;
 
 /**
- * Receives items in processing flow.
+ * Receives elements in processing flow.
  *
- * @param <T> the type of input items
- * @see AbstractEventChannel
+ * @param <T> the type of input elements
+ * @see BaseEventOperator
  */
-public interface EventChannel<T> extends EventSink<T>, LifecycleAware {
-    boolean isBlocking();
-    boolean isFull();
+public interface EventOperator<T> extends EventSink<T>, LifecycleAware {
 }

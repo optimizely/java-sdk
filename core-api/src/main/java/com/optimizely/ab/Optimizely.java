@@ -23,6 +23,7 @@ import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfileService;
+import com.optimizely.ab.common.LifecycleAware;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.FeatureVariable;
@@ -38,7 +39,7 @@ import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
 import com.optimizely.ab.notification.NotificationCenter;
-import com.optimizely.ab.processor.EventChannel;
+import com.optimizely.ab.processor.EventSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -148,16 +149,16 @@ public class Optimizely {
         ErrorHandler errorHandler,
         DecisionService decisionService,
         UserProfileService userProfileService,
-        EventChannel<Event> eventProcessor
+        EventSink<Event> eventProcessor
     ) {
         this.eventHandler = eventHandler;
         this.eventFactory = eventFactory;
         this.errorHandler = errorHandler;
         this.decisionService = decisionService;
         this.userProfileService = userProfileService;
-        this.eventProcessor = eventProcessor::put;
+        this.eventProcessor = eventProcessor::send;
 
-        eventProcessor.onStart();
+        LifecycleAware.start(eventProcessor);
     }
 
     /**

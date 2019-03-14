@@ -16,16 +16,16 @@
 package com.optimizely.ab.processor;
 
 /**
- * Intercepts events being processed; supports monitoring or filtering items.
+ * Intercepts events being processed; supports monitoring or filtering elements.
  *
- * @param <T> the type of input and output items
+ * @param <T> the type of input and output elements
  */
 @FunctionalInterface
 public interface EventInterceptor<T> {
     /**
-     * Intercept item
-     * @param item the input item
-     * @return the item to pass to next step
+     * Intercept element
+     * @param element the input element
+     * @return the element to pass to next step
      */
-    T intercept(T item);
+    T intercept(T element);
 }

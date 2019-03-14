@@ -19,6 +19,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.util.DaemonThreadFactory;
+import com.optimizely.ab.common.LifecycleAware;
 import com.optimizely.ab.processor.EventSink;
 import org.junit.After;
 import org.junit.Before;
@@ -41,10 +42,10 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-public class DisruptorEventChannelTest {
-    private static final Logger logger = LoggerFactory.getLogger(DisruptorEventChannelTest.class);
+public class DisruptorBufferOperatorTest {
+    private static final Logger logger = LoggerFactory.getLogger(DisruptorBufferOperatorTest.class);
 
-    private DisruptorEventChannel<TestEvent> channel;
+    private DisruptorBufferOperator<TestEvent> channel;
     private List<List<TestEvent>> output;
     private AtomicInteger outputCount;
 
@@ -70,12 +71,12 @@ public class DisruptorEventChannelTest {
     private EventSink<TestEvent> createDefaultSink() {
         return new EventSink<TestEvent>() {
             @Override
-            public void put(TestEvent item) {
+            public void send(TestEvent element) {
                 fail("put() not expected to be called");
             }
 
             @Override
-            public void putBatch(Collection<? extends TestEvent> batch) {
+            public void sendBatch(Collection<? extends TestEvent> batch) {
                 //noinspection unchecked
                 output.add((List<TestEvent>) batch);
 
@@ -91,18 +92,18 @@ public class DisruptorEventChannelTest {
     @After
     public void tearDown() throws Exception {
         if (channel != null) {
-            channel.onStop(30, TimeUnit.SECONDS);
+            LifecycleAware.stop(channel, 30, TimeUnit.SECONDS);
         }
     }
 
     private void init() {
-        channel = new DisruptorEventChannel<>(
+        channel = new DisruptorBufferOperator<>(
             createDefaultSink(),
             batchMaxSize,
             bufferCapacity,
             threadFactory,
             waitStrategy,
-            DisruptorEventChannel.LoggingExceptionHandler.getInstance()
+            DisruptorBufferOperator.LoggingExceptionHandler.getInstance()
         );
         channel.onStart();
     }
@@ -113,7 +114,7 @@ public class DisruptorEventChannelTest {
         init();
 
         for (int i = 0; i < 12; i++) {
-            channel.put(TestEvent.next());
+            channel.send(TestEvent.next());
         }
 
         await().atMost(1, TimeUnit.SECONDS)
@@ -128,7 +129,7 @@ public class DisruptorEventChannelTest {
         init();
 
         for (int i = 0; i < 12; i++) {
-            channel.put(TestEvent.next());
+            channel.send(TestEvent.next());
         }
 
         await().atMost(1, TimeUnit.SECONDS)
@@ -144,7 +145,7 @@ public class DisruptorEventChannelTest {
         init();
 
         for (int i = 0; i < 12; i++) {
-            channel.put(TestEvent.next());
+            channel.send(TestEvent.next());
         }
 
         await().atMost(1, TimeUnit.SECONDS)
@@ -163,7 +164,7 @@ public class DisruptorEventChannelTest {
         init();
 
         for (int i = 0; i < 12; i++) {
-            channel.put(TestEvent.next());
+            channel.send(TestEvent.next());
         }
 
         await().atMost(1, TimeUnit.SECONDS)

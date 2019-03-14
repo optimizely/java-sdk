@@ -23,10 +23,10 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.processor.AbstractEventChannel;
+import com.optimizely.ab.processor.BaseEventOperator;
 import com.optimizely.ab.processor.EventProcessor;
 import com.optimizely.ab.processor.EventSink;
-import com.optimizely.ab.processor.EventStage;
+import com.optimizely.ab.processor.EventOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,15 +52,15 @@ public class LogEventProcessor<T> extends EventProcessor<T, EventBatch, LogEvent
     };
 
     @Override
-    public EventStage<EventBatch, LogEvent> getBatchStage() {
+    public EventOperation<EventBatch, LogEvent> getBatchStage() {
         // Default to legacy behavior
         if (batchMaxSize == null || batchMaxSize <= 1) {
             logger.info("Batching is not configured. Events will be dispatched individually"); // TODO warn
-            return sink -> new LegacyEventChannel(sink, eventFactory, this::getCallback);
+            return sink -> new LegacyEventOperator(sink, eventFactory, this::getCallback);
         }
 
-        EventBufferStage<EventBatch> bufferStage = new EventBufferStage<>(this);
-        BatchCollapseStage batchFormatStage = new BatchCollapseStage(getEventFactory(), this::getCallback);
+        EventBufferOperation<EventBatch> bufferStage = new EventBufferOperation<>(this);
+        BatchCollapseOperation batchFormatStage = new BatchCollapseOperation(getEventFactory(), this::getCallback);
         return bufferStage.andThen(batchFormatStage);
     }
 
@@ -133,11 +133,11 @@ public class LogEventProcessor<T> extends EventProcessor<T, EventBatch, LogEvent
         return this;
     }
 
-    static class LegacyEventChannel extends AbstractEventChannel<EventBatch, LogEvent> {
+    static class LegacyEventOperator extends BaseEventOperator<EventBatch, LogEvent> {
         private final Function<EventBatch, LogEvent> eventFactory;
         private final Supplier<Callback<EventBatch>> callbackSupplier;
 
-        public LegacyEventChannel(
+        public LegacyEventOperator(
             EventSink<LogEvent> sink,
             Function<EventBatch, LogEvent> eventFactory,
             Supplier<Callback<EventBatch>> callbackSupplier
@@ -148,7 +148,7 @@ public class LogEventProcessor<T> extends EventProcessor<T, EventBatch, LogEvent
         }
 
         @Override
-        public void put(EventBatch input) {
+        public void send(EventBatch input) {
             if (input == null) {
                 return;
             }
@@ -160,7 +160,7 @@ public class LogEventProcessor<T> extends EventProcessor<T, EventBatch, LogEvent
 
             setCallback(output);
 
-            getSink().put(output);
+            getSink().send(output);
         }
 
         private void setCallback(LogEvent logEvent) {
@@ -189,12 +189,12 @@ public class LogEventProcessor<T> extends EventProcessor<T, EventBatch, LogEvent
         }
 
         @Override
-        public void put(LogEvent logEvent) {
+        public void send(LogEvent logEvent) {
             handle(logEvent);
         }
 
         @Override
-        public void putBatch(Collection<? extends LogEvent> batch) {
+        public void sendBatch(Collection<? extends LogEvent> batch) {
             for (final LogEvent logEvent : batch) {
                 handle(logEvent);
             }

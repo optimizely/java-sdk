@@ -18,7 +18,7 @@ package com.optimizely.ab.processor;
 /**
  * Performs an action on input, presumably for side-effects.
  *
- * @param <T> the type of input items
+ * @param <T> the type of input elements
  */
 @FunctionalInterface
 public interface EventTransformer<T> {
