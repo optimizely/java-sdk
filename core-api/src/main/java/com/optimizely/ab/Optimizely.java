@@ -415,13 +415,13 @@ public class Optimizely {
         }
 
         Map<String, Object> decisionInfo = new HashMap<>();
-        decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_KEY.toString(), featureKey);
-        decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_ENABLED.toString(), featureEnabled);
-        decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), sourceExperimentKey);
-        decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_VARIATION_KEY.toString(), sourceVariationKey);
-        decisionInfo.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), decisionSource);
+        decisionInfo.put(DecisionInfoEnums.FeatureDecisionInfo.FEATURE_KEY.toString(), featureKey);
+        decisionInfo.put(DecisionInfoEnums.FeatureDecisionInfo.FEATURE_ENABLED.toString(), featureEnabled);
+        decisionInfo.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), sourceExperimentKey);
+        decisionInfo.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE_VARIATION_KEY.toString(), sourceVariationKey);
+        decisionInfo.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE.toString(), decisionSource);
         notificationCenter.sendNotifications(NotificationCenter.NotificationType.Decision,
-            NotificationCenter.OnDecisionNotificationType.IS_FEATURE_ENABLED.toString(),
+            NotificationCenter.DecisionNotificationType.FEATURE.toString(),
             userId,
             copiedAttributes,
             decisionInfo);

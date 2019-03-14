@@ -2670,7 +2670,7 @@ public class OptimizelyTest {
             new DecisionNotificationListener() {
                 @Override
                 public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
-                    assertEquals(type, NotificationCenter.OnDecisionNotificationType.IS_FEATURE_ENABLED.toString());
+                    assertEquals(type, NotificationCenter.DecisionNotificationType.FEATURE.toString());
                 }
             });
 
@@ -2740,14 +2740,14 @@ public class OptimizelyTest {
         testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
 
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_VARIATION_KEY.toString(), "George");
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), "multivariate_experiment");
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_ENABLED.toString(), true);
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.EXPERIMENT);
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE_VARIATION_KEY.toString(), "George");
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), "multivariate_experiment");
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.FEATURE_ENABLED.toString(), true);
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.EXPERIMENT);
 
         int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
-            getDecisionListener(NotificationCenter.OnDecisionNotificationType.IS_FEATURE_ENABLED.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE.toString(),
                 genericUserId,
                 testUserAttributes,
                 testDecisionInfoMap));
@@ -2788,14 +2788,14 @@ public class OptimizelyTest {
         testUserAttributes.put(testBucketingIdKey, testBucketingId);
 
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_VARIATION_KEY.toString(), "variation_toggled_off");
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), "multivariate_experiment");
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_ENABLED.toString(), false);
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.EXPERIMENT);
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE_VARIATION_KEY.toString(), "variation_toggled_off");
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), "multivariate_experiment");
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.FEATURE_ENABLED.toString(), false);
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.EXPERIMENT);
 
         int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
-            getDecisionListener(NotificationCenter.OnDecisionNotificationType.IS_FEATURE_ENABLED.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE.toString(),
                 genericUserId,
                 testUserAttributes,
                 testDecisionInfoMap));
@@ -2838,12 +2838,12 @@ public class OptimizelyTest {
         final Map<String, String> testUserAttributes = new HashMap<>();
 
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_ENABLED.toString(), false);
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.FEATURE_ENABLED.toString(), false);
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
 
         int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
-            getDecisionListener(NotificationCenter.OnDecisionNotificationType.IS_FEATURE_ENABLED.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE.toString(),
                 genericUserId,
                 testUserAttributes,
                 testDecisionInfoMap));
@@ -2878,13 +2878,13 @@ public class OptimizelyTest {
         testUserAttributes.put(testBucketingIdKey, testBucketingId);
 
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE_VARIATION_KEY.toString(), null);
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.FEATURE_ENABLED.toString(), true);
-        testDecisionInfoMap.put(DecisionInfoEnums.IsFeatureEnabledDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE_VARIATION_KEY.toString(), null);
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.FEATURE_KEY.toString(), validFeatureKey);
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.FEATURE_ENABLED.toString(), true);
+        testDecisionInfoMap.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE.toString(), FeatureDecision.DecisionSource.ROLLOUT);
 
         int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
-            getDecisionListener(NotificationCenter.OnDecisionNotificationType.IS_FEATURE_ENABLED.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE.toString(),
                 genericUserId,
                 testUserAttributes,
                 testDecisionInfoMap));
