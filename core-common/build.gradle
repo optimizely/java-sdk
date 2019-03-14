@@ -1,4 +1,7 @@
+apply plugin: 'java-library'
+
 dependencies {
-    compile group: 'com.google.code.findbugs', name: 'annotations', version: findbugsAnnotationVersion
-    compile group: 'com.google.code.findbugs', name: 'jsr305', version: findbugsJsrVersion
+    implementation group: 'com.google.code.findbugs', name: 'annotations', version: findbugsAnnotationVersion
+    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: findbugsJsrVersion
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
 }

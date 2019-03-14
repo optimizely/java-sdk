@@ -19,8 +19,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.util.DaemonThreadFactory;
-import com.optimizely.ab.common.LifecycleAware;
-import com.optimizely.ab.processor.EventSink;
+import com.optimizely.ab.common.lifecycle.LifecycleAware;
+import com.optimizely.ab.processor.Processor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,10 +42,10 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-public class DisruptorBufferOperatorTest {
-    private static final Logger logger = LoggerFactory.getLogger(DisruptorBufferOperatorTest.class);
+public class BufferProcessorTest {
+    private static final Logger logger = LoggerFactory.getLogger(BufferProcessorTest.class);
 
-    private DisruptorBufferOperator<TestEvent> channel;
+    private DisruptorBufferStage.BufferProcessor<TestEvent> buffer;
     private List<List<TestEvent>> output;
     private AtomicInteger outputCount;
 
@@ -68,15 +68,15 @@ public class DisruptorBufferOperatorTest {
         waitStrategy = new BlockingWaitStrategy();
     }
 
-    private EventSink<TestEvent> createDefaultSink() {
-        return new EventSink<TestEvent>() {
+    private Processor<TestEvent> createDefaultSink() {
+        return new Processor<TestEvent>() {
             @Override
-            public void send(TestEvent element) {
+            public void process(TestEvent element) {
                 fail("put() not expected to be called");
             }
 
             @Override
-            public void sendBatch(Collection<? extends TestEvent> batch) {
+            public void processBatch(Collection<? extends TestEvent> batch) {
                 //noinspection unchecked
                 output.add((List<TestEvent>) batch);
 
@@ -91,21 +91,21 @@ public class DisruptorBufferOperatorTest {
 
     @After
     public void tearDown() throws Exception {
-        if (channel != null) {
-            LifecycleAware.stop(channel, 30, TimeUnit.SECONDS);
+        if (buffer != null) {
+            LifecycleAware.stop(buffer, 30, TimeUnit.SECONDS);
         }
     }
 
     private void init() {
-        channel = new DisruptorBufferOperator<>(
+        buffer = new DisruptorBufferStage.BufferProcessor<>(
             createDefaultSink(),
             batchMaxSize,
             bufferCapacity,
             threadFactory,
             waitStrategy,
-            DisruptorBufferOperator.LoggingExceptionHandler.getInstance()
+            DisruptorBufferStage.LoggingExceptionHandler.getInstance()
         );
-        channel.onStart();
+        buffer.onStart();
     }
 
     @Test
@@ -114,7 +114,7 @@ public class DisruptorBufferOperatorTest {
         init();
 
         for (int i = 0; i < 12; i++) {
-            channel.send(TestEvent.next());
+            buffer.process(TestEvent.next());
         }
 
         await().atMost(1, TimeUnit.SECONDS)
@@ -129,7 +129,7 @@ public class DisruptorBufferOperatorTest {
         init();
 
         for (int i = 0; i < 12; i++) {
-            channel.send(TestEvent.next());
+            buffer.process(TestEvent.next());
         }
 
         await().atMost(1, TimeUnit.SECONDS)
@@ -145,7 +145,7 @@ public class DisruptorBufferOperatorTest {
         init();
 
         for (int i = 0; i < 12; i++) {
-            channel.send(TestEvent.next());
+            buffer.process(TestEvent.next());
         }
 
         await().atMost(1, TimeUnit.SECONDS)
@@ -164,7 +164,7 @@ public class DisruptorBufferOperatorTest {
         init();
 
         for (int i = 0; i < 12; i++) {
-            channel.send(TestEvent.next());
+            buffer.process(TestEvent.next());
         }
 
         await().atMost(1, TimeUnit.SECONDS)

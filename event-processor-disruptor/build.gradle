@@ -1,5 +1,7 @@
+apply plugin: 'java-library'
+
 dependencies {
     compile project(':core-event-processor')
 
-    compile 'com.lmax:disruptor:3.4.2'
+    api 'com.lmax:disruptor:3.4.2'
 }

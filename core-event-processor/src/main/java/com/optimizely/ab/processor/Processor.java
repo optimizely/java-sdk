@@ -1,5 +1,5 @@
 /**
- *    Copyright 2019, Optimizely and contributors
+ *    Copyright 2019, Optimizely Inc. and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,17 +15,27 @@
  */
 package com.optimizely.ab.processor;
 
+import javax.annotation.Nonnull;
+import java.util.Collection;
+
 /**
- * Intercepts events being processed; supports monitoring or filtering elements.
+ * Performs a processing task on received elements.
  *
- * @param <T> the type of input and output elements
+ * @param <T> the type of input elements
+ * @see ProcessingStage
  */
-@FunctionalInterface
-public interface EventInterceptor<T> {
+public interface Processor<T> {
     /**
-     * Intercept element
-     * @param element the input element
-     * @return the element to pass to next step
+     * Pushes a single element to be process
+     *
+     * @param element the element to push
      */
-    T intercept(T element);
+    void process(@Nonnull T element);
+
+    /**
+     * Sends a batch of elements
+     *
+     * @param elements the elements to put
+     */
+    void processBatch(@Nonnull Collection<? extends T> elements);
 }

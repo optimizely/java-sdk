@@ -21,13 +21,14 @@ import com.lmax.disruptor.SequenceBarrier;
 import com.lmax.disruptor.TimeoutException;
 import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.YieldingWaitStrategy;
-import com.optimizely.ab.common.Plugin;
-import com.optimizely.ab.common.Callback;
+import com.optimizely.ab.common.callback.Callback;
+import com.optimizely.ab.common.lifecycle.LifecycleAware;
+import com.optimizely.ab.common.plugin.Plugin;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.payload.Visitor;
-import com.optimizely.ab.processor.EventOperator;
+import com.optimizely.ab.processor.Processor;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -61,7 +62,7 @@ public class LogEventProcessorTest {
         output = new OutputCapture();
     }
 
-    private EventOperator<EventBatch.Builder> processor(Consumer<LogEventProcessor<EventBatch.Builder>> configure) {
+    private Processor<EventBatch.Builder> processor(Consumer<LogEventProcessor<EventBatch.Builder>> configure) {
         LogEventProcessor<EventBatch.Builder> processor = new LogEventProcessor<>();
 
         // base configuration
@@ -71,23 +72,23 @@ public class LogEventProcessorTest {
         // per-test configuration
         configure.accept(processor);
 
-        EventOperator<EventBatch.Builder> channel = processor.build();
+        Processor<EventBatch.Builder> inst = processor.build();
 
-        channel.onStart();
+        LifecycleAware.start(inst);
 
-        return channel;
+        return inst;
     }
 
     @Test
     public void testInterceptorFilter() throws Exception {
-        EventOperator<EventBatch.Builder> processor = processor(builder -> builder
-            .filterInterceptor(event -> event.getAccountId().equals("2")));
+        Processor<EventBatch.Builder> stage = processor(builder -> builder
+            .interceptor(event -> event.getAccountId().equals("2")));
 
-        processor.send(eventBatchBuilder().setAccountId("1"));
-        processor.send(eventBatchBuilder().setAccountId("2").addVisitor(visitorBuilder().setVisitorId("1").build()));
-        processor.send(eventBatchBuilder().setAccountId("3"));
-        processor.send(eventBatchBuilder().setAccountId("2").addVisitor(visitorBuilder().setVisitorId("2").build()));
-        processor.send(eventBatchBuilder().setAccountId("1"));
+        stage.process(eventBatchBuilder().setAccountId("1"));
+        stage.process(eventBatchBuilder().setAccountId("2").addVisitor(visitorBuilder().setVisitorId("1").build()));
+        stage.process(eventBatchBuilder().setAccountId("3"));
+        stage.process(eventBatchBuilder().setAccountId("2").addVisitor(visitorBuilder().setVisitorId("2").build()));
+        stage.process(eventBatchBuilder().setAccountId("1"));
 
         await().timeout(3, SECONDS).untilAtomic(output.successesCount, equalTo(2));
         assertEquals(0, output.failures.size());
@@ -97,7 +98,7 @@ public class LogEventProcessorTest {
     public void testEventTransformerRuntimeException() throws Exception {
         AtomicInteger count = new AtomicInteger(0);
 
-        EventOperator<EventBatch.Builder> processor = processor(builder -> builder
+        Processor<EventBatch.Builder> stage = processor(builder -> builder
             .transformer(b -> {}) // good actor
             .transformer(b -> {   // bad actor
                 if (count.getAndIncrement() == 1) {
@@ -106,17 +107,17 @@ public class LogEventProcessorTest {
             })
             .batchMaxSize(1));
 
-        processor.send(eventBatchBuilder());
+        stage.process(eventBatchBuilder());
         assertEquals(1, output.payloads.size());
         assertEquals(1, output.successes.size());
         assertEquals(0, output.failures.size());
 
-        processor.send(eventBatchBuilder()); // throws
+        stage.process(eventBatchBuilder()); // throws
         assertEquals(2, output.payloads.size());
         assertEquals(2, output.successes.size());
         assertEquals(0, output.failures.size());
 
-        processor.send(eventBatchBuilder()); // should complete
+        stage.process(eventBatchBuilder()); // should complete
         assertEquals(3, output.payloads.size());
         assertEquals(3, output.successes.size());
         assertEquals(0, output.failures.size());
@@ -126,9 +127,9 @@ public class LogEventProcessorTest {
     public void testEventInterceptorRuntimeException() throws Exception {
         AtomicInteger count = new AtomicInteger(0);
 
-        EventOperator<EventBatch.Builder> processor = processor(builder -> builder
-            .filterInterceptor(event -> true) // good actor
-            .filterInterceptor(event -> {     // bad actor
+        Processor<EventBatch.Builder> stage = processor(builder -> builder
+            .interceptor(event -> true) // good actor
+            .interceptor(event -> {     // bad actor
                 if (count.getAndIncrement() == 1) {
                     throw new NullPointerException("TEST");
                 }
@@ -136,17 +137,17 @@ public class LogEventProcessorTest {
             })
             .batchMaxSize(1));
 
-        processor.send(eventBatchBuilder());
+        stage.process(eventBatchBuilder());
         assertEquals(1, output.payloads.size());
         assertEquals(1, output.successes.size());
         assertEquals(0, output.failures.size());
 
-        processor.send(eventBatchBuilder()); // throws
+        stage.process(eventBatchBuilder()); // throws
         assertEquals(2, output.payloads.size());
         assertEquals(2, output.successes.size());
         assertEquals(0, output.failures.size());
 
-        processor.send(eventBatchBuilder()); // should complete
+        stage.process(eventBatchBuilder()); // should complete
         assertEquals(3, output.payloads.size());
         assertEquals(3, output.successes.size());
         assertEquals(0, output.failures.size());
@@ -157,7 +158,7 @@ public class LogEventProcessorTest {
         AtomicInteger count = new AtomicInteger(0);
         AtomicInteger others = new AtomicInteger(0);
 
-        EventOperator<EventBatch.Builder> processor = processor(builder -> builder
+        Processor<EventBatch.Builder> stage = processor(builder -> builder
             .callback(event -> others.incrementAndGet())
             .callback(event -> {
                 if (count.getAndIncrement() == 1) {
@@ -167,19 +168,19 @@ public class LogEventProcessorTest {
             .callback(event -> others.incrementAndGet())
             .batchMaxSize(1));
 
-        processor.send(eventBatchBuilder());
+        stage.process(eventBatchBuilder());
         assertEquals(1, output.payloads.size());
         assertEquals(1, output.successes.size());
         assertEquals(0, output.failures.size());
         assertEquals(2, others.get());
 
-        processor.send(eventBatchBuilder()); // throws
+        stage.process(eventBatchBuilder()); // throws
         assertEquals(2, output.payloads.size()); // event still goes out
         assertEquals(2, output.successes.size());
         assertEquals(0, output.failures.size());
         assertEquals(4, others.get());
 
-        processor.send(eventBatchBuilder()); // should complete
+        stage.process(eventBatchBuilder()); // should complete
         assertEquals(3, output.payloads.size());
         assertEquals(3, output.successes.size());
         assertEquals(0, output.failures.size());
@@ -194,7 +195,7 @@ public class LogEventProcessorTest {
         // block the consumer to allow us to fill up
         phaser.register();
 
-        EventOperator<EventBatch.Builder> processor = processor(builder -> builder
+        Processor<EventBatch.Builder> stage = processor(builder -> builder
             .waitStrategy(new TestableWaitStrategy(phaser))
             .transformer(e -> {
                 switch (counter.getAndIncrement()) {
@@ -223,7 +224,7 @@ public class LogEventProcessorTest {
             .batchMaxSize(100));
 
         for (int i = 0; i < 10; i++) {
-            processor.send(eventBatchBuilder()
+            stage.process(eventBatchBuilder()
                 .addVisitor(visitorBuilder().setVisitorId(String.valueOf(i)).build()));
             logger.info("Added visitor {}", i);
         }
@@ -281,19 +282,19 @@ public class LogEventProcessorTest {
 
     @Test
     public void testMergesVisitors() throws Exception {
-        EventOperator<EventBatch.Builder> processor = processor(builder -> builder
+        Processor<EventBatch.Builder> stage = processor(builder -> builder
             .eventFactory(TestLogEvent::new)
             .batchMaxSize(3));
 
-        processor.send(eventBatchBuilder()
+        stage.process(eventBatchBuilder()
             .addVisitor(visitorBuilder()
                 .setVisitorId("1").build()));
-        processor.send(eventBatchBuilder()
+        stage.process(eventBatchBuilder()
             .addVisitor(visitorBuilder()
                 .setVisitorId("2").build())
             .addVisitor(visitorBuilder()
                 .setVisitorId("3").build()));
-        processor.send(eventBatchBuilder()
+        stage.process(eventBatchBuilder()
             .addVisitor(visitorBuilder()
                 .setVisitorId("1").build()));
 
@@ -317,7 +318,7 @@ public class LogEventProcessorTest {
     public void scratch() throws Exception {
         final AtomicInteger counter = new AtomicInteger(0);
 
-        EventOperator<EventBatch.Builder> processor = processor(builder -> builder
+        Processor<EventBatch.Builder> stage = processor(builder -> builder
             .transformer(b -> {
                 b.setAccountId("test");
             })
@@ -328,11 +329,11 @@ public class LogEventProcessorTest {
             })
             .batchMaxSize(1));
 
-        processor.send(eventBatchBuilder());
+        stage.process(eventBatchBuilder());
 
-        processor.send(eventBatchBuilder());
+        stage.process(eventBatchBuilder());
 
-        processor.send(eventBatchBuilder());
+        stage.process(eventBatchBuilder());
 
         assertEquals(2, output.payloads.size());
         assertEquals(3, output.successes.size());
@@ -397,7 +398,7 @@ public class LogEventProcessorTest {
                 inflightCount.incrementAndGet();
             });
 
-            builder.filterInterceptor(event -> {
+            builder.interceptor(event -> {
                 interceptorCount.incrementAndGet();
                 return true;
             });

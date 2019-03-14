@@ -13,28 +13,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.optimizely.ab.common;
+package com.optimizely.ab.common.callback;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+/**
+ * A callback that handles successful and unsuccessful completion for a type.
+ *
+ * @param <E> the type of values received by this callback.
+ */
 public interface Callback<E> {
     /**
-     * Called when the action completed successfully
+     * Called when the action successfully completed.
      * @param context
      */
     void success(E context);
 
     /**
-     * Called when the action could not be completed
+     * Called when the action unsuccessfully completed.
      */
     void failure(E context, @Nonnull Throwable throwable);
 
+    /**
+     * Returns a new instance that will execute this callback on the passed {@link Executor}.
+     *
+     * @param executor the executor where this callback will be executed
+     * @return a new callback
+     * @throws NullPointerException if paramter is {@code null}
+     */
+    default Callback<E> calledOn(@Nonnull Executor executor) {
+        return new AsyncCallback<>(this, executor);
+    }
 
     /**
-     * Convenience method to reify a {@link Callback} instance from separate success and failure handler functions.
+     * Convenience method to reify a {@link Callback} instance using anonymous functions.
      *
      * @param onSuccess function invoked on success
      * @param onFailure function invoked on failure
@@ -63,42 +78,10 @@ public interface Callback<E> {
     }
 
     /**
-     * Similar to {@link #from(Consumer, BiConsumer)}, however, handlers are executed on the given {@link Executor}
-     */
-    static <E> Callback<E> from(
-        final Consumer<E> onSuccess,
-        final BiConsumer<E, Throwable> onFailure,
-        final Executor executor
-    ) {
-        return new Callback<E>() {
-            @Override
-            public void success(E context) {
-                if (onSuccess != null) {
-                    executor.execute(() -> onSuccess.accept(context));
-                }
-            }
-
-            @Override
-            public void failure(E context, @Nonnull Throwable throwable) {
-                if (onFailure != null) {
-                    executor.execute(() -> onFailure.accept(context, throwable));
-                }
-            }
-        };
-    }
-
-    /**
      * @see #from(Consumer, BiConsumer)
      */
     static <E> Callback<E> from(final Consumer<E> onSuccess) {
-        return from(onSuccess, (BiConsumer<E, Throwable>) null);
-    }
-
-    /**
-     * @see #from(Consumer, BiConsumer, Executor)
-     */
-    static <E> Callback<E> from(final Consumer<E> onSuccess, Executor executor) {
-        return from(onSuccess, null, executor);
+        return from(onSuccess, null);
     }
 
     /**
@@ -131,41 +114,9 @@ public interface Callback<E> {
     }
 
     /**
-     * Similar to {@link #from(Runnable, Consumer)}, however, handlers are executed on the given {@link Executor}
-     */
-    static <E> Callback<E> from(
-        final Runnable onSuccess,
-        final Consumer<Throwable> onFailure,
-        final Executor executor
-    ) {
-        return new Callback<E>() {
-            @Override
-            public void success(E context) {
-                if (onSuccess != null) {
-                    executor.execute(onSuccess);
-                }
-            }
-
-            @Override
-            public void failure(E context, @Nonnull Throwable throwable) {
-                if (onFailure != null) {
-                    executor.execute(() -> onFailure.accept(throwable));
-                }
-            }
-        };
-    }
-
-    /**
      * @see #from(Runnable)
      */
     static <E> Callback<E> from(final Runnable onSuccess) {
-        return from(onSuccess, (Consumer<Throwable>) null);
-    }
-
-    /**
-     * @see #from(Runnable, Consumer, Executor)
-     */
-    static <E> Callback<E> from(final Runnable onSuccess, Executor executor) {
-        return from(onSuccess, null, executor);
+        return from(onSuccess, null);
     }
 }

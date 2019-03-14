@@ -1,5 +1,7 @@
+apply plugin: 'java-library'
+
 dependencies {
     compile project(':core-common')
 
-    compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
+    api group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
 }

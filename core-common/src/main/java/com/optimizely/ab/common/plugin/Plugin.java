@@ -13,14 +13,8 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.processor;
+package com.optimizely.ab.common.plugin;
 
-/**
- * Performs an action on input, presumably for side-effects.
- *
- * @param <T> the type of input elements
- */
-@FunctionalInterface
-public interface EventTransformer<T> {
-    void transform(T input);
+public interface Plugin<T extends PluginSupport> {
+    void configure(T configurable);
 }

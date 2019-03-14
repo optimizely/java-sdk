@@ -15,18 +15,22 @@
  */
 package com.optimizely.ab.processor.internal;
 
+import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.WaitStrategy;
-import com.optimizely.ab.common.PluginSupport;
-import com.optimizely.ab.common.Callback;
+import com.lmax.disruptor.util.DaemonThreadFactory;
+import com.optimizely.ab.common.callback.Callback;
 import com.optimizely.ab.common.internal.Assert;
+import com.optimizely.ab.common.plugin.PluginSupport;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.processor.BaseEventOperator;
-import com.optimizely.ab.processor.EventProcessor;
-import com.optimizely.ab.processor.EventSink;
-import com.optimizely.ab.processor.EventOperation;
+import com.optimizely.ab.processor.AbstractProcessor;
+import com.optimizely.ab.processor.EventProcessorBuilder;
+import com.optimizely.ab.processor.ProcessingStage;
+import com.optimizely.ab.processor.Processor;
+import com.optimizely.ab.processor.disruptor.DisruptorBufferConfig;
+import com.optimizely.ab.processor.disruptor.DisruptorBufferStage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,8 +43,10 @@ import java.util.function.Supplier;
 /**
  * Processor for events.
  */
-public class LogEventProcessor<T> extends EventProcessor<T, EventBatch, LogEvent, LogEventProcessor<T>> implements PluginSupport {
+public class LogEventProcessor<T> extends EventProcessorBuilder<T, EventBatch, LogEvent, LogEventProcessor<T>> implements PluginSupport {
     private static final Logger logger = LoggerFactory.getLogger(LogEventProcessor.class);
+    private static final int DEFAULT_BUFFER_CAPACITY = 1024;
+    private static final int DEFAULT_MAX_BATCH_SIZE = 50;
 
     private Integer batchMaxSize;
     private WaitStrategy waitStrategy;
@@ -52,16 +58,43 @@ public class LogEventProcessor<T> extends EventProcessor<T, EventBatch, LogEvent
     };
 
     @Override
-    public EventOperation<EventBatch, LogEvent> getBatchStage() {
+    public ProcessingStage<EventBatch, LogEvent> getBatchStage() {
         // Default to legacy behavior
         if (batchMaxSize == null || batchMaxSize <= 1) {
             logger.info("Batching is not configured. Events will be dispatched individually"); // TODO warn
             return sink -> new LegacyEventOperator(sink, eventFactory, this::getCallback);
         }
 
-        EventBufferOperation<EventBatch> bufferStage = new EventBufferOperation<>(this);
-        BatchCollapseOperation batchFormatStage = new BatchCollapseOperation(getEventFactory(), this::getCallback);
-        return bufferStage.andThen(batchFormatStage);
+        ThreadFactory threadFactory = getThreadFactory();
+        if (threadFactory == null) {
+            threadFactory = DaemonThreadFactory.INSTANCE;
+        }
+
+        WaitStrategy waitStrategy = getWaitStrategy();
+        if (waitStrategy == null) {
+            waitStrategy = new BlockingWaitStrategy();
+        }
+
+        Integer batchMaxSize = getBatchMaxSize();
+        if (batchMaxSize == null) {
+            batchMaxSize = DEFAULT_MAX_BATCH_SIZE;
+        }
+
+        Integer bufferCapacity = getBufferSize();
+        if (bufferCapacity == null) {
+            bufferCapacity = DEFAULT_BUFFER_CAPACITY;
+        }
+
+        DisruptorBufferStage<EventBatch> buffer = new DisruptorBufferStage<>(DisruptorBufferConfig.builder()
+            .batchMaxSize(batchMaxSize)
+            .capacity(bufferCapacity)
+            .threadFactory(threadFactory)
+            .waitStrategy(waitStrategy)
+            .build());
+
+        EventBatchMergeStage batchFormatStage = new EventBatchMergeStage(getEventFactory(), this::getCallback);
+
+        return buffer.andThen(batchFormatStage);
     }
 
     Function<EventBatch, LogEvent> getEventFactory() {
@@ -133,12 +166,12 @@ public class LogEventProcessor<T> extends EventProcessor<T, EventBatch, LogEvent
         return this;
     }
 
-    static class LegacyEventOperator extends BaseEventOperator<EventBatch, LogEvent> {
+    static class LegacyEventOperator extends AbstractProcessor<EventBatch, LogEvent> {
         private final Function<EventBatch, LogEvent> eventFactory;
         private final Supplier<Callback<EventBatch>> callbackSupplier;
 
         public LegacyEventOperator(
-            EventSink<LogEvent> sink,
+            Processor<LogEvent> sink,
             Function<EventBatch, LogEvent> eventFactory,
             Supplier<Callback<EventBatch>> callbackSupplier
         ) {
@@ -148,7 +181,7 @@ public class LogEventProcessor<T> extends EventProcessor<T, EventBatch, LogEvent
         }
 
         @Override
-        public void send(EventBatch input) {
+        public void process(EventBatch input) {
             if (input == null) {
                 return;
             }
@@ -160,7 +193,7 @@ public class LogEventProcessor<T> extends EventProcessor<T, EventBatch, LogEvent
 
             setCallback(output);
 
-            getSink().send(output);
+            getSink().process(output);
         }
 
         private void setCallback(LogEvent logEvent) {
@@ -172,9 +205,9 @@ public class LogEventProcessor<T> extends EventProcessor<T, EventBatch, LogEvent
     }
 
     /**
-     * Adapts an {@link EventHandler} to the {@link EventSink} interface.
+     * Adapts an {@link EventHandler} to the {@link Processor} interface.
      */
-    static class EventHandlerSink implements EventSink<LogEvent> {
+    static class EventHandlerSink implements Processor<LogEvent> {
         private static final Logger logger = LoggerFactory.getLogger(EventHandlerSink.class);
 
         private final EventHandler eventHandler;
@@ -189,12 +222,12 @@ public class LogEventProcessor<T> extends EventProcessor<T, EventBatch, LogEvent
         }
 
         @Override
-        public void send(LogEvent logEvent) {
+        public void process(LogEvent logEvent) {
             handle(logEvent);
         }
 
         @Override
-        public void sendBatch(Collection<? extends LogEvent> batch) {
+        public void processBatch(Collection<? extends LogEvent> batch) {
             for (final LogEvent logEvent : batch) {
                 handle(logEvent);
             }

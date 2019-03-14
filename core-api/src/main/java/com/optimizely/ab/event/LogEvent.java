@@ -16,7 +16,7 @@
  */
 package com.optimizely.ab.event;
 
-import com.optimizely.ab.common.Callback;
+import com.optimizely.ab.common.callback.Callback;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.serializer.DefaultJsonSerializer;
 import com.optimizely.ab.event.internal.serializer.Serializer;

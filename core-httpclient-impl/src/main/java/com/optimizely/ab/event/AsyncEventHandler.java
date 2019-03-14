@@ -19,7 +19,7 @@ package com.optimizely.ab.event;
 import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.NamedThreadFactory;
 import com.optimizely.ab.annotations.VisibleForTesting;
-import com.optimizely.ab.common.LifecycleAware;
+import com.optimizely.ab.common.lifecycle.LifecycleAware;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;

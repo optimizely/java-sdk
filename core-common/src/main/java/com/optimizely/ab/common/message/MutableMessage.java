@@ -15,7 +15,7 @@
  */
 package com.optimizely.ab.common.message;
 
-import com.optimizely.ab.common.Callback;
+import com.optimizely.ab.common.callback.Callback;
 
 import javax.annotation.Nonnull;
 
