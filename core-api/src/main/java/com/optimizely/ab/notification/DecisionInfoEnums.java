@@ -17,13 +17,13 @@
 package com.optimizely.ab.notification;
 
 public class DecisionInfoEnums {
-    public enum ActivateVariationDecisionInfo {
+    public enum ExperimentDecisionInfo {
         EXPERIMENT_KEY("experiment_key"),
         VARIATION_KEY("variation_key");
 
         private final String key;
 
-        ActivateVariationDecisionInfo(String key) {
+        ExperimentDecisionInfo(String key) {
             this.key = key;
         }
 

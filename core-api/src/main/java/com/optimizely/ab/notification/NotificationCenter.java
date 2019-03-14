@@ -33,14 +33,14 @@ import java.util.Map;
  * more flexible.
  */
 public class NotificationCenter {
-    public enum OnDecisionNotificationType {
-        IS_FEATURE_ENABLED("feature"),
-        GET_FEATURE_VARIABLE("feature_variable"),
+    public enum DecisionNotificationType {
+        FEATURE("feature"),
+        FEATURE_VARIABLE("feature_variable"),
         EXPERIMENT("experiment");
 
         private final String key;
 
-        OnDecisionNotificationType(String key) {
+        DecisionNotificationType(String key) {
             this.key = key;
         }
 

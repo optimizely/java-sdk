@@ -2670,11 +2670,11 @@ public class OptimizelyTest {
             .build();
 
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
-        testDecisionInfoMap.put(DecisionInfoEnums.ActivateVariationDecisionInfo.EXPERIMENT_KEY.toString(), activatedExperiment.getKey());
-        testDecisionInfoMap.put(DecisionInfoEnums.ActivateVariationDecisionInfo.VARIATION_KEY.toString(), "Gred");
+        testDecisionInfoMap.put(DecisionInfoEnums.ExperimentDecisionInfo.EXPERIMENT_KEY.toString(), activatedExperiment.getKey());
+        testDecisionInfoMap.put(DecisionInfoEnums.ExperimentDecisionInfo.VARIATION_KEY.toString(), "Gred");
 
         int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
-            getDecisionListener(NotificationCenter.OnDecisionNotificationType.EXPERIMENT.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.EXPERIMENT.toString(),
                 userId,
                 testUserAttributes,
                 testDecisionInfoMap));
@@ -2707,11 +2707,11 @@ public class OptimizelyTest {
             .build();
 
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
-        testDecisionInfoMap.put(DecisionInfoEnums.ActivateVariationDecisionInfo.EXPERIMENT_KEY.toString(), activatedExperiment.getKey());
-        testDecisionInfoMap.put(DecisionInfoEnums.ActivateVariationDecisionInfo.VARIATION_KEY.toString(), null);
+        testDecisionInfoMap.put(DecisionInfoEnums.ExperimentDecisionInfo.EXPERIMENT_KEY.toString(), activatedExperiment.getKey());
+        testDecisionInfoMap.put(DecisionInfoEnums.ExperimentDecisionInfo.VARIATION_KEY.toString(), null);
 
         int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
-            getDecisionListener(NotificationCenter.OnDecisionNotificationType.EXPERIMENT.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.EXPERIMENT.toString(),
                 genericUserId,
                 testUserAttributes,
                 testDecisionInfoMap));
@@ -4915,11 +4915,11 @@ public class OptimizelyTest {
             .build();
 
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
-        testDecisionInfoMap.put(DecisionInfoEnums.ActivateVariationDecisionInfo.EXPERIMENT_KEY.toString(), experiment.getKey());
-        testDecisionInfoMap.put(DecisionInfoEnums.ActivateVariationDecisionInfo.VARIATION_KEY.toString(), bucketedVariation.getKey());
+        testDecisionInfoMap.put(DecisionInfoEnums.ExperimentDecisionInfo.EXPERIMENT_KEY.toString(), experiment.getKey());
+        testDecisionInfoMap.put(DecisionInfoEnums.ExperimentDecisionInfo.VARIATION_KEY.toString(), bucketedVariation.getKey());
 
         int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
-            getDecisionListener(NotificationCenter.OnDecisionNotificationType.EXPERIMENT.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.EXPERIMENT.toString(),
                 testUserId,
                 testUserAttributes,
                 testDecisionInfoMap));

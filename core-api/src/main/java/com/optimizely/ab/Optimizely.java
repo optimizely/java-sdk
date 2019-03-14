@@ -715,11 +715,11 @@ public class Optimizely {
         Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes);
 
         Map<String, Object> decisionInfo = new HashMap<>();
-        decisionInfo.put(DecisionInfoEnums.ActivateVariationDecisionInfo.EXPERIMENT_KEY.toString(), experiment.getKey());
-        decisionInfo.put(DecisionInfoEnums.ActivateVariationDecisionInfo.VARIATION_KEY.toString(), variation != null ? variation.getKey() : null);
+        decisionInfo.put(DecisionInfoEnums.ExperimentDecisionInfo.EXPERIMENT_KEY.toString(), experiment.getKey());
+        decisionInfo.put(DecisionInfoEnums.ExperimentDecisionInfo.VARIATION_KEY.toString(), variation != null ? variation.getKey() : null);
 
         notificationCenter.sendNotifications(NotificationCenter.NotificationType.Decision,
-            NotificationCenter.OnDecisionNotificationType.EXPERIMENT.toString(),
+            NotificationCenter.DecisionNotificationType.EXPERIMENT.toString(),
             userId,
             copiedAttributes,
             decisionInfo);
