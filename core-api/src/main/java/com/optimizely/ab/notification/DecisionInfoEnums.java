@@ -17,7 +17,7 @@
 package com.optimizely.ab.notification;
 
 public class DecisionInfoEnums {
-    public enum GetFeatureVariableDecisionInfo {
+    public enum FeatureVariableDecisionInfo {
         SOURCE_EXPERIMENT_KEY("source_experiment_key"),
         SOURCE_VARIATION_KEY("source_variation_key"),
         FEATURE_KEY("feature_key"),
@@ -29,7 +29,7 @@ public class DecisionInfoEnums {
 
         private final String key;
 
-        GetFeatureVariableDecisionInfo(String key) {
+        FeatureVariableDecisionInfo(String key) {
             this.key = key;
         }
 
