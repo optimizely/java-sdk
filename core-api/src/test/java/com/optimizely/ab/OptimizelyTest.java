@@ -20,15 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
-import com.optimizely.ab.config.Attribute;
-import com.optimizely.ab.config.EventType;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.FeatureFlag;
-import com.optimizely.ab.config.FeatureVariable;
-import com.optimizely.ab.config.FeatureVariableUsageInstance;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.TrafficAllocation;
-import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
@@ -64,7 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.optimizely.ab.config.ProjectConfigTestUtils.*;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
 import static com.optimizely.ab.event.LogEvent.RequestMethod;
 import static java.util.Arrays.asList;
@@ -634,7 +626,7 @@ public class OptimizelyTest {
 
     /**
      * Verify the case were {@link Optimizely#activate(Experiment, String)} is called with an {@link Experiment}
-     * that is not present in the current {@link ProjectConfig}. We should NOT throw an error in that case.
+     * that is not present in the current {@link DatafileProjectConfig}. We should NOT throw an error in that case.
      * <p>
      * This may happen if an experiment is retrieved from the project config, the project config is updated and the
      * referenced experiment removed, then activate is called given the now removed experiment.

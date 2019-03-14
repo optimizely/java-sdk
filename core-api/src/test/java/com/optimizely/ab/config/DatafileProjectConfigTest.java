@@ -25,9 +25,7 @@ import com.optimizely.ab.config.audience.UserAttribute;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
@@ -43,9 +41,9 @@ import org.junit.Test;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
- * Tests for {@link ProjectConfig}.
+ * Tests for {@link DatafileProjectConfig}.
  */
-public class ProjectConfigTest {
+public class DatafileProjectConfigTest {
 
     private ProjectConfig projectConfig;
 
@@ -54,11 +52,11 @@ public class ProjectConfigTest {
 
     @Before
     public void initialize() {
-        projectConfig = ProjectConfigTestUtils.validProjectConfigV3();
+        projectConfig = DatafileProjectConfigTestUtils.validProjectConfigV3();
     }
 
     /**
-     * Verify that {@link ProjectConfig#toString()} doesn't throw an exception.
+     * Verify that {@link DatafileProjectConfig#toString()} doesn't throw an exception.
      */
     @Test
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
@@ -67,7 +65,7 @@ public class ProjectConfigTest {
     }
 
     /**
-     * Asserts that {@link ProjectConfig#getExperimentsForEventKey(String)}
+     * Asserts that {@link DatafileProjectConfig#getExperimentsForEventKey(String)}
      * returns the respective experiment ids for experiments using an event,
      * provided that the event parameter is valid.
      */
@@ -85,7 +83,7 @@ public class ProjectConfigTest {
     }
 
     /**
-     * Asserts that {@link ProjectConfig#getExperimentsForEventKey(String)} returns an empty List
+     * Asserts that {@link DatafileProjectConfig#getExperimentsForEventKey(String)} returns an empty List
      * when given an invalid event key.
      */
     @Test
@@ -135,7 +133,7 @@ public class ProjectConfigTest {
      */
     @Test
     public void verifyAnonymizeIPIsFalseByDefault() throws Exception {
-        ProjectConfig v2ProjectConfig = ProjectConfigTestUtils.validProjectConfigV2();
+        ProjectConfig v2ProjectConfig = DatafileProjectConfigTestUtils.validProjectConfigV2();
         assertFalse(v2ProjectConfig.getAnonymizeIP());
     }
 
@@ -293,21 +291,21 @@ public class ProjectConfigTest {
 
     @Test
     public void getAttributeIDWhenAttributeKeyIsFromAttributeKeyMapping() {
-        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
+        ProjectConfig projectConfig = DatafileProjectConfigTestUtils.validProjectConfigV4();
         String attributeID = projectConfig.getAttributeId(projectConfig, "house");
         assertEquals(attributeID, "553339214");
     }
 
     @Test
     public void getAttributeIDWhenAttributeKeyIsUsingReservedKey() {
-        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
+        ProjectConfig projectConfig = DatafileProjectConfigTestUtils.validProjectConfigV4();
         String attributeID = projectConfig.getAttributeId(projectConfig, "$opt_user_agent");
         assertEquals(attributeID, ControlAttribute.USER_AGENT_ATTRIBUTE.toString());
     }
 
     @Test
     public void getAttributeIDWhenAttributeKeyUnrecognizedAttribute() {
-        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
+        ProjectConfig projectConfig = DatafileProjectConfigTestUtils.validProjectConfigV4();
         String invalidAttribute = "empty";
         String attributeID = projectConfig.getAttributeId(projectConfig, invalidAttribute);
         assertNull(attributeID);
@@ -316,7 +314,7 @@ public class ProjectConfigTest {
 
     @Test
     public void getAttributeIDWhenAttributeKeyPrefixIsMatched() {
-        ProjectConfig projectConfig = ProjectConfigTestUtils.validProjectConfigV4();
+        ProjectConfig projectConfig = DatafileProjectConfigTestUtils.validProjectConfigV4();
         String attributeWithReservedPrefix = "$opt_test";
         String attributeID = projectConfig.getAttributeId(projectConfig, attributeWithReservedPrefix);
         assertEquals(attributeID, "583394100");

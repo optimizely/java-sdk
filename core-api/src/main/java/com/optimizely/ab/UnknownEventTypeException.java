@@ -16,8 +16,8 @@
  */
 package com.optimizely.ab;
 
-import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.EventType;
 
 /**
  * Exception thrown when attempting to use/refer to an {@link EventType} that isn't present in the current

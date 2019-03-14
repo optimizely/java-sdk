@@ -18,7 +18,7 @@ package com.optimizely.ab.bucketing;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.ProjectConfigTestUtils;
+import com.optimizely.ab.config.DatafileProjectConfigTestUtils;
 import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.ValidProjectConfigV4;
@@ -42,10 +42,9 @@ import java.util.Map;
 import ch.qos.logback.classic.Level;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV3;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV4;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.noAudienceProjectConfigV3;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV3;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV4;
 import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_HOUSE_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_NATIONALITY_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_ENGLISH_CITIZENS_VALUE;
@@ -740,11 +739,11 @@ public class DecisionServiceTest {
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
             genericUserId,
-            ProjectConfigTestUtils.createMapOfObjects(
-                ProjectConfigTestUtils.createListOfObjects(
+            DatafileProjectConfigTestUtils.createMapOfObjects(
+                DatafileProjectConfigTestUtils.createListOfObjects(
                     ATTRIBUTE_HOUSE_KEY, ATTRIBUTE_NATIONALITY_KEY
                 ),
-                ProjectConfigTestUtils.createListOfObjects(
+                DatafileProjectConfigTestUtils.createListOfObjects(
                     AUDIENCE_GRYFFINDOR_VALUE, AUDIENCE_ENGLISH_CITIZENS_VALUE
                 )
             )

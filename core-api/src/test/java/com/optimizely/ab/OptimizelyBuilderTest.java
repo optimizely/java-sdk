@@ -17,8 +17,7 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.bucketing.UserProfileService;
-import com.optimizely.ab.config.ProjectConfigTestUtils;
-import com.optimizely.ab.config.parser.ConfigParseException;
+import com.optimizely.ab.config.DatafileProjectConfigTestUtils;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.EventHandler;
@@ -33,7 +32,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import static com.optimizely.ab.config.ProjectConfigTestUtils.*;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertFalse;
@@ -71,7 +70,7 @@ public class OptimizelyBuilderTest {
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
             .build();
 
-        ProjectConfigTestUtils.verifyProjectConfig(optimizelyClient.getProjectConfig(), validProjectConfigV2());
+        DatafileProjectConfigTestUtils.verifyProjectConfig(optimizelyClient.getProjectConfig(), validProjectConfigV2());
     }
 
     @Test
@@ -79,7 +78,7 @@ public class OptimizelyBuilderTest {
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV3(), mockEventHandler)
             .build();
 
-        ProjectConfigTestUtils.verifyProjectConfig(optimizelyClient.getProjectConfig(), validProjectConfigV3());
+        DatafileProjectConfigTestUtils.verifyProjectConfig(optimizelyClient.getProjectConfig(), validProjectConfigV3());
     }
 
     @Test

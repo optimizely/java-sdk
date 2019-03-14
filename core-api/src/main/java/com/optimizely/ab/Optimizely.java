@@ -20,13 +20,7 @@ import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfileService;
-import com.optimizely.ab.config.EventType;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.FeatureFlag;
-import com.optimizely.ab.config.FeatureVariable;
-import com.optimizely.ab.config.FeatureVariableUsageInstance;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
@@ -114,7 +108,7 @@ public class Optimizely {
     void initialize(@Nonnull String datafile, @Nullable ProjectConfig projectConfig) {
         if (projectConfig == null) {
             try {
-                projectConfig = new ProjectConfig.Builder()
+                projectConfig = new DatafileProjectConfig.Builder()
                     .withDatafile(datafile)
                     .build();
                 isValid = true;
@@ -776,7 +770,7 @@ public class Optimizely {
 
     /**
      * Gets the forced variation for a given user and experiment.
-     * This method just calls into the {@link com.optimizely.ab.config.ProjectConfig#getForcedVariation(String, String)}
+     * This method just calls into the {@link ProjectConfig#getForcedVariation(String, String)}
      * method of the same signature.
      *
      * @param experimentKey The key for the experiment.
