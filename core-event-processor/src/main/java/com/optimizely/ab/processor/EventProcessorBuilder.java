@@ -125,7 +125,6 @@ public class EventProcessorBuilder<T, U, R, S extends EventProcessorBuilder<T, U
         return self();
     }
 
-    // EventProcessor.java
     public Processor<T> build() {
         return getTransformStage()
             .andThen(getConverterStage())
