@@ -91,25 +91,16 @@ public class OptimizelyTest {
     public static Collection<Object[]> data() throws IOException {
         return Arrays.asList(new Object[][]{
             {
-                2,
                 validConfigJsonV2(),
                 noAudienceProjectConfigJsonV2(),
-                validProjectConfigV2(),
-                noAudienceProjectConfigV2()
             },
             {
-                3,
                 validConfigJsonV3(),
-                noAudienceProjectConfigJsonV3(),
-                validProjectConfigV3(),
-                noAudienceProjectConfigV3()
+                noAudienceProjectConfigJsonV3(),  // FIX-ME this is not a valid v3 datafile
             },
             {
-                4,
                 validConfigJsonV4(),
-                validConfigJsonV4(),
-                validProjectConfigV4(),
-                validProjectConfigV4()
+                validConfigJsonV4()
             }
         });
     }
@@ -146,16 +137,17 @@ public class OptimizelyTest {
     private ProjectConfig validProjectConfig;
     private ProjectConfig noAudienceProjectConfig;
 
-    public OptimizelyTest(int datafileVersion,
-                          String validDatafile,
-                          String noAudienceDatafile,
-                          ProjectConfig validProjectConfig,
-                          ProjectConfig noAudienceProjectConfig) {
-        this.datafileVersion = datafileVersion;
+    public OptimizelyTest(String validDatafile, String noAudienceDatafile) throws ConfigParseException {
         this.validDatafile = validDatafile;
         this.noAudienceDatafile = noAudienceDatafile;
-        this.validProjectConfig = validProjectConfig;
-        this.noAudienceProjectConfig = noAudienceProjectConfig;
+
+        this.validProjectConfig = new ProjectConfig.Builder().withDatafile(validDatafile).build();
+        this.noAudienceProjectConfig = new ProjectConfig.Builder().withDatafile(noAudienceDatafile).build();
+
+        // FIX-ME
+        //assertEquals(validProjectConfig.getVersion(), noAudienceProjectConfig.getVersion());
+
+        this.datafileVersion = Integer.parseInt(validProjectConfig.getVersion());
     }
 
     //======== activate tests ========//
@@ -189,7 +181,6 @@ public class OptimizelyTest {
             .withErrorHandler(mockErrorHandler)
             .build();
 
-
         when(mockEventFactory.createImpressionEvent(validProjectConfig, activatedExperiment, bucketedVariation, testUserId,
             testUserAttributes))
             .thenReturn(logEventToDispatch);
@@ -207,6 +198,9 @@ public class OptimizelyTest {
             activatedExperiment.getKey() + "\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
             testParams + " and payload \"{}\"");
+
+        // Force variation to null to get expected log output.
+        optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, null);
 
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, testUserAttributes);
@@ -266,6 +260,9 @@ public class OptimizelyTest {
             activatedExperiment.getKey() + "\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
             testParams + " and payload \"{}\"");
+
+        // Force variation to null to get expected log output.
+        optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, null);
 
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, testUserAttributes);
@@ -418,6 +415,9 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
             testParams + " and payload \"{}\"");
 
+        // Force variation to null to get expected log output.
+        optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, null);
+
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, testUserAttributes);
 
@@ -476,6 +476,9 @@ public class OptimizelyTest {
             activatedExperiment.getKey() + "\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
             testParams + " and payload \"{}\"");
+
+        // Force variation to null to get expected log output.
+        optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, null);
 
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, testUserAttributes);
@@ -584,6 +587,9 @@ public class OptimizelyTest {
             activatedExperiment.getKey() + "\".");
         logbackVerifier.expectMessage(Level.DEBUG, "Dispatching impression event to URL test_url with params " +
             testParams + " and payload \"{}\"");
+
+        // Force variation to null to get expected log output.
+        optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, null);
 
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, testUserAttributes);
@@ -1537,6 +1543,9 @@ public class OptimizelyTest {
 
         when(mockBucketer.bucket(launchedExperiment, testUserId))
             .thenReturn(launchedExperiment.getVariations().get(0));
+
+        // Force variation to launched experiment.
+        optimizely.setForcedVariation(launchedExperiment.getKey(), testUserId, expectedVariation.getKey());
 
         logbackVerifier.expectMessage(Level.INFO,
             "Experiment has \"Launched\" status so not dispatching event during activation.");
