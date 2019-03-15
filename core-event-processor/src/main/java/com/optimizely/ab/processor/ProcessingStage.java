@@ -37,16 +37,17 @@ public interface ProcessingStage<T, R> {
      * Creates an instance of this operator.
      *
      * @param sink the downstream sink
-     * @return a operator that is a sink for elements of type {@code T} and a source for elements of type {@code R}
+     * @return a operator that is a sink for elements of type {@code T} and a
+     *         source for elements of type {@code R}
      */
     @Nonnull
     Processor<T> create(@Nonnull Processor<R> sink);
 
     /**
-     * Creates a composite operation that combines the {@code upstream} operation and this.
+     * Creates a composite stage that combines the {@code upstream} stage and this.
      *
-     * @param <V> the type of input of the {@code upstream} operation, and to operation that's returned.
-     * @param upstream the operation to apply to elements before this operator
+     * @param <V> the type of input of the {@code upstream} stage, and to stage that's returned.
+     * @param upstream the stage to apply to elements before this operator
      * @return a composed operator
      * @throws NullPointerException if argument is null
      *
@@ -58,11 +59,11 @@ public interface ProcessingStage<T, R> {
     }
 
     /**
-     * Creates a composite operation that combines this and the {@code downstream} operation.
+     * Creates a composite stage that connects this and the {@code downstream} stage.
      *
-     * @param <V> the type of output of the {@code downstream} operation, and operation that's returned.
-     * @param downstream the operation to apply to elements before this operation
-     * @return a composite operation
+     * @param <V> the type of output of the {@code downstream} and returned stage
+     * @param downstream the stage to apply to elements before this stage
+     * @return a composite stage
      * @throws NullPointerException if argument is null
      *
      * @see #compose(ProcessingStage)
@@ -73,24 +74,24 @@ public interface ProcessingStage<T, R> {
     }
 
     /**
-     * Returns an operation that always returns its input operation.
+     * Returns an stage that always returns its input stage.
      *
-     * @param <T> the type of the input elements and output elements to the operation
-     * @return a operation that always returns its input argument
+     * @param <T> the type of the input elements and output elements to the stage
+     * @return a stage that always returns its input argument
      */
     static <T> ProcessingStage<T, T> identity() {
         return sink -> sink;
     }
 
     /**
-     * Creates a synchronous operation from a function.
+     * Creates a synchronous stage from a function.
      *
      * When a batch of inputs are sent, the {@code consumer} is invoked once for each element in batch.
      *
      * @param consumer function invoked on every element put into operators
      * @param <T> the type of input elements
      * @param <R> the type of output elements
-     * @return an operation that uses consumer on every event
+     * @return an stage that uses consumer on every event
      * @throws NullPointerException if argument is null
      */
     static <T, R> ProcessingStage<T, R> simple(final BiConsumer<T, Processor<R>> consumer) {
@@ -104,7 +105,7 @@ public interface ProcessingStage<T, R> {
     }
 
     /**
-     * Creates a synchronous operation that produces elements that are the results
+     * Creates a synchronous stage that produces elements that are the results
      * of applying the given function to each put element.
      *
      * If the {@code mapper} returns null, an element will not be emitted to the sink.
@@ -112,7 +113,7 @@ public interface ProcessingStage<T, R> {
      * @param <T> the type of input elements
      * @param <R> the type of output elements
      * @param mapper a transforming function.
-     * @return the new operation
+     * @return the new stage
      * @throws NullPointerException if argument is null
      */
     static <T, R> ProcessingStage<T, R> mapper(final Function<? super T, ? extends R> mapper) {
@@ -126,14 +127,14 @@ public interface ProcessingStage<T, R> {
     }
 
     /**
-     * Creates an synchronous operation that performs side-effects on input elements.
+     * Creates an synchronous stage that performs side-effects on input elements.
      * Each of the {@code transformers} is invoked on every input element in-order.
      *
      * If an empty list is passed, it is the same as calling {@link #identity()}.
      *
      * @param actions list of transformers
      * @param <T> the type of input and output elements
-     * @return the new operation
+     * @return the new stage
      * @throws NullPointerException if argument is null
      * @see ForEachStage.ForEachProcessor
      */
@@ -146,7 +147,7 @@ public interface ProcessingStage<T, R> {
     }
 
     /**
-     * Creates an synchronous operation that performs filtering or replacement of input elements.
+     * Creates an synchronous stage that performs filtering or replacement of input elements.
      * Each of the {@code handlers} is invoked on every input element in-order.
      *
      * Each {@link InterceptingStage.InterceptHandler} is invoked with the value returned from the previous
@@ -159,7 +160,7 @@ public interface ProcessingStage<T, R> {
      *
      * @param handlers list of intercept handlers
      * @param <T> the type of input and output elements
-     * @return the new operation
+     * @return the new stage
      * @throws NullPointerException if argument is null
      * @see InterceptingStage.InterceptProcessor
      */
