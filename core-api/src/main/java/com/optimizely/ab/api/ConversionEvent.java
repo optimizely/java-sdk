@@ -16,17 +16,23 @@
 package com.optimizely.ab.api;
 
 
+import com.optimizely.ab.config.EventType;
+import com.optimizely.ab.event.internal.Conversion;
 import com.optimizely.ab.event.internal.payload.Attribute;
 
 import java.util.List;
 import java.util.Map;
 
 public interface ConversionEvent extends Event {
-    String getUserId();
+    EventType getEvent();
 
-    com.optimizely.ab.config.EventType getEvent();
+    String getUserId();
 
     List<Attribute> getUserAttributes();
 
     Map<String, ?> getTags();
+
+    static Conversion.Builder builder() {
+        return Conversion.builder();
+    }
 }

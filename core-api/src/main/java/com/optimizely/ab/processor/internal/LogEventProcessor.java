@@ -34,6 +34,7 @@ import com.optimizely.ab.processor.disruptor.DisruptorBufferStage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
@@ -41,7 +42,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Processor for events.
+ * Processor for events being dispatched using an {@link EventHandler}.
  */
 public class LogEventProcessor<T> extends EventProcessorBuilder<T, EventBatch, LogEvent, LogEventProcessor<T>> implements PluginSupport {
     private static final Logger logger = LoggerFactory.getLogger(LogEventProcessor.class);
@@ -49,10 +50,15 @@ public class LogEventProcessor<T> extends EventProcessorBuilder<T, EventBatch, L
     private static final int DEFAULT_MAX_BATCH_SIZE = 50;
 
     private Integer batchMaxSize;
+
     private WaitStrategy waitStrategy;
+
     private ThreadFactory threadFactory;
+
     private Integer bufferSize;
+
     private Function<EventBatch, LogEvent> eventFactory = (new EventFactory())::createLogEvent; // TODO do not default
+
     private BiConsumer<LogEvent, Throwable> logEventExceptionHandler = (logEvent, err) -> {
         logger.error("Error dispatching event: {}", logEvent, err);
     };
@@ -215,7 +221,7 @@ public class LogEventProcessor<T> extends EventProcessorBuilder<T, EventBatch, L
 
         EventHandlerSink(
             EventHandler eventHandler,
-            BiConsumer<LogEvent, Throwable> exceptionHandler
+            @Nullable BiConsumer<LogEvent, Throwable> exceptionHandler
         ) {
             this.eventHandler = Assert.notNull(eventHandler, "eventHandler");
             this.exceptionHandler = exceptionHandler;

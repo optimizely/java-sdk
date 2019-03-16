@@ -16,14 +16,13 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
-import com.optimizely.ab.api.ConversionEvent;
-import com.optimizely.ab.api.Event;
 import com.optimizely.ab.api.ImpressionEvent;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.common.lifecycle.LifecycleAware;
+import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.FeatureVariable;
@@ -36,10 +35,14 @@ import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
+import com.optimizely.ab.event.internal.Conversion;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.processor.Processor;
+import com.optimizely.ab.processor.internal.OutgoingConversion;
+import com.optimizely.ab.processor.internal.OutgoingEvent;
+import com.optimizely.ab.processor.internal.OutgoingImpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,7 +99,7 @@ public class Optimizely {
     private boolean isValid;
     public final NotificationCenter notificationCenter = new NotificationCenter();
 
-    private Consumer<Event> eventProcessor;
+    private Consumer<OutgoingEvent> eventProcessor;
 
     @Nullable
     private final UserProfileService userProfileService;
@@ -111,28 +114,14 @@ public class Optimizely {
         this.eventFactory = eventFactory;
         this.errorHandler = errorHandler;
         this.userProfileService = userProfileService;
-        this.eventProcessor = (Event event) -> {
-            final LogEvent logEvent = eventFactory.createLogEvent(event);
+        this.eventProcessor = outgoingEvent -> {
+            final LogEvent logEvent = eventFactory.createLogEvent(outgoingEvent.buildEvent());
 
             // logging preserved from previous releases
-            event.getType().handle(event, new Event.EventType.EventConsumer() {
-                @Override
-                public void acceptConversion(ConversionEvent conversion) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Dispatching conversion event to URL {} with params {} and payload \"{}\".",
-                            logEvent.getEndpointUrl(), logEvent.getRequestParams(), logEvent.getBody());
-                    }
-                }
-
-                @Override
-                public void acceptImpression(ImpressionEvent impression) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug(
-                            "Dispatching impression event to URL {} with params {} and payload \"{}\".",
-                            logEvent.getEndpointUrl(), logEvent.getRequestParams(), logEvent.getBody());
-                    }
-                }
-            });
+            if (logger.isDebugEnabled()) {
+                logger.debug("Dispatching {} event to URL {} with params {} and payload \"{}\".",
+                    outgoingEvent.getEventType(), logEvent.getEndpointUrl(), logEvent.getRequestParams(), logEvent.getBody());
+            }
 
             try {
                 eventHandler.dispatchEvent(logEvent);
@@ -149,16 +138,16 @@ public class Optimizely {
         ErrorHandler errorHandler,
         DecisionService decisionService,
         UserProfileService userProfileService,
-        Processor<Event> stage
+        Processor<OutgoingEvent> eventProcessor
     ) {
         this.eventHandler = eventHandler;
         this.eventFactory = eventFactory;
         this.errorHandler = errorHandler;
         this.decisionService = decisionService;
         this.userProfileService = userProfileService;
-        this.eventProcessor = stage::process;
+        this.eventProcessor = eventProcessor::process;
 
-        LifecycleAware.start(stage);
+        LifecycleAware.start(eventProcessor);
     }
 
     /**
@@ -289,24 +278,31 @@ public class Optimizely {
                                 @Nonnull Map<String, ?> filteredAttributes,
                                 @Nonnull Variation variation) {
         if (experiment.isRunning()) {
-            ImpressionEvent impressionEvent = eventFactory.createImpression(
-                projectConfig,
-                experiment,
-                variation,
-                userId,
-                filteredAttributes);
+            OutgoingImpression impression = OutgoingImpression.create(projectConfig, ImpressionEvent.builder()
+                .experiment(experiment)
+                .variation(variation)
+                .userId(userId)
+                .userAttributes(EventFactory.buildAttributeList(projectConfig, filteredAttributes)));
 
             logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
 
             try {
-                eventProcessor.accept(impressionEvent);
+                eventProcessor.accept(impression);
             } catch (Exception e) {
                 logger.error("Unexpected exception in event dispatcher", e);
             }
 
-            // TODO(llinn) move to interceptor
             notificationCenter.sendNotifications(NotificationCenter.NotificationType.Activate, experiment, userId,
-                filteredAttributes, variation, impressionEvent);
+                filteredAttributes,
+                variation,
+                // create a LogEvent that's just for listeners to maintain backwards compatibility.
+                // note: this may not be the actual LogEvent that's given to EventHandler when batching is enabled.
+                eventFactory.createImpressionEvent(
+                    projectConfig,
+                    experiment,
+                    variation,
+                    userId,
+                    filteredAttributes));
         } else {
             logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
         }
@@ -348,7 +344,7 @@ public class Optimizely {
         ProjectConfig currentConfig = getProjectConfig();
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
 
-        com.optimizely.ab.config.EventType eventType = currentConfig.getEventTypeForName(eventName, errorHandler);
+        EventType eventType = currentConfig.getEventTypeForName(eventName, errorHandler);
         if (eventType == null) {
             // if no matching event type could be found, do not dispatch an event
             logger.info("Not tracking event \"{}\" for user \"{}\".", eventName, userId);
@@ -360,24 +356,33 @@ public class Optimizely {
         }
 
         // create the conversion event request parameters, then dispatch
-        ConversionEvent conversionEvent = eventFactory.createConversion(
-            projectConfig,
-            userId,
-            eventName,
-            copiedAttributes,
-            eventTags);
-
         logger.info("Tracking event \"{}\" for user \"{}\".", eventName, userId);
 
+        OutgoingConversion conversion = OutgoingConversion.createConversion(projectConfig, Conversion.builder()
+            .event(eventType)
+            .tags(eventTags)
+            .userId(userId)
+            .userAttributes(EventFactory.buildAttributeList(projectConfig, copiedAttributes)));
+
         try {
-            eventProcessor.accept(conversionEvent);
+            eventProcessor.accept(conversion);
         } catch (Exception e) {
             logger.error("Unexpected exception in event dispatcher", e);
         }
 
-        // TODO(llinn) move to interceptor
         notificationCenter.sendNotifications(NotificationCenter.NotificationType.Track, eventName, userId,
-            copiedAttributes, eventTags, conversionEvent);
+            copiedAttributes,
+            eventTags,
+            // create a LogEvent that's just for listeners to maintain backwards compatibility.
+            // note: this may not be the actual LogEvent that's given to EventHandler when batching is enabled.
+            eventFactory.createConversionEvent(
+                projectConfig,
+                userId,
+                eventType.getId(),
+                eventType.getKey(),
+                copiedAttributes,
+                eventTags
+            ));
     }
 
     //======== FeatureFlag APIs ========//

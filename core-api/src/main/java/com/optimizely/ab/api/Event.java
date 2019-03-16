@@ -15,13 +15,13 @@
  */
 package com.optimizely.ab.api;
 
-import com.optimizely.ab.common.internal.Assert;
+import com.optimizely.ab.event.internal.payload.Attribute;
 
-import javax.annotation.Nonnull;
 import java.util.Date;
+import java.util.List;
 
 public interface Event {
-    EventType getType();
+    Type getType();
 
     Date getTimestamp();
 
@@ -29,44 +29,13 @@ public interface Event {
 
     EventContext getContext();
 
-    enum EventType {
+    String getUserId();
+
+    List<Attribute> getUserAttributes();
+
+    enum Type {
         // may want to follow convention of NotificationCenter.NotificationType
         CONVERSION,
-        IMPRESSION;
-
-        public interface EventConsumer {
-            void acceptConversion(ConversionEvent conversion);
-
-            void acceptImpression(ImpressionEvent impression);
-        }
-
-        public interface EventMapper<R> {
-            R applyConversion(ConversionEvent conversion);
-
-            R applyImpression(ImpressionEvent impression);
-        }
-
-        public void handle(Event event, @Nonnull EventConsumer consumer) {
-            Assert.notNull(event, "event");
-            switch (this) {
-                case CONVERSION:
-                    consumer.acceptConversion((ConversionEvent) event);
-                    break;
-                case IMPRESSION:
-                    consumer.acceptImpression((ImpressionEvent) event);
-                    break;
-            }
-        }
-
-        public <R> R map(Event event, @Nonnull EventMapper<R> mapper) {
-            Assert.notNull(event, "event");
-            switch (this) {
-                case CONVERSION:
-                    return mapper.applyConversion((ConversionEvent) event);
-                case IMPRESSION:
-                    return mapper.applyImpression((ImpressionEvent) event);
-            }
-            throw new Error("Missing case for " + this);
-        }
+        IMPRESSION
     }
 }

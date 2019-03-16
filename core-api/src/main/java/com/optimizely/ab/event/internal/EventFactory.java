@@ -17,14 +17,14 @@
 package com.optimizely.ab.event.internal;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.api.ConversionEvent;
+import com.optimizely.ab.api.EventContext;
+import com.optimizely.ab.api.ImpressionEvent;
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.api.ConversionEvent;
-import com.optimizely.ab.api.EventContext;
-import com.optimizely.ab.api.ImpressionEvent;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.Attribute;
 import com.optimizely.ab.event.internal.payload.Decision;
@@ -60,7 +60,7 @@ public class EventFactory {
     private final Map<String, String> parameters;
 
     public EventFactory() {
-        this(EventBatch.ClientEngine.JAVA_SDK, BuildVersionInfo.VERSION);
+        this(null, null);
     }
 
     public EventFactory(EventBatch.ClientEngine clientEngine, String clientVersion) {
@@ -78,8 +78,13 @@ public class EventFactory {
         this.endpoint = endpoint;
         this.parameters = parameters;
 
-        logger.debug("Client engine: {}/{}", clientEngine.getClientEngineValue(), clientVersion);
-        logger.debug("Endpoint: {}", endpoint);
+        logger.debug("Optimizely client: {}/{}", this.clientEngine.getClientEngineValue(), this.clientVersion);
+        logger.debug("Optimizely endpoint: {}", endpoint);
+        if (!BuildVersionInfo.VERSION.equals(clientVersion)) {
+            logger.warn("Optimizely client version is being overridden from {} to {}. This is NOT recommended.",
+                BuildVersionInfo.VERSION,
+                clientVersion);
+        }
     }
 
     @Nonnull
@@ -96,34 +101,14 @@ public class EventFactory {
     @Nonnull
     public EventBatch createEventBatch(com.optimizely.ab.api.Event event) {
         Assert.notNull(event, "event");
-        return event.getType().map(event, new com.optimizely.ab.api.Event.EventType.EventMapper<EventBatch>() {
-            @Override
-            public EventBatch applyConversion(ConversionEvent conversion) {
-                return createEventBatch(conversion);
-            }
-
-            @Override
-            public EventBatch applyImpression(ImpressionEvent impression) {
-                return createEventBatch(impression);
-            }
-        });
-    }
-
-    @Nonnull
-    public ImpressionEvent createImpression(
-        @Nonnull ProjectConfig projectConfig,
-        @Nonnull Experiment activatedExperiment,
-        @Nonnull Variation variation,
-        @Nonnull String userId,
-        @Nonnull Map<String, ?> attributes
-    ) {
-        return ImpressionEventImpl.builder()
-            .context(createEventContext(projectConfig))
-            .experiment(activatedExperiment)
-            .variation(variation)
-            .userId(userId)
-            .userAttributes(buildAttributeList(projectConfig, attributes))
-            .build();
+        Assert.isTrue(event.getType() != null, "Event must specify type");
+        switch (event.getType()) {
+            case CONVERSION:
+                return createEventBatch((Conversion) event);
+            case IMPRESSION:
+                return createEventBatch((Impression) event);
+            default: throw new IllegalArgumentException("Unhandled event type: " + event.getType());
+        }
     }
 
     @Nonnull
@@ -180,13 +165,13 @@ public class EventFactory {
         @Nonnull Map<String, ?> attributes
     ) {
         return createLogEvent(createEventBatch(
-            createImpression(
-                projectConfig,
-                activatedExperiment,
-                variation,
-                userId,
-                attributes
-            )));
+            ImpressionEvent.builder()
+                .context(createEventContext(projectConfig))
+                .experiment(activatedExperiment)
+                .variation(variation)
+                .userId(userId)
+                .userAttributes(buildAttributeList(projectConfig, attributes))
+                .build(createEventContext(projectConfig))));
     }
 
     public ConversionEvent createConversion(
@@ -196,13 +181,23 @@ public class EventFactory {
         @Nonnull Map<String, ?> attributes,
         @Nonnull Map<String, ?> eventTags
     ) {
-        return ConversionEventImpl.builder()
+        return conversionBuilder(projectConfig, userId, eventName, attributes, eventTags)
+            .build(createEventContext(projectConfig));
+    }
+
+    public Conversion.Builder conversionBuilder(
+        @Nonnull ProjectConfig projectConfig,
+        @Nonnull String userId,
+        @Nonnull String eventName,
+        @Nonnull Map<String, ?> attributes,
+        @Nonnull Map<String, ?> eventTags
+    ) {
+        return Conversion.builder()
             .context(createEventContext(projectConfig))
             .userId(userId)
             .event(projectConfig.getEventNameMapping().get(eventName))
             .userAttributes(buildAttributeList(projectConfig, attributes))
-            .tags(eventTags)
-            .build();
+            .tags(eventTags);
     }
 
     public EventBatch createEventBatch(ConversionEvent conversion) {
@@ -262,14 +257,11 @@ public class EventFactory {
 
     @Nonnull
     private EventContext createEventContext(ProjectConfig projectConfig) {
-        return EventContextImpl.builder()
-            .from(projectConfig)
-            .client(clientEngine.getClientEngineValue(), clientVersion)
-            .build();
+        return EventContext.create(projectConfig, clientEngine.getClientEngineValue(), clientVersion);
     }
 
     // TODO make private
-    public List<Attribute> buildAttributeList(ProjectConfig projectConfig, Map<String, ?> attributes) {
+    public static List<Attribute> buildAttributeList(ProjectConfig projectConfig, Map<String, ?> attributes) {
         List<Attribute> attributesList = new ArrayList<Attribute>();
 
         if (attributes != null) {

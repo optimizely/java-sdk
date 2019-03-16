@@ -15,9 +15,9 @@
  */
 package com.optimizely.ab.event.internal;
 
+import com.optimizely.ab.api.EventContext;
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.api.EventContext;
 
 import java.util.Objects;
 
@@ -34,8 +34,8 @@ public class EventContextImpl implements EventContext {
     private EventContextImpl(Builder builder) {
         accountId = builder.accountId;
         projectId = builder.projectId;
-        clientName = builder.clientName;
-        clientVersion = builder.clientVersion;
+        clientName = builder.clientName != null ? builder.clientName : "java-sdk";
+        clientVersion = builder.clientVersion != null ? builder.clientVersion : BuildVersionInfo.VERSION;
         revision = builder.revision;
         anonymizeIp = builder.anonymizeIp;
         botFiltering = builder.botFiltering;

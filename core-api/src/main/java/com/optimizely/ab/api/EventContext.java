@@ -15,6 +15,7 @@
  */
 package com.optimizely.ab.api;
 
+import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.event.internal.EventContextImpl;
 
 public interface EventContext {
@@ -37,5 +38,9 @@ public interface EventContext {
 
     static EventContextImpl.Builder builder() {
         return EventContextImpl.builder();
+    }
+
+    static EventContext create(ProjectConfig projectConfig, String clientName, String clientVersion) {
+        return builder().from(projectConfig).client(clientName, clientVersion).build();
     }
 }
