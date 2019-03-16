@@ -16,11 +16,13 @@
 package com.optimizely.ab.processor.internal;
 
 import com.lmax.disruptor.AlertException;
+import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.Sequence;
 import com.lmax.disruptor.SequenceBarrier;
 import com.lmax.disruptor.TimeoutException;
 import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.YieldingWaitStrategy;
+import com.lmax.disruptor.util.DaemonThreadFactory;
 import com.optimizely.ab.common.callback.Callback;
 import com.optimizely.ab.common.lifecycle.LifecycleAware;
 import com.optimizely.ab.common.plugin.Plugin;
@@ -28,7 +30,10 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.payload.Visitor;
+import com.optimizely.ab.processor.ProcessingStage;
 import com.optimizely.ab.processor.Processor;
+import com.optimizely.ab.processor.disruptor.DisruptorBufferConfig;
+import com.optimizely.ab.processor.disruptor.DisruptorBufferStage;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -79,6 +84,21 @@ public class LogEventProcessorTest {
         return inst;
     }
 
+    private <T> ProcessingStage<T, T> disruptor(Consumer<DisruptorBufferConfig.Builder> configure) {
+        DisruptorBufferConfig.Builder config = DisruptorBufferConfig.builder();
+
+        // base configuration
+        config.waitStrategy(new BlockingWaitStrategy())
+            .threadFactory(DaemonThreadFactory.INSTANCE)
+            .batchMaxSize(10)
+            .capacity(128);
+
+        // per-test configuration
+        configure.accept(config);
+
+        return new DisruptorBufferStage<>(config.build());
+    }
+
     @Test
     public void testInterceptorFilter() throws Exception {
         Processor<EventBatch.Builder> stage = processor(builder -> builder
@@ -104,8 +124,7 @@ public class LogEventProcessorTest {
                 if (count.getAndIncrement() == 1) {
                     throw new NullPointerException("TEST");
                 }
-            })
-            .batchMaxSize(1));
+            }));
 
         stage.process(eventBatchBuilder());
         assertEquals(1, output.payloads.size());
@@ -134,8 +153,7 @@ public class LogEventProcessorTest {
                     throw new NullPointerException("TEST");
                 }
                 return true;
-            })
-            .batchMaxSize(1));
+            }));
 
         stage.process(eventBatchBuilder());
         assertEquals(1, output.payloads.size());
@@ -165,8 +183,7 @@ public class LogEventProcessorTest {
                     throw new NullPointerException("TEST");
                 }
             })
-            .callback(event -> others.incrementAndGet())
-            .batchMaxSize(1));
+            .callback(event -> others.incrementAndGet()));
 
         stage.process(eventBatchBuilder());
         assertEquals(1, output.payloads.size());
@@ -196,7 +213,9 @@ public class LogEventProcessorTest {
         phaser.register();
 
         Processor<EventBatch.Builder> stage = processor(builder -> builder
-            .waitStrategy(new TestableWaitStrategy(phaser))
+            .bufferStage(disruptor(d -> d
+                    .waitStrategy(new TestableWaitStrategy(phaser))
+                    .batchMaxSize(100)))
             .transformer(e -> {
                 switch (counter.getAndIncrement()) {
                     case 1:
@@ -220,8 +239,7 @@ public class LogEventProcessorTest {
                     default:
                         break;
                 }
-            })
-            .batchMaxSize(100));
+            }));
 
         for (int i = 0; i < 10; i++) {
             stage.process(eventBatchBuilder()
@@ -284,7 +302,7 @@ public class LogEventProcessorTest {
     public void testMergesVisitors() throws Exception {
         Processor<EventBatch.Builder> stage = processor(builder -> builder
             .eventFactory(TestLogEvent::new)
-            .batchMaxSize(3));
+            .bufferStage(disruptor(d -> d.batchMaxSize(3))));
 
         stage.process(eventBatchBuilder()
             .addVisitor(visitorBuilder()
@@ -326,8 +344,7 @@ public class LogEventProcessorTest {
                 b.addVisitor(visitorBuilder()
                     .setVisitorId(String.valueOf(counter.incrementAndGet()))
                     .build());
-            })
-            .batchMaxSize(1));
+            }));
 
         stage.process(eventBatchBuilder());
 

@@ -57,7 +57,7 @@ public class DisruptorBufferStage<T> implements ProcessingStage<T, T> {
 
     @Nonnull
     @Override
-    public Processor<T> create(@Nonnull Processor<T> sink) {
+    public Processor<T> create(@Nonnull Processor<? super T> sink) {
         return new BufferProcessor<>(config, sink);
     }
 
@@ -74,13 +74,13 @@ public class DisruptorBufferStage<T> implements ProcessingStage<T, T> {
         static final int SLEEP_MILLIS_BETWEEN_DRAIN_ATTEMPTS = 50;
         static final int MAX_DRAIN_ATTEMPTS_BEFORE_SHUTDOWN = 200;
 
-        private final Processor<U> sink;
+        private final Processor<? super U> sink;
         private final EventTranslatorOneArg<MutableMessage<U>, U> translator;
 
         private volatile Disruptor<MutableMessage<U>> disruptor;
         private BufferBatch<U> batch;
 
-        BufferProcessor(Config config, Processor<U> sink) {
+        BufferProcessor(Config config, Processor<? super U> sink) {
             this(sink,
                 config.getBatchMaxSize(),
                 config.getCapacity(),
@@ -93,7 +93,7 @@ public class DisruptorBufferStage<T> implements ProcessingStage<T, T> {
          * @param waitStrategy strategy used by consumer when buffer is empty
          */
         protected BufferProcessor(
-            Processor<U> sink,
+            Processor<? super U> sink,
             int batchMaxSize,
             int ringBufferSize,
             ThreadFactory threadFactory,
@@ -233,12 +233,12 @@ public class DisruptorBufferStage<T> implements ProcessingStage<T, T> {
          * Operations are not thread-safe and should only be
          */
         private static class BufferBatch<E> implements Flushable {
-            private final Processor<E> sink;
+            private final Processor<? super E> sink;
             private final int limit;
 
             private List<E> elements;
 
-            private BufferBatch(Processor<E> sink, int limit) {
+            private BufferBatch(Processor<? super E> sink, int limit) {
                 this.sink = sink;
                 this.limit = limit;
             }

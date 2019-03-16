@@ -54,7 +54,7 @@ class EventBatchMergeStage implements ProcessingStage<EventBatch, LogEvent> {
 
     @Nonnull
     @Override
-    public Processor<EventBatch> create(@Nonnull Processor<LogEvent> sink) {
+    public Processor<EventBatch> create(@Nonnull Processor<? super LogEvent> sink) {
         return new BatchLogEventOperator(sink);
     }
 
@@ -62,13 +62,15 @@ class EventBatchMergeStage implements ProcessingStage<EventBatch, LogEvent> {
      * Builds and emits {@link LogEvent} from one or more {@link EventBatch} inputs.
      */
     class BatchLogEventOperator extends AbstractProcessor<EventBatch, LogEvent> {
-        public BatchLogEventOperator(Processor<LogEvent> sink) {
+        public BatchLogEventOperator(Processor<? super LogEvent> sink) {
             super(sink);
         }
 
         @Override
         public void process(EventBatch element) {
-            getSink().process(eventFactory.apply(element));
+            LogEvent logEvent = eventFactory.apply(element);
+            logEvent.setCallback(callbackSupplier.get());
+            getSink().process(logEvent);
         }
 
         @Override

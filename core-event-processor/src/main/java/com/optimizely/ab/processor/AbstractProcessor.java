@@ -40,9 +40,9 @@ public abstract class AbstractProcessor<T, R> implements Processor<T>, Lifecycle
      */
     protected static final Logger logger = LoggerFactory.getLogger(AbstractProcessor.class);
 
-    private final Processor<R> sink;
+    private final Processor<? super R> sink;
 
-    public AbstractProcessor(Processor<R> sink) {
+    public AbstractProcessor(Processor<? super R> sink) {
         this.sink = Assert.notNull(sink, "sink");
     }
 
@@ -131,7 +131,7 @@ public abstract class AbstractProcessor<T, R> implements Processor<T>, Lifecycle
         sink.processBatch(elements);
     }
 
-    protected Processor<R> getSink() {
+    protected Processor<? super R> getSink() {
         return sink;
     }
 }

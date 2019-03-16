@@ -44,7 +44,7 @@ public class ForEachStage<T> implements ProcessingStage<T, T> {
 
     @Nonnull
     @Override
-    public Processor<T> create(@Nonnull Processor<T> sink) {
+    public Processor<T> create(@Nonnull Processor<? super T> sink) {
         return new ForEachProcessor<>(actions, sink);
     }
 
@@ -54,7 +54,7 @@ public class ForEachStage<T> implements ProcessingStage<T, T> {
         private final List<Consumer<? super T>> actions;
 
 
-        private ForEachProcessor(List<Consumer<? super T>> actions, Processor<T> sink) {
+        private ForEachProcessor(List<Consumer<? super T>> actions, Processor<? super T> sink) {
             super(sink);
             this.actions = Assert.notNull(actions, "actions");
         }

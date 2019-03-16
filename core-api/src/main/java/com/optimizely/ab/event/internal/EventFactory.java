@@ -60,7 +60,7 @@ public class EventFactory {
     private final Map<String, String> parameters;
 
     public EventFactory() {
-        this(null, null);
+        this(EventBatch.ClientEngine.JAVA_SDK, BuildVersionInfo.VERSION);
     }
 
     public EventFactory(EventBatch.ClientEngine clientEngine, String clientVersion) {

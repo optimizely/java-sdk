@@ -295,8 +295,11 @@ public class Optimizely {
             notificationCenter.sendNotifications(NotificationCenter.NotificationType.Activate, experiment, userId,
                 filteredAttributes,
                 variation,
-                // create a LogEvent that's just for listeners to maintain backwards compatibility.
-                // note: this may not be the actual LogEvent that's given to EventHandler when batching is enabled.
+                // Create a LogEvent that's just for notificationCenter listeners :\
+                // This is to maintain backwards compatibility.
+                // The LogEvent given to listener may not match the actual one
+                // that EventHandler receives, i.e. if batching is enabled.
+                // NOTE: LogEvent that listener receives will not
                 eventFactory.createImpressionEvent(
                     projectConfig,
                     experiment,

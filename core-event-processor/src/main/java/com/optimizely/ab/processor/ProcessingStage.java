@@ -41,7 +41,7 @@ public interface ProcessingStage<T, R> {
      *         source for elements of type {@code R}
      */
     @Nonnull
-    Processor<T> create(@Nonnull Processor<R> sink);
+    Processor<T> create(@Nonnull Processor<? super R> sink);
 
     /**
      * Creates a composite stage that combines the {@code upstream} stage and this.
@@ -68,7 +68,7 @@ public interface ProcessingStage<T, R> {
      *
      * @see #compose(ProcessingStage)
      */
-    default <V> ProcessingStage<T, V> andThen(ProcessingStage<R, V> downstream) {
+    default <V> ProcessingStage<T, V> andThen(ProcessingStage<? super R, ? extends V> downstream) {
         Assert.notNull(downstream, "downstream");
         return sink -> create(downstream.create(sink));
     }
@@ -80,7 +80,8 @@ public interface ProcessingStage<T, R> {
      * @return a stage that always returns its input argument
      */
     static <T> ProcessingStage<T, T> identity() {
-        return sink -> sink;
+        //noinspection unchecked
+        return sink -> (Processor<T>) sink;
     }
 
     /**
@@ -94,7 +95,7 @@ public interface ProcessingStage<T, R> {
      * @return an stage that uses consumer on every event
      * @throws NullPointerException if argument is null
      */
-    static <T, R> ProcessingStage<T, R> simple(final BiConsumer<T, Processor<R>> consumer) {
+    static <T, R> ProcessingStage<T, R> simple(final BiConsumer<T, Processor<? super R>> consumer) {
         Assert.notNull(consumer, "consumer");
         return sink -> new AbstractProcessor<T, R>(sink) {
             @Override
@@ -118,12 +119,16 @@ public interface ProcessingStage<T, R> {
      */
     static <T, R> ProcessingStage<T, R> mapper(final Function<? super T, ? extends R> mapper) {
         Assert.notNull(mapper, "mapper");
-        return sink -> new AbstractProcessor<T, R>(sink) {
+        return (Processor<? super R> sink) -> new AbstractProcessor<T, R>(sink) {
             @Override
             public void process(@Nonnull T element) {
                 emitElementIfPresent(mapper.apply(element));
             }
         };
+    }
+
+    default <T, R> ProcessingStage<T, R> map(final Function<? super T, ? extends R> mapper) {
+        return mapper(mapper);
     }
 
     /**

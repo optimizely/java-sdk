@@ -39,7 +39,7 @@ public class InterceptingStage<T> implements ProcessingStage<T, T> {
 
     @Nonnull
     @Override
-    public Processor<T> create(@Nonnull Processor<T> sink) {
+    public Processor<T> create(@Nonnull Processor<? super T> sink) {
         return new InterceptProcessor<>(interceptors, sink);
     }
 
@@ -49,7 +49,7 @@ public class InterceptingStage<T> implements ProcessingStage<T, T> {
 
         private final List<InterceptHandler<T>> interceptors;
 
-        private InterceptProcessor(List<InterceptHandler<T>> interceptors, Processor<T> sink) {
+        private InterceptProcessor(List<InterceptHandler<T>> interceptors, Processor<? super T> sink) {
             super(sink);
             this.interceptors = Assert.notNull(interceptors, "interceptors");
         }
