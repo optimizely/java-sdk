@@ -73,16 +73,17 @@ public class Optimizely {
     private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
 
     @VisibleForTesting
-    DecisionService decisionService;
+    final DecisionService decisionService;
     @VisibleForTesting
     final EventFactory eventFactory;
-    @VisibleForTesting
-    ProjectConfig projectConfig;
     @VisibleForTesting
     final EventHandler eventHandler;
     @VisibleForTesting
     final ErrorHandler errorHandler;
-    private boolean isValid;
+
+    private final ProjectConfigManager projectConfigManager;
+
+    // TODO should be private
     public final NotificationCenter notificationCenter = new NotificationCenter();
 
     @Nullable
@@ -91,42 +92,16 @@ public class Optimizely {
     private Optimizely(@Nonnull EventHandler eventHandler,
                        @Nonnull EventFactory eventFactory,
                        @Nonnull ErrorHandler errorHandler,
-                       @Nullable DecisionService decisionService,
-                       @Nullable UserProfileService userProfileService) {
+                       @Nonnull DecisionService decisionService,
+                       @Nonnull UserProfileService userProfileService,
+                       @Nonnull ProjectConfigManager projectConfigManager
+    ) {
         this.decisionService = decisionService;
         this.eventHandler = eventHandler;
         this.eventFactory = eventFactory;
         this.errorHandler = errorHandler;
         this.userProfileService = userProfileService;
-    }
-
-    /**
-     * Initializes the SDK state. Can conceivably re-use this in the future with datafile sync where
-     * we can re-initialize the SDK instead of re-instantiating.
-     */
-    @VisibleForTesting
-    void initialize(@Nonnull String datafile, @Nullable ProjectConfig projectConfig) {
-        if (projectConfig == null) {
-            try {
-                projectConfig = new DatafileProjectConfig.Builder()
-                    .withDatafile(datafile)
-                    .build();
-                isValid = true;
-                logger.info("Datafile is valid");
-            } catch (ConfigParseException ex) {
-                logger.error("Unable to parse the datafile", ex);
-                logger.info("Datafile is invalid");
-                errorHandler.handleError(new OptimizelyRuntimeException(ex));
-            }
-        } else {
-            isValid = true;
-        }
-
-        this.projectConfig = projectConfig;
-        if (decisionService == null) {
-            Bucketer bucketer = new Bucketer(projectConfig);
-            decisionService = new DecisionService(bucketer, errorHandler, projectConfig, userProfileService);
-        }
+        this.projectConfigManager = projectConfigManager;
     }
 
     /**
@@ -137,7 +112,7 @@ public class Optimizely {
      * False if the Optimizely instance is not valid.
      */
     public boolean isValid() {
-        return isValid;
+        return getProjectConfig() != null;
     }
 
     //======== activate calls ========//
@@ -152,10 +127,6 @@ public class Optimizely {
     public Variation activate(@Nonnull String experimentKey,
                               @Nonnull String userId,
                               @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
-        if (!isValid) {
-            logger.error("Optimizely instance is not valid, failing activate call.");
-            return null;
-        }
 
         if (experimentKey == null) {
             logger.error("The experimentKey parameter must be nonnull.");
@@ -167,16 +138,20 @@ public class Optimizely {
             return null;
         }
 
-        ProjectConfig currentConfig = getProjectConfig();
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing activate call.");
+            return null;
+        }
 
-        Experiment experiment = currentConfig.getExperimentForKey(experimentKey, errorHandler);
+        Experiment experiment = projectConfig.getExperimentForKey(experimentKey, errorHandler);
         if (experiment == null) {
             // if we're unable to retrieve the associated experiment, return null
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experimentKey);
             return null;
         }
 
-        return activate(currentConfig, experiment, userId, attributes);
+        return activate(projectConfig, experiment, userId, attributes);
     }
 
     @Nullable
@@ -189,18 +164,15 @@ public class Optimizely {
     public Variation activate(@Nonnull Experiment experiment,
                               @Nonnull String userId,
                               @Nonnull Map<String, ?> attributes) {
-
-        ProjectConfig currentConfig = getProjectConfig();
-
-        return activate(currentConfig, experiment, userId, attributes);
+        return activate(getProjectConfig(), experiment, userId, attributes);
     }
 
     @Nullable
-    private Variation activate(@Nonnull ProjectConfig projectConfig,
+    private Variation activate(@Nullable ProjectConfig projectConfig,
                                @Nonnull Experiment experiment,
                                @Nonnull String userId,
                                @Nonnull Map<String, ?> attributes) {
-        if (!isValid) {
+        if (projectConfig == null) {
             logger.error("Optimizely instance is not valid, failing activate call.");
             return null;
         }
@@ -211,7 +183,7 @@ public class Optimizely {
         }
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         // bucket the user to the given experiment and dispatch an impression event
-        Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes);
+        Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes, projectConfig);
         if (variation == null) {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
@@ -272,11 +244,6 @@ public class Optimizely {
                       @Nonnull String userId,
                       @Nonnull Map<String, ?> attributes,
                       @Nonnull Map<String, ?> eventTags) throws UnknownEventTypeException {
-        if (!isValid) {
-            logger.error("Optimizely instance is not valid, failing track call.");
-            return;
-        }
-
         if (!validateUserId(userId)) {
             logger.info("Not tracking event \"{}\".", eventName);
             return;
@@ -288,10 +255,15 @@ public class Optimizely {
             return;
         }
 
-        ProjectConfig currentConfig = getProjectConfig();
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
+            return;
+        }
+
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
 
-        EventType eventType = currentConfig.getEventTypeForName(eventName, errorHandler);
+        EventType eventType = projectConfig.getEventTypeForName(eventName, errorHandler);
         if (eventType == null) {
             // if no matching event type could be found, do not dispatch an event
             logger.info("Not tracking event \"{}\" for user \"{}\".", eventName, userId);
@@ -361,11 +333,6 @@ public class Optimizely {
     public Boolean isFeatureEnabled(@Nonnull String featureKey,
                                     @Nonnull String userId,
                                     @Nonnull Map<String, ?> attributes) {
-        if (!isValid) {
-            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
-            return false;
-        }
-
         if (featureKey == null) {
             logger.warn("The featureKey parameter must be nonnull.");
             return false;
@@ -373,6 +340,13 @@ public class Optimizely {
             logger.warn("The userId parameter must be nonnull.");
             return false;
         }
+
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
+            return false;
+        }
+
         FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
         if (featureFlag == null) {
             logger.info("No feature flag was found for key \"{}\".", featureKey);
@@ -380,7 +354,7 @@ public class Optimizely {
         }
 
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes, projectConfig);
 
         if (featureDecision.variation != null) {
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
@@ -435,10 +409,6 @@ public class Optimizely {
                                              @Nonnull String variableKey,
                                              @Nonnull String userId,
                                              @Nonnull Map<String, ?> attributes) {
-        if (!isValid) {
-            logger.error("Optimizely instance is not valid, failing getFeatureVariableBoolean call.");
-            return null;
-        }
 
         String variableValue = getFeatureVariableValueForType(
             featureKey,
@@ -484,10 +454,6 @@ public class Optimizely {
                                            @Nonnull String variableKey,
                                            @Nonnull String userId,
                                            @Nonnull Map<String, ?> attributes) {
-        if (!isValid) {
-            logger.error("Optimizely instance is not valid, failing getFeatureVariableDouble call.");
-            return null;
-        }
 
         String variableValue = getFeatureVariableValueForType(
             featureKey,
@@ -538,10 +504,6 @@ public class Optimizely {
                                              @Nonnull String variableKey,
                                              @Nonnull String userId,
                                              @Nonnull Map<String, ?> attributes) {
-        if (!isValid) {
-            logger.error("Optimizely instance is not valid, failing getFeatureVariableInteger call.");
-            return null;
-        }
 
         String variableValue = getFeatureVariableValueForType(
             featureKey,
@@ -592,10 +554,6 @@ public class Optimizely {
                                            @Nonnull String variableKey,
                                            @Nonnull String userId,
                                            @Nonnull Map<String, ?> attributes) {
-        if (!isValid) {
-            logger.error("Optimizely instance is not valid, failing getFeatureVariableString call.");
-            return null;
-        }
 
         return getFeatureVariableValueForType(
             featureKey,
@@ -621,6 +579,13 @@ public class Optimizely {
             logger.warn("The userId parameter must be nonnull.");
             return null;
         }
+
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing getFeatureVariableValueForType call. type: {}", variableType);
+            return null;
+        }
+
         FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
         if (featureFlag == null) {
             logger.info("No feature flag was found for key \"{}\".", featureKey);
@@ -642,7 +607,7 @@ public class Optimizely {
 
         String variableValue = variable.getDefaultValue();
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes, projectConfig);
         if (featureDecision.variation != null) {
             FeatureVariableUsageInstance featureVariableUsageInstance =
                 featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
@@ -663,6 +628,7 @@ public class Optimizely {
 
     /**
      * Get the list of features that are enabled for the user.
+     * TODO revisit this method. Calling this as-is can dramatically increase visitor impression counts.
      *
      * @param userId     The ID of the user.
      * @param attributes The user's attributes.
@@ -671,13 +637,13 @@ public class Optimizely {
      */
     public List<String> getEnabledFeatures(@Nonnull String userId, @Nonnull Map<String, ?> attributes) {
         List<String> enabledFeaturesList = new ArrayList<String>();
-
-        if (!isValid) {
-            logger.error("Optimizely instance is not valid, failing getEnabledFeatures call.");
+        if (!validateUserId(userId)) {
             return enabledFeaturesList;
         }
 
-        if (!validateUserId(userId)) {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
             return enabledFeaturesList;
         }
 
@@ -706,7 +672,7 @@ public class Optimizely {
                                   @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
 
-        return decisionService.getVariation(experiment, userId, copiedAttributes);
+        return decisionService.getVariation(experiment, userId, copiedAttributes, getProjectConfig());
     }
 
     @Nullable
@@ -720,11 +686,6 @@ public class Optimizely {
     public Variation getVariation(@Nonnull String experimentKey,
                                   @Nonnull String userId,
                                   @Nonnull Map<String, ?> attributes) {
-        if (!isValid) {
-            logger.error("Optimizely instance is not valid, failing getVariation call.");
-            return null;
-        }
-
         if (!validateUserId(userId)) {
             return null;
         }
@@ -734,15 +695,19 @@ public class Optimizely {
             return null;
         }
 
-        ProjectConfig currentConfig = getProjectConfig();
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
+            return null;
+        }
 
-        Experiment experiment = currentConfig.getExperimentForKey(experimentKey, errorHandler);
+        Experiment experiment = projectConfig.getExperimentForKey(experimentKey, errorHandler);
         if (experiment == null) {
             // if we're unable to retrieve the associated experiment, return null
             return null;
         }
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
-        return decisionService.getVariation(experiment, userId, copiedAttributes);
+        return decisionService.getVariation(experiment, userId, copiedAttributes, projectConfig);
     }
 
     /**
@@ -760,11 +725,14 @@ public class Optimizely {
     public boolean setForcedVariation(@Nonnull String experimentKey,
                                       @Nonnull String userId,
                                       @Nullable String variationKey) {
-        if (!isValid) {
-            logger.error("Optimizely instance is not valid, failing setForcedVariation call.");
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
             return false;
         }
 
+        // TODO this is problematic if swapping out ProjectConfigs.
+        // This state should be represented elsewhere like in a ephemeral UserProfileService.
         return projectConfig.setForcedVariation(experimentKey, userId, variationKey);
     }
 
@@ -781,7 +749,8 @@ public class Optimizely {
     @Nullable
     public Variation getForcedVariation(@Nonnull String experimentKey,
                                         @Nonnull String userId) {
-        if (!isValid) {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
             logger.error("Optimizely instance is not valid, failing getForcedVariation call.");
             return null;
         }
@@ -792,9 +761,9 @@ public class Optimizely {
     /**
      * @return the current {@link ProjectConfig} instance.
      */
-    @Nonnull
+    @Nullable
     public ProjectConfig getProjectConfig() {
-        return projectConfig;
+        return projectConfigManager.getConfig();
     }
 
     @Nullable
@@ -840,6 +809,11 @@ public class Optimizely {
         return new Builder(datafile, eventHandler);
     }
 
+    public static Builder builder(@Nonnull ProjectConfigManager projectConfigManager,
+                                  @Nonnull EventHandler eventHandler) {
+        return new Builder(projectConfigManager, eventHandler);
+    }
+
     /**
      * {@link Optimizely} instance builder.
      * <p>
@@ -859,6 +833,7 @@ public class Optimizely {
         private ClientEngine clientEngine;
         private String clientVersion;
         private ProjectConfig projectConfig;
+        private ProjectConfigManager projectConfigManager;
         private UserProfileService userProfileService;
 
         public Builder(@Nonnull String datafile,
@@ -867,14 +842,10 @@ public class Optimizely {
             this.eventHandler = eventHandler;
         }
 
-        protected Builder withBucketing(Bucketer bucketer) {
-            this.bucketer = bucketer;
-            return this;
-        }
-
-        protected Builder withDecisionService(DecisionService decisionService) {
-            this.decisionService = decisionService;
-            return this;
+        public Builder(@Nonnull ProjectConfigManager projectConfigManager,
+                       @Nonnull EventHandler eventHandler) {
+            this.projectConfigManager = projectConfigManager;
+            this.eventHandler = eventHandler;
         }
 
         public Builder withErrorHandler(ErrorHandler errorHandler) {
@@ -897,16 +868,32 @@ public class Optimizely {
             return this;
         }
 
+        public Builder withConfigManager(ProjectConfigManager projectConfigManager) {
+            this.projectConfigManager = projectConfigManager;
+            return this;
+        }
+
+        // Helper function for making testing easier
+        protected Builder withBucketing(Bucketer bucketer) {
+            this.bucketer = bucketer;
+            return this;
+        }
+
+        protected Builder withConfig(ProjectConfig projectConfig) {
+            this.projectConfig = projectConfig;
+            return this;
+        }
+
+        protected Builder withDecisionService(DecisionService decisionService) {
+            this.decisionService = decisionService;
+            return this;
+        }
+
         protected Builder withEventBuilder(EventFactory eventFactory) {
             this.eventFactory = eventFactory;
             return this;
         }
 
-        // Helper function for making testing easier
-        protected Builder withConfig(ProjectConfig projectConfig) {
-            this.projectConfig = projectConfig;
-            return this;
-        }
 
         public Optimizely build() {
             if (clientEngine == null) {
@@ -917,7 +904,6 @@ public class Optimizely {
                 clientVersion = BuildVersionInfo.VERSION;
             }
 
-
             if (eventFactory == null) {
                 eventFactory = new EventFactory(clientEngine, clientVersion);
             }
@@ -926,14 +912,35 @@ public class Optimizely {
                 errorHandler = new NoOpErrorHandler();
             }
 
-            // Used for convenience while unit testing to override/mock bucketing. This interface is NOT public and should be refactored out.
-            if (bucketer != null && decisionService == null) {
-                decisionService = new DecisionService(bucketer, errorHandler, projectConfig, userProfileService);
+            if (bucketer == null) {
+                bucketer = new Bucketer();
             }
 
-            Optimizely optimizely = new Optimizely(eventHandler, eventFactory, errorHandler, decisionService, userProfileService);
-            optimizely.initialize(datafile, projectConfig);
-            return optimizely;
+            if (decisionService == null) {
+                decisionService = new DecisionService(bucketer, errorHandler, userProfileService);
+            }
+
+            if (projectConfig == null && datafile != null && !datafile.isEmpty()) {
+                try {
+                    projectConfig = new DatafileProjectConfig.Builder().withDatafile(datafile).build();
+                    logger.info("Datafile successfully loaded with revision: {}", projectConfig.getRevision());
+                } catch (ConfigParseException ex) {
+                    logger.error("Unable to parse the datafile", ex);
+                    logger.info("Datafile is invalid");
+                    errorHandler.handleError(new OptimizelyRuntimeException(ex));
+                }
+            }
+
+            FallbackProjectConfigManager.Builder builder = FallbackProjectConfigManager.builder();
+            if (projectConfigManager != null) {
+                builder.add(projectConfigManager);
+            }
+
+            if (projectConfig != null) {
+                builder.add(StaticProjectConfigManager.create(projectConfig));
+            }
+
+            return new Optimizely(eventHandler, eventFactory, errorHandler, decisionService, userProfileService, builder.build());
         }
     }
 }

@@ -455,6 +455,7 @@ public final class DatafileProjectConfigTestUtils {
 
     /**
      * Asserts that the provided project configs are equivalent.
+     * TODO this signature is backwards should be (ProjectConfig expected, ProjectConfig actual)
      */
     public static void verifyProjectConfig(@CheckForNull ProjectConfig actual, @Nonnull ProjectConfig expected) {
         assertNotNull(actual);

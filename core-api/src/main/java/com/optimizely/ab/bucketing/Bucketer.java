@@ -36,14 +36,12 @@ import java.util.List;
  * identifier.
  * <p>
  * The user identifier <i>must</i> be provided in the first data argument passed to
- * {@link #bucket(Experiment, String)} and <i>must</i> be non-null and non-empty.
+ * {@link #bucket(Experiment, String, ProjectConfig)} and <i>must</i> be non-null and non-empty.
  *
  * @see <a href="https://en.wikipedia.org/wiki/MurmurHash">MurmurHash</a>
  */
 @Immutable
 public class Bucketer {
-
-    private final ProjectConfig projectConfig;
 
     private static final Logger logger = LoggerFactory.getLogger(Bucketer.class);
 
@@ -54,10 +52,6 @@ public class Bucketer {
      */
     @VisibleForTesting
     static final int MAX_TRAFFIC_VALUE = 10000;
-
-    public Bucketer(ProjectConfig projectConfig) {
-        this.projectConfig = projectConfig;
-    }
 
     private String bucketToEntity(int bucketValue, List<TrafficAllocation> trafficAllocations) {
         int currentEndOfRange;
@@ -76,7 +70,8 @@ public class Bucketer {
     }
 
     private Experiment bucketToExperiment(@Nonnull Group group,
-                                          @Nonnull String bucketingId) {
+                                          @Nonnull String bucketingId,
+                                          @Nonnull ProjectConfig projectConfig) {
         // "salt" the bucket id using the group id
         String bucketKey = bucketingId + group.getId();
 
@@ -132,7 +127,8 @@ public class Bucketer {
      */
     @Nullable
     public Variation bucket(@Nonnull Experiment experiment,
-                            @Nonnull String bucketingId) {
+                            @Nonnull String bucketingId,
+                            @Nonnull ProjectConfig projectConfig) {
         // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group
@@ -140,7 +136,7 @@ public class Bucketer {
             Group experimentGroup = projectConfig.getGroupIdMapping().get(groupId);
             // bucket to an experiment only if group entities are to be mutually exclusive
             if (experimentGroup.getPolicy().equals(Group.RANDOM_POLICY)) {
-                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId);
+                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId, projectConfig);
                 if (bucketedExperiment == null) {
                     logger.info("User with bucketingId \"{}\" is not in any experiment of group {}.", bucketingId, experimentGroup.getId());
                     return null;

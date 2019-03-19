@@ -49,7 +49,6 @@ public class DecisionService {
 
     private final Bucketer bucketer;
     private final ErrorHandler errorHandler;
-    private final ProjectConfig projectConfig;
     private final UserProfileService userProfileService;
     private static final Logger logger = LoggerFactory.getLogger(DecisionService.class);
 
@@ -58,16 +57,13 @@ public class DecisionService {
      *
      * @param bucketer           Base bucketer to allocate new users to an experiment.
      * @param errorHandler       The error handler of the Optimizely client.
-     * @param projectConfig      Optimizely Project Config representing the datafile.
      * @param userProfileService UserProfileService implementation for storing user info.
      */
     public DecisionService(@Nonnull Bucketer bucketer,
                            @Nonnull ErrorHandler errorHandler,
-                           @Nullable ProjectConfig projectConfig,
                            @Nullable UserProfileService userProfileService) {
         this.bucketer = bucketer;
         this.errorHandler = errorHandler;
-        this.projectConfig = projectConfig;
         this.userProfileService = userProfileService;
     }
 
@@ -82,7 +78,8 @@ public class DecisionService {
     @Nullable
     public Variation getVariation(@Nonnull Experiment experiment,
                                   @Nonnull String userId,
-                                  @Nonnull Map<String, ?> filteredAttributes) {
+                                  @Nonnull Map<String, ?> filteredAttributes,
+                                  @Nonnull ProjectConfig projectConfig) {
 
         if (!ExperimentUtils.isExperimentActive(experiment)) {
             return null;
@@ -121,7 +118,7 @@ public class DecisionService {
 
         // check if user exists in user profile
         if (userProfile != null) {
-            variation = getStoredVariation(experiment, userProfile);
+            variation = getStoredVariation(experiment, userProfile, projectConfig);
             // return the stored variation if it exists
             if (variation != null) {
                 return variation;
@@ -132,7 +129,7 @@ public class DecisionService {
 
         if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
             String bucketingId = getBucketingId(userId, filteredAttributes);
-            variation = bucketer.bucket(experiment, bucketingId);
+            variation = bucketer.bucket(experiment, bucketingId, projectConfig);
 
             if (variation != null) {
                 if (userProfileService != null) {
@@ -159,12 +156,13 @@ public class DecisionService {
      */
     @Nonnull
     public FeatureDecision getVariationForFeature(@Nonnull FeatureFlag featureFlag,
-                                           @Nonnull String userId,
-                                           @Nonnull Map<String, ?> filteredAttributes) {
+                                                  @Nonnull String userId,
+                                                  @Nonnull Map<String, ?> filteredAttributes,
+                                                  @Nonnull ProjectConfig projectConfig) {
         if (!featureFlag.getExperimentIds().isEmpty()) {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
-                Variation variation = this.getVariation(experiment, userId, filteredAttributes);
+                Variation variation = getVariation(experiment, userId, filteredAttributes, projectConfig);
                 if (variation != null) {
                     return new FeatureDecision(experiment, variation,
                         FeatureDecision.DecisionSource.EXPERIMENT);
@@ -174,7 +172,7 @@ public class DecisionService {
             logger.info("The feature flag \"{}\" is not used in any experiments.", featureFlag.getKey());
         }
 
-        FeatureDecision featureDecision = getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes);
+        FeatureDecision featureDecision = getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes, projectConfig);
         if (featureDecision.variation == null) {
             logger.info("The user \"{}\" was not bucketed into a rollout for feature flag \"{}\".",
                 userId, featureFlag.getKey());
@@ -198,7 +196,8 @@ public class DecisionService {
     @Nonnull
     FeatureDecision getVariationForFeatureInRollout(@Nonnull FeatureFlag featureFlag,
                                                     @Nonnull String userId,
-                                                    @Nonnull Map<String, ?> filteredAttributes) {
+                                                    @Nonnull Map<String, ?> filteredAttributes,
+                                                    @Nonnull ProjectConfig projectConfig) {
         // use rollout to get variation for feature
         if (featureFlag.getRolloutId().isEmpty()) {
             logger.info("The feature flag \"{}\" is not used in a rollout.", featureFlag.getKey());
@@ -219,7 +218,7 @@ public class DecisionService {
             Experiment rolloutRule = rollout.getExperiments().get(i);
             Audience audience = projectConfig.getAudienceIdMapping().get(rolloutRule.getAudienceIds().get(0));
             if (ExperimentUtils.isUserInExperiment(projectConfig, rolloutRule, filteredAttributes)) {
-                variation = bucketer.bucket(rolloutRule, bucketingId);
+                variation = bucketer.bucket(rolloutRule, bucketingId, projectConfig);
                 if (variation == null) {
                     break;
                 }
@@ -234,7 +233,7 @@ public class DecisionService {
         // get last rule which is the fall back rule
         Experiment finalRule = rollout.getExperiments().get(rolloutRulesLength - 1);
         if (ExperimentUtils.isUserInExperiment(projectConfig, finalRule, filteredAttributes)) {
-            variation = bucketer.bucket(finalRule, bucketingId);
+            variation = bucketer.bucket(finalRule, bucketingId, projectConfig);
             if (variation != null) {
                 return new FeatureDecision(finalRule, variation,
                     FeatureDecision.DecisionSource.ROLLOUT);
@@ -279,7 +278,8 @@ public class DecisionService {
      */
     @Nullable
     Variation getStoredVariation(@Nonnull Experiment experiment,
-                                 @Nonnull UserProfile userProfile) {
+                                 @Nonnull UserProfile userProfile,
+                                 @Nonnull ProjectConfig projectConfig) {
         // ---------- Check User Profile for Sticky Bucketing ----------
         // If a user profile instance is present then check it for a saved variation
         String experimentId = experiment.getId();

@@ -17,7 +17,7 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.bucketing.UserProfileService;
-import com.optimizely.ab.config.DatafileProjectConfigTestUtils;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.EventHandler;
@@ -35,8 +35,7 @@ import org.mockito.junit.MockitoRule;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -154,7 +153,7 @@ public class OptimizelyBuilderTest {
     @SuppressFBWarnings(value = "NP_NONNULL_PARAM_VIOLATION", justification = "Testing nullness contract violation")
     @Test
     public void nullDatafileResultsInInvalidOptimizelyInstance() throws Exception {
-        Optimizely optimizelyClient = Optimizely.builder(null, mockEventHandler).build();
+        Optimizely optimizelyClient = Optimizely.builder((String) null, mockEventHandler).build();
 
         assertFalse(optimizelyClient.isValid());
     }
@@ -179,5 +178,39 @@ public class OptimizelyBuilderTest {
             .build();
 
         assertFalse(optimizelyClient.isValid());
+    }
+
+    @Test
+    public void withValidProjectConfigManagerOnly() throws Exception {
+        ProjectConfig projectConfig = new DatafileProjectConfig.Builder().withDatafile(validConfigJsonV4()).build();
+        ProjectConfigManager projectConfigManager = StaticProjectConfigManager.create(projectConfig);
+
+        Optimizely optimizelyClient = Optimizely.builder(projectConfigManager, mockEventHandler)
+            .build();
+
+        assertTrue(optimizelyClient.isValid());
+        verifyProjectConfig(optimizelyClient.getProjectConfig(), projectConfig);
+    }
+
+    @Test
+    public void withInvalidProjectConfigManagerOnly() throws Exception {
+        ProjectConfigManager projectConfigManager = StaticProjectConfigManager.create(null);
+        Optimizely optimizelyClient = Optimizely.builder(projectConfigManager, mockEventHandler)
+            .build();
+
+        assertFalse(optimizelyClient.isValid());
+    }
+
+    @Test
+    public void withProjectConfigManagerAndFallbackDatafile() throws Exception {
+        ProjectConfig expectedProjectConfig = new DatafileProjectConfig.Builder().withDatafile(validConfigJsonV4()).build();
+        ProjectConfigManager projectConfigManager = StaticProjectConfigManager.create(null);
+
+        Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV4(), mockEventHandler)
+            .withConfigManager(projectConfigManager)
+            .build();
+
+        assertTrue(optimizelyClient.isValid());
+        verifyProjectConfig(optimizelyClient.getProjectConfig(), expectedProjectConfig);
     }
 }

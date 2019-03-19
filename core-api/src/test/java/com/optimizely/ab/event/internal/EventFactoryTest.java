@@ -721,7 +721,7 @@ public class EventFactoryTest {
 
         // Bucket to the first variation for all experiments.
         for (Experiment experiment : validProjectConfig.getExperiments()) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
+            when(mockBucketAlgorithm.bucket(experiment, userId, validProjectConfig))
                 .thenReturn(experiment.getVariations().get(0));
         }
 
@@ -801,7 +801,7 @@ public class EventFactoryTest {
 
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         for (Experiment experiment : validProjectConfig.getExperiments()) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
+            when(mockBucketAlgorithm.bucket(experiment, userId, validProjectConfig))
                 .thenReturn(experiment.getVariations().get(0));
         }
 
@@ -836,7 +836,7 @@ public class EventFactoryTest {
 
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         for (Experiment experiment : projectConfig.getExperiments()) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
+            when(mockBucketAlgorithm.bucket(experiment, userId, validProjectConfig))
                 .thenReturn(experiment.getVariations().get(0));
         }
 
