@@ -2629,6 +2629,8 @@ public class OptimizelyTest {
 
     //======== Notification listeners ========//
 
+    boolean isListenerCalled = false;
+
     /**
      * Helper method to return decisionListener
      **/
@@ -2648,6 +2650,7 @@ public class OptimizelyTest {
                 for (Map.Entry<String, ?> entry : decisionInfo.entrySet()) {
                     assertEquals(testDecisionInfo.get(entry.getKey()), entry.getValue());
                 }
+                isListenerCalled = true;
             }
         };
     }
@@ -2662,7 +2665,7 @@ public class OptimizelyTest {
     @Test
     public void getFeatureVariableWithListenerUserInExperimentFeatureOn() throws Exception {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
-
+        isListenerCalled = false;
         final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
         String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
         String expectedValue = "F";
@@ -2697,6 +2700,9 @@ public class OptimizelyTest {
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             expectedValue);
 
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
 
@@ -2708,7 +2714,7 @@ public class OptimizelyTest {
     @Test
     public void getFeatureVariableWithListenerUserInExperimentFeatureOff() {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
-
+        isListenerCalled = false;
         final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
         String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
         String expectedValue = "H";
@@ -2743,6 +2749,9 @@ public class OptimizelyTest {
             null),
             expectedValue);
 
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
 
@@ -2754,6 +2763,7 @@ public class OptimizelyTest {
     public void getFeatureVariableWithListenerUserInRollOutFeatureOn() throws Exception {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
+        isListenerCalled = false;
         final String validFeatureKey = FEATURE_SINGLE_VARIABLE_STRING_KEY;
         String validVariableKey = VARIABLE_STRING_VARIABLE_KEY;
         String expectedValue = "lumos";
@@ -2788,6 +2798,9 @@ public class OptimizelyTest {
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             expectedValue);
 
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
 
@@ -2799,6 +2812,7 @@ public class OptimizelyTest {
     public void getFeatureVariableWithListenerUserNotInRollOutFeatureOff() {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
+        isListenerCalled = false;
         final String validFeatureKey = FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY;
         String validVariableKey = VARIABLE_BOOLEAN_VARIABLE_KEY;
         Boolean expectedValue = true;
@@ -2833,6 +2847,9 @@ public class OptimizelyTest {
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             expectedValue);
 
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
 
@@ -2844,6 +2861,7 @@ public class OptimizelyTest {
     public void getFeatureVariableIntegerWithListenerUserInRollOutFeatureOn() {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
+        isListenerCalled = false;
         final String validFeatureKey = FEATURE_SINGLE_VARIABLE_INTEGER_KEY;
         String validVariableKey = VARIABLE_INTEGER_VARIABLE_KEY;
         int expectedValue = 7;
@@ -2877,6 +2895,9 @@ public class OptimizelyTest {
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             (long) expectedValue);
 
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
 
@@ -2888,6 +2909,7 @@ public class OptimizelyTest {
     public void getFeatureVariableDoubleWithListenerUserInExperimentFeatureOn() throws Exception {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
+        isListenerCalled = false;
         final String validFeatureKey = FEATURE_SINGLE_VARIABLE_DOUBLE_KEY;
         String validVariableKey = VARIABLE_DOUBLE_VARIABLE_KEY;
 
@@ -2920,6 +2942,9 @@ public class OptimizelyTest {
             genericUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_SLYTHERIN_VALUE)),
             Math.PI, 2);
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
 
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }

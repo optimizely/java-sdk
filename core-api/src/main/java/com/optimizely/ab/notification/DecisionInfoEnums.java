@@ -18,14 +18,14 @@ package com.optimizely.ab.notification;
 
 public class DecisionInfoEnums {
     public enum FeatureVariableDecisionInfo {
-        SOURCE_EXPERIMENT_KEY("source_experiment_key"),
-        SOURCE_VARIATION_KEY("source_variation_key"),
         FEATURE_KEY("feature_key"),
         FEATURE_ENABLED("feature_enabled"),
+        SOURCE("source"),
+        SOURCE_EXPERIMENT_KEY("source_experiment_key"),
+        SOURCE_VARIATION_KEY("source_variation_key"),
         VARIABLE_KEY("variable_key"),
         VARIABLE_TYPE("variable_type"),
-        VARIABLE_VALUE("variable_value"),
-        SOURCE("source");
+        VARIABLE_VALUE("variable_value");
 
         private final String key;
 

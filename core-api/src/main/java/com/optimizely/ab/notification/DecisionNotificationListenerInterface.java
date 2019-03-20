@@ -25,8 +25,8 @@ public interface DecisionNotificationListenerInterface {
      * onDecision called when an activate was triggered
      *
      * @param type         - The notification type.
-     * @param userId       - The userId passed into activate.
-     * @param attributes   - The filtered attribute list passed into activate
+     * @param userId       - The userId passed to the API.
+     * @param attributes   - The attribute map passed to the API.
      * @param decisionInfo - The decision information containing all parameters passed in API.
      */
     void onDecision(@Nonnull String type,
