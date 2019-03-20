@@ -2638,6 +2638,7 @@ public class OptimizelyTest {
 
     //======== Notification listeners ========//
 
+    boolean isListenerCalled = false;
     /**
      * Helper method to return decisionListener
      **/
@@ -2657,6 +2658,7 @@ public class OptimizelyTest {
                 for (Map.Entry<String, ?> entry : decisionInfo.entrySet()) {
                     assertEquals(testDecisionInfo.get(entry.getKey()), entry.getValue());
                 }
+                isListenerCalled = true;
             }
         };
     }
@@ -2671,6 +2673,8 @@ public class OptimizelyTest {
     public void getEnabledFeaturesWithListenerMultipleFeatureEnabled() throws Exception {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
+        isListenerCalled = false;
+
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
             .withConfig(validProjectConfig)
             .build();
@@ -2679,6 +2683,7 @@ public class OptimizelyTest {
             new DecisionNotificationListener() {
                 @Override
                 public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
+                    isListenerCalled = true;
                     assertEquals(type, NotificationCenter.DecisionNotificationType.FEATURE.toString());
                 }
             });
@@ -2687,7 +2692,10 @@ public class OptimizelyTest {
             new HashMap<String, String>());
         assertEquals(2, featureFlags.size());
 
-        verify(mockEventHandler, times(2)).dispatchEvent(any(LogEvent.class));
+        verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
 
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
@@ -2703,6 +2711,7 @@ public class OptimizelyTest {
     public void getEnabledFeaturesWithNoFeatureEnabled() throws Exception {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
+        isListenerCalled = false;
         Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
             .withConfig(validProjectConfig)
             .build());
@@ -2726,6 +2735,9 @@ public class OptimizelyTest {
 
         verify(mockEventHandler, times(0)).dispatchEvent(any(LogEvent.class));
 
+        // Verify that listener not being called
+        assertFalse(isListenerCalled);
+
         assertTrue(spyOptimizely.notificationCenter.removeNotificationListener(notificationId));
     }
 
@@ -2739,6 +2751,7 @@ public class OptimizelyTest {
     public void isFeatureEnabledWithListenerUserInExperimentFeatureOn() throws Exception {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
+        isListenerCalled = false;
         final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
@@ -2774,6 +2787,9 @@ public class OptimizelyTest {
         );
         verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
 
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
 
@@ -2784,6 +2800,8 @@ public class OptimizelyTest {
     @Test
     public void isFeatureEnabledWithListenerUserInExperimentFeatureOff() throws Exception {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        isListenerCalled = false;
 
         final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
 
@@ -2827,6 +2845,10 @@ public class OptimizelyTest {
                 "\" is not enabled for user \"" + genericUserId + "\"."
         );
         verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
 
@@ -2839,6 +2861,7 @@ public class OptimizelyTest {
     public void isFeatureEnabledWithListenerUserNotInExperimentAndNotInRollOut() throws Exception {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
+        isListenerCalled = false;
         final String validFeatureKey = "boolean_feature";
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
@@ -2865,6 +2888,10 @@ public class OptimizelyTest {
                 "\" is not enabled for user \"" + genericUserId + "\"."
         );
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
 
@@ -2876,6 +2903,7 @@ public class OptimizelyTest {
     public void isFeatureEnabledWithListenerUserInRollOut() throws Exception {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
+        isListenerCalled = false;
         final String validFeatureKey = "integer_single_variable_feature";
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
@@ -2906,6 +2934,10 @@ public class OptimizelyTest {
                 "\" is not enabled for user \"" + genericUserId + "\"."
         );
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
 
