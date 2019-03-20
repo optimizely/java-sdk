@@ -35,5 +35,4 @@ public class DecisionInfoEnums {
             return key;
         }
     }
-
 }
