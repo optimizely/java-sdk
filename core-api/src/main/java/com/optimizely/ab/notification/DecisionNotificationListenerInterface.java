@@ -26,7 +26,7 @@ public interface DecisionNotificationListenerInterface {
      *
      * @param type         - The notification type.
      * @param userId       - The userId passed into API.
-     * @param attributes   - The filtered attribute list passed into API.
+     * @param attributes   - The attribute map passed to the API.
      * @param decisionInfo - The decision information containing all parameters passed in API.
      */
     void onDecision(@Nonnull String type,
