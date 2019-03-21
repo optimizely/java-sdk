@@ -37,5 +37,5 @@ public interface Processor<T> {
      *
      * @param elements the elements to put
      */
-    void processBatch(@Nonnull Collection<? extends T> elements);
+    void processBatch(@Nonnull Collection<? extends T> elements); // TODO remove "? extends"
 }

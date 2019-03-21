@@ -74,6 +74,19 @@ public interface ProcessingStage<T, R> {
     }
 
     /**
+     * Creates a composite stage that applies a functional transform over the output elements of this stage.
+     *
+     * @param mapper a function to apply to each element
+     * @param <V> the type of output elements
+     * @return a composite stage
+     * @throws NullPointerException if argument is null
+     */
+    default <V> ProcessingStage<T, V> map(final Function<? super R, ? extends V> mapper) {
+        Assert.notNull(mapper, "mapper");
+        return andThen(mapper(mapper));
+    }
+
+    /**
      * Returns an stage that always returns its input stage.
      *
      * @param <T> the type of the input elements and output elements to the stage
@@ -109,8 +122,6 @@ public interface ProcessingStage<T, R> {
      * Creates a synchronous stage that produces elements that are the results
      * of applying the given function to each put element.
      *
-     * If the {@code mapper} returns null, an element will not be emitted to the sink.
-     *
      * @param <T> the type of input elements
      * @param <R> the type of output elements
      * @param mapper a transforming function.
@@ -127,15 +138,9 @@ public interface ProcessingStage<T, R> {
         };
     }
 
-    default <T, R> ProcessingStage<T, R> map(final Function<? super T, ? extends R> mapper) {
-        return mapper(mapper);
-    }
-
     /**
      * Creates an synchronous stage that performs side-effects on input elements.
      * Each of the {@code transformers} is invoked on every input element in-order.
-     *
-     * If an empty list is passed, it is the same as calling {@link #identity()}.
      *
      * @param actions list of transformers
      * @param <T> the type of input and output elements
@@ -145,9 +150,6 @@ public interface ProcessingStage<T, R> {
      */
     static <T> ProcessingStage<T, T> transformers(final List<Consumer<? super T>> actions) {
         Assert.notNull(actions, "transformers");
-        if (actions.isEmpty()) {
-            return identity();
-        }
         return new ForEachStage<>(actions);
     }
 
@@ -161,8 +163,6 @@ public interface ProcessingStage<T, R> {
      * If a {@link InterceptingStage.InterceptHandler} returns null, no element will be emitted to the sink and
      * the EventInterceptors that follow it will not be invoked.
      *
-     * If an empty list is passed, it is the same as calling {@link #identity()}.
-     *
      * @param handlers list of intercept handlers
      * @param <T> the type of input and output elements
      * @return the new stage
@@ -171,9 +171,20 @@ public interface ProcessingStage<T, R> {
      */
     static <T> ProcessingStage<T, T> interceptors(final List<InterceptingStage.InterceptHandler<T>> handlers) {
         Assert.notNull(handlers, "handlers");
-        if (handlers.isEmpty()) {
-            return identity();
-        }
         return new InterceptingStage<>(handlers);
+    }
+
+    /**
+     * Creates a synchronized (thread-safe) stage backed by the specified stage.
+     *
+     * @param stage the stage to wrap
+     * @param <T> the type of input elements
+     * @param <R> the type of output elements
+     * @return the synchronized stage
+     * @throws NullPointerException if argument is null
+     */
+    static <T, R> ProcessingStage<T, R> synchronizedStage(final ProcessingStage<T, R> stage) {
+        Assert.notNull(stage, "stage");
+        return sink -> new SynchronizedProcessor<>(stage.create(sink));
     }
 }

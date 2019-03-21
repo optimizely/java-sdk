@@ -15,6 +15,8 @@
  */
 package com.optimizely.ab.common.callback;
 
+import com.optimizely.ab.common.internal.Assert;
+
 import javax.annotation.Nonnull;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
@@ -78,45 +80,28 @@ public interface Callback<E> {
     }
 
     /**
-     * @see #from(Consumer, BiConsumer)
+     * Creates a callback that calls the given function on completion.
      */
-    static <E> Callback<E> from(final Consumer<E> onSuccess) {
-        return from(onSuccess, null);
-    }
-
-    /**
-     * Convenience method to reify a {@link Callback} instance from separate success and failure handler functions.
-     *
-     * @param onSuccess function invoked on success
-     * @param onFailure function invoked on failure
-     * @param <E>       the type of object passed to callback
-     * @return a reified {@link Callback} instance
-     */
-    static <E> Callback<E> from(
-        final Runnable onSuccess,
-        final Consumer<Throwable> onFailure
-    ) {
+    static <E> Callback<E> completion(BiConsumer<E, Throwable> listener) {
+        Assert.notNull(listener, "listener");
         return new Callback<E>() {
             @Override
-            public void success(E context) {
-                if (onSuccess != null) {
-                    onSuccess.run();
-                }
+            public void success(E value) {
+                listener.accept(value, null);
             }
 
             @Override
             public void failure(E context, @Nonnull Throwable throwable) {
-                if (onFailure != null) {
-                    onFailure.accept(throwable);
-                }
+                listener.accept(context, throwable);
             }
         };
     }
 
     /**
-     * @see #from(Runnable)
+     * @return a dummy callback that does nothing
      */
-    static <E> Callback<E> from(final Runnable onSuccess) {
-        return from(onSuccess, null);
+    @SuppressWarnings("unchecked")
+    static <E> Callback<E> dummy() {
+        return (Callback<E>) NoopCallback.INSTANCE;
     }
 }

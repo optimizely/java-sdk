@@ -159,8 +159,9 @@ public class LogEventProcessor<T> implements PluginSupport {
     }
 
     public Processor<T> build() {
-        return ProcessingStage.transformers(transformers)
-            .andThen(ProcessingStage.<T, EventBatch>mapper(converter))
+        return ProcessingStage
+            .transformers(transformers)
+            .map(converter)
             .andThen(ProcessingStage.interceptors(interceptors))
             .andThen(bufferStage)
             .andThen(new EventBatchMergeStage(eventFactory, () -> callbacks))
