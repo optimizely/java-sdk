@@ -14,28 +14,36 @@
  * limitations under the License.                                           *
  ***************************************************************************/
 
-package com.optimizely.ab.notification;
+package com.optimizely.ab.notification.decisionInfo;
 
-public class DecisionInfoEnums {
-    public enum FeatureVariableDecisionInfo {
-        FEATURE_KEY("feature_key"),
-        FEATURE_ENABLED("feature_enabled"),
-        SOURCE("source"),
-        SOURCE_EXPERIMENT_KEY("source_experiment_key"),
-        SOURCE_VARIATION_KEY("source_variation_key"),
-        VARIABLE_KEY("variable_key"),
-        VARIABLE_TYPE("variable_type"),
-        VARIABLE_VALUE("variable_value");
+import com.optimizely.ab.notification.NotificationCenter;
 
-        private final String key;
+import java.util.Map;
 
-        FeatureVariableDecisionInfo(String key) {
-            this.key = key;
-        }
+public class DecisionNotification {
+    public String type;
+    public String userId;
+    public Map<String, ?> attributes;
+    public Map<String, ?> decisionInfo;
+    private NotificationCenter notificationCenter;
 
-        @Override
-        public String toString() {
-            return key;
-        }
+    protected DecisionNotification() {
+    }
+
+    protected DecisionNotification(NotificationCenter notificationCenter,
+                                   String type,
+                                   String userId,
+                                   Map<String, ?> attributes,
+                                   Map<String, ?> decisionInfo) {
+        this.type = type;
+        this.userId = userId;
+        this.attributes = attributes;
+        this.decisionInfo = decisionInfo;
+        this.notificationCenter = notificationCenter;
+    }
+
+    public void sendNotification() {
+        notificationCenter.sendNotifications(NotificationCenter.NotificationType.Decision,
+            this);
     }
 }

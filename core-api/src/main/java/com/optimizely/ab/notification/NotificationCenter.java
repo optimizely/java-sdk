@@ -19,6 +19,7 @@ package com.optimizely.ab.notification;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
+import com.optimizely.ab.notification.decisionInfo.DecisionNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,8 +116,8 @@ public class NotificationCenter {
         } else {
             return addNotificationListener(NotificationType.Decision, new DecisionNotificationListener() {
                 @Override
-                public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
-                    decisionNotificationListenerInterface.onDecision(type, userId, attributes, decisionInfo);
+                public void onDecision(@Nonnull DecisionNotification decisionNotification) {
+                    decisionNotificationListenerInterface.onDecision(decisionNotification);
                 }
             });
         }

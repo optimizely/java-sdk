@@ -21,6 +21,7 @@ import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.internal.LogbackVerifier;
+import com.optimizely.ab.notification.decisionInfo.DecisionNotification;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -70,7 +71,7 @@ public class NotificationCenterTest {
     public void testAddDecisionNotificationTwice() {
         DecisionNotificationListener listener = new DecisionNotificationListener() {
             @Override
-            public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
+            public void onDecision(@Nonnull DecisionNotification decisionNotification) {
 
             }
         };
@@ -115,7 +116,7 @@ public class NotificationCenterTest {
     public void testAddDecisionNotification() {
         int notificationId = notificationCenter.addDecisionNotificationListener(new DecisionNotificationListener() {
             @Override
-            public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
+            public void onDecision(@Nonnull DecisionNotification decisionNotification) {
 
             }
         });
@@ -161,7 +162,7 @@ public class NotificationCenterTest {
     public void testAddDecisionNotificationInterface() {
         int notificationId = notificationCenter.addDecisionNotificationListener(new DecisionNotificationListenerInterface() {
             @Override
-            public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
+            public void onDecision(@Nonnull DecisionNotification decisionNotification) {
 
             }
         });

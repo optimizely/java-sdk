@@ -14,27 +14,17 @@
  * limitations under the License.                                           *
  ***************************************************************************/
 
-package com.optimizely.ab.notification;
+package com.optimizely.ab.notification.decisionInfo;
 
-import com.optimizely.ab.notification.decisionInfo.DecisionNotification;
-
-import javax.annotation.Nonnull;
-
-public abstract class DecisionNotificationListener implements NotificationListener, DecisionNotificationListenerInterface {
-
-    /**
-     * Base notify called with var args.  This method parses the parameters and calls the abstract method.
-     *
-     * @param args - variable argument list based on the type of notification.
-     */
-    @Override
-    public final void notify(Object... args) {
-        assert (args[0] instanceof DecisionNotification);
-        DecisionNotification decisionNotification = (DecisionNotification) args[0];
-        onDecision(decisionNotification);
-
+public class DecisionInfoMapConstants {
+    public static class FeatureVariableDecisionBuilder {
+        public static String FEATURE_KEY = "feature_key";
+        public static String FEATURE_ENABLED = "feature_enabled";
+        public static String SOURCE = "source";
+        public static String SOURCE_EXPERIMENT_KEY = "source_experiment_key";
+        public static String SOURCE_VARIATION_KEY = "source_variation_key";
+        public static String VARIABLE_KEY = "variable_key";
+        public static String VARIABLE_TYPE = "variable_type";
+        public static String VARIABLE_VALUE = "variable_value";
     }
-
-    @Override
-    public abstract void onDecision(@Nonnull DecisionNotification decisionNotification);
 }

@@ -16,21 +16,20 @@
 
 package com.optimizely.ab.notification;
 
+import com.optimizely.ab.notification.decisionInfo.DecisionNotification;
+
 import javax.annotation.Nonnull;
-import java.util.Map;
 
 public interface DecisionNotificationListenerInterface {
 
     /**
      * onDecision called when an activate was triggered
      *
-     * @param type         - The notification type.
-     * @param userId       - The userId passed to the API.
-     * @param attributes   - The attribute map passed to the API.
-     * @param decisionInfo - The decision information containing all parameters passed in API.
+     * @param decisionNotification - The decision notification object containing:
+     *                             type         - The notification type.
+     *                             userId       - The userId passed to the API.
+     *                             attributes   - The attribute map passed to the API.
+     *                             decisionInfo - The decision information containing all parameters passed in API.
      */
-    void onDecision(@Nonnull String type,
-                    @Nonnull String userId,
-                    @Nonnull Map<String, ?> attributes,
-                    @Nonnull Map<String, ?> decisionInfo);
+    void onDecision(@Nonnull DecisionNotification decisionNotification);
 }
