@@ -3588,14 +3588,14 @@ public class OptimizelyTest {
 
         String validFeatureKey = FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY;
         String validVariableKey = VARIABLE_BOOLEAN_VARIABLE_KEY;
-        String defaultValue = VARIABLE_BOOLEAN_VARIABLE_DEFAULT_VALUE;
+        Boolean defaultValue = Boolean.parseBoolean(VARIABLE_BOOLEAN_VARIABLE_DEFAULT_VALUE);
         Map<String, String> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
             .withConfig(validProjectConfig)
             .build();
 
-        String value = optimizely.getFeatureVariableValueForType(
+        Boolean value = optimizely.getFeatureVariableValueForType(
             validFeatureKey,
             validVariableKey,
             genericUserId,
@@ -3633,7 +3633,7 @@ public class OptimizelyTest {
 
         String validFeatureKey = FEATURE_SINGLE_VARIABLE_DOUBLE_KEY;
         String validVariableKey = VARIABLE_DOUBLE_VARIABLE_KEY;
-        String expectedValue = VARIABLE_DOUBLE_DEFAULT_VALUE;
+        Double expectedValue = Double.parseDouble(VARIABLE_DOUBLE_DEFAULT_VALUE);
         FeatureFlag featureFlag = FEATURE_FLAG_SINGLE_VARIABLE_DOUBLE;
         Experiment experiment = validProjectConfig.getExperimentIdMapping().get(featureFlag.getExperimentIds().get(0));
 
@@ -3641,7 +3641,7 @@ public class OptimizelyTest {
             .withConfig(validProjectConfig)
             .build();
 
-        String valueWithImproperAttributes = optimizely.getFeatureVariableValueForType(
+        Double valueWithImproperAttributes = optimizely.getFeatureVariableValueForType(
             validFeatureKey,
             validVariableKey,
             genericUserId,
@@ -3721,13 +3721,13 @@ public class OptimizelyTest {
         String validFeatureKey = FEATURE_SINGLE_VARIABLE_INTEGER_KEY;
         String validVariableKey = VARIABLE_INTEGER_VARIABLE_KEY;
         FeatureVariable variable = FEATURE_FLAG_SINGLE_VARIABLE_INTEGER.getVariableKeyToFeatureVariableMap().get(validVariableKey);
-        String expectedValue = variable.getDefaultValue();
+        Integer expectedValue = Integer.parseInt(variable.getDefaultValue());
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
             .withConfig(validProjectConfig)
             .build();
 
-        String value = optimizely.getFeatureVariableValueForType(
+        Integer value = optimizely.getFeatureVariableValueForType(
             validFeatureKey,
             validVariableKey,
             genericUserId,
@@ -4601,7 +4601,7 @@ public class OptimizelyTest {
             .build());
 
 
-        doReturn(valueNoAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+        doReturn(valueNoAttributes).when(spyOptimizely).getFeatureVariableValueForType(
             eq(featureKey),
             eq(variableKey),
             eq(genericUserId),
@@ -4609,7 +4609,7 @@ public class OptimizelyTest {
             eq(FeatureVariable.VariableType.BOOLEAN)
         );
 
-        doReturn(valueWithAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+        doReturn(valueWithAttributes).when(spyOptimizely).getFeatureVariableValueForType(
             eq(featureKey),
             eq(variableKey),
             eq(genericUserId),
@@ -4699,7 +4699,7 @@ public class OptimizelyTest {
             .build());
 
 
-        doReturn(valueNoAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+        doReturn(valueNoAttributes).when(spyOptimizely).getFeatureVariableValueForType(
             eq(featureKey),
             eq(variableKey),
             eq(genericUserId),
@@ -4707,7 +4707,7 @@ public class OptimizelyTest {
             eq(FeatureVariable.VariableType.DOUBLE)
         );
 
-        doReturn(valueWithAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+        doReturn(valueWithAttributes).when(spyOptimizely).getFeatureVariableValueForType(
             eq(featureKey),
             eq(variableKey),
             eq(genericUserId),
@@ -4912,11 +4912,57 @@ public class OptimizelyTest {
             variableKey,
             genericUserId
         ));
+    }
+
+    /**
+     * Verify that {@link Optimizely#convertStringToType(String, FeatureVariable.VariableType)}
+     * do not throw errors when they are unable to parse the value into an Double.
+     *
+     * @throws NumberFormatException
+     */
+    @Test
+    public void convertStringToTypeDoubleCatchesExceptionFromParsing() throws NumberFormatException {
+        String unParsableValue = "not_a_double";
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        assertNull(optimizely.convertStringToType(
+            unParsableValue,
+            FeatureVariable.VariableType.DOUBLE
+        ));
 
         logbackVerifier.expectMessage(
             Level.ERROR,
             "NumberFormatException while trying to parse \"" + unParsableValue +
                 "\" as Double. "
+        );
+    }
+
+    /**
+     * Verify that {@link Optimizely#convertStringToType(String, FeatureVariable.VariableType)}
+     * do not throw errors when they are unable to parse the value into an Integer.
+     *
+     * @throws NumberFormatException
+     */
+    @Test
+    public void convertStringToTypeIntegerCatchesExceptionFromParsing() throws NumberFormatException {
+        String unParsableValue = "not_a_integer";
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        assertNull(optimizely.convertStringToType(
+            unParsableValue,
+            FeatureVariable.VariableType.INTEGER
+        ));
+
+        logbackVerifier.expectMessage(
+            Level.ERROR,
+            "NumberFormatException while trying to parse \"" + unParsableValue +
+                "\" as Integer. "
         );
     }
 
@@ -5047,7 +5093,7 @@ public class OptimizelyTest {
             .build());
 
 
-        doReturn(valueNoAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+        doReturn(valueNoAttributes).when(spyOptimizely).getFeatureVariableValueForType(
             eq(featureKey),
             eq(variableKey),
             eq(genericUserId),
@@ -5055,7 +5101,7 @@ public class OptimizelyTest {
             eq(FeatureVariable.VariableType.INTEGER)
         );
 
-        doReturn(valueWithAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+        doReturn(valueWithAttributes).when(spyOptimizely).getFeatureVariableValueForType(
             eq(featureKey),
             eq(variableKey),
             eq(genericUserId),
@@ -5114,12 +5160,6 @@ public class OptimizelyTest {
             variableKey,
             genericUserId
         ));
-
-        logbackVerifier.expectMessage(
-            Level.ERROR,
-            "NumberFormatException while trying to parse \"" + unParsableValue +
-                "\" as Integer. "
-        );
     }
 
     /**
