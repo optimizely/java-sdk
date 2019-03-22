@@ -75,8 +75,8 @@ public class NotificationCenterTest {
 
             }
         };
-        int notificationId = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision, listener);
-        int notificationId2 = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision, listener);
+        int notificationId = notificationCenter.addDecisionNotificationListener(listener);
+        int notificationId2 = notificationCenter.addDecisionNotificationListener(listener);
         logbackVerifier.expectMessage(Level.WARN, "Notification listener was already added");
         assertEquals(notificationId2, -1);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
@@ -160,7 +160,7 @@ public class NotificationCenterTest {
 
     @Test
     public void testAddDecisionNotificationInterface() {
-        int notificationId = notificationCenter.addDecisionNotificationListener(new DecisionNotificationListenerInterface() {
+        int notificationId = notificationCenter.addDecisionNotificationListener(new DecisionNotificationListener() {
             @Override
             public void onDecision(@Nonnull DecisionNotification decisionNotification) {
 

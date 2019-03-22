@@ -23,30 +23,31 @@ import com.optimizely.ab.notification.NotificationCenter;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.optimizely.ab.notification.decisionInfo.DecisionInfoMapConstants.FeatureVariableDecisionBuilder.*;
-import static com.optimizely.ab.notification.decisionInfo.DecisionInfoMapConstants.FeatureVariableDecisionBuilder.SOURCE;
-
 public class FeatureVariableNotification extends DecisionNotification {
 
-    public static Builder builder(NotificationCenter notificationCenter) {
-        return new Builder(notificationCenter);
+    public static String FEATURE_KEY = "feature_key";
+    public static String FEATURE_ENABLED = "feature_enabled";
+    public static String SOURCE = "source";
+    public static String SOURCE_EXPERIMENT_KEY = "source_experiment_key";
+    public static String SOURCE_VARIATION_KEY = "source_variation_key";
+    public static String VARIABLE_KEY = "variable_key";
+    public static String VARIABLE_TYPE = "variable_type";
+    public static String VARIABLE_VALUE = "variable_value";
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public static class Builder {
         private String userId;
         private Map<String, ?> attributes;
         private Map<String, Object> decisionInfo;
-        private NotificationCenter notificationCenter;
         private String featureKey;
         private Boolean featureEnabled;
         private FeatureDecision featureDecision;
         private String variableKey;
         private FeatureVariable.VariableType variableType;
         private Object variableValue;
-
-        public Builder(NotificationCenter notificationCenter) {
-            this.notificationCenter = notificationCenter;
-        }
 
         public Builder withFeatureKey(String featureKey) {
             this.featureKey = featureKey;
@@ -110,7 +111,7 @@ public class FeatureVariableNotification extends DecisionNotification {
                 decisionInfo.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT);
             }
 
-            return new DecisionNotification(notificationCenter,
+            return new DecisionNotification(
                 NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
                 userId,
                 attributes,

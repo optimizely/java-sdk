@@ -20,21 +20,16 @@ import com.optimizely.ab.notification.decisionInfo.DecisionNotification;
 
 import javax.annotation.Nonnull;
 
-public abstract class DecisionNotificationListener implements NotificationListener, DecisionNotificationListenerInterface {
+public interface DecisionNotificationListener {
 
     /**
-     * Base notify called with var args.  This method parses the parameters and calls the abstract method.
+     * onDecision called when an activate was triggered
      *
-     * @param args - variable argument list based on the type of notification.
+     * @param decisionNotification - The decision notification object containing:
+     *                             type         - The notification type.
+     *                             userId       - The userId passed to the API.
+     *                             attributes   - The attribute map passed to the API.
+     *                             decisionInfo - The decision information containing all parameters passed in API.
      */
-    @Override
-    public final void notify(Object... args) {
-        assert (args[0] instanceof DecisionNotification);
-        DecisionNotification decisionNotification = (DecisionNotification) args[0];
-        onDecision(decisionNotification);
-
-    }
-
-    @Override
-    public abstract void onDecision(@Nonnull DecisionNotification decisionNotification);
+    void onDecision(@Nonnull DecisionNotification decisionNotification);
 }

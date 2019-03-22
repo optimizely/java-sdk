@@ -58,8 +58,7 @@ public class NotificationCenter {
     public enum NotificationType {
 
         Activate(ActivateNotificationListener.class), // Activate was called. Track an impression event
-        Track(TrackNotificationListener.class), // Track was called.  Track a conversion event
-        Decision(DecisionNotificationListener.class); // Decision was made.
+        Track(TrackNotificationListener.class); // Track was called.  Track a conversion event
 
         private Class notificationTypeClass;
 
@@ -84,10 +83,16 @@ public class NotificationCenter {
     private static class NotificationHolder {
         int notificationId;
         NotificationListener notificationListener;
+        DecisionNotificationListener decisionNotificationListener;
 
         NotificationHolder(int id, NotificationListener notificationListener) {
             notificationId = id;
             this.notificationListener = notificationListener;
+        }
+
+        NotificationHolder(int id, DecisionNotificationListener decisionNotificationListener) {
+            notificationId = id;
+            this.decisionNotificationListener = decisionNotificationListener;
         }
     }
 
@@ -97,30 +102,34 @@ public class NotificationCenter {
     public NotificationCenter() {
         notificationsListeners.put(NotificationType.Activate, new ArrayList<NotificationHolder>());
         notificationsListeners.put(NotificationType.Track, new ArrayList<NotificationHolder>());
-        notificationsListeners.put(NotificationType.Decision, new ArrayList<NotificationHolder>());
     }
 
     // private list of notification by notification type.
     // we used a list so that notification order can mean something.
     private Map<NotificationType, ArrayList<NotificationHolder>> notificationsListeners = new HashMap<NotificationType, ArrayList<NotificationHolder>>();
+    private ArrayList<NotificationHolder> decisionListenerHolder = new ArrayList<>();
 
     /**
      * Convenience method to support lambdas as callbacks in later version of Java (8+).
      *
-     * @param decisionNotificationListenerInterface
+     * @param decisionNotificationListener
      * @return greater than zero if added.
      */
-    public int addDecisionNotificationListener(final DecisionNotificationListenerInterface decisionNotificationListenerInterface) {
-        if (decisionNotificationListenerInterface instanceof DecisionNotificationListener) {
-            return addNotificationListener(NotificationType.Decision, (NotificationListener) decisionNotificationListenerInterface);
-        } else {
-            return addNotificationListener(NotificationType.Decision, new DecisionNotificationListener() {
-                @Override
-                public void onDecision(@Nonnull DecisionNotification decisionNotification) {
-                    decisionNotificationListenerInterface.onDecision(decisionNotification);
+    public int addDecisionNotificationListener(DecisionNotificationListener decisionNotificationListener) {
+        notificationListenerID++;
+        if (decisionNotificationListener instanceof DecisionNotificationListener) {
+            for (NotificationHolder holder : decisionListenerHolder) {
+                if (holder.decisionNotificationListener == decisionNotificationListener) {
+                    logger.warn("Notification listener was already added");
+                    return -1;
                 }
-            });
+            }
+            decisionListenerHolder.add(new NotificationHolder(notificationListenerID, decisionNotificationListener));
+        } else {
+            logger.warn("Notification listener was the wrong type. It was not added to the notification center.");
+            return -1;
         }
+        return notificationListenerID;
     }
 
     /**
@@ -177,7 +186,7 @@ public class NotificationCenter {
         }
 
         for (NotificationHolder holder : notificationsListeners.get(notificationType)) {
-            if (holder.notificationListener == notificationListener ) {
+            if (holder.notificationListener == notificationListener) {
                 logger.warn("Notification listener was already added");
                 return -1;
             }
@@ -195,6 +204,13 @@ public class NotificationCenter {
      * @return true if removed otherwise false (if the notification is already registered, it returns false).
      */
     public boolean removeNotificationListener(int notificationID) {
+        for (NotificationHolder holder : decisionListenerHolder) {
+            if (holder.notificationId == notificationID) {
+                notificationsListeners.remove(holder);
+                logger.info("Notification listener removed {}", notificationID);
+                return true;
+            }
+        }
         for (NotificationType type : NotificationType.values()) {
             for (NotificationHolder holder : notificationsListeners.get(type)) {
                 if (holder.notificationId == notificationID) {
@@ -214,6 +230,7 @@ public class NotificationCenter {
      * Clear out all the notification listeners.
      */
     public void clearAllNotificationListeners() {
+        decisionListenerHolder.clear();
         for (NotificationType type : NotificationType.values()) {
             clearNotificationListeners(type);
         }
@@ -226,6 +243,21 @@ public class NotificationCenter {
      */
     public void clearNotificationListeners(NotificationType notificationType) {
         notificationsListeners.get(notificationType).clear();
+    }
+
+    /**
+     * fire a notificaiton of Decision Notification type.
+     *
+     * @param decision containing Decision Notification object
+     */
+    public void sendNotifications(DecisionNotification decision) {
+        for (NotificationHolder holder : decisionListenerHolder) {
+            try {
+                (holder.decisionNotificationListener).onDecision(decision);
+            } catch (Exception e) {
+                logger.error("Unexpected exception calling notification listener {}", holder.notificationId, e);
+            }
+        }
     }
 
     // fire a notificaiton of a certain type.  The arg list changes depending on the type of notification sent.

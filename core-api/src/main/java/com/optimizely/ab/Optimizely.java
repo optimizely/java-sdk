@@ -35,6 +35,7 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
+import com.optimizely.ab.notification.decisionInfo.DecisionNotification;
 import com.optimizely.ab.notification.decisionInfo.FeatureVariableNotification;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
@@ -671,7 +672,7 @@ public class Optimizely {
 
         Object convertedValue = convertStringToType(variableValue, variableType);
 
-        FeatureVariableNotification.builder(notificationCenter)
+        DecisionNotification decisionNotification = FeatureVariableNotification.builder()
             .withUserId(userId)
             .withAttributes(copiedAttributes)
             .withFeatureKey(featureKey)
@@ -680,8 +681,10 @@ public class Optimizely {
             .withVariableType(variableType)
             .withVariableValue(convertedValue)
             .withFeatureDecision(featureDecision)
-            .build()
-            .sendNotification();
+            .build();
+
+
+        notificationCenter.sendNotifications(decisionNotification);
 
         return (T) convertedValue;
     }

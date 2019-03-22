@@ -16,22 +16,19 @@
 
 package com.optimizely.ab.notification.decisionInfo;
 
-import com.optimizely.ab.notification.NotificationCenter;
 
 import java.util.Map;
 
 public class DecisionNotification {
-    public String type;
-    public String userId;
-    public Map<String, ?> attributes;
-    public Map<String, ?> decisionInfo;
-    private NotificationCenter notificationCenter;
+    protected String type;
+    protected String userId;
+    protected Map<String, ?> attributes;
+    protected Map<String, ?> decisionInfo;
 
     protected DecisionNotification() {
     }
 
-    protected DecisionNotification(NotificationCenter notificationCenter,
-                                   String type,
+    protected DecisionNotification(String type,
                                    String userId,
                                    Map<String, ?> attributes,
                                    Map<String, ?> decisionInfo) {
@@ -39,11 +36,21 @@ public class DecisionNotification {
         this.userId = userId;
         this.attributes = attributes;
         this.decisionInfo = decisionInfo;
-        this.notificationCenter = notificationCenter;
     }
 
-    public void sendNotification() {
-        notificationCenter.sendNotifications(NotificationCenter.NotificationType.Decision,
-            this);
+    public String getType() {
+        return type;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public Map<String, ?> getAttributes() {
+        return attributes;
+    }
+
+    public Map<String, ?> getDecisionInfo() {
+        return decisionInfo;
     }
 }

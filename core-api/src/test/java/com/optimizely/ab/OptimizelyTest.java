@@ -66,7 +66,14 @@ import java.util.Map;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
 import static com.optimizely.ab.event.LogEvent.RequestMethod;
-import static com.optimizely.ab.notification.decisionInfo.DecisionInfoMapConstants.FeatureVariableDecisionBuilder.*;
+import static com.optimizely.ab.notification.decisionInfo.FeatureVariableNotification.FEATURE_ENABLED;
+import static com.optimizely.ab.notification.decisionInfo.FeatureVariableNotification.FEATURE_KEY;
+import static com.optimizely.ab.notification.decisionInfo.FeatureVariableNotification.SOURCE;
+import static com.optimizely.ab.notification.decisionInfo.FeatureVariableNotification.SOURCE_EXPERIMENT_KEY;
+import static com.optimizely.ab.notification.decisionInfo.FeatureVariableNotification.SOURCE_VARIATION_KEY;
+import static com.optimizely.ab.notification.decisionInfo.FeatureVariableNotification.VARIABLE_KEY;
+import static com.optimizely.ab.notification.decisionInfo.FeatureVariableNotification.VARIABLE_VALUE;
+import static com.optimizely.ab.notification.decisionInfo.FeatureVariableNotification.VARIABLE_TYPE;
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
@@ -2648,13 +2655,13 @@ public class OptimizelyTest {
         return new DecisionNotificationListener() {
             @Override
             public void onDecision(@Nonnull DecisionNotification decisionNotification) {
-                assertEquals(decisionNotification.type, testType);
-                assertEquals(decisionNotification.userId, testUserId);
-                assertEquals(decisionNotification.attributes, testUserAttributes);
-                for (Map.Entry<String, ?> entry : decisionNotification.attributes.entrySet()) {
+                assertEquals(decisionNotification.getType(), testType);
+                assertEquals(decisionNotification.getUserId(), testUserId);
+                assertEquals(decisionNotification.getAttributes(), testUserAttributes);
+                for (Map.Entry<String, ?> entry : decisionNotification.getAttributes().entrySet()) {
                     assertEquals(testUserAttributes.get(entry.getKey()), entry.getValue());
                 }
-                for (Map.Entry<String, ?> entry : decisionNotification.decisionInfo.entrySet()) {
+                for (Map.Entry<String, ?> entry : decisionNotification.getDecisionInfo().entrySet()) {
                     assertEquals(testDecisionInfo.get(entry.getKey()), entry.getValue());
                 }
                 isListenerCalled = true;
@@ -2694,7 +2701,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.EXPERIMENT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
+        int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
                 testUserId,
                 testUserAttributes,
@@ -2743,7 +2750,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.EXPERIMENT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
+        int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
                 userID,
                 testUserAttributes,
@@ -2792,7 +2799,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
+        int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -2841,7 +2848,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
+        int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -2889,7 +2896,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
+        int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -2937,7 +2944,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIABLE_VALUE, 3.14);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.EXPERIMENT);
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision,
+        int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
                 genericUserId,
                 testUserAttributes,
