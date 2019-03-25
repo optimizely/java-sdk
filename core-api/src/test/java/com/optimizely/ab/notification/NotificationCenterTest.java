@@ -21,7 +21,6 @@ import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.internal.LogbackVerifier;
-import com.optimizely.ab.notification.decisionInfo.DecisionNotification;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

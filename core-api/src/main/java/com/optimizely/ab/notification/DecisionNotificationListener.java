@@ -16,8 +16,6 @@
 
 package com.optimizely.ab.notification;
 
-import com.optimizely.ab.notification.decisionInfo.DecisionNotification;
-
 import javax.annotation.Nonnull;
 
 public interface DecisionNotificationListener {

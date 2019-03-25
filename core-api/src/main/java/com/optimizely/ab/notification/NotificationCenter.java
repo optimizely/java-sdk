@@ -19,7 +19,6 @@ package com.optimizely.ab.notification;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
-import com.optimizely.ab.notification.decisionInfo.DecisionNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +26,7 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -75,7 +75,7 @@ public class NotificationCenter {
 
 
     // the notification id is incremented and is assigned as the callback id, it can then be used to remove the notification.
-    private int notificationListenerID = 1;
+    private AtomicInteger notificationListenerID = new AtomicInteger();
 
     final private static Logger logger = LoggerFactory.getLogger(NotificationCenter.class);
 
@@ -116,7 +116,7 @@ public class NotificationCenter {
      * @return greater than zero if added.
      */
     public int addDecisionNotificationListener(DecisionNotificationListener decisionNotificationListener) {
-        notificationListenerID++;
+        int id = this.notificationListenerID.incrementAndGet();
         if (decisionNotificationListener instanceof DecisionNotificationListener) {
             for (NotificationHolder holder : decisionListenerHolder) {
                 if (holder.decisionNotificationListener == decisionNotificationListener) {
@@ -124,12 +124,12 @@ public class NotificationCenter {
                     return -1;
                 }
             }
-            decisionListenerHolder.add(new NotificationHolder(notificationListenerID, decisionNotificationListener));
+            decisionListenerHolder.add(new NotificationHolder(id, decisionNotificationListener));
         } else {
             logger.warn("Notification listener was the wrong type. It was not added to the notification center.");
             return -1;
         }
-        return notificationListenerID;
+        return id;
     }
 
     /**
@@ -191,7 +191,7 @@ public class NotificationCenter {
                 return -1;
             }
         }
-        int id = notificationListenerID++;
+        int id = this.notificationListenerID.incrementAndGet();
         notificationsListeners.get(notificationType).add(new NotificationHolder(id, notificationListener));
         logger.info("Notification listener {} was added with id {}", notificationListener.toString(), id);
         return id;
@@ -204,24 +204,37 @@ public class NotificationCenter {
      * @return true if removed otherwise false (if the notification is already registered, it returns false).
      */
     public boolean removeNotificationListener(int notificationID) {
-        for (NotificationHolder holder : decisionListenerHolder) {
+
+        for (ArrayList<NotificationHolder> notificationHolders : notificationsListeners.values()) {
+            if(removeNotificationListener(notificationID, notificationHolders)) {
+                return true;
+            }
+        }
+
+        if (removeNotificationListener(notificationID, decisionListenerHolder)) {
+            return true;
+        }
+
+        logger.warn("Notification listener with id {} not found", notificationID);
+
+        return false;
+    }
+
+    /**
+     * Helper method to iterate find NotificationHolder in an List identified by the notificationId
+     *
+     * @param notificationID the id passed back from add notification.
+     * @param notificationHolderList list from which to remove notification listener.
+     * @return true if removed otherwise false
+     */
+    private boolean removeNotificationListener(int notificationID, ArrayList<NotificationHolder> notificationHolderList) {
+        for (NotificationHolder holder : notificationHolderList) {
             if (holder.notificationId == notificationID) {
-                notificationsListeners.remove(holder);
+                notificationHolderList.remove(holder);
                 logger.info("Notification listener removed {}", notificationID);
                 return true;
             }
         }
-        for (NotificationType type : NotificationType.values()) {
-            for (NotificationHolder holder : notificationsListeners.get(type)) {
-                if (holder.notificationId == notificationID) {
-                    notificationsListeners.get(type).remove(holder);
-                    logger.info("Notification listener removed {}", notificationID);
-                    return true;
-                }
-            }
-        }
-
-        logger.warn("Notification listener with id {} not found", notificationID);
 
         return false;
     }
@@ -253,7 +266,7 @@ public class NotificationCenter {
     public void sendNotifications(DecisionNotification decision) {
         for (NotificationHolder holder : decisionListenerHolder) {
             try {
-                (holder.decisionNotificationListener).onDecision(decision);
+                holder.decisionNotificationListener.onDecision(decision);
             } catch (Exception e) {
                 logger.error("Unexpected exception calling notification listener {}", holder.notificationId, e);
             }
