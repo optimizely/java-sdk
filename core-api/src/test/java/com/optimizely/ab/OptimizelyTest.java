@@ -2731,7 +2731,7 @@ public class OptimizelyTest {
         isListenerCalled = false;
         final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
         String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
-        String expectedValue = "H";
+        String expectedValue = "G";
         String userID = "Gred";
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
@@ -3686,7 +3686,8 @@ public class OptimizelyTest {
 
         String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
         String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
-        String expectedValue = VARIABLE_FIRST_LETTER_DEFAULT_VALUE;
+        FeatureVariable variable = FEATURE_FLAG_MULTI_VARIATE_FEATURE.getVariableKeyToFeatureVariableMap().get(validVariableKey);
+        String expectedValue = VARIATION_MULTIVARIATE_EXPERIMENT_GRED.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId()).getValue();;
         Experiment multivariateExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)

@@ -653,7 +653,7 @@ public class Optimizely {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
         Boolean featureEnabled = false;
-        if (featureDecision.variation != null && featureDecision.variation.getFeatureEnabled()) {
+        if (featureDecision.variation != null) {
             FeatureVariableUsageInstance featureVariableUsageInstance =
                 featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
             if (featureVariableUsageInstance != null) {
