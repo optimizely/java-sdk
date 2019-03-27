@@ -649,13 +649,20 @@ public class Optimizely {
         String variableValue = variable.getDefaultValue();
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
-        if (featureDecision.variation != null && featureDecision.variation.getFeatureEnabled()) {
-            FeatureVariableUsageInstance featureVariableUsageInstance =
-                featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
-            if (featureVariableUsageInstance != null) {
-                variableValue = featureVariableUsageInstance.getValue();
+        if (featureDecision.variation != null) {
+            if (featureDecision.variation.getFeatureEnabled()) {
+                FeatureVariableUsageInstance featureVariableUsageInstance =
+                    featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
+                if (featureVariableUsageInstance != null) {
+                    variableValue = featureVariableUsageInstance.getValue();
+                } else {
+                    variableValue = variable.getDefaultValue();
+                }
             } else {
-                variableValue = variable.getDefaultValue();
+                logger.info("Feature \"{}\" for variation \"{}\" was not enabled. " +
+                        "The default value \"{}\" for \"{}\" is being returned.",
+                    featureKey, featureDecision.variation.getKey(), variableValue, variableKey
+                );
             }
         } else {
             logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +

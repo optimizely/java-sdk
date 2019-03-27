@@ -3382,6 +3382,12 @@ public class OptimizelyTest {
             FeatureVariable.VariableType.STRING
         );
 
+        logbackVerifier.expectMessage(
+            Level.INFO,
+            "Feature \"" + validFeatureKey + "\" for variation \"Gred\" was not enabled. " +
+                "The default value \""+ expectedValue +"\" for \""+ validVariableKey +"\" is being returned."
+        );
+
         assertEquals(expectedValue, value);
     }
 
@@ -3522,7 +3528,6 @@ public class OptimizelyTest {
             genericUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             (long) expectedValue);
-
     }
 
     /**
@@ -3550,7 +3555,6 @@ public class OptimizelyTest {
             genericUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_SLYTHERIN_VALUE)),
             Math.PI, 2);
-
     }
 
     /**
