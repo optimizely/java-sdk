@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -107,7 +108,7 @@ public class NotificationCenter {
     // private list of notification by notification type.
     // we used a list so that notification order can mean something.
     private Map<NotificationType, ArrayList<NotificationHolder>> notificationsListeners = new HashMap<NotificationType, ArrayList<NotificationHolder>>();
-    private ArrayList<NotificationHolder> decisionListenerHolder = new ArrayList<>();
+    private List<NotificationHolder> decisionListenerHolder = new ArrayList<>();
 
     /**
      * Convenience method to support lambdas as callbacks in later version of Java (8+).
@@ -116,20 +117,21 @@ public class NotificationCenter {
      * @return greater than zero if added.
      */
     public int addDecisionNotificationListener(DecisionNotificationListener decisionNotificationListener) {
-        int id = this.notificationListenerID.incrementAndGet();
-        if (decisionNotificationListener instanceof DecisionNotificationListener) {
+        if (decisionNotificationListener != null) {
             for (NotificationHolder holder : decisionListenerHolder) {
                 if (holder.decisionNotificationListener == decisionNotificationListener) {
+                    // TODO: 3/27/2019 change log level from warn to info and to return existing listener ID
                     logger.warn("Notification listener was already added");
                     return -1;
                 }
             }
+            int id = this.notificationListenerID.incrementAndGet();
             decisionListenerHolder.add(new NotificationHolder(id, decisionNotificationListener));
+            return id;
         } else {
             logger.warn("Notification listener was the wrong type. It was not added to the notification center.");
             return -1;
         }
-        return id;
     }
 
     /**
@@ -205,8 +207,8 @@ public class NotificationCenter {
      */
     public boolean removeNotificationListener(int notificationID) {
 
-        for (ArrayList<NotificationHolder> notificationHolders : notificationsListeners.values()) {
-            if(removeNotificationListener(notificationID, notificationHolders)) {
+        for (List<NotificationHolder> notificationHolders : notificationsListeners.values()) {
+            if (removeNotificationListener(notificationID, notificationHolders)) {
                 return true;
             }
         }
@@ -227,7 +229,7 @@ public class NotificationCenter {
      * @param notificationHolderList list from which to remove notification listener.
      * @return true if removed otherwise false
      */
-    private boolean removeNotificationListener(int notificationID, ArrayList<NotificationHolder> notificationHolderList) {
+    private boolean removeNotificationListener(int notificationID, List<NotificationHolder> notificationHolderList) {
         for (NotificationHolder holder : notificationHolderList) {
             if (holder.notificationId == notificationID) {
                 notificationHolderList.remove(holder);

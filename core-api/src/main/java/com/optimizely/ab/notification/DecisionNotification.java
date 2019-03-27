@@ -20,6 +20,8 @@ package com.optimizely.ab.notification;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.FeatureVariable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,12 +34,15 @@ public class DecisionNotification {
     protected DecisionNotification() {
     }
 
-    protected DecisionNotification(String type,
-                                   String userId,
-                                   Map<String, ?> attributes,
-                                   Map<String, ?> decisionInfo) {
+    protected DecisionNotification(@Nonnull String type,
+                                   @Nonnull String userId,
+                                   @Nullable Map<String, ?> attributes,
+                                   @Nonnull Map<String, ?> decisionInfo) {
         this.type = type;
         this.userId = userId;
+        if (attributes == null) {
+            attributes = new HashMap<>();
+        }
         this.attributes = attributes;
         this.decisionInfo = decisionInfo;
     }
@@ -64,33 +69,20 @@ public class DecisionNotification {
 
     private static class BaseDecisionNotificationBuilder {
         protected String userId;
-        protected String type;
         protected Map<String, ?> attributes;
         protected Map<String, Object> decisionInfo;
-
-        public DecisionNotification build() {
-            if (attributes == null) {
-                attributes = new HashMap<>();
-            }
-
-            return new DecisionNotification(
-                type,
-                userId,
-                attributes,
-                decisionInfo);
-        }
     }
 
     public static class FeatureVariableDecisionNotificationBuilder extends BaseDecisionNotificationBuilder {
 
-        public static String FEATURE_KEY = "feature_key";
-        public static String FEATURE_ENABLED = "feature_enabled";
-        public static String SOURCE = "source";
-        public static String SOURCE_EXPERIMENT_KEY = "source_experiment_key";
-        public static String SOURCE_VARIATION_KEY = "source_variation_key";
-        public static String VARIABLE_KEY = "variable_key";
-        public static String VARIABLE_TYPE = "variable_type";
-        public static String VARIABLE_VALUE = "variable_value";
+        public static final String FEATURE_KEY = "feature_key";
+        public static final String FEATURE_ENABLED = "feature_enabled";
+        public static final String SOURCE = "source";
+        public static final String SOURCE_EXPERIMENT_KEY = "source_experiment_key";
+        public static final String SOURCE_VARIATION_KEY = "source_variation_key";
+        public static final String VARIABLE_KEY = "variable_key";
+        public static final String VARIABLE_TYPE = "variable_type";
+        public static final String VARIABLE_VALUE = "variable_value";
 
         private String featureKey;
         private Boolean featureEnabled;
@@ -117,7 +109,7 @@ public class DecisionNotification {
             return this;
         }
 
-        public FeatureVariableDecisionNotificationBuilder withFeatureEnabled(Boolean featureEnabled) {
+        public FeatureVariableDecisionNotificationBuilder withFeatureEnabled(boolean featureEnabled) {
             this.featureEnabled = featureEnabled;
             return this;
         }
@@ -149,7 +141,7 @@ public class DecisionNotification {
             decisionInfo.put(VARIABLE_KEY, variableKey);
             decisionInfo.put(VARIABLE_TYPE, variableType);
             decisionInfo.put(VARIABLE_VALUE, variableValue);
-            if (featureDecision.decisionSource != null && featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
+            if (featureDecision.decisionSource != null && FeatureDecision.DecisionSource.EXPERIMENT.equals(featureDecision.decisionSource)) {
                 decisionInfo.put(SOURCE_EXPERIMENT_KEY, featureDecision.experiment.getKey());
                 decisionInfo.put(SOURCE_VARIATION_KEY, featureDecision.variation.getKey());
                 decisionInfo.put(SOURCE, featureDecision.decisionSource);
@@ -159,9 +151,11 @@ public class DecisionNotification {
                 decisionInfo.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT);
             }
 
-            this.type = NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString();
-
-            return super.build();
+            return new DecisionNotification(
+                NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
+                userId,
+                attributes,
+                decisionInfo);
         }
     }
 }
