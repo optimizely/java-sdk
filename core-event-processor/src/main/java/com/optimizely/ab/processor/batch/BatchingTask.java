@@ -17,12 +17,22 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * A buffer of items bounded by size and/or age.
+ * Task that produces a single batch by maintaining a temporary thread-safe buffer.
  *
- * @param <E> the type of buffer
+ * Closure can be triggered by any of following conditions:
+ * <ul>
+ *   <li>Reached configured maximum size (via {@link #offer(Object)})</li>
+ *   <li>Reached configured maximum age (relative to time first element was added)</li>
+ *   <li>Buffer has been explicitly closed (via {@link #close})</li>
+ * </ul>
+ *
+ * While the task is running (open), other threads can offer items to the buffer.
+ * The buffer is flushed to the consumer from the thread that invokes {@link #run}.
+ *
+ * @param <E> the type of elements in buffer
  */
-class BatchBufferTask<E, C extends Collection<? super E>> implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(BatchBufferTask.class);
+class BatchingTask<E, C extends Collection<? super E>> implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(BatchingTask.class);
     private static final AtomicInteger sequence = new AtomicInteger();
 
     private final int id = sequence.incrementAndGet();
@@ -38,9 +48,15 @@ class BatchBufferTask<E, C extends Collection<? super E>> implements Runnable {
 
     private C buffer;
     private Date deadline; // populated on first element
-    private boolean closed;
+    private volatile Status status = Status.OPEN;
 
-    public BatchBufferTask(
+    public enum Status {
+        OPEN,
+        CLOSING,
+        CLOSED
+    }
+
+    public BatchingTask(
         Supplier<C> bufferSupplier,
         Consumer<C> bufferConsumer,
         Integer maxSize,
@@ -49,7 +65,7 @@ class BatchBufferTask<E, C extends Collection<? super E>> implements Runnable {
         this(bufferSupplier, bufferConsumer, maxSize, maxAge, Clock.systemUTC());
     }
 
-    BatchBufferTask(
+    BatchingTask(
         Supplier<C> bufferSupplier,
         Consumer<C> bufferConsumer,
         Integer maxSize,
@@ -67,16 +83,21 @@ class BatchBufferTask<E, C extends Collection<? super E>> implements Runnable {
     public void run() {
         lock.lock();
         try {
-            while (!closed) {
+            Assert.state(status != Status.CLOSED, "Task has already been run");
+
+            while (status == Status.OPEN) {
                 if (deadline != null) {
                     // wait until deadline reached or closed by another thread
-                    closed = !condition.awaitUntil(deadline) || closed;
+                    if (!condition.awaitUntil(deadline)) {
+                        break;
+                    }
                 } else {
                     // unbounded wait until first item is added
                     condition.await();
                 }
-                logger.info("[{}] Consumer is awake. closed={}", id, closed);
             }
+
+            status = Status.CLOSED;
         } catch (InterruptedException e) {
             throw new BatchInterruptedException(this.buffer, "Interrupted while waiting for lock", e);
         } finally {
@@ -110,38 +131,30 @@ class BatchBufferTask<E, C extends Collection<? super E>> implements Runnable {
     public void close() {
         lock.lock();
         try {
-            if (closed) {
-                logger.trace("[{}] Batch is already closed", id);
+            if (status != Status.OPEN) {
+                logger.trace("Batch is not open");
                 return;
             }
 
-            closed = true;
+            status = Status.CLOSING;
             condition.signal();
-            logger.trace("[{}] Batch is now closed", id);
+            logger.trace("Batch is now closed");
         } finally {
             lock.unlock();
         }
     }
 
-    Date getDeadline() {
-        return deadline;
+    public boolean isOpen() {
+        return status == Status.OPEN;
     }
 
-    int size() {
-        return buffer.size();
-    }
-
-    boolean isFull() {
-        return maxSize != null && size() >= maxSize;
-    }
-
-    boolean isClosed() {
-        return closed;
+    private boolean isFull() {
+        return maxSize != null && buffer.size() >= maxSize;
     }
 
     // assumes lock is being held
     private boolean insert(E element) {
-        if (closed) {
+        if (status != Status.OPEN) {
             return false;
         }
 
@@ -161,7 +174,7 @@ class BatchBufferTask<E, C extends Collection<? super E>> implements Runnable {
 
         if (isFull()) {
             logger.trace("[{}] Batch is now full", id);
-            closed = true;
+            status = Status.CLOSING;
             signal = true;
         }
 

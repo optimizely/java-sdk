@@ -45,18 +45,15 @@ public class BatchingProcessorTest {
     private AtomicInteger batchCount;
 
     @Before
-    public void setUp() throws Exception {
-        executor = Executors.newCachedThreadPool(new ThreadFactoryBuilder()
-            .setNameFormat("batch-test-%d")
-            .build());
+    public void setUp() {
+        executor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("batching-processor-%d").build());
         batchCount = new AtomicInteger();
         batches = Collections.synchronizedList(new ArrayList<>());
     }
 
     @After
-    public void tearDown() throws Exception {
-        executor.shutdown();
-        executor.awaitTermination(3, TimeUnit.SECONDS);
+    public void tearDown() {
+        executor.shutdownNow();
     }
 
     @Test

@@ -32,12 +32,12 @@ public class BatchingProcessor<E> extends AbstractProcessor<E, E> {
     private final Semaphore inFlightBatches;
 
     /**
-     * Reference to current batch
+     * Task that holds & flushes the buffer for latest batch
      */
-    private BatchBufferTask<E, ?> batchTask;
+    private BatchingTask<E, ?> batchTask;
 
     /**
-     * Mutex to serialize modifying batchTask
+     * Mutex to serialize modifications to buffer
      */
     private final Object mutex = new Object();
 
@@ -54,32 +54,38 @@ public class BatchingProcessor<E> extends AbstractProcessor<E, E> {
         this.inFlightBatches = new Semaphore(config.getMaxInFlightBatches(), true);
     }
 
-    public BatchingProcessorConfig getConfig() {
-        return config;
-    }
-
     /**
      * @param element the element to push
-     * @throws BatchBufferTask.BatchInterruptedException if interrupted while inserting into buffer
+     * @throws BatchingTask.BatchInterruptedException if interrupted while inserting into buffer
      */
     @Override
     public void process(@Nonnull E element) {
         synchronized (mutex) {
-            add(element);
+            addToBuffer(element);
         }
     }
 
     /**
      * @param elements the elements to put
-     * @throws BatchBufferTask.BatchInterruptedException if interrupted while inserting into buffer
+     * @throws BatchingTask.BatchInterruptedException if interrupted while inserting into buffer
      */
     @Override
     public void processBatch(@Nonnull Collection<? extends E> elements) {
         synchronized (mutex) {
             for (E element : elements) {
-                add(element);
+                addToBuffer(element);
             }
         }
+    }
+
+    @Override
+    protected boolean beforeStop() {
+        try {
+            flush();
+        } catch (InterruptedException e) {
+            logger.warn("Interrupted while flushing before shutdown");
+        }
+        return true;
     }
 
     /**
@@ -99,12 +105,30 @@ public class BatchingProcessor<E> extends AbstractProcessor<E, E> {
         }
     }
 
-    private void add(E element) {
+    public BatchingProcessorConfig getConfig() {
+        return config;
+    }
+
+    protected Collection<E> createBuffer() {
+        return new ArrayList<>(config.getMaxBatchSize());
+    }
+
+    protected void onBufferClose(Collection<E> elements) {
+        if (elements == null || elements.isEmpty()) {
+            logger.debug("Batch completed with empty buffer");
+            return;
+        }
+
+        logger.debug("Batch completed with {} elements: {}", elements.size(), elements);
+        emitBatch(elements);
+    }
+
+    private void addToBuffer(E element) {
         if (batchTask != null && batchTask.offer(element)) {
             return;
         }
 
-        BatchBufferTask<E, ?> next = new BatchBufferTask<>(
+        BatchingTask<E, ?> next = new BatchingTask<>(
             this::createBuffer,
             this::onBufferClose,
             config.getMaxBatchSize(),
@@ -124,7 +148,7 @@ public class BatchingProcessor<E> extends AbstractProcessor<E, E> {
     /**
      * Creates fresh buffer task and submits to executor.
      */
-    private void execute(BatchBufferTask<E, ?> task) {
+    private void execute(BatchingTask<E, ?> task) {
         try {
             inFlightBatches.acquire();
 
@@ -147,19 +171,6 @@ public class BatchingProcessor<E> extends AbstractProcessor<E, E> {
         } catch (RejectedExecutionException e) {
             inFlightBatches.release();
             throw new BatchingProcessorException("Unable to start batching task", e);
-        }
-    }
-
-    private Collection<E> createBuffer() {
-        return new ArrayList<>(config.getMaxBatchSize());
-    }
-
-    private void onBufferClose(Collection<E> elements) {
-        if (elements != null && !elements.isEmpty()) {
-            logger.debug("Batch completed with {} elements: {}", elements.size(), elements);
-            emitBatch(elements);
-        } else {
-            logger.debug("Batch completed with empty buffer");
         }
     }
 }
