@@ -7,12 +7,8 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -28,6 +24,7 @@ import java.util.function.Supplier;
 class BatchBufferTask<E, C extends Collection<? super E>> implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(BatchBufferTask.class);
     private static final AtomicInteger sequence = new AtomicInteger();
+
     private final int id = sequence.incrementAndGet();
 
     private final Supplier<C> bufferSupplier;
@@ -69,28 +66,24 @@ class BatchBufferTask<E, C extends Collection<? super E>> implements Runnable {
     @Override
     public void run() {
         lock.lock();
-        C buffer;
         try {
             while (!closed) {
                 if (deadline != null) {
-                    if (!condition.awaitUntil(deadline)) {
-                        closed = true;
-                    }
+                    // wait until deadline reached or closed by another thread
+                    closed = !condition.awaitUntil(deadline) || closed;
                 } else {
                     // unbounded wait until first item is added
                     condition.await();
                 }
                 logger.info("[{}] Consumer is awake. closed={}", id, closed);
             }
-
-            buffer = this.buffer;
         } catch (InterruptedException e) {
             throw new BatchInterruptedException(this.buffer, "Interrupted while waiting for lock", e);
         } finally {
             lock.unlock();
         }
 
-        if (bufferConsumer != null && buffer != null) {
+        if (bufferConsumer != null) {
             bufferConsumer.accept(buffer);
         }
     }
@@ -105,43 +98,6 @@ class BatchBufferTask<E, C extends Collection<? super E>> implements Runnable {
         lock.lock();
         try {
             return insert(element);
-        } catch (InterruptedException e) {
-            throw new BatchInterruptedException(buffer, "Interrupted while waiting for lock", e);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /**
-     * Offers a collection of elements to the buffer. Inserts as many elements as possible.
-     *
-     * @param elements
-     * @return a subset of elements that were were not accepted into buffer
-     */
-    public List<E> offerFrom(Collection<E> elements) {
-        lock.lock();
-        try {
-            final Iterator<E> it = elements.iterator();
-            int n = 0;
-            while (it.hasNext()) {
-                E next = it.next();
-                if (!insert(next)) {
-                    break;
-                }
-                n++;
-            }
-
-            if (it.hasNext()) {
-                List<E> leftovers = new ArrayList<>(elements.size() - n);
-                while (it.hasNext()) {
-                    leftovers.add(it.next());
-                }
-                return leftovers;
-            }
-
-            return Collections.emptyList();
-        } catch (InterruptedException e) {
-            throw new BatchInterruptedException(buffer, "Interrupted while waiting for lock", e);
         } finally {
             lock.unlock();
         }
@@ -184,7 +140,7 @@ class BatchBufferTask<E, C extends Collection<? super E>> implements Runnable {
     }
 
     // assumes lock is being held
-    private boolean insert(E element) throws InterruptedException {
+    private boolean insert(E element) {
         if (closed) {
             return false;
         }
@@ -206,9 +162,10 @@ class BatchBufferTask<E, C extends Collection<? super E>> implements Runnable {
         if (isFull()) {
             logger.trace("[{}] Batch is now full", id);
             closed = true;
+            signal = true;
         }
 
-        if (closed || signal) {
+        if (signal) {
             logger.trace("[{}] Signalling consumer", id);
             condition.signalAll();
         }

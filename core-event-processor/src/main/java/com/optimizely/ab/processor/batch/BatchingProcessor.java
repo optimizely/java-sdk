@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class BatchingProcessor<E> extends AbstractProcessor<E, E> {
     public static final Logger logger = LoggerFactory.getLogger(BatchingProcessor.class);
@@ -35,7 +34,12 @@ public class BatchingProcessor<E> extends AbstractProcessor<E, E> {
     /**
      * Reference to current batch
      */
-    private final AtomicReference<BatchBufferTask<E, ?>> currentBatch;
+    private BatchBufferTask<E, ?> batchTask;
+
+    /**
+     * Mutex to serialize modifying batchTask
+     */
+    private final Object mutex = new Object();
 
     public BatchingProcessor(
         BatchingProcessorConfig config,
@@ -48,7 +52,6 @@ public class BatchingProcessor<E> extends AbstractProcessor<E, E> {
         this.config = Assert.notNull(config, "config");
         this.executor = Assert.notNull(config.getExecutor(), "executor");
         this.inFlightBatches = new Semaphore(config.getMaxInFlightBatches(), true);
-        this.currentBatch = new AtomicReference<>();
     }
 
     public BatchingProcessorConfig getConfig() {
@@ -61,7 +64,9 @@ public class BatchingProcessor<E> extends AbstractProcessor<E, E> {
      */
     @Override
     public void process(@Nonnull E element) {
-        add(element);
+        synchronized (mutex) {
+            add(element);
+        }
     }
 
     /**
@@ -70,8 +75,10 @@ public class BatchingProcessor<E> extends AbstractProcessor<E, E> {
      */
     @Override
     public void processBatch(@Nonnull Collection<? extends E> elements) {
-        for (E element : elements) {
-            add(element);
+        synchronized (mutex) {
+            for (E element : elements) {
+                add(element);
+            }
         }
     }
 
@@ -79,42 +86,39 @@ public class BatchingProcessor<E> extends AbstractProcessor<E, E> {
      * Forces in-flight work to be flushed synchronously.
      */
     public void flush() throws InterruptedException {
-        // prevent new batches from being started
-        BatchBufferTask<E, ?> batch = currentBatch.get();
-        if (batch != null) {
-            batch.close();
-        }
+        synchronized (mutex) {
+            // prevent new batches from being started
+            if (batchTask != null) {
+                batchTask.close();
+            }
 
-        logger.debug("Flush started");
-        inFlightBatches.acquire(config.getMaxInFlightBatches());
-        inFlightBatches.release(config.getMaxInFlightBatches());
-        logger.debug("Flush complete");
+            logger.debug("Flush started");
+            inFlightBatches.acquire(config.getMaxInFlightBatches());
+            inFlightBatches.release(config.getMaxInFlightBatches());
+            logger.debug("Flush complete");
+        }
     }
 
     private void add(E element) {
-        while (true) {
-            BatchBufferTask<E, ?> current = currentBatch.get();
-            if (current != null && current.offer(element)) {
-                return;
-            }
-
-            BatchBufferTask<E, ?> next = new BatchBufferTask<>(
-                this::createBuffer,
-                this::onBufferClose,
-                config.getMaxBatchSize(),
-                config.getMaxBatchAge());
-
-            if (!next.offer(element)) {
-                // This can only happen if element itself is flawed and
-                // cannot be added to batch (even a new one), so we must drop it.
-                throw new BatchingProcessorException("Failed to add to batch: " + element);
-            }
-
-            if (currentBatch.compareAndSet(current, next)) {
-                execute(next);
-                return;
-            }
+        if (batchTask != null && batchTask.offer(element)) {
+            return;
         }
+
+        BatchBufferTask<E, ?> next = new BatchBufferTask<>(
+            this::createBuffer,
+            this::onBufferClose,
+            config.getMaxBatchSize(),
+            config.getMaxBatchAge());
+
+        if (!next.offer(element)) {
+            // This can only happen if element itself is flawed and
+            // cannot be added to batch (even a new one), so we must drop it.
+            throw new BatchingProcessorException("Failed to add to batch: " + element);
+        }
+
+        execute(next);
+
+        batchTask = next;
     }
 
     /**

@@ -194,13 +194,12 @@ public class BatchingProcessorTest {
     }
 
     private void testMaxInflight(int maxInflight, int maxBatchSize) {
-        int numBatches = 3;
-        ExecutorService producerExecutor = Executors.newFixedThreadPool(numBatches, new ThreadFactoryBuilder()
+        int numProducers = maxInflight + 1;
+        ExecutorService producerExecutor = Executors.newFixedThreadPool(numProducers, new ThreadFactoryBuilder()
             .setNameFormat("test-producer-%d")
             .build());
+        InstrumentedExecutorService executor = new InstrumentedExecutorService(this.executor);
         try {
-            InstrumentedExecutorService executor = new InstrumentedExecutorService(this.executor);
-
             BatchingProcessor<Object> buffer = batchingQueue(config -> config
                     .maxBatchSize(maxBatchSize)
                     .maxBatchOpen(Duration.ofDays(1)) // wont reach timeout
@@ -208,14 +207,17 @@ public class BatchingProcessorTest {
                     .executor(executor),
                 delayConsumer(Duration.ofMillis(250)));
 
+            List<Object> expected = Collections.synchronizedList(new ArrayList<>());
+
             // produce batches in parallel
-            CompletableFuture[] futures = IntStream.range(0, numBatches)
+            CompletableFuture[] futures = IntStream.range(0, numProducers)
                 .mapToObj(n ->
                     CompletableFuture.runAsync(() -> {
                         for (int i = 0; i < maxBatchSize; i++) {
                             String element = String.format("%s-%s", n, i);
                             buffer.process(element);
-                            logger.info("processed {}", element);
+                            logger.debug("processed {}", element);
+                            expected.add(element);
                             try {
                                 Thread.sleep(10L);
                             } catch (InterruptedException e) {
@@ -226,22 +228,21 @@ public class BatchingProcessorTest {
                 .toArray(CompletableFuture[]::new);
 
             try {
-                logger.info("Waiting for producers to stop");
+                logger.debug("Waiting for producers to stop");
                 CompletableFuture.allOf(futures).get();
-                logger.info("Producers done");
+                logger.debug("Producers done");
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
 
-            assertBatchCount(numBatches, 5, SECONDS);
+            assertBatchCount(numProducers, 1, SECONDS);
 
-            assertThat(executor.getExecuteCount().intValue(), equalTo(3));
+            assertThat(executor.getExecuteCount().intValue(), equalTo(numProducers));
             assertThat(executor.getExecutingCount().intValue(), equalTo(0));
             assertThat(executor.getExecutingMax().intValue(), equalTo(maxInflight));
         } finally {
             producerExecutor.shutdownNow();
         }
-
     }
 
     private Consumer<Collection<Object>> delayConsumer(Duration delay) {
