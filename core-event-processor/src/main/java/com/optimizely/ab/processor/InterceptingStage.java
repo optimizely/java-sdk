@@ -19,50 +19,48 @@ import com.optimizely.ab.common.internal.Assert;
 
 import javax.annotation.Nonnull;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
- * A synchronous stage that calls a list of intercept handlers sequentially on each input.
+ * A synchronous stage that passes input elements through a sequential chain of intercept handlers.
  *
  * If a handler returns {@code null}, the element will be dropped, otherwise the returned value
  * will be passed to the next handler in list if one exists, otherwise to the downstream processor.
  *
  * Catches any {@link RuntimeException} thrown from an interceptor, logs it, then continues
  */
-public class InterceptingStage<T> implements ProcessingStage<T, T> {
-    private final List<InterceptHandler<T>> interceptors = new LinkedList<>();
+public class InterceptingStage<T> implements Stage<T, T> {
+    private final List<InterceptHandler<T>> handlers;
 
-    public InterceptingStage(List<InterceptHandler<T>> interceptors) {
-        this.interceptors.addAll(Assert.notNull(interceptors, "interceptors"));
+    public InterceptingStage(List<InterceptHandler<T>> handlers) {
+        this.handlers = Assert.notNull(handlers, "handlers");
     }
 
     @Nonnull
     @Override
-    public Processor<T> create(@Nonnull Processor<? super T> sink) {
-        return new InterceptProcessor<>(interceptors, sink);
+    public Processor<T> getProcessor(@Nonnull Processor<? super T> sink) {
+        return new InterceptProcessor(sink);
     }
 
+    /**
+     * Filters inputs through the chain of interceptors
+     */
+    public class InterceptProcessor extends AbstractProcessor<T, T> {
+        private final String logLabel = InterceptProcessor.class.getSimpleName();
 
-    public static class InterceptProcessor<T> extends AbstractProcessor<T, T> {
-        private static final String logLabel = InterceptProcessor.class.getSimpleName();
-
-        private final List<InterceptHandler<T>> interceptors;
-
-        private InterceptProcessor(List<InterceptHandler<T>> interceptors, Processor<? super T> sink) {
+        InterceptProcessor(Processor<? super T> sink) {
             super(sink);
-            this.interceptors = Assert.notNull(interceptors, "interceptors");
         }
 
         @Override
         public void process(T element) {
-            if (interceptors.isEmpty()) {
+            if (handlers.isEmpty()) {
                 emitElementIfPresent(element);
             }
 
-            logger.trace("[{}] Invoking {} interceptors", logLabel, interceptors.size(), element);
+            logger.trace("[{}] Invoking {} interceptors", logLabel, handlers.size(), element);
 
-            Iterator<InterceptHandler<T>> it = interceptors.iterator();
+            Iterator<InterceptHandler<T>> it = handlers.iterator();
             while (element != null && it.hasNext()) {
                 InterceptHandler<T> interceptor = it.next();
 
@@ -76,7 +74,7 @@ public class InterceptingStage<T> implements ProcessingStage<T, T> {
 
                     element = nextEvent;
                 } catch (RuntimeException e) {
-                    logger.warn("[{}] Skipping interceptor", logLabel, e);
+                    logger.warn("[{}] Skipping interceptor that threw", logLabel, e);
                 }
             }
 

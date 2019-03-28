@@ -15,8 +15,8 @@
  */
 package com.optimizely.ab.processor;
 
-import com.optimizely.ab.common.lifecycle.LifecycleAware;
 import com.optimizely.ab.common.internal.Assert;
+import com.optimizely.ab.common.lifecycle.LifecycleAware;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
- * Abstract implementation of basic behavior for {@link Processor}
+ * Abstract implementation of basic behavior for non-terminal {@link Processor}
  * for intermediate operations of a processing flow.
  *
  * Maintains reference to a downstream {@link Processor}.
@@ -35,9 +35,7 @@ import java.util.function.Consumer;
  * @param <R> the type of output elements; the type of elements accepted by downstream.
  */
 public abstract class AbstractProcessor<T, R> implements Processor<T>, LifecycleAware, Consumer<T> {
-    /**
-     * Share logger with subclasses
-     */
+    // Share logger with subclasses
     protected static final Logger logger = LoggerFactory.getLogger(AbstractProcessor.class);
 
     private final Processor<? super R> sink;

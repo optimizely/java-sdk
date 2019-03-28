@@ -24,10 +24,14 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.processor.AbstractProcessor;
+import com.optimizely.ab.processor.BatchingConfig;
+import com.optimizely.ab.processor.BatchingStage;
+import com.optimizely.ab.processor.InterceptingStage;
 import com.optimizely.ab.processor.InterceptingStage.InterceptHandler;
-import com.optimizely.ab.processor.ProcessingStage;
+import com.optimizely.ab.processor.NoOpProcessor;
 import com.optimizely.ab.processor.Processor;
+import com.optimizely.ab.processor.Stage;
+import com.optimizely.ab.processor.Stages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +43,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 /**
  * Configures the processing flow for dispatching Optimizely events to an {@link EventHandler}.
@@ -57,8 +60,6 @@ import java.util.function.Supplier;
  */
 public class LogEventProcessor<T> implements PluginSupport {
     private static final Logger logger = LoggerFactory.getLogger(LogEventProcessor.class);
-    private static final int DEFAULT_BUFFER_CAPACITY = 1024;
-    private static final int DEFAULT_MAX_BATCH_SIZE = 50;
 
     private EventHandler eventHandler;
 
@@ -84,7 +85,7 @@ public class LogEventProcessor<T> implements PluginSupport {
      *
      * By default, no buffer is used in order to be consistent with previous releases. This may change in the future.
      */
-    private ProcessingStage<EventBatch, EventBatch> bufferStage = ProcessingStage.identity();
+    private Stage<EventBatch, EventBatch> bufferStage = sink -> new NoOpProcessor<>(sink);
 
     /**
      * Callbacks to be invoked when an event is finished being dispatched to report success or failure status.
@@ -145,8 +146,13 @@ public class LogEventProcessor<T> implements PluginSupport {
     /**
      * Configures the wait strategy for ring buffer consumer
      */
-    public LogEventProcessor<T> bufferStage(ProcessingStage<EventBatch, EventBatch> bufferStage) {
+    public LogEventProcessor<T> bufferStage(Stage<EventBatch, EventBatch> bufferStage) {
         this.bufferStage = Assert.notNull(bufferStage, "bufferStage");
+        return this;
+    }
+
+    public LogEventProcessor<T> bufferStage(BatchingConfig config) {
+        this.bufferStage = new BatchingStage<>(Assert.notNull(config, "config"));
         return this;
     }
 
@@ -159,55 +165,17 @@ public class LogEventProcessor<T> implements PluginSupport {
     }
 
     public Processor<T> build() {
-        return ProcessingStage
-            .transformers(transformers)
-            .map(converter)
-            .andThen(ProcessingStage.interceptors(interceptors))
+        return Stages
+            .behavior(new CompositeConsumer<>(transformers))
+            .andThen(Stages.mapping(converter))
+            .andThen(new InterceptingStage<>(interceptors))
             .andThen(bufferStage)
             .andThen(new EventBatchMergeStage(eventFactory, () -> callbacks))
-            .create(new EventHandlerSink(eventHandler, logEventExceptionHandler));
-    }
-
-    static class LegacyEventOperator extends AbstractProcessor<EventBatch, LogEvent> {
-        private final Function<EventBatch, LogEvent> eventFactory;
-        private final Supplier<Callback<EventBatch>> callbackSupplier;
-
-        public LegacyEventOperator(
-            Processor<? super LogEvent> sink,
-            Function<EventBatch, LogEvent> eventFactory,
-            Supplier<Callback<EventBatch>> callbackSupplier
-        ) {
-            super(sink);
-            this.eventFactory = Assert.notNull(eventFactory, "eventFactory");
-            this.callbackSupplier = Assert.notNull(callbackSupplier, "callbackSupplier");
-        }
-
-        @Override
-        public void process(EventBatch input) {
-            if (input == null) {
-                return;
-            }
-
-            LogEvent output = eventFactory.apply(input);
-            if (output == null) {
-                return;
-            }
-
-            setCallback(output);
-
-            getSink().process(output);
-        }
-
-        private void setCallback(LogEvent logEvent) {
-            Callback<EventBatch> callback = callbackSupplier.get();
-            if (callback != null) {
-                logEvent.setCallback(callback);
-            }
-        }
+            .getProcessor(new EventHandlerSink(eventHandler, logEventExceptionHandler));
     }
 
     /**
-     * Adapts an {@link EventHandler} to the {@link Processor} interface.
+     * Terminal processor that adapts an {@link EventHandler} to the {@link Processor} interface.
      */
     static class EventHandlerSink implements Processor<LogEvent> {
         private static final Logger logger = LoggerFactory.getLogger(EventHandlerSink.class);

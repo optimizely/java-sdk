@@ -28,7 +28,7 @@ import com.lmax.disruptor.dsl.ProducerType;
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.common.lifecycle.LifecycleAware;
 import com.optimizely.ab.common.message.MutableMessage;
-import com.optimizely.ab.processor.ProcessingStage;
+import com.optimizely.ab.processor.Stage;
 import com.optimizely.ab.processor.Processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @param <T> the type of elements to in buffer
  */
-public class DisruptorBufferStage<T> implements ProcessingStage<T, T> {
+public class DisruptorBufferStage<T> implements Stage<T, T> {
     private static final Logger logger = LoggerFactory.getLogger(DisruptorBufferStage.class);
 
     private final Config config;
@@ -57,7 +57,7 @@ public class DisruptorBufferStage<T> implements ProcessingStage<T, T> {
 
     @Nonnull
     @Override
-    public Processor<T> create(@Nonnull Processor<? super T> sink) {
+    public Processor<T> getProcessor(@Nonnull Processor<? super T> sink) {
         return new BufferProcessor<>(config, sink);
     }
 

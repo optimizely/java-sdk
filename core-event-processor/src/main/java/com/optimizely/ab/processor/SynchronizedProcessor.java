@@ -13,35 +13,34 @@ import java.util.Collection;
  */
 class SynchronizedProcessor<T> implements Processor<T> {
     private final Processor<T> processor;
-    private final Object mutex;
+    protected final Object processMutex;
 
     /**
      * @param processor the processor to wrap
      */
-    SynchronizedProcessor(Processor<T> processor) {
-        this.processor = Assert.notNull(processor, "processor");
-        this.mutex = this;
+    public SynchronizedProcessor(Processor<T> processor) {
+        this(processor, new Object());
     }
 
     /**
      * @param processor the processor to wrap
-     * @param mutex the mutex object to synchronize on
+     * @param processMutex the processMutex object to synchronize on
      */
-    SynchronizedProcessor(Processor<T> processor, Object mutex) {
+    protected SynchronizedProcessor(Processor<T> processor, Object processMutex) {
         this.processor = Assert.notNull(processor, "processor");
-        this.mutex = Assert.notNull(mutex, "mutex");
+        this.processMutex = Assert.notNull(processMutex, "processMutex");
     }
 
     @Override
     public void process(@Nonnull T element) {
-        synchronized (mutex) {
+        synchronized (processMutex) {
             processor.process(element);
         }
     }
 
     @Override
     public void processBatch(@Nonnull Collection<? extends T> elements) {
-        synchronized (mutex) {
+        synchronized (processMutex) {
             processor.processBatch(elements);
         }
     }

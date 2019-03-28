@@ -1,6 +1,7 @@
 package com.optimizely.ab.processor.batch;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.optimizely.ab.processor.BatchingTask;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -20,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.fail;
 
 public class BatchingTaskTest {
     public static final Logger logger = LoggerFactory.getLogger(BatchingTaskTest.class);
@@ -83,6 +86,31 @@ public class BatchingTaskTest {
     }
 
     @Test
+    public void testNoMaxSize() throws Exception {
+        BatchingTask<Integer, ArrayList<Object>> task = new BatchingTask<>(
+            ArrayList::new,
+            batches::add,
+            null,
+            Duration.ofDays(1));
+
+        for (int i = 0; i < 100; i++) {
+            task.offer(i);
+        }
+
+        Future future = executor.submit(task);
+
+        for (int i = 100; i < 200; i++) {
+            task.offer(i);
+        }
+
+        task.close();
+        future.get(1, TimeUnit.SECONDS);
+
+        assertThat(batches, hasSize(1));
+        assertThat(batches.get(0), hasSize(200));
+    }
+
+    @Test
     public void testClosedBeforeRun() throws Exception {
         BatchingTask<Integer, ArrayList<Object>> task = new BatchingTask<>(
             ArrayList::new,
@@ -124,5 +152,43 @@ public class BatchingTaskTest {
         assertThat(task.offer(1), is(true));
         future.get(100L, TimeUnit.MILLISECONDS);
         assertThat(task.isOpen(), is(false));
+    }
+
+    @Test
+    public void testFlushesWhenInterrupted() throws Exception {
+        BatchingTask<Integer, ArrayList<Object>> task = new BatchingTask<>(
+            ArrayList::new,
+            batches::add,
+            10,
+            Duration.ofDays(1));
+
+        Future future = executor.submit(task);
+
+        task.offer(1);
+        task.offer(2);
+
+        future.cancel(true);
+
+        assertThat(batches, hasSize(1));
+        assertThat(batches.get(0), contains(1, 2));
+    }
+
+    @Test
+    public void testThrowsIfRunAgain() throws Exception {
+        BatchingTask<Integer, ArrayList<Object>> task = new BatchingTask<>(
+            ArrayList::new,
+            batches::add,
+            1,
+            Duration.ofSeconds(1));
+
+        task.offer(1);
+        executor.submit(task).get(1, TimeUnit.SECONDS);
+
+        try {
+            executor.submit(task).get(1, TimeUnit.SECONDS);
+            fail("Should have thrown");
+        } catch (ExecutionException e) {
+            assertThat(e.getCause(), instanceOf(IllegalStateException.class));
+        }
     }
 }

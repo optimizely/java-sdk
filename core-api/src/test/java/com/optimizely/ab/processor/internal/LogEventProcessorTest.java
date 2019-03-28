@@ -30,7 +30,7 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.payload.Visitor;
-import com.optimizely.ab.processor.ProcessingStage;
+import com.optimizely.ab.processor.Stage;
 import com.optimizely.ab.processor.Processor;
 import com.optimizely.ab.processor.disruptor.DisruptorBufferConfig;
 import com.optimizely.ab.processor.disruptor.DisruptorBufferStage;
@@ -84,7 +84,7 @@ public class LogEventProcessorTest {
         return inst;
     }
 
-    private <T> ProcessingStage<T, T> disruptor(Consumer<DisruptorBufferConfig.Builder> configure) {
+    private <T> Stage<T, T> disruptor(Consumer<DisruptorBufferConfig.Builder> configure) {
         DisruptorBufferConfig.Builder config = DisruptorBufferConfig.builder();
 
         // base configuration

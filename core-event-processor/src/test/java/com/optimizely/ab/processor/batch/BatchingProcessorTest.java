@@ -3,7 +3,9 @@ package com.optimizely.ab.processor.batch;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.optimizely.ab.common.internal.Assert;
+import com.optimizely.ab.processor.BatchingConfig;
 import com.optimizely.ab.processor.Processor;
+import com.optimizely.ab.processor.BatchingStage.BatchingProcessor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -63,11 +66,11 @@ public class BatchingProcessorTest {
             .maxBatchOpen(Duration.ofDays(1))); // wont reach timeout
 
         buffer.process("one");
-        assertBatchCount(1);
+        assertBatchCount(1, buffer);
         buffer.process("two");
-        assertBatchCount(2);
+        assertBatchCount(2, buffer);
         buffer.process("three");
-        assertBatchCount(3);
+        assertBatchCount(3, buffer);
         assertThat(batches.get(0), equalTo(newArrayList("one")));
         assertThat(batches.get(1), equalTo(newArrayList("two")));
         assertThat(batches.get(2), equalTo(newArrayList("three")));
@@ -81,10 +84,10 @@ public class BatchingProcessorTest {
 
         buffer.process("one");
         buffer.process("two");
-        assertBatchCount(1);
+        assertBatchCount(1, buffer);
         buffer.process("three");
         buffer.process("four");
-        assertBatchCount(2);
+        assertBatchCount(2, buffer);
         assertThat(batches.get(0), equalTo(newArrayList("one", "two")));
         assertThat(batches.get(1), equalTo(newArrayList("three", "four")));
     }
@@ -96,13 +99,13 @@ public class BatchingProcessorTest {
             .maxBatchOpen(Duration.ofMillis(500)));
 
         buffer.process(0);
-        assertBatchCount(1);
+        assertBatchCount(1, buffer);
         assertThat(batches.get(0), equalTo(newArrayList(0)));
 
         for (int i = 1; i <= 10; i++) {
             buffer.process(i);
         }
-        assertBatchCount(2);
+        assertBatchCount(2, buffer);
         assertThat(batches.get(1), equalTo(newArrayList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)));
     }
 
@@ -113,7 +116,7 @@ public class BatchingProcessorTest {
             .maxBatchOpen(Duration.ofDays(1))); // wont reach timeout
 
         buffer.processBatch(Lists.newArrayList("one", "two", "three"));
-        assertBatchCount(3);
+        assertBatchCount(3, buffer);
         assertThat(batches.get(0), equalTo(newArrayList("one")));
         assertThat(batches.get(1), equalTo(newArrayList("two")));
         assertThat(batches.get(2), equalTo(newArrayList("three")));
@@ -126,7 +129,7 @@ public class BatchingProcessorTest {
             .maxBatchOpen(Duration.ofDays(1))); // wont reach timeout
 
         buffer.processBatch(Lists.newArrayList("one", "two", "three", "four"));
-        assertBatchCount(2);
+        assertBatchCount(2, buffer);
         assertThat(batches.get(0), equalTo(newArrayList("one", "two")));
         assertThat(batches.get(1), equalTo(newArrayList("three", "four")));
     }
@@ -138,7 +141,7 @@ public class BatchingProcessorTest {
             .maxBatchOpen(Duration.ofMillis(500)));
 
         buffer.processBatch(Lists.newArrayList("one", "two", "three"));
-        assertBatchCount(2);
+        assertBatchCount(2, buffer);
         assertThat(batches.get(0), equalTo(newArrayList("one", "two")));
         assertThat(batches.get(1), equalTo(newArrayList("three")));
     }
@@ -170,14 +173,40 @@ public class BatchingProcessorTest {
             .maxBatchOpen(Duration.ZERO));
 
         buffer.process("one");
-        assertBatchCount(0, 500, MILLISECONDS);
+        assertBatchCount(0, buffer);
         buffer.process("two");
-        assertBatchCount(0, 500, MILLISECONDS);
+        assertBatchCount(0, buffer);
         buffer.process("three");
-        assertBatchCount(0, 500, MILLISECONDS);
+        assertBatchCount(0, buffer);
         buffer.flush();
-        assertBatchCount(1);
+        assertBatchCount(1, buffer);
         assertThat(batches.get(0), equalTo(newArrayList("one", "two", "three")));
+    }
+
+    @Test
+    public void testFlushOnShutdown_true() throws Exception {
+        BatchingProcessor<Object> buffer = batchingQueue(config -> config
+            .maxBatchOpen(null)
+            .flushOnShutdown(true));
+
+        buffer.process("one");
+        Thread.sleep(250L);
+        assertThat(batchCount.get(), equalTo(0));
+        buffer.onStop(1, SECONDS);
+        assertBatchCount(1, buffer);
+    }
+
+    @Test
+    public void testFlushOnShutdown_false() throws Exception {
+        BatchingProcessor<Object> buffer = batchingQueue(config -> config
+            .maxBatchOpen(null)
+            .flushOnShutdown(false));
+
+        buffer.process("one");
+        Thread.sleep(250L);
+        assertThat(batchCount.get(), equalTo(0));
+        buffer.onStop(1, SECONDS);
+        assertBatchCount(0, buffer);
     }
 
     @Test
@@ -232,7 +261,7 @@ public class BatchingProcessorTest {
                 throw new RuntimeException(e);
             }
 
-            assertBatchCount(numProducers, 1, SECONDS);
+            assertBatchCount(numProducers, buffer);
 
             assertThat(executor.getExecuteCount().intValue(), equalTo(numProducers));
             assertThat(executor.getExecutingCount().intValue(), equalTo(0));
@@ -255,19 +284,19 @@ public class BatchingProcessorTest {
         };
     }
 
-    private BatchingProcessorConfig.Builder batchingQueueConfig() {
-        return BatchingProcessorConfig.builder().executor(executor);
+    private BatchingConfig.Builder batchingQueueConfig() {
+        return BatchingConfig.builder().executor(executor);
     }
 
-    private BatchingProcessor<Object> batchingQueue(Consumer<BatchingProcessorConfig.Builder> configure) {
+    private BatchingProcessor<Object> batchingQueue(Consumer<BatchingConfig.Builder> configure) {
         return batchingQueue(configure, this::recordBatch);
     }
 
     private BatchingProcessor<Object> batchingQueue(
-        Consumer<BatchingProcessorConfig.Builder> configure,
+        Consumer<BatchingConfig.Builder> configure,
         Consumer<Collection<Object>> consumer
     ) {
-        BatchingProcessorConfig.Builder config = batchingQueueConfig();
+        BatchingConfig.Builder config = batchingQueueConfig();
 
         // per-test config
         configure.accept(config);
@@ -292,13 +321,21 @@ public class BatchingProcessorTest {
         logger.info("Received batch #{}: {}", n, batch);
     }
 
-    private void assertBatchCount(int n) {
-        assertBatchCount(n, 1, SECONDS);
-    }
-
-    private void assertBatchCount(int n, int timeout, TimeUnit unit) {
+    private void assertBatchCount(int n, long timeout, TimeUnit unit) {
         Integer actual = await().atMost(timeout, unit)
             .untilAtomic(batchCount, greaterThanOrEqualTo(n));
+
+        assertThat(actual, equalTo(n));
+    }
+
+    // waits for the configured max age
+    private void assertBatchCount(int n, BatchingProcessor processor) {
+        long millis = Optional.ofNullable(processor.getConfig().getMaxBatchAge())
+            .map(maxAge -> maxAge.plus(Duration.ofMillis(250)))
+            .orElse(Duration.ofSeconds(1))
+            .toMillis();
+
+        Integer actual = await().atMost(millis, MILLISECONDS).untilAtomic(batchCount, greaterThanOrEqualTo(n));
 
         assertThat(actual, equalTo(n));
     }

@@ -1,15 +1,12 @@
-package com.optimizely.ab.processor.batch;
+package com.optimizely.ab.processor;
 
 import com.optimizely.ab.common.internal.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.time.Clock;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Date;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -17,37 +14,35 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Task that produces a single batch by maintaining a temporary thread-safe buffer.
+ * Task that handles lifecycle of a batch that acts a buffer while open and flushes to a consumer when closed.
  *
- * Closure can be triggered by any of following conditions:
+ * Supports any of the following conditions to trigger the buffer to flushed:
  * <ul>
- *   <li>Reached configured maximum size (via {@link #offer(Object)})</li>
+ *   <li>Reached configured maximum size</li>
  *   <li>Reached configured maximum age (relative to time first element was added)</li>
- *   <li>Buffer has been explicitly closed (via {@link #close})</li>
+ *   <li>Buffer has been explicitly closed</li>
+ *   <li>Thread is interrupted</li>
  * </ul>
  *
  * While the task is running (open), other threads can offer items to the buffer.
  * The buffer is flushed to the consumer from the thread that invokes {@link #run}.
  *
  * @param <E> the type of elements in buffer
+ * @param <C> the type of {@link Collection} used for buffer
  */
-class BatchingTask<E, C extends Collection<? super E>> implements Runnable {
+public class BatchingTask<E, C extends Collection<? super E>> implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(BatchingTask.class);
-    private static final AtomicInteger sequence = new AtomicInteger();
-
-    private final int id = sequence.incrementAndGet();
 
     private final Supplier<C> bufferSupplier;
     private final Consumer<C> bufferConsumer;
-    private final Integer maxSize;
+    private final int maxSize;
     private final Duration maxAge;
-    private final Clock clock;
+    private final Lock lock;
+    private final Condition condition;
 
-    private final Lock lock = new ReentrantLock(true);
-    private final Condition condition = lock.newCondition();
-
+    // The following fields should only be modified when lock is held
     private C buffer;
-    private Date deadline; // populated on first element
+    private Date deadline;
     private volatile Status status = Status.OPEN;
 
     public enum Status {
@@ -62,23 +57,28 @@ class BatchingTask<E, C extends Collection<? super E>> implements Runnable {
         Integer maxSize,
         Duration maxAge
     ) {
-        this(bufferSupplier, bufferConsumer, maxSize, maxAge, Clock.systemUTC());
+        this(bufferSupplier, bufferConsumer, maxSize, maxAge, new ReentrantLock());
     }
 
-    BatchingTask(
+    protected BatchingTask(
         Supplier<C> bufferSupplier,
         Consumer<C> bufferConsumer,
         Integer maxSize,
         Duration maxAge,
-        Clock clock
+        Lock lock
     ) {
         this.bufferSupplier = Assert.notNull(bufferSupplier, "bufferSupplier");
         this.bufferConsumer = bufferConsumer;
-        this.maxSize = (maxSize != null && maxSize > 0) ? maxSize : null;
+        this.maxSize = (maxSize != null && maxSize > 0) ? maxSize : Integer.MAX_VALUE;
         this.maxAge = (maxAge != null && !maxAge.isNegative() && !maxAge.isZero()) ? maxAge : null;
-        this.clock = Assert.notNull(clock, "clock");
+        this.lock = Assert.notNull(lock, "lock");
+        this.condition = lock.newCondition();
     }
 
+    /**
+     * Waits until buffer is marked closed, thread is interrupted, or the configured deadline elapses, then invokes the
+     * consumer with buffer contents.
+     */
     @Override
     public void run() {
         lock.lock();
@@ -96,13 +96,13 @@ class BatchingTask<E, C extends Collection<? super E>> implements Runnable {
                     condition.await();
                 }
             }
-
-            status = Status.CLOSED;
         } catch (InterruptedException e) {
-            throw new BatchInterruptedException(this.buffer, "Interrupted while waiting for lock", e);
+            logger.warn("Flushing buffer contents due to interrupt", e);
         } finally {
             lock.unlock();
         }
+
+        status = Status.CLOSED;
 
         if (bufferConsumer != null) {
             bufferConsumer.accept(buffer);
@@ -112,16 +112,51 @@ class BatchingTask<E, C extends Collection<? super E>> implements Runnable {
     /**
      * Inserts the specified element into this buffer if the buffer is still open.
      *
-     * @param element
+     * @param element object to add to buffer
      * @return true if element was inserted, otherwise false
      */
     public boolean offer(E element) {
         lock.lock();
         try {
-            return insert(element);
+            if (status != Status.OPEN) {
+                return false;
+            }
+
+            boolean notify = false; // should threads waiting on lock be woken up?
+
+            // initialize buffer on first element
+            if (buffer == null) {
+                buffer = bufferSupplier.get();
+
+                // set the deadline when first added and signal to pick it up
+                if (maxAge != null) {
+                    // limited benefit to using Clock here since we are using awaitUntil
+                    long now = System.currentTimeMillis();
+
+                    deadline = new Date(now + maxAge.toMillis());
+
+                    notify = true;
+                }
+
+                logger.debug("Initialized buffer with deadline: {}", deadline);
+            }
+
+            buffer.add(element);
+
+            if (buffer.size() >= maxSize) {
+                logger.debug("Closing buffer (reached max size)");
+                status = Status.CLOSING;
+                notify = true;
+            }
+
+            if (notify) {
+                condition.signal();
+            }
         } finally {
             lock.unlock();
         }
+
+        return true;
     }
 
     /**
@@ -132,13 +167,13 @@ class BatchingTask<E, C extends Collection<? super E>> implements Runnable {
         lock.lock();
         try {
             if (status != Status.OPEN) {
-                logger.trace("Batch is not open");
+                logger.trace("Buffer is not open");
                 return;
             }
 
             status = Status.CLOSING;
             condition.signal();
-            logger.trace("Batch is now closed");
+            logger.trace("Buffer is now closed");
         } finally {
             lock.unlock();
         }
@@ -146,57 +181,5 @@ class BatchingTask<E, C extends Collection<? super E>> implements Runnable {
 
     public boolean isOpen() {
         return status == Status.OPEN;
-    }
-
-    private boolean isFull() {
-        return maxSize != null && buffer.size() >= maxSize;
-    }
-
-    // assumes lock is being held
-    private boolean insert(E element) {
-        if (status != Status.OPEN) {
-            return false;
-        }
-
-        boolean signal = false;
-        if (buffer == null) {
-            buffer = bufferSupplier.get();
-
-            // set the deadline when first added and signal to pick it up
-            if (maxAge != null) {
-                deadline = new Date(clock.millis() + maxAge.toMillis());
-                signal = true;
-                logger.debug("[{}] Batch deadline: {}", id, deadline);
-            }
-        }
-
-        buffer.add(element);
-
-        if (isFull()) {
-            logger.trace("[{}] Batch is now full", id);
-            status = Status.CLOSING;
-            signal = true;
-        }
-
-        if (signal) {
-            logger.trace("[{}] Signalling consumer", id);
-            condition.signalAll();
-        }
-
-        return true;
-    }
-
-    public static class BatchInterruptedException extends BatchingProcessorException {
-        private final Collection buffer;
-
-        BatchInterruptedException(Collection buffer, String message, Throwable cause) {
-            super(message, cause);
-            this.buffer = buffer;
-        }
-
-        @Nullable
-        public Collection getBuffer() {
-            return buffer;
-        }
     }
 }

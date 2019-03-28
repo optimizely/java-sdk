@@ -22,7 +22,7 @@ import java.util.Collection;
  * Performs a processing task on received elements.
  *
  * @param <T> the type of input elements
- * @see ProcessingStage
+ * @see Stage
  */
 public interface Processor<T> {
     /**

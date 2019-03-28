@@ -22,7 +22,7 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.processor.AbstractProcessor;
 import com.optimizely.ab.processor.Processor;
-import com.optimizely.ab.processor.ProcessingStage;
+import com.optimizely.ab.processor.Stage;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ import java.util.function.Supplier;
  *
  * @see EventContextKey
  */
-class EventBatchMergeStage implements ProcessingStage<EventBatch, LogEvent> {
+class EventBatchMergeStage implements Stage<EventBatch, LogEvent> {
     private final Function<EventBatch, LogEvent> eventFactory;
     private final Supplier<Callback<EventBatch>> callbackSupplier;
 
@@ -54,7 +54,7 @@ class EventBatchMergeStage implements ProcessingStage<EventBatch, LogEvent> {
 
     @Nonnull
     @Override
-    public Processor<EventBatch> create(@Nonnull Processor<? super LogEvent> sink) {
+    public Processor<EventBatch> getProcessor(@Nonnull Processor<? super LogEvent> sink) {
         return new BatchLogEventOperator(sink);
     }
 

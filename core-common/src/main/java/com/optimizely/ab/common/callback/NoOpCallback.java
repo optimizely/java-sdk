@@ -2,7 +2,7 @@ package com.optimizely.ab.common.callback;
 
 import javax.annotation.Nonnull;
 
-enum NoopCallback implements Callback<Object> {
+enum NoOpCallback implements Callback<Object> {
     INSTANCE;
 
     @Override

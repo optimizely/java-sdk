@@ -15,8 +15,6 @@
  */
 package com.optimizely.ab.common.callback;
 
-import com.optimizely.ab.common.internal.Assert;
-
 import javax.annotation.Nonnull;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
@@ -77,31 +75,5 @@ public interface Callback<E> {
                 }
             }
         };
-    }
-
-    /**
-     * Creates a callback that calls the given function on completion.
-     */
-    static <E> Callback<E> completion(BiConsumer<E, Throwable> listener) {
-        Assert.notNull(listener, "listener");
-        return new Callback<E>() {
-            @Override
-            public void success(E value) {
-                listener.accept(value, null);
-            }
-
-            @Override
-            public void failure(E context, @Nonnull Throwable throwable) {
-                listener.accept(context, throwable);
-            }
-        };
-    }
-
-    /**
-     * @return a dummy callback that does nothing
-     */
-    @SuppressWarnings("unchecked")
-    static <E> Callback<E> dummy() {
-        return (Callback<E>) NoopCallback.INSTANCE;
     }
 }
