@@ -141,7 +141,7 @@ public class DecisionNotification {
             decisionInfo.put(VARIABLE_KEY, variableKey);
             decisionInfo.put(VARIABLE_TYPE, variableType);
             decisionInfo.put(VARIABLE_VALUE, variableValue);
-            if (featureDecision.decisionSource != null && FeatureDecision.DecisionSource.EXPERIMENT.equals(featureDecision.decisionSource)) {
+            if (featureDecision != null && featureDecision.decisionSource != null && FeatureDecision.DecisionSource.EXPERIMENT.equals(featureDecision.decisionSource)) {
                 decisionInfo.put(SOURCE_EXPERIMENT_KEY, featureDecision.experiment.getKey());
                 decisionInfo.put(SOURCE_VARIATION_KEY, featureDecision.variation.getKey());
                 decisionInfo.put(SOURCE, featureDecision.decisionSource);
