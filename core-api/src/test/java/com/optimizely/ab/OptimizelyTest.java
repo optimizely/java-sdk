@@ -3348,8 +3348,8 @@ public class OptimizelyTest {
 
     /**
      * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}
+     * is called when the variation is not null and feature enabled is false
      * returns the default variable value
-     * if the variation is not null featureEnabled is false.
      *
      * @throws ConfigParseException
      */
@@ -3385,7 +3385,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey + "\" for variation \"Gred\" was not enabled. " +
-                "The default value \""+ expectedValue +"\" for \""+ validVariableKey +"\" is being returned."
+                "The default value is being returned."
         );
 
         assertEquals(expectedValue, value);
@@ -3393,7 +3393,7 @@ public class OptimizelyTest {
 
     /**
      * Verify that the {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
-     * notification listener of getFeatureVariableString is called when feature is in experiment and feature is true
+     * is called when feature is in experiment and feature enabled is true
      * returns variable value
      */
     @Test
@@ -3414,13 +3414,12 @@ public class OptimizelyTest {
             testUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             expectedValue);
-
     }
 
     /**
      * Verify that the {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
-     * notification listener of getFeatureVariableString is called when feature is in experiment and feature enabled is false
-     * than default value will get returned
+     * is called when feature is in experiment and feature enabled is false
+     * than default value will gets returned
      */
     @Test
     public void getFeatureVariableWithListenerUserInExperimentFeatureOff() {
@@ -3441,7 +3440,6 @@ public class OptimizelyTest {
             userID,
             null),
             expectedValue);
-
      }
 
     /**
@@ -3470,7 +3468,6 @@ public class OptimizelyTest {
             genericUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             expectedValue);
-
     }
 
     /**
@@ -3499,7 +3496,6 @@ public class OptimizelyTest {
             genericUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             expectedValue);
-
     }
 
     /**

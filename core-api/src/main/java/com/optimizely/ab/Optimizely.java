@@ -660,7 +660,7 @@ public class Optimizely {
                 }
             } else {
                 logger.info("Feature \"{}\" for variation \"{}\" was not enabled. " +
-                        "The default value \"{}\" for \"{}\" is being returned.",
+                        "The default value is being returned.",
                     featureKey, featureDecision.variation.getKey(), variableValue, variableKey
                 );
             }
