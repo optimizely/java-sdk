@@ -37,7 +37,8 @@ class CompositeConsumer<T> implements Consumer<T> {
     }
 
     @Override
-    public void accept(T input) {
+    public final void accept(T input) {
+        beforeAccept(input);
         for (final Consumer<? super T> consumer : consumers) {
             try {
                 consumer.accept(input);
@@ -45,6 +46,15 @@ class CompositeConsumer<T> implements Consumer<T> {
                 handleError(consumer, e);
             }
         }
+        afterAccept(input);
+    }
+
+    protected void beforeAccept(T input) {
+        // overrideable
+    }
+
+    protected void afterAccept(T input) {
+        // overridable
     }
 
     protected void handleError(Consumer<? super T> consumer, RuntimeException e) {
