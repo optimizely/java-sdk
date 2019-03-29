@@ -34,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -183,6 +184,7 @@ public class BatchingTaskTest {
         task.offer(2);
 
         future.cancel(true);
+        await().atMost(500, TimeUnit.MILLISECONDS).until(future::isDone);
 
         assertThat(batches, hasSize(1));
         assertThat(batches.get(0), contains(1, 2));
