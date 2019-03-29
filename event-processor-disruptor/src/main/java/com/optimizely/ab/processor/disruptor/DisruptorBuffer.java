@@ -70,12 +70,6 @@ public class DisruptorBuffer<T> extends StageProcessor<T, T> {
     public DisruptorBuffer(Config config) {
         this.config = Assert.notNull(config, "config");
 
-        int batchMaxSize = config.getBatchMaxSize();
-        if (batchMaxSize < 1) {
-            logger.warn("Invalid batch size {}, using minimum size 1", batchMaxSize);
-            batchMaxSize = 1;
-        }
-
         int ringBufferSize = config.getCapacity();
         if (ringBufferSize < MIN_RINGBUFFER_SIZE) {
             logger.warn("Invalid ring buffer size {}, using minimum size {}", ringBufferSize, MIN_RINGBUFFER_SIZE);
@@ -101,7 +95,14 @@ public class DisruptorBuffer<T> extends StageProcessor<T, T> {
     @Override
     public void configure(Processor<? super T> sink) {
         super.configure(sink);
-        this.batch = new BufferBatch<>(sink, config.getBatchMaxSize());
+
+        int batchMaxSize = config.getBatchMaxSize();
+        if (batchMaxSize < 1) {
+            logger.warn("Invalid batch size {}, using minimum size 1", batchMaxSize);
+            batchMaxSize = 1;
+        }
+
+        this.batch = new BufferBatch<>(sink, batchMaxSize);
     }
 
     @Override
