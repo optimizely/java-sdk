@@ -58,8 +58,8 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 
-public class LogEventProcessorTest {
-    private static final Logger logger = LoggerFactory.getLogger(LogEventProcessorTest.class);
+public class EventProcessorTest {
+    private static final Logger logger = LoggerFactory.getLogger(EventProcessorTest.class);
     private OutputCapture output;
 
     @Before
@@ -67,8 +67,8 @@ public class LogEventProcessorTest {
         output = new OutputCapture();
     }
 
-    private Processor<EventBatch.Builder> processor(Consumer<LogEventProcessor<EventBatch.Builder>> configure) {
-        LogEventProcessor<EventBatch.Builder> processor = new LogEventProcessor<>();
+    private Processor<EventBatch.Builder> processor(Consumer<EventProcessor<EventBatch.Builder>> configure) {
+        EventProcessor<EventBatch.Builder> processor = new EventProcessor<>();
 
         // base configuration
         processor.converter(EventBatch.Builder::build);
@@ -389,7 +389,7 @@ public class LogEventProcessorTest {
      *
      * Collections are paired with Atomic for more efficient wait conditions.
      */
-    public static class OutputCapture implements Plugin<LogEventProcessor<EventBatch.Builder>> {
+    public static class OutputCapture implements Plugin<EventProcessor<EventBatch.Builder>> {
         AtomicInteger payloadCount = new AtomicInteger();
         List<LogEvent> payloads = Collections.synchronizedList(new LinkedList<>());
 
@@ -410,7 +410,7 @@ public class LogEventProcessorTest {
         }
 
         @Override
-        public void configure(LogEventProcessor<EventBatch.Builder> builder) {
+        public void configure(EventProcessor<EventBatch.Builder> builder) {
             builder.transformer(event -> {
                 transformerCount.incrementAndGet();
                 inflightCount.incrementAndGet();

@@ -58,8 +58,8 @@ import java.util.function.Predicate;
  *
  * @param <T> the type of elements fed into the processor
  */
-public class LogEventProcessor<T> implements PluginSupport {
-    private static final Logger logger = LoggerFactory.getLogger(LogEventProcessor.class);
+public class EventProcessor<T> implements PluginSupport {
+    private static final Logger logger = LoggerFactory.getLogger(EventProcessor.class);
 
     private EventHandler eventHandler;
 
@@ -98,18 +98,18 @@ public class LogEventProcessor<T> implements PluginSupport {
         logger.error("Error dispatching event: {}", logEvent, err);
     };
 
-    public LogEventProcessor<T> plugin(Plugin<LogEventProcessor<T>> plugin) {
+    public EventProcessor<T> plugin(Plugin<EventProcessor<T>> plugin) {
         Assert.notNull(plugin, "plugin");
         plugin.configure(this);
         return this;
     }
 
-    public LogEventProcessor<T> transformer(Consumer<T> transformer) {
+    public EventProcessor<T> transformer(Consumer<T> transformer) {
         this.transformers.add(Assert.notNull(transformer, "transformer"));
         return this;
     }
 
-    public LogEventProcessor<T> interceptor(Predicate<EventBatch> filter) {
+    public EventProcessor<T> interceptor(Predicate<EventBatch> filter) {
         Assert.notNull(filter, "interceptor");
         this.interceptors.add(input -> {
             if (!filter.test(input)) {
@@ -120,25 +120,25 @@ public class LogEventProcessor<T> implements PluginSupport {
         return this;
     }
 
-    public LogEventProcessor<T> callback(Callback<EventBatch> callback) {
+    public EventProcessor<T> callback(Callback<EventBatch> callback) {
         this.callbacks.add(Assert.notNull(callback, "callback"));
         return this;
     }
 
-    public LogEventProcessor<T> callback(Consumer<EventBatch> success) {
+    public EventProcessor<T> callback(Consumer<EventBatch> success) {
         return callback(Callback.from(success, (c, ex) -> {}));
     }
 
-    public LogEventProcessor<T> eventFactory(Function<EventBatch, LogEvent> eventFactory) {
+    public EventProcessor<T> eventFactory(Function<EventBatch, LogEvent> eventFactory) {
         this.eventFactory = Assert.notNull(eventFactory, "eventFactory");
         return this;
     }
 
-    public LogEventProcessor<T> eventFactory(EventFactory eventFactory) {
+    public EventProcessor<T> eventFactory(EventFactory eventFactory) {
         return eventFactory(Assert.notNull(eventFactory, "eventFactory")::createLogEvent);
     }
 
-    public LogEventProcessor<T> eventHandler(EventHandler eventHandler) {
+    public EventProcessor<T> eventHandler(EventHandler eventHandler) {
         this.eventHandler = Assert.notNull(eventHandler, "eventHandler");
         return this;
     }
@@ -146,12 +146,12 @@ public class LogEventProcessor<T> implements PluginSupport {
     /**
      * Configures the wait strategy for ring buffer consumer
      */
-    public LogEventProcessor<T> bufferStage(Stage<EventBatch, EventBatch> bufferStage) {
+    public EventProcessor<T> bufferStage(Stage<EventBatch, EventBatch> bufferStage) {
         this.bufferStage = Assert.notNull(bufferStage, "bufferStage");
         return this;
     }
 
-    public LogEventProcessor<T> bufferStage(BatchingConfig config) {
+    public EventProcessor<T> bufferStage(BatchingConfig config) {
         this.bufferStage = new BatchingProcessor<>(Assert.notNull(config, "config"));
         return this;
     }
@@ -159,7 +159,7 @@ public class LogEventProcessor<T> implements PluginSupport {
     /**
      * Configures the conversion stage between transformers and interceptors.
      */
-    LogEventProcessor<T> converter(Function<? super T, ? extends EventBatch> converter) {
+    EventProcessor<T> converter(Function<? super T, ? extends EventBatch> converter) {
         this.converter = Assert.notNull(converter, "converter");
         return this;
     }
