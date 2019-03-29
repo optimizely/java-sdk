@@ -23,11 +23,7 @@ import java.util.Collection;
  *
  * @param <T> the type of input and output elements
  */
-public class IdentityProcessor<T> extends SourceProcessor<T, T> {
-    public IdentityProcessor(Processor<? super T> sink) {
-        super(sink);
-    }
-
+public class IdentityProcessor<T> extends StageProcessor<T, T> {
     @Override
     public void process(@Nonnull T element) {
         emitElement(element);

@@ -30,10 +30,10 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.payload.Visitor;
-import com.optimizely.ab.processor.Stage;
 import com.optimizely.ab.processor.Processor;
+import com.optimizely.ab.processor.Stage;
+import com.optimizely.ab.processor.disruptor.DisruptorBuffer;
 import com.optimizely.ab.processor.disruptor.DisruptorBufferConfig;
-import com.optimizely.ab.processor.disruptor.DisruptorBufferStage;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -84,7 +84,7 @@ public class LogEventProcessorTest {
         return inst;
     }
 
-    private <T> Stage<T, T> disruptor(Consumer<DisruptorBufferConfig.Builder> configure) {
+    private <T> Stage<T, T> disruptorStage(Consumer<DisruptorBufferConfig.Builder> configure) {
         DisruptorBufferConfig.Builder config = DisruptorBufferConfig.builder();
 
         // base configuration
@@ -96,7 +96,7 @@ public class LogEventProcessorTest {
         // per-test configuration
         configure.accept(config);
 
-        return new DisruptorBufferStage<>(config.build());
+        return new DisruptorBuffer<>(config.build());
     }
 
     @Test
@@ -213,7 +213,8 @@ public class LogEventProcessorTest {
         phaser.register();
 
         Processor<EventBatch.Builder> stage = processor(builder -> builder
-            .bufferStage(disruptor(d -> d
+            .bufferStage(
+                disruptorStage(d -> d
                     .waitStrategy(new TestableWaitStrategy(phaser))
                     .batchMaxSize(100)))
             .transformer(e -> {
@@ -302,7 +303,7 @@ public class LogEventProcessorTest {
     public void testMergesVisitors() throws Exception {
         Processor<EventBatch.Builder> stage = processor(builder -> builder
             .eventFactory(TestLogEvent::new)
-            .bufferStage(disruptor(d -> d.batchMaxSize(3))));
+            .bufferStage(disruptorStage(d -> d.batchMaxSize(3))));
 
         stage.process(eventBatchBuilder()
             .addVisitor(visitorBuilder()

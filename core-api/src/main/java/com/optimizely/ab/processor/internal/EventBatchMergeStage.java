@@ -20,9 +20,8 @@ import com.optimizely.ab.common.callback.Callback;
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.processor.SourceProcessor;
 import com.optimizely.ab.processor.Processor;
-import com.optimizely.ab.processor.Stage;
+import com.optimizely.ab.processor.StageProcessor;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -40,7 +39,7 @@ import java.util.function.Supplier;
  *
  * @see EventContextKey
  */
-class EventBatchMergeStage implements Stage<EventBatch, LogEvent> {
+class EventBatchMergeStage extends StageProcessor<EventBatch, LogEvent> {
     private final Function<EventBatch, LogEvent> eventFactory;
     private final Supplier<Callback<EventBatch>> callbackSupplier;
 
@@ -52,75 +51,60 @@ class EventBatchMergeStage implements Stage<EventBatch, LogEvent> {
         this.callbackSupplier = Assert.notNull(callbackSupplier, "callbackSupplier");
     }
 
-    @Nonnull
     @Override
-    public Processor<EventBatch> getProcessor(@Nonnull Processor<? super LogEvent> sink) {
-        return new BatchLogEventOperator(sink);
+    public void process(EventBatch element) {
+        LogEvent logEvent = eventFactory.apply(element);
+        logEvent.setCallback(callbackSupplier.get());
+        getSink().process(logEvent);
     }
 
-    /**
-     * Builds and emits {@link LogEvent} from one or more {@link EventBatch} inputs.
-     */
-    class BatchLogEventOperator extends SourceProcessor<EventBatch, LogEvent> {
-        public BatchLogEventOperator(Processor<? super LogEvent> sink) {
-            super(sink);
+    @Override
+    public void processBatch(Collection<? extends EventBatch> items) {
+        Map<EventContextKey, Collection<EventBatch>> grouping = new HashMap<>();
+        for (EventBatch msg : items) {
+            EventContextKey key = EventContextKey.create(msg);
+
+            grouping.computeIfAbsent(key, k -> new ArrayList<>()).add(msg);
         }
 
-        @Override
-        public void process(EventBatch element) {
-            LogEvent logEvent = eventFactory.apply(element);
-            logEvent.setCallback(callbackSupplier.get());
+        logger.debug("Split {} batched elements into {} groups", items.size(), grouping.size());
+
+        for (Map.Entry<EventContextKey, Collection<EventBatch>> entry : grouping.entrySet()) {
+            EventBatch.Builder eventBatch = entry.getKey().toEventBatchBuilder();
+
+            final Collection<EventBatch> group = entry.getValue();
+            for (EventBatch single : group) {
+                eventBatch.addVisitors(single.getVisitors());
+            }
+
+            LogEvent logEvent = eventFactory.apply(eventBatch.build());
+
+            // callback is expected to be called with the original elements of combined batch.
+            logEvent.setCallback(createFanoutCallback(callbackSupplier.get(), group));
+
             getSink().process(logEvent);
         }
-
-        @Override
-        public void processBatch(Collection<? extends EventBatch> items) {
-            Map<EventContextKey, Collection<EventBatch>> grouping = new HashMap<>();
-            for (EventBatch msg : items) {
-                EventContextKey key = EventContextKey.create(msg);
-
-                grouping.computeIfAbsent(key, k -> new ArrayList<>()).add(msg);
-            }
-
-            logger.debug("Split {} batched elements into {} groups", items.size(), grouping.size());
-
-            for (Map.Entry<EventContextKey, Collection<EventBatch>> entry : grouping.entrySet()) {
-                EventBatch.Builder eventBatch = entry.getKey().toEventBatchBuilder();
-
-                final Collection<EventBatch> group = entry.getValue();
-                for (EventBatch single : group) {
-                    eventBatch.addVisitors(single.getVisitors());
-                }
-
-                LogEvent logEvent = eventFactory.apply(eventBatch.build());
-
-                // callback is expected to be called with the original elements of combined batch.
-                logEvent.setCallback(createFanoutCallback(callbackSupplier.get(), group));
-
-                getSink().process(logEvent);
-            }
-        }
-
-        private Callback<EventBatch> createFanoutCallback(
-            Callback<EventBatch> delegate,
-            Collection<EventBatch> group
-        ) {
-            return new Callback<EventBatch>() {
-                @Override
-                public void success(EventBatch bundled) {
-                    for (final EventBatch source : group) {
-                        delegate.success(source);
-                    }
-                }
-
-                @Override
-                public void failure(EventBatch context, @Nonnull Throwable ex) {
-                    for (final EventBatch source : group) {
-                        delegate.failure(source, ex);
-                    }
-                }
-            };
-        }
-
     }
+
+    private Callback<EventBatch> createFanoutCallback(
+        Callback<EventBatch> delegate,
+        Collection<EventBatch> group
+    ) {
+        return new Callback<EventBatch>() {
+            @Override
+            public void success(EventBatch bundled) {
+                for (final EventBatch source : group) {
+                    delegate.success(source);
+                }
+            }
+
+            @Override
+            public void failure(EventBatch context, @Nonnull Throwable ex) {
+                for (final EventBatch source : group) {
+                    delegate.failure(source, ex);
+                }
+            }
+        };
+    }
+
 }

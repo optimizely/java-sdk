@@ -25,15 +25,13 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.processor.BatchingConfig;
-import com.optimizely.ab.processor.BatchingStage;
-import com.optimizely.ab.processor.BehaviorStage;
+import com.optimizely.ab.processor.BatchingProcessor;
+import com.optimizely.ab.processor.BehaviorProcessor;
 import com.optimizely.ab.processor.IdentityProcessor;
-import com.optimizely.ab.processor.InterceptingStage;
-import com.optimizely.ab.processor.InterceptingStage.InterceptHandler;
+import com.optimizely.ab.processor.InterceptProcessor;
 import com.optimizely.ab.processor.Pipeline;
 import com.optimizely.ab.processor.Processor;
 import com.optimizely.ab.processor.Stage;
-import com.optimizely.ab.processor.Stages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +71,7 @@ public class LogEventProcessor<T> implements PluginSupport {
     /**
      * List of interceptors to be invoked (in natural order) during the Intercept Stage.
      */
-    private List<InterceptHandler<EventBatch>> interceptors = new ArrayList<>();
+    private List<InterceptProcessor.Handler<EventBatch>> interceptors = new ArrayList<>();
 
     /**
      * Converts output elements of Transform Stage to input elements of Intercept Stage.
@@ -87,7 +85,7 @@ public class LogEventProcessor<T> implements PluginSupport {
      *
      * By default, no buffer is used in order to be consistent with previous releases. This may change in the future.
      */
-    private Stage<EventBatch, EventBatch> bufferStage = sink -> new IdentityProcessor<>(sink);
+    private Stage<EventBatch, EventBatch> bufferStage = new IdentityProcessor<>();
 
     /**
      * Callbacks to be invoked when an event is finished being dispatched to report success or failure status.
@@ -154,7 +152,7 @@ public class LogEventProcessor<T> implements PluginSupport {
     }
 
     public LogEventProcessor<T> bufferStage(BatchingConfig config) {
-        this.bufferStage = new BatchingStage<>(Assert.notNull(config, "config"));
+        this.bufferStage = new BatchingProcessor<>(Assert.notNull(config, "config"));
         return this;
     }
 
@@ -167,12 +165,12 @@ public class LogEventProcessor<T> implements PluginSupport {
     }
 
     public Processor<T> build() {
-        return Pipeline.buildFrom(new BehaviorStage<>(new CompositeConsumer<>(transformers)))
-            .andThen(Stages.mapStage(converter))
-            .andThen(new InterceptingStage<>(interceptors))
+        return Pipeline.buildWith(new BehaviorProcessor<>(new CompositeConsumer<>(transformers)))
+            .andThen(Stage.of(converter))
+            .andThen(new InterceptProcessor<>(interceptors))
             .andThen(bufferStage)
             .andThen(new EventBatchMergeStage(eventFactory, () -> callbacks))
-            .getProcessor(new EventHandlerSink(eventHandler, logEventExceptionHandler));
+            .build(new EventHandlerSink(eventHandler, logEventExceptionHandler));
     }
 
     /**

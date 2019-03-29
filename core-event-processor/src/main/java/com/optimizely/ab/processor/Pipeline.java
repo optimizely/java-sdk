@@ -16,15 +16,17 @@
 package com.optimizely.ab.processor;
 
 import com.optimizely.ab.common.internal.Assert;
+import com.optimizely.ab.common.lifecycle.LifecycleAware;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 
-public class Pipeline<T, R> implements Stage<T, R> {
+public class Pipeline<T, R> extends StageProcessor<T, R> {
     protected Stage<T, ?> first;
     protected Stage<?, R> last;
     protected List<Stage> stages;
@@ -33,43 +35,42 @@ public class Pipeline<T, R> implements Stage<T, R> {
         return new Builder<>();
     }
 
-    public static <T, R> Builder<T, R> builder(Pipeline<? super T, ? extends R> pipeline) {
+    public static <T, R> Builder<T, R> builder(Pipeline<T, R> pipeline) {
         return new Builder<>(Assert.notNull(pipeline, "pipeline"));
     }
 
-    public static <T, R> Builder<T, R> buildFrom(Stage<T, R> stage) {
+    public static <T, R> Builder<T, R> buildWith(Stage<? super T, R> stage) {
         return new Builder<>(stage);
     }
 
-    public <A, B, C> Pipeline<A, C> of(Stage<A, B> s1, Stage<B, C> s2) {
-        return new Pipeline<>(s1, s2);
-    }
-
-    public <A, B, C, D> Pipeline<A, D> of(Stage<A, B> s1, Stage<B, C> s2, Stage<C, D> s3) {
-        return new Pipeline<>(s1, s2, s3);
-    }
-
-    public <A, B, C, D, E> Pipeline<A, E> of(Stage<A, B> s1, Stage<B, C> s2, Stage<C, D> s3, Stage<D, E> s4) {
-        return new Pipeline<>(s1, s2, s3);
-    }
-
-    public <A, B, C, D, E, F> Pipeline<A, F> of(
-        Stage<A, B> s1,
-        Stage<B, C> s2,
-        Stage<C, D> s3,
-        Stage<D, E> s4,
-        Stage<E, F> s5
-    ) {
-        return new Pipeline<>(s1, s2, s3, s4, s5);
-    }
-
-    Pipeline(Stage... stages) {
+    protected Pipeline(Stage... stages) {
         this(new ArrayList<>(Arrays.asList(stages)));
     }
 
     private Pipeline(final List<Stage> stages) {
         this.stages = Assert.notNull(stages, "stages");
         touchStages();
+    }
+
+    @Override
+    public void configure(Processor<? super R> sink) {
+        super.configure(sink);
+        linkStages(stages, sink);
+    }
+
+    @Override
+    protected void beforeStart() {
+        LifecycleAware.start(first);
+    }
+
+    @Override
+    public void process(@Nonnull T element) {
+        first.process(element);
+    }
+
+    @Override
+    public void processBatch(@Nonnull Collection<? extends T> elements) {
+        first.processBatch(elements);
     }
 
     /**
@@ -79,20 +80,15 @@ public class Pipeline<T, R> implements Stage<T, R> {
         return Collections.unmodifiableList(stages);
     }
 
-    @Nonnull
-    @Override
-    public Processor<T> getProcessor(@Nonnull Processor<? super R> sink) {
-        return assemble(stages, sink);
-    }
-
     @SuppressWarnings("unchecked")
-    protected static <T, R> Processor<T> assemble(List<Stage> stages, Processor<? super R> sink) {
+    protected static <T, R> Processor<T> linkStages(List<Stage> stages, Processor<? super R> sink) {
         ListIterator<Stage> it = stages.listIterator(stages.size());
-        Processor current = sink;
         try {
+            Processor current = sink;
             while (it.hasPrevious()) {
                 Stage s = it.previous();
-                current = s.getProcessor(current);
+                s.configure(sink);
+                sink = s;
             }
             return (Processor<T>) current;
         } catch (ClassCastException e) {
@@ -136,11 +132,7 @@ public class Pipeline<T, R> implements Stage<T, R> {
         }
 
         public <U> Builder<T, U> andThen(Stage<? super R, ? extends U> stage) {
-            if (stage instanceof Pipeline) {
-                this.stages.addAll(((Pipeline) stage).stages);
-            } else {
-                this.stages.add(stage);
-            }
+            this.stages.add(stage);
             return (Builder<T, U>) this;
         }
 
@@ -148,8 +140,10 @@ public class Pipeline<T, R> implements Stage<T, R> {
             return new Pipeline<>(stages);
         }
 
-        public Processor<T> getProcessor(Processor<? super R> sink) {
-            return build().getProcessor(sink);
+        public Pipeline<T, R> build(Processor<? super R> sink) {
+            Pipeline<T, R> pipeline = build();
+            pipeline.configure(sink);
+            return pipeline;
         }
     }
 

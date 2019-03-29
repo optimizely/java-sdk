@@ -19,7 +19,7 @@ import org.slf4j.helpers.NOPLogger;
 
 import java.util.List;
 
-public abstract class StageContext implements LifecycleAware {
+public abstract class PipelineContext implements LifecycleAware {
     enum State {
         START,
         STARTING,

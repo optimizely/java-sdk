@@ -19,8 +19,8 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.processor.BatchingConfig;
+import com.optimizely.ab.processor.BatchingProcessor;
 import com.optimizely.ab.processor.Processor;
-import com.optimizely.ab.processor.BatchingStage.BatchingProcessor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -316,17 +316,21 @@ public class BatchingProcessorTest {
         // per-test config
         configure.accept(config);
 
-        return new BatchingProcessor<>(config.build(), new Processor<Object>() {
+        BatchingProcessor<Object> processor = new BatchingProcessor<>(config.build());
+        processor.configure(new Processor<Object>() {
             @Override
             public void process(@Nonnull Object element) {
                 fail("Not expecting process to be invoked");
             }
 
+            @SuppressWarnings("unchecked")
             @Override
             public void processBatch(@Nonnull Collection<?> elements) {
                 consumer.accept((Collection<Object>) elements);
             }
         });
+
+        return processor;
     }
 
     // receives batching output

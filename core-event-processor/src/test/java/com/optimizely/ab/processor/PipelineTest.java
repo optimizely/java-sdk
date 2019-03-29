@@ -25,32 +25,32 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 
 public class PipelineTest {
-    private final Stage<Integer, Integer> incrementStage = Stages.mapStage(x -> x + 1);
-    private final Stage<Integer, Integer> squareStage = Stages.mapStage(x -> x * x);
-    private final Stage<Object, String> toStringStage = Stages.mapStage(Object::toString);
-    private final Stage<Object, String> emphasisStage = Stages.mapStage(o -> o.toString() + "!");
+    private final Stage<Integer, Integer> incrementStage = Stage.of(x -> x + 1);
+    private final Stage<Integer, Integer> squareStage = Stage.of(x -> x * x);
+    private final Stage<Object, String> toStringStage = Stage.of(Object::toString);
+    private final Stage<Object, String> emphasisStage = Stage.of(o -> o.toString() + "!");
 
     @Test
-    public void testGetProcessor_singleStage() {
-        Pipeline<Integer, String> pipeline = new Pipeline<>(toStringStage);
+    public void testSingleStage() {
+        Pipeline<Integer, String> pipeline = Pipeline.<Integer, String>buildWith(toStringStage).build();
 
         assertThat(pipeline.getStages(), hasSize(1));
         assertThat(pipeline.getStages(), contains(toStringStage));
 
         List<String> output = new ArrayList<>();
-        Processor<Integer> processor = pipeline.getProcessor(Processors.from(output::add));
+        pipeline.configure(output::add);
 
-        processor.process(1);
+        pipeline.process(1);
         assertThat(output, contains("1"));
 
-        processor.process(2);
+        pipeline.process(2);
         assertThat(output, contains("1", "2"));
     }
 
     @Test
-    public void testGetProcessor_multiStage() {
+    public void testMultiStage() {
         Pipeline<Integer, String> pipeline = Pipeline
-            .buildFrom(incrementStage)
+            .buildWith(incrementStage)
             .andThen(squareStage)
             .andThen(toStringStage)
             .andThen(emphasisStage)
@@ -64,12 +64,12 @@ public class PipelineTest {
         ));
 
         List<String> output = new ArrayList<>();
-        Processor<Integer> processor = pipeline.getProcessor(Processors.from(output::add));
+        pipeline.configure(output::add);
 
-        processor.process(0);
+        pipeline.process(0);
         assertThat(output, contains("1!"));
 
-        processor.process(1);
+        pipeline.process(1);
         assertThat(output, contains("1!", "4!"));
     }
 

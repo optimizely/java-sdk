@@ -42,10 +42,10 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-public class BufferProcessorTest {
-    private static final Logger logger = LoggerFactory.getLogger(BufferProcessorTest.class);
+public class DisruptorBufferTest {
+    private static final Logger logger = LoggerFactory.getLogger(DisruptorBufferTest.class);
 
-    private DisruptorBufferStage.BufferProcessor<TestEvent> buffer;
+    private DisruptorBuffer<TestEvent> buffer;
     private List<List<TestEvent>> output;
     private AtomicInteger outputCount;
 
@@ -85,7 +85,7 @@ public class BufferProcessorTest {
         };
     }
 
-    IntSummaryStatistics summarizeBatchSizes() {
+    private IntSummaryStatistics summarizeBatchSizes() {
         return output.stream().collect(Collectors.summarizingInt(List::size));
     }
 
@@ -97,14 +97,18 @@ public class BufferProcessorTest {
     }
 
     private void init() {
-        buffer = new DisruptorBufferStage.BufferProcessor<>(
-            createDefaultSink(),
-            batchMaxSize,
-            bufferCapacity,
-            threadFactory,
-            waitStrategy,
-            DisruptorBufferStage.LoggingExceptionHandler.getInstance()
-        );
+        DisruptorBufferConfig config = DisruptorBufferConfig.builder()
+            .batchMaxSize(batchMaxSize)
+            .capacity(bufferCapacity)
+            .threadFactory(threadFactory)
+            .waitStrategy(waitStrategy)
+            .exceptionHandler(DisruptorBuffer.LoggingExceptionHandler.getInstance())
+            .build();
+
+        buffer = new DisruptorBuffer<>(config);
+
+        buffer.configure(createDefaultSink());
+
         buffer.onStart();
     }
 

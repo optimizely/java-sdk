@@ -17,26 +17,35 @@ package com.optimizely.ab.processor;
 
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.common.lifecycle.LifecycleAware;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Abstract implementation of basic behavior for non-terminal {@link Processor}
- * for intermediate operations of a processing flow.
- *
- * Maintains reference to a downstream {@link Processor}.
+ * Abstract class of basic behavior for processing (non-terminal) stage in a pipeline.
  *
  * @param <T> the type of input elements
  * @param <R> the type of output elements; the type of elements accepted by downstream.
  */
-public abstract class SourceProcessor<T, R> extends BaseProcessor<T> implements LifecycleAware {
+public abstract class StageProcessor<T, R> implements Stage<T, R>, LifecycleAware {
+    // Share logger with subclasses
+    protected static final Logger logger = LoggerFactory.getLogger(StageProcessor.class);
 
-    private final Processor<? super R> sink;
+    private Processor<? super R> sink;
 
-    public SourceProcessor(Processor<? super R> sink) {
+    public StageProcessor() {
+    }
+
+    public StageProcessor(Processor<? super R> sink) {
         this.sink = Assert.notNull(sink, "sink");
+    }
+
+    @Override
+    public void configure(Processor<? super R> sink) {
+        this.sink = sink;
     }
 
     /**
@@ -44,8 +53,16 @@ public abstract class SourceProcessor<T, R> extends BaseProcessor<T> implements 
      */
     @Override
     public final void onStart() {
+        beforeStart();
         LifecycleAware.start(getSink());
         afterStart();
+    }
+
+    /**
+     * Overridable method to carry out initialization tasks when started.
+     */
+    protected void beforeStart() {
+        // no-op by default
     }
 
     /**
@@ -60,7 +77,7 @@ public abstract class SourceProcessor<T, R> extends BaseProcessor<T> implements 
      */
     @Override
     public final boolean onStop(long timeout, TimeUnit unit) {
-        boolean thisResult = beforeStop();
+        boolean thisResult = beforeStop(timeout, unit);
         return LifecycleAware.stop(getSink(), timeout, unit) && thisResult;
     }
 
@@ -69,7 +86,7 @@ public abstract class SourceProcessor<T, R> extends BaseProcessor<T> implements 
      *
      * @see LifecycleAware#onStop(long, TimeUnit)
      */
-    protected boolean beforeStop() {
+    protected boolean beforeStop(long timeout, TimeUnit unit) {
         return true;
     }
 
@@ -94,7 +111,7 @@ public abstract class SourceProcessor<T, R> extends BaseProcessor<T> implements 
      * @param element value to emit
      */
     protected void emitElement(@Nonnull R element) {
-        sink.process(element);
+        getSink().process(element);
     }
 
     /**
@@ -103,10 +120,11 @@ public abstract class SourceProcessor<T, R> extends BaseProcessor<T> implements 
      * @param elements values to emit
      */
     protected void emitBatch(@Nonnull Collection<? extends R> elements) {
-        sink.processBatch(elements);
+        getSink().processBatch(elements);
     }
 
     protected Processor<? super R> getSink() {
+        Assert.state(sink != null, "Sink has not been set");
         return sink;
     }
 }

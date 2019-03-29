@@ -37,5 +37,9 @@ public interface Processor<T> {
      *
      * @param elements the elements to put
      */
-    void processBatch(@Nonnull Collection<? extends T> elements);
+    default void processBatch(@Nonnull Collection<? extends T> elements) {
+        for (final T element : elements) {
+            process(element);
+        }
+    }
 }

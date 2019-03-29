@@ -23,7 +23,7 @@ import com.optimizely.ab.common.internal.Assert;
 
 import java.util.concurrent.ThreadFactory;
 
-public class DisruptorBufferConfig implements DisruptorBufferStage.Config {
+public class DisruptorBufferConfig implements DisruptorBuffer.Config {
     private final int batchMaxSize;
     private final int capacity;
     private final ThreadFactory threadFactory;
@@ -82,7 +82,7 @@ public class DisruptorBufferConfig implements DisruptorBufferStage.Config {
         private Integer capacity;
         private ThreadFactory threadFactory = DaemonThreadFactory.INSTANCE;
         private WaitStrategy waitStrategy = new BlockingWaitStrategy();
-        private ExceptionHandler<Object> exceptionHandler = DisruptorBufferStage.LoggingExceptionHandler.getInstance();
+        private ExceptionHandler<Object> exceptionHandler = DisruptorBuffer.LoggingExceptionHandler.getInstance();
 
         private Builder() {
         }

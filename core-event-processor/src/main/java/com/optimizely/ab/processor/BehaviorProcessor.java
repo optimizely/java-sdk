@@ -26,11 +26,11 @@ import java.util.function.Consumer;
  *
  * @param <T> the type of input and output elements
  */
-public class BehaviorProcessor<T> extends SourceProcessor<T, T> {
+public class BehaviorProcessor<T> extends StageProcessor<T, T> {
     private final Consumer<? super T> action;
 
-    public BehaviorProcessor(Processor<? super T> sink, Consumer<? super T> action) {
-        super(sink);
+    public BehaviorProcessor(Consumer<? super T> action) {
+        super();
         this.action = Assert.notNull(action, "action");
     }
 
