@@ -67,13 +67,7 @@ public class DecisionNotification {
         return new FeatureVariableDecisionNotificationBuilder();
     }
 
-    private static class BaseDecisionNotificationBuilder {
-        protected String userId;
-        protected Map<String, ?> attributes;
-        protected Map<String, Object> decisionInfo;
-    }
-
-    public static class FeatureVariableDecisionNotificationBuilder extends BaseDecisionNotificationBuilder {
+    public static class FeatureVariableDecisionNotificationBuilder {
 
         public static final String FEATURE_KEY = "feature_key";
         public static final String FEATURE_ENABLED = "feature_enabled";
@@ -90,6 +84,9 @@ public class DecisionNotification {
         private String variableKey;
         private FeatureVariable.VariableType variableType;
         private Object variableValue;
+        private String userId;
+        private Map<String, ?> attributes;
+        private Map<String, Object> decisionInfo;
 
         protected FeatureVariableDecisionNotificationBuilder() {
         }
