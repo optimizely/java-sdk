@@ -20,7 +20,7 @@ import com.optimizely.ab.common.callback.Callback;
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.processor.AbstractProcessor;
+import com.optimizely.ab.processor.SourceProcessor;
 import com.optimizely.ab.processor.Processor;
 import com.optimizely.ab.processor.Stage;
 
@@ -61,7 +61,7 @@ class EventBatchMergeStage implements Stage<EventBatch, LogEvent> {
     /**
      * Builds and emits {@link LogEvent} from one or more {@link EventBatch} inputs.
      */
-    class BatchLogEventOperator extends AbstractProcessor<EventBatch, LogEvent> {
+    class BatchLogEventOperator extends SourceProcessor<EventBatch, LogEvent> {
         public BatchLogEventOperator(Processor<? super LogEvent> sink) {
             super(sink);
         }

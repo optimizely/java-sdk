@@ -15,21 +15,27 @@
  */
 package com.optimizely.ab.processor;
 
+import com.optimizely.ab.common.internal.Assert;
+
 import javax.annotation.Nonnull;
-import java.util.Collection;
+import java.util.function.Consumer;
 
-public class NoOpProcessor<T> extends AbstractProcessor<T, T> {
-    public NoOpProcessor(Processor<? super T> sink) {
-        super(sink);
+/**
+ * An synchronous stage for behavior triggered on each input element to perform side-effects, such as mutation or
+ * logging. Forwards each input element to the sink after invoking the behavior callback.
+ *
+ * @param <T> the type of input and output elements
+ */
+public class BehaviorStage<T> implements Stage<T, T> {
+    private final Consumer<? super T> action;
+
+    public BehaviorStage(Consumer<? super T> action) {
+        this.action = Assert.notNull(action, "action");
     }
 
+    @Nonnull
     @Override
-    public void process(@Nonnull T element) {
-        emitElement(element);
-    }
-
-    @Override
-    public void processBatch(Collection<? extends T> elements) {
-        emitBatch(elements);
+    public Processor<T> getProcessor(@Nonnull Processor<? super T> sink) {
+        return new BehaviorProcessor<>(sink, action);
     }
 }

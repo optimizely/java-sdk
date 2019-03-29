@@ -15,27 +15,31 @@
  */
 package com.optimizely.ab.processor;
 
-import javax.annotation.Nonnull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collection;
+import java.util.function.Consumer;
 
-/**
- * Performs a processing task on received elements.
- *
- * @param <T> the type of input elements
- * @see Stage
- */
-public interface Processor<T> {
-    /**
-     * Pushes a single element to be process
-     *
-     * @param element the element to push
-     */
-    void process(@Nonnull T element);
+abstract class BaseProcessor<T> implements Processor<T>, Consumer<T> {
+    // Share logger with subclasses
+    protected static final Logger logger = LoggerFactory.getLogger(Processor.class);
 
     /**
-     * Sends a batch of elements
-     *
-     * @param elements the elements to put
+     * Implements {@link Consumer} interface. Same as calling {@link #process(Object)}
      */
-    void processBatch(@Nonnull Collection<? extends T> elements);
+    @Override
+    public void accept(T element) {
+        process(element);
+    }
+
+    /**
+     * A default implementation that handles each of the input elements individually.
+     */
+    @Override
+    public void processBatch(Collection<? extends T> elements) {
+        for (final T element : elements) {
+            process(element);
+        }
+    }
 }

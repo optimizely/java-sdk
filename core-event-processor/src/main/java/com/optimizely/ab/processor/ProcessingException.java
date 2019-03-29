@@ -15,27 +15,16 @@
  */
 package com.optimizely.ab.processor;
 
-import javax.annotation.Nonnull;
-import java.util.Collection;
+public class ProcessingException extends RuntimeException {
+    public ProcessingException(Throwable cause) {
+        super(cause);
+    }
 
-/**
- * Performs a processing task on received elements.
- *
- * @param <T> the type of input elements
- * @see Stage
- */
-public interface Processor<T> {
-    /**
-     * Pushes a single element to be process
-     *
-     * @param element the element to push
-     */
-    void process(@Nonnull T element);
+    public ProcessingException(String message) {
+        super(message);
+    }
 
-    /**
-     * Sends a batch of elements
-     *
-     * @param elements the elements to put
-     */
-    void processBatch(@Nonnull Collection<? extends T> elements);
+    public ProcessingException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

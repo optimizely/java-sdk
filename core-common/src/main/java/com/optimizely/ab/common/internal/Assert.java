@@ -19,7 +19,7 @@ public final class Assert {
     private Assert() {
     }
 
-    public static void isTrue(boolean expression, String errorMessageFormat, Object... args) {
+    public static void argument(boolean expression, String errorMessageFormat, Object... args) {
         if (!expression) {
             throw new IllegalArgumentException(String.format(errorMessageFormat, args));
         }

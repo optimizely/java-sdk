@@ -17,13 +17,10 @@ package com.optimizely.ab.processor;
 
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.common.lifecycle.LifecycleAware;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 /**
  * Abstract implementation of basic behavior for non-terminal {@link Processor}
@@ -34,13 +31,11 @@ import java.util.function.Consumer;
  * @param <T> the type of input elements
  * @param <R> the type of output elements; the type of elements accepted by downstream.
  */
-public abstract class AbstractProcessor<T, R> implements Processor<T>, LifecycleAware, Consumer<T> {
-    // Share logger with subclasses
-    protected static final Logger logger = LoggerFactory.getLogger(AbstractProcessor.class);
+public abstract class SourceProcessor<T, R> extends BaseProcessor<T> implements LifecycleAware {
 
     private final Processor<? super R> sink;
 
-    public AbstractProcessor(Processor<? super R> sink) {
+    public SourceProcessor(Processor<? super R> sink) {
         this.sink = Assert.notNull(sink, "sink");
     }
 
@@ -78,24 +73,6 @@ public abstract class AbstractProcessor<T, R> implements Processor<T>, Lifecycle
         return true;
     }
 
-
-    /**
-     * Implements {@link Consumer} interface. Same as calling {@link #process(Object)}
-     */
-    @Override
-    public void accept(T element) {
-        process(element);
-    }
-
-    /**
-     * A default implementation that handles each of the input elements individually.
-     */
-    @Override
-    public void processBatch(Collection<? extends T> elements) {
-        for (final T element : elements) {
-            process(element);
-        }
-    }
 
     /**
      * Sends a value downstream, if it is not {@code null}.

@@ -26,9 +26,11 @@ import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.processor.BatchingConfig;
 import com.optimizely.ab.processor.BatchingStage;
+import com.optimizely.ab.processor.BehaviorStage;
+import com.optimizely.ab.processor.IdentityProcessor;
 import com.optimizely.ab.processor.InterceptingStage;
 import com.optimizely.ab.processor.InterceptingStage.InterceptHandler;
-import com.optimizely.ab.processor.NoOpProcessor;
+import com.optimizely.ab.processor.Pipeline;
 import com.optimizely.ab.processor.Processor;
 import com.optimizely.ab.processor.Stage;
 import com.optimizely.ab.processor.Stages;
@@ -85,7 +87,7 @@ public class LogEventProcessor<T> implements PluginSupport {
      *
      * By default, no buffer is used in order to be consistent with previous releases. This may change in the future.
      */
-    private Stage<EventBatch, EventBatch> bufferStage = sink -> new NoOpProcessor<>(sink);
+    private Stage<EventBatch, EventBatch> bufferStage = sink -> new IdentityProcessor<>(sink);
 
     /**
      * Callbacks to be invoked when an event is finished being dispatched to report success or failure status.
@@ -165,9 +167,8 @@ public class LogEventProcessor<T> implements PluginSupport {
     }
 
     public Processor<T> build() {
-        return Stages
-            .behavior(new CompositeConsumer<>(transformers))
-            .andThen(Stages.mapping(converter))
+        return Pipeline.buildFrom(new BehaviorStage<>(new CompositeConsumer<>(transformers)))
+            .andThen(Stages.mapStage(converter))
             .andThen(new InterceptingStage<>(interceptors))
             .andThen(bufferStage)
             .andThen(new EventBatchMergeStage(eventFactory, () -> callbacks))

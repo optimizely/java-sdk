@@ -15,16 +15,26 @@
  */
 package com.optimizely.ab.processor;
 
-public class ProcessorException extends RuntimeException {
-    public ProcessorException(Throwable cause) {
-        super(cause);
+import javax.annotation.Nonnull;
+import java.util.Collection;
+
+/**
+ * Simply maps the input to sink without any processing
+ *
+ * @param <T> the type of input and output elements
+ */
+public class IdentityProcessor<T> extends SourceProcessor<T, T> {
+    public IdentityProcessor(Processor<? super T> sink) {
+        super(sink);
     }
 
-    public ProcessorException(String message) {
-        super(message);
+    @Override
+    public void process(@Nonnull T element) {
+        emitElement(element);
     }
 
-    public ProcessorException(String message, Throwable cause) {
-        super(message, cause);
+    @Override
+    public void processBatch(Collection<? extends T> elements) {
+        emitBatch(elements);
     }
 }

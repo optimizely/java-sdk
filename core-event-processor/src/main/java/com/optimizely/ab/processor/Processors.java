@@ -16,26 +16,19 @@
 package com.optimizely.ab.processor;
 
 import javax.annotation.Nonnull;
-import java.util.Collection;
+import java.util.function.Consumer;
 
-/**
- * Performs a processing task on received elements.
- *
- * @param <T> the type of input elements
- * @see Stage
- */
-public interface Processor<T> {
-    /**
-     * Pushes a single element to be process
-     *
-     * @param element the element to push
-     */
-    void process(@Nonnull T element);
+public final class Processors {
+    public static <T> Processor<T> from(Consumer<? super T> consumer) {
+        return new BaseProcessor<T>() {
+            @Override
+            public void process(@Nonnull T element) {
+                consumer.accept(element);
+            }
+        };
+    }
 
-    /**
-     * Sends a batch of elements
-     *
-     * @param elements the elements to put
-     */
-    void processBatch(@Nonnull Collection<? extends T> elements);
+    private Processors() {
+        // no instances
+    }
 }

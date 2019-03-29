@@ -54,7 +54,7 @@ public class BatchingStage<T> implements Stage<T, T> {
      *
      * @param <E>
      */
-    public static class BatchingProcessor<E> extends AbstractProcessor<E, E> {
+    public static class BatchingProcessor<E> extends SourceProcessor<E, E> {
         public static final Logger logger = LoggerFactory.getLogger(BatchingProcessor.class);
 
         /**
@@ -99,7 +99,7 @@ public class BatchingStage<T> implements Stage<T, T> {
         @Override
         public void process(@Nonnull E element) {
             synchronized (mutex) {
-                addToBuffer(element);
+                collect(element);
             }
         }
 
@@ -110,7 +110,7 @@ public class BatchingStage<T> implements Stage<T, T> {
         public void processBatch(@Nonnull Collection<? extends E> elements) {
             synchronized (mutex) {
                 for (E element : elements) {
-                    addToBuffer(element);
+                    collect(element);
                 }
             }
         }
@@ -182,7 +182,7 @@ public class BatchingStage<T> implements Stage<T, T> {
             logger.warn("Discarding element rejected by buffer", element);
         }
 
-        private void addToBuffer(E element) {
+        private void collect(E element) {
             // try to add to current buffer
             if (batchTask == null || !batchTask.offer(element)) {
                 // otherwise, start a new buffer
@@ -218,7 +218,7 @@ public class BatchingStage<T> implements Stage<T, T> {
                 } catch (InterruptedException e) {
                     logger.debug("Interrupted while waiting for in-flight batch permit");
                     Thread.currentThread().interrupt();
-                    throw new ProcessorException(e.getMessage(), e);
+                    throw new ProcessingException(e.getMessage(), e);
                 }
 
                 // release permit when run complete
@@ -238,7 +238,7 @@ public class BatchingStage<T> implements Stage<T, T> {
                 if (inFlightBatches != null) {
                     inFlightBatches.release();
                 }
-                throw new ProcessorException("Unable to start batching task", e);
+                throw new ProcessingException("Unable to start batching task", e);
             }
         }
     }

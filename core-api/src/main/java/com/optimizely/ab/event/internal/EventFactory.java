@@ -101,7 +101,7 @@ public class EventFactory {
     @Nonnull
     public EventBatch createEventBatch(com.optimizely.ab.api.Event event) {
         Assert.notNull(event, "event");
-        Assert.isTrue(event.getType() != null, "Event must specify type");
+        Assert.argument(event.getType() != null, "Event must specify type");
         switch (event.getType()) {
             case CONVERSION:
                 return createEventBatch((Conversion) event);

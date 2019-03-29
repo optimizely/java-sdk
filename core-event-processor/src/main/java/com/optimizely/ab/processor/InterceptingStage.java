@@ -22,10 +22,14 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * A synchronous stage that passes input elements through a sequential chain of intercept handlers.
+ * Creates an synchronous stage that performs filtering or replacement of input elements. Each of the {@code handlers}
+ * is invoked on every input element in-order.
  *
- * If a handler returns {@code null}, the element will be dropped, otherwise the returned value
- * will be passed to the next handler in list if one exists, otherwise to the downstream processor.
+ * Each {@link InterceptingStage.InterceptHandler} is invoked with the value returned from the previous
+ * EventInterceptor. The value returned from the last EventInterceptor is emitted to the sink.
+ *
+ * If a {@link InterceptingStage.InterceptHandler} returns null, no element will be emitted to the sink and the
+ * EventInterceptors that follow it will not be invoked.
  *
  * Catches any {@link RuntimeException} thrown from an interceptor, logs it, then continues
  */
@@ -45,7 +49,7 @@ public class InterceptingStage<T> implements Stage<T, T> {
     /**
      * Filters inputs through the chain of interceptors
      */
-    public class InterceptProcessor extends AbstractProcessor<T, T> {
+    public class InterceptProcessor extends SourceProcessor<T, T> {
         private final String logLabel = InterceptProcessor.class.getSimpleName();
 
         InterceptProcessor(Processor<? super T> sink) {

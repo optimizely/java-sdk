@@ -28,7 +28,7 @@ import java.util.Collection;
  */
 class SynchronizedProcessor<T> implements Processor<T> {
     private final Processor<T> processor;
-    protected final Object processMutex;
+    private final Object processMutex;
 
     /**
      * @param processor the processor to wrap

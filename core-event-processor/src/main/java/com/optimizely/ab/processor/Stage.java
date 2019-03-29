@@ -12,10 +12,7 @@
  */
 package com.optimizely.ab.processor;
 
-import com.optimizely.ab.common.internal.Assert;
-
 import javax.annotation.Nonnull;
-import java.util.function.Function;
 
 /**
  * Composable stage in a processing pipeline. Produces {@link Processor} connected to a downstream sink.
@@ -33,48 +30,4 @@ public interface Stage<T, R> {
      */
     @Nonnull
     Processor<T> getProcessor(@Nonnull Processor<? super R> sink);
-
-    /**
-     * Creates a composite stage that combines the {@code upstream} stage and this.
-     *
-     * @param <V> the type of input of the {@code upstream} stage, and to stage that's returned.
-     * @param upstream the stage to apply to elements before this operator
-     * @return a composed operator
-     * @throws NullPointerException if argument is null
-     *
-     * @see #andThen(Stage)
-     */
-    default <V> Stage<V, R> compose(Stage<V, T> upstream) {
-        Assert.notNull(upstream, "upstream");
-        return sink -> upstream.getProcessor(getProcessor(sink));
-    }
-
-    /**
-     * Creates a composite stage that connects this and the {@code downstream} stage.
-     *
-     * @param <V> the type of output of the {@code downstream} and returned stage
-     * @param downstream the stage to apply to elements before this stage
-     * @return a composite stage
-     * @throws NullPointerException if argument is null
-     *
-     * @see #compose(Stage)
-     */
-    default <V> Stage<T, V> andThen(Stage<? super R, ? extends V> downstream) {
-        Assert.notNull(downstream, "downstream");
-        return sink -> getProcessor(downstream.getProcessor(sink));
-    }
-
-    /**
-     * Creates a composite stage that applies a functional transform over the output elements of this stage.
-     *
-     * @param mapper a function to apply to each element
-     * @param <V> the type of output elements
-     * @return a composite stage
-     * @throws NullPointerException if argument is null
-     */
-    default <V> Stage<T, V> map(final Function<? super R, ? extends V> mapper) {
-        Assert.notNull(mapper, "mapper");
-        return andThen(Stages.mapping(mapper));
-    }
-
 }
