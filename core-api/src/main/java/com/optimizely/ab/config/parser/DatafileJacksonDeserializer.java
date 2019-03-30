@@ -23,17 +23,15 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
-import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.TypedAudience;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
+class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig> {
     @Override
-    public ProjectConfig deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+    public DatafileProjectConfig deserialize(JsonParser parser, DeserializationContext context) throws IOException {
         ObjectCodec codec = parser.getCodec();
         JsonNode node = codec.readTree(parser);
 
@@ -59,14 +57,14 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
         }
 
         boolean anonymizeIP = false;
-        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
+        if (datafileVersion >= Integer.parseInt(DatafileProjectConfig.Version.V3.toString())) {
             anonymizeIP = node.get("anonymizeIP").asBoolean();
         }
 
         List<FeatureFlag> featureFlags = null;
         List<Rollout> rollouts = null;
         Boolean botFiltering = null;
-        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
+        if (datafileVersion >= Integer.parseInt(DatafileProjectConfig.Version.V4.toString())) {
             featureFlags = JacksonHelpers.arrayNodeToList(node.get("featureFlags"), FeatureFlag.class, codec);
             rollouts = JacksonHelpers.arrayNodeToList(node.get("rollouts"), Rollout.class, codec);
             if (node.hasNonNull("botFiltering")) {
@@ -74,7 +72,7 @@ class ProjectConfigJacksonDeserializer extends JsonDeserializer<ProjectConfig> {
             }
         }
 
-        return new ProjectConfig(
+        return new DatafileProjectConfig(
             accountId,
             anonymizeIP,
             botFiltering,

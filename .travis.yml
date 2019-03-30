@@ -5,8 +5,6 @@ jdk:
   - oraclejdk8
   - oraclejdk9
 install: true
-addons:
-  srcclr: true
 script:
     - "./gradlew clean"
     - "./gradlew exhaustiveTest"
@@ -24,10 +22,6 @@ branches:
   only:
   - master
   - /^\d+\.\d+\.(\d|[x])+(-SNAPSHOT|-alpha|-beta)?\d*$/ # trigger builds on tags which are semantically versioned to ship the SDK.
-after_success:
-  - ./gradlew coveralls uploadArchives --console plain
-after_failure:
-  - cat /home/travis/build/optimizely/java-sdk/core-api/build/reports/findbugs/main.html
 
 # Integration tests need to run first to reset the PR build status to pending
 stages:
@@ -37,15 +31,10 @@ stages:
 jobs:
   include:
     - stage: 'Integration tests'
-      merge_mode: replace
       env: SDK=java
       cache: false
-      language: python
-      before_install: skip
+      language: minimal
       install:
-        - "pip install awscli"
-      before_script:
-        - "aws s3 cp s3://optimizely-travisci-artifacts/ci/trigger_fullstack-sdk-compat.sh ci/ && chmod u+x ci/trigger_fullstack-sdk-compat.sh"
+        - mkdir $HOME/travisci-tools && pushd $HOME/travisci-tools && git init && git pull https://$CI_USER_TOKEN@github.com/optimizely/travisci-tools.git && popd
       script:
-        - "ci/trigger_fullstack-sdk-compat.sh"
-      after_success: travis_terminate 0
+        - "$HOME/travisci-tools/fsc-trigger/trigger_fullstack-sdk-compat.sh"

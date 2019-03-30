@@ -16,18 +16,8 @@
  */
 package com.optimizely.ab.config.parser;
 
-import com.optimizely.ab.config.Attribute;
-import com.optimizely.ab.config.EventType;
-import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.Experiment.ExperimentStatus;
-import com.optimizely.ab.config.FeatureFlag;
-import com.optimizely.ab.config.Group;
-import com.optimizely.ab.config.FeatureVariable;
-import com.optimizely.ab.config.FeatureVariableUsageInstance;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.Rollout;
-import com.optimizely.ab.config.TrafficAllocation;
-import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
@@ -95,7 +85,7 @@ final class JsonConfigParser implements ConfigParser {
                     botFiltering = rootObject.getBoolean("botFiltering");
             }
 
-            return new ProjectConfig(
+            return new DatafileProjectConfig(
                 accountId,
                 anonymizeIP,
                 botFiltering,

@@ -16,8 +16,8 @@
  */
 package com.optimizely.ab.event;
 
-import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.NamedThreadFactory;
+import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.common.lifecycle.LifecycleAware;
 import org.apache.http.HttpResponse;
@@ -29,9 +29,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,18 +48,9 @@ import java.util.function.Supplier;
  */
 public class AsyncEventHandler implements EventHandler, LifecycleAware {
 
-    // The following static values are public so that they can be tweaked if necessary.
-    // These are the recommended settings for http protocol.  https://hc.apache.org/httpcomponents-client-ga/tutorial/html/connmgmt.html
-    // The maximum number of connections allowed across all routes.
-    private int maxTotalConnections = 200;
-    // The maximum number of connections allowed for a route
-    private int maxPerRoute = 20;
-    // Defines period of inactivity in milliseconds after which persistent connections must be re-validated prior to being leased to the consumer.
-    private int validateAfterInactivity = 5000;
-
     private static final Logger logger = LoggerFactory.getLogger(AsyncEventHandler.class);
 
-    private final CloseableHttpClient httpClient;
+    private final OptimizelyHttpClient httpClient;
     private final ExecutorService workerExecutor;
 
     public AsyncEventHandler(int queueCapacity, int numWorkers) {
@@ -74,14 +62,10 @@ public class AsyncEventHandler implements EventHandler, LifecycleAware {
             throw new IllegalArgumentException("queue capacity must be > 0");
         }
 
-        this.maxTotalConnections = maxConnections;
-        this.maxPerRoute = connectionsPerRoute;
-        this.validateAfterInactivity = validateAfter;
-
-        this.httpClient = HttpClients.custom()
-            .setDefaultRequestConfig(HttpClientUtils.DEFAULT_REQUEST_CONFIG)
-            .setConnectionManager(poolingHttpClientConnectionManager())
-            .disableCookieManagement()
+        this.httpClient = OptimizelyHttpClient.builder()
+            .withMaxTotalConnections(maxConnections)
+            .withMaxPerRoute(connectionsPerRoute)
+            .withValidateAfterInactivity(validateAfter)
             .build();
 
         this.workerExecutor = new ThreadPoolExecutor(numWorkers, numWorkers,
@@ -91,17 +75,9 @@ public class AsyncEventHandler implements EventHandler, LifecycleAware {
     }
 
     @VisibleForTesting
-    public AsyncEventHandler(CloseableHttpClient httpClient, ExecutorService workerExecutor) {
+    public AsyncEventHandler(OptimizelyHttpClient httpClient, ExecutorService workerExecutor) {
         this.httpClient = httpClient;
         this.workerExecutor = workerExecutor;
-    }
-
-    private PoolingHttpClientConnectionManager poolingHttpClientConnectionManager() {
-        PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager();
-        poolingHttpClientConnectionManager.setMaxTotal(maxTotalConnections);
-        poolingHttpClientConnectionManager.setDefaultMaxPerRoute(maxPerRoute);
-        poolingHttpClientConnectionManager.setValidateAfterInactivity(validateAfterInactivity);
-        return poolingHttpClientConnectionManager;
     }
 
     @Override
@@ -257,7 +233,7 @@ public class AsyncEventHandler implements EventHandler, LifecycleAware {
     }
 
     /**
-     * Handler for the event request that returns nothing (i.e., Void)
+     * Handler for the event request.
      */
     private static final class ProjectConfigResponseHandler implements ResponseHandler<Void> {
 

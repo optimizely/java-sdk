@@ -16,8 +16,8 @@
  */
 package com.optimizely.ab;
 
-import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.Experiment;
 
 /**
  * Exception thrown when attempting to use/refer to an {@link Experiment} that isn't present in the current

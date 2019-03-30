@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,22 +14,25 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab;
-
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.EventType;
+package com.optimizely.ab.config;
 
 /**
- * Exception thrown when attempting to use/refer to an {@link EventType} that isn't present in the current
- * {@link ProjectConfig}.
+ * Holder for a single, static ProjectConfig.
  */
-public class UnknownEventTypeException extends OptimizelyRuntimeException {
+public class StaticProjectConfigManager implements ProjectConfigManager {
 
-    public UnknownEventTypeException(String message) {
-        super(message);
+    private final ProjectConfig projectConfig;
+
+    private StaticProjectConfigManager(ProjectConfig projectConfig) {
+        this.projectConfig = projectConfig;
     }
 
-    public UnknownEventTypeException(String message, Throwable cause) {
-        super(message, cause);
+    public static StaticProjectConfigManager create(ProjectConfig projectConfig) {
+        return new StaticProjectConfigManager(projectConfig);
+    }
+
+    @Override
+    public ProjectConfig getConfig() {
+        return projectConfig;
     }
 }
