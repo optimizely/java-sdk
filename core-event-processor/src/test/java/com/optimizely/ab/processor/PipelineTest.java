@@ -32,7 +32,7 @@ public class PipelineTest {
 
     @Test
     public void testSingleStage() {
-        Pipeline<Integer, String> pipeline = Pipeline.<Integer, String>buildWith(toStringStage).build();
+        Pipeline<Integer, String> pipeline = Pipeline.pipe(toStringStage).cast(Integer.class).end();
 
         assertThat(pipeline.getStages(), hasSize(1));
         assertThat(pipeline.getStages(), contains(toStringStage));
@@ -49,12 +49,11 @@ public class PipelineTest {
 
     @Test
     public void testMultiStage() {
-        Pipeline<Integer, String> pipeline = Pipeline
-            .buildWith(incrementStage)
-            .andThen(squareStage)
-            .andThen(toStringStage)
-            .andThen(emphasisStage)
-            .build();
+        Pipeline<Integer, String> pipeline = Pipeline.pipe(incrementStage)
+            .into(squareStage)
+            .into(toStringStage)
+            .into(emphasisStage)
+            .end();
 
         assertThat(pipeline.getStages(), contains(
             incrementStage,

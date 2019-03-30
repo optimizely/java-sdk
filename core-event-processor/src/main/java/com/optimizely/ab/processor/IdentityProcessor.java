@@ -24,6 +24,15 @@ import java.util.Collection;
  * @param <T> the type of input and output elements
  */
 public class IdentityProcessor<T> extends StageProcessor<T, T> {
+    private static final IdentityProcessor<?> INSTANCE = new IdentityProcessor<>();
+
+    @SuppressWarnings("unchecked")
+    static <T> IdentityProcessor<T> getInstance() {
+        return (IdentityProcessor<T>) INSTANCE;
+    }
+
+
+
     @Override
     public void process(@Nonnull T element) {
         emitElement(element);

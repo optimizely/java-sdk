@@ -39,11 +39,11 @@ import java.util.function.Supplier;
  *
  * @see EventContextKey
  */
-class EventBatchMergeStage extends StageProcessor<EventBatch, LogEvent> {
+class ToLogEventStage extends StageProcessor<EventBatch, LogEvent> {
     private final Function<EventBatch, LogEvent> eventFactory;
     private final Supplier<Callback<EventBatch>> callbackSupplier;
 
-    EventBatchMergeStage(
+    ToLogEventStage(
         Function<EventBatch, LogEvent> eventFactory,
         Supplier<Callback<EventBatch>> callbackSupplier
     ) {

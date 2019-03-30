@@ -20,36 +20,48 @@ import com.optimizely.ab.common.lifecycle.LifecycleAware;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.function.Supplier;
 
+/**
+ * A sequence of {@link Stage}s that form a processing pipeline.
+ *
+ * The stages are linked together to form a unified {@link StageProcessor}.
+ *
+ * @param <T> the type of input elements for first stage in pipeline
+ * @param <R> the type of output elements
+ */
 public class Pipeline<T, R> extends StageProcessor<T, R> {
-    protected Stage<T, ?> first;
-    protected Stage<?, R> last;
-    protected List<Stage> stages;
+    private final List<Stage> stages;
+    private Processor<? super T> head;
 
-    public static <T, R> Builder<T, R> builder() {
-        return new Builder<>();
+    /**
+     * Creates an object for creating {@link Pipeline} with a type-safe interface.
+     *
+     * @param stage the first stage in a pipeline
+     * @param <T> the type of input elements accepted by the pipeline
+     * @param <R> the type of output elements emitted by first stage in pipeline
+     * @return a {@link Chain} for the given stage
+     * @throws NullPointerException if argument is null
+     */
+    public static <T, R> Chain<T, T, R> pipe(Stage<T, R> stage) {
+        Assert.notNull(stage, "stage");
+        return new Chain<>(null, stage, stage);
     }
 
-    public static <T, R> Builder<T, R> builder(Pipeline<T, R> pipeline) {
-        return new Builder<>(Assert.notNull(pipeline, "pipeline"));
-    }
-
-    public static <T, R> Builder<T, R> buildWith(Stage<? super T, R> stage) {
-        return new Builder<>(stage);
-    }
-
-    protected Pipeline(Stage... stages) {
-        this(new ArrayList<>(Arrays.asList(stages)));
-    }
-
+    /**
+     * Constructs the pipeline from a sequence of stages
+     *
+     * @param stages the processing stages of pipeline
+     */
+    @SuppressWarnings("unchecked")
     private Pipeline(final List<Stage> stages) {
+        Assert.argument(!stages.isEmpty(), "stages cannot be empty");
         this.stages = Assert.notNull(stages, "stages");
-        touchStages();
+        this.head = (Processor<? super T>) stages.get(0);
     }
 
     @Override
@@ -60,17 +72,18 @@ public class Pipeline<T, R> extends StageProcessor<T, R> {
 
     @Override
     protected void beforeStart() {
-        LifecycleAware.start(first);
+        /// start the head
+        LifecycleAware.start(head);
     }
 
     @Override
     public void process(@Nonnull T element) {
-        first.process(element);
+        head.process(element);
     }
 
     @Override
     public void processBatch(@Nonnull Collection<? extends T> elements) {
-        first.processBatch(elements);
+        head.processBatch(elements);
     }
 
     /**
@@ -80,76 +93,106 @@ public class Pipeline<T, R> extends StageProcessor<T, R> {
         return Collections.unmodifiableList(stages);
     }
 
+    /**
+     * Links the stages together, flowing into the sink.
+     *
+     * Configures the stages by traversing in reverse order and configuring the downstream {@link Processor} to be the
+     * upstream {@link Stage} in the pipeline.
+     *
+     * @return the first processor in pipeline
+     */
     @SuppressWarnings("unchecked")
-    protected static <T, R> Processor<T> linkStages(List<Stage> stages, Processor<? super R> sink) {
+    static <R> void linkStages(List<Stage> stages, Processor<? super R> sink) {
         ListIterator<Stage> it = stages.listIterator(stages.size());
-        try {
-            Processor current = sink;
-            while (it.hasPrevious()) {
-                Stage s = it.previous();
-                s.configure(sink);
-                sink = s;
-            }
-            return (Processor<T>) current;
-        } catch (ClassCastException e) {
-            throw new PipelineDefinitionException("Incompatible stages in pipeline", e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    protected void touchStages() {
-        int size = stages.size();
-        if (size == 0) {
-            first = null;
-            last = null;
-        } else {
-            this.first = (Stage<T, ?>) stages.get(0);
-            this.last = (Stage<?, R>) stages.get(size - 1);
+        Processor downstream = sink;
+        while (it.hasPrevious()) {
+            Stage stage = it.previous();
+            stage.configure(downstream);
+            downstream = stage;
         }
     }
 
     /**
-     * Fluent builder of a {@link Pipeline}
+     * This class that provides a type-safe fluent interface for chaining {@link Stage} together,
+     * with the ability to create {@link Pipeline} objects.
      *
-     * @param <T> the type of input elements for first stage
-     * @param <R> the type of output elements for last stage
+     * @param <PipelineInput> the type of input accepted by pipeline
+     * @param <StageInput> the type of input element  the contained stage
+     * @param <StageOutput> the type of output
      */
-    @SuppressWarnings("unchecked")
-    public static class Builder<T, R> {
-        private List<Stage> stages;
+    public static class Chain<PipelineInput, StageInput, StageOutput> implements Supplier<Stage<? super StageInput, ? extends StageOutput>> {
+        private final Chain<PipelineInput, ?, ?> upstream;
+        private final Processor<PipelineInput> head;
+        private final Stage<? super StageInput, ? extends StageOutput> stage;
 
-        private Builder() {
-            this.stages = new ArrayList<>();
+        private Chain(
+            Chain<PipelineInput, ?, ?> upstream,
+            Processor<PipelineInput> head,
+            Stage<? super StageInput, ? extends StageOutput> stage
+        ) {
+            this.upstream = upstream;
+            this.head = head;
+            this.stage = stage;
         }
 
-        private Builder(Pipeline<? super T, ? extends R> pipeline) {
-            this.stages = new ArrayList<>(pipeline.stages);
+        /**
+         * @return the {@link Stage} represented by this instance
+         */
+        @Override
+        public Stage<? super StageInput, ? extends StageOutput> get() {
+            return stage;
         }
 
-        private Builder(Stage<? super T, ? extends R> stage) {
-            this();
-            stages.add(stage);
+        /**
+         * @return the instance upstream to this or null when this is in head position
+         */
+        public Chain<PipelineInput, ?, ?> prev() {
+            return upstream;
         }
 
-        public <U> Builder<T, U> andThen(Stage<? super R, ? extends U> stage) {
-            this.stages.add(stage);
-            return (Builder<T, U>) this;
+        /**
+         * Returns a new instance linked to this
+         *
+         * @param stage a stage with input type compatible with output type of this stage
+         * @param <U> the type of elements output by passed stage
+         * @return a new instance that is linked to this instance
+         */
+        public <U> Chain<PipelineInput, StageOutput, U> into(Stage<? super StageOutput, ? extends U> stage) {
+            return new Chain<>(this, head, stage);
         }
 
-        public Pipeline<T, R> build() {
-            return new Pipeline<>(stages);
+        /**
+         * Down-casts the pipeline's input type. Useful if the input type of the pipeline cannot be implicitly inferred by
+         * the compiler.
+         *
+         * @return the current chain with the new end type.
+         */
+        public <T extends PipelineInput> Chain<T, StageInput, StageOutput> cast(Class<T> inletClass) {
+            return (Chain<T, StageInput, StageOutput>) this;
         }
 
-        public Pipeline<T, R> build(Processor<? super R> sink) {
-            Pipeline<T, R> pipeline = build();
-            pipeline.configure(sink);
-            return pipeline;
-        }
-    }
+        /**
+         * @return an ordered list of all stages in chain up to and including this stage
+         */
+        public List<Stage> getStages() {
+            final List<Stage> stages = new ArrayList<>();
 
-    public static class PipelineDefinitionException extends RuntimeException {
-        public PipelineDefinitionException(String message, Throwable cause) {
-            super(message, cause);
+            Chain curr = this;
+            while (curr != null) {
+                stages.add(curr.stage);
+                curr = curr.upstream;
+            }
+
+            Collections.reverse(stages);
+
+            return stages;
+        }
+
+        /**
+         * @return a {@link Pipeline} instance containing all stages in chain up to and including this stage
+         */
+        public Pipeline<PipelineInput, StageOutput> end() {
+            return new Pipeline<>(getStages());
         }
     }
 }
