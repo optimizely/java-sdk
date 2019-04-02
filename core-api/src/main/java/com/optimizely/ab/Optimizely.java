@@ -35,7 +35,7 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
-import com.optimizely.ab.notification.DecisionInfoEnums;
+import com.optimizely.ab.notification.DecisionNotification;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -714,15 +714,14 @@ public class Optimizely {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes);
 
-        Map<String, Object> decisionInfo = new HashMap<>();
-        decisionInfo.put(DecisionInfoEnums.ExperimentDecisionInfo.EXPERIMENT_KEY.toString(), experiment.getKey());
-        decisionInfo.put(DecisionInfoEnums.ExperimentDecisionInfo.VARIATION_KEY.toString(), variation != null ? variation.getKey() : null);
+        DecisionNotification decisionNotification = DecisionNotification.newExperimentDecisionNotificationBuilder()
+            .withUserId(userId)
+            .withAttributes(copiedAttributes)
+            .withExperimentKey(experiment.getKey())
+            .withVariation(variation)
+            .build();
 
-        notificationCenter.sendNotifications(NotificationCenter.NotificationType.Decision,
-            NotificationCenter.DecisionNotificationType.EXPERIMENT.toString(),
-            userId,
-            copiedAttributes,
-            decisionInfo);
+        notificationCenter.sendNotifications(decisionNotification);
 
         return variation;
     }

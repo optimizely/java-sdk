@@ -17,38 +17,17 @@
 package com.optimizely.ab.notification;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.Map;
 
-public abstract class DecisionNotificationListener implements NotificationListener, DecisionNotificationListenerInterface {
+public interface DecisionNotificationListener {
 
     /**
-     * Base notify called with var args.  This method parses the parameters and calls the abstract method.
+     * onDecision called when an activate was triggered
      *
-     * @param args - variable argument list based on the type of notification.
+     * @param decisionNotification - The decision notification object containing:
+     *                             type         - The notification type.
+     *                             userId       - The userId passed to the API.
+     *                             attributes   - The attribute map passed to the API.
+     *                             decisionInfo - The decision information containing all parameters passed in API.
      */
-    @Override
-    public final void notify(Object... args) {
-        assert (args[0] instanceof String);
-        String type = (String) args[0];
-        assert (args[1] instanceof String);
-        String userId = (String) args[1];
-        Map<String, ?> attributes = null;
-        if (args[2] != null) {
-            assert (args[2] instanceof java.util.Map);
-            attributes = (Map<String, ?>) args[2];
-        } else {
-            attributes = new HashMap<>();
-        }
-
-        assert (args[3] instanceof java.util.Map);
-        Map<String, ?> decisionInfo = (Map<String, ?>) args[3];
-        onDecision(type, userId, attributes, decisionInfo);
-    }
-
-    @Override
-    public abstract void onDecision(@Nonnull String type,
-                                    @Nonnull String userId,
-                                    @Nonnull Map<String, ?> attributes,
-                                    @Nonnull Map<String, ?> decisionInfo);
+    void onDecision(@Nonnull DecisionNotification decisionNotification);
 }

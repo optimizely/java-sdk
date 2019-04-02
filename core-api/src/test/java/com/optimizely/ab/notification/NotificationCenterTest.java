@@ -70,12 +70,12 @@ public class NotificationCenterTest {
     public void testAddDecisionNotificationTwice() {
         DecisionNotificationListener listener = new DecisionNotificationListener() {
             @Override
-            public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
+            public void onDecision(@Nonnull DecisionNotification decisionNotification) {
 
             }
         };
-        int notificationId = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision, listener);
-        int notificationId2 = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Decision, listener);
+        int notificationId = notificationCenter.addDecisionNotificationListener(listener);
+        int notificationId2 = notificationCenter.addDecisionNotificationListener(listener);
         logbackVerifier.expectMessage(Level.WARN, "Notification listener was already added");
         assertEquals(notificationId2, -1);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
@@ -115,7 +115,7 @@ public class NotificationCenterTest {
     public void testAddDecisionNotification() {
         int notificationId = notificationCenter.addDecisionNotificationListener(new DecisionNotificationListener() {
             @Override
-            public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
+            public void onDecision(@Nonnull DecisionNotification decisionNotification) {
 
             }
         });
@@ -159,9 +159,9 @@ public class NotificationCenterTest {
 
     @Test
     public void testAddDecisionNotificationInterface() {
-        int notificationId = notificationCenter.addDecisionNotificationListener(new DecisionNotificationListenerInterface() {
+        int notificationId = notificationCenter.addDecisionNotificationListener(new DecisionNotificationListener() {
             @Override
-            public void onDecision(@Nonnull String type, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> decisionInfo) {
+            public void onDecision(@Nonnull DecisionNotification decisionNotification) {
 
             }
         });
