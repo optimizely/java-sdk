@@ -35,7 +35,7 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
-import com.optimizely.ab.notification.DecisionInfoEnums;
+import com.optimizely.ab.notification.DecisionNotification;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -414,17 +414,16 @@ public class Optimizely {
             }
         }
 
-        Map<String, Object> decisionInfo = new HashMap<>();
-        decisionInfo.put(DecisionInfoEnums.FeatureDecisionInfo.FEATURE_KEY.toString(), featureKey);
-        decisionInfo.put(DecisionInfoEnums.FeatureDecisionInfo.FEATURE_ENABLED.toString(), featureEnabled);
-        decisionInfo.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE_EXPERIMENT_KEY.toString(), sourceExperimentKey);
-        decisionInfo.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE_VARIATION_KEY.toString(), sourceVariationKey);
-        decisionInfo.put(DecisionInfoEnums.FeatureDecisionInfo.SOURCE.toString(), decisionSource);
-        notificationCenter.sendNotifications(NotificationCenter.NotificationType.Decision,
-            NotificationCenter.DecisionNotificationType.FEATURE.toString(),
-            userId,
-            copiedAttributes,
-            decisionInfo);
+        DecisionNotification decisionNotification = DecisionNotification.newFeatureDecisionNotificationBuilder()
+            .withUserId(userId)
+            .withAttributes(copiedAttributes)
+            .withFeatureKey(featureKey)
+            .withFeatureEnabled(featureEnabled)
+            .withSource(decisionSource)
+            .withSourceExperimentKey(sourceExperimentKey)
+            .withSourceVariationKey(sourceVariationKey)
+            .build();
+        notificationCenter.sendNotifications(decisionNotification);
 
         logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
         return featureEnabled;
