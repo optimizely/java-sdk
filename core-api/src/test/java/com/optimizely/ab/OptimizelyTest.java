@@ -3421,6 +3421,7 @@ public class OptimizelyTest {
      * is called when feature is in experiment and feature enabled is false
      * than default value will gets returned
      */
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     @Test
     public void getFeatureVariableWithListenerUserInExperimentFeatureOff() {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
