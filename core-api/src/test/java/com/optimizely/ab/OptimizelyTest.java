@@ -3460,9 +3460,6 @@ public class OptimizelyTest {
             .withConfig(validProjectConfig)
             .build();
 
-        final Map<String, String> testUserAttributes = new HashMap<>();
-        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
-
         assertEquals(optimizely.getFeatureVariableString(
             validFeatureKey,
             validVariableKey,
@@ -3487,9 +3484,6 @@ public class OptimizelyTest {
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
             .withConfig(validProjectConfig)
             .build();
-
-        final Map<String, String> testUserAttributes = new HashMap<>();
-        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
 
         assertEquals(optimizely.getFeatureVariableBoolean(
             validFeatureKey,
@@ -3516,9 +3510,6 @@ public class OptimizelyTest {
             .withConfig(validProjectConfig)
             .build();
 
-        final Map<String, String> testUserAttributes = new HashMap<>();
-        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
-
         assertEquals((long) optimizely.getFeatureVariableInteger(
             validFeatureKey,
             validVariableKey,
@@ -3542,9 +3533,6 @@ public class OptimizelyTest {
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
             .withConfig(validProjectConfig)
             .build();
-
-        final Map<String, String> testUserAttributes = new HashMap<>();
-        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_SLYTHERIN_VALUE);
 
         assertEquals(optimizely.getFeatureVariableDouble(
             validFeatureKey,
