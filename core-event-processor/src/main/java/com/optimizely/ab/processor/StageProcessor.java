@@ -36,39 +36,20 @@ public abstract class StageProcessor<T, R> implements Stage<T, R>, LifecycleAwar
 
     private Processor<? super R> sink;
 
-    public StageProcessor() {
-    }
-
-    public StageProcessor(Processor<? super R> sink) {
-        this.sink = Assert.notNull(sink, "sink");
-    }
-
     @Override
     public void configure(Processor<? super R> sink) {
+        if (this.sink != null) {
+            if (sink == null) {
+                logger.info("Clearing configured sink (before: {})", this.sink);
+            } else if (this.sink != sink) {
+                logger.info("Replacing configured sink (before: {}, after: {})", this.sink, sink);
+            }
+        }
         this.sink = sink;
     }
 
-    /**
-     * Propagates the lifecycle signal to downstream
-     */
     @Override
-    public final void onStart() {
-        beforeStart();
-        LifecycleAware.start(getSink());
-        afterStart();
-    }
-
-    /**
-     * Overridable method to carry out initialization tasks when started.
-     */
-    protected void beforeStart() {
-        // no-op by default
-    }
-
-    /**
-     * Overridable method to carry out initialization tasks when started.
-     */
-    protected void afterStart() {
+    public void onStart() {
         // no-op by default
     }
 
@@ -76,20 +57,9 @@ public abstract class StageProcessor<T, R> implements Stage<T, R>, LifecycleAwar
      * Propagates the lifecycle signal to downstream
      */
     @Override
-    public final boolean onStop(long timeout, TimeUnit unit) {
-        boolean thisResult = beforeStop(timeout, unit);
-        return LifecycleAware.stop(getSink(), timeout, unit) && thisResult;
-    }
-
-    /**
-     * Overridable method to carry out shutdown tasks when stopped.
-     *
-     * @see LifecycleAware#onStop(long, TimeUnit)
-     */
-    protected boolean beforeStop(long timeout, TimeUnit unit) {
+    public boolean onStop(long timeout, TimeUnit unit) {
         return true;
     }
-
 
     /**
      * Sends a value downstream, if it is not {@code null}.

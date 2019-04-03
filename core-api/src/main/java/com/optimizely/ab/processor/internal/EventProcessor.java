@@ -24,9 +24,7 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.processor.BatchingConfig;
-import com.optimizely.ab.processor.BatchingProcessor;
-import com.optimizely.ab.processor.BehaviorProcessor;
+import com.optimizely.ab.processor.BatchProcessor;
 import com.optimizely.ab.processor.InterceptProcessor;
 import com.optimizely.ab.processor.Pipeline;
 import com.optimizely.ab.processor.Processor;
@@ -38,6 +36,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ThreadFactory;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -75,7 +74,7 @@ public class EventProcessor<T> implements PluginSupport {
     /**
      * Converts output elements of Transform Stage to input elements of Intercept Stage.
      */
-    private Function<? super T, ? extends EventBatch> converter;
+    private Function<? super T, ? extends EventBatch> eventBatchConverter;
 
     /**
      * Buffering stage that receives elements from (application) threads producing into this processor.
@@ -84,12 +83,14 @@ public class EventProcessor<T> implements PluginSupport {
      *
      * By default, no buffer is used in order to be consistent with previous releases. This may change in the future.
      */
-    private Stage<EventBatch, EventBatch> bufferStage = Stage.identity();
+    private Stage<EventBatch, EventBatch> batchStage = Stage.identity();
 
     /**
      * Callbacks to be invoked when an event is finished being dispatched to report success or failure status.
      */
     private AggregateCallback<EventBatch> callbacks = new AggregateCallback<>();
+
+    private ThreadFactory threadFactory;
 
     private Function<EventBatch, LogEvent> eventFactory = (new EventFactory())::createLogEvent; // TODO do not default
 
@@ -98,15 +99,15 @@ public class EventProcessor<T> implements PluginSupport {
     };
 
     public Processor<T> build() {
-        Pipeline<T, LogEvent> pipeline = Pipeline
-            .pipe(getTransformerStage())
-            .into(getToEventBatchStage())
-            .into(getInterceptorStage())
-            .into(getBufferStage())
-            .into(getToLogEventStage())
-            .end();
+        Pipeline<T, LogEvent> pipeline = Pipeline.Pipe
+            .of(getTransformProcessor())
+            .to(getEventBatchConverter())
+            .to(getInterceptProcessor())
+            .to(getBatchProcessor())
+            .to(getLogEventConverter())
+            .toPipeline();
 
-        pipeline.configure(getEventHandlerSink());
+        pipeline.configure(getSink());
 
         return pipeline;
     }
@@ -160,12 +161,12 @@ public class EventProcessor<T> implements PluginSupport {
      * Configures the wait strategy for ring buffer consumer
      */
     public EventProcessor<T> bufferStage(Stage<EventBatch, EventBatch> bufferStage) {
-        this.bufferStage = Assert.notNull(bufferStage, "bufferStage");
+        this.batchStage = Assert.notNull(bufferStage, "batchStage");
         return this;
     }
 
-    public EventProcessor<T> bufferStage(BatchingConfig config) {
-        this.bufferStage = new BatchingProcessor<>(Assert.notNull(config, "config"));
+    public EventProcessor<T> bufferStage(BatchProcessor.Config config) {
+        this.batchStage = new BatchProcessor<>(Assert.notNull(config, "config"));
         return this;
     }
 
@@ -173,23 +174,23 @@ public class EventProcessor<T> implements PluginSupport {
      * Configures the conversion stage between transformers and interceptors.
      */
     EventProcessor<T> converter(Function<? super T, ? extends EventBatch> converter) {
-        this.converter = Assert.notNull(converter, "converter");
+        this.eventBatchConverter = Assert.notNull(converter, "eventBatchConverter");
         return this;
     }
 
-    Stage<T, T> getTransformerStage() {
+    Stage<T, T> getTransformProcessor() {
         if (transformers == null || transformers.isEmpty()) {
             logger.trace("No transformers are configured");
             return Stage.identity();
         }
-        return new BehaviorProcessor<>(new CompositeConsumer<>(transformers));
+        return Stage.behavior(new CompositeConsumer<>(transformers));
     }
 
-    Stage<T, ? extends EventBatch> getToEventBatchStage() {
-        return Stage.of(converter);
+    Stage<T, ? extends EventBatch> getEventBatchConverter() {
+        return Stage.mapping(eventBatchConverter);
     }
 
-    Stage<EventBatch, EventBatch> getInterceptorStage() {
+    Stage<EventBatch, EventBatch> getInterceptProcessor() {
         if (interceptors == null || interceptors.isEmpty()) {
             logger.trace("No interceptors are configured");
             return Stage.identity();
@@ -197,16 +198,16 @@ public class EventProcessor<T> implements PluginSupport {
         return new InterceptProcessor<>(interceptors);
     }
 
-    Stage<EventBatch, EventBatch> getBufferStage() {
-        return bufferStage;
+    Stage<EventBatch, EventBatch> getBatchProcessor() {
+        return batchStage;
     }
 
-    ToLogEventStage getToLogEventStage() {
+    Stage<EventBatch, LogEvent> getLogEventConverter() {
         Assert.state(eventFactory != null, "EventFactory has not been configured");
         return new ToLogEventStage(eventFactory, () -> callbacks);
     }
 
-    EventHandlerSink getEventHandlerSink() {
+    Processor<LogEvent> getSink() {
         Assert.state(eventHandler != null, "EventHandler has not been configured");
         return new EventHandlerSink(eventHandler, logEventExceptionHandler);
     }

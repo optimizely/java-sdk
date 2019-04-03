@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.IntSummaryStatistics;
@@ -71,12 +72,12 @@ public class DisruptorBufferTest {
     private Processor<TestEvent> createDefaultSink() {
         return new Processor<TestEvent>() {
             @Override
-            public void process(TestEvent element) {
+            public void process(@Nonnull TestEvent element) {
                 fail("put() not expected to be called");
             }
 
             @Override
-            public void processBatch(Collection<? extends TestEvent> batch) {
+            public void processBatch(@Nonnull Collection<? extends TestEvent> batch) {
                 //noinspection unchecked
                 output.add((List<TestEvent>) batch);
 

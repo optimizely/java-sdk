@@ -106,7 +106,7 @@ public class DisruptorBuffer<T> extends StageProcessor<T, T> {
     }
 
     @Override
-    public void afterStart() {
+    public void onStart() {
         try {
             disruptor.start();
         } catch (IllegalStateException e) {
@@ -115,7 +115,7 @@ public class DisruptorBuffer<T> extends StageProcessor<T, T> {
     }
 
     @Override
-    public boolean beforeStop(long timeout, TimeUnit unit) {
+    public boolean onStop(long timeout, TimeUnit unit) {
         Disruptor disruptor = this.disruptor; // read volatile once
         if (disruptor == null) {
             logger.trace("Not started. Skipping...");

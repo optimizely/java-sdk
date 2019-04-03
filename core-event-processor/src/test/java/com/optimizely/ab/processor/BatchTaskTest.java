@@ -13,10 +13,9 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.processor.batch;
+package com.optimizely.ab.processor;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.optimizely.ab.processor.BatchingTask;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,8 +39,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.fail;
 
-public class BatchingTaskTest {
-    public static final Logger logger = LoggerFactory.getLogger(BatchingTaskTest.class);
+public class BatchTaskTest {
+    public static final Logger logger = LoggerFactory.getLogger(BatchTaskTest.class);
 
     private ExecutorService executor;
     private List<Collection<Object>> batches;
@@ -60,7 +59,7 @@ public class BatchingTaskTest {
 
     @Test
     public void testMaxSize() throws Exception {
-        BatchingTask<Integer, ArrayList<Object>> task = new BatchingTask<>(
+        BatchTask<Integer, ArrayList<Object>> task = new BatchTask<>(
             ArrayList::new,
             batches::add,
             2,
@@ -84,7 +83,7 @@ public class BatchingTaskTest {
 
     @Test
     public void testMaxAge() throws Exception {
-        BatchingTask<Integer, ArrayList<Object>> task = new BatchingTask<>(
+        BatchTask<Integer, ArrayList<Object>> task = new BatchTask<>(
             ArrayList::new,
             batches::add,
             1000,
@@ -103,7 +102,7 @@ public class BatchingTaskTest {
 
     @Test
     public void testNoMaxSize() throws Exception {
-        BatchingTask<Integer, ArrayList<Object>> task = new BatchingTask<>(
+        BatchTask<Integer, ArrayList<Object>> task = new BatchTask<>(
             ArrayList::new,
             batches::add,
             null,
@@ -128,7 +127,7 @@ public class BatchingTaskTest {
 
     @Test
     public void testClosedBeforeRun() throws Exception {
-        BatchingTask<Integer, ArrayList<Object>> task = new BatchingTask<>(
+        BatchTask<Integer, ArrayList<Object>> task = new BatchTask<>(
             ArrayList::new,
             batches::add,
             2,
@@ -153,7 +152,7 @@ public class BatchingTaskTest {
 
     @Test
     public void testTimedFromFirstElement() throws Exception {
-        BatchingTask<Integer, ArrayList<Object>> task = new BatchingTask<>(
+        BatchTask<Integer, ArrayList<Object>> task = new BatchTask<>(
             ArrayList::new,
             batches::add,
             1000,
@@ -172,7 +171,7 @@ public class BatchingTaskTest {
 
     @Test
     public void testFlushesWhenInterrupted() throws Exception {
-        BatchingTask<Integer, ArrayList<Object>> task = new BatchingTask<>(
+        BatchTask<Integer, ArrayList<Object>> task = new BatchTask<>(
             ArrayList::new,
             batches::add,
             10,
@@ -192,7 +191,7 @@ public class BatchingTaskTest {
 
     @Test
     public void testThrowsIfRunAgain() throws Exception {
-        BatchingTask<Integer, ArrayList<Object>> task = new BatchingTask<>(
+        BatchTask<Integer, ArrayList<Object>> task = new BatchTask<>(
             ArrayList::new,
             batches::add,
             1,

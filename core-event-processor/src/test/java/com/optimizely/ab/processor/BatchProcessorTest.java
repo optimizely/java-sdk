@@ -13,14 +13,11 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.processor.batch;
+package com.optimizely.ab.processor;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.optimizely.ab.common.internal.Assert;
-import com.optimizely.ab.processor.BatchingConfig;
-import com.optimizely.ab.processor.BatchingProcessor;
-import com.optimizely.ab.processor.Processor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,8 +52,8 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.Assert.fail;
 
-public class BatchingProcessorTest {
-    public static final Logger logger = LoggerFactory.getLogger(BatchingProcessorTest.class);
+public class BatchProcessorTest {
+    public static final Logger logger = LoggerFactory.getLogger(BatchProcessorTest.class);
 
     private ExecutorService executor;
     private List<Collection<Object>> batches;
@@ -76,9 +73,9 @@ public class BatchingProcessorTest {
 
     @Test
     public void testProcess_maxBatchSize1() throws Exception {
-        BatchingProcessor<Object> buffer = batchingQueue(config -> config
+        BatchProcessor<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(1)
-            .maxBatchOpen(Duration.ofDays(1))); // wont reach timeout
+            .maxBatchAge(Duration.ofDays(1))); // wont reach timeout
 
         buffer.process("one");
         assertBatchCount(1, buffer);
@@ -93,9 +90,9 @@ public class BatchingProcessorTest {
 
     @Test
     public void testProcess_maxBatchSize2() throws Exception {
-        BatchingProcessor<Object> buffer = batchingQueue(config -> config
+        BatchProcessor<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(2)
-            .maxBatchOpen(Duration.ofDays(1))); // wont reach timeout
+            .maxBatchAge(Duration.ofDays(1))); // wont reach timeout
 
         buffer.process("one");
         buffer.process("two");
@@ -109,9 +106,9 @@ public class BatchingProcessorTest {
 
     @Test
     public void testProcess_timeout() throws Exception {
-        BatchingProcessor<Object> buffer = batchingQueue(config -> config
+        BatchProcessor<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(10)
-            .maxBatchOpen(Duration.ofMillis(500)));
+            .maxBatchAge(Duration.ofMillis(500)));
 
         buffer.process(0);
         assertBatchCount(1, buffer);
@@ -126,9 +123,9 @@ public class BatchingProcessorTest {
 
     @Test
     public void testProcessBatch_maxBatchSize1() {
-        BatchingProcessor<Object> buffer = batchingQueue(config -> config
+        BatchProcessor<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(1)
-            .maxBatchOpen(Duration.ofDays(1))); // wont reach timeout
+            .maxBatchAge(Duration.ofDays(1))); // wont reach timeout
 
         buffer.processBatch(Lists.newArrayList("one", "two", "three"));
         assertBatchCount(3, buffer);
@@ -139,9 +136,9 @@ public class BatchingProcessorTest {
 
     @Test
     public void testProcessBatch_maxBatchSize2() {
-        BatchingProcessor<Object> buffer = batchingQueue(config -> config
+        BatchProcessor<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(2)
-            .maxBatchOpen(Duration.ofDays(1))); // wont reach timeout
+            .maxBatchAge(Duration.ofDays(1))); // wont reach timeout
 
         buffer.processBatch(Lists.newArrayList("one", "two", "three", "four"));
         assertBatchCount(2, buffer);
@@ -151,9 +148,9 @@ public class BatchingProcessorTest {
 
     @Test
     public void testProcessBatch_timeout() {
-        BatchingProcessor<Object> buffer = batchingQueue(config -> config
+        BatchProcessor<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(2)
-            .maxBatchOpen(Duration.ofMillis(500)));
+            .maxBatchAge(Duration.ofMillis(500)));
 
         buffer.processBatch(Lists.newArrayList("one", "two", "three"));
         assertBatchCount(2, buffer);
@@ -164,9 +161,9 @@ public class BatchingProcessorTest {
     @Test
     public void testFlushingOpenBatch() throws Exception {
         // flush before bounds are reached
-        BatchingProcessor<Object> buffer = batchingQueue(config -> config
+        BatchProcessor<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(100)
-            .maxBatchOpen(Duration.ofHours(1)));
+            .maxBatchAge(Duration.ofHours(1)));
 
         for (int i = 0; i < 10; i++) {
             buffer.process(i);
@@ -184,8 +181,8 @@ public class BatchingProcessorTest {
 
     @Test
     public void testDeadlineZero() throws Exception {
-        BatchingProcessor<Object> buffer = batchingQueue(config -> config
-            .maxBatchOpen(Duration.ZERO));
+        BatchProcessor<Object> buffer = batchingQueue(config -> config
+            .maxBatchAge(Duration.ZERO));
 
         buffer.process("one");
         assertBatchCount(0, buffer);
@@ -200,8 +197,8 @@ public class BatchingProcessorTest {
 
     @Test
     public void testFlushOnShutdown_true() throws Exception {
-        BatchingProcessor<Object> buffer = batchingQueue(config -> config
-            .maxBatchOpen(null)
+        BatchProcessor<Object> buffer = batchingQueue(config -> config
+            .maxBatchAge(null)
             .flushOnShutdown(true));
 
         buffer.process("one");
@@ -213,8 +210,8 @@ public class BatchingProcessorTest {
 
     @Test
     public void testFlushOnShutdown_false() throws Exception {
-        BatchingProcessor<Object> buffer = batchingQueue(config -> config
-            .maxBatchOpen(null)
+        BatchProcessor<Object> buffer = batchingQueue(config -> config
+            .maxBatchAge(null)
             .flushOnShutdown(false));
 
         buffer.process("one");
@@ -241,10 +238,10 @@ public class BatchingProcessorTest {
             .build());
         InstrumentedExecutorService executor = new InstrumentedExecutorService(this.executor);
         try {
-            BatchingProcessor<Object> buffer = batchingQueue(config -> config
+            BatchProcessor<Object> buffer = batchingQueue(config -> config
                     .maxBatchSize(maxBatchSize)
-                    .maxBatchOpen(Duration.ofDays(1)) // wont reach timeout
-                    .maxInflightBatches(maxInflight)
+                    .maxBatchAge(Duration.ofDays(1)) // wont reach timeout
+                    .maxBatchInFlight(maxInflight)
                     .executor(executor),
                 delayConsumer(Duration.ofMillis(250)));
 
@@ -299,24 +296,24 @@ public class BatchingProcessorTest {
         };
     }
 
-    private BatchingConfig.Builder batchingQueueConfig() {
-        return BatchingConfig.builder().executor(executor);
+    private BatchProcessor.Builder batchingQueueConfig() {
+        return BatchProcessor.builder().executor(executor);
     }
 
-    private BatchingProcessor<Object> batchingQueue(Consumer<BatchingConfig.Builder> configure) {
+    private BatchProcessor<Object> batchingQueue(Consumer<BatchProcessor.Builder> configure) {
         return batchingQueue(configure, this::recordBatch);
     }
 
-    private BatchingProcessor<Object> batchingQueue(
-        Consumer<BatchingConfig.Builder> configure,
+    private BatchProcessor<Object> batchingQueue(
+        Consumer<BatchProcessor.Builder> configure,
         Consumer<Collection<Object>> consumer
     ) {
-        BatchingConfig.Builder config = batchingQueueConfig();
+        BatchProcessor.Builder config = batchingQueueConfig();
 
         // per-test config
         configure.accept(config);
 
-        BatchingProcessor<Object> processor = new BatchingProcessor<>(config.build());
+        BatchProcessor<Object> processor = new BatchProcessor<>(config);
         processor.configure(new Processor<Object>() {
             @Override
             public void process(@Nonnull Object element) {
@@ -340,15 +337,8 @@ public class BatchingProcessorTest {
         logger.info("Received batch #{}: {}", n, batch);
     }
 
-    private void assertBatchCount(int n, long timeout, TimeUnit unit) {
-        Integer actual = await().atMost(timeout, unit)
-            .untilAtomic(batchCount, greaterThanOrEqualTo(n));
-
-        assertThat(actual, equalTo(n));
-    }
-
     // waits for the configured max age
-    private void assertBatchCount(int n, BatchingProcessor processor) {
+    private void assertBatchCount(int n, BatchProcessor processor) {
         long millis = Optional.ofNullable(processor.getConfig().getMaxBatchAge())
             .map(maxAge -> maxAge.plus(Duration.ofMillis(250)))
             .orElse(Duration.ofSeconds(1))

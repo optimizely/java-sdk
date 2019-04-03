@@ -22,9 +22,12 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.function.Supplier;
+import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * A sequence of {@link Stage}s that form a processing pipeline.
@@ -34,46 +37,45 @@ import java.util.function.Supplier;
  * @param <T> the type of input elements for first stage in pipeline
  * @param <R> the type of output elements
  */
-public class Pipeline<T, R> extends StageProcessor<T, R> {
-    private final List<Stage> stages;
+public class Pipeline<T, R> implements Stage<T, R>, LifecycleAware {
+    private final Pipe<T, ?, R> lastStage;
     private Processor<? super T> head;
+    private final List<Stage> stages;
 
-    /**
-     * Creates an object for creating {@link Pipeline} with a type-safe interface.
-     *
-     * @param stage the first stage in a pipeline
-     * @param <T> the type of input elements accepted by the pipeline
-     * @param <R> the type of output elements emitted by first stage in pipeline
-     * @return a {@link Chain} for the given stage
-     * @throws NullPointerException if argument is null
-     */
-    public static <T, R> Chain<T, T, R> pipe(Stage<T, R> stage) {
-        Assert.notNull(stage, "stage");
-        return new Chain<>(null, stage, stage);
-    }
-
-    /**
-     * Constructs the pipeline from a sequence of stages
-     *
-     * @param stages the processing stages of pipeline
-     */
     @SuppressWarnings("unchecked")
-    private Pipeline(final List<Stage> stages) {
+    public Pipeline(Pipe<T, ?, R> lastStage) {
+        this.lastStage = Assert.notNull(lastStage, "lastStage");
+        List<Stage> stages = lastStage.stages();
         Assert.argument(!stages.isEmpty(), "stages cannot be empty");
-        this.stages = Assert.notNull(stages, "stages");
-        this.head = (Processor<? super T>) stages.get(0);
+        this.stages = new ArrayList<>(stages); //
+        this.head = (Processor<? super T>) this.stages.get(0);
     }
 
     @Override
     public void configure(Processor<? super R> sink) {
-        super.configure(sink);
         linkStages(stages, sink);
     }
 
+    /**
+     * Starts stages from last to first
+     */
     @Override
-    protected void beforeStart() {
-        /// start the head
-        LifecycleAware.start(head);
+    public void onStart() {
+        for (int i = stages.size() - 1; i >= 0; i--) {
+            Stage stage = stages.get(i);
+            LifecycleAware.start(stage);
+        }
+    }
+
+    /**
+     * Stops stages from first to last
+     */
+    @Override
+    public boolean onStop(long timeout, TimeUnit unit) {
+        for (final Stage stage : stages) {
+            LifecycleAware.stop(stage, timeout, unit);
+        }
+        return true;
     }
 
     @Override
@@ -113,86 +115,141 @@ public class Pipeline<T, R> extends StageProcessor<T, R> {
     }
 
     /**
+     * A {@link Pipe} represents a list of {@link Stage} chained together.
+     *
      * This class that provides a type-safe fluent interface for chaining {@link Stage} together,
      * with the ability to create {@link Pipeline} objects.
      *
-     * @param <PipelineInput> the type of input accepted by pipeline
-     * @param <StageInput> the type of input element  the contained stage
-     * @param <StageOutput> the type of output
+     * Does not support cycles.
+     *
+     * @param <HEAD_IN> the type of input elements accepted by first {@link Stage} in topology
+     * @param <E_IN> the type of input elements accepted by current {@link Stage} in topology
+     * @param <E_OUT> the type of output elements emitted by current {@link Stage} in topology
      */
-    public static class Chain<PipelineInput, StageInput, StageOutput> implements Supplier<Stage<? super StageInput, ? extends StageOutput>> {
-        private final Chain<PipelineInput, ?, ?> upstream;
-        private final Processor<PipelineInput> head;
-        private final Stage<? super StageInput, ? extends StageOutput> stage;
+    public abstract static class Pipe<HEAD_IN, E_IN, E_OUT> {
 
-        private Chain(
-            Chain<PipelineInput, ?, ?> upstream,
-            Processor<PipelineInput> head,
-            Stage<? super StageInput, ? extends StageOutput> stage
-        ) {
-            this.upstream = upstream;
-            this.head = head;
-            this.stage = stage;
+        /**
+         * Creates initial {@link Pipe} in a chain
+         */
+        public static <T, R> Pipe<T, T, R> of(Stage<? super T, ? extends R> head) {
+            Assert.notNull(head, "head");
+            return new RealPipe<>(head);
         }
 
         /**
          * @return the {@link Stage} represented by this instance
          */
-        @Override
-        public Stage<? super StageInput, ? extends StageOutput> get() {
-            return stage;
-        }
+        abstract Stage<? super E_IN, ? extends E_OUT> get();
+
+        abstract Pipe<HEAD_IN, ?, E_IN> prev();
+
+        abstract boolean isEmpty();
 
         /**
-         * @return the instance upstream to this or null when this is in head position
-         */
-        public Chain<PipelineInput, ?, ?> prev() {
-            return upstream;
-        }
-
-        /**
-         * Returns a new instance linked to this
+         * Creates a successor {@link Pipe}.
          *
          * @param stage a stage with input type compatible with output type of this stage
-         * @param <U> the type of elements output by passed stage
-         * @return a new instance that is linked to this instance
+         * @param <U> the output type of the sink {@link Stage}
+         * @return a new instance with source of current
          */
-        public <U> Chain<PipelineInput, StageOutput, U> into(Stage<? super StageOutput, ? extends U> stage) {
-            return new Chain<>(this, head, stage);
+        public <U> Pipe<HEAD_IN, E_OUT, U> to(Stage<? super E_OUT, ? extends U> stage) {
+            walk(s -> {
+                if (s.equals(stage)) {
+                    throw new IllegalArgumentException("Cycle detected: " + stage);
+                }
+            });
+
+            return new RealPipe<>(stage, this);
         }
 
         /**
-         * Down-casts the pipeline's input type. Useful if the input type of the pipeline cannot be implicitly inferred by
-         * the compiler.
+         * Returns list of {@link Stage}, starting from inner-most and ending with current.
+         * Verifies cycles do not exist;
          *
-         * @return the current chain with the new end type.
+         * @return a stack of {@link Stage} linked to this,
+         * @throws IllegalStateException if cycle is detected in chain
          */
-        public <T extends PipelineInput> Chain<T, StageInput, StageOutput> cast(Class<T> inletClass) {
-            return (Chain<T, StageInput, StageOutput>) this;
-        }
-
-        /**
-         * @return an ordered list of all stages in chain up to and including this stage
-         */
-        public List<Stage> getStages() {
-            final List<Stage> stages = new ArrayList<>();
-
-            Chain curr = this;
-            while (curr != null) {
-                stages.add(curr.stage);
-                curr = curr.upstream;
-            }
-
-            Collections.reverse(stages);
-
+        public List<Stage> stages() {
+            LinkedList<Stage> stages = new LinkedList<>();
+            walk(stages::push);
             return stages;
         }
 
         /**
          * @return a {@link Pipeline} instance containing all stages in chain up to and including this stage
          */
-        public Pipeline<PipelineInput, StageOutput> end() {
-            return new Pipeline<>(getStages());
+        public Pipeline<HEAD_IN, E_OUT> toPipeline() {
+            return new Pipeline<>(this);
+        }
+
+        /**
+         * Walk the list of {@link Stage} in reverse order using recursion (not tail-optimized).
+         */
+        public void walk(Consumer<Stage> visitor) {
+            if (isEmpty()) {
+                return;
+            }
+            visitor.accept(get());
+            prev().walk(visitor);
+        }
+
+        /**
+         * @return an empty {@link Pipe} special-value. Dummy node of sorts.
+         */
+        @SuppressWarnings("unchecked")
+        static <T, R> Pipe<T, ?, R> nil() {
+            return (Pipe<T, ?, R>) NilPipe.NIL;
+        }
+
+        private static class NilPipe<HEAD_IN, E_IN, E_OUT> extends Pipe<HEAD_IN, E_IN, E_OUT> {
+            private static final Pipe NIL = new NilPipe();
+
+            @Override
+            Stage<? super E_IN, ? extends E_OUT> get() {
+                throw new NoSuchElementException();
+            }
+
+            @Override
+            Pipe<HEAD_IN, ?, E_IN> prev() {
+                throw new NoSuchElementException();
+            }
+
+            @Override
+            boolean isEmpty() {
+                return true;
+            }
+        }
+
+        private static class RealPipe<HEAD_IN, E_IN, E_OUT> extends Pipe<HEAD_IN, E_IN, E_OUT> {
+            private final Stage<? super E_IN, ? extends E_OUT> value;
+            private final Pipe<HEAD_IN, ?, E_IN> prev;
+
+            private RealPipe(Stage<? super E_IN, ? extends E_OUT> value) {
+                this(value, nil());
+            }
+
+            private RealPipe(
+                Stage<? super E_IN, ? extends E_OUT> value,
+                Pipe<HEAD_IN, ?, E_IN> prev
+            ) {
+                this.value = Assert.notNull(value, "value");
+                this.prev = Assert.notNull(prev, "prev");
+            }
+
+            @Override
+            Stage<? super E_IN, ? extends E_OUT> get() {
+                return value;
+            }
+
+            @Override
+            Pipe<HEAD_IN, ?, E_IN> prev() {
+                return prev;
+            }
+
+            @Override
+            boolean isEmpty() {
+                return false;
+            }
         }
     }
 }

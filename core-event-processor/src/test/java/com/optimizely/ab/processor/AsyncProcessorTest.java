@@ -15,31 +15,8 @@
  */
 package com.optimizely.ab.processor;
 
-import javax.annotation.Nonnull;
-import java.util.Collection;
+import static org.junit.Assert.*;
 
-/**
- * Simply maps the input to sink without any processing
- *
- * @param <T> the type of input and output elements
- */
-public class IdentityProcessor<T> extends StageProcessor<T, T> {
-    private static final IdentityProcessor<?> INSTANCE = new IdentityProcessor<>();
+public class AsyncProcessorTest {
 
-    @SuppressWarnings("unchecked")
-    static <T> IdentityProcessor<T> getInstance() {
-        return (IdentityProcessor<T>) INSTANCE;
-    }
-
-
-
-    @Override
-    public void process(@Nonnull T element) {
-        emitElement(element);
-    }
-
-    @Override
-    public void processBatch(Collection<? extends T> elements) {
-        emitBatch(elements);
-    }
 }

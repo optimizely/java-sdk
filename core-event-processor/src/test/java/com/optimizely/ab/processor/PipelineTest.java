@@ -25,14 +25,14 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 
 public class PipelineTest {
-    private final Stage<Integer, Integer> incrementStage = Stage.of(x -> x + 1);
-    private final Stage<Integer, Integer> squareStage = Stage.of(x -> x * x);
-    private final Stage<Object, String> toStringStage = Stage.of(Object::toString);
-    private final Stage<Object, String> emphasisStage = Stage.of(o -> o.toString() + "!");
+    private final Stage<Integer, Integer> incrementStage = Stage.mapping(x -> x + 1);
+    private final Stage<Integer, Integer> squareStage = Stage.mapping(x -> x * x);
+    private final Stage<Object, String> toStringStage = Stage.mapping(Object::toString);
+    private final Stage<Object, String> emphasisStage = Stage.mapping(o -> o.toString() + "!");
 
     @Test
     public void testSingleStage() {
-        Pipeline<Integer, String> pipeline = Pipeline.pipe(toStringStage).cast(Integer.class).end();
+        Pipeline<Integer, String> pipeline = Pipeline.Pipe.<Integer, String>of(toStringStage).toPipeline();
 
         assertThat(pipeline.getStages(), hasSize(1));
         assertThat(pipeline.getStages(), contains(toStringStage));
@@ -49,11 +49,12 @@ public class PipelineTest {
 
     @Test
     public void testMultiStage() {
-        Pipeline<Integer, String> pipeline = Pipeline.pipe(incrementStage)
-            .into(squareStage)
-            .into(toStringStage)
-            .into(emphasisStage)
-            .end();
+        Pipeline<Integer, String> pipeline = Pipeline.Pipe
+            .of(incrementStage)
+            .to(squareStage)
+            .to(toStringStage)
+            .to(emphasisStage)
+            .toPipeline();
 
         assertThat(pipeline.getStages(), contains(
             incrementStage,
@@ -72,7 +73,11 @@ public class PipelineTest {
         assertThat(output, contains("1!", "4!"));
     }
 
-    @Test
-    public void testThrows() {
+    @Test(expected = IllegalArgumentException.class)
+    public void detectsCycle() {
+        Pipeline.Pipe.of(squareStage)
+            .to(incrementStage)
+            .to(squareStage)
+            .toPipeline();
     }
 }

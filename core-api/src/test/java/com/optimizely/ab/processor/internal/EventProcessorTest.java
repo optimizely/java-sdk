@@ -15,14 +15,6 @@
  */
 package com.optimizely.ab.processor.internal;
 
-import com.lmax.disruptor.AlertException;
-import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.Sequence;
-import com.lmax.disruptor.SequenceBarrier;
-import com.lmax.disruptor.TimeoutException;
-import com.lmax.disruptor.WaitStrategy;
-import com.lmax.disruptor.YieldingWaitStrategy;
-import com.lmax.disruptor.util.DaemonThreadFactory;
 import com.optimizely.ab.common.callback.Callback;
 import com.optimizely.ab.common.lifecycle.LifecycleAware;
 import com.optimizely.ab.common.plugin.Plugin;
@@ -30,23 +22,25 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.payload.Visitor;
+import com.optimizely.ab.processor.BatchProcessor;
 import com.optimizely.ab.processor.Processor;
 import com.optimizely.ab.processor.Stage;
-import com.optimizely.ab.processor.disruptor.DisruptorBuffer;
-import com.optimizely.ab.processor.disruptor.DisruptorBufferConfig;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.LongSummaryStatistics;
-import java.util.concurrent.Phaser;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -61,10 +55,17 @@ import static org.junit.Assert.assertEquals;
 public class EventProcessorTest {
     private static final Logger logger = LoggerFactory.getLogger(EventProcessorTest.class);
     private OutputCapture output;
+    private ExecutorService executor;
 
     @Before
     public void setUp() {
         output = new OutputCapture();
+        executor = Executors.newCachedThreadPool();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        executor.shutdownNow();
     }
 
     private Processor<EventBatch.Builder> processor(Consumer<EventProcessor<EventBatch.Builder>> configure) {
@@ -84,19 +85,13 @@ public class EventProcessorTest {
         return inst;
     }
 
-    private <T> Stage<T, T> disruptorStage(Consumer<DisruptorBufferConfig.Builder> configure) {
-        DisruptorBufferConfig.Builder config = DisruptorBufferConfig.builder();
-
-        // base configuration
-        config.waitStrategy(new BlockingWaitStrategy())
-            .threadFactory(DaemonThreadFactory.INSTANCE)
-            .batchMaxSize(10)
-            .capacity(128);
-
-        // per-test configuration
-        configure.accept(config);
-
-        return new DisruptorBuffer<>(config.build());
+    private <T> Stage<T, T> bufferStage() {
+        return BatchProcessor.<T>builder()
+            .executor(executor)
+            .maxBatchAge(Duration.ofSeconds(1))
+            .maxBatchSize(10)
+            .maxBatchInFlight(null)
+            .build();
     }
 
     @Test
@@ -207,16 +202,12 @@ public class EventProcessorTest {
     @Test
     public void testBatchesByEventContext() throws Exception {
         final AtomicInteger counter = new AtomicInteger(0);
-        final Phaser phaser = new Phaser();
-
-        // block the consumer to allow us to fill up
-        phaser.register();
 
         Processor<EventBatch.Builder> stage = processor(builder -> builder
-            .bufferStage(
-                disruptorStage(d -> d
-                    .waitStrategy(new TestableWaitStrategy(phaser))
-                    .batchMaxSize(100)))
+            .bufferStage(BatchProcessor.builder()
+                .executor(executor)
+                .maxBatchAge(Duration.ofHours(1))
+                .maxBatchSize(10))
             .transformer(e -> {
                 switch (counter.getAndIncrement()) {
                     case 1:
@@ -248,8 +239,6 @@ public class EventProcessorTest {
             logger.info("Added visitor {}", i);
         }
 
-        phaser.arriveAndDeregister();
-
         await().timeout(1, SECONDS).untilAtomic(output.successesCount, equalTo(10));
 
         assertEquals(7, output.payloads.size());   // transformed get their own batch
@@ -257,54 +246,20 @@ public class EventProcessorTest {
         assertEquals(0, output.failures.size());
     }
 
-    /**
-     * Testing utility. Allows external synchronization
-     */
-    public static class TestableWaitStrategy implements WaitStrategy {
-        private static final Logger logger = LoggerFactory.getLogger(TestableWaitStrategy.class);
-
-        private final Phaser phaser;
-        private final WaitStrategy delegate;
-
-        public TestableWaitStrategy(Phaser phaser) {
-            this(phaser, new YieldingWaitStrategy());
-        }
-
-        public TestableWaitStrategy(Phaser phaser, WaitStrategy delegate) {
-            this.phaser = phaser;
-            this.delegate = delegate;
-
-            phaser.register();
-        }
-
-        @Override
-        public long waitFor(long sequence, Sequence cursor, Sequence dependentSequence, SequenceBarrier barrier) throws AlertException, InterruptedException, TimeoutException {
-            int arrivalPhase = phaser.arrive();
-
-            logger.debug("Waiting on {} of {} to advance from phase {}...",
-                phaser.getUnarrivedParties(),
-                phaser.getRegisteredParties(),
-                arrivalPhase);
-
-            phaser.awaitAdvance(arrivalPhase);
-
-            logger.debug("Advanced to phase {}", phaser.getPhase());
-
-            return delegate.waitFor(sequence, cursor, dependentSequence, barrier);
-        }
-
-        @Override
-        public void signalAllWhenBlocking() {
-            delegate.signalAllWhenBlocking();
-        }
-    }
-
     @Test
     public void testMergesVisitors() throws Exception {
+        BatchProcessor<EventBatch> batchProcessor = BatchProcessor.<EventBatch>builder()
+            .executor(executor)
+            .maxBatchAge(Duration.ofSeconds(60))
+            .maxBatchSize(100)
+            .maxBatchInFlight(null)
+            .build();
+
         Processor<EventBatch.Builder> stage = processor(builder -> builder
             .eventFactory(TestLogEvent::new)
-            .bufferStage(disruptorStage(d -> d.batchMaxSize(3))));
+            .bufferStage(batchProcessor));
 
+        // buffer items
         stage.process(eventBatchBuilder()
             .addVisitor(visitorBuilder()
                 .setVisitorId("1").build()));
@@ -316,6 +271,9 @@ public class EventProcessorTest {
         stage.process(eventBatchBuilder()
             .addVisitor(visitorBuilder()
                 .setVisitorId("1").build()));
+
+        // flush items together
+        batchProcessor.flush();
 
         await().timeout(1, SECONDS).untilAtomic(output.successesCount, equalTo(3));
         assertEquals(0, output.failures.size());

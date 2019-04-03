@@ -29,24 +29,26 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Task that handles lifecycle of a batch that acts a buffer while open and flushes to a consumer when closed.
+ * A {@link Runnable} that holds a temporary buffer for batching. Exposes thread-safe
+ * methods to produce into the {@link Collection} buffer while it is open.
  *
- * Supports any of the following conditions to trigger the buffer to flushed:
+ * The buffer can be closed by any of the following conditions:
  * <ul>
- *   <li>Reached configured maximum size</li>
- *   <li>Reached configured maximum age (relative to time first element was added)</li>
- *   <li>Buffer has been explicitly closed</li>
- *   <li>Thread is interrupted</li>
+ *   <li>Reached maximum size, if configured</li>
+ *   <li>Reached maximum age, if configured (relative to time first element was added)</li>
+ *   <li>Buffer has been explicitly flushed</li>
  * </ul>
  *
- * While the task is running (open), other threads can offer items to the buffer.
- * The buffer is flushed to the consumer from the thread that invokes {@link #run}.
+ * Additionally, the buffer will be closed if thread is interrupted.
+ *
+ * Once the buffer is closed, it will be flushed to the configured {@link Consumer}.
+ * The buffer is always flushed from the thread executing {@link #run()}.
  *
  * @param <E> the type of elements in buffer
  * @param <C> the type of {@link Collection} used for buffer
  */
-public class BatchingTask<E, C extends Collection<? super E>> implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(BatchingTask.class);
+class BatchTask<E, C extends Collection<? super E>> implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(BatchTask.class);
 
     private final Supplier<C> bufferSupplier;
     private final Consumer<C> bufferConsumer;
@@ -60,13 +62,41 @@ public class BatchingTask<E, C extends Collection<? super E>> implements Runnabl
     private Date deadline;
     private volatile Status status = Status.OPEN;
 
-    public enum Status {
-        OPEN,
-        CLOSING,
-        CLOSED
+    /**
+     * State of the buffer
+     */
+    protected enum Status {
+        /**
+         * Accepting new items
+         */
+        OPEN(false),
+        /**
+         * No longer accepting new items (due to size or manual flush), but has not flushed yet (a non-terminal state)
+         */
+        CLOSED(false),
+        /**
+         * Terminal state; batch has been flushed.
+         */
+        COMPLETE(true);
+
+        private final boolean terminal;
+
+        Status(boolean terminal) {
+            this.terminal = terminal;
+        }
+
+        public boolean isTerminal() {
+            return terminal;
+        }
     }
 
-    public BatchingTask(
+    /**
+     * @param bufferSupplier supplies a fresh buffer on-demand (on first item)
+     * @param bufferConsumer handles buffer being flushed
+     * @param maxSize maximum size of an open buffer
+     * @param maxAge
+     */
+    BatchTask(
         Supplier<C> bufferSupplier,
         Consumer<C> bufferConsumer,
         Integer maxSize,
@@ -75,7 +105,7 @@ public class BatchingTask<E, C extends Collection<? super E>> implements Runnabl
         this(bufferSupplier, bufferConsumer, maxSize, maxAge, new ReentrantLock());
     }
 
-    protected BatchingTask(
+    protected BatchTask(
         Supplier<C> bufferSupplier,
         Consumer<C> bufferConsumer,
         Integer maxSize,
@@ -98,9 +128,11 @@ public class BatchingTask<E, C extends Collection<? super E>> implements Runnabl
     public void run() {
         lock.lock();
         try {
-            Assert.state(status != Status.CLOSED, "Task has already been run");
+            // note: buffer can be closed
+            Assert.state(!status.isTerminal(), "Task has already been run");
 
-            while (status == Status.OPEN) {
+            while (status == Status.OPEN && !Thread.currentThread().isInterrupted()) {
+                // deadline is not set until first insert (and maxAge non-null)
                 if (deadline != null) {
                     // wait until deadline reached or closed by another thread
                     if (!condition.awaitUntil(deadline)) {
@@ -117,7 +149,7 @@ public class BatchingTask<E, C extends Collection<? super E>> implements Runnabl
             lock.unlock();
         }
 
-        status = Status.CLOSED;
+        status = Status.COMPLETE;
 
         if (bufferConsumer != null) {
             bufferConsumer.accept(buffer);
@@ -160,7 +192,7 @@ public class BatchingTask<E, C extends Collection<? super E>> implements Runnabl
 
             if (buffer.size() >= maxSize) {
                 logger.debug("Closing buffer (reached max size)");
-                status = Status.CLOSING;
+                status = Status.CLOSED;
                 notify = true;
             }
 
@@ -186,7 +218,7 @@ public class BatchingTask<E, C extends Collection<? super E>> implements Runnabl
                 return;
             }
 
-            status = Status.CLOSING;
+            status = Status.CLOSED;
             condition.signal();
             logger.trace("Buffer is now closed");
         } finally {

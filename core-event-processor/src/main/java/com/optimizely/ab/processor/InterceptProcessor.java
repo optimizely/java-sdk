@@ -38,7 +38,6 @@ public class InterceptProcessor<T> extends StageProcessor<T, T> {
     private final List<Handler<T>> handlers;
 
     public InterceptProcessor(List<Handler<T>> handlers) {
-        super();
         this.handlers = Assert.notNull(handlers, "handlers");
     }
 

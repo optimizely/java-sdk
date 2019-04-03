@@ -24,6 +24,7 @@ import java.util.Collection;
  * @param <T> the type of input elements
  * @see Stage
  */
+@FunctionalInterface
 public interface Processor<T> {
     /**
      * Pushes a single element to be process
