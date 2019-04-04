@@ -28,6 +28,7 @@ after_success:
   - ./gradlew coveralls uploadArchives --console plain
 after_failure:
   - cat /home/travis/build/optimizely/java-sdk/core-api/build/reports/findbugs/main.html
+  - cat /home/travis/build/optimizely/java-sdk/core-api/build/reports/findbugs/test.html
 
 # Integration tests need to run first to reset the PR build status to pending
 stages:
