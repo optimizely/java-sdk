@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 
 import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
+import static com.optimizely.ab.internal.AttributesUtil.isValidRegex;
 
 public class MatchType {
 
@@ -58,6 +59,11 @@ public class MatchType {
             case "lt":
                 if (isValidNumber(conditionValue)) {
                     return new MatchType(matchType, new LTMatch((Number) conditionValue));
+                }
+                break;
+            case "regex":
+                if (isValidRegex(conditionValue)) {
+                    return new MatchType(matchType, new RegexMatch((String) conditionValue));
                 }
                 break;
             case "legacy_custom_attribute":

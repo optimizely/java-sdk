@@ -65,6 +65,8 @@ public class AudienceConditionEvaluationTest {
         testTypedUserAttributes.put("num_size", 3);
         testTypedUserAttributes.put("meta_data", testUserAttributes);
         testTypedUserAttributes.put("null_val", null);
+        testTypedUserAttributes.put("email_address", "Android@mail.com");
+
     }
 
     /**
@@ -595,6 +597,16 @@ public class AudienceConditionEvaluationTest {
     }
 
     /**
+     * Verify that UserAttribute.evaluate for REGEX match type returns true if the
+     * UserAttribute's value satisfies condition's regex.
+     */
+    @Test
+    public void regexMatchConditionEvaluatesTrue()  {
+        UserAttribute testInstanceString = new UserAttribute("email_address", "custom_attribute", "regex", "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$");
+        assertTrue(testInstanceString.evaluate(null, testTypedUserAttributes));
+    }
+
+    /**
      * Verify that UserAttribute.evaluate for SUBSTRING match type returns true if the
      * UserAttribute's value is a substring of the condition's value.
      */
@@ -612,6 +624,45 @@ public class AudienceConditionEvaluationTest {
     public void substringMatchConditionEvaluatesFalse()  {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "substring", "chr0me");
         assertFalse(testInstanceString.evaluate(null, testUserAttributes));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for REGEX match type returns false if the
+     * UserAttribute's value is NOT satisfying the condition's regex value.
+     */
+    @Test
+    public void regexMatchConditionEvaluatesFalse()  {
+        UserAttribute testInstanceString = new UserAttribute("email_address", "custom_attribute", "regex", "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$");
+        assertFalse(testInstanceString.evaluate(null, Collections.singletonMap("email_address", "abs_.co")));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for REGEX match type returns null if the
+     * condition value is NOT a valid regex.
+     */
+    @Test
+    public void regexMatchConditionEvaluatesNullValueInvalid()  {
+        UserAttribute testInstanceString = new UserAttribute("email_address", "custom_attribute", "regex", "***");
+        assertNull(testInstanceString.evaluate(null, Collections.singletonMap("email_address", "abs_.co")));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for REGEX match type returns null if the
+     * UserAttribute's value type is not a string.
+     */
+    @Test
+    public void regexMatchConditionEvaluatesNull()  {
+        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "regex", "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$");
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "regex", "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$");
+        UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "regex", "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$");
+        UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "regex", "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$");
+        UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "regex", "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$");
+
+        assertNull(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceDouble.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceObject.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceNull.evaluate(null, testTypedUserAttributes));
     }
 
     /**

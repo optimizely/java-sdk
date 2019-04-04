@@ -51,6 +51,10 @@ public class ValidProjectConfigV4 {
     public static final String ATTRIBUTE_OPT_KEY = "$opt_test";
     private static final Attribute ATTRIBUTE_OPT = new Attribute(ATTRIBUTE_OPT_ID, ATTRIBUTE_OPT_KEY);
 
+    private static final String ATTRIBUTE_REGEX_ID = "3234345462";
+    public static final String ATTRIBUTE_REGEX_KEY = "regexKey";
+    private static final Attribute ATTRIBUTE_REGEX = new Attribute(ATTRIBUTE_REGEX_ID, ATTRIBUTE_REGEX_KEY);
+
     private static final String ATTRIBUTE_BOOLEAN_ID = "323434545";
     public static final String ATTRIBUTE_BOOLEAN_KEY = "booleanKey";
     private static final Attribute ATTRIBUTE_BOOLEAN = new Attribute(ATTRIBUTE_BOOLEAN_ID, ATTRIBUTE_BOOLEAN_KEY);
@@ -69,6 +73,19 @@ public class ValidProjectConfigV4 {
 
     // audiences
     private static final String CUSTOM_ATTRIBUTE_TYPE = "custom_attribute";
+    private static final String AUDIENCE_REGEX_ID = "3468206641";
+    private static final String AUDIENCE_REGEX_KEY = "REGEX";
+    public static final String AUDIENCE_REGEX_VALUE = "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$";
+    private static final Audience TYPED_AUDIENCE_REGEX = new Audience(
+        AUDIENCE_REGEX_ID,
+        AUDIENCE_REGEX_KEY,
+        new AndCondition(Collections.<Condition>singletonList(
+            new OrCondition(Collections.<Condition>singletonList(
+                new OrCondition(Collections.singletonList((Condition) new UserAttribute(ATTRIBUTE_REGEX_KEY,
+                    CUSTOM_ATTRIBUTE_TYPE, "regex",
+                    AUDIENCE_REGEX_VALUE)))))))
+    );
+
     private static final String AUDIENCE_BOOL_ID = "3468206643";
     private static final String AUDIENCE_BOOL_KEY = "BOOL";
     public static final Boolean AUDIENCE_BOOL_VALUE = true;
@@ -225,7 +242,9 @@ public class ValidProjectConfigV4 {
             new AudienceIdCondition(AUDIENCE_BOOL_ID),
             new AudienceIdCondition(AUDIENCE_INT_ID),
             new AudienceIdCondition(AUDIENCE_INT_EXACT_ID),
-            new AudienceIdCondition(AUDIENCE_DOUBLE_ID)));
+            new AudienceIdCondition(AUDIENCE_DOUBLE_ID),
+            new AudienceIdCondition(AUDIENCE_REGEX_ID)
+            ));
 
     // features
     private static final String FEATURE_BOOLEAN_FEATURE_ID = "4195505407";
@@ -1298,6 +1317,8 @@ public class ValidProjectConfigV4 {
         attributes.add(ATTRIBUTE_INTEGER);
         attributes.add(ATTRIBUTE_DOUBLE);
         attributes.add(ATTRIBUTE_EMPTY);
+        attributes.add(ATTRIBUTE_REGEX);
+
 
         // list audiences
         List<Audience> audiences = new ArrayList<Audience>();
@@ -1315,6 +1336,8 @@ public class ValidProjectConfigV4 {
         typedAudiences.add(TYPED_AUDIENCE_SLYTHERIN);
         typedAudiences.add(TYPED_AUDIENCE_ENGLISH_CITIZENS);
         typedAudiences.add(AUDIENCE_WITH_MISSING_VALUE);
+        typedAudiences.add(TYPED_AUDIENCE_REGEX);
+
 
         // list events
         List<EventType> events = new ArrayList<EventType>();

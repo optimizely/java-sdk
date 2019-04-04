@@ -17,6 +17,9 @@
 
 package com.optimizely.ab.internal;
 
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
 public class AttributesUtil {
 
     /**
@@ -35,6 +38,19 @@ public class AttributesUtil {
             return Math.abs((Long) value) <= Math.pow(2, 53);
         }
         return false;
+    }
+
+    public static boolean isValidRegex(Object regex) {
+        if(regex instanceof String) {
+            try {
+                Pattern.compile((String) regex);
+            } catch (PatternSyntaxException exception) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+        return true;
     }
 
 }

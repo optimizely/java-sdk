@@ -181,7 +181,7 @@ public class ExperimentUtilsTest {
 
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Evaluating audiences for experiment \"typed_audience_experiment\": \"[or, 3468206643, 3468206644, 3468206646, 3468206645]\"");
+            "Evaluating audiences for experiment \"typed_audience_experiment\": \"[or, 3468206643, 3468206644, 3468206646, 3468206645, 3468206641]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
             "Starting to evaluate audience BOOL with conditions: \"[and, [or, [or, {name='booleanKey', type='custom_attribute', match='exact', value=true}]]]\"");
         logbackVerifier.expectMessage(Level.INFO,

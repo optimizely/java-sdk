@@ -67,6 +67,11 @@
       "id": "2196265320",
       "name": "audience_with_missing_value",
       "conditions": ["and", ["or", ["or", {"name": "nationality", "type": "custom_attribute", "value": "English"}, {"name": "nationality", "type": "custom_attribute"}]]]
+    },
+    {
+      "id": "3468206641",
+      "name": "REGEX",
+      "conditions": ["and", ["or", ["or", {"name": "regexKey", "type": "custom_attribute", "match":"regex", "value": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$"}]]]
     }
   ],
   "attributes": [
@@ -97,6 +102,10 @@
     {
       "id": "808797686",
       "key": ""
+    },
+    {
+      "id": "3234345462",
+      "key": "regexKey"
     }
   ],
   "events": [
@@ -188,7 +197,7 @@
         }
       ],
       "audienceIds": ["3468206643", "3468206644", "3468206646", "3468206645"],
-      "audienceConditions" : ["or", "3468206643", "3468206644", "3468206646", "3468206645" ],
+      "audienceConditions" : ["or", "3468206643", "3468206644", "3468206646", "3468206645", "3468206641"],
       "forcedVariations": {}
     },
     {
