@@ -23,6 +23,7 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.payload.Visitor;
 import com.optimizely.ab.processor.BatchBlock;
+import com.optimizely.ab.processor.BatchOptions;
 import com.optimizely.ab.processor.Blocks;
 import com.optimizely.ab.processor.TargetBlock;
 import org.junit.After;
@@ -197,8 +198,7 @@ public class EventProcessorTest {
         final AtomicInteger counter = new AtomicInteger(0);
 
         TargetBlock<EventBatch.Builder> target = processor(builder -> builder
-            .batchConfig(BatchBlock.builder()
-                .executor(executor)
+            .batchConfig(BatchOptions.builder()
                 .maxBatchAge(Duration.ofHours(1))
                 .maxBatchSize(10))
             .transformer(e -> {
@@ -241,8 +241,7 @@ public class EventProcessorTest {
 
     @Test
     public void testMergesVisitors() throws Exception {
-        BatchBlock<EventBatch> batchProcessor = Blocks.batch(BatchBlock.builder()
-            .executor(executor)
+        BatchBlock<EventBatch> batchProcessor = Blocks.batch(BatchOptions.builder()
             .maxBatchAge(Duration.ofSeconds(60))
             .maxBatchSize(100)
             .maxBatchInFlight(null));

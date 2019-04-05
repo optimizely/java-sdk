@@ -34,14 +34,14 @@ import java.util.function.UnaryOperator;
  *
  * @param <T> the type of input and output elements
  */
-class UnaryOperatorChain<T> implements UnaryOperator<T>, Iterable<UnaryOperator<T>> {
+class CompositeUnaryOperator<T> implements UnaryOperator<T>, Iterable<UnaryOperator<T>> {
     private final List<UnaryOperator<T>> chain;
 
-    UnaryOperatorChain() {
+    CompositeUnaryOperator() {
         this.chain = new ArrayList<>();
     }
 
-    UnaryOperatorChain(Collection<UnaryOperator<T>> chain) {
+    CompositeUnaryOperator(Collection<UnaryOperator<T>> chain) {
         Assert.notNull(chain, "chain");
         this.chain = new ArrayList<>(chain);
     }

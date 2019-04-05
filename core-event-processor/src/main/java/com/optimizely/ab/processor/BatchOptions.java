@@ -15,10 +15,10 @@
  */
 package com.optimizely.ab.processor;
 
-import javax.annotation.Nonnull;
+import com.optimizely.ab.common.internal.Assert;
+
 import javax.annotation.Nullable;
 import java.time.Duration;
-import java.util.concurrent.Executor;
 
 public interface BatchOptions {
     /**
@@ -46,9 +46,86 @@ public interface BatchOptions {
     boolean shouldFlushOnShutdown();
 
     /**
-     * TODO move out so this is only stateless/scalar options
-     * @return executor that batching tasks will be submitted to.
+     * @return a builder object for {@link BatchOptions}
      */
-    @Nonnull
-    Executor getExecutor();
+    static <T> Builder<T> builder() {
+        return new Builder<>();
+    }
+
+    class Builder<T> implements BatchOptions {
+        static int MAX_BATCH_SIZE_DEFAULT = 10;
+        static Duration MAX_BATCH_OPEN_MS_DEFAULT = Duration.ofMillis(250);
+
+        private Integer maxBatchSize = MAX_BATCH_SIZE_DEFAULT;
+        private Duration maxBatchAge = MAX_BATCH_OPEN_MS_DEFAULT;
+        private Integer maxBatchInFlight = null;
+        private boolean flushOnShutdown = true;
+
+        private Builder() {
+        }
+
+        public Builder<T> from(BatchOptions config) {
+            Assert.notNull(config, "options");
+            this.maxBatchSize = config.getMaxBatchSize();
+            this.maxBatchAge = config.getMaxBatchAge();
+            this.maxBatchInFlight = config.getMaxBatchInFlight();
+            this.flushOnShutdown = config.shouldFlushOnShutdown();
+            return this;
+        }
+
+        public Builder<T> maxBatchSize(@Nullable Integer maxBatchSize) {
+            this.maxBatchSize = maxBatchSize;
+            return this;
+        }
+
+        public Builder<T> maxBatchAge(@Nullable Duration maxBatchAge) {
+            this.maxBatchAge = maxBatchAge;
+            return this;
+        }
+
+        public Builder<T> maxBatchInFlight(@Nullable Integer maxBatchInFlight) {
+            this.maxBatchInFlight = maxBatchInFlight;
+            return this;
+        }
+
+        public Builder<T> flushOnShutdown(boolean flushOnShutdown) {
+            this.flushOnShutdown = flushOnShutdown;
+            return this;
+        }
+
+        @Override
+        public Integer getMaxBatchSize() {
+            return maxBatchSize;
+        }
+
+        @Override
+        public Duration getMaxBatchAge() {
+            return maxBatchAge;
+        }
+
+        @Override
+        public Integer getMaxBatchInFlight() {
+            return maxBatchInFlight;
+        }
+
+        @Override
+        public boolean shouldFlushOnShutdown() {
+            return flushOnShutdown;
+        }
+
+        @Override
+        public String toString() {
+            final StringBuffer sb = new StringBuffer("Builder{");
+            sb.append(", maxBatchSize=").append(maxBatchSize);
+            sb.append(", maxBatchAge=").append(maxBatchAge);
+            sb.append(", maxBatchInFlight=").append(maxBatchInFlight);
+            sb.append(", flushOnShutdown=").append(flushOnShutdown);
+            sb.append('}');
+            return sb.toString();
+        }
+
+        public BatchOptions build() {
+            return this;
+        }
+    }
 }

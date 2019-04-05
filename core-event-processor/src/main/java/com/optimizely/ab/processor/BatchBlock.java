@@ -20,18 +20,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
- * Emits buffers in the form of a {@link Collection}, each which contains a maximum number of elements or when teh
+ * Emits buffers in the form of a {@link Collection}, each which contains a maximum number of elements or when the
  * buffer reaches a maximum age.
  *
  * Buffers are maintained and flushed downstream on a separate, dedicated thread.
@@ -44,7 +45,7 @@ import java.util.function.Supplier;
 public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, T> {
     public static final Logger logger = LoggerFactory.getLogger(BatchBlock.class);
 
-    private final BatchOptions config;
+    private final BatchOptions options;
     private final Executor executor;
     private final Semaphore inFlightPermits;
     private final Supplier<BatchTask<T, ?>> batchTaskFactory;
@@ -59,15 +60,15 @@ public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, 
      */
     private BatchTask<T, ?> currentTask;
 
-    public static <T> Builder<T> builder() {
-        return new Builder<>();
+    BatchBlock(BatchOptions options, ThreadFactory threadFactory) {
+        this(options, Executors.newCachedThreadPool(threadFactory));
     }
 
-    BatchBlock(BatchOptions config) {
-        this.config = Assert.notNull(config, "config");
-        this.executor = Assert.notNull(config.getExecutor(), "executor");
-        this.inFlightPermits = createInFlightSemaphore(config);
-        this.batchTaskFactory = createBatchTaskFactory(config);
+    BatchBlock(BatchOptions options, Executor executor) {
+        this.options = Assert.notNull(options, "options");
+        this.executor = Assert.notNull(executor, "executor");
+        this.inFlightPermits = createInFlightSemaphore(options);
+        this.batchTaskFactory = createBatchTaskFactory(options);
     }
 
     /**
@@ -94,7 +95,7 @@ public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, 
 
     @Override
     public boolean onStop(long timeout, TimeUnit unit) {
-        if (config.shouldFlushOnShutdown()) {
+        if (options.shouldFlushOnShutdown()) {
             try {
                 flush();
             } catch (InterruptedException e) {
@@ -115,7 +116,7 @@ public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, 
             }
 
             logger.debug("Flush started");
-            Integer n = config.getMaxBatchInFlight();
+            Integer n = options.getMaxBatchInFlight();
             if (inFlightPermits != null && n != null) {
                 inFlightPermits.acquire(n);
                 inFlightPermits.release(n);
@@ -124,8 +125,8 @@ public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, 
         }
     }
 
-    public BatchOptions getConfig() {
-        return config;
+    public BatchOptions getOptions() {
+        return options;
     }
 
     protected Supplier<BatchTask<T, ?>> createBatchTaskFactory(BatchOptions config) {
@@ -223,7 +224,6 @@ public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, 
                     inFlightPermits.getQueueLength());
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for in-flight batch permit");
-                Thread.interrupted();
                 Thread.currentThread().interrupt();
                 throw new BlockException(e.getMessage(), e);
             }
@@ -246,96 +246,6 @@ public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, 
                 inFlightPermits.release();
             }
             throw new BlockException("Unable to start batching task", e);
-        }
-    }
-
-    public static class Builder<T> implements BatchOptions {
-        static int MAX_BATCH_SIZE_DEFAULT = 10;
-        static Duration MAX_BATCH_OPEN_MS_DEFAULT = Duration.ofMillis(250);
-
-        private Integer maxBatchSize = MAX_BATCH_SIZE_DEFAULT;
-        private Duration maxBatchAge = MAX_BATCH_OPEN_MS_DEFAULT;
-        private Integer maxBatchInFlight = null;
-        private boolean flushOnShutdown = true;
-        private Executor executor;
-
-        private Builder() {
-        }
-
-        public Builder<T> from(BatchOptions config) {
-            Assert.notNull(config, "config");
-            this.maxBatchSize = config.getMaxBatchSize();
-            this.maxBatchAge = config.getMaxBatchAge();
-            this.maxBatchInFlight = config.getMaxBatchInFlight();
-            this.flushOnShutdown = config.shouldFlushOnShutdown();
-            this.executor = config.getExecutor();
-            return this;
-        }
-
-        public Builder<T> maxBatchSize(@Nullable Integer maxBatchSize) {
-            this.maxBatchSize = maxBatchSize;
-            return this;
-        }
-
-        public Builder<T> maxBatchAge(@Nullable Duration maxBatchAge) {
-            this.maxBatchAge = maxBatchAge;
-            return this;
-        }
-
-        public Builder<T> maxBatchInFlight(@Nullable Integer maxBatchInFlight) {
-            this.maxBatchInFlight = maxBatchInFlight;
-            return this;
-        }
-
-        public Builder<T> flushOnShutdown(boolean flushOnShutdown) {
-            this.flushOnShutdown = flushOnShutdown;
-            return this;
-        }
-
-        public Builder<T> executor(@Nonnull Executor executor) {
-            this.executor = Assert.notNull(executor, "executor");
-            return this;
-        }
-
-        @Override
-        public Integer getMaxBatchSize() {
-            return maxBatchSize;
-        }
-
-        @Override
-        public Duration getMaxBatchAge() {
-            return maxBatchAge;
-        }
-
-        @Override
-        public Integer getMaxBatchInFlight() {
-            return maxBatchInFlight;
-        }
-
-        @Override
-        public boolean shouldFlushOnShutdown() {
-            return flushOnShutdown;
-        }
-
-        @Override
-        public Executor getExecutor() {
-            return executor;
-        }
-
-        @Override
-        public String toString() {
-            final StringBuffer sb = new StringBuffer("Builder{");
-            sb.append(", maxBatchSize=").append(maxBatchSize);
-            sb.append(", maxBatchAge=").append(maxBatchAge);
-            sb.append(", maxBatchInFlight=").append(maxBatchInFlight);
-            sb.append(", flushOnShutdown=").append(flushOnShutdown);
-            sb.append(", executor=").append(executor);
-            sb.append('}');
-            return sb.toString();
-        }
-
-        public BatchBlock<T> build() {
-            return new BatchBlock<>(this);
         }
     }
 }

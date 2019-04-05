@@ -19,6 +19,8 @@ import com.optimizely.ab.common.internal.Assert;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -111,7 +113,15 @@ public final class Blocks {
      * @see BatchBlock
      */
     public static <T> BatchBlock<T> batch(BatchOptions config) {
-        return new BatchBlock<>(config);
+        return new BatchBlock<>(config, Executors.defaultThreadFactory()); // TODO get a shared thread factory for SDK
+    }
+
+    /**
+     * @return an block (async) that batches inputs into collections, bounded by size and/or time
+     * @see BatchBlock
+     */
+    public static <T> BatchBlock<T> batch(BatchOptions config, ThreadFactory threadFactory) {
+        return new BatchBlock<>(config, threadFactory);
     }
 
     /**

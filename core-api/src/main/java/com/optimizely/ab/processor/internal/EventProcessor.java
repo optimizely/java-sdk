@@ -45,24 +45,39 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * Configures and builds the event processing pipeline for dispatching Optimizely
- * events to an {@link EventHandler}.
+ * Builder for a {@link Processor} that receives events produced by Optimizely SDK public interfaces,
+ * namely conversions and impressions, and processes them before being sent to Optimizely ingestion services
+ * via an {@link EventHandler}.
+ *
+ * The processor consists of a series of well-defined stages and this class provides an interface to configure
+ * their parameters and extensions.
  *
  * @param <T> the type of elements fed into the processor
  */
 public class EventProcessor<T> implements PluginSupport {
     private static final Logger logger = LoggerFactory.getLogger(EventProcessor.class);
 
+    /**
+     * Handler that receives output of {@link EventProcessor}
+     */
     private EventHandler eventHandler;
 
+    /**
+     * Handler group that transforming stage.
+     */
     private CompositeConsumer<T> transformers = new CompositeConsumer<>();
 
-    private UnaryOperatorChain<EventBatch> interceptors = new UnaryOperatorChain<>();
+    /**
+     * Handler group for intercepting stage.
+     */
+    private CompositeUnaryOperator<EventBatch> interceptors = new CompositeUnaryOperator<>();
 
+    // converts the generic input into EventBatch objects
     private Function<? super T, ? extends EventBatch> eventBatchConverter;
 
     /**
      * Block that handles event batching.
+     *
      * Receives elements from (application) threads producing into this processor.
      * By default, no buffer is used in order to be consistent with past releases. This may change in the future.
      */
@@ -104,6 +119,11 @@ public class EventProcessor<T> implements PluginSupport {
         );
 
         return new Processor<>(transformProcessor, blocks);
+    }
+
+    public EventProcessor<T> threadFactory(ThreadFactory threadFactory) {
+        this.threadFactory = Assert.notNull(threadFactory, "threadFactory");
+        return this;
     }
 
     public EventProcessor<T> plugin(Plugin<EventProcessor<T>> plugin) {
