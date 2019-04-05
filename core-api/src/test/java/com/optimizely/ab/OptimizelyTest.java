@@ -2732,7 +2732,7 @@ public class OptimizelyTest {
         isListenerCalled = false;
         final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
         String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
-        String expectedValue = "G";
+        String expectedValue = "H";
         String userID = "Gred";
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
@@ -3752,7 +3752,7 @@ public class OptimizelyTest {
      */
     @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     @Test
-    public void getFeatureVariableWithListenerUserInExperimentFeatureOff() {
+    public void getFeatureVariableUserInExperimentFeatureOff() {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
         final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
