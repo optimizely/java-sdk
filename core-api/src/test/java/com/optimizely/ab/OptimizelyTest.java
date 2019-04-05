@@ -4872,4 +4872,46 @@ public class OptimizelyTest {
         );
         return new EventType("8765", "unknown_event_type", experimentIds);
     }
+
+    /* Invalid Experiement */
+    @Test
+    @SuppressFBWarnings("NP")
+    public void setForcedVariationNullExperimentKey() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        assertFalse(optimizely.setForcedVariation(null, "testUser1", "vtag1"));
+    }
+
+    @Test
+    @SuppressFBWarnings("NP")
+    public void getForcedVariationNullExperimentKey() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        assertNull(optimizely.getForcedVariation(null, "testUser1"));
+    }
+
+
+    @Test
+    public void setForcedVariationWrongExperimentKey() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        assertFalse(optimizely.setForcedVariation("wrongKey", "testUser1", "vtag1"));
+
+    }
+
+    @Test
+    public void getForcedVariationWrongExperimentKey() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        assertNull(optimizely.getForcedVariation("wrongKey", "testUser1"));
+    }
+
+    @Test
+    public void setForcedVariationEmptyExperimentKey() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        assertFalse(optimizely.setForcedVariation("", "testUser1", "vtag1"));
+
+    }
+
+    @Test
+    public void getForcedVariationEmptyExperimentKey() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        assertNull(optimizely.getForcedVariation("", "testUser1"));
+    }
 }
