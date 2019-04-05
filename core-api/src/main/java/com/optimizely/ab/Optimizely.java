@@ -745,7 +745,7 @@ public class Optimizely {
 
     /**
      * Gets the forced variation for a given user and experiment.
-     * This method just calls into the {@link ProjectConfig#getForcedVariation(String, String)}
+     * This method just calls into the {@link DecisionService#getForcedVariation(Experiment, String)}
      * method of the same signature.
      *
      * @param experimentKey The key for the experiment.

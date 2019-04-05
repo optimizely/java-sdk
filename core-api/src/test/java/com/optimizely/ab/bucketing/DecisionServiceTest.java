@@ -1064,7 +1064,6 @@ public class DecisionServiceTest {
     @Test
     public void getForcedVariationEmptyUserId() {
         Experiment experiment = validProjectConfig.getExperimentKeyMapping().get("etag1");
-        // why did this change?
         assertNull(decisionService.getForcedVariation(experiment, ""));
     }
 
@@ -1126,8 +1125,6 @@ public class DecisionServiceTest {
 
         assertNull(decisionService.getForcedVariation(experiment2, "testUser1"));
         assertNull(decisionService.getForcedVariation(experiment2, "testUser2"));
-
-
     }
 
     @Test
@@ -1152,9 +1149,9 @@ public class DecisionServiceTest {
 
         assertNull(decisionService.getForcedVariation(experiment1, "testUser1"));
         assertNull(decisionService.getForcedVariation(experiment1, "testUser2"));
+
         assertNull(decisionService.getForcedVariation(experiment2, "testUser1"));
         assertNull(decisionService.getForcedVariation(experiment2, "testUser2"));
-
     }
 
 }
