@@ -28,8 +28,9 @@ import com.lmax.disruptor.dsl.ProducerType;
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.common.lifecycle.LifecycleAware;
 import com.optimizely.ab.common.message.MutableMessage;
-import com.optimizely.ab.processor.Processor;
-import com.optimizely.ab.processor.StageProcessor;
+import com.optimizely.ab.processor.ActorBlock;
+import com.optimizely.ab.processor.SourceBlock;
+import com.optimizely.ab.processor.TargetBlock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,6 @@ import javax.annotation.Nonnull;
 import java.io.Flushable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @param <T> the type of elements to in buffer
  */
-public class DisruptorBuffer<T> extends StageProcessor<T, T> {
+public class DisruptorBuffer<T> extends SourceBlock.Base<T> implements ActorBlock<T, T> {
     private static final Logger logger = LoggerFactory.getLogger(DisruptorBuffer.class);
     static final int MIN_RINGBUFFER_SIZE = 128;
     static final int SLEEP_MILLIS_BETWEEN_DRAIN_ATTEMPTS = 50;
@@ -93,8 +93,8 @@ public class DisruptorBuffer<T> extends StageProcessor<T, T> {
     }
 
     @Override
-    public void configure(Processor<? super T> sink) {
-        super.configure(sink);
+    public Link linkTo(TargetBlock<? super T> target) {
+        final Link link = super.linkTo(target);
 
         int batchMaxSize = config.getBatchMaxSize();
         if (batchMaxSize < 1) {
@@ -102,7 +102,10 @@ public class DisruptorBuffer<T> extends StageProcessor<T, T> {
             batchMaxSize = 1;
         }
 
-        this.batch = new BufferBatch<>(sink, batchMaxSize);
+        // do we need to initialize here vs onStart?
+        this.batch = new BufferBatch<>(target, batchMaxSize);
+
+        return link;
     }
 
     @Override
@@ -157,7 +160,7 @@ public class DisruptorBuffer<T> extends StageProcessor<T, T> {
      * This method is thread-safe; it can be called from any thread.
      */
     @Override
-    public void process(@Nonnull T element) {
+    public void post(@Nonnull T element) {
         Disruptor<MutableMessage<T>> disruptor = this.disruptor;
         if (disruptor == null) {
             logger.warn("Ignoring event (not initialized or has been stopped): {}", element);
@@ -174,7 +177,7 @@ public class DisruptorBuffer<T> extends StageProcessor<T, T> {
     }
 
     @Override
-    public void processBatch(@Nonnull Collection<? extends T> elements) {
+    public void postBatch(@Nonnull Collection<? extends T> elements) {
         Disruptor<MutableMessage<T>> disruptor = this.disruptor;
         if (disruptor == null) {
             logger.warn("Ignoring events. Not initialized or has been stopped");
@@ -200,30 +203,26 @@ public class DisruptorBuffer<T> extends StageProcessor<T, T> {
     }
 
     /**
-     * Mutable batch of elements that flushes to a sink at the specified size limit.
+     * Mutable batch of elements that flushes to a target at the specified size limit.
      * Operations are not thread-safe and should only be
      */
     private static class BufferBatch<E> implements Flushable {
-        private final Processor<? super E> sink;
+        private final TargetBlock<? super E> target;
         private final int limit;
+        private ArrayList<E> elements;
 
-        private List<E> elements;
-
-        private BufferBatch(Processor<? super E> sink, int limit) {
-            this.sink = sink;
+        private BufferBatch(TargetBlock<? super E> target, int limit) {
+            this.target = target;
             this.limit = limit;
         }
 
         public void init(int sizeHint) {
-            Assert.state(elements == null, "elements is non-null");
-            logger.trace("Initializing a buffer for {} elements", sizeHint);
             elements = new ArrayList<>(sizeHint);
         }
 
         public boolean add(E element) {
             if (elements == null) {
-                logger.trace("Starting new batch");
-                elements = new ArrayList<>(limit);
+                init(limit);
             }
 
             if (element == null) {
@@ -248,7 +247,7 @@ public class DisruptorBuffer<T> extends StageProcessor<T, T> {
             }
 
             logger.trace("Flushing {} elements", elements.size());
-            sink.processBatch(elements);
+            target.postBatch(elements);
             elements = null;
         }
 
@@ -293,6 +292,9 @@ public class DisruptorBuffer<T> extends StageProcessor<T, T> {
         public void onBatchStart(long batchSize) {
             logger.trace("Starting to process {} elements in buffer", batchSize);
             try {
+                if (batch.size() != 0) {
+                    logger.warn("Expected batch to be empty in onBatchStart callback (actual size: {})", batch.size());
+                }
                 batch.init(Math.toIntExact(batchSize));
             } catch (ArithmeticException | IllegalStateException e) {
                 // ignore

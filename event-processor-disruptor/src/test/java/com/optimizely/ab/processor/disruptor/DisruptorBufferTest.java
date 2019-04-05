@@ -20,7 +20,7 @@ import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.util.DaemonThreadFactory;
 import com.optimizely.ab.common.lifecycle.LifecycleAware;
-import com.optimizely.ab.processor.Processor;
+import com.optimizely.ab.processor.TargetBlock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,18 +69,20 @@ public class DisruptorBufferTest {
         waitStrategy = new BlockingWaitStrategy();
     }
 
-    private Processor<TestEvent> createDefaultSink() {
-        return new Processor<TestEvent>() {
+    /**
+     * @return a {@link TargetBlock} that collects buffered output
+     */
+    private TargetBlock<TestEvent> outputTarget() {
+        return new TargetBlock<TestEvent>() {
             @Override
-            public void process(@Nonnull TestEvent element) {
+            public void post(@Nonnull TestEvent element) {
                 fail("put() not expected to be called");
             }
 
             @Override
-            public void processBatch(@Nonnull Collection<? extends TestEvent> batch) {
+            public void postBatch(@Nonnull Collection<? extends TestEvent> batch) {
                 //noinspection unchecked
                 output.add((List<TestEvent>) batch);
-
                 outputCount.incrementAndGet();
             }
         };
@@ -108,7 +110,7 @@ public class DisruptorBufferTest {
 
         buffer = new DisruptorBuffer<>(config);
 
-        buffer.configure(createDefaultSink());
+        buffer.linkTo(outputTarget());
 
         buffer.onStart();
     }
@@ -119,7 +121,7 @@ public class DisruptorBufferTest {
         init();
 
         for (int i = 0; i < 12; i++) {
-            buffer.process(TestEvent.next());
+            buffer.post(TestEvent.next());
         }
 
         await().atMost(1, TimeUnit.SECONDS)
@@ -134,7 +136,7 @@ public class DisruptorBufferTest {
         init();
 
         for (int i = 0; i < 12; i++) {
-            buffer.process(TestEvent.next());
+            buffer.post(TestEvent.next());
         }
 
         await().atMost(1, TimeUnit.SECONDS)
@@ -150,7 +152,7 @@ public class DisruptorBufferTest {
         init();
 
         for (int i = 0; i < 12; i++) {
-            buffer.process(TestEvent.next());
+            buffer.post(TestEvent.next());
         }
 
         await().atMost(1, TimeUnit.SECONDS)
@@ -169,7 +171,7 @@ public class DisruptorBufferTest {
         init();
 
         for (int i = 0; i < 12; i++) {
-            buffer.process(TestEvent.next());
+            buffer.post(TestEvent.next());
         }
 
         await().atMost(1, TimeUnit.SECONDS)

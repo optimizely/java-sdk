@@ -22,9 +22,9 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.payload.Visitor;
-import com.optimizely.ab.processor.BatchProcessor;
-import com.optimizely.ab.processor.Processor;
-import com.optimizely.ab.processor.Stage;
+import com.optimizely.ab.processor.BatchBlock;
+import com.optimizely.ab.processor.Blocks;
+import com.optimizely.ab.processor.TargetBlock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -50,6 +50,7 @@ import java.util.stream.Collectors;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
 
 public class EventProcessorTest {
@@ -68,7 +69,7 @@ public class EventProcessorTest {
         executor.shutdownNow();
     }
 
-    private Processor<EventBatch.Builder> processor(Consumer<EventProcessor<EventBatch.Builder>> configure) {
+    private TargetBlock<EventBatch.Builder> processor(Consumer<EventProcessor<EventBatch.Builder>> configure) {
         EventProcessor<EventBatch.Builder> processor = new EventProcessor<>();
 
         // base configuration
@@ -78,34 +79,26 @@ public class EventProcessorTest {
         // per-test configuration
         configure.accept(processor);
 
-        Processor<EventBatch.Builder> inst = processor.build();
+        TargetBlock<EventBatch.Builder> inst = processor.build();
 
         LifecycleAware.start(inst);
 
         return inst;
     }
 
-    private <T> Stage<T, T> bufferStage() {
-        return BatchProcessor.<T>builder()
-            .executor(executor)
-            .maxBatchAge(Duration.ofSeconds(1))
-            .maxBatchSize(10)
-            .maxBatchInFlight(null)
-            .build();
-    }
-
     @Test
     public void testInterceptorFilter() throws Exception {
-        Processor<EventBatch.Builder> stage = processor(builder -> builder
+        TargetBlock<EventBatch.Builder> target = processor(builder -> builder
             .interceptor(event -> event.getAccountId().equals("2")));
 
-        stage.process(eventBatchBuilder().setAccountId("1"));
-        stage.process(eventBatchBuilder().setAccountId("2").addVisitor(visitorBuilder().setVisitorId("1").build()));
-        stage.process(eventBatchBuilder().setAccountId("3"));
-        stage.process(eventBatchBuilder().setAccountId("2").addVisitor(visitorBuilder().setVisitorId("2").build()));
-        stage.process(eventBatchBuilder().setAccountId("1"));
+        target.post(eventBatchBuilder().setAccountId("1"));
+        target.post(eventBatchBuilder().setAccountId("2").addVisitor(visitorBuilder().setVisitorId("1").build()));
+        target.post(eventBatchBuilder().setAccountId("3"));
+        target.post(eventBatchBuilder().setAccountId("2").addVisitor(visitorBuilder().setVisitorId("2").build()));
+        target.post(eventBatchBuilder().setAccountId("1"));
 
-        await().timeout(3, SECONDS).untilAtomic(output.successesCount, equalTo(2));
+        await().untilAtomic(output.successesCount, greaterThanOrEqualTo(2));
+        assertEquals(2, output.successesCount.get());
         assertEquals(0, output.failures.size());
     }
 
@@ -113,7 +106,7 @@ public class EventProcessorTest {
     public void testEventTransformerRuntimeException() throws Exception {
         AtomicInteger count = new AtomicInteger(0);
 
-        Processor<EventBatch.Builder> stage = processor(builder -> builder
+        TargetBlock<EventBatch.Builder> target = processor(builder -> builder
             .transformer(b -> {}) // good actor
             .transformer(b -> {   // bad actor
                 if (count.getAndIncrement() == 1) {
@@ -121,17 +114,17 @@ public class EventProcessorTest {
                 }
             }));
 
-        stage.process(eventBatchBuilder());
+        target.post(eventBatchBuilder());
         assertEquals(1, output.payloads.size());
         assertEquals(1, output.successes.size());
         assertEquals(0, output.failures.size());
 
-        stage.process(eventBatchBuilder()); // throws
+        target.post(eventBatchBuilder()); // throws
         assertEquals(2, output.payloads.size());
         assertEquals(2, output.successes.size());
         assertEquals(0, output.failures.size());
 
-        stage.process(eventBatchBuilder()); // should complete
+        target.post(eventBatchBuilder()); // should complete
         assertEquals(3, output.payloads.size());
         assertEquals(3, output.successes.size());
         assertEquals(0, output.failures.size());
@@ -141,7 +134,7 @@ public class EventProcessorTest {
     public void testEventInterceptorRuntimeException() throws Exception {
         AtomicInteger count = new AtomicInteger(0);
 
-        Processor<EventBatch.Builder> stage = processor(builder -> builder
+        TargetBlock<EventBatch.Builder> target = processor(builder -> builder
             .interceptor(event -> true) // good actor
             .interceptor(event -> {     // bad actor
                 if (count.getAndIncrement() == 1) {
@@ -150,17 +143,17 @@ public class EventProcessorTest {
                 return true;
             }));
 
-        stage.process(eventBatchBuilder());
+        target.post(eventBatchBuilder());
         assertEquals(1, output.payloads.size());
         assertEquals(1, output.successes.size());
         assertEquals(0, output.failures.size());
 
-        stage.process(eventBatchBuilder()); // throws
+        target.post(eventBatchBuilder()); // throws
         assertEquals(2, output.payloads.size());
         assertEquals(2, output.successes.size());
         assertEquals(0, output.failures.size());
 
-        stage.process(eventBatchBuilder()); // should complete
+        target.post(eventBatchBuilder()); // should complete
         assertEquals(3, output.payloads.size());
         assertEquals(3, output.successes.size());
         assertEquals(0, output.failures.size());
@@ -171,7 +164,7 @@ public class EventProcessorTest {
         AtomicInteger count = new AtomicInteger(0);
         AtomicInteger others = new AtomicInteger(0);
 
-        Processor<EventBatch.Builder> stage = processor(builder -> builder
+        TargetBlock<EventBatch.Builder> target = processor(builder -> builder
             .callback(event -> others.incrementAndGet())
             .callback(event -> {
                 if (count.getAndIncrement() == 1) {
@@ -180,19 +173,19 @@ public class EventProcessorTest {
             })
             .callback(event -> others.incrementAndGet()));
 
-        stage.process(eventBatchBuilder());
+        target.post(eventBatchBuilder());
         assertEquals(1, output.payloads.size());
         assertEquals(1, output.successes.size());
         assertEquals(0, output.failures.size());
         assertEquals(2, others.get());
 
-        stage.process(eventBatchBuilder()); // throws
+        target.post(eventBatchBuilder()); // throws
         assertEquals(2, output.payloads.size()); // event still goes out
         assertEquals(2, output.successes.size());
         assertEquals(0, output.failures.size());
         assertEquals(4, others.get());
 
-        stage.process(eventBatchBuilder()); // should complete
+        target.post(eventBatchBuilder()); // should complete
         assertEquals(3, output.payloads.size());
         assertEquals(3, output.successes.size());
         assertEquals(0, output.failures.size());
@@ -203,8 +196,8 @@ public class EventProcessorTest {
     public void testBatchesByEventContext() throws Exception {
         final AtomicInteger counter = new AtomicInteger(0);
 
-        Processor<EventBatch.Builder> stage = processor(builder -> builder
-            .bufferStage(BatchProcessor.builder()
+        TargetBlock<EventBatch.Builder> target = processor(builder -> builder
+            .batchConfig(BatchBlock.builder()
                 .executor(executor)
                 .maxBatchAge(Duration.ofHours(1))
                 .maxBatchSize(10))
@@ -234,7 +227,7 @@ public class EventProcessorTest {
             }));
 
         for (int i = 0; i < 10; i++) {
-            stage.process(eventBatchBuilder()
+            target.post(eventBatchBuilder()
                 .addVisitor(visitorBuilder().setVisitorId(String.valueOf(i)).build()));
             logger.info("Added visitor {}", i);
         }
@@ -248,27 +241,26 @@ public class EventProcessorTest {
 
     @Test
     public void testMergesVisitors() throws Exception {
-        BatchProcessor<EventBatch> batchProcessor = BatchProcessor.<EventBatch>builder()
+        BatchBlock<EventBatch> batchProcessor = Blocks.batch(BatchBlock.builder()
             .executor(executor)
             .maxBatchAge(Duration.ofSeconds(60))
             .maxBatchSize(100)
-            .maxBatchInFlight(null)
-            .build();
+            .maxBatchInFlight(null));
 
-        Processor<EventBatch.Builder> stage = processor(builder -> builder
+        TargetBlock<EventBatch.Builder> target = processor(builder -> builder
             .eventFactory(TestLogEvent::new)
-            .bufferStage(batchProcessor));
+            .batchBlock(batchProcessor));
 
         // buffer items
-        stage.process(eventBatchBuilder()
+        target.post(eventBatchBuilder()
             .addVisitor(visitorBuilder()
                 .setVisitorId("1").build()));
-        stage.process(eventBatchBuilder()
+        target.post(eventBatchBuilder()
             .addVisitor(visitorBuilder()
                 .setVisitorId("2").build())
             .addVisitor(visitorBuilder()
                 .setVisitorId("3").build()));
-        stage.process(eventBatchBuilder()
+        target.post(eventBatchBuilder()
             .addVisitor(visitorBuilder()
                 .setVisitorId("1").build()));
 
@@ -295,7 +287,7 @@ public class EventProcessorTest {
     public void scratch() throws Exception {
         final AtomicInteger counter = new AtomicInteger(0);
 
-        Processor<EventBatch.Builder> stage = processor(builder -> builder
+        TargetBlock<EventBatch.Builder> target = processor(builder -> builder
             .transformer(b -> {
                 b.setAccountId("test");
             })
@@ -305,11 +297,11 @@ public class EventProcessorTest {
                     .build());
             }));
 
-        stage.process(eventBatchBuilder());
+        target.post(eventBatchBuilder());
 
-        stage.process(eventBatchBuilder());
+        target.post(eventBatchBuilder());
 
-        stage.process(eventBatchBuilder());
+        target.post(eventBatchBuilder());
 
         assertEquals(2, output.payloads.size());
         assertEquals(3, output.successes.size());

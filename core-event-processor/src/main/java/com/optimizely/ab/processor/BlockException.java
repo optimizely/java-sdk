@@ -15,8 +15,19 @@
  */
 package com.optimizely.ab.processor;
 
-import static org.junit.Assert.*;
+/**
+ * Superclass to exceptions that can be thrown
+ */
+public class BlockException extends RuntimeException {
+    public BlockException(Throwable cause) {
+        super(cause);
+    }
 
-public class AsyncProcessorTest {
+    public BlockException(String message) {
+        super(message);
+    }
 
+    public BlockException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

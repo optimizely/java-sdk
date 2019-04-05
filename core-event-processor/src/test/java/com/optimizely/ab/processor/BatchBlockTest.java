@@ -52,8 +52,8 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.Assert.fail;
 
-public class BatchProcessorTest {
-    public static final Logger logger = LoggerFactory.getLogger(BatchProcessorTest.class);
+public class BatchBlockTest {
+    public static final Logger logger = LoggerFactory.getLogger(BatchBlockTest.class);
 
     private ExecutorService executor;
     private List<Collection<Object>> batches;
@@ -73,15 +73,15 @@ public class BatchProcessorTest {
 
     @Test
     public void testProcess_maxBatchSize1() throws Exception {
-        BatchProcessor<Object> buffer = batchingQueue(config -> config
+        BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(1)
             .maxBatchAge(Duration.ofDays(1))); // wont reach timeout
 
-        buffer.process("one");
+        buffer.post("one");
         assertBatchCount(1, buffer);
-        buffer.process("two");
+        buffer.post("two");
         assertBatchCount(2, buffer);
-        buffer.process("three");
+        buffer.post("three");
         assertBatchCount(3, buffer);
         assertThat(batches.get(0), equalTo(newArrayList("one")));
         assertThat(batches.get(1), equalTo(newArrayList("two")));
@@ -90,15 +90,15 @@ public class BatchProcessorTest {
 
     @Test
     public void testProcess_maxBatchSize2() throws Exception {
-        BatchProcessor<Object> buffer = batchingQueue(config -> config
+        BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(2)
             .maxBatchAge(Duration.ofDays(1))); // wont reach timeout
 
-        buffer.process("one");
-        buffer.process("two");
+        buffer.post("one");
+        buffer.post("two");
         assertBatchCount(1, buffer);
-        buffer.process("three");
-        buffer.process("four");
+        buffer.post("three");
+        buffer.post("four");
         assertBatchCount(2, buffer);
         assertThat(batches.get(0), equalTo(newArrayList("one", "two")));
         assertThat(batches.get(1), equalTo(newArrayList("three", "four")));
@@ -106,16 +106,16 @@ public class BatchProcessorTest {
 
     @Test
     public void testProcess_timeout() throws Exception {
-        BatchProcessor<Object> buffer = batchingQueue(config -> config
+        BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(10)
             .maxBatchAge(Duration.ofMillis(500)));
 
-        buffer.process(0);
+        buffer.post(0);
         assertBatchCount(1, buffer);
         assertThat(batches.get(0), equalTo(newArrayList(0)));
 
         for (int i = 1; i <= 10; i++) {
-            buffer.process(i);
+            buffer.post(i);
         }
         assertBatchCount(2, buffer);
         assertThat(batches.get(1), equalTo(newArrayList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)));
@@ -123,11 +123,11 @@ public class BatchProcessorTest {
 
     @Test
     public void testProcessBatch_maxBatchSize1() {
-        BatchProcessor<Object> buffer = batchingQueue(config -> config
+        BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(1)
             .maxBatchAge(Duration.ofDays(1))); // wont reach timeout
 
-        buffer.processBatch(Lists.newArrayList("one", "two", "three"));
+        buffer.postBatch(Lists.newArrayList("one", "two", "three"));
         assertBatchCount(3, buffer);
         assertThat(batches.get(0), equalTo(newArrayList("one")));
         assertThat(batches.get(1), equalTo(newArrayList("two")));
@@ -136,11 +136,11 @@ public class BatchProcessorTest {
 
     @Test
     public void testProcessBatch_maxBatchSize2() {
-        BatchProcessor<Object> buffer = batchingQueue(config -> config
+        BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(2)
             .maxBatchAge(Duration.ofDays(1))); // wont reach timeout
 
-        buffer.processBatch(Lists.newArrayList("one", "two", "three", "four"));
+        buffer.postBatch(Lists.newArrayList("one", "two", "three", "four"));
         assertBatchCount(2, buffer);
         assertThat(batches.get(0), equalTo(newArrayList("one", "two")));
         assertThat(batches.get(1), equalTo(newArrayList("three", "four")));
@@ -148,11 +148,11 @@ public class BatchProcessorTest {
 
     @Test
     public void testProcessBatch_timeout() {
-        BatchProcessor<Object> buffer = batchingQueue(config -> config
+        BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(2)
             .maxBatchAge(Duration.ofMillis(500)));
 
-        buffer.processBatch(Lists.newArrayList("one", "two", "three"));
+        buffer.postBatch(Lists.newArrayList("one", "two", "three"));
         assertBatchCount(2, buffer);
         assertThat(batches.get(0), equalTo(newArrayList("one", "two")));
         assertThat(batches.get(1), equalTo(newArrayList("three")));
@@ -161,12 +161,12 @@ public class BatchProcessorTest {
     @Test
     public void testFlushingOpenBatch() throws Exception {
         // flush before bounds are reached
-        BatchProcessor<Object> buffer = batchingQueue(config -> config
+        BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(100)
             .maxBatchAge(Duration.ofHours(1)));
 
         for (int i = 0; i < 10; i++) {
-            buffer.process(i);
+            buffer.post(i);
         }
 
         buffer.flush();
@@ -181,14 +181,14 @@ public class BatchProcessorTest {
 
     @Test
     public void testDeadlineZero() throws Exception {
-        BatchProcessor<Object> buffer = batchingQueue(config -> config
+        BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchAge(Duration.ZERO));
 
-        buffer.process("one");
+        buffer.post("one");
         assertBatchCount(0, buffer);
-        buffer.process("two");
+        buffer.post("two");
         assertBatchCount(0, buffer);
-        buffer.process("three");
+        buffer.post("three");
         assertBatchCount(0, buffer);
         buffer.flush();
         assertBatchCount(1, buffer);
@@ -197,11 +197,11 @@ public class BatchProcessorTest {
 
     @Test
     public void testFlushOnShutdown_true() throws Exception {
-        BatchProcessor<Object> buffer = batchingQueue(config -> config
+        BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchAge(null)
             .flushOnShutdown(true));
 
-        buffer.process("one");
+        buffer.post("one");
         Thread.sleep(250L);
         assertThat(batchCount.get(), equalTo(0));
         buffer.onStop(1, SECONDS);
@@ -210,11 +210,11 @@ public class BatchProcessorTest {
 
     @Test
     public void testFlushOnShutdown_false() throws Exception {
-        BatchProcessor<Object> buffer = batchingQueue(config -> config
+        BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchAge(null)
             .flushOnShutdown(false));
 
-        buffer.process("one");
+        buffer.post("one");
         Thread.sleep(250L);
         assertThat(batchCount.get(), equalTo(0));
         buffer.onStop(1, SECONDS);
@@ -238,7 +238,7 @@ public class BatchProcessorTest {
             .build());
         InstrumentedExecutorService executor = new InstrumentedExecutorService(this.executor);
         try {
-            BatchProcessor<Object> buffer = batchingQueue(config -> config
+            BatchBlock<Object> buffer = batchingQueue(config -> config
                     .maxBatchSize(maxBatchSize)
                     .maxBatchAge(Duration.ofDays(1)) // wont reach timeout
                     .maxBatchInFlight(maxInflight)
@@ -253,7 +253,7 @@ public class BatchProcessorTest {
                     CompletableFuture.runAsync(() -> {
                         for (int i = 0; i < maxBatchSize; i++) {
                             String element = String.format("%s-%s", n, i);
-                            buffer.process(element);
+                            buffer.post(element);
                             logger.debug("processed {}", element);
                             expected.add(element);
                             try {
@@ -296,33 +296,33 @@ public class BatchProcessorTest {
         };
     }
 
-    private BatchProcessor.Builder batchingQueueConfig() {
-        return BatchProcessor.builder().executor(executor);
+    private BatchBlock.Builder batchingQueueConfig() {
+        return BatchBlock.builder().executor(executor);
     }
 
-    private BatchProcessor<Object> batchingQueue(Consumer<BatchProcessor.Builder> configure) {
+    private BatchBlock<Object> batchingQueue(Consumer<BatchBlock.Builder> configure) {
         return batchingQueue(configure, this::recordBatch);
     }
 
-    private BatchProcessor<Object> batchingQueue(
-        Consumer<BatchProcessor.Builder> configure,
+    private BatchBlock<Object> batchingQueue(
+        Consumer<BatchBlock.Builder> configure,
         Consumer<Collection<Object>> consumer
     ) {
-        BatchProcessor.Builder config = batchingQueueConfig();
+        BatchBlock.Builder config = batchingQueueConfig();
 
         // per-test config
         configure.accept(config);
 
-        BatchProcessor<Object> processor = new BatchProcessor<>(config);
-        processor.configure(new Processor<Object>() {
+        BatchBlock<Object> processor = Blocks.batch(config);
+        processor.linkTo(new TargetBlock<Object>() {
             @Override
-            public void process(@Nonnull Object element) {
+            public void post(@Nonnull Object element) {
                 fail("Not expecting process to be invoked");
             }
 
             @SuppressWarnings("unchecked")
             @Override
-            public void processBatch(@Nonnull Collection<?> elements) {
+            public void postBatch(@Nonnull Collection<?> elements) {
                 consumer.accept((Collection<Object>) elements);
             }
         });
@@ -338,7 +338,7 @@ public class BatchProcessorTest {
     }
 
     // waits for the configured max age
-    private void assertBatchCount(int n, BatchProcessor processor) {
+    private void assertBatchCount(int n, BatchBlock processor) {
         long millis = Optional.ofNullable(processor.getConfig().getMaxBatchAge())
             .map(maxAge -> maxAge.plus(Duration.ofMillis(250)))
             .orElse(Duration.ofSeconds(1))

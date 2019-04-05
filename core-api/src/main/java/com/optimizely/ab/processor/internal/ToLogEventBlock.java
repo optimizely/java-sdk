@@ -20,8 +20,11 @@ import com.optimizely.ab.common.callback.Callback;
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.processor.Processor;
-import com.optimizely.ab.processor.StageProcessor;
+import com.optimizely.ab.processor.ActorBlock;
+import com.optimizely.ab.processor.SourceBlock;
+import com.optimizely.ab.processor.TargetBlock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -32,34 +35,49 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Converts one or more {@link EventBatch} into {@link LogEvent}.
+ * A group {@link LogEvent} from {@link EventBatch} objects/collections.
  *
- * Inputs are grouped prior to merging when multiple events are sent using {@link Processor#processBatch(Collection)}
+ * Inputs are grouped prior to merging when multiple events are sent using {@link TargetBlock#postBatch(Collection)}
  * to avoid {@link EventContext} collisions.
  *
  * @see EventContextKey
  */
-class ToLogEventStage extends StageProcessor<EventBatch, LogEvent> {
-    private final Function<EventBatch, LogEvent> eventFactory;
-    private final Supplier<Callback<EventBatch>> callbackSupplier;
+class ToLogEventBlock extends SourceBlock.Base<LogEvent> implements ActorBlock<EventBatch, LogEvent> {
+    private static final Logger logger = LoggerFactory.getLogger(ToLogEventBlock.class);
 
-    ToLogEventStage(
-        Function<EventBatch, LogEvent> eventFactory,
-        Supplier<Callback<EventBatch>> callbackSupplier
+    private final Function<EventBatch, LogEvent> logEventFactory;
+    private final Supplier<Callback<EventBatch>> callbackProvider;
+
+    /**
+     * @param logEventFactory converts a {@link EventBatch} into {@link LogEvent}
+     * @param callbackProvider optional completion callback provider for individual
+     */
+    ToLogEventBlock(
+        Function<EventBatch, LogEvent> logEventFactory,
+        Supplier<Callback<EventBatch>> callbackProvider
     ) {
-        this.eventFactory = Assert.notNull(eventFactory, "eventFactory");
-        this.callbackSupplier = Assert.notNull(callbackSupplier, "callbackSupplier");
+        this.logEventFactory = Assert.notNull(logEventFactory, "logEventFactory");
+        this.callbackProvider = callbackProvider;
     }
 
+    // simple 1:1 conversion
     @Override
-    public void process(EventBatch element) {
-        LogEvent logEvent = eventFactory.apply(element);
-        logEvent.setCallback(callbackSupplier.get());
-        getSink().process(logEvent);
+    public void post(@Nonnull EventBatch element) {
+        LogEvent logEvent = logEventFactory.apply(element);
+
+        if (callbackProvider != null) {
+            logEvent.setCallback(callbackProvider.get());
+        }
+
+        target().post(logEvent);
     }
 
+    /**
+     *
+     * @param items
+     */
     @Override
-    public void processBatch(Collection<? extends EventBatch> items) {
+    public void postBatch(@Nonnull Collection<? extends EventBatch> items) {
         Map<EventContextKey, Collection<EventBatch>> grouping = new HashMap<>();
         for (EventBatch msg : items) {
             EventContextKey key = EventContextKey.create(msg);
@@ -77,12 +95,14 @@ class ToLogEventStage extends StageProcessor<EventBatch, LogEvent> {
                 eventBatch.addVisitors(single.getVisitors());
             }
 
-            LogEvent logEvent = eventFactory.apply(eventBatch.build());
+            LogEvent logEvent = logEventFactory.apply(eventBatch.build());
 
-            // callback is expected to be called with the original elements of combined batch.
-            logEvent.setCallback(createFanoutCallback(callbackSupplier.get(), group));
+            if (callbackProvider != null) {
+                // callback is expected to be called with the original elements of combined batch.
+                logEvent.setCallback(createFanoutCallback(callbackProvider.get(), group));
+            }
 
-            getSink().process(logEvent);
+            target().post(logEvent);
         }
     }
 
@@ -106,5 +126,4 @@ class ToLogEventStage extends StageProcessor<EventBatch, LogEvent> {
             }
         };
     }
-
 }

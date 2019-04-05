@@ -13,48 +13,47 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.processor.util;
+package com.optimizely.ab.processor;
 
-import com.optimizely.ab.processor.CollectorSink;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-public class CollectorSinkTest {
+public class CollectBlockTest {
     @Test
     public void toListCollector() {
-        CollectorSink<String, ?, List<String>> sink = new CollectorSink<>(Collectors.toList());
+        TerminalBlock<String, List<String>> sink = Blocks.collect(toList());
         assertThat(sink.get(), empty());
 
-        sink.process("a");
-        sink.processBatch(Arrays.asList("b", "c"));
+        sink.post("a");
+        sink.postBatch(Arrays.asList("b", "c"));
 
         assertThat(sink.get(), contains("a", "b", "c"));
 
-        sink.process("d");
+        sink.post("d");
         assertThat(sink.get(), contains("a", "b", "c", "d"));
 
-        sink.clear();
+        sink.reset();
         assertThat(sink.get(), empty());
     }
 
     @Test
     public void toSetCollector() {
-        CollectorSink<String, ?, Map<String, Integer>> sink = new CollectorSink<>(
-            Collectors.toMap(s -> s, String::length));
+        TerminalBlock<String, Map<String, Integer>> sink = Blocks.collect(toMap(s -> s, String::length));
 
         assertThat(sink.get(), equalTo(Collections.emptyMap()));
 
-        sink.process("a");
-        sink.process("bb");
-        sink.process("ccc");
+        sink.post("a");
+        sink.post("bb");
+        sink.post("ccc");
 
         assertThat(sink.get(), allOf(
             hasEntry("a", 1),
@@ -62,7 +61,7 @@ public class CollectorSinkTest {
             hasEntry("ccc", 3)
         ));
 
-        sink.process("");
+        sink.post("");
 
         assertThat(sink.get(), allOf(
             hasEntry("", 0),
@@ -71,7 +70,7 @@ public class CollectorSinkTest {
             hasEntry("ccc", 3)
         ));
 
-        sink.clear();
+        sink.reset();
         assertThat(sink.get(), equalTo(Collections.emptyMap()));
     }
 }

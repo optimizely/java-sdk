@@ -19,6 +19,9 @@ import com.optimizely.ab.common.internal.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -27,37 +30,46 @@ import java.util.function.Consumer;
  *
  * @param <T> the type of input element
  */
-class CompositeConsumer<T> implements Consumer<T> {
+class CompositeConsumer<T> implements Consumer<T>, Iterable<Consumer<? super T>> {
     private static final Logger logger = LoggerFactory.getLogger(CompositeConsumer.class);
 
     private final List<Consumer<? super T>> consumers;
 
-    CompositeConsumer(List<Consumer<? super T>> consumers) {
-        this.consumers = Assert.notNull(consumers, "consumers");
+    CompositeConsumer() {
+        this.consumers = new ArrayList<>();
+    }
+
+    CompositeConsumer(Collection<Consumer<? super T>> consumers) {
+        Assert.notNull(consumers, "consumers");
+        this.consumers = new ArrayList<>(consumers);
     }
 
     @Override
     public final void accept(T input) {
-        beforeAccept(input);
         for (final Consumer<? super T> consumer : consumers) {
-            try {
-                consumer.accept(input);
-            } catch (RuntimeException e) {
-                handleError(consumer, e);
-            }
+            consumer.accept(input);
         }
-        afterAccept(input);
     }
 
-    protected void beforeAccept(T input) {
-        // overrideable
+    @Override
+    public Iterator<Consumer<? super T>> iterator() {
+        return consumers.iterator();
     }
 
-    protected void afterAccept(T input) {
-        // overridable
+    public boolean isEmpty() {
+        return consumers.isEmpty();
+    }
+
+    public int size() {
+        return consumers.size();
     }
 
     protected void handleError(Consumer<? super T> consumer, RuntimeException e) {
         logger.warn("Exception thrown by {}", consumer, e);
+    }
+
+    void add(Consumer<? super T> consumer) {
+        consumers.add(Assert.notNull(consumer, "consumer"));
+
     }
 }

@@ -41,42 +41,10 @@ import java.util.function.Supplier;
  * @param <T> the type of input elements and output element batches
  * @see BatchTask
  */
-public class BatchProcessor<T> extends StageProcessor<T, T> { // TODO look into being more DRY with AsyncProcessor/QueueProcessor
-    public static final Logger logger = LoggerFactory.getLogger(BatchProcessor.class);
+public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, T> { // TODO look into being more DRY with AsyncProcessor/QueueProcessor
+    public static final Logger logger = LoggerFactory.getLogger(BatchBlock.class);
 
-    public interface Config {
-        /**
-         * @return a positive number the buffer size that triggers flush, otherwise null if size should not be enforced
-         */
-        @Nullable
-        Integer getMaxBatchSize();
-
-        /**
-         * @return a positive duration for buffer age that triggers flush, otherwise null if age should not be enforced.
-         */
-        @Nullable
-        Duration getMaxBatchAge();
-
-        /**
-         * Limits the number of in-flight batches (threads) In-flight batches can accumulate when batches are produced
-         * faster than they can be flushed to sink.
-         */
-        @Nullable
-        Integer getMaxBatchInFlight();
-
-        /**
-         * @return true if buffer should flush when shutdown is requested
-         */
-        boolean shouldFlushOnShutdown();
-
-        /**
-         * @return executor that batching tasks will be submitted to.
-         */
-        @Nonnull
-        Executor getExecutor();
-    }
-
-    private final Config config;
+    private final BatchOptions config;
     private final Executor executor;
     private final Semaphore inFlightPermits;
     private final Supplier<BatchTask<T, ?>> batchTaskFactory;
@@ -89,13 +57,13 @@ public class BatchProcessor<T> extends StageProcessor<T, T> { // TODO look into 
     /**
      * Task that holds & flushes the buffer for latest batch
      */
-    private BatchTask<T, ?> batchTask;
+    private BatchTask<T, ?> currentTask;
 
     public static <T> Builder<T> builder() {
         return new Builder<>();
     }
 
-    public BatchProcessor(Config config) {
+    BatchBlock(BatchOptions config) {
         this.config = Assert.notNull(config, "config");
         this.executor = Assert.notNull(config.getExecutor(), "executor");
         this.inFlightPermits = createInFlightSemaphore(config);
@@ -106,7 +74,7 @@ public class BatchProcessor<T> extends StageProcessor<T, T> { // TODO look into 
      * @param element the element to push
      */
     @Override
-    public void process(@Nonnull T element) {
+    public void post(@Nonnull T element) {
         synchronized (mutex) {
             collect(element);
         }
@@ -116,7 +84,7 @@ public class BatchProcessor<T> extends StageProcessor<T, T> { // TODO look into 
      * @param elements the elements to put
      */
     @Override
-    public void processBatch(@Nonnull Collection<? extends T> elements) {
+    public void postBatch(@Nonnull Collection<? extends T> elements) {
         synchronized (mutex) {
             for (T element : elements) {
                 collect(element);
@@ -142,8 +110,8 @@ public class BatchProcessor<T> extends StageProcessor<T, T> { // TODO look into 
     public void flush() throws InterruptedException {
         synchronized (mutex) {
             // prevent new batches from being started
-            if (batchTask != null) {
-                batchTask.close();
+            if (currentTask != null) {
+                currentTask.close();
             }
 
             logger.debug("Flush started");
@@ -156,11 +124,11 @@ public class BatchProcessor<T> extends StageProcessor<T, T> { // TODO look into 
         }
     }
 
-    public Config getConfig() {
+    public BatchOptions getConfig() {
         return config;
     }
 
-    protected Supplier<BatchTask<T, ?>> createBatchTaskFactory(Config config) {
+    protected Supplier<BatchTask<T, ?>> createBatchTaskFactory(BatchOptions config) {
         int maxSize = normalizeMaxBatchSize(config);
         Duration maxAge = normalizeMaxBatchAge(config);
 
@@ -174,7 +142,7 @@ public class BatchProcessor<T> extends StageProcessor<T, T> { // TODO look into 
     /**
      * @return a positive integer if max size is configured, otherwise returns zero.
      */
-    protected static int normalizeMaxBatchSize(Config config) {
+    protected static int normalizeMaxBatchSize(BatchOptions config) {
         Integer maxBatchSize = config.getMaxBatchSize();
         if (maxBatchSize == null || maxBatchSize <= 0) {
             return 0;
@@ -185,7 +153,7 @@ public class BatchProcessor<T> extends StageProcessor<T, T> { // TODO look into 
     /**
      * @return a {@link Duration} if max age is configured, otherwise {@code null}.
      */
-    protected static Duration normalizeMaxBatchAge(Config config) {
+    protected static Duration normalizeMaxBatchAge(BatchOptions config) {
         Duration maxBatchAge = config.getMaxBatchAge();
         if (maxBatchAge == null || maxBatchAge.isNegative()) {
             return Duration.ZERO;
@@ -194,51 +162,56 @@ public class BatchProcessor<T> extends StageProcessor<T, T> { // TODO look into 
     }
 
 
-    protected Semaphore createInFlightSemaphore(Config config) {
+    protected Semaphore createInFlightSemaphore(BatchOptions config) {
         Integer n = config.getMaxBatchInFlight();
         return (n != null) ? new Semaphore(n) : null;
     }
 
-    protected void onBufferClose(Collection<T> elements) {
-        if (elements == null || elements.isEmpty()) {
-            logger.debug("Batch completed with empty buffer");
+    /**
+     * Callback that consumes elements from a closed {@link BatchTask}
+     */
+    protected void onBufferClose(Collection<? extends T> batch) {
+        if (batch == null || batch.isEmpty()) {
+            logger.debug("Batch completed without any elements"); // i.e. forced
             return;
         }
 
-        logger.debug("Batch completed with {} elements: {}", elements.size(), elements);
-        emitBatch(elements);
-    }
+        logger.debug("Batch completed with {} elements: {}", batch.size(), batch);
 
-    // assumes lock is being held
+        target().postBatch(batch);
+    }
 
     /**
-     * This can only happen if element itself is flawed and cannot be added to batch (even a new one), so we must drop it.
-     * Can be overridden for different behavior.
+     * Inserts the specified element into a batch, initializing a new batch if current
+     * batch does not exist or does not accept it (max age/size), and blocking if
+     * necessary to acquire in-flight batch permit.
+     *
+     * Assumes mutex for {@link #currentTask} is being held by caller.
      */
-    protected void onElementDiscarded(T element) {
-        logger.warn("Discarding element rejected by buffer", element);
-    }
-
-    private void collect(T element) {
+    protected void collect(T element) {
         // try to add to current buffer
-        if (batchTask == null || !batchTask.offer(element)) {
-            // otherwise, start a new buffer
-            BatchTask<T, ?> next = batchTaskFactory.get();
+        if (currentTask == null || !currentTask.offer(element)) {
+            // otherwise, start new one
+            BatchTask<T, ?> successorTask = batchTaskFactory.get();
 
-            if (!next.offer(element)) {
-                onElementDiscarded(element);
+            if (!successorTask.offer(element)) {
+                // This can only happen if element itself is flawed and cannot be added
+                // to batch (even a new one), so we must drop it.
+                logger.warn("Discarding {} rejected by {}", element, successorTask);
+                // could potentially return here; currently utilizes successorTask
             }
 
-            execute(next);
+            currentTask = successorTask;
 
-            batchTask = next;
+            // TODO consider executing (acquiring in-flight permit) after releasing task mutex
+            executeBatch(successorTask);
         }
     }
 
     /**
      * Submits task to executor when permitted by the configured number of in-flight batches.
      */
-    protected void execute(final BatchTask<T, ?> task) {
+    protected void executeBatch(final BatchTask<T, ?> task) {
         Runnable runnable = task;
 
         if (inFlightPermits != null) {
@@ -250,8 +223,9 @@ public class BatchProcessor<T> extends StageProcessor<T, T> { // TODO look into 
                     inFlightPermits.getQueueLength());
             } catch (InterruptedException e) {
                 logger.debug("Interrupted while waiting for in-flight batch permit");
+                Thread.interrupted();
                 Thread.currentThread().interrupt();
-                throw new ProcessingException(e.getMessage(), e);
+                throw new BlockException(e.getMessage(), e);
             }
 
             // release permit when run complete
@@ -271,11 +245,11 @@ public class BatchProcessor<T> extends StageProcessor<T, T> { // TODO look into 
             if (inFlightPermits != null) {
                 inFlightPermits.release();
             }
-            throw new ProcessingException("Unable to start batching task", e);
+            throw new BlockException("Unable to start batching task", e);
         }
     }
 
-    public static class Builder<T> implements Config {
+    public static class Builder<T> implements BatchOptions {
         static int MAX_BATCH_SIZE_DEFAULT = 10;
         static Duration MAX_BATCH_OPEN_MS_DEFAULT = Duration.ofMillis(250);
 
@@ -288,7 +262,7 @@ public class BatchProcessor<T> extends StageProcessor<T, T> { // TODO look into 
         private Builder() {
         }
 
-        public Builder<T> from(Config config) {
+        public Builder<T> from(BatchOptions config) {
             Assert.notNull(config, "config");
             this.maxBatchSize = config.getMaxBatchSize();
             this.maxBatchAge = config.getMaxBatchAge();
@@ -360,8 +334,8 @@ public class BatchProcessor<T> extends StageProcessor<T, T> { // TODO look into 
             return sb.toString();
         }
 
-        public BatchProcessor<T> build() {
-            return new BatchProcessor<>(this);
+        public BatchBlock<T> build() {
+            return new BatchBlock<>(this);
         }
     }
 }
