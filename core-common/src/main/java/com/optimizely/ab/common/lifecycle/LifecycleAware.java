@@ -19,13 +19,17 @@ import java.util.concurrent.TimeUnit;
 
 public interface LifecycleAware {
     /**
-     * Called once when component starts
+     * Called once when component starts.
      */
     void onStart();
 
     /**
-     * Blocks until all tasks have completed execution after a shutdown request, or the timeout occurs, or the current
-     * thread is interrupted, whichever happens first.
+     * Called once when component stops.
+     *
+     * Blocks execution until all tasks have completed execution after a shutdown request, or the
+     * timeout occurs, or the current thread is interrupted, whichever happens first.
+     *
+     * TODO remove timeout arguments and return value
      *
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
