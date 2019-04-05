@@ -189,8 +189,6 @@ public class OptimizelyTest {
         when(mockBucketer.bucket(activatedExperiment, bucketingId, validProjectConfig))
             .thenReturn(bucketedVariation);
 
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("No variation for experiment \"%s\" mapped to user \"%s\" in the forced variation map", activatedExperiment.getKey(), testUserId));
-
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
         logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
@@ -247,8 +245,6 @@ public class OptimizelyTest {
 
         when(mockBucketer.bucket(activatedExperiment, bucketingId, validProjectConfig))
             .thenReturn(bucketedVariation);
-
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("No variation for experiment \"%s\" mapped to user \"%s\" in the forced variation map", activatedExperiment.getKey(), testUserId));
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
@@ -399,8 +395,6 @@ public class OptimizelyTest {
         when(mockBucketer.bucket(activatedExperiment, bucketingId, validProjectConfig))
             .thenReturn(bucketedVariation);
 
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("No variation for experiment \"%s\" mapped to user \"%s\" in the forced variation map", activatedExperiment.getKey(), testUserId));
-
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
         logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
@@ -457,8 +451,6 @@ public class OptimizelyTest {
 
         when(mockBucketer.bucket(activatedExperiment, bucketingId, validProjectConfig))
             .thenReturn(bucketedVariation);
-
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("No variation for experiment \"%s\" mapped to user \"%s\" in the forced variation map", activatedExperiment.getKey(), testUserId));
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
@@ -565,8 +557,6 @@ public class OptimizelyTest {
 
         when(mockBucketer.bucket(activatedExperiment, bucketingId, validProjectConfig))
             .thenReturn(bucketedVariation);
-
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("No variation for experiment \"%s\" mapped to user \"%s\" in the forced variation map", activatedExperiment.getKey(), testUserId));
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
