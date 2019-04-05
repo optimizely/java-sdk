@@ -41,7 +41,7 @@ import java.util.function.Supplier;
  * @param <T> the type of input elements and output element batches
  * @see BatchTask
  */
-public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, T> { // TODO look into being more DRY with AsyncProcessor/QueueProcessor
+public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, T> {
     public static final Logger logger = LoggerFactory.getLogger(BatchBlock.class);
 
     private final BatchOptions config;
