@@ -650,12 +650,19 @@ public class Optimizely {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
         if (featureDecision.variation != null) {
-            FeatureVariableUsageInstance featureVariableUsageInstance =
-                featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
-            if (featureVariableUsageInstance != null) {
-                variableValue = featureVariableUsageInstance.getValue();
+            if (featureDecision.variation.getFeatureEnabled()) {
+                FeatureVariableUsageInstance featureVariableUsageInstance =
+                    featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
+                if (featureVariableUsageInstance != null) {
+                    variableValue = featureVariableUsageInstance.getValue();
+                } else {
+                    variableValue = variable.getDefaultValue();
+                }
             } else {
-                variableValue = variable.getDefaultValue();
+                logger.info("Feature \"{}\" for variation \"{}\" was not enabled. " +
+                        "The default value is being returned.",
+                    featureKey, featureDecision.variation.getKey(), variableValue, variableKey
+                );
             }
         } else {
             logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
