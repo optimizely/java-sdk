@@ -80,32 +80,4 @@ public interface Callback<E> {
         };
     }
 
-    /**
-     * A thread-safe wrapper {@link Callback} that delegates
-     */
-    class Holder<E> implements Callback<E> {
-        final AtomicReference<Callback<? super E>> delegate;
-
-        public Holder() {
-            this(NoOpCallback.INSTANCE);
-        }
-
-        public Holder(Callback<? super E> delegate) {
-            this.delegate = new AtomicReference<>(Assert.notNull(delegate, "delegate"));
-        }
-
-        public void set(Callback<? super E> callback) {
-            delegate.set(callback != null ? callback : NoOpCallback.INSTANCE);
-        }
-
-        @Override
-        public void success(E context) {
-            delegate.get().success(context);
-        }
-
-        @Override
-        public void failure(E context, @Nonnull Throwable throwable) {
-            delegate.get().failure(context, throwable);
-        }
-    }
 }

@@ -17,6 +17,7 @@
 package com.optimizely.ab.event;
 
 import com.optimizely.ab.common.callback.Callback;
+import com.optimizely.ab.common.callback.CallbackHolder;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.serializer.DefaultJsonSerializer;
 import com.optimizely.ab.event.internal.serializer.Serializer;
@@ -36,7 +37,7 @@ public class LogEvent implements Message<EventBatch> {
     private final String endpointUrl;
     private final Map<String, String> requestParams;
     private final EventBatch eventBatch;
-    private final transient Callback.Holder<EventBatch> callback;
+    private final transient CallbackHolder<EventBatch> callback;
 
     public LogEvent(@Nonnull RequestMethod requestMethod,
                     @Nonnull String endpointUrl,
@@ -46,7 +47,7 @@ public class LogEvent implements Message<EventBatch> {
         this.endpointUrl = endpointUrl;
         this.requestParams = requestParams;
         this.eventBatch = eventBatch;
-        this.callback = new Callback.Holder<>();
+        this.callback = new CallbackHolder<>();
     }
 
     public void setCallback(Callback<EventBatch> callback) {
