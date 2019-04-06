@@ -36,7 +36,7 @@ public class LogEvent implements Message<EventBatch> {
     private final String endpointUrl;
     private final Map<String, String> requestParams;
     private final EventBatch eventBatch;
-    private transient Callback<EventBatch> callback;
+    private final transient Callback.Holder<EventBatch> callback;
 
     public LogEvent(@Nonnull RequestMethod requestMethod,
                     @Nonnull String endpointUrl,
@@ -46,10 +46,11 @@ public class LogEvent implements Message<EventBatch> {
         this.endpointUrl = endpointUrl;
         this.requestParams = requestParams;
         this.eventBatch = eventBatch;
+        this.callback = new Callback.Holder<>();
     }
 
     public void setCallback(Callback<EventBatch> callback) {
-        this.callback = callback;
+        this.callback.set(callback);
     }
 
     //======== Getters ========//
@@ -98,16 +99,12 @@ public class LogEvent implements Message<EventBatch> {
 
     @Override
     public void markSuccess() {
-        if (callback != null) {
-            callback.success(getValue());
-        }
+        callback.success(getValue());
     }
 
     @Override
     public void markFailure(@Nonnull Throwable ex) {
-        if (callback != null) {
-            callback.failure(getValue(), ex);
-        }
+        callback.failure(getValue(), ex);
     }
 
     //======== Helper classes ========//
