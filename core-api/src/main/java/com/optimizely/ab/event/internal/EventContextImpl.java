@@ -18,32 +18,57 @@ package com.optimizely.ab.event.internal;
 import com.optimizely.ab.api.EventContext;
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.event.internal.payload.EventBatch;
 
 import java.util.Objects;
 
-// TODO make package-private
-public class EventContextImpl implements EventContext {
-    private final String accountId;
-    private final String projectId;
-    private final String clientName;
-    private final String clientVersion;
-    private final String revision;
-    private final Boolean anonymizeIp;
-    private final Boolean botFiltering;
+/**
+ * A mutable implementation of {@link EventContext}
+ */
+class EventContextImpl implements EventContext {
+    private String accountId;
+    private String projectId;
+    private String revision;
+    private Boolean anonymizeIp;
+    private Boolean botFiltering;
+    private String clientName;
+    private String clientVersion;
 
-    private EventContextImpl(Builder builder) {
-        accountId = builder.accountId;
-        projectId = builder.projectId;
-        clientName = builder.clientName != null ? builder.clientName : "java-sdk";
-        clientVersion = builder.clientVersion != null ? builder.clientVersion : BuildVersionInfo.VERSION;
-        revision = builder.revision;
-        anonymizeIp = builder.anonymizeIp;
-        botFiltering = builder.botFiltering;
+    private static String defaultClientName() {
+        // TODO get this from a more canonical class than EventBatch
+        return EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue();
     }
 
-    // TODO make package-private
-    public static Builder builder() {
-        return new Builder();
+    private static String defaltClientVersion() {
+        return BuildVersionInfo.VERSION;
+    }
+
+    EventContextImpl(ProjectConfig projectConfig) {
+        this.accountId = projectConfig.getAccountId();
+        this.projectId = projectConfig.getProjectId();
+        this.revision = projectConfig.getRevision();
+        this.anonymizeIp = projectConfig.getAnonymizeIP();
+        this.botFiltering = projectConfig.getBotFiltering();
+        this.clientName = defaultClientName();
+        this.clientVersion = defaltClientVersion();
+    }
+
+    EventContextImpl(
+        String accountId,
+        String projectId,
+        String revision,
+        Boolean anonymizeIp,
+        Boolean botFiltering,
+        String clientName,
+        String clientVersion
+    ) {
+        this.accountId = accountId;
+        this.projectId = projectId;
+        this.revision = revision;
+        this.anonymizeIp = anonymizeIp;
+        this.botFiltering = botFiltering;
+        this.clientName = (clientName != null) ? clientName : defaultClientName();
+        this.clientVersion = (clientVersion != null) ? clientVersion : defaltClientVersion();
     }
 
     @Override
@@ -51,19 +76,17 @@ public class EventContextImpl implements EventContext {
         return accountId;
     }
 
+    public void setAccountId(String accountId) {
+        this.accountId = Assert.notNull(accountId, "accountId");
+    }
+
     @Override
     public String getProjectId() {
         return projectId;
     }
 
-    @Override
-    public String getClientName() {
-        return clientName;
-    }
-
-    @Override
-    public String getClientVersion() {
-        return clientVersion;
+    public void setProjectId(String projectId) {
+        this.projectId = Assert.notNull(projectId, "projectId");
     }
 
     @Override
@@ -71,14 +94,44 @@ public class EventContextImpl implements EventContext {
         return revision;
     }
 
+    public void setRevision(String revision) {
+        this.revision = Assert.notNull(revision, "revision");
+    }
+
     @Override
     public Boolean getAnonymizeIp() {
         return anonymizeIp;
     }
 
-//    @Override
+    public void setAnonymizeIp(Boolean anonymizeIp) {
+        this.anonymizeIp = anonymizeIp;
+    }
+
+    @Override
     public Boolean getBotFiltering() {
         return botFiltering;
+    }
+
+    public void setBotFiltering(Boolean botFiltering) {
+        this.botFiltering = botFiltering;
+    }
+
+    @Override
+    public String getClientName() {
+        return clientName;
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = Assert.notNull(clientName, "clientName");
+    }
+
+    @Override
+    public String getClientVersion() {
+        return clientVersion;
+    }
+
+    public void setClientVersion(String clientVersion) {
+        this.clientVersion = Assert.notNull(clientVersion, "clientVersion");
     }
 
     @Override
@@ -98,69 +151,5 @@ public class EventContextImpl implements EventContext {
     @Override
     public int hashCode() {
         return Objects.hash(accountId, projectId, clientName, clientVersion, revision, anonymizeIp, botFiltering);
-    }
-
-    public static final class Builder {
-        private String accountId;
-        private String projectId;
-        private String clientName;
-        private String clientVersion;
-        private String revision;
-        private Boolean anonymizeIp;
-        private Boolean botFiltering;
-
-        private Builder() {
-        }
-
-        public Builder from(EventContext inst) {
-            return accountId(inst.getAccountId())
-                .client(inst.getClientName(), inst.getClientVersion())
-                .projectId(inst.getProjectId())
-                .revision(inst.getRevision())
-                .anonymizeIp(inst.getAnonymizeIp())
-                .botFiltering(inst.getBotFiltering());
-        }
-
-        public Builder from(ProjectConfig projectConfig) {
-            return accountId(projectConfig.getAccountId())
-                .projectId(projectConfig.getProjectId())
-                .revision(projectConfig.getRevision())
-                .anonymizeIp(projectConfig.getAnonymizeIP());
-        }
-
-        public Builder client(String name, String version) {
-            this.clientName = Assert.notNull(name, "name");
-            this.clientVersion = Assert.notNull(version, "version");
-            return this;
-        }
-
-        public Builder accountId(String val) {
-            this.accountId = Assert.notNull(val, "accountId");
-            return this;
-        }
-
-        public Builder projectId(String val) {
-            this.projectId = Assert.notNull(val, "projectId");
-            return this;
-        }
-
-        public Builder revision(String val) {
-            this.revision = Assert.notNull(val, "revision");
-            return this;
-        }
-
-        public Builder anonymizeIp(Boolean val) {
-            this.anonymizeIp = val;
-            return this;
-        }
-
-        public Builder botFiltering(Boolean val) {
-            this.botFiltering = val;
-            return this;
-        }
-
-        public EventContextImpl build() {
-            return new EventContextImpl(this);
-        }
     }
 }

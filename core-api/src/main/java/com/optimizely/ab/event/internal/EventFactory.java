@@ -257,7 +257,10 @@ public class EventFactory {
 
     @Nonnull
     private EventContext createEventContext(ProjectConfig projectConfig) {
-        return EventContext.create(projectConfig, clientEngine.getClientEngineValue(), clientVersion);
+        EventContextImpl eventContext = new EventContextImpl(projectConfig);
+        eventContext.setClientName(clientEngine.getClientEngineValue());
+        eventContext.setClientVersion(clientVersion);
+        return eventContext;
     }
 
     // TODO make private

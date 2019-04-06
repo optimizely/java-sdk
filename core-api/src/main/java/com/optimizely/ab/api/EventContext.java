@@ -15,9 +15,6 @@
  */
 package com.optimizely.ab.api;
 
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.event.internal.EventContextImpl;
-
 public interface EventContext {
     String getAccountId();
 
@@ -35,12 +32,4 @@ public interface EventContext {
 
 //        Object get(String key);
 //        void set(String key, Object value);
-
-    static EventContextImpl.Builder builder() {
-        return EventContextImpl.builder();
-    }
-
-    static EventContext create(ProjectConfig projectConfig, String clientName, String clientVersion) {
-        return builder().from(projectConfig).client(clientName, clientVersion).build();
-    }
 }
