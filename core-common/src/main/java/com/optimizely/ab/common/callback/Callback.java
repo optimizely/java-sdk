@@ -15,11 +15,7 @@
  */
 package com.optimizely.ab.common.callback;
 
-import com.optimizely.ab.common.internal.Assert;
-
 import javax.annotation.Nonnull;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -31,7 +27,6 @@ import java.util.function.Consumer;
 public interface Callback<E> {
     /**
      * Called when the action successfully completed.
-     * @param context
      */
     void success(E context);
 
@@ -39,17 +34,6 @@ public interface Callback<E> {
      * Called when the action unsuccessfully completed.
      */
     void failure(E context, @Nonnull Throwable throwable);
-
-    /**
-     * Returns a new instance that will execute this callback on the passed {@link Executor}.
-     *
-     * @param executor the executor where this callback will be executed
-     * @return a new callback
-     * @throws NullPointerException if parameter is {@code null}
-     */
-    default Callback<E> calledOn(@Nonnull Executor executor) {
-        return new AsyncCallback<>(this, executor);
-    }
 
     /**
      * Convenience method to reify a {@link Callback} instance using anonymous functions.
@@ -79,5 +63,4 @@ public interface Callback<E> {
             }
         };
     }
-
 }
