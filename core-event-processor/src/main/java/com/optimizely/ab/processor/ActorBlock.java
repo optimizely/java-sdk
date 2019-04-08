@@ -15,22 +15,8 @@ package com.optimizely.ab.processor;
 /**
  * Represents a dataflow {@link Block} that is both a target for data and a source of data.
  *
- * This interface and its counterparts, {@link SourceBlock} and {@link TargetBlock}, are inspired by .NET TPL. They
- * provide the basic building blocks to define the in-process message passing for coarse-grained dataflow and
- * parallelism.
- *
  * @param <T> the type of input elements
  * @param <R> the type of output elements
  */
 public interface ActorBlock<T, R> extends Block, TargetBlock<T>, SourceBlock<R> {
-    /**
-     * This class provides skeletal implementation for {@link ActorBlock} to interface to minimize the effort required to
-     * implement the interface.
-     *
-     * @param <T>
-     * @param <R>
-     * @see SourceBlock.Base
-     */
-    abstract class Base<T, R> extends SourceBlock.Base<R> implements ActorBlock<T, R> {
-    }
 }

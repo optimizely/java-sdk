@@ -19,6 +19,7 @@ import com.optimizely.ab.common.internal.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Date;
@@ -53,9 +54,11 @@ class BatchTask<E, C extends Collection<? super E>> implements Runnable {
     private final Supplier<C> bufferSupplier;
     private final Consumer<C> bufferConsumer;
     private final int maxSize;
-    private final Duration maxAge;
-    private final Lock lock;
-    private final Condition condition;
+    private final long maxAge;
+    private final Clock clock;
+
+    private final Lock lock = new ReentrantLock();
+    private final Condition condition = lock.newCondition();
 
     // The following fields should only be modified when lock is held
     private C buffer;
@@ -90,34 +93,43 @@ class BatchTask<E, C extends Collection<? super E>> implements Runnable {
         }
     }
 
+    BatchTask(
+        Supplier<C> bufferSupplier,
+        Consumer<C> bufferConsumer,
+        int maxSize,
+        Duration maxAge
+    ) {
+        this(bufferSupplier, bufferConsumer, maxSize, maxAge.toMillis());
+    }
+
+    BatchTask(
+        Supplier<C> bufferSupplier,
+        Consumer<C> bufferConsumer,
+        int maxSize,
+        long maxAge
+    ) {
+        this(bufferSupplier, bufferConsumer, maxSize, maxAge, Clock.systemUTC());
+    }
+
     /**
      * @param bufferSupplier supplies a fresh buffer on-demand (on first item)
      * @param bufferConsumer handles buffer being flushed
      * @param maxSize maximum size of an open buffer
-     * @param maxAge
+     * @param maxAge maximum age of an open buffer in milliseconds
+     * @param clock clock used to compute deadline
      */
-    BatchTask(
-        Supplier<C> bufferSupplier,
-        Consumer<C> bufferConsumer,
-        Integer maxSize,
-        Duration maxAge
-    ) {
-        this(bufferSupplier, bufferConsumer, maxSize, maxAge, new ReentrantLock());
-    }
-
     protected BatchTask(
         Supplier<C> bufferSupplier,
         Consumer<C> bufferConsumer,
-        Integer maxSize,
-        Duration maxAge,
-        Lock lock
+        int maxSize,
+        long maxAge,
+        Clock clock
     ) {
         this.bufferSupplier = Assert.notNull(bufferSupplier, "bufferSupplier");
         this.bufferConsumer = bufferConsumer;
-        this.maxSize = (maxSize != null && maxSize > 0) ? maxSize : Integer.MAX_VALUE;
-        this.maxAge = (maxAge != null && !maxAge.isNegative() && !maxAge.isZero()) ? maxAge : null;
-        this.lock = Assert.notNull(lock, "lock");
-        this.condition = lock.newCondition();
+        this.maxSize = maxSize;
+        this.maxAge = maxAge;
+        this.clock = Assert.notNull(clock, "clock");
     }
 
     /**
@@ -131,7 +143,7 @@ class BatchTask<E, C extends Collection<? super E>> implements Runnable {
             // note: buffer can be closed
             Assert.state(!status.isTerminal(), "Task has already been run");
 
-            while (status == Status.OPEN && !Thread.currentThread().isInterrupted()) {
+            while (isOpen() && !Thread.currentThread().isInterrupted()) {
                 // deadline is not set until first insert (and maxAge non-null)
                 if (deadline != null) {
                     // wait until deadline reached or closed by another thread
@@ -147,9 +159,8 @@ class BatchTask<E, C extends Collection<? super E>> implements Runnable {
             logger.warn("Flushing buffer contents due to interrupt", e);
         } finally {
             lock.unlock();
+            status = Status.COMPLETE;
         }
-
-        status = Status.COMPLETE;
 
         if (bufferConsumer != null) {
             bufferConsumer.accept(buffer);
@@ -176,16 +187,12 @@ class BatchTask<E, C extends Collection<? super E>> implements Runnable {
                 buffer = bufferSupplier.get();
 
                 // set the deadline when first added and signal to pick it up
-                if (maxAge != null) {
-                    // limited benefit to using Clock here since we are using awaitUntil
-                    long now = System.currentTimeMillis();
-
-                    deadline = new Date(now + maxAge.toMillis());
-
+                deadline = computeDeadline();
+                if (deadline != null) {
                     notify = true;
                 }
 
-                logger.debug("Initialized buffer with deadline: {}", deadline);
+                logger.debug("Initialized buffer with deadline: {}", this.deadline);
             }
 
             buffer.add(element);
@@ -197,7 +204,7 @@ class BatchTask<E, C extends Collection<? super E>> implements Runnable {
             }
 
             if (notify) {
-                condition.signal();
+                condition.signalAll();
             }
         } finally {
             lock.unlock();
@@ -226,7 +233,30 @@ class BatchTask<E, C extends Collection<? super E>> implements Runnable {
         }
     }
 
+    public Date getDeadline() {
+        lock.lock();
+        try {
+            return deadline;
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public boolean isOpen() {
         return status == Status.OPEN;
+    }
+
+    /**
+     * @return date of deadline from now
+     */
+    private Date computeDeadline() {
+        if (maxAge != BatchOptions.UNBOUNDED_AGE) {
+            try {
+                return new Date(clock.millis() + maxAge);
+            } catch (ArithmeticException e) {
+                // treat overflow as no deadline
+            }
+        }
+        return null;
     }
 }

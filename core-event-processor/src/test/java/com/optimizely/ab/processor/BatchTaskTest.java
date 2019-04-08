@@ -22,10 +22,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -63,7 +65,7 @@ public class BatchTaskTest {
             ArrayList::new,
             batches::add,
             2,
-            Duration.ofMinutes(1));
+            BatchOptions.UNBOUNDED_AGE);
 
         Future future = executor.submit(task);
 
@@ -86,7 +88,7 @@ public class BatchTaskTest {
         BatchTask<Integer, ArrayList<Object>> task = new BatchTask<>(
             ArrayList::new,
             batches::add,
-            1000,
+            BatchOptions.UNBOUNDED_SIZE,
             Duration.ofMillis(100));
 
         assertThat(task.offer(1), is(true));
@@ -105,8 +107,8 @@ public class BatchTaskTest {
         BatchTask<Integer, ArrayList<Object>> task = new BatchTask<>(
             ArrayList::new,
             batches::add,
-            null,
-            Duration.ofDays(1));
+            BatchOptions.UNBOUNDED_SIZE,
+            BatchOptions.UNBOUNDED_AGE);
 
         for (int i = 0; i < 100; i++) {
             task.offer(i);
@@ -131,7 +133,7 @@ public class BatchTaskTest {
             ArrayList::new,
             batches::add,
             2,
-            null);
+            BatchOptions.UNBOUNDED_AGE);
 
         assertThat(task.isOpen(), is(true));
         assertThat(task.offer(1), is(true));
@@ -152,20 +154,33 @@ public class BatchTaskTest {
 
     @Test
     public void testTimedFromFirstElement() throws Exception {
+        Clock realClock = Clock.systemUTC();
+        Clock testClock = Clock.fixed(realClock.instant(), realClock.getZone());
+
         BatchTask<Integer, ArrayList<Object>> task = new BatchTask<>(
             ArrayList::new,
             batches::add,
-            1000,
-            Duration.ofMillis(10));
+            BatchOptions.UNBOUNDED_SIZE,
+            10L,
+            testClock);
 
-        Future future = executor.submit(task);
+        assertThat(task.getDeadline(), nullValue());
 
-        assertThat(task.isOpen(), is(true));
+        Thread thread = new Thread(task);
+        thread.start();
+        await().until(thread::isAlive);
+
+        // sleep longer than the max age (wait condition doesn't use clock)
         Thread.sleep(250L);
-        assertThat(future.isDone(), is(false));
+
+        assertThat(thread.isAlive(), is(true));
         assertThat(task.isOpen(), is(true));
+        assertThat(task.getDeadline(), nullValue()); // haven't added an item yet
+
         assertThat(task.offer(1), is(true));
-        future.get(100L, TimeUnit.MILLISECONDS);
+        assertThat(task.getDeadline(), is(new Date(testClock.millis() + 10L)));
+
+        thread.join(1000L);
         assertThat(task.isOpen(), is(false));
     }
 

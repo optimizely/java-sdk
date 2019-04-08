@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Executor;
@@ -42,8 +41,8 @@ import java.util.function.Supplier;
  * @param <T> the type of input elements and output element batches
  * @see BatchTask
  */
-public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, T> {
-    public static final Logger logger = LoggerFactory.getLogger(BatchBlock.class);
+public class BatchBlock<T> extends Blocks.Source<T> implements ActorBlock<T, T> {
+    private static final Logger logger = LoggerFactory.getLogger(BatchBlock.class);
 
     private final BatchOptions options;
     private final Executor executor;
@@ -61,7 +60,7 @@ public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, 
     private BatchTask<T, ?> currentTask;
 
     BatchBlock(BatchOptions options, ThreadFactory threadFactory) {
-        this(options, Executors.newCachedThreadPool(threadFactory));
+        this(options, createExecutor(threadFactory));
     }
 
     BatchBlock(BatchOptions options, Executor executor) {
@@ -69,6 +68,13 @@ public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, 
         this.executor = Assert.notNull(executor, "executor");
         this.inFlightPermits = createInFlightSemaphore(options);
         this.batchTaskFactory = createBatchTaskFactory(options);
+    }
+
+    private static Executor createExecutor(ThreadFactory threadFactory) {
+        if (threadFactory == null) {
+            return Executors.newCachedThreadPool();
+        }
+        return Executors.newCachedThreadPool(threadFactory);
     }
 
     /**
@@ -129,37 +135,19 @@ public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, 
         return options;
     }
 
-    protected Supplier<BatchTask<T, ?>> createBatchTaskFactory(BatchOptions config) {
-        int maxSize = normalizeMaxBatchSize(config);
-        Duration maxAge = normalizeMaxBatchAge(config);
+    protected Supplier<BatchTask<T, ?>> createBatchTaskFactory(BatchOptions opts) {
+        int maxSize = opts.getMaxSize();
 
-        final Supplier<Collection<T>> bufferSupplier = (maxSize > 0) ?
-            () -> new ArrayList<>(maxSize) :
-            ArrayList::new;
+        // TODO should this live on BatchOptions?
+        final Supplier<Collection<T>> bufferSupplier = (maxSize == BatchOptions.UNBOUNDED_SIZE) ?
+            () -> new ArrayList<>(maxSize) : // bounded
+            ArrayList::new;                  // unbounded
 
-        return () -> new BatchTask<>(bufferSupplier, this::onBufferClose, maxSize, maxAge);
-    }
-
-    /**
-     * @return a positive integer if max size is configured, otherwise returns zero.
-     */
-    protected static int normalizeMaxBatchSize(BatchOptions config) {
-        Integer maxBatchSize = config.getMaxBatchSize();
-        if (maxBatchSize == null || maxBatchSize <= 0) {
-            return 0;
-        }
-        return maxBatchSize;
-    }
-
-    /**
-     * @return a {@link Duration} if max age is configured, otherwise {@code null}.
-     */
-    protected static Duration normalizeMaxBatchAge(BatchOptions config) {
-        Duration maxBatchAge = config.getMaxBatchAge();
-        if (maxBatchAge == null || maxBatchAge.isNegative()) {
-            return Duration.ZERO;
-        }
-        return maxBatchAge;
+        return () -> new BatchTask<>(
+            bufferSupplier,
+            this::onBufferClose,
+            opts.getMaxSize(),
+            opts.getMaxAge());
     }
 
 
@@ -179,7 +167,7 @@ public class BatchBlock<T> extends SourceBlock.Base<T> implements ActorBlock<T, 
 
         logger.debug("Batch completed with {} elements: {}", batch.size(), batch);
 
-        target().postBatch(batch);
+        emitBatch(batch);
     }
 
     /**

@@ -29,7 +29,7 @@ import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.common.lifecycle.LifecycleAware;
 import com.optimizely.ab.common.message.MutableMessage;
 import com.optimizely.ab.processor.ActorBlock;
-import com.optimizely.ab.processor.SourceBlock;
+import com.optimizely.ab.processor.Blocks;
 import com.optimizely.ab.processor.TargetBlock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @param <T> the type of elements to in buffer
  */
-public class DisruptorBuffer<T> extends SourceBlock.Base<T> implements ActorBlock<T, T> {
+public class DisruptorBuffer<T> extends Blocks.Source<T> implements ActorBlock<T, T> {
     private static final Logger logger = LoggerFactory.getLogger(DisruptorBuffer.class);
     static final int MIN_RINGBUFFER_SIZE = 128;
     static final int SLEEP_MILLIS_BETWEEN_DRAIN_ATTEMPTS = 50;
@@ -93,9 +93,7 @@ public class DisruptorBuffer<T> extends SourceBlock.Base<T> implements ActorBloc
     }
 
     @Override
-    public Link linkTo(TargetBlock<? super T> target) {
-        final Link link = super.linkTo(target);
-
+    public void linkTo(TargetBlock<? super T> target) {
         int batchMaxSize = config.getBatchMaxSize();
         if (batchMaxSize < 1) {
             logger.warn("Invalid batch size {}, using minimum size 1", batchMaxSize);
@@ -104,8 +102,6 @@ public class DisruptorBuffer<T> extends SourceBlock.Base<T> implements ActorBloc
 
         // do we need to initialize here vs onStart?
         this.batch = new BufferBatch<>(target, batchMaxSize);
-
-        return link;
     }
 
     @Override

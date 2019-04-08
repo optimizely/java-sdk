@@ -21,31 +21,48 @@ import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * This class consists exclusively of static utility methods that operate on or return {@link Block}s.
  */
 public final class Blocks {
+    private static final IdentityBlock IDENTITY_BLOCK = new IdentityBlock();
+
+    private Blocks() { /* no instances */ }
 
     /**
-     * Creates a block that performs the provided action for every element received, presumably for
-     * side-effects, such as mutation or logging.
+     * Creates a pass-through {@link ActorBlock} that immediately emits the elements it receives downstream.
      *
      * @param <T> the type of input and output elements
-     * @return a block that synchronously accepts all elements offered to it, offers to consumer, then forwards to target
      */
-    public static <T> ActorBlock<T, T> effect(final Consumer<? super T> action) {
+    @SuppressWarnings("unchecked")
+    public static <T> ActorBlock<T, T> identity() {
+        return (Actor<T, T>) IDENTITY_BLOCK;
+    }
+
+    /**
+     * Creates a block that performs the provided action for every element received,
+     * then relays the element downstream.
+     *
+     * Can be used to perform side-effects, such as mutation or logging.
+     *
+     * @param <T> the type of input and output elements
+     * @return a new block
+     */
+    public static <T> ActorBlock<T, T> action(final Consumer<? super T> action) {
         Assert.notNull(action, "action");
-        return new ActorBlock.Base<T, T>() {
+        return new Actor<T, T>() {
             @Override
             public void post(@Nonnull T element) {
                 action.accept(element);
-                target().post(element);
+                emit(element);
             }
         };
     }
@@ -56,26 +73,26 @@ public final class Blocks {
      * @param operator function delegate
      * @param <T> the type of input elements
      * @param <R> the type of output elements
-     * @return new block
+     * @return a new block
      */
     public static <T, R> ActorBlock<T, R> map(final Function<? super T, ? extends R> operator) {
         Assert.notNull(operator, "operator");
-        return new ActorBlock.Base<T, R>() {
+        return new Actor<T, R>() {
             @Override
             public void post(@Nonnull T element) {
-                target().postNullable(operator.apply(element));
+                emit(operator.apply(element));
             }
         };
     }
 
     public static <T, R> ActorBlock<T, R> flatMap(final Function<? super T, ? extends Collection<? extends R>> operator) {
         Assert.notNull(operator, "operator");
-        return new ActorBlock.Base<T, R>() {
+        return new Actor<T, R>() {
             @Override
             public void post(@Nonnull T element) {
                 Collection<? extends R> coll = operator.apply(element);
                 if (coll != null) {
-                    target().postBatch(coll);
+                    emitBatch(coll);
                 }
             }
         };
@@ -86,25 +103,28 @@ public final class Blocks {
      *
      * @param condition predicate delegate
      * @param <T> the type of input and output elements
-     * @return new block
+     * @return a new block
      */
     public static <T> ActorBlock<T, T> filter(final Predicate<? super T> condition) {
         Assert.notNull(condition, "condition");
-        return new ActorBlock.Base<T, T>() {
+        return new Actor<T, T>() {
             @Override
             public void post(@Nonnull T element) {
                 if (condition.test(element)) {
-                    target().post(element);
+                    emit(element);
                 }
             }
         };
     }
 
     /**
+     * Creates a block that consumes elements using a {@link Collector}, similar to {@link Stream#collect(Collector)}.
+     *
+     * @param collector describes the reduction
      * @return a new target block that performs a reduction operation
-     * @see CollectBlock
+     * @see Collectors
      */
-    public static <T, A, R> TerminalBlock<T, R> collect(final Collector<? super T, A, R> collector) {
+    public static <T, A, R> OutputBlock<T, R> collect(final Collector<? super T, A, R> collector) {
         return new CollectBlock<>(collector);
     }
 
@@ -125,19 +145,35 @@ public final class Blocks {
     }
 
     /**
-     * Creates a pass-through {@link ActorBlock} that immediately emits the elements it receives downstream.
-     *
-     * @param <T> the type of input and output elements
+     * Performs start sequence on the specified blocks
      */
-    public static <T> ActorBlock<T, T> identity() {
-        return new ActorBlock.Base<T, T>() {
-            @Override
-            public void post(@Nonnull T element) {
-                target().post(element);
+    public static void startAll(Block... blocks) {
+        for (int i = blocks.length - 1; i >= 0; i--) {
+            Block block = blocks[i];
+            if (block != null) {
+                block.onStart();
             }
-        };
+        }
     }
 
+    /**
+     * Performs stop sequence on the specified blocks
+     */
+    public static void stopAll(Block... blocks) {
+        for (final Block block : blocks) {
+            block.onStop();
+        }
+    }
+
+    /**
+     * Class for pass-through blocks
+     */
+    private static class IdentityBlock extends Actor<Object, Object> {
+        @Override
+        public void post(@Nonnull Object element) {
+            emit(element);
+        }
+    }
 
     /**
      * A stateful sink that performs reduction operation of a {@link Collector} over each input element.
@@ -147,7 +183,7 @@ public final class Blocks {
      * @param <R> the result type of the reduction operation
      * @see Collectors
      */
-    static class CollectBlock<T, A, R> implements TerminalBlock<T, R> {
+    static class CollectBlock<T, A, R> implements OutputBlock<T, R> {
         private final Collector<? super T, A, R> collector;
         private A state;
 
@@ -173,5 +209,91 @@ public final class Blocks {
         }
     }
 
-    private Blocks() { /* no instances */ }
+    /**
+     * This class provides skeletal implementation for {@link ActorBlock}
+     */
+    abstract static class Actor<T, R> extends Source<R> implements ActorBlock<T, R> {
+    }
+
+    /**
+     * This class provides skeletal implementation for {@link SourceBlock} to interface to minimize the effort required to
+     * implement the interface.
+     *
+     * Maintains link state to {@link TargetBlock} and the associated {@link LinkOptions} and propagates completion signal
+     * accordingly.
+     *
+     * @param <TOutput> the type of output elements; the type of elements accepted by downstream.
+     */
+    public abstract static class Source<TOutput> implements SourceBlock<TOutput> {
+        // currently support only a single target; could change in future
+        private TargetBlock<? super TOutput> target;
+        private LinkOptions options;
+
+        @Override
+        public synchronized void linkTo(TargetBlock<? super TOutput> target, LinkOptions options) {
+            this.target = target;
+            if (target != null) {
+                this.options = (options != null) ? options : LinkOptions.create();
+            } else {
+                this.options = null;
+            }
+        }
+
+        @Override
+        public void onStart() {
+            // no-op
+        }
+
+        @Override
+        public boolean onStop(long timeout, TimeUnit unit) {
+            if (options != null && options.getPropagateCompletion()) {
+                target.onStop();
+            }
+            return true;
+        }
+
+        /**
+         * @throws IllegalStateException if target not linked
+         */
+        protected void emit(TOutput element) {
+            emit(element, false);
+        }
+
+        protected void emit(TOutput element, boolean requireTarget) {
+            if (element == null) {
+                return;
+            }
+
+            if (target == null) {
+                if (requireTarget) {
+                    throw new IllegalStateException("Not linked to a target");
+                }
+                return;
+            }
+
+            target.post(element);
+        }
+
+        /**
+         * @throws IllegalStateException if target not linked
+         */
+        protected void emitBatch(Collection<? extends TOutput> elements) {
+            emitBatch(elements, false);
+        }
+
+        protected void emitBatch(Collection<? extends TOutput> elements, boolean requireTarget) {
+            if (elements == null) {
+                return;
+            }
+
+            if (target == null) {
+                if (requireTarget) {
+                    throw new IllegalStateException("Not linked to a target");
+                }
+                return;
+            }
+
+            target.postBatch(elements);
+        }
+    }
 }

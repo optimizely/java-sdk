@@ -37,6 +37,10 @@ public interface LifecycleAware {
      */
     boolean onStop(long timeout, TimeUnit unit);
 
+    default void onStop() {
+        onStop(1, TimeUnit.SECONDS);
+    }
+
     /**
      * Helper to call {@link #onStop(long, TimeUnit)} on input when it is lifecycle aware.
      *

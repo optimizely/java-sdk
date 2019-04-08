@@ -15,23 +15,26 @@
  */
 package com.optimizely.ab.processor;
 
-import com.optimizely.ab.common.internal.Assert;
-
 import javax.annotation.Nullable;
 import java.time.Duration;
+import java.util.Objects;
 
+/**
+ * Specifies batching-related parameters.
+ */
 public interface BatchOptions {
-    /**
-     * @return a positive number the buffer size that triggers flush, otherwise null if size should not be enforced
-     */
-    @Nullable
-    Integer getMaxBatchSize();
+    int UNBOUNDED_SIZE = Integer.MAX_VALUE;
+    long UNBOUNDED_AGE = Long.MAX_VALUE;
 
     /**
-     * @return a positive duration for buffer age that triggers flush, otherwise null if age should not be enforced.
+     * @return maximum number of elements in a single batch
      */
-    @Nullable
-    Duration getMaxBatchAge();
+    int getMaxSize();
+
+    /**
+     * @return amount of time, in milliseconds, to hold a batch open before flushing
+     */
+    long getMaxAge();
 
     /**
      * Limits the number of in-flight batches (threads) In-flight batches can accumulate when batches are produced
@@ -45,6 +48,14 @@ public interface BatchOptions {
      */
     boolean shouldFlushOnShutdown();
 
+    static boolean hasMaxSize(BatchOptions options) {
+        return options.getMaxSize() != UNBOUNDED_SIZE;
+    }
+
+    static boolean hasMaxAge(BatchOptions options) {
+        return options.getMaxAge() != UNBOUNDED_AGE;
+    }
+
     /**
      * @return a builder object for {@link BatchOptions}
      */
@@ -53,33 +64,24 @@ public interface BatchOptions {
     }
 
     class Builder<T> implements BatchOptions {
-        static int MAX_BATCH_SIZE_DEFAULT = 10;
-        static Duration MAX_BATCH_OPEN_MS_DEFAULT = Duration.ofMillis(250);
+        static int MAX_SIZE_DEFAULT = 10;
+        static long MAX_AGE_DEFAULT = 250L;
 
-        private Integer maxBatchSize = MAX_BATCH_SIZE_DEFAULT;
-        private Duration maxBatchAge = MAX_BATCH_OPEN_MS_DEFAULT;
+        private int maxBatchSize = MAX_SIZE_DEFAULT;
+        private long maxBatchAge = MAX_AGE_DEFAULT;
         private Integer maxBatchInFlight = null;
         private boolean flushOnShutdown = true;
 
         private Builder() {
         }
 
-        public Builder<T> from(BatchOptions config) {
-            Assert.notNull(config, "options");
-            this.maxBatchSize = config.getMaxBatchSize();
-            this.maxBatchAge = config.getMaxBatchAge();
-            this.maxBatchInFlight = config.getMaxBatchInFlight();
-            this.flushOnShutdown = config.shouldFlushOnShutdown();
-            return this;
-        }
-
         public Builder<T> maxBatchSize(@Nullable Integer maxBatchSize) {
-            this.maxBatchSize = maxBatchSize;
+            this.maxBatchSize = (maxBatchSize != null) ? maxBatchSize : UNBOUNDED_SIZE;
             return this;
         }
 
         public Builder<T> maxBatchAge(@Nullable Duration maxBatchAge) {
-            this.maxBatchAge = maxBatchAge;
+            this.maxBatchAge = (maxBatchAge != null) ? maxBatchAge.toMillis() : UNBOUNDED_AGE;
             return this;
         }
 
@@ -94,12 +96,12 @@ public interface BatchOptions {
         }
 
         @Override
-        public Integer getMaxBatchSize() {
+        public int getMaxSize() {
             return maxBatchSize;
         }
 
         @Override
-        public Duration getMaxBatchAge() {
+        public long getMaxAge() {
             return maxBatchAge;
         }
 
@@ -111,6 +113,22 @@ public interface BatchOptions {
         @Override
         public boolean shouldFlushOnShutdown() {
             return flushOnShutdown;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Builder)) return false;
+            final Builder<?> builder = (Builder<?>) o;
+            return maxBatchSize == builder.maxBatchSize &&
+                maxBatchAge == builder.maxBatchAge &&
+                flushOnShutdown == builder.flushOnShutdown &&
+                Objects.equals(maxBatchInFlight, builder.maxBatchInFlight);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(maxBatchSize, maxBatchAge, maxBatchInFlight, flushOnShutdown);
         }
 
         @Override

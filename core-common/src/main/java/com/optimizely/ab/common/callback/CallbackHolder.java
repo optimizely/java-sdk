@@ -18,33 +18,42 @@ package com.optimizely.ab.common.callback;
 import com.optimizely.ab.common.internal.Assert;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A thread-safe wrapper {@link Callback} that delegates
  */
 public class CallbackHolder<E> implements Callback<E> {
-    private final AtomicReference<Callback<? super E>> delegate;
+    private final AtomicReference<Callback<? super E>> callback;
 
     public CallbackHolder() {
         this(NoOpCallback.INSTANCE);
     }
 
-    public CallbackHolder(Callback<? super E> delegate) {
-        this.delegate = new AtomicReference<>(Assert.notNull(delegate, "delegate"));
+    public CallbackHolder(Callback<? super E> callback) {
+        this.callback = new AtomicReference<>(Assert.notNull(callback, "callback"));
     }
 
-    public void set(Callback<? super E> callback) {
-        delegate.set(callback != null ? callback : NoOpCallback.INSTANCE);
+    public void set(@Nullable Callback<? super E> callback) {
+        if (callback == null) {
+            clear();
+        } else {
+            this.callback.set(callback);
+        }
+    }
+
+    public void clear() {
+        callback.set(NoOpCallback.INSTANCE);
     }
 
     @Override
     public void success(E context) {
-        delegate.get().success(context);
+        callback.get().success(context);
     }
 
     @Override
     public void failure(E context, @Nonnull Throwable throwable) {
-        delegate.get().failure(context, throwable);
+        callback.get().failure(context, throwable);
     }
 }

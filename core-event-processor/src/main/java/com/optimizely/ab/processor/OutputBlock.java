@@ -18,14 +18,14 @@ package com.optimizely.ab.processor;
 import java.util.function.Supplier;
 
 /**
- * Represents a {@link Block} with value.
+ * Represents a {@link TargetBlock} with an output value.
  *
- * @param <TInput> the type of
+ * @param <TInput> the type of input elements
  * @param <TValue> the type of value held by block
  */
-public interface TerminalBlock<TInput, TValue> extends Block, TargetBlock<TInput>, Supplier<TValue> {
+public interface OutputBlock<TInput, TValue> extends TargetBlock<TInput>, Supplier<TValue> {
     /**
-     * Clears any state held by block
+     * Clears output state of by block
      */
     void reset();
 }

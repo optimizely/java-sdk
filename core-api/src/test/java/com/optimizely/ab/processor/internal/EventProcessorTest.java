@@ -16,10 +16,10 @@
 package com.optimizely.ab.processor.internal;
 
 import com.optimizely.ab.common.callback.Callback;
-import com.optimizely.ab.common.lifecycle.LifecycleAware;
 import com.optimizely.ab.common.plugin.Plugin;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
+import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.payload.Visitor;
 import com.optimizely.ab.processor.BatchBlock;
@@ -74,15 +74,14 @@ public class EventProcessorTest {
         EventProcessor<EventBatch.Builder> processor = new EventProcessor<>();
 
         // base configuration
-        processor.converter(EventBatch.Builder::build);
+        processor.eventBatchConverter(EventBatch.Builder::build);
+        processor.logEventConverter(new EventFactory()::createLogEvent);
         processor.plugin(output);
 
         // per-test configuration
         configure.accept(processor);
 
-        TargetBlock<EventBatch.Builder> inst = processor.build();
-
-        LifecycleAware.start(inst);
+        TargetBlock<EventBatch.Builder> inst = processor.build(output.eventHandler);
 
         return inst;
     }
@@ -198,7 +197,7 @@ public class EventProcessorTest {
         final AtomicInteger counter = new AtomicInteger(0);
 
         TargetBlock<EventBatch.Builder> target = processor(builder -> builder
-            .batchConfig(BatchOptions.builder()
+            .batchOptions(BatchOptions.builder()
                 .maxBatchAge(Duration.ofHours(1))
                 .maxBatchSize(10))
             .transformer(e -> {
@@ -247,8 +246,8 @@ public class EventProcessorTest {
             .maxBatchInFlight(null));
 
         TargetBlock<EventBatch.Builder> target = processor(builder -> builder
-            .eventFactory(TestLogEvent::new)
-            .batchBlock(batchProcessor));
+            .logEventConverter(TestLogEvent::new)
+            .batchProcessorProvider(() -> batchProcessor));
 
         // buffer items
         target.post(eventBatchBuilder()
@@ -352,6 +351,16 @@ public class EventProcessorTest {
         AtomicInteger interceptorCount = new AtomicInteger();
         AtomicInteger inflightCount = new AtomicInteger();
 
+        EventHandler eventHandler = new EventHandler() {
+            @Override
+            public synchronized void dispatchEvent(LogEvent logEvent) {
+                logger.info("Sending {}", logEvent);
+                payloadCount.incrementAndGet();
+                payloads.add(logEvent);
+                logEvent.markSuccess();
+            }
+        };
+
         void dump() {
             logger.info("service invocations: {}", payloads.size());
             logger.info("success callbacks: {}", successes.size());
@@ -368,16 +377,6 @@ public class EventProcessorTest {
             builder.interceptor(event -> {
                 interceptorCount.incrementAndGet();
                 return true;
-            });
-
-            builder.eventHandler(new EventHandler() {
-                @Override
-                public synchronized void dispatchEvent(LogEvent logEvent) {
-                    logger.info("Sending {}", logEvent);
-                    payloadCount.incrementAndGet();
-                    payloads.add(logEvent);
-                    logEvent.markSuccess();
-                }
             });
 
             builder.callback(new Callback<EventBatch>() {

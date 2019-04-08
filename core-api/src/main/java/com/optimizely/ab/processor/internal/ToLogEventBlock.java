@@ -15,14 +15,12 @@
  */
 package com.optimizely.ab.processor.internal;
 
-import com.optimizely.ab.api.EventContext;
 import com.optimizely.ab.common.callback.Callback;
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.processor.ActorBlock;
-import com.optimizely.ab.processor.SourceBlock;
-import com.optimizely.ab.processor.TargetBlock;
+import com.optimizely.ab.processor.Blocks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,14 +33,16 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * A group {@link LogEvent} from {@link EventBatch} objects/collections.
+ * An operation that converts {@link EventBatch} into an {@link LogEvent}.
  *
- * Inputs are grouped prior to merging when multiple events are sent using {@link TargetBlock#postBatch(Collection)}
- * to avoid {@link EventContext} collisions.
+ * Supports receiving batches of elements and packing into a single {@link LogEvent}.
+ * Uses {@link EventContextKey} to separate a batch into sub-groups in the case that
+ * the whole batch does not map cleanly into a single {@link LogEvent}. For example,
+ * if batch contains events from different revisions.
  *
  * @see EventContextKey
  */
-class ToLogEventBlock extends SourceBlock.Base<LogEvent> implements ActorBlock<EventBatch, LogEvent> {
+class ToLogEventBlock extends Blocks.Source<LogEvent> implements ActorBlock<EventBatch, LogEvent> {
     private static final Logger logger = LoggerFactory.getLogger(ToLogEventBlock.class);
 
     private final Function<EventBatch, LogEvent> logEventFactory;
@@ -64,17 +64,15 @@ class ToLogEventBlock extends SourceBlock.Base<LogEvent> implements ActorBlock<E
     @Override
     public void post(@Nonnull EventBatch element) {
         LogEvent logEvent = logEventFactory.apply(element);
+        logEvent.setCallback(getUpstreamCallback());
 
-        if (callbackProvider != null) {
-            logEvent.setCallback(callbackProvider.get());
-        }
-
-        target().post(logEvent);
+        emit(logEvent);
     }
 
     /**
-     *
-     * @param items
+     * Converts a batch of elements into as few {@link LogEvent} as possible while preserving
+     * the fields captured by {@link EventContextKey}. In most cases, the product should be
+     * a single {@link LogEvent}.
      */
     @Override
     public void postBatch(@Nonnull Collection<? extends EventBatch> items) {
@@ -96,34 +94,69 @@ class ToLogEventBlock extends SourceBlock.Base<LogEvent> implements ActorBlock<E
             }
 
             LogEvent logEvent = logEventFactory.apply(eventBatch.build());
+            logEvent.setCallback(getBatchCallback(group));
 
-            if (callbackProvider != null) {
-                // callback is expected to be called with the original elements of combined batch.
-                logEvent.setCallback(createFanoutCallback(callbackProvider.get(), group));
-            }
-
-            target().post(logEvent);
+            emit(logEvent);
         }
     }
 
-    private Callback<EventBatch> createFanoutCallback(
-        Callback<EventBatch> delegate,
-        Collection<EventBatch> group
-    ) {
-        return new Callback<EventBatch>() {
-            @Override
-            public void success(EventBatch bundled) {
-                for (final EventBatch source : group) {
-                    delegate.success(source);
-                }
-            }
+    private Callback<EventBatch> getUpstreamCallback() {
+        if (callbackProvider != null) {
+            return callbackProvider.get();
+        }
+        return null;
+    }
 
-            @Override
-            public void failure(EventBatch context, @Nonnull Throwable ex) {
-                for (final EventBatch source : group) {
-                    delegate.failure(source, ex);
-                }
+    /**
+     * Creates a callback to attach to the {@link LogEvent} that gets emitted for a batch of elements.
+     *
+     * This fans-out the success/failure callback so that the {@link Callback} that's passed receives the original batched
+     * elements, individually.
+     *
+     * The reason we want to callback per-item because it allows callbacks to be unaware of batching and enable an element
+     * to tracked from end-to-end.
+     *
+     * @param originals the elements to pass {@code callback} when the returned callback is completed.
+     * @return a callback that notifies
+     */
+    private Callback<EventBatch> getBatchCallback(Collection<EventBatch> originals) {
+        final Callback<EventBatch> upstreamCallback = getUpstreamCallback();
+        if (upstreamCallback == null || originals.isEmpty()) {
+            return null;
+        }
+
+        // optimization: avoid unnecessary wrapper
+        if (originals.size() == 1) {
+            return upstreamCallback;
+        }
+
+        return new BatchCallback<>(upstreamCallback, originals);
+    }
+
+    private static class BatchCallback<T> implements Callback<T> {
+        private final Callback<T> elementCallback;
+        private final Collection<T> batchElements;
+
+        public BatchCallback(
+            Callback<T> elementCallback,
+            Collection<T> batchElements
+        ) {
+            this.batchElements = batchElements;
+            this.elementCallback = elementCallback;
+        }
+
+        @Override
+        public void success(T batchedElement) {
+            for (final T original : batchElements) {
+                elementCallback.success(original);
             }
-        };
+        }
+
+        @Override
+        public void failure(T batchedElement, @Nonnull Throwable ex) {
+            for (final T source : batchElements) {
+                elementCallback.failure(source, ex);
+            }
+        }
     }
 }

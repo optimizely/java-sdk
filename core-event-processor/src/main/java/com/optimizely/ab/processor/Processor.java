@@ -21,64 +21,125 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.concurrent.TimeUnit;
 
 /**
- * This class represents processing pipeline as a list of {@link Block}.
- * Manages lifecycle and forwards to a {@link TargetBlock}
+ * This class represents processing pipeline as a sequence of {@link Block}s composed together.
  */
-public class Processor<TInput> implements TargetBlock<TInput> {
+public class Processor<TInput, TOutput> implements ActorBlock<TInput, TOutput> {
     public static final Logger logger = LoggerFactory.getLogger(Processor.class);
 
-    private final TargetBlock<TInput> target;
-    private final List<Block> blocks;
+    private final TargetBlock<TInput> in;
+    private final SourceBlock<TOutput> out;
+    private final Block[] blocks;
 
-    public Processor(
-        TargetBlock<TInput> target,
-        List<Block> blocks
+    /**
+     * Creates a {@link Processor} from a series of {@link Block}.
+     *
+     * The first block is used as {@link TargetBlock} at the head of chain and last block is used as {@link SourceBlock} *
+     * at the tail of chain.
+     *
+     * @param <T> the type of input elements
+     * @param <R> the type of output elements
+     * @return a new {@link ActorBlock}
+     * @throws IllegalArgumentException if {@code blocks} is null or contains null
+     */
+    @SuppressWarnings("unchecked")
+    public static <T, R> Processor<T, R> from(Block... blocks) {
+        Assert.notNull(blocks, "blocks");
+
+        // validation
+        Assert.argument(blocks.length > 0, "blocks must not be empty");
+        for (int i = 0; i < blocks.length; i++) {
+            Block block = blocks[i];
+            Assert.argument(block != null, "blocks must not contain nulls");
+            for (int j = i + 1; j < blocks.length; j++) {
+                Assert.argument(block != blocks[j], "blocks must not contain duplicates");
+            }
+        }
+
+        TargetBlock<T> in = (TargetBlock<T>) blocks[0];
+        Block last = blocks[blocks.length - 1];
+
+        SourceBlock<R> out = null;
+        if (last instanceof SourceBlock) {
+            out = (SourceBlock<R>) last;
+        }
+
+        return new Processor<>(in, out, blocks);
+    }
+
+    private Processor(
+        TargetBlock<TInput> in,
+        SourceBlock<TOutput> out,
+        Block[] blocks
     ) {
-        this.target = Assert.notNull(target, "target");
-        this.blocks = blocks;
+        this.in = Assert.notNull(in, "in");
+        this.out = out;
+        this.blocks = Assert.notNull(blocks, "blocks");
+    }
+
+    @SuppressWarnings("unchecked")
+    public void link() {
+        TargetBlock downstream = (TargetBlock) blocks[blocks.length - 1];
+        for (int i = blocks.length - 2; i >= 0; i--) {
+            SourceBlock upstream = (SourceBlock) blocks[i];
+            upstream.linkTo(downstream);
+            downstream = (TargetBlock) upstream;
+        }
     }
 
     @Override
     public void onStart() {
-        logger.debug("Starting...");
-        ListIterator<Block> it = blocks.listIterator(blocks.size());
-        while (it.hasPrevious()) {
-            it.previous().onStart();
+        logger.debug("Starting {} components...", blocks.length);
+
+        for (int i = blocks.length - 1; i >= 0; i--) {
+            blocks[i].onStart();
         }
+
         logger.debug("Started");
     }
 
     @Override
     public boolean onStop(long timeout, TimeUnit unit) {
-        logger.debug("Stopping");
+        logger.debug("Stopping {} components...", blocks.length);
+
+
         for (final Block block : blocks) {
-            try {
-                block.onStop(timeout, unit);
-            } catch (RuntimeException e) {
-                logger.warn("Error while stopping {}", block, e);
-            }
+            block.onStop();
         }
+
         logger.debug("Stopped");
         return true;
     }
 
     @Override
     public void post(@Nonnull TInput element) {
-        target.post(element);
+        in.post(element);
     }
 
     @Override
     public void postBatch(@Nonnull Collection<? extends TInput> elements) {
-        target.postBatch(elements);
+        in.postBatch(elements);
     }
 
     @Override
-    public void postNullable(TInput element) {
-        target.postNullable(element);
+    public void linkTo(TargetBlock<? super TOutput> target, LinkOptions options) {
+        if (out == null) {
+            throw new UnsupportedOperationException();
+        }
+        out.linkTo(target, options);
+    }
+
+    TargetBlock<TInput> getTargetBlock() {
+        return in;
+    }
+
+    SourceBlock<TOutput> getSourceBlock() {
+        return out;
+    }
+
+    Block[] getBlocks() {
+        return blocks;
     }
 }

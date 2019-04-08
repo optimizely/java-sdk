@@ -18,12 +18,13 @@ package com.optimizely.ab.event;
 
 import com.optimizely.ab.common.callback.Callback;
 import com.optimizely.ab.common.callback.CallbackHolder;
+import com.optimizely.ab.common.message.Message;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.serializer.DefaultJsonSerializer;
 import com.optimizely.ab.event.internal.serializer.Serializer;
-import com.optimizely.ab.common.message.Message;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.Map;
 
@@ -50,7 +51,7 @@ public class LogEvent implements Message<EventBatch> {
         this.eventBatch = eventBatch;
     }
 
-    public void setCallback(Callback<EventBatch> callback) {
+    public void setCallback(@Nullable Callback<EventBatch> callback) {
         this.callback.set(callback);
     }
 

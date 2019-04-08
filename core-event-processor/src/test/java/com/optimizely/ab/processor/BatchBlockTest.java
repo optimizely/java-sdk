@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -47,7 +46,6 @@ import java.util.stream.IntStream;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -185,9 +183,9 @@ public class BatchBlockTest {
     }
 
     @Test
-    public void testDeadlineZero() throws Exception {
+    public void testUnboundedAge() throws Exception {
         BatchBlock<Object> buffer = batchingQueue(config -> config
-            .maxBatchAge(Duration.ZERO));
+            .maxBatchAge(null));
 
         buffer.post("one");
         assertBatchCount(0, buffer);
@@ -209,7 +207,7 @@ public class BatchBlockTest {
         buffer.post("one");
         Thread.sleep(250L);
         assertThat(batchCount.get(), equalTo(0));
-        buffer.onStop(1, SECONDS);
+        buffer.onStop();
         assertBatchCount(1, buffer);
     }
 
@@ -222,7 +220,7 @@ public class BatchBlockTest {
         buffer.post("one");
         Thread.sleep(250L);
         assertThat(batchCount.get(), equalTo(0));
-        buffer.onStop(1, SECONDS);
+        buffer.onStop();
         assertBatchCount(0, buffer);
     }
 
@@ -357,12 +355,18 @@ public class BatchBlockTest {
 
     // waits for the configured max age
     private void assertBatchCount(int n, BatchBlock processor) {
-        long millis = Optional.ofNullable(processor.getOptions().getMaxBatchAge())
-            .map(maxAge -> maxAge.plus(Duration.ofMillis(250)))
-            .orElse(Duration.ofSeconds(1))
-            .toMillis();
+        BatchOptions options = processor.getOptions();
 
-        Integer actual = await().atMost(millis, MILLISECONDS).untilAtomic(batchCount, greaterThanOrEqualTo(n));
+        long timeout = 1000L;
+        if (BatchOptions.hasMaxAge(options)) {
+            // some leniency for context switching
+            timeout = Math.max(options.getMaxAge() + 100L, timeout);
+        }
+
+        logger.info("Timeout={}", timeout);
+        Integer actual = await()
+            .atMost(timeout, MILLISECONDS)
+            .untilAtomic(batchCount, greaterThanOrEqualTo(n));
 
         assertThat(actual, equalTo(n));
     }

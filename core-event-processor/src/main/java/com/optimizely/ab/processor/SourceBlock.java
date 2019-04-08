@@ -12,166 +12,63 @@
  */
 package com.optimizely.ab.processor;
 
-import com.optimizely.ab.common.internal.Assert;
-
-import javax.annotation.Nonnull;
-import java.util.Collection;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Objects;
 
 /**
  * Represents a dataflow {@link Block} that is a source of data.
  *
- * This interface and its counterparts, {@link TargetBlock} and {@link ActorBlock}, are inspired by .NET TPL. They
- * provide the basic building blocks to define the in-process message passing for coarse-grained dataflow and
- * parallelism.
- *
  * @param <TOutput> the type of output elements
  */
 public interface SourceBlock<TOutput> extends Block {
-
-    /**
-     * Links the {@link SourceBlock} to the specified {@link TargetBlock}.
-     *
-     * @param target the target to connect to this source
-     * @return a disposable link between this and target
-     */
-    default Link linkTo(TargetBlock<? super TOutput> target) {
-        return linkTo(target, LinkOptions.create());
-    }
-
     /**
      * Links the {@link SourceBlock} to the specified {@link TargetBlock}.
      *
      * @param target the target to connect to this source
      * @param options configures the link
-     * @return a disposable link between this and target
      */
-    Link linkTo(TargetBlock<? super TOutput> target, LinkOptions options);
+    void linkTo(TargetBlock<? super TOutput> target, LinkOptions options);
 
     /**
-     * This class provides skeletal implementation for {@link SourceBlock} to interface to minimize the effort required to
-     * implement the interface.
+     * Links the {@link SourceBlock} to the specified {@link TargetBlock}.
      *
-     * Maintains link state to {@link TargetBlock} and the associated {@link LinkOptions} and propagates completion signal
-     * accordingly.
-     *
-     * @param <TOutput> the type of output elements; the type of elements accepted by downstream.
+     * @param target the target to connect to this source
      */
-    abstract class Base<TOutput> implements SourceBlock<TOutput> {
-        // currently support only a single target to be linked; could change in future
-        private final AtomicReference<TargetLink<TOutput>> state = new AtomicReference<>();
+    default void linkTo(TargetBlock<? super TOutput> target) {
+        linkTo(target, null);
+    }
 
-        @Override
-        public Link linkTo(TargetBlock<? super TOutput> target, LinkOptions options) {
-            TargetLink<TOutput> link = new TargetLink<>(state, target, options);
-            link.create();
-            return link;
+    /**
+     * A mutable set of options used to configure a link between {@link Blocks}
+     */
+    class LinkOptions {
+        private boolean propagateCompletion = false;
+
+        public static LinkOptions create() {
+            return new LinkOptions();
+        }
+
+        private LinkOptions() {
+        }
+
+        public boolean getPropagateCompletion() {
+            return propagateCompletion;
+        }
+
+        public void setPropagateCompletion(boolean propagateCompletion) {
+            this.propagateCompletion = propagateCompletion;
         }
 
         @Override
-        public void onStart() {
-            // no-op
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof LinkOptions)) return false;
+            final LinkOptions that = (LinkOptions) o;
+            return propagateCompletion == that.propagateCompletion;
         }
 
         @Override
-        public boolean onStop(long timeout, TimeUnit unit) {
-            TargetLink link = state.get();
-            if (link != null) {
-                return link.onStop(timeout, unit);
-            }
-            return true;
-        }
-
-        /**
-         * Safely get a {@link TargetBlock}.
-         *
-         * @throws IllegalStateException if no target is linked
-         */
-        @Nonnull
-        protected TargetBlock<? super TOutput> target() {
-            TargetLink<? super TOutput> link = this.state.get();
-            Assert.state(link != null, "Target has not been linked");
-            return link;
-        }
-
-        /**
-         * Implements a link to a delegate target
-         */
-        static class TargetLink<TOutput> implements TargetBlock<TOutput>, Link {
-            private final AtomicReference<TargetLink<TOutput>> state;
-            private TargetBlock<? super TOutput> target;
-            private LinkOptions options;
-
-            TargetLink(
-                AtomicReference<TargetLink<TOutput>> state,
-                TargetBlock<? super TOutput> target,
-                LinkOptions options
-            ) {
-                this.state = Assert.notNull(state, "state");
-                this.target = Assert.notNull(target, "target");
-                this.options = (options != null) ? options : LinkOptions.create();
-            }
-
-            /**
-             * Sets/replaces the current link state with this.
-             */
-            public void create() {
-                // set as current, replacing if one exists
-                TargetLink existing = this.state.getAndSet(this);
-                if (existing != null) {
-                    existing.close();
-                }
-            }
-
-            protected LinkOptions getOptions() {
-                return options;
-            }
-
-            @Override
-            public void post(@Nonnull TOutput element) {
-                Assert.state(target != null, "Link is closed");
-                target.post(element);
-            }
-
-            @Override
-            public void postBatch(@Nonnull Collection<? extends TOutput> elements) {
-                Assert.state(target != null, "Link is closed");
-                target.postBatch(elements);
-            }
-
-            @Override
-            public void postNullable(TOutput element) {
-                Assert.state(target != null, "Link is closed");
-                target.postNullable(element);
-            }
-
-            @Override
-            public void onStart() {
-                Assert.state(target != null, "Link is closed");
-                target.onStart();
-            }
-
-            @Override
-            public boolean onStop(long timeout, TimeUnit unit) {
-                Assert.state(target != null, "Link is closed");
-                close();
-                if (options.getPropagateCompletion()) {
-                    return target.onStop(timeout, unit);
-                }
-                return true;
-            }
-
-            @Override
-            public void close() {
-                state.compareAndSet(this, null);
-                target = null;
-            }
-
-            @Override
-            public boolean isClosed() {
-                return (this != state.get());
-            }
+        public int hashCode() {
+            return Objects.hash(propagateCompletion);
         }
     }
 }

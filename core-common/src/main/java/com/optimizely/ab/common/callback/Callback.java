@@ -36,6 +36,14 @@ public interface Callback<E> {
     void failure(E context, @Nonnull Throwable throwable);
 
     /**
+     * @return a {@link Callback} that does nothing
+     */
+    @SuppressWarnings("unchecked")
+    static <E> Callback<E> noop() {
+        return (Callback<E>) NoOpCallback.INSTANCE;
+    }
+
+    /**
      * Convenience method to reify a {@link Callback} instance using anonymous functions.
      *
      * @param onSuccess function invoked on success

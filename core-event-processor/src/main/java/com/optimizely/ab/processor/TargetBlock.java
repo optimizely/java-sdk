@@ -25,10 +25,6 @@ import java.util.Collection;
  * implementations either individually, via {@link #post}, or (optionally) in bulk,
  * via {@link #postBatch}.
  *
- * This interface and its counterparts, {@link SourceBlock} and {@link ActorBlock},
- * are inspired by .NET TPL. They provide the basic building blocks to define the
- * in-process message passing for coarse-grained dataflow and parallelism.
- *
  * @param <TInput> the type of input elements
  */
 @FunctionalInterface
@@ -55,18 +51,9 @@ public interface TargetBlock<TInput> extends Block {
      */
     default void postBatch(@Nonnull Collection<? extends TInput> elements) {
         for (final TInput element : elements) {
-            postNullable(element);
-        }
-    }
-
-    /**
-     * Posts a potentially-null element.
-     *
-     * Default implementation ignores nulls
-     */
-    default void postNullable(TInput element) {
-        if (element != null) {
-            post(element);
+            if (element != null) {
+                post(element);
+            }
         }
     }
 
