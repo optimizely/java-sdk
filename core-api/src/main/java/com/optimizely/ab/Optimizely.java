@@ -731,14 +731,21 @@ public class Optimizely {
             return false;
         }
 
+        // if the experiment is not a valid experiment key, don't set it.
+        Experiment experiment = projectConfig.getExperimentKeyMapping().get(experimentKey);
+        if (experiment == null) {
+            logger.error("Experiment {} does not exist in ProjectConfig for project {}", experimentKey, projectConfig.getProjectId());
+            return false;
+        }
+
         // TODO this is problematic if swapping out ProjectConfigs.
         // This state should be represented elsewhere like in a ephemeral UserProfileService.
-        return projectConfig.setForcedVariation(experimentKey, userId, variationKey);
+        return decisionService.setForcedVariation(experiment, userId, variationKey);
     }
 
     /**
      * Gets the forced variation for a given user and experiment.
-     * This method just calls into the {@link ProjectConfig#getForcedVariation(String, String)}
+     * This method just calls into the {@link DecisionService#getForcedVariation(Experiment, String)}
      * method of the same signature.
      *
      * @param experimentKey The key for the experiment.
@@ -755,7 +762,13 @@ public class Optimizely {
             return null;
         }
 
-        return projectConfig.getForcedVariation(experimentKey, userId);
+        Experiment experiment = projectConfig.getExperimentKeyMapping().get(experimentKey);
+        if (experiment == null) {
+            logger.debug("No experiment \"{}\" mapped to user \"{}\" in the forced variation map ", experimentKey, userId);
+            return null;
+        }
+
+        return decisionService.getForcedVariation(experiment, userId);
     }
 
     /**

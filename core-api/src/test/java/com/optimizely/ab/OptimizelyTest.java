@@ -189,8 +189,6 @@ public class OptimizelyTest {
         when(mockBucketer.bucket(activatedExperiment, bucketingId, validProjectConfig))
             .thenReturn(bucketedVariation);
 
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("No variation for experiment \"%s\" mapped to user \"%s\" in the forced variation map", activatedExperiment.getKey(), testUserId));
-
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
         logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
@@ -247,8 +245,6 @@ public class OptimizelyTest {
 
         when(mockBucketer.bucket(activatedExperiment, bucketingId, validProjectConfig))
             .thenReturn(bucketedVariation);
-
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("No variation for experiment \"%s\" mapped to user \"%s\" in the forced variation map", activatedExperiment.getKey(), testUserId));
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
@@ -399,8 +395,6 @@ public class OptimizelyTest {
         when(mockBucketer.bucket(activatedExperiment, bucketingId, validProjectConfig))
             .thenReturn(bucketedVariation);
 
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("No variation for experiment \"%s\" mapped to user \"%s\" in the forced variation map", activatedExperiment.getKey(), testUserId));
-
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
         logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
@@ -457,8 +451,6 @@ public class OptimizelyTest {
 
         when(mockBucketer.bucket(activatedExperiment, bucketingId, validProjectConfig))
             .thenReturn(bucketedVariation);
-
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("No variation for experiment \"%s\" mapped to user \"%s\" in the forced variation map", activatedExperiment.getKey(), testUserId));
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
@@ -565,8 +557,6 @@ public class OptimizelyTest {
 
         when(mockBucketer.bucket(activatedExperiment, bucketingId, validProjectConfig))
             .thenReturn(bucketedVariation);
-
-        logbackVerifier.expectMessage(Level.DEBUG, String.format("No variation for experiment \"%s\" mapped to user \"%s\" in the forced variation map", activatedExperiment.getKey(), testUserId));
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
@@ -4871,5 +4861,47 @@ public class OptimizelyTest {
             "223"
         );
         return new EventType("8765", "unknown_event_type", experimentIds);
+    }
+
+    /* Invalid Experiement */
+    @Test
+    @SuppressFBWarnings("NP")
+    public void setForcedVariationNullExperimentKey() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        assertFalse(optimizely.setForcedVariation(null, "testUser1", "vtag1"));
+    }
+
+    @Test
+    @SuppressFBWarnings("NP")
+    public void getForcedVariationNullExperimentKey() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        assertNull(optimizely.getForcedVariation(null, "testUser1"));
+    }
+
+
+    @Test
+    public void setForcedVariationWrongExperimentKey() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        assertFalse(optimizely.setForcedVariation("wrongKey", "testUser1", "vtag1"));
+
+    }
+
+    @Test
+    public void getForcedVariationWrongExperimentKey() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        assertNull(optimizely.getForcedVariation("wrongKey", "testUser1"));
+    }
+
+    @Test
+    public void setForcedVariationEmptyExperimentKey() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        assertFalse(optimizely.setForcedVariation("", "testUser1", "vtag1"));
+
+    }
+
+    @Test
+    public void getForcedVariationEmptyExperimentKey() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        assertNull(optimizely.getForcedVariation("", "testUser1"));
     }
 }

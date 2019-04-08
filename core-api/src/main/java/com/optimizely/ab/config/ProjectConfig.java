@@ -24,7 +24,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ProjectConfig is an interface capturing the experiment, variation and feature definitions.
@@ -93,16 +92,6 @@ public interface ProjectConfig {
     Map<String, Rollout> getRolloutIdMapping();
 
     Map<String, FeatureFlag> getFeatureKeyMapping();
-
-    ConcurrentHashMap<String, ConcurrentHashMap<String, String>> getForcedVariationMapping();
-
-    boolean setForcedVariation(@Nonnull String experimentKey,
-                               @Nonnull String userId,
-                               @Nullable String variationKey);
-
-    @Nullable
-    Variation getForcedVariation(@Nonnull String experimentKey,
-                                 @Nonnull String userId);
 
     @Override
     String toString();
