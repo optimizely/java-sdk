@@ -28,7 +28,7 @@ import com.lmax.disruptor.dsl.ProducerType;
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.common.lifecycle.LifecycleAware;
 import com.optimizely.ab.common.message.MutableMessage;
-import com.optimizely.ab.processor.ActorBlock;
+import com.optimizely.ab.processor.ProcessorBlock;
 import com.optimizely.ab.processor.Blocks;
 import com.optimizely.ab.processor.TargetBlock;
 import org.slf4j.Logger;
@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @param <T> the type of elements to in buffer
  */
-public class DisruptorBuffer<T> extends Blocks.Source<T> implements ActorBlock<T, T> {
+public class DisruptorBuffer<T> extends Blocks.Source<T> implements ProcessorBlock<T, T> {
     private static final Logger logger = LoggerFactory.getLogger(DisruptorBuffer.class);
     static final int MIN_RINGBUFFER_SIZE = 128;
     static final int SLEEP_MILLIS_BETWEEN_DRAIN_ATTEMPTS = 50;

@@ -15,17 +15,17 @@
  */
 package com.optimizely.ab.processor.internal;
 
-import com.optimizely.ab.common.callback.CompositeCallback;
 import com.optimizely.ab.common.callback.Callback;
+import com.optimizely.ab.common.callback.CompositeCallback;
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.common.plugin.Plugin;
 import com.optimizely.ab.common.plugin.PluginSupport;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.processor.ActorBlock;
 import com.optimizely.ab.processor.BatchOptions;
 import com.optimizely.ab.processor.Blocks;
+import com.optimizely.ab.processor.ProcessorBlock;
 import com.optimizely.ab.processor.TargetBlock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +56,7 @@ public class EventProcessor<T> implements PluginSupport {
     /**
      * Handler group for intercepting stage.
      */
-    private CompositeUnaryOperator<EventBatch> interceptors = new CompositeUnaryOperator<>();
+    private CompositeUnaryOperator<T> interceptors = new CompositeUnaryOperator<>();
 
     /**
      * Block that handles event batching.
@@ -64,7 +64,7 @@ public class EventProcessor<T> implements PluginSupport {
      * Receives elements from (application) threads producing into this processor.
      * By default, no buffer is used in order to be consistent with past releases. This may change in the future.
      */
-    private Supplier<ActorBlock<EventBatch, EventBatch>> batchProcessorProvider = Blocks::identity;
+    private Supplier<ProcessorBlock<EventBatch, EventBatch>> batchProcessorProvider = Blocks::identity;
 
     /**
      * Callbacks to be invoked when an event is finished being dispatched to report success or failure status.
@@ -86,16 +86,16 @@ public class EventProcessor<T> implements PluginSupport {
         return build(eventHandlerAdapter(eventHandler));
     }
 
-    public TargetBlock<T> build(TargetBlock<LogEvent> sink) {
-        ActorBlock<T, T> transformProcessor = getTransformProcessor();
-        ActorBlock<T, EventBatch> eventBatchConverter = getEventBatchConverter();
-        ActorBlock<EventBatch, EventBatch> interceptProcessor = getInterceptProcessor();
-        ActorBlock<EventBatch, EventBatch> batchProcessor = batchProcessorProvider.get();
-        ActorBlock<EventBatch, LogEvent> logEventConverter = getLogEventConverter();
+    public ProcessorBlock<T, LogEvent> build(TargetBlock<LogEvent> sink) {
+        ProcessorBlock<T, T> transformProcessor = getTransformProcessor();
+        ProcessorBlock<T, T> interceptProcessor = getInterceptProcessor();
+        ProcessorBlock<T, EventBatch> eventBatchConverter = getEventBatchConverter();
+        ProcessorBlock<EventBatch, EventBatch> batchProcessor = batchProcessorProvider.get();
+        ProcessorBlock<EventBatch, LogEvent> logEventConverter = getLogEventConverter();
 
-        transformProcessor.linkTo(eventBatchConverter);
-        eventBatchConverter.linkTo(interceptProcessor);
-        interceptProcessor.linkTo(batchProcessor);
+        transformProcessor.linkTo(interceptProcessor);
+        interceptProcessor.linkTo(eventBatchConverter);
+        eventBatchConverter.linkTo(batchProcessor);
         batchProcessor.linkTo(logEventConverter);
         logEventConverter.linkTo(sink);
 
@@ -108,10 +108,10 @@ public class EventProcessor<T> implements PluginSupport {
             sink
         );
 
-        return transformProcessor; // the front of the pipeline
+        return Blocks.processor(transformProcessor, logEventConverter);
     }
 
-    static ActorBlock<LogEvent, LogEvent> eventHandlerAdapter(final EventHandler eventHandler) {
+    static ProcessorBlock<LogEvent, LogEvent> eventHandlerAdapter(final EventHandler eventHandler) {
         return Blocks.action(logEvent -> {
             try {
                 eventHandler.dispatchEvent(logEvent);
@@ -151,7 +151,7 @@ public class EventProcessor<T> implements PluginSupport {
      *
      * Note: this should not be included in public API until a semantic model class is used for predicate.
      */
-    public EventProcessor<T> interceptor(final Predicate<EventBatch> filter) {
+    public EventProcessor<T> interceptor(final Predicate<T> filter) {
         Assert.notNull(filter, "filter");
         this.interceptors.add(element -> {
             try {
@@ -205,7 +205,7 @@ public class EventProcessor<T> implements PluginSupport {
     /**
      * Configures the provider used for the batching
      */
-    EventProcessor<T> batchProcessorProvider(Supplier<ActorBlock<EventBatch, EventBatch>> provider) {
+    EventProcessor<T> batchProcessorProvider(Supplier<ProcessorBlock<EventBatch, EventBatch>> provider) {
         this.batchProcessorProvider = Assert.notNull(provider, "provider");
         return this;
     }
@@ -220,7 +220,7 @@ public class EventProcessor<T> implements PluginSupport {
         return this;
     }
 
-    protected ActorBlock<T, T> getTransformProcessor() {
+    protected ProcessorBlock<T, T> getTransformProcessor() {
         if (transformers == null || transformers.isEmpty()) {
             logger.trace("No transformers are configured");
             return Blocks.identity();
@@ -228,11 +228,11 @@ public class EventProcessor<T> implements PluginSupport {
         return Blocks.action(transformers);
     }
 
-    protected ActorBlock<T, EventBatch> getEventBatchConverter() {
+    protected ProcessorBlock<T, EventBatch> getEventBatchConverter() {
         return Blocks.map(eventBatchConverter);
     }
 
-    protected ActorBlock<EventBatch, EventBatch> getInterceptProcessor() {
+    protected ProcessorBlock<T, T> getInterceptProcessor() {
         if (interceptors == null || interceptors.isEmpty()) {
             logger.trace("No interceptors are configured");
             return Blocks.identity();
@@ -241,7 +241,7 @@ public class EventProcessor<T> implements PluginSupport {
         return Blocks.map(interceptors);
     }
 
-    protected ActorBlock<EventBatch, LogEvent> getLogEventConverter() {
+    protected ProcessorBlock<EventBatch, LogEvent> getLogEventConverter() {
         return new ToLogEventBlock(logEventConverter, () -> callbacks);
     }
 }

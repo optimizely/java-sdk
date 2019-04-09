@@ -40,7 +40,7 @@ import java.util.function.Supplier;
  * @param <T> the type of input elements and output element batches
  * @see BatchTask
  */
-public class BatchBlock<T> extends Blocks.Source<T> implements ActorBlock<T, T> {
+public class BatchBlock<T> extends Blocks.Source<T> implements ProcessorBlock<T, T> {
     private static final Logger logger = LoggerFactory.getLogger(BatchBlock.class);
 
     private final BatchOptions options;

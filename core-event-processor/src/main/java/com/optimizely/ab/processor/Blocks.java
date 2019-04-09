@@ -38,13 +38,13 @@ public final class Blocks {
     private Blocks() { /* no instances */ }
 
     /**
-     * Creates a pass-through {@link ActorBlock} that immediately emits the elements it receives downstream.
+     * Creates a pass-through {@link ProcessorBlock} that immediately emits the elements it receives downstream.
      *
      * @param <T> the type of input and output elements
      */
     @SuppressWarnings("unchecked")
-    public static <T> ActorBlock<T, T> identity() {
-        return (Actor<T, T>) IDENTITY_BLOCK;
+    public static <T> ProcessorBlock<T, T> identity() {
+        return (Processor<T, T>) IDENTITY_BLOCK;
     }
 
     /**
@@ -56,9 +56,9 @@ public final class Blocks {
      * @param <T> the type of input and output elements
      * @return a new block
      */
-    public static <T> ActorBlock<T, T> action(final Consumer<? super T> action) {
+    public static <T> ProcessorBlock<T, T> action(final Consumer<? super T> action) {
         Assert.notNull(action, "action");
-        return new Actor<T, T>() {
+        return new Processor<T, T>() {
             @Override
             public void post(@Nonnull T element) {
                 action.accept(element);
@@ -75,9 +75,9 @@ public final class Blocks {
      * @param <R> the type of output elements
      * @return a new block
      */
-    public static <T, R> ActorBlock<T, R> map(final Function<? super T, ? extends R> operator) {
+    public static <T, R> ProcessorBlock<T, R> map(final Function<? super T, ? extends R> operator) {
         Assert.notNull(operator, "operator");
-        return new Actor<T, R>() {
+        return new Processor<T, R>() {
             @Override
             public void post(@Nonnull T element) {
                 emit(operator.apply(element));
@@ -85,9 +85,9 @@ public final class Blocks {
         };
     }
 
-    public static <T, R> ActorBlock<T, R> flatMap(final Function<? super T, ? extends Collection<? extends R>> operator) {
+    public static <T, R> ProcessorBlock<T, R> flatMap(final Function<? super T, ? extends Collection<? extends R>> operator) {
         Assert.notNull(operator, "operator");
-        return new Actor<T, R>() {
+        return new Processor<T, R>() {
             @Override
             public void post(@Nonnull T element) {
                 Collection<? extends R> coll = operator.apply(element);
@@ -105,9 +105,9 @@ public final class Blocks {
      * @param <T> the type of input and output elements
      * @return a new block
      */
-    public static <T> ActorBlock<T, T> filter(final Predicate<? super T> condition) {
+    public static <T> ProcessorBlock<T, T> filter(final Predicate<? super T> condition) {
         Assert.notNull(condition, "condition");
-        return new Actor<T, T>() {
+        return new Processor<T, T>() {
             @Override
             public void post(@Nonnull T element) {
                 if (condition.test(element)) {
@@ -145,6 +145,34 @@ public final class Blocks {
     }
 
     /**
+     * Creates a {@link ProcessorBlock} that is the combination of a {@link TargetBlock} and a {@link SourceBlock}.
+     */
+    public static <T, R> ProcessorBlock<T, R> processor(
+        final TargetBlock<? super T> target,
+        final SourceBlock<? extends R> source
+    ) {
+        Assert.notNull(target, "target");
+        Assert.notNull(source, "source");
+        return new Processor<T, R>() {
+
+            @Override
+            public void post(@Nonnull T element) {
+                target.post(element);
+            }
+
+            @Override
+            public void postBatch(@Nonnull Collection<? extends T> elements) {
+                target.postBatch(elements);
+            }
+
+            @Override
+            public void linkTo(TargetBlock<? super R> target) {
+                source.linkTo(target);
+            }
+        };
+    }
+
+    /**
      * Performs start sequence on the specified blocks
      */
     public static void startAll(Block... blocks) {
@@ -168,7 +196,7 @@ public final class Blocks {
     /**
      * Class for pass-through blocks
      */
-    private static class IdentityBlock extends Actor<Object, Object> {
+    private static class IdentityBlock extends Processor<Object, Object> {
         @Override
         public void post(@Nonnull Object element) {
             emit(element);
@@ -225,9 +253,9 @@ public final class Blocks {
     }
 
     /**
-     * This class provides skeletal implementation for {@link ActorBlock}.
+     * This class provides skeletal implementation for {@link ProcessorBlock}.
      */
-    abstract static class Actor<T, R> extends Source<R> implements ActorBlock<T, R> {}
+    abstract static class Processor<T, R> extends Source<R> implements ProcessorBlock<T, R> {}
 
     /**
      * This class provides skeletal implementation for {@link SourceBlock} to interface to minimize the effort required to

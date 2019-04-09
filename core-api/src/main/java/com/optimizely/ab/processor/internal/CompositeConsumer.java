@@ -70,6 +70,5 @@ class CompositeConsumer<T> implements Consumer<T>, Iterable<Consumer<? super T>>
 
     void add(Consumer<? super T> consumer) {
         consumers.add(Assert.notNull(consumer, "consumer"));
-
     }
 }

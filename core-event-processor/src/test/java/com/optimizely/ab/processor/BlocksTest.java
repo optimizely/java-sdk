@@ -36,8 +36,11 @@ import java.util.stream.IntStream;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.*;
 
+@SuppressWarnings("unchecked")
 public class BlocksTest {
     @Test
     public void testSource() {
@@ -74,7 +77,7 @@ public class BlocksTest {
 
     @Test
     public void testActor() {
-        class TestActor extends Blocks.Actor<Integer, Integer> {
+        class TestProcessor extends Blocks.Processor<Integer, Integer> {
             @Override
             public void post(@Nonnull Integer element) {
                 if (element <= 1) {
@@ -85,7 +88,7 @@ public class BlocksTest {
             }
         }
 
-        ActorBlock<Integer, Integer> block = new TestActor();
+        ProcessorBlock<Integer, Integer> block = new TestProcessor();
 
         Blocks.ValueBlock<Object, List<Object>> target = Blocks.collect(Collectors.toList());
 
@@ -110,7 +113,7 @@ public class BlocksTest {
     public void testEffect() {
         LongAdder adder1 = new LongAdder();
         LongAdder adder2 = new LongAdder();
-        ActorBlock<LongAdder, LongAdder> block = Blocks.action(LongAdder::increment);
+        ProcessorBlock<LongAdder, LongAdder> block = Blocks.action(LongAdder::increment);
 
         AtomicReference<LongAdder> latest = new AtomicReference<>();
         block.linkTo(latest::set);
@@ -144,7 +147,7 @@ public class BlocksTest {
         dict.put("foo", "bar");
         dict.put("bar", "baz");
 
-        ActorBlock<String, String> block = Blocks.map(dict::get);
+        ProcessorBlock<String, String> block = Blocks.map(dict::get);
 
         LinkedList<String> output = new LinkedList<>();
         block.linkTo(output::push);
@@ -165,7 +168,7 @@ public class BlocksTest {
         dict.put("foo", Collections.singleton("bar"));
         dict.put("bar", new HashSet<>(Arrays.asList("baz", "qux")));
 
-        ActorBlock<String, String> block = Blocks.flatMap(dict::get);
+        ProcessorBlock<String, String> block = Blocks.flatMap(dict::get);
 
         LinkedList<String> output = new LinkedList<>();
         block.linkTo(output::push);
@@ -183,7 +186,7 @@ public class BlocksTest {
 
     @Test
     public void testFilter() {
-        ActorBlock<Integer, Integer> block = Blocks.filter(i -> i % 2 == 0);
+        ProcessorBlock<Integer, Integer> block = Blocks.filter(i -> i % 2 == 0);
 
         LinkedList<Number> output = new LinkedList<>();
         block.linkTo(output::push);
@@ -215,10 +218,33 @@ public class BlocksTest {
         assertThat(block.get(), is(new HashSet<>(Arrays.asList("foo", "bar"))));
     }
 
+    @Test
+    public void testProcessor() {
+        TargetBlock<Integer> target = (TargetBlock<Integer>) mock(TargetBlock.class);
+        SourceBlock<String> source = (SourceBlock<String>) mock(SourceBlock.class);
+
+        ProcessorBlock<Integer, String> processor = Blocks.processor(target, source);
+
+        processor.post(42);
+        verify(target, times(1)).post(42);
+
+        processor.postBatch(Arrays.asList(100, 101, 102));
+        verify(target, times(1)).postBatch(eq(Arrays.asList(100, 101, 102)));
+
+        verifyNoMoreInteractions(target);
+        verifyZeroInteractions(source);
+
+        TargetBlock linkedTarget = mock(TargetBlock.class);
+        processor.linkTo(linkedTarget);
+        verify(source, times(1)).linkTo(linkedTarget);
+
+        verifyNoMoreInteractions(target);
+        verifyNoMoreInteractions(source);
+    }
 
     @Test
     public void testIdentity() {
-        ActorBlock<Object, Object> block = Blocks.identity();
+        ProcessorBlock<Object, Object> block = Blocks.identity();
 
         LinkedList<Object> output = new LinkedList<>();
         block.linkTo(output::push);

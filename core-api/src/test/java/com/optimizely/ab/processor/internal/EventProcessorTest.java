@@ -95,7 +95,7 @@ public class EventProcessorTest {
     @Test
     public void testInterceptorFilter() throws Exception {
         TargetBlock<EventBatch.Builder> target = processor(builder -> builder
-            .interceptor(event -> event.getAccountId().equals("2")));
+            .interceptor(event -> event.build().getAccountId().equals("2")));
 
         target.post(eventBatchBuilder().setAccountId("1"));
         target.post(eventBatchBuilder().setAccountId("2").addVisitor(visitorBuilder().setVisitorId("1").build()));

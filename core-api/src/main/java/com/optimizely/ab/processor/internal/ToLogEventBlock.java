@@ -19,7 +19,7 @@ import com.optimizely.ab.common.callback.Callback;
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.processor.ActorBlock;
+import com.optimizely.ab.processor.ProcessorBlock;
 import com.optimizely.ab.processor.Blocks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,7 @@ import java.util.function.Supplier;
  *
  * @see EventContextKey
  */
-class ToLogEventBlock extends Blocks.Source<LogEvent> implements ActorBlock<EventBatch, LogEvent> {
+class ToLogEventBlock extends Blocks.Source<LogEvent> implements ProcessorBlock<EventBatch, LogEvent> {
     private static final Logger logger = LoggerFactory.getLogger(ToLogEventBlock.class);
 
     private final Function<EventBatch, LogEvent> logEventFactory;

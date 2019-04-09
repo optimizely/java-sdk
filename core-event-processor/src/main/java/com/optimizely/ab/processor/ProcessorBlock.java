@@ -18,5 +18,4 @@ package com.optimizely.ab.processor;
  * @param <T> the type of input elements
  * @param <R> the type of output elements
  */
-public interface ActorBlock<T, R> extends Block, TargetBlock<T>, SourceBlock<R> {
-}
+public interface ProcessorBlock<T, R> extends Block, TargetBlock<T>, SourceBlock<R> {}
