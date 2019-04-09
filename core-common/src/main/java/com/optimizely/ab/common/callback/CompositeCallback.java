@@ -33,21 +33,21 @@ import java.util.ListIterator;
  *
  * @param <T> the type of value received by callbacks
  */
-public class AggregateCallback<T> extends AbstractSequentialList<Callback<T>> implements Callback<T> {
-    private static final Logger logger = LoggerFactory.getLogger(AggregateCallback.class);
+public class CompositeCallback<T> extends AbstractSequentialList<Callback<T>> implements Callback<T> {
+    private static final Logger logger = LoggerFactory.getLogger(CompositeCallback.class);
 
     private final List<Callback<T>> callbacks;
 
-    public AggregateCallback() {
+    public CompositeCallback() {
         this.callbacks = new LinkedList<>();
     }
 
-    protected AggregateCallback(List<Callback<? super T>> callbacks) {
+    protected CompositeCallback(List<Callback<? super T>> callbacks) {
         this();
         for (final Callback<? super T> callback : callbacks) {
-            if (callback instanceof AggregateCallback) {
+            if (callback instanceof CompositeCallback) {
                 //noinspection unchecked
-                callbacks.addAll(((AggregateCallback) callback).callbacks);
+                callbacks.addAll(((CompositeCallback) callback).callbacks);
             } else if (callback != null) {
                 callbacks.add(callback);
             }

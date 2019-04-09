@@ -87,7 +87,7 @@ public class BlocksTest {
 
         ActorBlock<Integer, Integer> block = new TestActor();
 
-        OutputBlock<Object, List<Object>> target = Blocks.collect(Collectors.toList());
+        Blocks.ValueBlock<Object, List<Object>> target = Blocks.collect(Collectors.toList());
 
         block.linkTo(target);
 
@@ -203,7 +203,7 @@ public class BlocksTest {
 
     @Test
     public void testCollector() {
-        OutputBlock<String, Set<String>> block = Blocks.collect(toSet());
+        Blocks.ValueBlock<String, Set<String>> block = Blocks.collect(toSet());
 
         block.post("foo");
         assertThat(block.get(), is(Collections.singleton("foo")));

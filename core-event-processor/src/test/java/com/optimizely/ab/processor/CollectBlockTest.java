@@ -30,7 +30,7 @@ import static org.hamcrest.Matchers.*;
 public class CollectBlockTest {
     @Test
     public void toListCollector() {
-        OutputBlock<String, List<String>> sink = Blocks.collect(toList());
+        Blocks.ValueBlock<String, List<String>> sink = Blocks.collect(toList());
         assertThat(sink.get(), empty());
 
         sink.post("a");
@@ -47,7 +47,7 @@ public class CollectBlockTest {
 
     @Test
     public void toSetCollector() {
-        OutputBlock<String, Map<String, Integer>> sink = Blocks.collect(toMap(s -> s, String::length));
+        Blocks.ValueBlock<String, Map<String, Integer>> sink = Blocks.collect(toMap(s -> s, String::length));
 
         assertThat(sink.get(), equalTo(Collections.emptyMap()));
 

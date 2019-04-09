@@ -24,6 +24,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -123,7 +124,7 @@ public final class Blocks {
      * @return a new target block that performs a reduction operation
      * @see Collectors
      */
-    public static <T, A, R> OutputBlock<T, R> collect(final Collector<? super T, A, R> collector) {
+    public static <T, A, R> ValueBlock<T, R> collect(final Collector<? super T, A, R> collector) {
         return new CollectBlock<>(collector);
     }
 
@@ -175,6 +176,21 @@ public final class Blocks {
     }
 
     /**
+     * Represents a {@link TargetBlock} with that exposes a value (some state)
+     *
+     * @param <TInput> the type of input elements
+     * @param <TValue> the type of value held by block
+     */
+    public interface ValueBlock<TInput, TValue> extends TargetBlock<TInput>, Supplier<TValue> {
+        /**
+         * Clears output state of by block
+         */
+        default void reset() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    /**
      * A stateful sink that performs reduction operation of a {@link Collector} over each input element.
      *
      * @param <T> the type of input elements to the reduction operation
@@ -182,7 +198,7 @@ public final class Blocks {
      * @param <R> the result type of the reduction operation
      * @see Collectors
      */
-    static class CollectBlock<T, A, R> implements OutputBlock<T, R> {
+    static class CollectBlock<T, A, R> implements ValueBlock<T, R> {
         private final Collector<? super T, A, R> collector;
         private A state;
 
@@ -203,7 +219,7 @@ public final class Blocks {
 
 
         @Override
-        public void reset() {
+        public synchronized void reset() {
             state = collector.supplier().get();
         }
     }

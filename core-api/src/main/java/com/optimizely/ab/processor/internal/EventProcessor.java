@@ -15,7 +15,7 @@
  */
 package com.optimizely.ab.processor.internal;
 
-import com.optimizely.ab.common.callback.AggregateCallback;
+import com.optimizely.ab.common.callback.CompositeCallback;
 import com.optimizely.ab.common.callback.Callback;
 import com.optimizely.ab.common.internal.Assert;
 import com.optimizely.ab.common.plugin.Plugin;
@@ -69,7 +69,7 @@ public class EventProcessor<T> implements PluginSupport {
     /**
      * Callbacks to be invoked when an event is finished being dispatched to report success or failure status.
      */
-    private AggregateCallback<EventBatch> callbacks = new AggregateCallback<>();
+    private CompositeCallback<EventBatch> callbacks = new CompositeCallback<>();
 
     private ThreadFactory threadFactory;
 
