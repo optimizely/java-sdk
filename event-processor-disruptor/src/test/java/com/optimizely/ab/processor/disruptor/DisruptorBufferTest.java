@@ -19,7 +19,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.util.DaemonThreadFactory;
-import com.optimizely.ab.common.lifecycle.LifecycleAware;
 import com.optimizely.ab.processor.TargetBlock;
 import org.junit.After;
 import org.junit.Before;
@@ -95,7 +94,7 @@ public class DisruptorBufferTest {
     @After
     public void tearDown() throws Exception {
         if (buffer != null) {
-            LifecycleAware.stop(buffer, 30, TimeUnit.SECONDS);
+            buffer.onStop();
         }
     }
 

@@ -27,7 +27,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
@@ -100,7 +99,7 @@ public class BatchBlock<T> extends Blocks.Source<T> implements ActorBlock<T, T> 
     }
 
     @Override
-    public boolean onStop(long timeout, TimeUnit unit) {
+    public void beforeStop() {
         if (options.shouldFlushOnShutdown()) {
             try {
                 flush();
@@ -108,7 +107,7 @@ public class BatchBlock<T> extends Blocks.Source<T> implements ActorBlock<T, T> 
                 logger.warn("Interrupted while flushing before shutdown");
             }
         }
-        return true;
+        super.onStop();
     }
 
     /**

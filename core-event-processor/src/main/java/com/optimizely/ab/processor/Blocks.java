@@ -21,7 +21,6 @@ import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -210,10 +209,9 @@ public final class Blocks {
     }
 
     /**
-     * This class provides skeletal implementation for {@link ActorBlock}
+     * This class provides skeletal implementation for {@link ActorBlock}.
      */
-    abstract static class Actor<T, R> extends Source<R> implements ActorBlock<T, R> {
-    }
+    abstract static class Actor<T, R> extends Source<R> implements ActorBlock<T, R> {}
 
     /**
      * This class provides skeletal implementation for {@link SourceBlock} to interface to minimize the effort required to
@@ -240,60 +238,66 @@ public final class Blocks {
         }
 
         @Override
-        public void onStart() {
-            // no-op
+        public final void onStart() {
+            afterStart();
         }
 
         @Override
-        public boolean onStop(long timeout, TimeUnit unit) {
+        public final void onStop() {
+            beforeStop();
+
             if (options != null && options.getPropagateCompletion()) {
                 target.onStop();
             }
+        }
+
+        /**
+         * Internal start method for subclasses
+         */
+        protected void afterStart() {
+            // overridable
+        }
+
+
+        /**
+         * Internal stop method for subclasses
+         */
+        protected void beforeStop() {
+            // overridable
+        }
+
+        /**
+         * Posts an element to linked block.
+         *
+         * @return true if linked and elements were emitted, otherwise false.
+         */
+        protected boolean emit(TOutput element) {
+            if (target == null) {
+                return false;
+            }
+
+            if (element != null) {
+                target.post(element);
+            }
+
             return true;
         }
 
         /**
-         * @throws IllegalStateException if target not linked
+         * Posts a batch of elements to linked block.
+         *
+         * @return true if linked and elements were emitted, otherwise false.
          */
-        protected void emit(TOutput element) {
-            emit(element, false);
-        }
-
-        protected void emit(TOutput element, boolean requireTarget) {
-            if (element == null) {
-                return;
-            }
-
+        protected boolean emitBatch(Collection<? extends TOutput> elements) {
             if (target == null) {
-                if (requireTarget) {
-                    throw new IllegalStateException("Not linked to a target");
-                }
-                return;
+                return false;
             }
 
-            target.post(element);
-        }
-
-        /**
-         * @throws IllegalStateException if target not linked
-         */
-        protected void emitBatch(Collection<? extends TOutput> elements) {
-            emitBatch(elements, false);
-        }
-
-        protected void emitBatch(Collection<? extends TOutput> elements, boolean requireTarget) {
-            if (elements == null) {
-                return;
+            if (elements != null && !elements.isEmpty()) {
+                target.postBatch(elements);
             }
 
-            if (target == null) {
-                if (requireTarget) {
-                    throw new IllegalStateException("Not linked to a target");
-                }
-                return;
-            }
-
-            target.postBatch(elements);
+            return true;
         }
     }
 }

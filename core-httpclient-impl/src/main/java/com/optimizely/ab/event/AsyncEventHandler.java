@@ -96,19 +96,17 @@ public class AsyncEventHandler implements EventHandler, LifecycleAware {
     }
 
     @Override
-    public boolean onStop(long timeout, TimeUnit unit) {
+    public void onStop() {
         workerExecutor.shutdown();
         try {
-            workerExecutor.awaitTermination(timeout, unit);
+            workerExecutor.awaitTermination(5, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             if (!workerExecutor.isTerminated()) {
                 logger.warn("Interrupting worker tasks");
                 List<Runnable> r = workerExecutor.shutdownNow();
                 logger.warn("{} workers did not execute", r.size());
-                return false;
             }
         }
-        return true;
     }
 
     /**

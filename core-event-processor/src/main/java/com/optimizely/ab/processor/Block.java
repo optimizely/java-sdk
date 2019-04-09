@@ -17,8 +17,6 @@ package com.optimizely.ab.processor;
 
 import com.optimizely.ab.common.lifecycle.LifecycleAware;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * Represents a block in a dataflow.
  */
@@ -31,8 +29,7 @@ public interface Block extends LifecycleAware {
     }
 
     @Override
-    default boolean onStop(long timeout, TimeUnit unit) {
+    default void onStop() {
         // no-op
-        return true;
     }
 }

@@ -15,8 +15,6 @@
  */
 package com.optimizely.ab.common.lifecycle;
 
-import java.util.concurrent.TimeUnit;
-
 public interface LifecycleAware {
     /**
      * Called once when component starts.
@@ -28,42 +26,6 @@ public interface LifecycleAware {
      *
      * Blocks execution until all tasks have completed execution after a shutdown request, or the
      * timeout occurs, or the current thread is interrupted, whichever happens first.
-     *
-     * TODO remove timeout arguments and return value
-     *
-     * @param timeout the maximum time to wait
-     * @param unit the time unit of the timeout argument
-     * @return true if the receiver was stopped cleanly and normally, false otherwise.
      */
-    boolean onStop(long timeout, TimeUnit unit);
-
-    default void onStop() {
-        onStop(1, TimeUnit.SECONDS);
-    }
-
-    /**
-     * Helper to call {@link #onStop(long, TimeUnit)} on input when it is lifecycle aware.
-     *
-     * @param component object to try lifecycle method invocation
-     */
-    static void start(Object component) {
-        if (component instanceof LifecycleAware) {
-            ((LifecycleAware) component).onStart();
-        }
-    }
-
-    /**
-     * Helper to call {@link #onStop(long, TimeUnit)} on input when it is lifecycle aware.
-     *
-     * @param component object to try lifecycle method invocation
-     * @param timeout the maximum time to wait
-     * @param unit the time unit of the timeout argument
-     * @return true if object is lifecycle aware and was stopped, otherwise false
-     */
-    static boolean stop(Object component, long timeout, TimeUnit unit) {
-        if (component instanceof LifecycleAware) {
-            return ((LifecycleAware) component).onStop(timeout, unit);
-        }
-        return true;
-    }
+    void onStop();
 }

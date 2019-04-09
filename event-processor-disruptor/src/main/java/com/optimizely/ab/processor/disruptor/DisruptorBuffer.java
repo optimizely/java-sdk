@@ -105,7 +105,7 @@ public class DisruptorBuffer<T> extends Blocks.Source<T> implements ActorBlock<T
     }
 
     @Override
-    public void onStart() {
+    public void afterStart() {
         try {
             disruptor.start();
         } catch (IllegalStateException e) {
@@ -114,11 +114,11 @@ public class DisruptorBuffer<T> extends Blocks.Source<T> implements ActorBlock<T
     }
 
     @Override
-    public boolean onStop(long timeout, TimeUnit unit) {
+    public void beforeStop() {
         Disruptor disruptor = this.disruptor; // read volatile once
         if (disruptor == null) {
             logger.trace("Not started. Skipping...");
-            return true;
+            return;
         }
 
         // Prevent new events from being published
@@ -138,15 +138,13 @@ public class DisruptorBuffer<T> extends Blocks.Source<T> implements ActorBlock<T
 
         try {
             // Busy-spins until all events currently in the disruptor have been processed, or timeout
-            disruptor.shutdown(timeout, unit);
+            disruptor.shutdown(5, TimeUnit.SECONDS);
         } catch (final TimeoutException e) {
-            logger.warn("Shutdown timed out after {} {}", timeout, unit);
+            logger.warn("Shutdown timed out");
             disruptor.halt(); // give up on remaining log events, if any
         }
 
         logger.trace("disruptor has been shutdown");
-
-        return hasBacklog(ringBuffer);
     }
 
 
@@ -303,9 +301,8 @@ public class DisruptorBuffer<T> extends Blocks.Source<T> implements ActorBlock<T
         }
 
         @Override
-        public boolean onStop(long timeout, TimeUnit unit) {
+        public void onStop() {
             logger.trace("Disruptor handler stopped");
-            return true;
         }
     }
 

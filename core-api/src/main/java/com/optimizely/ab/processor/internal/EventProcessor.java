@@ -26,7 +26,6 @@ import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.processor.ActorBlock;
 import com.optimizely.ab.processor.BatchOptions;
 import com.optimizely.ab.processor.Blocks;
-import com.optimizely.ab.processor.Processor;
 import com.optimizely.ab.processor.TargetBlock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,9 +37,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * Builder for a {@link Processor} that receives events produced by Optimizely SDK public interfaces,
- * namely conversions and impressions, and processes them before being sent to Optimizely ingestion services
- * via an {@link EventHandler}.
+ * Processor that receives events produced by Optimizely SDK public interfaces, i.e. namely conversions and impressions,
+ * and processes them before being sent to Optimizely ingestion services via an {@link EventHandler}.
  *
  * The processor consists of a series of well-defined stages and this class provides an interface to configure
  * their parameters and extensions.
