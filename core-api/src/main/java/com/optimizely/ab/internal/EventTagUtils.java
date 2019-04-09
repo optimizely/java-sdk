@@ -36,10 +36,13 @@ public final class EventTagUtils {
         Long eventValue = null;
         if (eventTags != null && eventTags.containsKey(ReservedEventKey.REVENUE.toString())) {
             Object rawValue = eventTags.get(ReservedEventKey.REVENUE.toString());
-            if (rawValue instanceof Number) {
-                eventValue = ((Number) rawValue).longValue();
+            if (Long.class.isInstance(rawValue)) {
+                eventValue = (Long) rawValue;
                 logger.info("Parsed revenue value \"{}\" from event tags.", eventValue);
-            } else { // TODO attempt a simple Long.paseLong(((CharSequence) rawValue).toString()) if instanceof CharSequence
+            } else if (Integer.class.isInstance(rawValue)) {
+                eventValue = ((Integer) rawValue).longValue();
+                logger.info("Parsed revenue value \"{}\" from event tags.", eventValue);
+            } else {
                 logger.warn("Failed to parse revenue value \"{}\" from event tags.", rawValue);
             }
         }
