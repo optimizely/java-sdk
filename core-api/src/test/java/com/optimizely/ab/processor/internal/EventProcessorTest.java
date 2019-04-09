@@ -19,7 +19,6 @@ import com.optimizely.ab.common.callback.Callback;
 import com.optimizely.ab.common.plugin.Plugin;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
-import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.payload.Visitor;
 import com.optimizely.ab.processor.BatchBlock;
@@ -75,7 +74,14 @@ public class EventProcessorTest {
 
         // base configuration
         processor.eventBatchConverter(EventBatch.Builder::build);
-        processor.logEventConverter(new EventFactory()::createLogEvent);
+
+        processor.logEventConverter(eventBatch -> new LogEvent(
+            LogEvent.RequestMethod.POST,
+            "https://test/v1/events",
+            Collections.emptyMap(),
+            eventBatch
+        ));
+
         processor.plugin(output);
 
         // per-test configuration
