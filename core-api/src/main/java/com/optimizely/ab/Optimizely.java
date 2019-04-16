@@ -394,7 +394,7 @@ public class Optimizely {
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
         Boolean featureEnabled = false;
         if (featureDecision.variation != null) {
-            if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
+            if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
                 sendImpression(
                     projectConfig,
                     featureDecision.experiment,
@@ -420,8 +420,8 @@ public class Optimizely {
             .withFeatureKey(featureKey)
             .withFeatureEnabled(featureEnabled)
             .withSource(decisionSource)
-            .withSourceExperimentKey(sourceExperimentKey)
-            .withSourceVariationKey(sourceVariationKey)
+            .withExperimentKey(sourceExperimentKey)
+            .withVariationKey(sourceVariationKey)
             .build();
         notificationCenter.sendNotifications(decisionNotification);
 
