@@ -104,7 +104,7 @@ public class DecisionNotification {
             decisionInfo.put(VARIATION_KEY, variation != null ? variation.getKey() : null);
 
             return new DecisionNotification(
-                NotificationCenter.DecisionNotificationType.EXPERIMENT.toString(),
+                NotificationCenter.DecisionNotificationType.AB_TEST.toString(),
                 userId,
                 attributes,
                 decisionInfo);

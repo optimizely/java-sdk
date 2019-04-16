@@ -2687,7 +2687,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIATION_KEY, "Gred");
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
-            getDecisionListener(NotificationCenter.DecisionNotificationType.EXPERIMENT.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.AB_TEST.toString(),
                 userId,
                 testUserAttributes,
                 testDecisionInfoMap));
@@ -2726,7 +2726,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIATION_KEY, null);
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
-            getDecisionListener(NotificationCenter.DecisionNotificationType.EXPERIMENT.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.AB_TEST.toString(),
                 null,
                 Collections.<String, Object>emptyMap(),
                 testDecisionInfoMap));
@@ -2766,7 +2766,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIATION_KEY, null);
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
-            getDecisionListener(NotificationCenter.DecisionNotificationType.EXPERIMENT.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.AB_TEST.toString(),
                 genericUserId,
                 testUserAttributes,
                 testDecisionInfoMap));
@@ -3516,7 +3516,7 @@ public class OptimizelyTest {
             .withDecisionService(mockDecisionService)
             .build();
 
-        FeatureDecision featureDecision = new FeatureDecision(multivariateExperiment, VARIATION_MULTIVARIATE_EXPERIMENT_GRED, FeatureDecision.DecisionSource.EXPERIMENT);
+        FeatureDecision featureDecision = new FeatureDecision(multivariateExperiment, VARIATION_MULTIVARIATE_EXPERIMENT_GRED, FeatureDecision.DecisionSource.FEATURE_TEST);
         doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
             genericUserId,
@@ -4062,7 +4062,7 @@ public class OptimizelyTest {
         Experiment activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
         Variation variation = new Variation("2", "variation_toggled_off", false, null);
 
-        FeatureDecision featureDecision = new FeatureDecision(activatedExperiment, variation, FeatureDecision.DecisionSource.EXPERIMENT);
+        FeatureDecision featureDecision = new FeatureDecision(activatedExperiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST);
         doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
             anyString(),
@@ -5135,7 +5135,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIATION_KEY, bucketedVariation.getKey());
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
-            getDecisionListener(NotificationCenter.DecisionNotificationType.EXPERIMENT.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.AB_TEST.toString(),
                 testUserId,
                 testUserAttributes,
                 testDecisionInfoMap));

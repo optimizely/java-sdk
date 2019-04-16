@@ -167,7 +167,7 @@ public class DecisionService {
                 Variation variation = this.getVariation(experiment, userId, filteredAttributes);
                 if (variation != null) {
                     return new FeatureDecision(experiment, variation,
-                        FeatureDecision.DecisionSource.EXPERIMENT);
+                        FeatureDecision.DecisionSource.FEATURE_TEST);
                 }
             }
         } else {

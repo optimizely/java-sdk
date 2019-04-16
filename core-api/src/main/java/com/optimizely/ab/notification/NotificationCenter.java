@@ -38,7 +38,7 @@ public class NotificationCenter {
     public enum DecisionNotificationType {
         FEATURE("feature"),
         FEATURE_VARIABLE("feature_variable"),
-        EXPERIMENT("experiment");
+        AB_TEST("ab-test");
 
         private final String key;
 
