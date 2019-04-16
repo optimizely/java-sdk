@@ -17,7 +17,6 @@
 package com.optimizely.ab.notification;
 
 import com.optimizely.ab.bucketing.FeatureDecision;
-import com.optimizely.ab.config.Variation;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -70,13 +69,14 @@ public class DecisionNotification {
         public final static String FEATURE_KEY = "feature_key";
         public final static String FEATURE_ENABLED = "feature_enabled";
         public final static String SOURCE = "source";
-        public final static String SOURCE_EXPERIMENT_KEY = "source_experiment_key";
-        public final static String SOURCE_VARIATION_KEY = "source_variation_key";
+        public final static String SOURCE_INFO = "source_info";
+        public final static String EXPERIMENT_KEY = "experiment_key";
+        public final static String VARIATION_KEY = "variation_key";
 
         private String featureKey;
         private Boolean featureEnabled;
-        private String sourceExperimentKey;
-        private String sourceVariationKey;
+        private String experimentKey;
+        private String variationKey;
         private FeatureDecision.DecisionSource source;
         private String userId;
         private Map<String, ?> attributes;
@@ -92,13 +92,13 @@ public class DecisionNotification {
             return this;
         }
 
-        public FeatureDecisionNotificationBuilder withSourceExperimentKey(String sourceExperimentKey) {
-            this.sourceExperimentKey = sourceExperimentKey;
+        public FeatureDecisionNotificationBuilder withExperimentKey(String experimentKey) {
+            this.experimentKey = experimentKey;
             return this;
         }
 
-        public FeatureDecisionNotificationBuilder withSourceVariationKey(String sourceVariationKey) {
-            this.sourceVariationKey = sourceVariationKey;
+        public FeatureDecisionNotificationBuilder withVariationKey(String variationKey) {
+            this.variationKey = variationKey;
             return this;
         }
 
@@ -121,9 +121,14 @@ public class DecisionNotification {
             decisionInfo = new HashMap<>();
             decisionInfo.put(FEATURE_KEY, featureKey);
             decisionInfo.put(FEATURE_ENABLED, featureEnabled);
-            decisionInfo.put(SOURCE_EXPERIMENT_KEY, sourceExperimentKey);
-            decisionInfo.put(SOURCE_VARIATION_KEY, sourceVariationKey);
             decisionInfo.put(SOURCE, source);
+
+            Map<String, String> sourceInfo = new HashMap<>();
+            if (source.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
+                sourceInfo.put(EXPERIMENT_KEY, experimentKey);
+                sourceInfo.put(VARIATION_KEY, variationKey);
+            }
+            decisionInfo.put(SOURCE_INFO, sourceInfo);
 
             return new DecisionNotification(
                 NotificationCenter.DecisionNotificationType.FEATURE.toString(),
