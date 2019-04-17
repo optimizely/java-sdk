@@ -721,11 +721,18 @@ public class Optimizely {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes);
 
+        String notificationType = NotificationCenter.DecisionNotificationType.AB_TEST.toString();
+
+        if (getProjectConfig().getExperimentFeatureKeyMapping().get(experiment.getId()) != null) {
+            notificationType = NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString();
+        }
+
         DecisionNotification decisionNotification = DecisionNotification.newExperimentDecisionNotificationBuilder()
             .withUserId(userId)
             .withAttributes(copiedAttributes)
             .withExperimentKey(experiment.getKey())
             .withVariation(variation)
+            .withType(notificationType)
             .build();
 
         notificationCenter.sendNotifications(decisionNotification);

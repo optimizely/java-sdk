@@ -2687,7 +2687,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIATION_KEY, "Gred");
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
-            getDecisionListener(NotificationCenter.DecisionNotificationType.AB_TEST.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString(),
                 userId,
                 testUserAttributes,
                 testDecisionInfoMap));
@@ -2766,7 +2766,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIATION_KEY, null);
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
-            getDecisionListener(NotificationCenter.DecisionNotificationType.AB_TEST.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString(),
                 genericUserId,
                 testUserAttributes,
                 testDecisionInfoMap));

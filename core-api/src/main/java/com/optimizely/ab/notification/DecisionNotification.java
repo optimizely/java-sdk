@@ -72,6 +72,7 @@ public class DecisionNotification {
         public final static String EXPERIMENT_KEY = "experiment_key";
         public final static String VARIATION_KEY = "variation_key";
 
+        private String type;
         private String experimentKey;
         private Variation variation;
         private String userId;
@@ -93,6 +94,11 @@ public class DecisionNotification {
             return this;
         }
 
+        public ExperimentDecisionNotificationBuilder withType(String type) {
+            this.type = type;
+            return this;
+        }
+
         public ExperimentDecisionNotificationBuilder withVariation(Variation variation) {
             this.variation = variation;
             return this;
@@ -104,7 +110,7 @@ public class DecisionNotification {
             decisionInfo.put(VARIATION_KEY, variation != null ? variation.getKey() : null);
 
             return new DecisionNotification(
-                NotificationCenter.DecisionNotificationType.AB_TEST.toString(),
+                type,
                 userId,
                 attributes,
                 decisionInfo);
