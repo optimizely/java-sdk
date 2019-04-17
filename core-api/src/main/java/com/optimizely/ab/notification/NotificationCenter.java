@@ -37,7 +37,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class NotificationCenter {
     public enum DecisionNotificationType {
         FEATURE("feature"),
-        FEATURE_VARIABLE("feature_variable"),
+        FEATURE_TEST("feature-test"),
+        FEATURE_VARIABLE("feature-variable"),
         AB_TEST("ab-test");
 
         private final String key;
