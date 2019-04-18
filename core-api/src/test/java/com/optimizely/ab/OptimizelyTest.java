@@ -2662,6 +2662,128 @@ public class OptimizelyTest {
         };
     }
 
+    //======Activate Notification TESTS======//
+
+    /**
+     * Verify that the {@link Optimizely#activate(Experiment, String, Map)} call correctly builds an endpoint url and
+     * request params and passes them through {@link EventHandler#dispatchEvent(LogEvent)}.
+     */
+    @Test
+    @SuppressFBWarnings(
+        value = "NP_NONNULL_PARAM_VIOLATION")
+    public void activateEndToEndWithDecisionListener() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        isListenerCalled = false;
+        Experiment activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
+        Map<String, String> testUserAttributes = new HashMap<>();
+        String userId = "Gred";
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(EXPERIMENT_KEY, activatedExperiment.getKey());
+        testDecisionInfoMap.put(VARIATION_KEY, "Gred");
+
+        int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString(),
+                userId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        // activate the experiment
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, null);
+
+        assertThat(actualVariation.getKey(), is("Gred"));
+
+        verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+
+    }
+
+    /**
+     * Verify that if user is null than listener will not get called.
+     */
+    @Test
+    @SuppressFBWarnings(
+        value = "NP_NONNULL_PARAM_VIOLATION")
+    public void activateUserNullWithListener() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        isListenerCalled = false;
+        Experiment activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(EXPERIMENT_KEY, activatedExperiment.getKey());
+        testDecisionInfoMap.put(VARIATION_KEY, null);
+
+        int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.AB_TEST.toString(),
+                null,
+                Collections.<String, Object>emptyMap(),
+                testDecisionInfoMap));
+
+        // activate the experiment
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), null, Collections.<String, Object>emptyMap());
+
+        assertNull(actualVariation);
+
+        verify(mockEventHandler, times(0)).dispatchEvent(any(LogEvent.class));
+
+        // Verify that listener will not get called
+        assertFalse(isListenerCalled);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+
+    }
+
+    /**
+     * Verify that a user not in any of an experiment's audiences isn't assigned to a variation.
+     */
+    @Test
+    public void activateUserNotInAudienceWithListener() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        isListenerCalled = false;
+        Experiment activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
+        Map<String, String> testUserAttributes = new HashMap<>();
+
+        testUserAttributes.put("invalid", "invalid");
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(EXPERIMENT_KEY, activatedExperiment.getKey());
+        testDecisionInfoMap.put(VARIATION_KEY, null);
+
+        int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString(),
+                genericUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        // activate the experiment
+        Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), genericUserId, testUserAttributes);
+
+        assertNull(actualVariation);
+
+        verify(mockEventHandler, times(0)).dispatchEvent(any(LogEvent.class));
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+
+    }
 
     //======GetFeatureVariable Notification TESTS======//
 
@@ -5355,11 +5477,23 @@ public class OptimizelyTest {
             .withErrorHandler(mockErrorHandler)
             .build();
 
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(EXPERIMENT_KEY, experiment.getKey());
+        testDecisionInfoMap.put(VARIATION_KEY, bucketedVariation.getKey());
+
+        int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.AB_TEST.toString(),
+                testUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
         Variation actualVariation = optimizely.getVariation(experiment.getKey(), userId, testUserAttributes);
 
         verify(mockBucketer).bucket(experiment, bucketingId);
 
         assertThat(actualVariation, is(bucketedVariation));
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
 
     //======== isValid calls  ========//
