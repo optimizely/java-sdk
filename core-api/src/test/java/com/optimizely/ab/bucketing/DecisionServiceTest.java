@@ -43,7 +43,6 @@ import ch.qos.logback.classic.Level;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import static com.optimizely.ab.config.ProjectConfigTestUtils.noAudienceProjectConfigV3;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
 import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV4;
 import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_HOUSE_KEY;
@@ -406,7 +405,7 @@ public class DecisionServiceTest {
             Collections.<String, String>emptyMap()
         );
         assertEquals(ValidProjectConfigV4.VARIATION_MUTEX_GROUP_EXP_2_VAR_1, featureDecision.variation);
-        assertEquals(FeatureDecision.DecisionSource.EXPERIMENT, featureDecision.decisionSource);
+        assertEquals(FeatureDecision.DecisionSource.FEATURE_TEST, featureDecision.decisionSource);
 
         verify(spyFeatureFlag, times(2)).getExperimentIds();
         verify(spyFeatureFlag, never()).getKey();
@@ -460,7 +459,7 @@ public class DecisionServiceTest {
             Collections.<String, String>emptyMap()
         );
         assertEquals(experimentVariation, featureDecision.variation);
-        assertEquals(FeatureDecision.DecisionSource.EXPERIMENT, featureDecision.decisionSource);
+        assertEquals(FeatureDecision.DecisionSource.FEATURE_TEST, featureDecision.decisionSource);
 
         // make sure we do not even check for rollout bucketing
         verify(decisionService, never()).getVariationForFeatureInRollout(

@@ -19,6 +19,7 @@ package com.optimizely.ab.notification;
 
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.FeatureVariable;
+import com.optimizely.ab.config.Variation;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -61,6 +62,58 @@ public class DecisionNotification {
 
     public Map<String, ?> getDecisionInfo() {
         return decisionInfo;
+    }
+    public static ExperimentDecisionNotificationBuilder newExperimentDecisionNotificationBuilder() {
+        return new ExperimentDecisionNotificationBuilder();
+    }
+
+    public static class ExperimentDecisionNotificationBuilder {
+        public final static String EXPERIMENT_KEY = "experiment_key";
+        public final static String VARIATION_KEY = "variation_key";
+
+        private String type;
+        private String experimentKey;
+        private Variation variation;
+        private String userId;
+        private Map<String, ?> attributes;
+        private Map<String, Object> decisionInfo;
+
+        public ExperimentDecisionNotificationBuilder withUserId(String userId) {
+            this.userId = userId;
+            return this;
+        }
+
+        public ExperimentDecisionNotificationBuilder withAttributes(Map<String, ?> attributes) {
+            this.attributes = attributes;
+            return this;
+        }
+
+        public ExperimentDecisionNotificationBuilder withExperimentKey(String experimentKey) {
+            this.experimentKey = experimentKey;
+            return this;
+        }
+
+        public ExperimentDecisionNotificationBuilder withType(String type) {
+            this.type = type;
+            return this;
+        }
+
+        public ExperimentDecisionNotificationBuilder withVariation(Variation variation) {
+            this.variation = variation;
+            return this;
+        }
+
+        public DecisionNotification build() {
+            decisionInfo = new HashMap<>();
+            decisionInfo.put(EXPERIMENT_KEY, experimentKey);
+            decisionInfo.put(VARIATION_KEY, variation != null ? variation.getKey() : null);
+
+            return new DecisionNotification(
+                type,
+                userId,
+                attributes,
+                decisionInfo);
+        }
     }
 
     public static FeatureVariableDecisionNotificationBuilder newFeatureVariableBuilder() {
@@ -138,7 +191,7 @@ public class DecisionNotification {
             decisionInfo.put(VARIABLE_KEY, variableKey);
             decisionInfo.put(VARIABLE_TYPE, variableType);
             decisionInfo.put(VARIABLE_VALUE, variableValue);
-            if (featureDecision != null && featureDecision.decisionSource != null && FeatureDecision.DecisionSource.EXPERIMENT.equals(featureDecision.decisionSource)) {
+            if (featureDecision != null && featureDecision.decisionSource != null && FeatureDecision.DecisionSource.FEATURE_TEST.equals(featureDecision.decisionSource)) {
                 decisionInfo.put(SOURCE_EXPERIMENT_KEY, featureDecision.experiment.getKey());
                 decisionInfo.put(SOURCE_VARIATION_KEY, featureDecision.variation.getKey());
                 decisionInfo.put(SOURCE, featureDecision.decisionSource);

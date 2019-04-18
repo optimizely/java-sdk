@@ -91,6 +91,7 @@ public class ProjectConfig {
     private final Map<String, EventType> eventNameMapping;
     private final Map<String, Experiment> experimentKeyMapping;
     private final Map<String, FeatureFlag> featureKeyMapping;
+    private final Map<String, List<String>> experimentFeatureKeyMapping;
 
     // id to entity mappings
     private final Map<String, Audience> audienceIdMapping;
@@ -216,6 +217,9 @@ public class ProjectConfig {
         this.experimentIdMapping = ProjectConfigUtils.generateIdMapping(this.experiments);
         this.groupIdMapping = ProjectConfigUtils.generateIdMapping(groups);
         this.rolloutIdMapping = ProjectConfigUtils.generateIdMapping(this.rollouts);
+
+        // Generate experiment to featureFlag list mapping to identify if experiment is AB-Test experiment or Feature-Test Experiment.
+        this.experimentFeatureKeyMapping = ProjectConfigUtils.generateExperimentFeatureMapping(this.featureFlags);
     }
 
     /**
@@ -417,6 +421,10 @@ public class ProjectConfig {
 
     public Map<String, FeatureFlag> getFeatureKeyMapping() {
         return featureKeyMapping;
+    }
+
+    public Map<String, List<String>> getExperimentFeatureKeyMapping() {
+        return experimentFeatureKeyMapping;
     }
 
     public ConcurrentHashMap<String, ConcurrentHashMap<String, String>> getForcedVariationMapping() {
