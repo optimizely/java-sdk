@@ -48,4 +48,22 @@ public class ProjectConfigUtils {
         return Collections.unmodifiableMap(nameMapping);
     }
 
+    /**
+     * Helper method for creating convenience mappings of ExperimentID to featureFlags it is included in.
+     */
+    public static Map<String, List<String>> generateExperimentFeatureMapping(List<FeatureFlag> featureFlags) {
+        Map<String, List<String>> experimentFeatureMap = new HashMap<>();
+        for (FeatureFlag featureFlag : featureFlags) {
+            for (String experimentId : featureFlag.getExperimentIds()) {
+                if (experimentFeatureMap.containsKey(experimentId)) {
+                    experimentFeatureMap.get(experimentId).add(featureFlag.getKey());
+                } else {
+                    ArrayList<String> featureFlagKeysList = new ArrayList<>();
+                    featureFlagKeysList.add(featureFlag.getKey());
+                    experimentFeatureMap.put(experimentId, featureFlagKeysList);
+                }
+            }
+        }
+        return Collections.unmodifiableMap(experimentFeatureMap);
+    }
 }

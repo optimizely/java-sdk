@@ -23,6 +23,7 @@ import com.optimizely.ab.event.LogEvent;
 import javax.annotation.Nonnull;
 import java.util.Map;
 
+@Deprecated
 public interface ActivateNotificationListenerInterface {
     /**
      * onActivate called when an activate was triggered

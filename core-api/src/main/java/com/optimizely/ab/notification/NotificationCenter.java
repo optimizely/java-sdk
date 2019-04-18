@@ -36,9 +36,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class NotificationCenter {
     public enum DecisionNotificationType {
+        AB_TEST("ab-test"),
         FEATURE("feature"),
-        FEATURE_VARIABLE("feature_variable"),
-        AB_TEST("ab-test");
+        FEATURE_TEST("feature-test"),
+        FEATURE_VARIABLE("feature-variable");
 
         private final String key;
 
@@ -140,6 +141,7 @@ public class NotificationCenter {
      * @param activateNotificationListenerInterface
      * @return greater than zero if added.
      */
+    @Deprecated
     public int addActivateNotificationListener(final ActivateNotificationListenerInterface activateNotificationListenerInterface) {
         if (activateNotificationListenerInterface instanceof ActivateNotificationListener) {
             return addNotificationListener(NotificationType.Activate, (NotificationListener) activateNotificationListenerInterface);

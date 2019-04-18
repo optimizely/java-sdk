@@ -218,7 +218,7 @@ public class Optimizely {
         }
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         // bucket the user to the given experiment and dispatch an impression event
-        Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes);
+        Variation variation = getVariation(experiment, userId, copiedAttributes);
         if (variation == null) {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
@@ -737,8 +737,25 @@ public class Optimizely {
                                   @Nonnull String userId,
                                   @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
+        Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes);
 
-        return decisionService.getVariation(experiment, userId, copiedAttributes);
+        String notificationType = NotificationCenter.DecisionNotificationType.AB_TEST.toString();
+
+        if (getProjectConfig().getExperimentFeatureKeyMapping().get(experiment.getId()) != null) {
+            notificationType = NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString();
+        }
+
+        DecisionNotification decisionNotification = DecisionNotification.newExperimentDecisionNotificationBuilder()
+            .withUserId(userId)
+            .withAttributes(copiedAttributes)
+            .withExperimentKey(experiment.getKey())
+            .withVariation(variation)
+            .withType(notificationType)
+            .build();
+
+        notificationCenter.sendNotifications(decisionNotification);
+
+        return variation;
     }
 
     @Nullable
@@ -773,8 +790,8 @@ public class Optimizely {
             // if we're unable to retrieve the associated experiment, return null
             return null;
         }
-        Map<String, ?> copiedAttributes = copyAttributes(attributes);
-        return decisionService.getVariation(experiment, userId, copiedAttributes);
+
+        return getVariation(experiment, userId, attributes);
     }
 
     /**
