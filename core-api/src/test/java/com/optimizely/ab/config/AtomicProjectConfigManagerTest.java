@@ -22,28 +22,21 @@ import org.junit.Test;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV4;
 import static org.junit.Assert.*;
 
-public class StaticProjectConfigManagerTest {
+public class AtomicProjectConfigManagerTest {
 
-    private ProjectConfig projectConfig;
+    private AtomicProjectConfigManager projectConfigManager;
 
     @Before
-    public void setUp() throws Exception {
-        projectConfig = new DatafileProjectConfig.Builder().withDatafile(validConfigJsonV4()).build();
+    public void setUp() {
+        projectConfigManager = new AtomicProjectConfigManager();
     }
 
     @Test
-    public void testGetConfig() {
-        ProjectConfigManager projectConfigManager = StaticProjectConfigManager.create(projectConfig);
-        ProjectConfig actual = projectConfigManager.getConfig();
+    public void testGetAndSetConfig() throws Exception {
+        assertNull(projectConfigManager.getConfig());
 
-        assertEquals(projectConfig, actual);
-    }
-
-    @Test
-    public void testGetConfigNull() {
-        ProjectConfigManager projectConfigManager = StaticProjectConfigManager.create(null);
-        ProjectConfig actual = projectConfigManager.getConfig();
-
-        assertNull(actual);
+        ProjectConfig projectConfig = new DatafileProjectConfig.Builder().withDatafile(validConfigJsonV4()).build();
+        projectConfigManager.setConfig(projectConfig);
+        assertEquals(projectConfig, projectConfigManager.getConfig());
     }
 }

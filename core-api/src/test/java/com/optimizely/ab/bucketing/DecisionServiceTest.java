@@ -28,7 +28,6 @@ import com.optimizely.ab.internal.LogbackVerifier;
 
 import com.optimizely.ab.internal.ControlAttribute;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -381,7 +380,7 @@ public class DecisionServiceTest {
             v4ProjectConfig
         );
         assertEquals(ValidProjectConfigV4.VARIATION_MUTEX_GROUP_EXP_2_VAR_1, featureDecision.variation);
-        assertEquals(FeatureDecision.DecisionSource.EXPERIMENT, featureDecision.decisionSource);
+        assertEquals(FeatureDecision.DecisionSource.FEATURE_TEST, featureDecision.decisionSource);
 
         verify(spyFeatureFlag, times(2)).getExperimentIds();
         verify(spyFeatureFlag, never()).getKey();
@@ -430,7 +429,7 @@ public class DecisionServiceTest {
             v4ProjectConfig
         );
         assertEquals(experimentVariation, featureDecision.variation);
-        assertEquals(FeatureDecision.DecisionSource.EXPERIMENT, featureDecision.decisionSource);
+        assertEquals(FeatureDecision.DecisionSource.FEATURE_TEST, featureDecision.decisionSource);
 
         // make sure we do not even check for rollout bucketing
         verify(decisionService, never()).getVariationForFeatureInRollout(

@@ -20,42 +20,46 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV4;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class PollingProjectConfigManagerTest {
 
-    private static final int POLLING_INTERVAL_MS = 1;
-    private static final int MAX_WAITING_STEPS = 100;
+    private static final long POLLING_PERIOD = 1;
+    private static final TimeUnit POLLING_UNIT = TimeUnit.MILLISECONDS;
+    private static final int PROJECT_CONFIG_DELAY = 100;
 
-    private PollingProjectConfigManager pollingProjectConfigManager;
-    private TestProjectConfigManager projectConfigManager;
+    private TestProjectConfigManager testProjectConfigManager;
+    private ProjectConfig projectConfig;
 
     @Before
     public void setUp() throws Exception {
-        projectConfigManager = new TestProjectConfigManager();
-        pollingProjectConfigManager = PollingProjectConfigManager.builder()
-            .withPollingIntervalMs(POLLING_INTERVAL_MS)
-            .withConfigManager(projectConfigManager)
-            .build();
+        projectConfig = new DatafileProjectConfig.Builder().withDatafile(validConfigJsonV4()).build();
+        testProjectConfigManager = new TestProjectConfigManager(projectConfig);
+        testProjectConfigManager.start();
     }
 
     @After
     public void tearDown() throws Exception {
-        pollingProjectConfigManager.close();
+        testProjectConfigManager.close();
     }
 
     @Test
-    public void testPollingUpdates() throws InterruptedException {
+    public void testPollingUpdates() throws Exception {
         int maxAttempts = 100;
-        int desiredCount = 50;
+        int desiredCount = 10;
 
-        blockForStarted(true);
+        testProjectConfigManager.release();
 
         for (int i = 0; i < maxAttempts; i++) {
-            Thread.sleep(POLLING_INTERVAL_MS);
-            if (desiredCount <= projectConfigManager.getCount()) {
+            Thread.sleep(PROJECT_CONFIG_DELAY);
+            if (desiredCount <= testProjectConfigManager.getCount()) {
                 return;
             }
         }
@@ -64,48 +68,106 @@ public class PollingProjectConfigManagerTest {
     }
 
     @Test
-    public void testPause() throws InterruptedException {
-        int maxAttempts = 100;
+    public void testStop() throws Exception {
+        int maxAttempts = 10;
 
-        blockForStarted(true);
-        pollingProjectConfigManager.pause();
-        blockForStarted(false);
+        testProjectConfigManager.release();
+        testProjectConfigManager.stop();
+        assertFalse(testProjectConfigManager.isRunning());
 
-        int desiredCount = projectConfigManager.getCount();
+        int desiredCount = testProjectConfigManager.getCount();
 
         for (int i = 0; i < maxAttempts; i++) {
-            Thread.sleep(POLLING_INTERVAL_MS);
-            if (desiredCount <= projectConfigManager.getCount()) {
-                assertEquals(desiredCount, projectConfigManager.getCount());
+            Thread.sleep(PROJECT_CONFIG_DELAY);
+            if (desiredCount <= testProjectConfigManager.getCount()) {
+                assertEquals(desiredCount, testProjectConfigManager.getCount());
             }
         }
     }
 
-    /**
-     * This should be replaced by an actual future from the PollingProjectConfigManager
-     */
-    private void blockForStarted(boolean waitFor) throws InterruptedException {
-        // Wait for started replace with future.
-        for (int i = 0; i < MAX_WAITING_STEPS; i++) {
-            if (pollingProjectConfigManager.isStarted() == waitFor) {
-                return;
-            }
-        }
-
-        fail(String.format("Max attempts waiting for ProjectConfigManager to be started: %s", waitFor));
+    @Test
+    public void testBlockingGetConfig() throws Exception {
+        testProjectConfigManager.release();
+        TimeUnit.MILLISECONDS.sleep(PROJECT_CONFIG_DELAY);
+        assertEquals(projectConfig, testProjectConfigManager.getConfig());
     }
 
-    private static class TestProjectConfigManager implements ProjectConfigManager {
+    @Test
+    public void testBlockingGetConfigWithDefault() throws Exception {
+        testProjectConfigManager.setConfig(projectConfig);
+        assertEquals(projectConfig, testProjectConfigManager.getConfig());
+    }
+
+    @Test
+    public void testGetConfigNotStarted() throws Exception {
+        testProjectConfigManager.release();
+        testProjectConfigManager.close();
+        assertFalse(testProjectConfigManager.isRunning());
+        assertEquals(projectConfig, testProjectConfigManager.getConfig());
+    }
+
+    @Test
+    public void testGetConfigNotStartedDefault() throws Exception {
+        testProjectConfigManager.setConfig(projectConfig);
+        testProjectConfigManager.close();
+        assertFalse(testProjectConfigManager.isRunning());
+        assertEquals(projectConfig, testProjectConfigManager.getConfig());
+    }
+
+    @Test
+    public void testSetConfig() {
+        PollingProjectConfigManager testProjectConfigManager = new PollingProjectConfigManager(10, TimeUnit.MINUTES) {
+            @Override
+            protected ProjectConfig poll() {
+                return null;
+            }
+        };
+
+        assertNull(testProjectConfigManager.getConfig());
+
+        testProjectConfigManager.setConfig(projectConfig);
+        assertEquals(projectConfig, testProjectConfigManager.getConfig());
+
+        testProjectConfigManager.setConfig(null);
+        assertEquals(projectConfig, testProjectConfigManager.getConfig());
+
+        ProjectConfig newerProjectConfig = mock(ProjectConfig.class);
+        when(newerProjectConfig.getRevision()).thenReturn("new");
+
+        testProjectConfigManager.setConfig(newerProjectConfig);
+        assertEquals(newerProjectConfig, testProjectConfigManager.getConfig());
+    }
+
+    private static class TestProjectConfigManager extends PollingProjectConfigManager {
         private final AtomicInteger counter = new AtomicInteger();
 
+        private final CountDownLatch countDownLatch = new CountDownLatch(1);
+        private final ProjectConfig projectConfig;
+
+        private TestProjectConfigManager(ProjectConfig projectConfig) {
+            super(POLLING_PERIOD, POLLING_UNIT);
+            this.projectConfig = projectConfig;
+        }
+
         @Override
-        public ProjectConfig getConfig() {
+        public ProjectConfig poll() {
+            try {
+                countDownLatch.await(10, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return null;
+            }
+
             counter.incrementAndGet();
-            return null;
+            return projectConfig;
         }
 
         public int getCount() {
             return counter.get();
+        }
+
+        public void release() {
+            countDownLatch.countDown();
         }
     }
 }

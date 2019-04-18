@@ -36,7 +36,7 @@ import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for {@link Optimizely#builder(String, EventHandler)}.
@@ -55,6 +55,9 @@ public class OptimizelyBuilderTest {
 
     @Mock
     private ErrorHandler mockErrorHandler;
+
+    @Mock
+    ProjectConfigManager mockProjectConfigManager;
 
     @Test
     public void withEventHandler() throws Exception {
@@ -183,9 +186,11 @@ public class OptimizelyBuilderTest {
     @Test
     public void withValidProjectConfigManagerOnly() throws Exception {
         ProjectConfig projectConfig = new DatafileProjectConfig.Builder().withDatafile(validConfigJsonV4()).build();
-        ProjectConfigManager projectConfigManager = StaticProjectConfigManager.create(projectConfig);
+        when(mockProjectConfigManager.getConfig()).thenReturn(projectConfig);
 
-        Optimizely optimizelyClient = Optimizely.builder(projectConfigManager, mockEventHandler)
+        Optimizely optimizelyClient = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withEventHandler(mockEventHandler)
             .build();
 
         assertTrue(optimizelyClient.isValid());
@@ -194,23 +199,20 @@ public class OptimizelyBuilderTest {
 
     @Test
     public void withInvalidProjectConfigManagerOnly() throws Exception {
-        ProjectConfigManager projectConfigManager = StaticProjectConfigManager.create(null);
-        Optimizely optimizelyClient = Optimizely.builder(projectConfigManager, mockEventHandler)
+        Optimizely optimizelyClient = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withEventHandler(mockEventHandler)
             .build();
-
         assertFalse(optimizelyClient.isValid());
     }
 
     @Test
     public void withProjectConfigManagerAndFallbackDatafile() throws Exception {
-        ProjectConfig expectedProjectConfig = new DatafileProjectConfig.Builder().withDatafile(validConfigJsonV4()).build();
-        ProjectConfigManager projectConfigManager = StaticProjectConfigManager.create(null);
-
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV4(), mockEventHandler)
-            .withConfigManager(projectConfigManager)
+            .withConfigManager(new AtomicProjectConfigManager())
             .build();
 
-        assertTrue(optimizelyClient.isValid());
-        verifyProjectConfig(optimizelyClient.getProjectConfig(), expectedProjectConfig);
+        // Project Config manager takes precedence.
+        assertFalse(optimizelyClient.isValid());
     }
 }

@@ -18,6 +18,7 @@ package com.optimizely.ab.config;
 
 import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.OptimizelyHttpClient;
+import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import org.apache.http.HttpEntity;
@@ -31,50 +32,52 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.CheckForNull;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicReference;
+import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 /**
  * HttpProjectConfigManager is an implementation of a ProjectConfigManager
  * backed by a datafile. Currently this is loosely tied to Apache HttpClient
  * implementation which is the client of choice in this package.
+ *
+ * Note that this implementation is blocking and stateless. This is best used in
+ * conjunction with the {@link PollingProjectConfigManager} to provide caching
+ * and asynchronous fetching.
  */
-public class HttpProjectConfigManager implements ProjectConfigManager {
+public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpProjectConfigManager.class);
 
     private final OptimizelyHttpClient httpClient;
-    private final HttpGet httpGet;
-    private final ResponseHandler<ProjectConfig> responseHandler;
-    private final AtomicReference<ProjectConfig> projectConfig = new AtomicReference<>();
+    private final URI uri;
+    private final ResponseHandler<String> responseHandler = new ProjectConfigResponseHandler();
 
-    private HttpProjectConfigManager(OptimizelyHttpClient httpClient, String url) {
+    private HttpProjectConfigManager(long period, TimeUnit timeUnit, OptimizelyHttpClient httpClient, String url) {
+        super(period, timeUnit);
         this.httpClient = httpClient;
-        this.httpGet = new HttpGet(url);
-        this.responseHandler = new ProjectConfigResponseHandler();
+        this.uri = URI.create(url);
     }
 
-    @VisibleForTesting
-    HttpGet getHttpGet() {
-        return httpGet;
+    public URI getUri() {
+        return uri;
     }
 
-    @VisibleForTesting
-    ResponseHandler<ProjectConfig> getResponseHandler() {
-        return responseHandler;
+    static ProjectConfig parseProjectConfig(String datafile) throws ConfigParseException {
+        return new DatafileProjectConfig.Builder().withDatafile(datafile).build();
     }
 
     @Override
-    public ProjectConfig getConfig() {
+    protected ProjectConfig poll() {
+        HttpGet httpGet = new HttpGet(uri);
+        logger.info("Fetching datafile from: {}", httpGet.getURI());
         try {
-            ProjectConfig newProjectConfig = httpClient.execute(httpGet, responseHandler);
-            if (newProjectConfig != null) {
-                projectConfig.set(newProjectConfig);
-            }
-        } catch (IOException e) {
+            String datafile = httpClient.execute(httpGet, responseHandler);
+            return parseProjectConfig(datafile);
+        } catch (ConfigParseException | IOException e) {
             logger.error("Error fetching datafile", e);
         }
 
-        return projectConfig.get();
+        return null;
     }
 
     public static Builder builder() {
@@ -82,10 +85,18 @@ public class HttpProjectConfigManager implements ProjectConfigManager {
     }
 
     public static class Builder {
+        private String datafile;
         private String sdkKey;
         private String url;
         private String format = "https://cdn.optimizely.com/datafiles/%s.json";
         private OptimizelyHttpClient httpClient;
+        private long period = 5;
+        private TimeUnit timeUnit = TimeUnit.MINUTES;
+
+        public Builder withDatafile(String datafile) {
+            this.datafile = datafile;
+            return this;
+        }
 
         public Builder withSdkKey(String sdkKey) {
             this.sdkKey = sdkKey;
@@ -107,13 +118,38 @@ public class HttpProjectConfigManager implements ProjectConfigManager {
             return this;
         }
 
+        public Builder withPollingInterval(long period, TimeUnit timeUnit) {
+            if (timeUnit == null) {
+                throw new NullPointerException("Must provide valid timeUnit");
+            }
+
+            this.period = period;
+            this.timeUnit = timeUnit;
+
+            return this;
+        }
+
+        /**
+         * HttpProjectConfigManager.Builder that builds and starts a HttpProjectConfigManager.
+         * This is the default builder which will block until a config is available.
+         */
         public HttpProjectConfigManager build() {
+            return build(false);
+        }
+
+        /**
+         * HttpProjectConfigManager.Builder that builds and starts a HttpProjectConfigManager.
+         *
+         * @param defer When true, we will not wait for the configuration to be available
+         *              before returning the HttpProjectConfigManager instance.
+         */
+        public HttpProjectConfigManager build(boolean defer) {
             if (httpClient == null) {
                 httpClient = HttpClientUtils.getDefaultHttpClient();
             }
 
             if (url != null) {
-                return new HttpProjectConfigManager(httpClient, url);
+                return new HttpProjectConfigManager(period, timeUnit, httpClient, url);
             }
 
             if (sdkKey == null) {
@@ -122,32 +158,41 @@ public class HttpProjectConfigManager implements ProjectConfigManager {
 
             url = String.format(format, sdkKey);
 
-            return new HttpProjectConfigManager(httpClient, url);
+            HttpProjectConfigManager httpProjectManager = new HttpProjectConfigManager(period, timeUnit, httpClient, url);
 
+            if (datafile != null) {
+                try {
+                    ProjectConfig projectConfig = HttpProjectConfigManager.parseProjectConfig(datafile);
+                    httpProjectManager.setConfig(projectConfig);
+                } catch (ConfigParseException e) {
+                    logger.warn("Error parsing fallback datafile.", e);
+                }
+            }
+
+            httpProjectManager.start();
+
+            // Optionally block until config is available.
+            if (!defer) {
+                httpProjectManager.getConfig();
+            }
+
+            return httpProjectManager;
         }
     }
 
     /**
      * Handler for the event request that returns nothing (i.e., Void)
      */
-    private static final class ProjectConfigResponseHandler implements ResponseHandler<ProjectConfig> {
+    static final class ProjectConfigResponseHandler implements ResponseHandler<String> {
 
         @Override
         @CheckForNull
-        public ProjectConfig handleResponse(HttpResponse response) throws IOException {
+        public String handleResponse(HttpResponse response) throws IOException {
             int status = response.getStatusLine().getStatusCode();
             if (status >= 200 && status < 300) {
                 // read the response, so we can close the connection
                 HttpEntity entity = response.getEntity();
-                String datafile = EntityUtils.toString(entity, "UTF-8");
-
-                try {
-                    return new DatafileProjectConfig.Builder().withDatafile(datafile).build();
-                } catch (ConfigParseException e) {
-                    logger.warn("Unable to parse datafile", e);
-                }
-
-                return null;
+                return EntityUtils.toString(entity, "UTF-8");
             } else {
                 // TODO handle unmodifed response.
                 throw new ClientProtocolException("unexpected response from event endpoint, status: " + status);

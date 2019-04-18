@@ -93,6 +93,8 @@ public interface ProjectConfig {
 
     Map<String, FeatureFlag> getFeatureKeyMapping();
 
+    Map<String, List<String>> getExperimentFeatureKeyMapping();
+
     @Override
     String toString();
 
