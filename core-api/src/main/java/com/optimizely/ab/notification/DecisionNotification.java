@@ -141,7 +141,7 @@ public class DecisionNotification {
             decisionInfo.put(VARIABLE_VALUE, variableValue);
 
             Map<String, String> sourceInfo = new HashMap<>();
-            if (featureDecision != null && featureDecision.decisionSource != null && FeatureDecision.DecisionSource.FEATURE_TEST.equals(featureDecision.decisionSource)) {
+            if (featureDecision != null && FeatureDecision.DecisionSource.FEATURE_TEST.equals(featureDecision.decisionSource)) {
                 sourceInfo.put(EXPERIMENT_KEY, featureDecision.experiment.getKey());
                 sourceInfo.put(VARIATION_KEY, featureDecision.variation.getKey());
                 decisionInfo.put(SOURCE, featureDecision.decisionSource);
