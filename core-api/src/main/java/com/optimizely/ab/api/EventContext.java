@@ -29,7 +29,4 @@ public interface EventContext {
     Boolean getAnonymizeIp();
 
     Boolean getBotFiltering();
-
-//        Object get(String key);
-//        void set(String key, Object value);
 }
