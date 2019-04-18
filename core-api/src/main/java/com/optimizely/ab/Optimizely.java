@@ -446,21 +446,14 @@ public class Optimizely {
             logger.error("Optimizely instance is not valid, failing getFeatureVariableBoolean call.");
             return null;
         }
-        Boolean variableValue = null;
-        try {
-            variableValue = getFeatureVariableValueForType(
+
+        return getFeatureVariableValueForType(
                 featureKey,
                 variableKey,
                 userId,
                 attributes,
                 FeatureVariable.VariableType.BOOLEAN
             );
-            return variableValue;
-        } catch (Exception exception) {
-            logger.error("BooleanTypeException while trying to parse \"" + variableValue +
-                "\" as Boolean. " + exception);
-        }
-        return null;
     }
 
     /**
@@ -508,9 +501,7 @@ public class Optimizely {
                 attributes,
                 FeatureVariable.VariableType.DOUBLE
             );
-            if (variableValue != null) {
-                return variableValue;
-            }
+            return variableValue;
         } catch (Exception exception) {
             logger.error("NumberFormatException while trying to parse \"" + variableValue +
                 "\" as Double. " + exception);
