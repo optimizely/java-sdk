@@ -68,8 +68,8 @@ public class DecisionNotification {
     }
 
     public static class ExperimentDecisionNotificationBuilder {
-        public final static String EXPERIMENT_KEY = "experiment_key";
-        public final static String VARIATION_KEY = "variation_key";
+        public final static String EXPERIMENT_KEY = "experimentKey";
+        public final static String VARIATION_KEY = "variationKey";
 
         private String type;
         private String experimentKey;
@@ -122,15 +122,15 @@ public class DecisionNotification {
 
     public static class FeatureVariableDecisionNotificationBuilder {
 
-        public static final String FEATURE_KEY = "feature_key";
-        public static final String FEATURE_ENABLED = "feature_enabled";
+        public static final String FEATURE_KEY = "featureKey";
+        public static final String FEATURE_ENABLED = "featureEnabled";
         public static final String SOURCE = "source";
-        public static final String SOURCE_INFO = "source_info";
-        public static final String EXPERIMENT_KEY = "experiment_key";
-        public static final String VARIATION_KEY = "variation_key";
-        public static final String VARIABLE_KEY = "variable_key";
-        public static final String VARIABLE_TYPE = "variable_type";
-        public static final String VARIABLE_VALUE = "variable_value";
+        public static final String SOURCE_INFO = "sourceInfo";
+        public static final String EXPERIMENT_KEY = "experimentKey";
+        public static final String VARIATION_KEY = "variationKey";
+        public static final String VARIABLE_KEY = "variableKey";
+        public static final String VARIABLE_TYPE = "variableType";
+        public static final String VARIABLE_VALUE = "variableValue";
 
         private String featureKey;
         private Boolean featureEnabled;
