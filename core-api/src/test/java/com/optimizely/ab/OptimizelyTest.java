@@ -3048,7 +3048,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, true);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT);
-            testDecisionInfoMap.put(SOURCE_INFO, new HashMap<>());
+        testDecisionInfoMap.put(SOURCE_INFO, new HashMap<>());
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE.toString(),
