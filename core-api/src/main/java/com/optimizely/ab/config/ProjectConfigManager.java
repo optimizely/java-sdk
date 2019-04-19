@@ -17,5 +17,11 @@
 package com.optimizely.ab.config;
 
 public interface ProjectConfigManager {
+    /**
+     * Implementations of this method should block until a datafile is available.
+     *
+     * @return ProjectConfig
+     */
     ProjectConfig getConfig();
 }
+

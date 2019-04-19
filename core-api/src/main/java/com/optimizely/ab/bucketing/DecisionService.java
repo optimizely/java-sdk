@@ -16,11 +16,7 @@
 package com.optimizely.ab.bucketing;
 
 import com.optimizely.ab.OptimizelyRuntimeException;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.FeatureFlag;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.Rollout;
-import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ExperimentUtils;
@@ -31,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -51,6 +48,15 @@ public class DecisionService {
     private final ErrorHandler errorHandler;
     private final UserProfileService userProfileService;
     private static final Logger logger = LoggerFactory.getLogger(DecisionService.class);
+
+    /**
+     * Forced variations supersede any other mappings.  They are transient and are not persistent or part of
+     * the actual datafile. This contains all the forced variations
+     * set by the user by calling {@link DecisionService#setForcedVariation(Experiment, String, String)} (it is not the same as the
+     * whitelisting forcedVariations data structure in the Experiments class).
+     */
+    private transient ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping = new ConcurrentHashMap<String, ConcurrentHashMap<String, String>>();
+
 
     /**
      * Initialize a decision service for the Optimizely client.
@@ -86,7 +92,7 @@ public class DecisionService {
         }
 
         // look for forced bucketing first.
-        Variation variation = projectConfig.getForcedVariation(experiment.getKey(), userId);
+        Variation variation = getForcedVariation(experiment, userId);
 
         // check for whitelisting
         if (variation == null) {
@@ -165,7 +171,7 @@ public class DecisionService {
                 Variation variation = getVariation(experiment, userId, filteredAttributes, projectConfig);
                 if (variation != null) {
                     return new FeatureDecision(experiment, variation,
-                        FeatureDecision.DecisionSource.EXPERIMENT);
+                        FeatureDecision.DecisionSource.FEATURE_TEST);
                 }
             }
         } else {
@@ -367,5 +373,130 @@ public class DecisionService {
             }
         }
         return bucketingId;
+    }
+
+    public ConcurrentHashMap<String, ConcurrentHashMap<String, String>> getForcedVariationMapping() {
+        return forcedVariationMapping;
+    }
+
+    /**
+     * Force a user into a variation for a given experiment.
+     * The forced variation value does not persist across application launches.
+     * If the experiment key is not in the project file, this call fails and returns false.
+     *
+     * @param experiment    The experiment to override.
+     * @param userId        The user ID to be used for bucketing.
+     * @param variationKey  The variation key to force the user into.  If the variation key is null
+     *                      then the forcedVariation for that experiment is removed.
+     * @return boolean A boolean value that indicates if the set completed successfully.
+     */
+    public boolean setForcedVariation(@Nonnull Experiment experiment,
+                                      @Nonnull String userId,
+                                      @Nullable String variationKey) {
+
+
+
+        Variation variation = null;
+
+        // keep in mind that you can pass in a variationKey that is null if you want to
+        // remove the variation.
+        if (variationKey != null) {
+            variation = experiment.getVariationKeyToVariationMap().get(variationKey);
+            // if the variation is not part of the experiment, return false.
+            if (variation == null) {
+                logger.error("Variation {} does not exist for experiment {}", variationKey, experiment.getKey());
+                return false;
+            }
+        }
+
+        // if the user id is invalid, return false.
+        if (!validateUserId(userId)) {
+            return false;
+        }
+
+        ConcurrentHashMap<String, String> experimentToVariation;
+        if (!forcedVariationMapping.containsKey(userId)) {
+            forcedVariationMapping.putIfAbsent(userId, new ConcurrentHashMap<String, String>());
+        }
+        experimentToVariation = forcedVariationMapping.get(userId);
+
+        boolean retVal = true;
+        // if it is null remove the variation if it exists.
+        if (variationKey == null) {
+            String removedVariationId = experimentToVariation.remove(experiment.getId());
+            if (removedVariationId != null) {
+                Variation removedVariation = experiment.getVariationIdToVariationMap().get(removedVariationId);
+                if (removedVariation != null) {
+                    logger.debug("Variation mapped to experiment \"{}\" has been removed for user \"{}\"", experiment.getKey(), userId);
+                } else {
+                    logger.debug("Removed forced variation that did not exist in experiment");
+                }
+            } else {
+                logger.debug("No variation for experiment {}", experiment.getKey());
+                retVal = false;
+            }
+        } else {
+            String previous = experimentToVariation.put(experiment.getId(), variation.getId());
+            logger.debug("Set variation \"{}\" for experiment \"{}\" and user \"{}\" in the forced variation map.",
+                variation.getKey(), experiment.getKey(), userId);
+            if (previous != null) {
+                Variation previousVariation = experiment.getVariationIdToVariationMap().get(previous);
+                if (previousVariation != null) {
+                    logger.debug("forced variation {} replaced forced variation {} in forced variation map.",
+                        variation.getKey(), previousVariation.getKey());
+                }
+            }
+        }
+
+        return retVal;
+    }
+
+    /**
+     * Gets the forced variation for a given user and experiment.
+     *
+     * @param experiment    The experiment forced.
+     * @param userId        The user ID to be used for bucketing.
+     * @return The variation the user was bucketed into. This value can be null if the
+     * forced variation fails.
+     */
+    @Nullable
+    public Variation getForcedVariation(@Nonnull Experiment experiment,
+                                        @Nonnull String userId) {
+
+        // if the user id is invalid, return false.
+        if (!validateUserId(userId)) {
+            return null;
+        }
+
+        Map<String, String> experimentToVariation = getForcedVariationMapping().get(userId);
+        if (experimentToVariation != null) {
+            String variationId = experimentToVariation.get(experiment.getId());
+            if (variationId != null) {
+                Variation variation = experiment.getVariationIdToVariationMap().get(variationId);
+                if (variation != null) {
+                    logger.debug("Variation \"{}\" is mapped to experiment \"{}\" and user \"{}\" in the forced variation map",
+                        variation.getKey(), experiment.getKey(), userId);
+                    return variation;
+                }
+            } else {
+                logger.debug("No variation for experiment \"{}\" mapped to user \"{}\" in the forced variation map ", experiment.getKey(), userId);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Helper function to check that the provided userId is valid
+     *
+     * @param userId the userId being validated
+     * @return whether the user ID is valid
+     */
+    private boolean validateUserId(String userId) {
+        if (userId == null) {
+            logger.error("User ID is invalid");
+            return false;
+        }
+
+        return true;
     }
 }

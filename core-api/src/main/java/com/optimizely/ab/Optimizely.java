@@ -26,9 +26,11 @@ import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
+import com.optimizely.ab.event.NoopEventHandler;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
+import com.optimizely.ab.notification.DecisionNotification;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +43,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
 
 /**
  * Top-level container class for Optimizely functionality.
@@ -183,7 +186,7 @@ public class Optimizely {
         }
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         // bucket the user to the given experiment and dispatch an impression event
-        Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes, projectConfig);
+        Variation variation = getVariation(experiment, userId, copiedAttributes, projectConfig);
         if (variation == null) {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
@@ -357,7 +360,7 @@ public class Optimizely {
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes, projectConfig);
 
         if (featureDecision.variation != null) {
-            if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
+            if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
                 sendImpression(
                     projectConfig,
                     featureDecision.experiment,
@@ -609,12 +612,19 @@ public class Optimizely {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes, projectConfig);
         if (featureDecision.variation != null) {
-            FeatureVariableUsageInstance featureVariableUsageInstance =
-                featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
-            if (featureVariableUsageInstance != null) {
-                variableValue = featureVariableUsageInstance.getValue();
+            if (featureDecision.variation.getFeatureEnabled()) {
+                FeatureVariableUsageInstance featureVariableUsageInstance =
+                    featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
+                if (featureVariableUsageInstance != null) {
+                    variableValue = featureVariableUsageInstance.getValue();
+                } else {
+                    variableValue = variable.getDefaultValue();
+                }
             } else {
-                variableValue = variable.getDefaultValue();
+                logger.info("Feature \"{}\" for variation \"{}\" was not enabled. " +
+                        "The default value is being returned.",
+                    featureKey, featureDecision.variation.getKey(), variableValue, variableKey
+                );
             }
         } else {
             logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
@@ -670,9 +680,34 @@ public class Optimizely {
     public Variation getVariation(@Nonnull Experiment experiment,
                                   @Nonnull String userId,
                                   @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
-        Map<String, ?> copiedAttributes = copyAttributes(attributes);
+        return getVariation(experiment, userId, attributes, getProjectConfig());
+    }
 
-        return decisionService.getVariation(experiment, userId, copiedAttributes, getProjectConfig());
+    @Nullable
+    public Variation getVariation(@Nonnull Experiment experiment,
+                                  @Nonnull String userId,
+                                  @Nonnull Map<String, ?> attributes,
+                                  @Nonnull ProjectConfig projectConfig) throws UnknownExperimentException {
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
+        Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes, projectConfig);
+
+        String notificationType = NotificationCenter.DecisionNotificationType.AB_TEST.toString();
+
+        if (getProjectConfig().getExperimentFeatureKeyMapping().get(experiment.getId()) != null) {
+            notificationType = NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString();
+        }
+
+        DecisionNotification decisionNotification = DecisionNotification.newExperimentDecisionNotificationBuilder()
+            .withUserId(userId)
+            .withAttributes(copiedAttributes)
+            .withExperimentKey(experiment.getKey())
+            .withVariation(variation)
+            .withType(notificationType)
+            .build();
+
+        notificationCenter.sendNotifications(decisionNotification);
+
+        return variation;
     }
 
     @Nullable
@@ -706,8 +741,8 @@ public class Optimizely {
             // if we're unable to retrieve the associated experiment, return null
             return null;
         }
-        Map<String, ?> copiedAttributes = copyAttributes(attributes);
-        return decisionService.getVariation(experiment, userId, copiedAttributes, projectConfig);
+
+        return getVariation(experiment, userId, attributes, projectConfig);
     }
 
     /**
@@ -731,14 +766,21 @@ public class Optimizely {
             return false;
         }
 
+        // if the experiment is not a valid experiment key, don't set it.
+        Experiment experiment = projectConfig.getExperimentKeyMapping().get(experimentKey);
+        if (experiment == null) {
+            logger.error("Experiment {} does not exist in ProjectConfig for project {}", experimentKey, projectConfig.getProjectId());
+            return false;
+        }
+
         // TODO this is problematic if swapping out ProjectConfigs.
         // This state should be represented elsewhere like in a ephemeral UserProfileService.
-        return projectConfig.setForcedVariation(experimentKey, userId, variationKey);
+        return decisionService.setForcedVariation(experiment, userId, variationKey);
     }
 
     /**
      * Gets the forced variation for a given user and experiment.
-     * This method just calls into the {@link ProjectConfig#getForcedVariation(String, String)}
+     * This method just calls into the {@link DecisionService#getForcedVariation(Experiment, String)}
      * method of the same signature.
      *
      * @param experimentKey The key for the experiment.
@@ -755,7 +797,13 @@ public class Optimizely {
             return null;
         }
 
-        return projectConfig.getForcedVariation(experimentKey, userId);
+        Experiment experiment = projectConfig.getExperimentKeyMapping().get(experimentKey);
+        if (experiment == null) {
+            logger.debug("No experiment \"{}\" mapped to user \"{}\" in the forced variation map ", experimentKey, userId);
+            return null;
+        }
+
+        return decisionService.getForcedVariation(experiment, userId);
     }
 
     /**
@@ -803,15 +851,15 @@ public class Optimizely {
     }
 
     //======== Builder ========//
-
+    @Deprecated
     public static Builder builder(@Nonnull String datafile,
                                   @Nonnull EventHandler eventHandler) {
+
         return new Builder(datafile, eventHandler);
     }
 
-    public static Builder builder(@Nonnull ProjectConfigManager projectConfigManager,
-                                  @Nonnull EventHandler eventHandler) {
-        return new Builder(projectConfigManager, eventHandler);
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
@@ -836,20 +884,25 @@ public class Optimizely {
         private ProjectConfigManager projectConfigManager;
         private UserProfileService userProfileService;
 
+        // For backwards compatibility
+        private AtomicProjectConfigManager fallbackConfigManager = new AtomicProjectConfigManager();
+
+        @Deprecated
         public Builder(@Nonnull String datafile,
                        @Nonnull EventHandler eventHandler) {
-            this.datafile = datafile;
             this.eventHandler = eventHandler;
+            this.datafile = datafile;
         }
 
-        public Builder(@Nonnull ProjectConfigManager projectConfigManager,
-                       @Nonnull EventHandler eventHandler) {
-            this.projectConfigManager = projectConfigManager;
-            this.eventHandler = eventHandler;
-        }
+        public Builder() { }
 
         public Builder withErrorHandler(ErrorHandler errorHandler) {
             this.errorHandler = errorHandler;
+            return this;
+        }
+
+        public Builder withEventHandler(EventHandler eventHandler) {
+            this.eventHandler = eventHandler;
             return this;
         }
 
@@ -894,8 +947,8 @@ public class Optimizely {
             return this;
         }
 
-
         public Optimizely build() {
+
             if (clientEngine == null) {
                 clientEngine = ClientEngine.JAVA_SDK;
             }
@@ -910,6 +963,10 @@ public class Optimizely {
 
             if (errorHandler == null) {
                 errorHandler = new NoOpErrorHandler();
+            }
+
+            if (eventHandler == null) {
+                eventHandler = new NoopEventHandler();
             }
 
             if (bucketer == null) {
@@ -931,16 +988,15 @@ public class Optimizely {
                 }
             }
 
-            FallbackProjectConfigManager.Builder builder = FallbackProjectConfigManager.builder();
-            if (projectConfigManager != null) {
-                builder.add(projectConfigManager);
-            }
-
             if (projectConfig != null) {
-                builder.add(StaticProjectConfigManager.create(projectConfig));
+                fallbackConfigManager.setConfig(projectConfig);
             }
 
-            return new Optimizely(eventHandler, eventFactory, errorHandler, decisionService, userProfileService, builder.build());
+            if (projectConfigManager == null) {
+                projectConfigManager = fallbackConfigManager;
+            }
+
+            return new Optimizely(eventHandler, eventFactory, errorHandler, decisionService, userProfileService, projectConfigManager);
         }
     }
 }

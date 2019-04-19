@@ -26,6 +26,7 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHttpResponse;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -38,98 +39,108 @@ import java.net.URI;
 import static com.optimizely.ab.config.HttpProjectConfigManager.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HttpProjectConfigManagerTest {
 
     @Mock
-    OptimizelyHttpClient mockHttpClient;
+    private OptimizelyHttpClient mockHttpClient;
 
     private String datafileString;
+    private HttpProjectConfigManager projectConfigManager;
 
     @Before
     public void setUp() throws Exception {
         datafileString = Resources.toString(Resources.getResource("valid-project-config-v4.json"), Charsets.UTF_8);
+        when(mockHttpClient.execute(any(HttpGet.class), any(ResponseHandler.class)))
+            .thenReturn(datafileString);
+    }
+
+    @After
+    public void tearDown() {
+        if (projectConfigManager == null) {
+            return;
+        }
+
+        projectConfigManager.close();
     }
 
     @Test
     public void testHttpGetBySdkKey() throws Exception {
-        HttpProjectConfigManager projectConfigManager = builder()
+        projectConfigManager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
             .withSdkKey("sdk-key")
             .build();
 
-        HttpGet actual = projectConfigManager.getHttpGet();
-
-        assertEquals("GET", actual.getMethod());
-        assertEquals(new URI("https://cdn.optimizely.com/datafiles/sdk-key.json"), actual.getURI());
+        URI actual = projectConfigManager.getUri();
+        assertEquals(new URI("https://cdn.optimizely.com/datafiles/sdk-key.json"), actual);
     }
 
     @Test
     public void testHttpGetByCustomFormat() throws Exception {
-        HttpProjectConfigManager projectConfigManager = builder()
+        projectConfigManager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
             .withSdkKey("sdk-key")
             .withFormat("https://custom.optimizely.com/%s.json")
             .build();
 
-        HttpGet actual = projectConfigManager.getHttpGet();
-
-        assertEquals("GET", actual.getMethod());
-        assertEquals(new URI("https://custom.optimizely.com/sdk-key.json"), actual.getURI());
+        URI actual = projectConfigManager.getUri();
+        assertEquals(new URI("https://custom.optimizely.com/sdk-key.json"), actual);
     }
 
     @Test
     public void testHttpGetByCustomUrl() throws Exception {
         String expected = "https://custom.optimizely.com/custom-location.json";
 
-        HttpProjectConfigManager projectConfigManager = builder()
+        projectConfigManager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
             .withUrl(expected)
             .build();
 
-        HttpGet actual = projectConfigManager.getHttpGet();
-
-        assertEquals("GET", actual.getMethod());
-        assertEquals(new URI(expected), actual.getURI());
+        URI actual = projectConfigManager.getUri();
+        assertEquals(new URI(expected), actual);
     }
 
     @Test
-    public void testGetConfig() throws Exception {
-        HttpProjectConfigManager projectConfigManager = builder()
+    public void testPoll() throws Exception {
+        projectConfigManager = builder()
             .withOptimizelyHttpClient(mockHttpClient)
             .withSdkKey("sdk-key")
             .build();
 
-        ProjectConfig projectConfig = new DatafileProjectConfig.Builder().withDatafile(datafileString).build();
-        when(mockHttpClient.execute(eq(projectConfigManager.getHttpGet()), any(ResponseHandler.class)))
-            .thenReturn(projectConfig);
-
-        assertEquals(projectConfig, projectConfigManager.getConfig());
+        assertEquals("1480511547", projectConfigManager.getConfig().getRevision());
     }
 
     @Test
-    public void testProjectConfigResponseHandler2XX() throws Exception {
-        HttpProjectConfigManager projectConfigManager = builder()
-            .withSdkKey("sdk-key")
-            .build();
+    public void testBuildDefer() throws Exception {
+        // always returns null so PollingProjectConfigManager will never resolve.
+        mockHttpClient = mock(OptimizelyHttpClient.class);
 
-        ResponseHandler<ProjectConfig> handler = projectConfigManager.getResponseHandler();
+        projectConfigManager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("sdk-key")
+            .build(true);
+    }
+
+    @Test
+    @Ignore
+    public void testProjectConfigResponseHandler2XX() throws Exception {
+        ResponseHandler<String> handler = new ProjectConfigResponseHandler();
 
         HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 200, "TEST");
         getResponse.setEntity(new StringEntity(datafileString));
 
-        ProjectConfig projectConfig = handler.handleResponse(getResponse);
-        assertNotNull(projectConfig);
-        assertEquals("4", projectConfig.getVersion());
+        String datafile = handler.handleResponse(getResponse);
+        assertNotNull(datafile);
+
+        assertEquals("4", parseProjectConfig(datafile).getVersion());
     }
 
     @Test(expected = ClientProtocolException.class)
     public void testProjectConfigResponseHandler3XX() throws Exception {
-        HttpProjectConfigManager projectConfigManager = builder()
-            .withSdkKey("sdk-key")
-            .build();
-
-        ResponseHandler<ProjectConfig> handler = projectConfigManager.getResponseHandler();
+        ResponseHandler<String> handler = new ProjectConfigResponseHandler();
 
         HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 300, "TEST");
         getResponse.setEntity(new StringEntity(datafileString));
@@ -139,11 +150,7 @@ public class HttpProjectConfigManagerTest {
 
     @Test(expected = ClientProtocolException.class)
     public void testProjectConfigResponseHandler4XX() throws Exception {
-        HttpProjectConfigManager projectConfigManager = builder()
-            .withSdkKey("sdk-key")
-            .build();
-
-        ResponseHandler<ProjectConfig> handler = projectConfigManager.getResponseHandler();
+        ResponseHandler<String> handler = new ProjectConfigResponseHandler();
 
         HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 400, "TEST");
         getResponse.setEntity(new StringEntity(datafileString));
@@ -153,11 +160,7 @@ public class HttpProjectConfigManagerTest {
 
     @Test(expected = ClientProtocolException.class)
     public void testProjectConfigResponseHandler5XX() throws Exception {
-        HttpProjectConfigManager projectConfigManager = builder()
-            .withSdkKey("sdk-key")
-            .build();
-
-        ResponseHandler<ProjectConfig> handler = projectConfigManager.getResponseHandler();
+        ResponseHandler<String> handler = new ProjectConfigResponseHandler();
 
         HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 500, "TEST");
         getResponse.setEntity(new StringEntity(datafileString));
@@ -168,12 +171,12 @@ public class HttpProjectConfigManagerTest {
     @Test
     @Ignore
     public void testBasicFetch() throws Exception {
-        ProjectConfigManager projectConfigManager = builder()
+        projectConfigManager = builder()
             .withSdkKey("7vPf3v7zye3fY4PcbejeCz")
             .build();
 
         ProjectConfig actual = projectConfigManager.getConfig();
         assertNotNull(actual);
-        assertEquals("4", actual.getVersion());
+        assertNotNull(actual.getVersion());
     }
 }

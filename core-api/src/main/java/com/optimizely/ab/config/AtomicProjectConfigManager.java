@@ -16,23 +16,18 @@
  */
 package com.optimizely.ab.config;
 
-/**
- * Holder for a single, static ProjectConfig.
- */
-public class StaticProjectConfigManager implements ProjectConfigManager {
+import java.util.concurrent.atomic.AtomicReference;
 
-    private final ProjectConfig projectConfig;
+public class AtomicProjectConfigManager implements ProjectConfigManager {
 
-    private StaticProjectConfigManager(ProjectConfig projectConfig) {
-        this.projectConfig = projectConfig;
-    }
-
-    public static StaticProjectConfigManager create(ProjectConfig projectConfig) {
-        return new StaticProjectConfigManager(projectConfig);
-    }
+    private final AtomicReference<ProjectConfig> projectConfigReference = new AtomicReference<>();
 
     @Override
     public ProjectConfig getConfig() {
-        return projectConfig;
+        return projectConfigReference.get();
+    }
+
+    public void setConfig(ProjectConfig projectConfig) {
+        projectConfigReference.set(projectConfig);
     }
 }

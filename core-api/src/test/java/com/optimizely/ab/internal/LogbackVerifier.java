@@ -99,6 +99,11 @@ public class LogbackVerifier implements TestRule {
                 public boolean matches(final Object argument) {
                     return expectedEvent.matches((ILoggingEvent) argument);
                 }
+
+                @Override
+                public void describeTo(org.hamcrest.Description description) {
+                    description.appendValue(expectedEvent);
+                }
             }));
         }
     }
@@ -133,6 +138,17 @@ public class LogbackVerifier implements TestRule {
         private boolean matchThrowables(ILoggingEvent actual) {
             IThrowableProxy eventProxy = actual.getThrowableProxy();
             return throwableClass == null || eventProxy != null && throwableClass.getName().equals(eventProxy.getClassName());
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("ExpectedLogEvent{");
+            sb.append("level=").append(level);
+            sb.append(", message='").append(message).append('\'');
+            sb.append(", throwableClass=").append(throwableClass);
+            sb.append(", times=").append(times);
+            sb.append('}');
+            return sb.toString();
         }
     }
 }

@@ -4,5 +4,5 @@ include 'core-api'
 include 'core-common'
 include 'core-event-processor'
 include 'core-httpclient-impl'
+include 'java-quickstart'
 include 'event-processor-disruptor'
-

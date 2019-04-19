@@ -24,7 +24,7 @@ import com.optimizely.ab.event.LogEvent;
 import javax.annotation.Nonnull;
 import java.util.Map;
 
-
+@Deprecated
 public abstract class ActivateNotificationListener implements NotificationListener, ActivateNotificationListenerInterface {
 
     /**
