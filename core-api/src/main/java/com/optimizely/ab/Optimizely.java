@@ -35,6 +35,7 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
+import com.optimizely.ab.notification.DecisionNotification;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -217,7 +218,7 @@ public class Optimizely {
         }
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         // bucket the user to the given experiment and dispatch an impression event
-        Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes);
+        Variation variation = getVariation(experiment, userId, copiedAttributes);
         if (variation == null) {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
@@ -389,7 +390,7 @@ public class Optimizely {
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
 
         if (featureDecision.variation != null) {
-            if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.EXPERIMENT)) {
+            if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
                 sendImpression(
                     projectConfig,
                     featureDecision.experiment,
@@ -650,12 +651,19 @@ public class Optimizely {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
         if (featureDecision.variation != null) {
-            FeatureVariableUsageInstance featureVariableUsageInstance =
-                featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
-            if (featureVariableUsageInstance != null) {
-                variableValue = featureVariableUsageInstance.getValue();
+            if (featureDecision.variation.getFeatureEnabled()) {
+                FeatureVariableUsageInstance featureVariableUsageInstance =
+                    featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
+                if (featureVariableUsageInstance != null) {
+                    variableValue = featureVariableUsageInstance.getValue();
+                } else {
+                    variableValue = variable.getDefaultValue();
+                }
             } else {
-                variableValue = variable.getDefaultValue();
+                logger.info("Feature \"{}\" for variation \"{}\" was not enabled. " +
+                        "The default value is being returned.",
+                    featureKey, featureDecision.variation.getKey(), variableValue, variableKey
+                );
             }
         } else {
             logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
@@ -711,8 +719,25 @@ public class Optimizely {
                                   @Nonnull String userId,
                                   @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
+        Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes);
 
-        return decisionService.getVariation(experiment, userId, copiedAttributes);
+        String notificationType = NotificationCenter.DecisionNotificationType.AB_TEST.toString();
+
+        if (getProjectConfig().getExperimentFeatureKeyMapping().get(experiment.getId()) != null) {
+            notificationType = NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString();
+        }
+
+        DecisionNotification decisionNotification = DecisionNotification.newExperimentDecisionNotificationBuilder()
+            .withUserId(userId)
+            .withAttributes(copiedAttributes)
+            .withExperimentKey(experiment.getKey())
+            .withVariation(variation)
+            .withType(notificationType)
+            .build();
+
+        notificationCenter.sendNotifications(decisionNotification);
+
+        return variation;
     }
 
     @Nullable
@@ -747,8 +772,8 @@ public class Optimizely {
             // if we're unable to retrieve the associated experiment, return null
             return null;
         }
-        Map<String, ?> copiedAttributes = copyAttributes(attributes);
-        return decisionService.getVariation(experiment, userId, copiedAttributes);
+
+        return getVariation(experiment, userId, attributes);
     }
 
     /**
