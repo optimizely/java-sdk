@@ -134,12 +134,10 @@ public class BatchBlock<T> extends Blocks.Source<T> implements ProcessorBlock<T,
     }
 
     protected Supplier<BatchTask<T, ?>> createBatchTaskFactory(BatchOptions opts) {
-        int maxSize = opts.getMaxSize();
-
         // TODO should this live on BatchOptions?
-        final Supplier<Collection<T>> bufferSupplier = (maxSize == BatchOptions.UNBOUNDED_SIZE) ?
-            () -> new ArrayList<>(maxSize) : // bounded
-            ArrayList::new;                  // unbounded
+        final Supplier<Collection<T>> bufferSupplier = BatchOptions.hasMaxSize(opts) ?
+            () -> new ArrayList<>(opts.getMaxSize()) :
+            ArrayList::new;
 
         return () -> new BatchTask<>(
             bufferSupplier,

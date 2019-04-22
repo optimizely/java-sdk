@@ -64,11 +64,8 @@ public interface BatchOptions {
     }
 
     class Builder<T> implements BatchOptions {
-        static int MAX_SIZE_DEFAULT = 10;
-        static long MAX_AGE_DEFAULT = 250L;
-
-        private int maxBatchSize = MAX_SIZE_DEFAULT;
-        private long maxBatchAge = MAX_AGE_DEFAULT;
+        private int maxBatchSize = UNBOUNDED_SIZE;
+        private long maxBatchAge = UNBOUNDED_AGE;
         private Integer maxBatchInFlight = null;
         private boolean flushOnShutdown = true;
 
