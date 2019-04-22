@@ -107,7 +107,6 @@ public class BatchBlock<T> extends Blocks.Source<T> implements ProcessorBlock<T,
                 logger.warn("Interrupted while flushing before shutdown");
             }
         }
-        super.onStop();
     }
 
     /**

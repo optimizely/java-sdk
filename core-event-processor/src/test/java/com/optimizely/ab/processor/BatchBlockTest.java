@@ -63,7 +63,7 @@ public class BatchBlockTest {
 
     @Before
     public void setUp() {
-        threadFactory = new ThreadFactoryBuilder().setNameFormat("batching-processor-%d").build();
+        threadFactory = new ThreadFactoryBuilder().setNameFormat(BatchBlockTest.class.getSimpleName() + "-%d").build();
         executor = Executors.newCachedThreadPool(threadFactory);
         batchCount = new AtomicInteger();
         batches = Collections.synchronizedList(new ArrayList<>());
@@ -75,7 +75,7 @@ public class BatchBlockTest {
     }
 
     @Test
-    public void testProcess_maxBatchSize1() throws Exception {
+    public void testPost_maxBatchSize1() throws Exception {
         BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(1)
             .maxBatchAge(Duration.ofDays(1))); // wont reach timeout
@@ -92,7 +92,7 @@ public class BatchBlockTest {
     }
 
     @Test
-    public void testProcess_maxBatchSize2() throws Exception {
+    public void testPost_maxBatchSize2() throws Exception {
         BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(2)
             .maxBatchAge(Duration.ofDays(1))); // wont reach timeout
@@ -108,7 +108,7 @@ public class BatchBlockTest {
     }
 
     @Test
-    public void testProcess_timeout() throws Exception {
+    public void testPost_timeout() throws Exception {
         BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(10)
             .maxBatchAge(Duration.ofMillis(500)));
@@ -125,7 +125,7 @@ public class BatchBlockTest {
     }
 
     @Test
-    public void testProcessBatch_maxBatchSize1() {
+    public void testPostBatch_maxBatchSize1() {
         BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(1)
             .maxBatchAge(Duration.ofDays(1))); // wont reach timeout
@@ -138,7 +138,7 @@ public class BatchBlockTest {
     }
 
     @Test
-    public void testProcessBatch_maxBatchSize2() {
+    public void testPostBatch_maxBatchSize2() {
         BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(2)
             .maxBatchAge(Duration.ofDays(1))); // wont reach timeout
@@ -150,7 +150,7 @@ public class BatchBlockTest {
     }
 
     @Test
-    public void testProcessBatch_timeout() {
+    public void testPostBatch_timeout() {
         BatchBlock<Object> buffer = batchingQueue(config -> config
             .maxBatchSize(2)
             .maxBatchAge(Duration.ofMillis(500)));
@@ -363,7 +363,6 @@ public class BatchBlockTest {
             timeout = Math.max(options.getMaxAge() + 100L, timeout);
         }
 
-        logger.info("Timeout={}", timeout);
         Integer actual = await()
             .atMost(timeout, MILLISECONDS)
             .untilAtomic(batchCount, greaterThanOrEqualTo(n));
