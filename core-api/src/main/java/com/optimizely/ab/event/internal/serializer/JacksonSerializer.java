@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 
 class JacksonSerializer implements Serializer {
 
-    private final ObjectMapper mapper =
+    private ObjectMapper mapper =
         new ObjectMapper().setPropertyNamingStrategy(
             PropertyNamingStrategy.SNAKE_CASE);
 
