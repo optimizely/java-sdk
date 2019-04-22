@@ -387,8 +387,12 @@ public class Optimizely {
         }
 
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
+        FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
+        String sourceExperimentKey = null;
+        String sourceVariationKey = null;
 
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
+        Boolean featureEnabled = false;
         if (featureDecision.variation != null) {
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
                 sendImpression(
@@ -397,18 +401,32 @@ public class Optimizely {
                     userId,
                     copiedAttributes,
                     featureDecision.variation);
+                decisionSource = featureDecision.decisionSource;
+                sourceVariationKey = featureDecision.variation.getKey();
+                sourceExperimentKey = featureDecision.experiment.getKey();
             } else {
                 logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
                     userId, featureKey);
             }
             if (featureDecision.variation.getFeatureEnabled()) {
                 logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
-                return true;
+                featureEnabled = true;
             }
         }
 
+        DecisionNotification decisionNotification = DecisionNotification.newFeatureDecisionNotificationBuilder()
+            .withUserId(userId)
+            .withAttributes(copiedAttributes)
+            .withFeatureKey(featureKey)
+            .withFeatureEnabled(featureEnabled)
+            .withSource(decisionSource)
+            .withExperimentKey(sourceExperimentKey)
+            .withVariationKey(sourceVariationKey)
+            .build();
+        notificationCenter.sendNotifications(decisionNotification);
+
         logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
-        return false;
+        return featureEnabled;
     }
 
     /**
