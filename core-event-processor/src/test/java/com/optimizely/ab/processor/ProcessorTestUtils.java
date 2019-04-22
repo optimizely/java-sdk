@@ -60,7 +60,7 @@ final class ProcessorTestUtils {
 
         public TransferBlock(BlockingQueue<Envelope<T>> queue) {
             this.queue = Assert.notNull(queue, "queue");
-            this.defaultTimeout = 5L;
+            this.defaultTimeout = 10L;
             this.defaultTimeUnit = TimeUnit.SECONDS;
         }
 
