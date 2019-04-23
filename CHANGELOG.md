@@ -8,6 +8,7 @@ This is a simple fix so that older versions of org.json can still parse the data
 
 ### Bug Fix
 We use org.json.JSONArray. Older versions do not support the iterator.  In order to ensure that the datafile is still parsable if you use a older version, we changed to use the get method instead of the iterator.
+([#283](https://github.com/optimizely/java-sdk/pull/283))
 
 ## 3.0.0
 
