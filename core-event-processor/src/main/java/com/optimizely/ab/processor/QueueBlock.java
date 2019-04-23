@@ -45,7 +45,7 @@ public class QueueBlock<T> extends Blocks.Source<T> implements ProcessorBlock<T,
     }
 
     @Override
-    protected synchronized void afterStart() {
+    protected void afterStart() {
         synchronized (this) {
             if (running) {
                 return;
