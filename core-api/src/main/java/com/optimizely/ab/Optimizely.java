@@ -465,17 +465,13 @@ public class Optimizely {
             return null;
         }
 
-        String variableValue = getFeatureVariableValueForType(
-            featureKey,
-            variableKey,
-            userId,
-            attributes,
-            FeatureVariable.VariableType.BOOLEAN
-        );
-        if (variableValue != null) {
-            return Boolean.parseBoolean(variableValue);
-        }
-        return null;
+        return getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                FeatureVariable.VariableType.BOOLEAN
+            );
     }
 
     /**
@@ -514,20 +510,19 @@ public class Optimizely {
             return null;
         }
 
-        String variableValue = getFeatureVariableValueForType(
-            featureKey,
-            variableKey,
-            userId,
-            attributes,
-            FeatureVariable.VariableType.DOUBLE
-        );
-        if (variableValue != null) {
-            try {
-                return Double.parseDouble(variableValue);
-            } catch (NumberFormatException exception) {
-                logger.error("NumberFormatException while trying to parse \"" + variableValue +
-                    "\" as Double. " + exception);
-            }
+        Double variableValue = null;
+        try {
+            variableValue = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                FeatureVariable.VariableType.DOUBLE
+            );
+            return variableValue;
+        } catch (Exception exception) {
+            logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                "\" as Double. " + exception);
         }
         return null;
     }
@@ -567,21 +562,19 @@ public class Optimizely {
             logger.error("Optimizely instance is not valid, failing getFeatureVariableInteger call.");
             return null;
         }
-
-        String variableValue = getFeatureVariableValueForType(
-            featureKey,
-            variableKey,
-            userId,
-            attributes,
-            FeatureVariable.VariableType.INTEGER
-        );
-        if (variableValue != null) {
-            try {
-                return Integer.parseInt(variableValue);
-            } catch (NumberFormatException exception) {
-                logger.error("NumberFormatException while trying to parse \"" + variableValue +
-                    "\" as Integer. " + exception.toString());
+        try {
+            Integer variableValue = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                FeatureVariable.VariableType.INTEGER
+            );
+            if (variableValue != null) {
+                return variableValue;
             }
+        } catch (Exception exception) {
+            logger.error("NumberFormatException while trying to parse value as Integer. " + exception.toString());
         }
         return null;
     }
@@ -631,11 +624,11 @@ public class Optimizely {
     }
 
     @VisibleForTesting
-    String getFeatureVariableValueForType(@Nonnull String featureKey,
-                                          @Nonnull String variableKey,
-                                          @Nonnull String userId,
-                                          @Nonnull Map<String, ?> attributes,
-                                          @Nonnull FeatureVariable.VariableType variableType) {
+    <T extends Object> T getFeatureVariableValueForType(@Nonnull String featureKey,
+                                                        @Nonnull String variableKey,
+                                                        @Nonnull String userId,
+                                                        @Nonnull Map<String, ?> attributes,
+                                                        @Nonnull FeatureVariable.VariableType variableType) {
         if (featureKey == null) {
             logger.warn("The featureKey parameter must be nonnull.");
             return null;
@@ -668,6 +661,7 @@ public class Optimizely {
         String variableValue = variable.getDefaultValue();
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
+        Boolean featureEnabled = false;
         if (featureDecision.variation != null) {
             if (featureDecision.variation.getFeatureEnabled()) {
                 FeatureVariableUsageInstance featureVariableUsageInstance =
@@ -683,6 +677,7 @@ public class Optimizely {
                     featureKey, featureDecision.variation.getKey(), variableValue, variableKey
                 );
             }
+            featureEnabled = featureDecision.variation.getFeatureEnabled();
         } else {
             logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
                     "The default value \"{}\" for \"{}\" is being returned.",
@@ -690,7 +685,53 @@ public class Optimizely {
             );
         }
 
-        return variableValue;
+        Object convertedValue = convertStringToType(variableValue, variableType);
+
+        DecisionNotification decisionNotification = DecisionNotification.newFeatureVariableBuilder()
+            .withUserId(userId)
+            .withAttributes(copiedAttributes)
+            .withFeatureKey(featureKey)
+            .withFeatureEnabled(featureEnabled)
+            .withVariableKey(variableKey)
+            .withVariableType(variableType)
+            .withVariableValue(convertedValue)
+            .withFeatureDecision(featureDecision)
+            .build();
+
+
+        notificationCenter.sendNotifications(decisionNotification);
+
+        return (T) convertedValue;
+    }
+
+    // Helper method which takes type and variable value and convert it to object to use in Listener DecisionInfo object variable value
+    @VisibleForTesting
+    Object convertStringToType(String variableValue, FeatureVariable.VariableType type) {
+        if (variableValue != null) {
+            switch (type) {
+                case DOUBLE:
+                    try {
+                        return Double.parseDouble(variableValue);
+                    } catch (NumberFormatException exception) {
+                        logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                            "\" as Double. " + exception);
+                    }
+                    break;
+                case STRING:
+                    return variableValue;
+                case BOOLEAN:
+                    return Boolean.parseBoolean(variableValue);
+                case INTEGER:
+                    try {
+                        return Integer.parseInt(variableValue);
+                    } catch (NumberFormatException exception) {
+                        logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                            "\" as Integer. " + exception.toString());
+                    }
+                    break;
+            }
+        }
+        return null;
     }
 
     /**
