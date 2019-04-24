@@ -177,7 +177,7 @@ public class DecisionNotification {
             decisionInfo = new HashMap<>();
             decisionInfo.put(FEATURE_KEY, featureKey);
             decisionInfo.put(FEATURE_ENABLED, featureEnabled);
-            decisionInfo.put(SOURCE, source);
+            decisionInfo.put(SOURCE, source.toString());
 
             Map<String, String> sourceInfo = new HashMap<>();
             if (source.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
@@ -274,9 +274,9 @@ public class DecisionNotification {
             if (featureDecision != null && FeatureDecision.DecisionSource.FEATURE_TEST.equals(featureDecision.decisionSource)) {
                 sourceInfo.put(EXPERIMENT_KEY, featureDecision.experiment.getKey());
                 sourceInfo.put(VARIATION_KEY, featureDecision.variation.getKey());
-                decisionInfo.put(SOURCE, featureDecision.decisionSource);
+                decisionInfo.put(SOURCE, featureDecision.decisionSource.toString());
             } else {
-                decisionInfo.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT);
+                decisionInfo.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
             }
             decisionInfo.put(SOURCE_INFO, sourceInfo);
 
