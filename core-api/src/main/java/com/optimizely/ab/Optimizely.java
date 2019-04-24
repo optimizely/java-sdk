@@ -35,8 +35,7 @@ import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
-import com.optimizely.ab.notification.DecisionNotification;
-import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.notification.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -388,11 +387,10 @@ public class Optimizely {
 
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
-        String sourceExperimentKey = null;
-        String sourceVariationKey = null;
 
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes);
         Boolean featureEnabled = false;
+        SourceInfo sourceInfo = new RolloutSourceInfo();
         if (featureDecision.variation != null) {
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
                 sendImpression(
@@ -402,8 +400,7 @@ public class Optimizely {
                     copiedAttributes,
                     featureDecision.variation);
                 decisionSource = featureDecision.decisionSource;
-                sourceVariationKey = featureDecision.variation.getKey();
-                sourceExperimentKey = featureDecision.experiment.getKey();
+                sourceInfo = new FeatureTestSourceInfo(featureDecision.experiment.getKey(), featureDecision.variation.getKey());
             } else {
                 logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
                     userId, featureKey);
@@ -420,8 +417,7 @@ public class Optimizely {
             .withFeatureKey(featureKey)
             .withFeatureEnabled(featureEnabled)
             .withSource(decisionSource)
-            .withExperimentKey(sourceExperimentKey)
-            .withVariationKey(sourceVariationKey)
+            .withSourceInfo(sourceInfo)
             .build();
         notificationCenter.sendNotifications(decisionNotification);
 

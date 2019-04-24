@@ -26,6 +26,9 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.EXPERIMENT_KEY;
+import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_KEY;
+
 public class DecisionNotification {
     protected String type;
     protected String userId;
@@ -126,13 +129,10 @@ public class DecisionNotification {
         public final static String FEATURE_ENABLED = "featureEnabled";
         public final static String SOURCE = "source";
         public final static String SOURCE_INFO = "sourceInfo";
-        public final static String EXPERIMENT_KEY = "experimentKey";
-        public final static String VARIATION_KEY = "variationKey";
 
         private String featureKey;
         private Boolean featureEnabled;
-        private String experimentKey;
-        private String variationKey;
+        private SourceInfo sourceInfo;
         private FeatureDecision.DecisionSource source;
         private String userId;
         private Map<String, ?> attributes;
@@ -148,13 +148,8 @@ public class DecisionNotification {
             return this;
         }
 
-        public FeatureDecisionNotificationBuilder withExperimentKey(String experimentKey) {
-            this.experimentKey = experimentKey;
-            return this;
-        }
-
-        public FeatureDecisionNotificationBuilder withVariationKey(String variationKey) {
-            this.variationKey = variationKey;
+        public FeatureDecisionNotificationBuilder withSourceInfo(SourceInfo sourceInfo) {
+            this.sourceInfo = sourceInfo;
             return this;
         }
 
@@ -179,12 +174,7 @@ public class DecisionNotification {
             decisionInfo.put(FEATURE_ENABLED, featureEnabled);
             decisionInfo.put(SOURCE, source.toString());
 
-            Map<String, String> sourceInfo = new HashMap<>();
-            if (source.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
-                sourceInfo.put(EXPERIMENT_KEY, experimentKey);
-                sourceInfo.put(VARIATION_KEY, variationKey);
-            }
-            decisionInfo.put(SOURCE_INFO, sourceInfo);
+            decisionInfo.put(SOURCE_INFO, sourceInfo.get());
 
             return new DecisionNotification(
                 NotificationCenter.DecisionNotificationType.FEATURE.toString(),
@@ -204,8 +194,6 @@ public class DecisionNotification {
         public static final String FEATURE_ENABLED = "featureEnabled";
         public static final String SOURCE = "source";
         public static final String SOURCE_INFO = "sourceInfo";
-        public static final String EXPERIMENT_KEY = "experimentKey";
-        public static final String VARIATION_KEY = "variationKey";
         public static final String VARIABLE_KEY = "variableKey";
         public static final String VARIABLE_TYPE = "variableType";
         public static final String VARIABLE_VALUE = "variableValue";
@@ -270,15 +258,15 @@ public class DecisionNotification {
             decisionInfo.put(VARIABLE_KEY, variableKey);
             decisionInfo.put(VARIABLE_TYPE, variableType);
             decisionInfo.put(VARIABLE_VALUE, variableValue);
-            Map<String, String> sourceInfo = new HashMap<>();
+            SourceInfo sourceInfo = new RolloutSourceInfo();
+
             if (featureDecision != null && FeatureDecision.DecisionSource.FEATURE_TEST.equals(featureDecision.decisionSource)) {
-                sourceInfo.put(EXPERIMENT_KEY, featureDecision.experiment.getKey());
-                sourceInfo.put(VARIATION_KEY, featureDecision.variation.getKey());
+                sourceInfo = new FeatureTestSourceInfo(featureDecision.experiment.getKey(), featureDecision.variation.getKey());
                 decisionInfo.put(SOURCE, featureDecision.decisionSource.toString());
             } else {
                 decisionInfo.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
             }
-            decisionInfo.put(SOURCE_INFO, sourceInfo);
+            decisionInfo.put(SOURCE_INFO, sourceInfo.get());
 
             return new DecisionNotification(
                 NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
