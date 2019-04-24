@@ -2890,7 +2890,7 @@ public class OptimizelyTest {
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, true);
-        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
@@ -2946,7 +2946,7 @@ public class OptimizelyTest {
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, false);
-        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
@@ -3002,7 +3002,7 @@ public class OptimizelyTest {
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, false);
-        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, new HashMap<>());
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
@@ -3049,7 +3049,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIATION_KEY, null);
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, true);
-        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, new HashMap<>());
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
@@ -3104,7 +3104,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
         testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING);
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
-        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
@@ -3157,7 +3157,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
         testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING);
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
-        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
@@ -3207,7 +3207,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
         testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING);
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
-        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
@@ -3257,7 +3257,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
         testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.BOOLEAN);
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
-        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
@@ -3306,7 +3306,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
         testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.INTEGER);
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
-        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
@@ -3358,7 +3358,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
         testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.DOUBLE);
         testDecisionInfoMap.put(VARIABLE_VALUE, 3.14);
-        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
 
         int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
