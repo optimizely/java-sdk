@@ -73,17 +73,12 @@ public interface BatchOptions {
         }
 
         public Builder<T> maxBatchSize(@Nullable Integer maxBatchSize) {
-            this.maxBatchSize = (maxBatchSize != null) ? maxBatchSize : UNBOUNDED_SIZE;
+            this.maxBatchSize = (maxBatchSize != null && maxBatchSize > 0) ? maxBatchSize : UNBOUNDED_SIZE;
             return this;
         }
 
         public Builder<T> maxBatchAge(@Nullable Duration maxBatchAge) {
-            this.maxBatchAge = (maxBatchAge != null) ? maxBatchAge.toMillis() : UNBOUNDED_AGE;
-            return this;
-        }
-
-        public Builder<T> maxBatchInFlight(@Nullable Integer maxBatchInFlight) {
-            this.maxBatchInFlight = maxBatchInFlight;
+            this.maxBatchAge = (maxBatchAge != null && !maxBatchAge.isNegative()) ? maxBatchAge.toMillis() : UNBOUNDED_AGE;
             return this;
         }
 

@@ -185,11 +185,10 @@ public class EventProcessor<T> implements PluginSupport {
      * Configures batching with the specified parameters
      */
     public EventProcessor<T> batchOptions(final BatchOptions options) {
-        if (options != null) {
-            this.batchProcessorProvider = () -> Blocks.batch(options, threadFactory);
-        } else {
-            this.batchProcessorProvider = Blocks::identity;
-        }
+        this.batchProcessorProvider = (options != null) ?
+            (() -> Blocks.batch(options, threadFactory)) : // defer instantiation to allow threadFactory to be configured separately
+            Blocks::identity;
+
         return this;
     }
 

@@ -3,6 +3,7 @@ package com.optimizely.ab.processor;
 import com.optimizely.ab.common.internal.Assert;
 
 import javax.annotation.Nonnull;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
@@ -51,8 +52,7 @@ final class ProcessorTestUtils {
     public static class TransferBlock<T> implements TargetBlock<T> {
         private final BlockingQueue<Envelope<T>> queue;
 
-        private long defaultTimeout;
-        private TimeUnit defaultTimeUnit;
+        private Duration defaultTimeout = Duration.ofSeconds(30L);
 
         public TransferBlock() {
             this(new LinkedBlockingQueue<>());
@@ -60,8 +60,6 @@ final class ProcessorTestUtils {
 
         public TransferBlock(BlockingQueue<Envelope<T>> queue) {
             this.queue = Assert.notNull(queue, "queue");
-            this.defaultTimeout = 10L;
-            this.defaultTimeUnit = TimeUnit.SECONDS;
         }
 
         @Override
@@ -83,7 +81,7 @@ final class ProcessorTestUtils {
         }
 
         public Envelope<T> await() throws InterruptedException, TimeoutException {
-            return await(defaultTimeout, defaultTimeUnit);
+            return await(defaultTimeout.toMillis(), TimeUnit.MILLISECONDS);
         }
 
         public Envelope<T> await(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException {
@@ -106,12 +104,8 @@ final class ProcessorTestUtils {
             return queue;
         }
 
-        public void setDefaultTimeout(long defaultTimeout) {
+        public void setDefaultTimeout(Duration defaultTimeout) {
             this.defaultTimeout = defaultTimeout;
-        }
-
-        public void setDefaultTimeUnit(TimeUnit defaultTimeUnit) {
-            this.defaultTimeUnit = defaultTimeUnit;
         }
 
         /**

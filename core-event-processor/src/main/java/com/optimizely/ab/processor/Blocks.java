@@ -18,8 +18,8 @@ package com.optimizely.ab.processor;
 import com.optimizely.ab.common.internal.Assert;
 
 import javax.annotation.Nonnull;
+import java.time.Clock;
 import java.util.Collection;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -34,6 +34,7 @@ import java.util.stream.Stream;
  */
 public final class Blocks {
     private static final IdentityBlock IDENTITY_BLOCK = new IdentityBlock();
+    private static Clock clock = Clock.systemUTC();
 
     private Blocks() { /* no instances */ }
 
@@ -129,19 +130,10 @@ public final class Blocks {
     }
 
     /**
-     * @return an block (async) that batches inputs into collections, bounded by size and/or time
-     * @see BatchBlock
+     * @return a block that buffers elements and asynchronously emits in batches
      */
-    public static <T> BatchBlock<T> batch(BatchOptions config) {
-        return new BatchBlock<>(config, Executors.defaultThreadFactory()); // TODO get a shared thread factory for SDK
-    }
-
-    /**
-     * @return an block (async) that batches inputs into collections, bounded by size and/or time
-     * @see BatchBlock
-     */
-    public static <T> BatchBlock<T> batch(BatchOptions config, ThreadFactory threadFactory) {
-        return new BatchBlock<>(config, threadFactory);
+    public static <T> ProcessorBlock<T, T> batch(BatchOptions config, ThreadFactory threadFactory) {
+        return BatchBlock.create(config, threadFactory);
     }
 
     /**
@@ -191,6 +183,24 @@ public final class Blocks {
         for (final Block block : blocks) {
             block.onStop();
         }
+    }
+
+    /**
+     * Sets the shared {@link Clock} instance.
+     *
+     * NOTE: for testing purposes only
+     *
+     * @param clock
+     */
+    static void setClock(Clock clock) {
+        Blocks.clock = clock;
+    }
+
+    /**
+     * @return the shared {@link Clock} instance
+     */
+    static Clock clock() {
+        return Blocks.clock;
     }
 
     /**
@@ -283,20 +293,25 @@ public final class Blocks {
 
         @Override
         public final void onStart() {
-            afterStart();
+            synchronized (this) {
+                afterStart();
+            }
         }
 
         @Override
         public final void onStop() {
-            beforeStop();
+            synchronized (this) {
+                beforeStop();
 
-            if (options != null && options.getPropagateCompletion()) {
-                target.onStop();
+                if (options != null && options.getPropagateCompletion()) {
+                    target.onStop();
+                }
             }
         }
 
         /**
-         * Internal start method for subclasses
+         * Internal start method for subclasses.
+         * Called while holding the monitor to {@code this}.
          */
         protected void afterStart() {
             // overridable
@@ -305,6 +320,7 @@ public final class Blocks {
 
         /**
          * Internal stop method for subclasses
+         * Called while holding the monitor to {@code this}.
          */
         protected void beforeStop() {
             // overridable

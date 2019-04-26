@@ -23,7 +23,6 @@ import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.event.internal.payload.Visitor;
 import com.optimizely.ab.processor.BatchBlock;
 import com.optimizely.ab.processor.BatchOptions;
-import com.optimizely.ab.processor.Blocks;
 import com.optimizely.ab.processor.TargetBlock;
 import org.junit.After;
 import org.junit.Before;
@@ -47,7 +46,6 @@ import java.util.function.Function;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
@@ -237,7 +235,7 @@ public class EventProcessorTest {
             logger.info("Added visitor {}", i);
         }
 
-        await().timeout(1, SECONDS).untilAtomic(output.successesCount, equalTo(10));
+        await().untilAtomic(output.successesCount, equalTo(10));
 
         assertEquals(7, output.payloads.size());   // transformed get their own batch
         assertEquals(10, output.successes.size()); // total
@@ -246,32 +244,33 @@ public class EventProcessorTest {
 
     @Test
     public void testMergesVisitors() throws Exception {
-        BatchBlock<EventBatch> batchProcessor = Blocks.batch(BatchOptions.builder()
+        BatchBlock<EventBatch> batchProcessor = BatchBlock.create(
+            BatchOptions.builder()
             .maxBatchAge(Duration.ofSeconds(60))
-            .maxBatchSize(100)
-            .maxBatchInFlight(null));
+                .maxBatchSize(100),
+            Executors.defaultThreadFactory());
 
-        TargetBlock<EventBatch.Builder> target = processor(builder -> builder
+        TargetBlock<EventBatch.Builder> p = processor(builder -> builder
             .logEventConverter(TestLogEvent::new)
             .batchProcessorProvider(() -> batchProcessor));
 
         // buffer items
-        target.post(eventBatchBuilder()
+        p.post(eventBatchBuilder()
             .addVisitor(visitorBuilder()
                 .setVisitorId("1").build()));
-        target.post(eventBatchBuilder()
+        p.post(eventBatchBuilder()
             .addVisitor(visitorBuilder()
                 .setVisitorId("2").build())
             .addVisitor(visitorBuilder()
                 .setVisitorId("3").build()));
-        target.post(eventBatchBuilder()
+        p.post(eventBatchBuilder()
             .addVisitor(visitorBuilder()
                 .setVisitorId("1").build()));
 
         // flush items together
         batchProcessor.flush();
 
-        await().timeout(1, SECONDS).untilAtomic(output.successesCount, equalTo(3));
+        await().untilAtomic(output.successesCount, equalTo(3));
         assertEquals(0, output.failures.size());
 
         LongSummaryStatistics visitorsSizeSummary = output.payloadStats(logEvent ->
