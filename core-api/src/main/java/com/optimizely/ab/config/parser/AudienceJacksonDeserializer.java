@@ -43,9 +43,15 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
 
         String id = node.get("id").textValue();
         String name = node.get("name").textValue();
-        List<Object> rawObjectList = (List<Object>)mapper.readValue(node.get("conditions").textValue(), List.class);
-        Condition conditions = parseConditions(rawObjectList);
 
+
+        Object rawObject = mapper.readValue(node.get("conditions").textValue(), Object.class);
+        Condition conditions;
+        if (rawObject instanceof ArrayList) {
+           conditions = parseConditions((List<Object>) rawObject);
+        } else {
+            conditions = parseConditions(rawObject);
+        }
         return new Audience(id, name, conditions);
     }
 
@@ -73,6 +79,18 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
         } else {
             condition = new NotCondition(conditions.get(0));
         }
+
+        return condition;
+    }
+
+    private Condition parseConditions(Object rawObject) {
+        List<Condition> conditions = new ArrayList<Condition>();
+
+        HashMap<String, String> conditionMap = (HashMap<String, String>)rawObject;
+        conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
+                conditionMap.get("value")));
+
+        Condition condition = new OrCondition(conditions);
 
         return condition;
     }
