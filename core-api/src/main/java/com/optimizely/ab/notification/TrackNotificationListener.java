@@ -24,7 +24,8 @@ import com.optimizely.ab.event.LogEvent;
 /**
  * This class handles the track event notification.
  */
-public abstract class TrackNotificationListener implements NotificationListener, TrackNotificationListenerInterface {
+public abstract class TrackNotificationListener implements NotificationHandler<TrackNotification>, NotificationListener, TrackNotificationListenerInterface {
+
     /**
      * Base notify called with var args.  This method parses the parameters and calls the abstract method.
      *
@@ -50,6 +51,17 @@ public abstract class TrackNotificationListener implements NotificationListener,
         LogEvent logEvent = (LogEvent) args[4];
 
         onTrack(eventKey, userId, attributes, eventTags, logEvent);
+    }
+
+    @Override
+    public final void notify(TrackNotification message) {
+        onTrack(
+            message.getEventKey(),
+            message.getUserId(),
+            message.getAttributes(),
+            message.getEventTags(),
+            message.getEvent()
+        );
     }
 
     /**

@@ -22,10 +22,11 @@ import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
 
 import javax.annotation.Nonnull;
+import java.rmi.activation.ActivateFailedException;
 import java.util.Map;
 
 @Deprecated
-public abstract class ActivateNotificationListener implements NotificationListener, ActivateNotificationListenerInterface {
+public abstract class ActivateNotificationListener implements NotificationHandler<ActivateNotification>, NotificationListener, ActivateNotificationListenerInterface {
 
     /**
      * Base notify called with var args.  This method parses the parameters and calls the abstract method.
@@ -49,6 +50,17 @@ public abstract class ActivateNotificationListener implements NotificationListen
         LogEvent logEvent = (LogEvent) args[4];
 
         onActivate(experiment, userId, attributes, variation, logEvent);
+    }
+
+    @Override
+    public final void notify(ActivateNotification message) {
+        onActivate(
+            message.getExperiment(),
+            message.getUserId(),
+            message.getAttributes(),
+            message.getVariation(),
+            message.getEvent()
+        );
     }
 
     /**

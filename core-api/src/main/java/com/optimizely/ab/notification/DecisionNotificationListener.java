@@ -18,10 +18,10 @@ package com.optimizely.ab.notification;
 
 import javax.annotation.Nonnull;
 
-public interface DecisionNotificationListener {
+public interface DecisionNotificationListener extends NotificationHandler<DecisionNotification> {
 
     /**
-     * onDecision called when an activate was triggered
+     * notify called when a decision was triggered via activation or feature access.
      *
      * @param decisionNotification - The decision notification object containing:
      *                             type         - The notification type.
@@ -29,5 +29,5 @@ public interface DecisionNotificationListener {
      *                             attributes   - The attribute map passed to the API.
      *                             decisionInfo - The decision information containing all parameters passed in API.
      */
-    void onDecision(@Nonnull DecisionNotification decisionNotification);
+    void notify(@Nonnull DecisionNotification decisionNotification);
 }

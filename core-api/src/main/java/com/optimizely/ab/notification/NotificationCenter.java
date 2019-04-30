@@ -16,18 +16,16 @@
  */
 package com.optimizely.ab.notification;
 
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.event.LogEvent;
+import com.optimizely.ab.OptimizelyRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.optimizely.ab.notification.Notification.ACTIVATE;
+import static com.optimizely.ab.notification.Notification.TRACK;
 
 
 /**
@@ -57,6 +55,7 @@ public class NotificationCenter {
     /**
      * NotificationType is used for the notification types supported.
      */
+    @Deprecated
     public enum NotificationType {
 
         Activate(ActivateNotificationListener.class), // Activate was called. Track an impression event
@@ -73,104 +72,63 @@ public class NotificationCenter {
         }
     }
 
-    ;
+    private static final AtomicInteger counter = new AtomicInteger();
+    private ConcurrentHashMap<Class, NotificationManager> notifierMap = new ConcurrentHashMap<>();
 
+    @Nonnull
+    @SuppressWarnings("unchecked")
+    public <T> NotificationManager<T> getNotificationManager(Class<? extends Notification> clazz) {
+        NotificationManager<T> newNotifier = new NotificationManager<>(counter);
+        NotificationManager<T> notifier = (NotificationManager<T>) notifierMap.putIfAbsent(clazz, newNotifier);
 
-    // the notification id is incremented and is assigned as the callback id, it can then be used to remove the notification.
-    private AtomicInteger notificationListenerID = new AtomicInteger();
+        return notifier == null ? newNotifier : notifier;
+    }
 
     final private static Logger logger = LoggerFactory.getLogger(NotificationCenter.class);
 
-    // notification holder holds the id as well as the notification.
-    private static class NotificationHolder {
-        int notificationId;
-        NotificationListener notificationListener;
-        DecisionNotificationListener decisionNotificationListener;
-
-        NotificationHolder(int id, NotificationListener notificationListener) {
-            notificationId = id;
-            this.notificationListener = notificationListener;
-        }
-
-        NotificationHolder(int id, DecisionNotificationListener decisionNotificationListener) {
-            notificationId = id;
-            this.decisionNotificationListener = decisionNotificationListener;
-        }
-    }
-
-    /**
-     * Instantiate a new NotificationCenter
-     */
-    public NotificationCenter() {
-        notificationsListeners.put(NotificationType.Activate, new ArrayList<NotificationHolder>());
-        notificationsListeners.put(NotificationType.Track, new ArrayList<NotificationHolder>());
-    }
-
-    // private list of notification by notification type.
-    // we used a list so that notification order can mean something.
-    private Map<NotificationType, ArrayList<NotificationHolder>> notificationsListeners = new HashMap<NotificationType, ArrayList<NotificationHolder>>();
-    private List<NotificationHolder> decisionListenerHolder = new ArrayList<>();
-
     /**
      * Convenience method to support lambdas as callbacks in later version of Java (8+).
      *
-     * @param decisionNotificationListener
-     * @return greater than zero if added.
-     */
-    public int addDecisionNotificationListener(DecisionNotificationListener decisionNotificationListener) {
-        if (decisionNotificationListener != null) {
-            for (NotificationHolder holder : decisionListenerHolder) {
-                if (holder.decisionNotificationListener == decisionNotificationListener) {
-                    // TODO: 3/27/2019 change log level from warn to info and to return existing listener ID
-                    logger.warn("Notification listener was already added");
-                    return -1;
-                }
-            }
-            int id = this.notificationListenerID.incrementAndGet();
-            decisionListenerHolder.add(new NotificationHolder(id, decisionNotificationListener));
-            return id;
-        } else {
-            logger.warn("Notification listener was the wrong type. It was not added to the notification center.");
-            return -1;
-        }
-    }
-
-    /**
-     * Convenience method to support lambdas as callbacks in later version of Java (8+).
-     *
-     * @param activateNotificationListenerInterface
+     * @param activateNotificationListener
      * @return greater than zero if added.
      */
     @Deprecated
-    public int addActivateNotificationListener(final ActivateNotificationListenerInterface activateNotificationListenerInterface) {
-        if (activateNotificationListenerInterface instanceof ActivateNotificationListener) {
-            return addNotificationListener(NotificationType.Activate, (NotificationListener) activateNotificationListenerInterface);
+    public int addActivateNotificationListener(final ActivateNotificationListenerInterface activateNotificationListener) {
+        NotificationManager<ActivateNotification> notificationManager = getNotificationManager(ACTIVATE);
+
+        if (activateNotificationListener instanceof ActivateNotificationListener) {
+            return notificationManager.addListener((ActivateNotificationListener) activateNotificationListener);
         } else {
-            return addNotificationListener(NotificationType.Activate, new ActivateNotificationListener() {
-                @Override
-                public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
-                    activateNotificationListenerInterface.onActivate(experiment, userId, attributes, variation, event);
-                }
-            });
+            return notificationManager.addListener(message -> activateNotificationListener.onActivate(
+                message.getExperiment(),
+                message.getUserId(),
+                message.getAttributes(),
+                message.getVariation(),
+                message.getEvent()
+            ));
         }
     }
 
     /**
      * Convenience method to support lambdas as callbacks in later versions of Java (8+)
      *
-     * @param trackNotificationListenerInterface
+     * @param trackNotificationListener
      * @return greater than zero if added.
      */
-    public int addTrackNotificationListener(final TrackNotificationListenerInterface trackNotificationListenerInterface) {
-        if (trackNotificationListenerInterface instanceof TrackNotificationListener) {
-            return addNotificationListener(NotificationType.Track, (NotificationListener) trackNotificationListenerInterface);
+    @Deprecated
+    public int addTrackNotificationListener(final TrackNotificationListenerInterface trackNotificationListener) {
+        NotificationManager<TrackNotification> notificationManager = getNotificationManager(TRACK);
+
+        if (trackNotificationListener instanceof TrackNotificationListener) {
+            return notificationManager.addListener((TrackNotificationListener) trackNotificationListener);
         } else {
-            return addNotificationListener(NotificationType.Track, new TrackNotificationListener() {
-                @Override
-                public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
-                    trackNotificationListenerInterface.onTrack(eventKey, userId, attributes, eventTags, event);
-                }
-            });
+            return notificationManager.addListener(message -> trackNotificationListener.onTrack(
+                message.getEventKey(),
+                message.getUserId(),
+                message.getAttributes(),
+                message.getEventTags(),
+                message.getEvent()
+            ));
         }
     }
 
@@ -181,75 +139,50 @@ public class NotificationCenter {
      * @param notificationListener - Notification to add.
      * @return the notification id used to remove the notification.  It is greater than 0 on success.
      */
+    @Deprecated
     public int addNotificationListener(NotificationType notificationType, NotificationListener notificationListener) {
 
-        Class clazz = notificationType.notificationTypeClass;
+        Class clazz = notificationType.getNotificationTypeClass();
         if (clazz == null || !clazz.isInstance(notificationListener)) {
             logger.warn("Notification listener was the wrong type. It was not added to the notification center.");
             return -1;
         }
 
-        for (NotificationHolder holder : notificationsListeners.get(notificationType)) {
-            if (holder.notificationListener == notificationListener) {
-                logger.warn("Notification listener was already added");
-                return -1;
-            }
+        switch (notificationType) {
+            case Track:
+                return addTrackNotificationListener((TrackNotificationListener) notificationListener);
+            case Activate:
+                return addActivateNotificationListener((ActivateNotificationListener) notificationListener);
+            default:
+                throw new OptimizelyRuntimeException("Unsupported notificationType");
         }
-        int id = this.notificationListenerID.incrementAndGet();
-        notificationsListeners.get(notificationType).add(new NotificationHolder(id, notificationListener));
-        logger.info("Notification listener {} was added with id {}", notificationListener.toString(), id);
-        return id;
     }
 
     /**
-     * Remove the notification listener based on the notificationId passed back from addNotificationListener.
+     * Remove the notification listener based on the notificationId passed back from addDecisionNotificationHandler.
      *
      * @param notificationID the id passed back from add notification.
      * @return true if removed otherwise false (if the notification is already registered, it returns false).
      */
     public boolean removeNotificationListener(int notificationID) {
-
-        for (List<NotificationHolder> notificationHolders : notificationsListeners.values()) {
-            if (removeNotificationListener(notificationID, notificationHolders)) {
-                return true;
-            }
-        }
-
-        if (removeNotificationListener(notificationID, decisionListenerHolder)) {
-            return true;
-        }
-
-        logger.warn("Notification listener with id {} not found", notificationID);
-
-        return false;
-    }
-
-    /**
-     * Helper method to iterate find NotificationHolder in an List identified by the notificationId
-     *
-     * @param notificationID the id passed back from add notification.
-     * @param notificationHolderList list from which to remove notification listener.
-     * @return true if removed otherwise false
-     */
-    private boolean removeNotificationListener(int notificationID, List<NotificationHolder> notificationHolderList) {
-        for (NotificationHolder holder : notificationHolderList) {
-            if (holder.notificationId == notificationID) {
-                notificationHolderList.remove(holder);
+        for (NotificationManager<?> manager : notifierMap.values()) {
+            if (manager.remove(notificationID)) {
                 logger.info("Notification listener removed {}", notificationID);
                 return true;
             }
         }
 
+        logger.warn("Notification listener with id {} not found", notificationID);
         return false;
     }
 
     /**
      * Clear out all the notification listeners.
      */
+    @Deprecated
     public void clearAllNotificationListeners() {
-        decisionListenerHolder.clear();
-        for (NotificationType type : NotificationType.values()) {
-            clearNotificationListeners(type);
+        for (NotificationManager<?> manager : notifierMap.values()) {
+            manager.clear();
         }
     }
 
@@ -258,35 +191,17 @@ public class NotificationCenter {
      *
      * @param notificationType type of notificationsListeners to remove.
      */
+    @Deprecated
     public void clearNotificationListeners(NotificationType notificationType) {
-        notificationsListeners.get(notificationType).clear();
-    }
-
-    /**
-     * fire a notificaiton of Decision Notification type.
-     *
-     * @param decision containing Decision Notification object
-     */
-    public void sendNotifications(DecisionNotification decision) {
-        for (NotificationHolder holder : decisionListenerHolder) {
-            try {
-                holder.decisionNotificationListener.onDecision(decision);
-            } catch (Exception e) {
-                logger.error("Unexpected exception calling notification listener {}", holder.notificationId, e);
-            }
+        switch (notificationType) {
+            case Track:
+                getNotificationManager(TRACK).clear();
+                break;
+            case Activate:
+                getNotificationManager(ACTIVATE).clear();
+                break;
+            default:
+                throw new OptimizelyRuntimeException("Unsupported notificationType");
         }
     }
-
-    // fire a notificaiton of a certain type.  The arg list changes depending on the type of notification sent.
-    public void sendNotifications(NotificationType notificationType, Object... args) {
-        ArrayList<NotificationHolder> holders = notificationsListeners.get(notificationType);
-        for (NotificationHolder holder : holders) {
-            try {
-                holder.notificationListener.notify(args);
-            } catch (Exception e) {
-                logger.error("Unexpected exception calling notification listener {}", holder.notificationId, e);
-            }
-        }
-    }
-
 }

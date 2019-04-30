@@ -21,6 +21,7 @@ import com.optimizely.ab.event.LogEvent;
 import javax.annotation.Nonnull;
 import java.util.Map;
 
+@Deprecated
 public interface TrackNotificationListenerInterface {
     /**
      * onTrack is called when a track event is triggered

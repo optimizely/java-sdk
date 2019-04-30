@@ -53,7 +53,7 @@ public class NotificationCenterTest {
     public void testAddWrongTrackNotificationListener() {
         int notificationId = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Activate, trackNotification);
         logbackVerifier.expectMessage(Level.WARN, "Notification listener was the wrong type. It was not added to the notification center.");
-        assertEquals(notificationId, -1);
+        assertEquals(-1, notificationId);
         assertFalse(notificationCenter.removeNotificationListener(notificationId));
 
     }
@@ -62,7 +62,7 @@ public class NotificationCenterTest {
     public void testAddWrongActivateNotificationListener() {
         int notificationId = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Track, activateNotification);
         logbackVerifier.expectMessage(Level.WARN, "Notification listener was the wrong type. It was not added to the notification center.");
-        assertEquals(notificationId, -1);
+        assertEquals(-1, notificationId);
         assertFalse(notificationCenter.removeNotificationListener(notificationId));
     }
 
@@ -70,14 +70,17 @@ public class NotificationCenterTest {
     public void testAddDecisionNotificationTwice() {
         DecisionNotificationListener listener = new DecisionNotificationListener() {
             @Override
-            public void onDecision(@Nonnull DecisionNotification decisionNotification) {
+            public void notify(@Nonnull DecisionNotification decisionNotification) {
 
             }
         };
-        int notificationId = notificationCenter.addDecisionNotificationListener(listener);
-        int notificationId2 = notificationCenter.addDecisionNotificationListener(listener);
+
+        NotificationManager<DecisionNotification> manager = notificationCenter.getNotificationManager(DecisionNotification.class);
+
+        int notificationId = manager.addListener(listener);
+        int notificationId2 = manager.addListener(listener);
         logbackVerifier.expectMessage(Level.WARN, "Notification listener was already added");
-        assertEquals(notificationId2, -1);
+        assertEquals(-1, notificationId2);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
         notificationCenter.clearAllNotificationListeners();
     }
@@ -93,7 +96,7 @@ public class NotificationCenterTest {
         int notificationId = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Activate, listener);
         int notificationId2 = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Activate, listener);
         logbackVerifier.expectMessage(Level.WARN, "Notification listener was already added");
-        assertEquals(notificationId2, -1);
+        assertEquals(-1, notificationId2);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
         notificationCenter.clearAllNotificationListeners();
     }
@@ -106,18 +109,19 @@ public class NotificationCenterTest {
 
             }
         });
-        assertNotSame(notificationId, -1);
+        assertNotSame(-1, notificationId);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
         notificationCenter.clearAllNotificationListeners();
     }
 
     @Test
     public void testAddDecisionNotification() {
-        int notificationId = notificationCenter.addDecisionNotificationListener(new DecisionNotificationListener() {
-            @Override
-            public void onDecision(@Nonnull DecisionNotification decisionNotification) {
+        NotificationManager<DecisionNotification> manager = notificationCenter.getNotificationManager(DecisionNotification.class);
+        int notificationId = manager.addListener(new DecisionNotificationListener() {
+                @Override
+                public void notify(@Nonnull DecisionNotification decisionNotification) {
 
-            }
+                }
         });
         assertNotSame(notificationId, -1);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
@@ -159,9 +163,10 @@ public class NotificationCenterTest {
 
     @Test
     public void testAddDecisionNotificationInterface() {
-        int notificationId = notificationCenter.addDecisionNotificationListener(new DecisionNotificationListener() {
+        NotificationManager<DecisionNotification> manager = notificationCenter.getNotificationManager(DecisionNotification.class);
+        int notificationId = manager.addListener(new DecisionNotificationListener() {
             @Override
-            public void onDecision(@Nonnull DecisionNotification decisionNotification) {
+            public void notify(@Nonnull DecisionNotification decisionNotification) {
 
             }
         });
