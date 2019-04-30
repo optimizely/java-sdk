@@ -26,6 +26,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static junit.framework.TestCase.assertNotSame;
@@ -68,17 +70,12 @@ public class NotificationCenterTest {
 
     @Test
     public void testAddDecisionNotificationTwice() {
-        DecisionNotificationListener listener = new DecisionNotificationListener() {
-            @Override
-            public void notify(@Nonnull DecisionNotification decisionNotification) {
+        NotificationHandler<DecisionNotification> handler = decisionNotification -> { };
+        NotificationManager<DecisionNotification> manager =
+            notificationCenter.getNotificationManager(DecisionNotification.class);
 
-            }
-        };
-
-        NotificationManager<DecisionNotification> manager = notificationCenter.getNotificationManager(DecisionNotification.class);
-
-        int notificationId = manager.addListener(listener);
-        int notificationId2 = manager.addListener(listener);
+        int notificationId = manager.addHandler(handler);
+        int notificationId2 = manager.addHandler(handler);
         logbackVerifier.expectMessage(Level.WARN, "Notification listener was already added");
         assertEquals(-1, notificationId2);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
@@ -117,12 +114,7 @@ public class NotificationCenterTest {
     @Test
     public void testAddDecisionNotification() {
         NotificationManager<DecisionNotification> manager = notificationCenter.getNotificationManager(DecisionNotification.class);
-        int notificationId = manager.addListener(new DecisionNotificationListener() {
-                @Override
-                public void notify(@Nonnull DecisionNotification decisionNotification) {
-
-                }
-        });
+        int notificationId = manager.addHandler(decisionNotification -> { });
         assertNotSame(notificationId, -1);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
         notificationCenter.clearAllNotificationListeners();
@@ -164,14 +156,9 @@ public class NotificationCenterTest {
     @Test
     public void testAddDecisionNotificationInterface() {
         NotificationManager<DecisionNotification> manager = notificationCenter.getNotificationManager(DecisionNotification.class);
-        int notificationId = manager.addListener(new DecisionNotificationListener() {
-            @Override
-            public void notify(@Nonnull DecisionNotification decisionNotification) {
-
-            }
-        });
+        int notificationId = manager.addHandler(decisionNotification -> { });
         assertNotSame(notificationId, -1);
-        assertTrue(notificationCenter.removeNotificationListener(notificationId));
+        assertTrue(manager.remove(notificationId));
         notificationCenter.clearAllNotificationListeners();
     }
 
@@ -188,4 +175,24 @@ public class NotificationCenterTest {
         notificationCenter.clearAllNotificationListeners();
     }
 
+    @Test
+    public void testSendWithoutHandler() {
+        TestNotification notification = new TestNotification("test");
+
+        // Should not throw NPE
+        notificationCenter.send(notification);
+    }
+
+    @Test
+    public void testSendWithHandler() {
+        TestNotificationHandler handler = new TestNotificationHandler();
+        notificationCenter.<TestNotification>getNotificationManager(TestNotification.class).addHandler(handler);
+
+        TestNotification notification = new TestNotification("test");
+        notificationCenter.send(notification);
+
+        List<TestNotification> messages = handler.getMessages();
+        assertEquals(1, messages.size());
+        assertEquals(notification, messages.get(0));
+    }
 }

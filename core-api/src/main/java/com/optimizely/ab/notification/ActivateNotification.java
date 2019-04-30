@@ -23,6 +23,9 @@ import com.optimizely.ab.event.LogEvent;
 import javax.annotation.Nonnull;
 import java.util.Map;
 
+/**
+ * ActivateNotification is deprecated in favor of {@link DecisionNotification}
+ */
 @Deprecated
 public class ActivateNotification implements Notification {
 

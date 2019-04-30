@@ -20,7 +20,11 @@ package com.optimizely.ab.notification;
  * An interface class for Optimizely notification listeners.
  * <p>
  * We changed this from a abstract class to a interface to support lambdas moving forward in Java 8 and beyond.
+ *
+ * This class has been deprecated in favor of the {@link NotificationHandler} interface.
+ *
  */
+@Deprecated
 public interface NotificationListener {
 
     /**

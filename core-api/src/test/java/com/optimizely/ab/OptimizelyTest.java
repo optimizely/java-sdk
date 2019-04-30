@@ -2643,24 +2643,23 @@ public class OptimizelyTest {
     /**
      * Helper method to return decisionListener
      **/
-    private DecisionNotificationListener getDecisionListener(final String testType,
-                                                             final String testUserId,
-                                                             final Map<String, ?> testUserAttributes,
-                                                             final Map<String, ?> testDecisionInfo) {
-        return new DecisionNotificationListener() {
-            @Override
-            public void notify(@Nonnull DecisionNotification decisionNotification) {
-                assertEquals(decisionNotification.getType(), testType);
-                assertEquals(decisionNotification.getUserId(), testUserId);
-                assertEquals(decisionNotification.getAttributes(), testUserAttributes);
-                for (Map.Entry<String, ?> entry : decisionNotification.getAttributes().entrySet()) {
-                    assertEquals(testUserAttributes.get(entry.getKey()), entry.getValue());
-                }
-                for (Map.Entry<String, ?> entry : decisionNotification.getDecisionInfo().entrySet()) {
-                    assertEquals(testDecisionInfo.get(entry.getKey()), entry.getValue());
-                }
-                isListenerCalled = true;
+    private NotificationHandler<DecisionNotification> getDecisionListener(
+        final String testType,
+        final String testUserId,
+        final Map<String, ?> testUserAttributes,
+        final Map<String, ?> testDecisionInfo)
+    {
+        return decisionNotification -> {
+            assertEquals(decisionNotification.getType(), testType);
+            assertEquals(decisionNotification.getUserId(), testUserId);
+            assertEquals(decisionNotification.getAttributes(), testUserAttributes);
+            for (Map.Entry<String, ?> entry : decisionNotification.getAttributes().entrySet()) {
+                assertEquals(testUserAttributes.get(entry.getKey()), entry.getValue());
             }
+            for (Map.Entry<String, ?> entry : decisionNotification.getDecisionInfo().entrySet()) {
+                assertEquals(testDecisionInfo.get(entry.getKey()), entry.getValue());
+            }
+            isListenerCalled = true;
         };
     }
 
@@ -2689,7 +2688,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(VARIATION_KEY, "Gred");
 
         int notificationId = optimizely.notificationCenter.<DecisionNotification>getNotificationManager(DecisionNotification.class)
-            .addListener(
+            .addHandler(
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString(),
                 userId,
                 testUserAttributes,
@@ -2805,12 +2804,9 @@ public class OptimizelyTest {
             .build();
 
         int notificationId = optimizely.addDecisionNotificationHandler(
-            new DecisionNotificationListener() {
-                @Override
-                public void notify(@Nonnull DecisionNotification decisionNotification) {
-                    isListenerCalled = true;
-                    assertEquals(decisionNotification.getType(), NotificationCenter.DecisionNotificationType.FEATURE.toString());
-                }
+            decisionNotification -> {
+                isListenerCalled = true;
+                assertEquals(decisionNotification.getType(), NotificationCenter.DecisionNotificationType.FEATURE.toString());
             });
 
         ArrayList<String> featureFlags = (ArrayList<String>) optimizely.getEnabledFeatures(testUserId,
@@ -2846,13 +2842,7 @@ public class OptimizelyTest {
             eq(Collections.<String, String>emptyMap())
         );
 
-        int notificationId = spyOptimizely.addDecisionNotificationHandler(
-            new DecisionNotificationListener() {
-                @Override
-                public void notify(@Nonnull DecisionNotification decisionNotification) {
-
-                }
-            });
+        int notificationId = spyOptimizely.addDecisionNotificationHandler( decisionNotification -> { });
 
         ArrayList<String> featureFlags = (ArrayList<String>) spyOptimizely.getEnabledFeatures(genericUserId,
             Collections.<String, String>emptyMap());

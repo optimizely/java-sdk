@@ -97,9 +97,9 @@ public class NotificationCenter {
         NotificationManager<ActivateNotification> notificationManager = getNotificationManager(ACTIVATE);
 
         if (activateNotificationListener instanceof ActivateNotificationListener) {
-            return notificationManager.addListener((ActivateNotificationListener) activateNotificationListener);
+            return notificationManager.addHandler((ActivateNotificationListener) activateNotificationListener);
         } else {
-            return notificationManager.addListener(message -> activateNotificationListener.onActivate(
+            return notificationManager.addHandler(message -> activateNotificationListener.onActivate(
                 message.getExperiment(),
                 message.getUserId(),
                 message.getAttributes(),
@@ -120,9 +120,9 @@ public class NotificationCenter {
         NotificationManager<TrackNotification> notificationManager = getNotificationManager(TRACK);
 
         if (trackNotificationListener instanceof TrackNotificationListener) {
-            return notificationManager.addListener((TrackNotificationListener) trackNotificationListener);
+            return notificationManager.addHandler((TrackNotificationListener) trackNotificationListener);
         } else {
-            return notificationManager.addListener(message -> trackNotificationListener.onTrack(
+            return notificationManager.addHandler(message -> trackNotificationListener.onTrack(
                 message.getEventKey(),
                 message.getUserId(),
                 message.getAttributes(),
@@ -179,7 +179,6 @@ public class NotificationCenter {
     /**
      * Clear out all the notification listeners.
      */
-    @Deprecated
     public void clearAllNotificationListeners() {
         for (NotificationManager<?> manager : notifierMap.values()) {
             manager.clear();
@@ -203,5 +202,15 @@ public class NotificationCenter {
             default:
                 throw new OptimizelyRuntimeException("Unsupported notificationType");
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void send(Notification notification) {
+        NotificationManager handler = notifierMap.get(notification.getClass());
+        if (handler == null) {
+            return;
+        }
+
+        handler.send(notification);
     }
 }

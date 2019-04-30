@@ -23,7 +23,10 @@ import com.optimizely.ab.event.LogEvent;
 
 /**
  * This class handles the track event notification.
+ *
+ * This class is deprecated and users should implement NotificationHandler<TrackNotification> directly.
  */
+@Deprecated
 public abstract class TrackNotificationListener implements NotificationHandler<TrackNotification>, NotificationListener, TrackNotificationListenerInterface {
 
     /**
@@ -32,6 +35,7 @@ public abstract class TrackNotificationListener implements NotificationHandler<T
      * @param args - variable argument list based on the type of notification.
      */
     @Override
+    @Deprecated
     public final void notify(Object... args) {
         assert (args[0] instanceof String);
         String eventKey = (String) args[0];

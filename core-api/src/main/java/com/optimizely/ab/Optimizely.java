@@ -42,15 +42,11 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
-import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.optimizely.ab.notification.Notification.ACTIVATE;
-import static com.optimizely.ab.notification.Notification.TRACK;
 
 /**
  * Top-level container class for Optimizely functionality.
@@ -258,9 +254,12 @@ public class Optimizely {
                 logger.error("Unexpected exception in event dispatcher", e);
             }
 
+            // Kept For backwards compatibility.
+            // This notification is deprecated and the new DecisionNotifications
+            // are sent via their respective method calls.
             ActivateNotification activateNotification = new ActivateNotification(
                 experiment, userId, filteredAttributes, variation, impressionEvent);
-            notificationCenter.getNotificationManager(ACTIVATE).send(activateNotification);
+            notificationCenter.send(activateNotification);
         } else {
             logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
         }
@@ -338,7 +337,7 @@ public class Optimizely {
         TrackNotification notification = new TrackNotification(eventName, userId,
             copiedAttributes, eventTags, conversionEvent);
 
-        notificationCenter.getNotificationManager(TRACK).send(notification);
+        notificationCenter.send(notification);
     }
 
     //======== FeatureFlag APIs ========//
@@ -426,7 +425,8 @@ public class Optimizely {
             .withSource(decisionSource)
             .withSourceInfo(sourceInfo)
             .build();
-        notificationCenter.getNotificationManager(DecisionNotification.class).send(decisionNotification);
+
+        notificationCenter.send(decisionNotification);
 
         logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
         return featureEnabled;
@@ -702,7 +702,7 @@ public class Optimizely {
             .build();
 
 
-        notificationCenter.getNotificationManager(DecisionNotification.class).send(decisionNotification);
+        notificationCenter.send(decisionNotification);
 
         return (T) convertedValue;
     }
@@ -797,7 +797,7 @@ public class Optimizely {
             .withType(notificationType)
             .build();
 
-        notificationCenter.getNotificationManager(DecisionNotification.class).send(decisionNotification);
+        notificationCenter.send(decisionNotification);
 
         return variation;
     }
@@ -938,7 +938,7 @@ public class Optimizely {
     public int addDecisionNotificationHandler(NotificationHandler<DecisionNotification> handler) {
         NotificationManager<DecisionNotification> manager =
             notificationCenter.getNotificationManager(DecisionNotification.class);
-        return manager.addListener(handler);
+        return manager.addHandler(handler);
     }
 
     /**
@@ -947,7 +947,7 @@ public class Optimizely {
     public int addTrackNotificationHandler(NotificationHandler<TrackNotification> handler) {
         NotificationManager<TrackNotification> notificationManager =
             notificationCenter.getNotificationManager(TrackNotification.class);
-        return notificationManager.addListener(handler);
+        return notificationManager.addHandler(handler);
     }
 
 

@@ -23,6 +23,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * NotificationManger is a generic class for managing notifications for a given {@link Notification}
+ * class.
+ *
+ * The NotificationManager is responsible for storing a collection of NotificationHandlers and mapping
+ * them to a globally unique integer so that they can be removed on demand.
+ */
 public class NotificationManager<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationManager.class);
@@ -34,12 +41,9 @@ public class NotificationManager<T> {
         this.counter = counter;
     }
 
-    public int addListener(NotificationHandler<T> newHandler) {
+    public int addHandler(NotificationHandler<T> newHandler) {
 
         // Prevent registering a duplication listener.
-        // This only works if attempting to add the same listener instance and not an equivalent
-        // notification listener. For that we should use .equals() instead. Using == to not break
-        // existing functionality.
         for (NotificationHandler<T> handler: handlers.values()) {
             if (handler.equals(newHandler)) {
                 logger.warn("Notification listener was already added");
