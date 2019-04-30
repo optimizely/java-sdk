@@ -5803,6 +5803,34 @@ public class OptimizelyTest {
         assertTrue(optimizely.isValid());
     }
 
+    //======== Test Notification APIs ========//
+
+    @Test
+    public void testGetNotificationCenter() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        assertEquals(optimizely.notificationCenter, optimizely.getNotificationCenter());
+    }
+
+    @Test
+    public void testAddTrackNotificationHandler() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        NotificationManager<TrackNotification> manager = optimizely.getNotificationCenter()
+            .getNotificationManager(TrackNotification.class);
+
+        int notificationId = optimizely.addTrackNotificationHandler(trackNotification -> {});
+        assertTrue(manager.remove(notificationId));
+    }
+
+    @Test
+    public void testAddDecisionNotificationHandler() {
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        NotificationManager<DecisionNotification> manager = optimizely.getNotificationCenter()
+            .getNotificationManager(DecisionNotification.class);
+
+        int notificationId = optimizely.addDecisionNotificationHandler(decisionNotification -> {});
+        assertTrue(manager.remove(notificationId));
+    }
+
     //======== Helper methods ========//
 
     private Experiment createUnknownExperiment() {
