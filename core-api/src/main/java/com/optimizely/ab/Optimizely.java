@@ -84,7 +84,6 @@ public class Optimizely {
 
     private final ProjectConfigManager projectConfigManager;
 
-    // TODO should be private
     public final NotificationCenter notificationCenter = new NotificationCenter();
 
     @Nullable
