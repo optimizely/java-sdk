@@ -29,7 +29,7 @@ import java.util.Map;
  * This class handles the activate event notification.
  *
  * This class is deprecated along with {@link ActivateNotification} and users should implement
- * NotificationHandler<DecisionNotification> directly.
+ * NotificationHandler&lt;DecisionNotification&gt; directly.
  */
 @Deprecated
 public abstract class ActivateNotificationListener implements NotificationHandler<ActivateNotification>, NotificationListener, ActivateNotificationListenerInterface {

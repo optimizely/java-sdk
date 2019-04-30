@@ -26,17 +26,19 @@ import java.util.Map;
  */
 public class TrackNotification implements Notification {
 
-    // Event API key being tracked.
     private final String eventKey;
-    // UserId that triggered the event.
     private final String userId;
-    // User attributes associated with the user. Included in the event to enable results segmentation.
     private final Map<String, ?> attributes;
-    // Additional metadata associated with the event.
     private final Map<String, ?> eventTags;
-    // LogEvent to be sent to Optimizely log endpoint.
     private final LogEvent event;
 
+    /**
+     * @param eventKey   - The event key that was triggered.
+     * @param userId     - user id passed into track.
+     * @param attributes - filtered attributes list after passed into track
+     * @param eventTags  - event tags if any were passed in.
+     * @param event      - The event being recorded.
+     */
     public TrackNotification(String eventKey, String userId, Map<String, ?> attributes, Map<String, ?> eventTags, LogEvent event) {
         this.eventKey = eventKey;
         this.userId = userId;

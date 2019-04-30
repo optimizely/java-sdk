@@ -24,7 +24,7 @@ import com.optimizely.ab.event.LogEvent;
 /**
  * This class handles the track event notification.
  *
- * This class is deprecated and users should implement NotificationHandler<TrackNotification> directly.
+ * This class is deprecated and users should implement NotificationHandler&lt;TrackNotification&gt; directly.
  */
 @Deprecated
 public abstract class TrackNotificationListener implements NotificationHandler<TrackNotification>, NotificationListener, TrackNotificationListenerInterface {

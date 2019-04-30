@@ -29,18 +29,19 @@ import java.util.Map;
 @Deprecated
 public class ActivateNotification implements Notification {
 
-    // Experiment being activated.
     private final Experiment experiment;
-    // UserId that triggered the event.
     private final String userId;
-    // User attributes associated with the user. Included in the event to enable
-    // results segmentation and advanced targeting.
     private final Map<String, ?> attributes;
-    // Variation being activated.
     private final Variation variation;
-    // LogEvent to be sent to Optimizely log endpoint.
     private final LogEvent event;
 
+    /**
+     * @param experiment - The experiment object being activated.
+     * @param userId     - The userId passed into activate.
+     * @param attributes - The filtered attribute list passed into activate
+     * @param variation  - The variation that was returned from activate.
+     * @param event      - The impression event that was triggered.
+     */
     public ActivateNotification(Experiment experiment, String userId, Map<String, ?> attributes, Variation variation, LogEvent event) {
         this.experiment = experiment;
         this.userId = userId;
