@@ -21,12 +21,20 @@ import com.optimizely.ab.event.LogEvent;
 import java.util.Collections;
 import java.util.Map;
 
+/**
+ * TrackNotification encapsulates the arguments used to submit tracking calls.
+ */
 public class TrackNotification implements Notification {
 
+    // Event API key being tracked.
     private final String eventKey;
+    // UserId that triggered the event.
     private final String userId;
+    // User attributes associated with the user. Included in the event to enable results segmentation.
     private final Map<String, ?> attributes;
+    // Additional metadata associated with the event.
     private final Map<String, ?> eventTags;
+    // LogEvent to be sent to Optimizely log endpoint.
     private final LogEvent event;
 
     public TrackNotification(String eventKey, String userId, Map<String, ?> attributes, Map<String, ?> eventTags, LogEvent event) {

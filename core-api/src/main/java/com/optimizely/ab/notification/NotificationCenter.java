@@ -72,16 +72,16 @@ public class NotificationCenter {
         }
     }
 
-    private static final AtomicInteger counter = new AtomicInteger();
-    private ConcurrentHashMap<Class, NotificationManager> notifierMap = new ConcurrentHashMap<>();
+    private final AtomicInteger counter = new AtomicInteger();
+    private final ConcurrentHashMap<Class, NotificationManager> notifierMap = new ConcurrentHashMap<>();
 
     @Nonnull
     @SuppressWarnings("unchecked")
     public <T> NotificationManager<T> getNotificationManager(Class<? extends Notification> clazz) {
-        NotificationManager<T> newNotifier = new NotificationManager<>(counter);
-        NotificationManager<T> notifier = (NotificationManager<T>) notifierMap.putIfAbsent(clazz, newNotifier);
+        NotificationManager<T> newManager = new NotificationManager<>(counter);
+        NotificationManager<T> manager = (NotificationManager<T>) notifierMap.putIfAbsent(clazz, newManager);
 
-        return notifier == null ? newNotifier : notifier;
+        return manager == null ? newManager : manager;
     }
 
     final private static Logger logger = LoggerFactory.getLogger(NotificationCenter.class);

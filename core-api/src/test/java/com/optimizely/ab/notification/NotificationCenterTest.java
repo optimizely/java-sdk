@@ -115,7 +115,7 @@ public class NotificationCenterTest {
     public void testAddDecisionNotification() {
         NotificationManager<DecisionNotification> manager = notificationCenter.getNotificationManager(DecisionNotification.class);
         int notificationId = manager.addHandler(decisionNotification -> { });
-        assertNotSame(notificationId, -1);
+        assertNotSame(-1, notificationId);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
         notificationCenter.clearAllNotificationListeners();
     }
@@ -128,7 +128,7 @@ public class NotificationCenterTest {
 
             }
         });
-        assertNotSame(notificationId, -1);
+        assertNotSame(-1, notificationId);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
         notificationCenter.clearAllNotificationListeners();
     }
@@ -148,7 +148,7 @@ public class NotificationCenterTest {
 
             }
         });
-        assertNotSame(notificationId, -1);
+        assertNotSame(-1, notificationId);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
         notificationCenter.clearAllNotificationListeners();
     }
@@ -157,7 +157,7 @@ public class NotificationCenterTest {
     public void testAddDecisionNotificationInterface() {
         NotificationManager<DecisionNotification> manager = notificationCenter.getNotificationManager(DecisionNotification.class);
         int notificationId = manager.addHandler(decisionNotification -> { });
-        assertNotSame(notificationId, -1);
+        assertNotSame(-1, notificationId);
         assertTrue(manager.remove(notificationId));
         notificationCenter.clearAllNotificationListeners();
     }
@@ -170,7 +170,7 @@ public class NotificationCenterTest {
 
             }
         });
-        assertNotSame(notificationId, -1);
+        assertNotSame(-1, notificationId);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
         notificationCenter.clearAllNotificationListeners();
     }
