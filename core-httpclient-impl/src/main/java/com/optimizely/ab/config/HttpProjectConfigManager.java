@@ -120,7 +120,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
         /**
          * Configure time to block before Completing the future. This timeout is used on the first call
-         * to {@link PollingProjectConfigManager#getConfig()). If the timeout is exceeded then the
+         * to {@link PollingProjectConfigManager#getConfig()}. If the timeout is exceeded then the
          * PollingProjectConfigManager will begin returning null immediately until the call to Poll
          * succeeds.
          */
