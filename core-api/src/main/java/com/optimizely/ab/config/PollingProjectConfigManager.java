@@ -128,7 +128,7 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
             return;
         }
 
-        Runnable runnable = new ProjectConfigFetcher(this);
+        Runnable runnable = new ProjectConfigFetcher();
         scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(runnable, 0, period, timeUnit);
         started = true;
     }
@@ -160,19 +160,13 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         return started;
     }
 
-    private static class ProjectConfigFetcher implements Runnable {
-
-        private final PollingProjectConfigManager pollingProjectConfigManager;
-
-        private ProjectConfigFetcher(PollingProjectConfigManager pollingProjectConfigManager) {
-            this.pollingProjectConfigManager = pollingProjectConfigManager;
-        }
+    private class ProjectConfigFetcher implements Runnable {
 
         @Override
         public void run() {
             try {
-                ProjectConfig projectConfig = pollingProjectConfigManager.poll();
-                pollingProjectConfigManager.setConfig(projectConfig);
+                ProjectConfig projectConfig = poll();
+                setConfig(projectConfig);
             } catch (Exception e) {
                 logger.error("Error polling ProjectConfigManager", e);
             }
