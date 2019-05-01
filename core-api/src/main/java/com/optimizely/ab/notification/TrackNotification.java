@@ -42,8 +42,8 @@ public class TrackNotification implements Notification {
     public TrackNotification(String eventKey, String userId, Map<String, ?> attributes, Map<String, ?> eventTags, LogEvent event) {
         this.eventKey = eventKey;
         this.userId = userId;
-        this.attributes = attributes == null ? Collections.emptyMap() : attributes;
-        this.eventTags = eventTags == null ? Collections.emptyMap() : eventTags;
+        this.attributes = attributes;
+        this.eventTags = eventTags;
         this.event = event;
     }
 

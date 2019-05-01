@@ -3844,7 +3844,7 @@ public class OptimizelyTest {
             public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
                 assertEquals(eventType.getKey(), eventKey);
                 assertEquals(genericUserId, userId);
-                assertTrue(attributes.isEmpty());
+                assertNull(attributes);
                 assertTrue(eventTags.isEmpty());
             }
         };
