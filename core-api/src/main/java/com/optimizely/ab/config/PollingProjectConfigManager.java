@@ -43,15 +43,22 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
     private final ScheduledExecutorService scheduledExecutorService;
     private final long period;
     private final TimeUnit timeUnit;
-
-    private final CompletableFuture<ProjectConfigManager> completableFuture = new CompletableFuture<>();
+    private final long blockingTimeoutPeriod;
+    private final TimeUnit blockingTimeoutUnit;
+    private final CountDownLatch countDownLatch = new CountDownLatch(1);
 
     private volatile boolean started;
     private ScheduledFuture<?> scheduledFuture;
 
     public PollingProjectConfigManager(long period, TimeUnit timeUnit)  {
+        this(period, timeUnit, Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+    }
+
+    public PollingProjectConfigManager(long period, TimeUnit timeUnit, long blockingTimeoutPeriod, TimeUnit blockingTimeoutUnit)  {
         this.period = period;
         this.timeUnit = timeUnit;
+        this.blockingTimeoutPeriod = blockingTimeoutPeriod;
+        this.blockingTimeoutUnit = blockingTimeoutUnit;
 
         final ThreadFactory threadFactory = Executors.defaultThreadFactory();
         this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(runnable -> {
@@ -82,21 +89,25 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         logger.info("New datafile set with revision: {}. Old revision: {}", projectConfig.getRevision(), previousRevision);
 
         currentProjectConfig.set(projectConfig);
-        completableFuture.complete(this);
+        countDownLatch.countDown();
     }
 
     /**
      * If the instance was never started, then call getConfig() directly from the inner ProjectConfigManager.
      * else, wait until the ProjectConfig is set or the timeout expires.
-     * TODO add timeout to we don't hang indefinitely..
      */
     @Override
     public ProjectConfig getConfig() {
         if (started) {
             try {
-                completableFuture.get();
-            } catch (InterruptedException | ExecutionException e) {
-                logger.warn("Interrupted waiting for valid ProjectConfig");
+                boolean aquired = countDownLatch.await(blockingTimeoutPeriod, blockingTimeoutUnit);
+                if (!aquired) {
+                    logger.warn("Timeout exceeded waiting for ProjectConfig to be set, returning null.");
+                    countDownLatch.countDown();
+                }
+
+            } catch (InterruptedException e) {
+                logger.warn("Interrupted waiting for valid ProjectConfig, returning null.");
             }
 
             return currentProjectConfig.get();
@@ -159,8 +170,12 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
 
         @Override
         public void run() {
-            ProjectConfig projectConfig = pollingProjectConfigManager.poll();
-            pollingProjectConfigManager.setConfig(projectConfig);
+            try {
+                ProjectConfig projectConfig = pollingProjectConfigManager.poll();
+                pollingProjectConfigManager.setConfig(projectConfig);
+            } catch (Exception e) {
+                logger.error("Error polling ProjectConfigManager", e);
+            }
         }
     }
 }

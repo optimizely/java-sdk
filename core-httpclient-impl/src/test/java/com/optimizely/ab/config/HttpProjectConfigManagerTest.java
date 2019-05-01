@@ -35,11 +35,13 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 import static com.optimizely.ab.config.HttpProjectConfigManager.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -166,6 +168,21 @@ public class HttpProjectConfigManagerTest {
         getResponse.setEntity(new StringEntity(datafileString));
 
         handler.handleResponse(getResponse);
+    }
+
+    @Test
+    public void testInvalidPayload() throws Exception {
+        reset(mockHttpClient);
+        when(mockHttpClient.execute(any(HttpGet.class), any(ResponseHandler.class)))
+            .thenReturn("I am an invalid response!");
+
+        projectConfigManager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("sdk-key")
+            .withBlockingTimeout(10, TimeUnit.MILLISECONDS)
+            .build();
+
+        assertNull(projectConfigManager.getConfig());
     }
 
     @Test

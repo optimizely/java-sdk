@@ -48,8 +48,8 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     private final URI uri;
     private final ResponseHandler<String> responseHandler = new ProjectConfigResponseHandler();
 
-    private HttpProjectConfigManager(long period, TimeUnit timeUnit, OptimizelyHttpClient httpClient, String url) {
-        super(period, timeUnit);
+    private HttpProjectConfigManager(long period, TimeUnit timeUnit, OptimizelyHttpClient httpClient, String url, long blockingTimeoutPeriod, TimeUnit blockingTimeoutUnit) {
+        super(period, timeUnit, blockingTimeoutPeriod, blockingTimeoutUnit);
         this.httpClient = httpClient;
         this.uri = URI.create(url);
     }
@@ -86,8 +86,12 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         private String url;
         private String format = "https://cdn.optimizely.com/datafiles/%s.json";
         private OptimizelyHttpClient httpClient;
+
         private long period = 5;
         private TimeUnit timeUnit = TimeUnit.MINUTES;
+
+        private long blockingTimeoutPeriod = 10;
+        private TimeUnit blockingTimeoutUnit = TimeUnit.SECONDS;
 
         public Builder withDatafile(String datafile) {
             this.datafile = datafile;
@@ -111,6 +115,23 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
         public Builder withOptimizelyHttpClient(OptimizelyHttpClient httpClient) {
             this.httpClient = httpClient;
+            return this;
+        }
+
+        /**
+         * Configure time to block before Completing the future. This timeout is used on the first call
+         * to {@link PollingProjectConfigManager#getConfig()). If the timeout is exceeded then the
+         * PollingProjectConfigManager will begin returning null immediately until the call to Poll
+         * succeeds.
+         */
+        public Builder withBlockingTimeout(long period, TimeUnit timeUnit) {
+            if (timeUnit == null) {
+                throw new NullPointerException("Must provide valid timeUnit");
+            }
+
+            this.blockingTimeoutPeriod = period;
+            this.blockingTimeoutUnit = timeUnit;
+
             return this;
         }
 
@@ -144,17 +165,15 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                 httpClient = HttpClientUtils.getDefaultHttpClient();
             }
 
-            if (url != null) {
-                return new HttpProjectConfigManager(period, timeUnit, httpClient, url);
+            if (url == null) {
+                if (sdkKey == null) {
+                    throw new NullPointerException("sdkKey cannot be null");
+                }
+
+                url = String.format(format, sdkKey);
             }
 
-            if (sdkKey == null) {
-                throw new NullPointerException("sdkKey cannot be null");
-            }
-
-            url = String.format(format, sdkKey);
-
-            HttpProjectConfigManager httpProjectManager = new HttpProjectConfigManager(period, timeUnit, httpClient, url);
+            HttpProjectConfigManager httpProjectManager = new HttpProjectConfigManager(period, timeUnit, httpClient, url, blockingTimeoutPeriod, blockingTimeoutUnit);
 
             if (datafile != null) {
                 try {

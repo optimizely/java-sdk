@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV4;
@@ -31,7 +32,7 @@ import static org.mockito.Mockito.when;
 
 public class PollingProjectConfigManagerTest {
 
-    private static final long POLLING_PERIOD = 1;
+    private static final long POLLING_PERIOD = 10;
     private static final TimeUnit POLLING_UNIT = TimeUnit.MILLISECONDS;
     private static final int PROJECT_CONFIG_DELAY = 100;
 
@@ -99,6 +100,12 @@ public class PollingProjectConfigManagerTest {
     }
 
     @Test
+    public void testBlockingGetConfigWithTimeout() throws Exception {
+        testProjectConfigManager.start();
+        assertNull(testProjectConfigManager.getConfig());
+    }
+
+    @Test
     public void testGetConfigNotStarted() throws Exception {
         testProjectConfigManager.release();
         testProjectConfigManager.close();
@@ -138,6 +145,45 @@ public class PollingProjectConfigManagerTest {
         assertEquals(newerProjectConfig, testProjectConfigManager.getConfig());
     }
 
+    @Test
+    public void testErroringProjectConfigManagerWithTimeout() throws Exception {
+        PollingProjectConfigManager testProjectConfigManager =
+            new PollingProjectConfigManager(POLLING_PERIOD, POLLING_UNIT, POLLING_PERIOD / 2, POLLING_UNIT) {
+            @Override
+            protected ProjectConfig poll() {
+                throw new RuntimeException();
+            }
+        };
+
+        testProjectConfigManager.start();
+        assertNull(testProjectConfigManager.getConfig());
+    }
+
+    @Test
+    public void testRecoveringProjectConfigManagerWithTimeout() throws Exception {
+        AtomicBoolean throwError = new AtomicBoolean(true);
+
+        PollingProjectConfigManager testProjectConfigManager =
+            new PollingProjectConfigManager(POLLING_PERIOD, POLLING_UNIT, POLLING_PERIOD / 2, POLLING_UNIT) {
+                @Override
+                protected ProjectConfig poll() {
+                    if (throwError.get()) {
+                        throw new RuntimeException("Test class, expected failure");
+                    }
+
+                    return projectConfig;
+                }
+            };
+
+        testProjectConfigManager.start();
+        assertNull(testProjectConfigManager.getConfig());
+
+        throwError.set(false);
+        Thread.sleep(2 * PROJECT_CONFIG_DELAY);
+        assertEquals(projectConfig, testProjectConfigManager.getConfig());
+
+    }
+
     private static class TestProjectConfigManager extends PollingProjectConfigManager {
         private final AtomicInteger counter = new AtomicInteger();
 
@@ -145,7 +191,7 @@ public class PollingProjectConfigManagerTest {
         private final ProjectConfig projectConfig;
 
         private TestProjectConfigManager(ProjectConfig projectConfig) {
-            super(POLLING_PERIOD, POLLING_UNIT);
+            super(POLLING_PERIOD, POLLING_UNIT, POLLING_PERIOD / 2, POLLING_UNIT);
             this.projectConfig = projectConfig;
         }
 
