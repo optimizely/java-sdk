@@ -17,6 +17,7 @@
 
 package com.optimizely.ab.notification;
 
+import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.FeatureVariable;
 import com.optimizely.ab.config.Variation;
@@ -118,5 +119,79 @@ public class DecisionNotificationTest {
         assertEquals(FeatureVariable.VariableType.STRING, actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.VARIABLE_TYPE));
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT.toString(), actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.SOURCE));
         assertEquals(rolloutSourceInfo.get(), actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.SOURCE_INFO));
+    }
+
+    @Test(expected = OptimizelyRuntimeException.class)
+    public void nullTypeFailsExperimentNotificationBuild() {
+        DecisionNotification.newExperimentDecisionNotificationBuilder()
+            .withExperimentKey(EXPERIMENT_KEY)
+            .build();
+    }
+
+    @Test(expected = OptimizelyRuntimeException.class)
+    public void nullExperimentKeyFailsExperimentNotificationBuild() {
+        DecisionNotification.newExperimentDecisionNotificationBuilder()
+            .withType(NotificationCenter.DecisionNotificationType.AB_TEST.toString())
+            .build();
+    }
+
+    @Test(expected = OptimizelyRuntimeException.class)
+    public void nullSourceFailsFeatureNotificationBuild() {
+        DecisionNotification.newFeatureDecisionNotificationBuilder()
+            .withFeatureKey(FEATURE_KEY)
+            .withFeatureEnabled(FEATURE_ENABLED)
+            .build();
+    }
+
+    @Test(expected = OptimizelyRuntimeException.class)
+    public void nullFeatureKeyFailsFeatureNotificationBuild() {
+        DecisionNotification.newFeatureDecisionNotificationBuilder()
+            .withFeatureEnabled(FEATURE_ENABLED)
+            .withSource(FeatureDecision.DecisionSource.ROLLOUT)
+            .build();
+    }
+
+    @Test(expected = OptimizelyRuntimeException.class)
+    public void nullFeatureEnabledFailsFeatureNotificationBuild() {
+        DecisionNotification.newFeatureDecisionNotificationBuilder()
+            .withFeatureKey(FEATURE_KEY)
+            .withSource(FeatureDecision.DecisionSource.ROLLOUT)
+            .build();
+    }
+
+    @Test(expected = OptimizelyRuntimeException.class)
+    public void nullFeatureKeyFailsFeatureVariableNotificationBuild() {
+        DecisionNotification.newFeatureVariableDecisionNotificationBuilder()
+            .withFeatureEnabled(Boolean.TRUE)
+            .withVariableKey(FEATURE_VARIABLE_KEY)
+            .withVariableType(FeatureVariable.VariableType.STRING)
+            .build();
+    }
+
+    @Test(expected = OptimizelyRuntimeException.class)
+    public void nullFeatureEnabledFailsFeatureVariableNotificationBuild() {
+        DecisionNotification.newFeatureVariableDecisionNotificationBuilder()
+            .withFeatureKey(FEATURE_KEY)
+            .withVariableKey(FEATURE_VARIABLE_KEY)
+            .withVariableType(FeatureVariable.VariableType.STRING)
+            .build();
+    }
+
+    @Test(expected = OptimizelyRuntimeException.class)
+    public void nullVariableKeyFailsFeatureVariableNotificationBuild() {
+        DecisionNotification.newFeatureVariableDecisionNotificationBuilder()
+            .withFeatureKey(FEATURE_KEY)
+            .withFeatureEnabled(Boolean.TRUE)
+            .withVariableType(FeatureVariable.VariableType.STRING)
+            .build();
+    }
+
+    @Test(expected = OptimizelyRuntimeException.class)
+    public void nullVariableTypeFailsFeatureVariableNotificationBuild() {
+        DecisionNotification.newFeatureVariableDecisionNotificationBuilder()
+            .withFeatureKey(FEATURE_KEY)
+            .withFeatureEnabled(Boolean.TRUE)
+            .withVariableKey(FEATURE_VARIABLE_KEY)
+            .build();
     }
 }
