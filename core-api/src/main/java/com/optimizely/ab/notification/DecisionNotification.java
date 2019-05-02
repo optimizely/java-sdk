@@ -17,6 +17,7 @@
 package com.optimizely.ab.notification;
 
 
+import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.FeatureVariable;
 import com.optimizely.ab.config.Variation;
@@ -26,9 +27,20 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.EXPERIMENT_KEY;
-import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_KEY;
-
+/**
+ * DecisionNotification encapsulates the arguments and responses when using the following methods:
+ *
+ * activate {@link com.optimizely.ab.Optimizely#activate}
+ * getEnabledFeatures {@link com.optimizely.ab.Optimizely#getEnabledFeatures}
+ * getFeatureVariableBoolean {@link com.optimizely.ab.Optimizely#getFeatureVariableBoolean}
+ * getFeatureVariableDouble {@link com.optimizely.ab.Optimizely#getFeatureVariableDouble}
+ * getFeatureVariableInteger {@link com.optimizely.ab.Optimizely#getFeatureVariableInteger}
+ * getFeatureVariableString {@link com.optimizely.ab.Optimizely#getFeatureVariableString}
+ * getVariation {@link com.optimizely.ab.Optimizely#getVariation}
+ * isFeatureEnabled {@link com.optimizely.ab.Optimizely#isFeatureEnabled}
+ *
+ * @see <a href="https://docs.developers.optimizely.com/full-stack/docs/register-notification-listeners">Notification Listeners</a>
+ */
 public final class DecisionNotification {
     protected String type;
     protected String userId;
@@ -108,6 +120,14 @@ public final class DecisionNotification {
         }
 
         public DecisionNotification build() {
+            if (type == null) {
+                throw new OptimizelyRuntimeException("type not set");
+            }
+
+            if (experimentKey == null) {
+                throw new OptimizelyRuntimeException("experimentKey not set");
+            }
+
             decisionInfo = new HashMap<>();
             decisionInfo.put(EXPERIMENT_KEY, experimentKey);
             decisionInfo.put(VARIATION_KEY, variation != null ? variation.getKey() : null);
@@ -169,11 +189,22 @@ public final class DecisionNotification {
         }
 
         public DecisionNotification build() {
+            if (source == null) {
+                throw new OptimizelyRuntimeException("source not set");
+            }
+
+            if (featureKey == null) {
+                throw new OptimizelyRuntimeException("featureKey not set");
+            }
+
+            if (featureEnabled == null) {
+                throw new OptimizelyRuntimeException("featureEnabled not set");
+            }
+
             decisionInfo = new HashMap<>();
             decisionInfo.put(FEATURE_KEY, featureKey);
             decisionInfo.put(FEATURE_ENABLED, featureEnabled);
             decisionInfo.put(SOURCE, source.toString());
-
             decisionInfo.put(SOURCE_INFO, sourceInfo.get());
 
             return new DecisionNotification(
@@ -184,7 +215,7 @@ public final class DecisionNotification {
         }
     }
 
-    public static FeatureVariableDecisionNotificationBuilder newFeatureVariableBuilder() {
+    public static FeatureVariableDecisionNotificationBuilder newFeatureVariableDecisionNotificationBuilder() {
         return new FeatureVariableDecisionNotificationBuilder();
     }
 
@@ -252,6 +283,22 @@ public final class DecisionNotification {
         }
 
         public DecisionNotification build() {
+            if (featureKey == null) {
+                throw new OptimizelyRuntimeException("featureKey not set");
+            }
+
+            if (featureEnabled == null) {
+                throw new OptimizelyRuntimeException("featureEnabled not set");
+            }
+
+            if (variableKey == null) {
+                throw new OptimizelyRuntimeException("variableKey not set");
+            }
+
+            if (variableType == null) {
+                throw new OptimizelyRuntimeException("variableType not set");
+            }
+
             decisionInfo = new HashMap<>();
             decisionInfo.put(FEATURE_KEY, featureKey);
             decisionInfo.put(FEATURE_ENABLED, featureEnabled);

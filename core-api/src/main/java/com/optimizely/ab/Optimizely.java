@@ -690,7 +690,7 @@ public class Optimizely {
 
         Object convertedValue = convertStringToType(variableValue, variableType);
 
-        DecisionNotification decisionNotification = DecisionNotification.newFeatureVariableBuilder()
+        DecisionNotification decisionNotification = DecisionNotification.newFeatureVariableDecisionNotificationBuilder()
             .withUserId(userId)
             .withAttributes(copiedAttributes)
             .withFeatureKey(featureKey)
