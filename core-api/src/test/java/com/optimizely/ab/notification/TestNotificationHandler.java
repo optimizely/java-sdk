@@ -26,7 +26,7 @@ class TestNotificationHandler<T> implements NotificationHandler<T> {
     private final List<T> messages = new ArrayList<>();
 
     @Override
-    public void notify(T message) {
+    public void handle(T message) {
         messages.add(message);
     }
 

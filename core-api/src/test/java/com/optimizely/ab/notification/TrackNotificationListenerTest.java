@@ -55,7 +55,7 @@ public class TrackNotificationListenerTest {
 
     @Test
     public void testNotifyWithTrackNotificationArg() {
-        trackNotificationHandler.notify(trackNotification);
+        trackNotificationHandler.handle(trackNotification);
     }
 
     private static class TrackNotificationHandler extends TrackNotificationListener {

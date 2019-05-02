@@ -34,7 +34,7 @@ public abstract class TrackNotificationListener implements NotificationHandler<T
      *
      * @param args - variable argument list based on the type of notification.
      *
-     * @deprecated by {@link TrackNotificationListener#notify(TrackNotification)}
+     * @deprecated by {@link TrackNotificationListener#handle(TrackNotification)}
      */
     @Override
     @Deprecated
@@ -60,7 +60,7 @@ public abstract class TrackNotificationListener implements NotificationHandler<T
     }
 
     @Override
-    public final void notify(TrackNotification message) {
+    public final void handle(TrackNotification message) {
         onTrack(
             message.getEventKey(),
             message.getUserId(),

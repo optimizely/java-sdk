@@ -58,7 +58,7 @@ public class ActivateNotificationListenerTest {
 
     @Test
     public void testNotifyWithActivateNotificationArg() {
-        activateNotificationListener.notify(activateNotification);
+        activateNotificationListener.handle(activateNotification);
     }
 
     private static class ActivateNotificationHandler extends ActivateNotificationListener {

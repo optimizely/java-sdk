@@ -38,7 +38,7 @@ public abstract class ActivateNotificationListener implements NotificationHandle
      *
      * @param args - variable argument list based on the type of notification.
      *
-     * @deprecated by {@link ActivateNotificationListener#notify(ActivateNotification)}
+     * @deprecated by {@link ActivateNotificationListener#handle(ActivateNotification)}
      */
     @Override
     @Deprecated
@@ -61,7 +61,7 @@ public abstract class ActivateNotificationListener implements NotificationHandle
     }
 
     @Override
-    public final void notify(ActivateNotification message) {
+    public final void handle(ActivateNotification message) {
         onActivate(
             message.getExperiment(),
             message.getUserId(),

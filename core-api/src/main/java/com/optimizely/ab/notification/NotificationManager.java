@@ -58,7 +58,7 @@ public class NotificationManager<T> {
 
     public void send(T message) {
         for (NotificationHandler<T> handler: handlers.values()) {
-            handler.notify(message);
+            handler.handle(message);
         }
     }
 
