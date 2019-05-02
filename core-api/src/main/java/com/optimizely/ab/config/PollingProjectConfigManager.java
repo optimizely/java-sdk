@@ -100,8 +100,8 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
     public ProjectConfig getConfig() {
         if (started) {
             try {
-                boolean aquired = countDownLatch.await(blockingTimeoutPeriod, blockingTimeoutUnit);
-                if (!aquired) {
+                boolean acquired = countDownLatch.await(blockingTimeoutPeriod, blockingTimeoutUnit);
+                if (!acquired) {
                     logger.warn("Timeout exceeded waiting for ProjectConfig to be set, returning null.");
                     countDownLatch.countDown();
                 }
