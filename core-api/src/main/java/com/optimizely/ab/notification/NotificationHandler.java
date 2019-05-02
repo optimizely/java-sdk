@@ -16,6 +16,13 @@
  */
 package com.optimizely.ab.notification;
 
+/**
+ * NotificationHandler is a generic interface Optimizely notification listeners.
+ * This interface replaces {@link NotificationListener} which didn't provide adequate type safety.
+ *
+ * While this class adds generic handler implementations to be created, the domain of supported
+ * implementations is maintained by the {@link NotificationCenter}
+ */
 public interface NotificationHandler<T> {
     void notify(T message);
 }
