@@ -22,13 +22,12 @@ import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
 
 import javax.annotation.Nonnull;
-import java.rmi.activation.ActivateFailedException;
 import java.util.Map;
 
 /**
- * This class handles the activate event notification.
+ * ActivateNotificationListener handles the activate event notification.
  *
- * This class is deprecated along with {@link ActivateNotification} and users should implement
+ * @deprecated along with {@link ActivateNotification} and users should implement
  * NotificationHandler&lt;DecisionNotification&gt; directly.
  */
 @Deprecated
@@ -38,8 +37,11 @@ public abstract class ActivateNotificationListener implements NotificationHandle
      * Base notify called with var args.  This method parses the parameters and calls the abstract method.
      *
      * @param args - variable argument list based on the type of notification.
+     *
+     * @deprecated by {@link ActivateNotificationListener#notify(ActivateNotification)}
      */
     @Override
+    @Deprecated
     public final void notify(Object... args) {
         assert (args[0] instanceof Experiment);
         Experiment experiment = (Experiment) args[0];

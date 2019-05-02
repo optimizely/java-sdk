@@ -17,6 +17,7 @@
 package com.optimizely.ab.notification;
 
 import ch.qos.logback.classic.Level;
+import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
@@ -211,24 +212,26 @@ public class NotificationCenterTest {
         assertTrue(manager.remove(id));
     }
 
-    @Test
+    @Test(expected = OptimizelyRuntimeException.class)
     public void testSendWithoutHandler() {
-        TestNotification notification = new TestNotification("test");
-
-        // Should not throw NPE
-        notificationCenter.send(notification);
+        notificationCenter.send(new TestNotification(""));
     }
 
     @Test
     public void testSendWithHandler() {
-        TestNotificationHandler handler = new TestNotificationHandler();
-        notificationCenter.<TestNotification>getNotificationManager(TestNotification.class).addHandler(handler);
+        testSendWithNotification(new TrackNotification());
+        testSendWithNotification(new DecisionNotification());
+        testSendWithNotification(new ActivateNotification());
+    }
 
-        TestNotification notification = new TestNotification("test");
+    private void testSendWithNotification(Object notification) {
+        TestNotificationHandler handler = new TestNotificationHandler<>();
+        notificationCenter.getNotificationManager(notification.getClass()).addHandler(handler);
         notificationCenter.send(notification);
 
-        List<TestNotification> messages = handler.getMessages();
+        List messages = handler.getMessages();
         assertEquals(1, messages.size());
         assertEquals(notification, messages.get(0));
+
     }
 }

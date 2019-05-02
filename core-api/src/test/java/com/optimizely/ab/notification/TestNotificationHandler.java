@@ -22,15 +22,15 @@ import java.util.List;
 /**
  * TestNotificationHandler used for unit testing NotificationCenter and NotificationManager
  */
-class TestNotificationHandler implements NotificationHandler<TestNotification> {
-    private final List<TestNotification> messages = new ArrayList<>();
+class TestNotificationHandler<T> implements NotificationHandler<T> {
+    private final List<T> messages = new ArrayList<>();
 
     @Override
-    public void notify(TestNotification message) {
+    public void notify(T message) {
         messages.add(message);
     }
 
-    List<TestNotification> getMessages() {
+    List<T> getMessages() {
         return messages;
     }
 }

@@ -19,13 +19,12 @@ package com.optimizely.ab.notification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * NotificationManger is a generic class for managing notifications for a given {@link Notification}
- * class.
+ * NotificationManger is a generic class for managing notifications for a given class.
  *
  * The NotificationManager is responsible for storing a collection of NotificationHandlers and mapping
  * them to a globally unique integer so that they can be removed on demand.
@@ -34,16 +33,16 @@ public class NotificationManager<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationManager.class);
 
-    private final Map<Integer, NotificationHandler<T>> handlers = new HashMap<>();
+    private final Map<Integer, NotificationHandler<T>> handlers = new LinkedHashMap<>();
     private final AtomicInteger counter;
 
-    public NotificationManager(AtomicInteger counter) {
+    NotificationManager(AtomicInteger counter) {
         this.counter = counter;
     }
 
     public int addHandler(NotificationHandler<T> newHandler) {
 
-        // Prevent registering a duplication listener.
+        // Prevent registering a duplicate listener.
         for (NotificationHandler<T> handler: handlers.values()) {
             if (handler.equals(newHandler)) {
                 logger.warn("Notification listener was already added");

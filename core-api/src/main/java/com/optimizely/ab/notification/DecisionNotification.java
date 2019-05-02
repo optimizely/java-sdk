@@ -29,7 +29,7 @@ import java.util.Map;
 import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.EXPERIMENT_KEY;
 import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_KEY;
 
-public class DecisionNotification implements Notification {
+public final class DecisionNotification {
     protected String type;
     protected String userId;
     protected Map<String, ?> attributes;

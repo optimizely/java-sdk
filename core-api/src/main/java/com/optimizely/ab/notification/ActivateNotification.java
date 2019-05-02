@@ -16,24 +16,32 @@
  */
 package com.optimizely.ab.notification;
 
+import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
 
-import javax.annotation.Nonnull;
 import java.util.Map;
 
 /**
- * ActivateNotification is deprecated in favor of {@link DecisionNotification}
+ * ActivateNotification supplies notification for AB activatation.
+ *
+ * @deprecated in favor of {@link DecisionNotification} which provides notifications for Experiment, Feature
+ * and Rollout decisions.
  */
 @Deprecated
-public class ActivateNotification implements Notification {
+public final class ActivateNotification {
 
     private final Experiment experiment;
     private final String userId;
     private final Map<String, ?> attributes;
     private final Variation variation;
     private final LogEvent event;
+
+    @VisibleForTesting
+    ActivateNotification() {
+        this(null, null, null, null, null);
+    }
 
     /**
      * @param experiment - The experiment object being activated.

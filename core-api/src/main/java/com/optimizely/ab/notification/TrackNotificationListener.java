@@ -22,9 +22,9 @@ import javax.annotation.Nonnull;
 import com.optimizely.ab.event.LogEvent;
 
 /**
- * This class handles the track event notification.
+ * TrackNotificationListener handles the track event notification.
  *
- * This class is deprecated and users should implement NotificationHandler&lt;TrackNotification&gt; directly.
+ * @deprecated and users should implement NotificationHandler&lt;TrackNotification&gt; directly.
  */
 @Deprecated
 public abstract class TrackNotificationListener implements NotificationHandler<TrackNotification>, NotificationListener, TrackNotificationListenerInterface {
@@ -33,6 +33,8 @@ public abstract class TrackNotificationListener implements NotificationHandler<T
      * Base notify called with var args.  This method parses the parameters and calls the abstract method.
      *
      * @param args - variable argument list based on the type of notification.
+     *
+     * @deprecated by {@link TrackNotificationListener#notify(TrackNotification)}
      */
     @Override
     @Deprecated

@@ -44,7 +44,7 @@ public class NotificationManagerTest {
 
     @Test
     public void testSend() {
-        TestNotificationHandler handler = new TestNotificationHandler();
+        TestNotificationHandler<TestNotification> handler = new TestNotificationHandler<>();
         assertEquals(1, notificationManager.addHandler(handler));
 
         notificationManager.send(new TestNotification("message1"));

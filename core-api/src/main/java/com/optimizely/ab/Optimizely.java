@@ -933,11 +933,11 @@ public class Optimizely {
     }
 
     /**
-     * Convenience method for adding TrackNotification Handlers
+     * Convenience method for adding DecisionNotification Handlers
      */
     public int addDecisionNotificationHandler(NotificationHandler<DecisionNotification> handler) {
-        NotificationManager<DecisionNotification> manager =
-            notificationCenter.getNotificationManager(DecisionNotification.class);
+        NotificationManager<DecisionNotification> manager = notificationCenter
+            .getNotificationManager(DecisionNotification.class);
         return manager.addHandler(handler);
     }
 

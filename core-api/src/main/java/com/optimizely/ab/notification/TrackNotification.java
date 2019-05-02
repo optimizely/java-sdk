@@ -16,21 +16,26 @@
  */
 package com.optimizely.ab.notification;
 
+import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.event.LogEvent;
 
-import java.util.Collections;
 import java.util.Map;
 
 /**
  * TrackNotification encapsulates the arguments used to submit tracking calls.
  */
-public class TrackNotification implements Notification {
+public final class TrackNotification {
 
     private final String eventKey;
     private final String userId;
     private final Map<String, ?> attributes;
     private final Map<String, ?> eventTags;
     private final LogEvent event;
+
+    @VisibleForTesting
+    TrackNotification() {
+        this(null, null, null, null, null);
+    }
 
     /**
      * @param eventKey   - The event key that was triggered.

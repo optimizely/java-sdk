@@ -19,7 +19,7 @@ package com.optimizely.ab.notification;
 /**
  * TestNotification used for unit testing NotificationCenter and NotificationManager
  */
-class TestNotification implements Notification {
+class TestNotification {
     private final String message;
 
     TestNotification(String message) {
