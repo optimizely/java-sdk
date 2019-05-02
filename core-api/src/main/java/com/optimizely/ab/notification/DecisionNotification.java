@@ -27,7 +27,6 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class DecisionNotification {
 /**
  * DecisionNotification encapsulates the arguments and responses when using the following methods:
  *
@@ -42,6 +41,7 @@ public final class DecisionNotification {
  *
  * @see <a href="https://docs.developers.optimizely.com/full-stack/docs/register-notification-listeners">Notification Listeners</a>
  */
+public final class DecisionNotification {
     protected String type;
     protected String userId;
     protected Map<String, ?> attributes;
