@@ -24,15 +24,24 @@ import com.optimizely.ab.event.LogEvent;
 import javax.annotation.Nonnull;
 import java.util.Map;
 
+/**
+ * ActivateNotificationListener handles the activate event notification.
+ *
+ * @deprecated along with {@link ActivateNotification} and users should implement
+ * NotificationHandler&lt;DecisionNotification&gt; directly.
+ */
 @Deprecated
-public abstract class ActivateNotificationListener implements NotificationListener, ActivateNotificationListenerInterface {
+public abstract class ActivateNotificationListener implements NotificationHandler<ActivateNotification>, NotificationListener, ActivateNotificationListenerInterface {
 
     /**
      * Base notify called with var args.  This method parses the parameters and calls the abstract method.
      *
      * @param args - variable argument list based on the type of notification.
+     *
+     * @deprecated by {@link ActivateNotificationListener#handle(ActivateNotification)}
      */
     @Override
+    @Deprecated
     public final void notify(Object... args) {
         assert (args[0] instanceof Experiment);
         Experiment experiment = (Experiment) args[0];
@@ -49,6 +58,17 @@ public abstract class ActivateNotificationListener implements NotificationListen
         LogEvent logEvent = (LogEvent) args[4];
 
         onActivate(experiment, userId, attributes, variation, logEvent);
+    }
+
+    @Override
+    public final void handle(ActivateNotification message) {
+        onActivate(
+            message.getExperiment(),
+            message.getUserId(),
+            message.getAttributes(),
+            message.getVariation(),
+            message.getEvent()
+        );
     }
 
     /**
