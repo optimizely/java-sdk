@@ -3074,7 +3074,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, true);
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
-        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING);
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING.toString());
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
@@ -3127,7 +3127,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, false);
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
-        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING);
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING.toString());
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
@@ -3177,7 +3177,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, true);
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
-        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING);
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING.toString());
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
@@ -3227,7 +3227,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, false);
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
-        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.BOOLEAN);
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.BOOLEAN.toString());
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
@@ -3276,7 +3276,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, true);
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
-        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.INTEGER);
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.INTEGER.toString());
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
@@ -3328,7 +3328,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, true);
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
-        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.DOUBLE);
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.DOUBLE.toString());
         testDecisionInfoMap.put(VARIABLE_VALUE, 3.14);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
