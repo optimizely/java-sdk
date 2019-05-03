@@ -16,20 +16,10 @@
  */
 package com.optimizely.ab.config.parser;
 
-import com.optimizely.ab.config.Attribute;
-import com.optimizely.ab.config.EventType;
-import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.Experiment.ExperimentStatus;
-import com.optimizely.ab.config.FeatureFlag;
-import com.optimizely.ab.config.Group;
-import com.optimizely.ab.config.FeatureVariable;
 import com.optimizely.ab.config.FeatureVariable.VariableStatus;
 import com.optimizely.ab.config.FeatureVariable.VariableType;
-import com.optimizely.ab.config.FeatureVariableUsageInstance;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.Rollout;
-import com.optimizely.ab.config.TrafficAllocation;
-import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
@@ -86,21 +76,21 @@ final class JsonSimpleConfigParser implements ConfigParser {
             List<Group> groups = parseGroups((JSONArray) rootObject.get("groups"));
 
             boolean anonymizeIP = false;
-            if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
+            if (datafileVersion >= Integer.parseInt(DatafileProjectConfig.Version.V3.toString())) {
                 anonymizeIP = (Boolean) rootObject.get("anonymizeIP");
             }
 
             List<FeatureFlag> featureFlags = null;
             List<Rollout> rollouts = null;
             Boolean botFiltering = null;
-            if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
+            if (datafileVersion >= Integer.parseInt(DatafileProjectConfig.Version.V4.toString())) {
                 featureFlags = parseFeatureFlags((JSONArray) rootObject.get("featureFlags"));
                 rollouts = parseRollouts((JSONArray) rootObject.get("rollouts"));
                 if (rootObject.containsKey("botFiltering"))
                     botFiltering = (Boolean) rootObject.get("botFiltering");
             }
 
-            return new ProjectConfig(
+            return new DatafileProjectConfig(
                 accountId,
                 anonymizeIP,
                 botFiltering,

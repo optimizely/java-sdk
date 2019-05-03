@@ -18,6 +18,7 @@ package com.optimizely.ab.event;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
+import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -25,6 +26,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -37,6 +39,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -48,17 +51,14 @@ import static org.mockito.Mockito.when;
 /**
  * Tests for {@link AsyncEventHandler}.
  */
+@RunWith(MockitoJUnitRunner.class)
 public class AsyncEventHandlerTest {
-
-    @Rule
-    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
-    public MockitoRule rule = MockitoJUnit.rule();
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Mock
-    CloseableHttpClient mockHttpClient;
+    OptimizelyHttpClient mockHttpClient;
     @Mock
     ExecutorService mockExecutorService;
 

@@ -45,9 +45,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 /**
- * Helper class that provides common functionality and resources for testing {@link ProjectConfig}.
+ * Helper class that provides common functionality and resources for testing {@link DatafileProjectConfig}.
  */
-public final class ProjectConfigTestUtils {
+public final class DatafileProjectConfigTestUtils {
 
     private static final ProjectConfig VALID_PROJECT_CONFIG_V2 = generateValidProjectConfigV2();
 
@@ -155,7 +155,7 @@ public final class ProjectConfigTestUtils {
             Collections.<TrafficAllocation>emptyList());
         List<Group> groups = asList(randomPolicyGroup, overlappingPolicyGroup);
 
-        return new ProjectConfig("789", "1234", "2", "42", groups, experiments, attributes, events, audiences);
+        return new DatafileProjectConfig("789", "1234", "2", "42", groups, experiments, attributes, events, audiences);
     }
 
     private static final ProjectConfig NO_AUDIENCE_PROJECT_CONFIG_V2 = generateNoAudienceProjectConfigV2();
@@ -207,7 +207,7 @@ public final class ProjectConfigTestUtils {
             new EventType("101", "event_with_launched_and_running_experiments", Arrays.asList("119", "223"))
         );
 
-        return new ProjectConfig("789", "1234", "2", "42", Collections.<Group>emptyList(), experiments, attributes,
+        return new DatafileProjectConfig("789", "1234", "2", "42", Collections.<Group>emptyList(), experiments, attributes,
             events, Collections.<Audience>emptyList());
     }
 
@@ -324,7 +324,7 @@ public final class ProjectConfigTestUtils {
             Collections.<TrafficAllocation>emptyList());
         List<Group> groups = asList(randomPolicyGroup, overlappingPolicyGroup);
 
-        return new ProjectConfig("789", "1234", "3", "42", groups, experiments, attributes, events, audiences,
+        return new DatafileProjectConfig("789", "1234", "3", "42", groups, experiments, attributes, events, audiences,
             true);
     }
 
@@ -377,7 +377,7 @@ public final class ProjectConfigTestUtils {
             new EventType("101", "event_with_launched_and_running_experiments", Arrays.asList("119", "223"))
         );
 
-        return new ProjectConfig("789", "1234", "3", "42", Collections.<Group>emptyList(), experiments, attributes,
+        return new DatafileProjectConfig("789", "1234", "3", "42", Collections.<Group>emptyList(), experiments, attributes,
             events, Collections.<Audience>emptyList(), true);
     }
 
@@ -387,7 +387,7 @@ public final class ProjectConfigTestUtils {
         return ValidProjectConfigV4.generateValidProjectConfigV4();
     }
 
-    private ProjectConfigTestUtils() {
+    private DatafileProjectConfigTestUtils() {
     }
 
     public static String validConfigJsonV2() throws IOException {
@@ -415,28 +415,28 @@ public final class ProjectConfigTestUtils {
     }
 
     /**
-     * @return the expected {@link ProjectConfig} for the json produced by {@link #validConfigJsonV2()} ()}
+     * @return the expected {@link DatafileProjectConfig} for the json produced by {@link #validConfigJsonV2()} ()}
      */
     public static ProjectConfig validProjectConfigV2() {
         return VALID_PROJECT_CONFIG_V2;
     }
 
     /**
-     * @return the expected {@link ProjectConfig} for the json produced by {@link #noAudienceProjectConfigJsonV2()}
+     * @return the expected {@link DatafileProjectConfig} for the json produced by {@link #noAudienceProjectConfigJsonV2()}
      */
     public static ProjectConfig noAudienceProjectConfigV2() {
         return NO_AUDIENCE_PROJECT_CONFIG_V2;
     }
 
     /**
-     * @return the expected {@link ProjectConfig} for the json produced by {@link #validConfigJsonV3()} ()}
+     * @return the expected {@link DatafileProjectConfig} for the json produced by {@link #validConfigJsonV3()} ()}
      */
     public static ProjectConfig validProjectConfigV3() {
         return VALID_PROJECT_CONFIG_V3;
     }
 
     /**
-     * @return the expected {@link ProjectConfig} for the json produced by {@link #noAudienceProjectConfigJsonV3()}
+     * @return the expected {@link DatafileProjectConfig} for the json produced by {@link #noAudienceProjectConfigJsonV3()}
      */
     public static ProjectConfig noAudienceProjectConfigV3() {
         return NO_AUDIENCE_PROJECT_CONFIG_V3;
@@ -447,7 +447,7 @@ public final class ProjectConfigTestUtils {
     }
 
     /**
-     * @return the expected {@link ProjectConfig} for the json produced by {@link #invalidProjectConfigV5()}
+     * @return the expected {@link DatafileProjectConfig} for the json produced by {@link #invalidProjectConfigV5()}
      */
     public static String invalidProjectConfigV5() throws IOException {
         return Resources.toString(Resources.getResource("config/invalid-project-config-v5.json"), Charsets.UTF_8);
@@ -455,6 +455,7 @@ public final class ProjectConfigTestUtils {
 
     /**
      * Asserts that the provided project configs are equivalent.
+     * TODO this signature is backwards should be (ProjectConfig expected, ProjectConfig actual)
      */
     public static void verifyProjectConfig(@CheckForNull ProjectConfig actual, @Nonnull ProjectConfig expected) {
         assertNotNull(actual);

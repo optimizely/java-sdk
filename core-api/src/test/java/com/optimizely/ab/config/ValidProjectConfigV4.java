@@ -202,7 +202,7 @@ public class ValidProjectConfigV4 {
         AUDIENCE_WITH_MISSING_VALUE_KEY,
         new AndCondition(Collections.<Condition>singletonList(
             new OrCondition(Collections.<Condition>singletonList(
-                new OrCondition(ProjectConfigTestUtils.<Condition>createListOfObjects(
+                new OrCondition(DatafileProjectConfigTestUtils.<Condition>createListOfObjects(
                     ATTRIBUTE_WITH_VALUE,
                     ATTRIBUTE_WITHOUT_VALUE
                 ))
@@ -444,21 +444,21 @@ public class ValidProjectConfigV4 {
         LAYER_BASIC_EXPERIMENT_ID,
         Collections.<String>emptyList(),
         null,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             VARIATION_BASIC_EXPERIMENT_VARIATION_A,
             VARIATION_BASIC_EXPERIMENT_VARIATION_B
         ),
-        ProjectConfigTestUtils.createMapOfObjects(
-            ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createMapOfObjects(
+            DatafileProjectConfigTestUtils.createListOfObjects(
                 BASIC_EXPERIMENT_FORCED_VARIATION_USER_ID_VARIATION_A,
                 BASIC_EXPERIMENT_FORCED_VARIATION_USER_ID_VARIATION_B
             ),
-            ProjectConfigTestUtils.createListOfObjects(
+            DatafileProjectConfigTestUtils.createListOfObjects(
                 VARIATION_BASIC_EXPERIMENT_VARIATION_A_KEY,
                 VARIATION_BASIC_EXPERIMENT_VARIATION_B_KEY
             )
         ),
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             new TrafficAllocation(
                 VARIATION_BASIC_EXPERIMENT_VARIATION_A_ID,
                 5000
@@ -492,19 +492,19 @@ public class ValidProjectConfigV4 {
         EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_KEY,
         Experiment.ExperimentStatus.RUNNING.toString(),
         LAYER_TYPEDAUDIENCE_EXPERIMENT_ID,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             AUDIENCE_BOOL_ID,
             AUDIENCE_INT_ID,
             AUDIENCE_INT_EXACT_ID,
             AUDIENCE_DOUBLE_ID
         ),
         AUDIENCE_COMBINATION,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A,
             VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_B
         ),
         Collections.EMPTY_MAP,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             new TrafficAllocation(
                 VARIATION_TYPEDAUDIENCE_EXPERIMENT_VARIATION_A_ID,
                 5000
@@ -538,18 +538,18 @@ public class ValidProjectConfigV4 {
         EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_KEY,
         Experiment.ExperimentStatus.RUNNING.toString(),
         LAYER_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_ID,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             AUDIENCE_BOOL_ID,
             AUDIENCE_INT_ID,
             AUDIENCE_DOUBLE_ID
         ),
         AUDIENCE_COMBINATION_WITH_AND_CONDITION,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_A,
             VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_B
         ),
         Collections.EMPTY_MAP,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             new TrafficAllocation(
                 VARIATION_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_VARIATION_A_ID,
                 5000
@@ -585,12 +585,12 @@ public class ValidProjectConfigV4 {
         LAYER_TYPEDAUDIENCE_LEAF_EXPERIMENT_ID,
         Collections.<String>emptyList(),
         AUDIENCE_COMBINATION_LEAF_CONDITION,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_A,
             VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_B
         ),
         Collections.EMPTY_MAP,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             new TrafficAllocation(
                 VARIATION_TYPEDAUDIENCE_LEAF_EXPERIMENT_VARIATION_A_ID,
                 5000
@@ -627,21 +627,21 @@ public class ValidProjectConfigV4 {
         LAYER_FIRST_GROUPED_EXPERIMENT_ID,
         Collections.singletonList(AUDIENCE_GRYFFINDOR_ID),
         null,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             VARIATION_FIRST_GROUPED_EXPERIMENT_A,
             VARIATION_FIRST_GROUPED_EXPERIMENT_B
         ),
-        ProjectConfigTestUtils.createMapOfObjects(
-            ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createMapOfObjects(
+            DatafileProjectConfigTestUtils.createListOfObjects(
                 FIRST_GROUPED_EXPERIMENT_FORCED_VARIATION_USER_ID_VARIATION_A,
                 FIRST_GROUPED_EXPERIMENT_FORCED_VARIATION_USER_ID_VARIATION_B
             ),
-            ProjectConfigTestUtils.createListOfObjects(
+            DatafileProjectConfigTestUtils.createListOfObjects(
                 VARIATION_FIRST_GROUPED_EXPERIMENT_A_KEY,
                 VARIATION_FIRST_GROUPED_EXPERIMENT_B_KEY
             )
         ),
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             new TrafficAllocation(
                 VARIATION_FIRST_GROUPED_EXPERIMENT_A_ID,
                 5000
@@ -679,21 +679,21 @@ public class ValidProjectConfigV4 {
         LAYER_SECOND_GROUPED_EXPERIMENT_ID,
         Collections.singletonList(AUDIENCE_GRYFFINDOR_ID),
         null,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             VARIATION_SECOND_GROUPED_EXPERIMENT_A,
             VARIATION_SECOND_GROUPED_EXPERIMENT_B
         ),
-        ProjectConfigTestUtils.createMapOfObjects(
-            ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createMapOfObjects(
+            DatafileProjectConfigTestUtils.createListOfObjects(
                 SECOND_GROUPED_EXPERIMENT_FORCED_VARIATION_USER_ID_VARIATION_A,
                 SECOND_GROUPED_EXPERIMENT_FORCED_VARIATION_USER_ID_VARIATION_B
             ),
-            ProjectConfigTestUtils.createListOfObjects(
+            DatafileProjectConfigTestUtils.createListOfObjects(
                 VARIATION_SECOND_GROUPED_EXPERIMENT_A_KEY,
                 VARIATION_SECOND_GROUPED_EXPERIMENT_B_KEY
             )
         ),
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             new TrafficAllocation(
                 VARIATION_SECOND_GROUPED_EXPERIMENT_A_ID,
                 5000
@@ -715,7 +715,7 @@ public class ValidProjectConfigV4 {
         VARIATION_MULTIVARIATE_EXPERIMENT_FRED_ID,
         VARIATION_MULTIVARIATE_EXPERIMENT_FRED_KEY,
         VARIATION_MULTIVARIATE_FEATURE_ENABLED_VALUE,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             new FeatureVariableUsageInstance(
                 VARIABLE_FIRST_LETTER_ID,
                 "F"
@@ -732,7 +732,7 @@ public class ValidProjectConfigV4 {
         VARIATION_MULTIVARIATE_EXPERIMENT_FEORGE_ID,
         VARIATION_MULTIVARIATE_EXPERIMENT_FEORGE_KEY,
         VARIATION_MULTIVARIATE_FEATURE_ENABLED_VALUE,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             new FeatureVariableUsageInstance(
                 VARIABLE_FIRST_LETTER_ID,
                 "F"
@@ -750,7 +750,7 @@ public class ValidProjectConfigV4 {
         VARIATION_MULTIVARIATE_EXPERIMENT_GRED_ID,
         VARIATION_MULTIVARIATE_EXPERIMENT_GRED_KEY,
         VARIATION_MULTIVARIATE_VARIATION_FEATURE_ENABLED_GRED_KEY,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             new FeatureVariableUsageInstance(
                 VARIABLE_FIRST_LETTER_ID,
                 "G"
@@ -767,7 +767,7 @@ public class ValidProjectConfigV4 {
         VARIATION_MULTIVARIATE_EXPERIMENT_GEORGE_ID,
         VARIATION_MULTIVARIATE_EXPERIMENT_GEORGE_KEY,
         VARIATION_MULTIVARIATE_FEATURE_ENABLED_VALUE,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             new FeatureVariableUsageInstance(
                 VARIABLE_FIRST_LETTER_ID,
                 "G"
@@ -789,27 +789,27 @@ public class ValidProjectConfigV4 {
         LAYER_MULTIVARIATE_EXPERIMENT_ID,
         Collections.singletonList(AUDIENCE_GRYFFINDOR_ID),
         null,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             VARIATION_MULTIVARIATE_EXPERIMENT_FRED,
             VARIATION_MULTIVARIATE_EXPERIMENT_FEORGE,
             VARIATION_MULTIVARIATE_EXPERIMENT_GRED,
             VARIATION_MULTIVARIATE_EXPERIMENT_GEORGE
         ),
-        ProjectConfigTestUtils.createMapOfObjects(
-            ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createMapOfObjects(
+            DatafileProjectConfigTestUtils.createListOfObjects(
                 MULTIVARIATE_EXPERIMENT_FORCED_VARIATION_USER_ID_FRED,
                 MULTIVARIATE_EXPERIMENT_FORCED_VARIATION_USER_ID_FEORGE,
                 MULTIVARIATE_EXPERIMENT_FORCED_VARIATION_USER_ID_GRED,
                 MULTIVARIATE_EXPERIMENT_FORCED_VARIATION_USER_ID_GEORGE
             ),
-            ProjectConfigTestUtils.createListOfObjects(
+            DatafileProjectConfigTestUtils.createListOfObjects(
                 VARIATION_MULTIVARIATE_EXPERIMENT_FRED_KEY,
                 VARIATION_MULTIVARIATE_EXPERIMENT_FEORGE_KEY,
                 VARIATION_MULTIVARIATE_EXPERIMENT_GRED_KEY,
                 VARIATION_MULTIVARIATE_EXPERIMENT_GEORGE_KEY
             )
         ),
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             new TrafficAllocation(
                 VARIATION_MULTIVARIATE_EXPERIMENT_FRED_ID,
                 2500
@@ -865,12 +865,12 @@ public class ValidProjectConfigV4 {
         LAYER_DOUBLE_FEATURE_EXPERIMENT_ID,
         Collections.singletonList(AUDIENCE_SLYTHERIN_ID),
         null,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             VARIATION_DOUBLE_FEATURE_PI_VARIATION,
             VARIATION_DOUBLE_FEATURE_EULER_VARIATION
         ),
         Collections.<String, String>emptyMap(),
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             new TrafficAllocation(
                 VARIATION_DOUBLE_FEATURE_PI_VARIATION_ID,
                 4000
@@ -1036,11 +1036,11 @@ public class ValidProjectConfigV4 {
     private static final Group GROUP_1 = new Group(
         GROUP_1_ID,
         Group.RANDOM_POLICY,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             EXPERIMENT_FIRST_GROUPED_EXPERIMENT,
             EXPERIMENT_SECOND_GROUPED_EXPERIMENT
         ),
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             new TrafficAllocation(
                 EXPERIMENT_FIRST_GROUPED_EXPERIMENT_ID,
                 4000
@@ -1054,11 +1054,11 @@ public class ValidProjectConfigV4 {
     private static final Group GROUP_2 = new Group(
         GROUP_2_ID,
         Group.RANDOM_POLICY,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1,
             EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2
         ),
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             new TrafficAllocation(
                 EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1_EXPERIMENT_ID,
                 5000
@@ -1076,7 +1076,7 @@ public class ValidProjectConfigV4 {
     private static final EventType EVENT_BASIC_EVENT = new EventType(
         EVENT_BASIC_EVENT_ID,
         EVENT_BASIC_EVENT_KEY,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             EXPERIMENT_BASIC_EXPERIMENT_ID,
             EXPERIMENT_FIRST_GROUPED_EXPERIMENT_ID,
             EXPERIMENT_SECOND_GROUPED_EXPERIMENT_ID,
@@ -1117,7 +1117,7 @@ public class ValidProjectConfigV4 {
                 "521740985",
                 "521740985",
                 true,
-                ProjectConfigTestUtils.createListOfObjects(
+                DatafileProjectConfigTestUtils.createListOfObjects(
                     new FeatureVariableUsageInstance(
                         "675244127",
                         "G"
@@ -1149,7 +1149,7 @@ public class ValidProjectConfigV4 {
                 "180042646",
                 "180042646",
                 true,
-                ProjectConfigTestUtils.createListOfObjects(
+                DatafileProjectConfigTestUtils.createListOfObjects(
                     new FeatureVariableUsageInstance(
                         "675244127",
                         "S"
@@ -1181,7 +1181,7 @@ public class ValidProjectConfigV4 {
                 "2346257680",
                 "2346257680",
                 true,
-                ProjectConfigTestUtils.createListOfObjects(
+                DatafileProjectConfigTestUtils.createListOfObjects(
                     new FeatureVariableUsageInstance(
                         "675244127",
                         "D"
@@ -1213,7 +1213,7 @@ public class ValidProjectConfigV4 {
                 "3137445031",
                 "3137445031",
                 true,
-                ProjectConfigTestUtils.createListOfObjects(
+                DatafileProjectConfigTestUtils.createListOfObjects(
                     new FeatureVariableUsageInstance(
                         "675244127",
                         "M"
@@ -1235,7 +1235,7 @@ public class ValidProjectConfigV4 {
     );
     public static final Rollout ROLLOUT_2 = new Rollout(
         ROLLOUT_2_ID,
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             ROLLOUT_2_RULE_1,
             ROLLOUT_2_RULE_2,
             ROLLOUT_2_RULE_3,
@@ -1249,7 +1249,7 @@ public class ValidProjectConfigV4 {
         FEATURE_MULTI_VARIATE_FEATURE_KEY,
         ROLLOUT_2_ID,
         Collections.singletonList(EXPERIMENT_MULTIVARIATE_EXPERIMENT_ID),
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             VARIABLE_FIRST_LETTER_VARIABLE,
             VARIABLE_REST_OF_NAME_VARIABLE
         )
@@ -1258,7 +1258,7 @@ public class ValidProjectConfigV4 {
         FEATURE_MUTEX_GROUP_FEATURE_ID,
         FEATURE_MUTEX_GROUP_FEATURE_KEY,
         "",
-        ProjectConfigTestUtils.createListOfObjects(
+        DatafileProjectConfigTestUtils.createListOfObjects(
             EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1_EXPERIMENT_ID,
             EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2_EXPERIMENT_ID
         ),
@@ -1354,7 +1354,7 @@ public class ValidProjectConfigV4 {
         rollouts.add(ROLLOUT_2);
         rollouts.add(ROLLOUT_3);
 
-        return new ProjectConfig(
+        return new DatafileProjectConfig(
             ACCOUNT_ID,
             ANONYMIZE_IP,
             BOT_FILTERING,

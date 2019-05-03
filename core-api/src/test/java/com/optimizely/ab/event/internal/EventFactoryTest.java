@@ -20,11 +20,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.optimizely.ab.bucketing.Bucketer;
-import com.optimizely.ab.config.Attribute;
-import com.optimizely.ab.config.EventType;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.Decision;
 import com.optimizely.ab.event.internal.payload.EventBatch;
@@ -39,8 +35,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV4;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV2;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV4;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNotSame;
@@ -725,7 +721,7 @@ public class EventFactoryTest {
 
         // Bucket to the first variation for all experiments.
         for (Experiment experiment : validProjectConfig.getExperiments()) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
+            when(mockBucketAlgorithm.bucket(experiment, userId, validProjectConfig))
                 .thenReturn(experiment.getVariations().get(0));
         }
 
@@ -805,7 +801,7 @@ public class EventFactoryTest {
 
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         for (Experiment experiment : validProjectConfig.getExperiments()) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
+            when(mockBucketAlgorithm.bucket(experiment, userId, validProjectConfig))
                 .thenReturn(experiment.getVariations().get(0));
         }
 
@@ -840,7 +836,7 @@ public class EventFactoryTest {
 
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         for (Experiment experiment : projectConfig.getExperiments()) {
-            when(mockBucketAlgorithm.bucket(experiment, userId))
+            when(mockBucketAlgorithm.bucket(experiment, userId, validProjectConfig))
                 .thenReturn(experiment.getVariations().get(0));
         }
 
