@@ -47,7 +47,7 @@ import javax.annotation.CheckForNull;
  * {@link EventHandler} implementation that queues events and has a separate pool of threads responsible
  * for the dispatch.
  */
-public class AsyncEventHandler implements EventHandler {
+public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncEventHandler.class);
     private static final ProjectConfigResponseHandler EVENT_RESPONSE_HANDLER = new ProjectConfigResponseHandler();
@@ -55,11 +55,16 @@ public class AsyncEventHandler implements EventHandler {
     private final OptimizelyHttpClient httpClient;
     private final ExecutorService workerExecutor;
 
-    public AsyncEventHandler(int queueCapacity, int numWorkers) {
-        this(queueCapacity, numWorkers, 200, 20, 5000);
-    }
+    private final long closeTimeout;
+    private final TimeUnit closeTimeoutUnit;
 
-    public AsyncEventHandler(int queueCapacity, int numWorkers, int maxConnections, int connectionsPerRoute, int validateAfter) {
+    public AsyncEventHandler(int queueCapacity,
+                             int numWorkers,
+                             int maxConnections,
+                             int connectionsPerRoute,
+                             int validateAfter,
+                             long closeTimeout,
+                             TimeUnit closeTimeoutUnit) {
         if (queueCapacity <= 0) {
             throw new IllegalArgumentException("queue capacity must be > 0");
         }
@@ -74,12 +79,17 @@ public class AsyncEventHandler implements EventHandler {
             0L, TimeUnit.MILLISECONDS,
             new ArrayBlockingQueue<Runnable>(queueCapacity),
             new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true));
+
+        this.closeTimeout = closeTimeout;
+        this.closeTimeoutUnit = closeTimeoutUnit;
     }
 
     @VisibleForTesting
     public AsyncEventHandler(OptimizelyHttpClient httpClient, ExecutorService workerExecutor) {
         this.httpClient = httpClient;
         this.workerExecutor = workerExecutor;
+        this.closeTimeout = Long.MAX_VALUE;
+        this.closeTimeoutUnit = TimeUnit.MILLISECONDS;
     }
 
     @Override
@@ -134,6 +144,11 @@ public class AsyncEventHandler implements EventHandler {
         }
 
         logger.info("event handler shutdown complete");
+    }
+
+    @Override
+    public void close() {
+        shutdownAndAwaitTermination(closeTimeout, closeTimeoutUnit);
     }
 
     //======== Helper classes ========//
@@ -203,6 +218,64 @@ public class AsyncEventHandler implements EventHandler {
             } else {
                 throw new ClientProtocolException("unexpected response from event endpoint, status: " + status);
             }
+        }
+    }
+
+    //======== Builder ========//
+
+    public static Builder builder() { return new Builder(); }
+
+    public static class Builder {
+
+        private int queueCapacity;
+        private int numWorkers;
+        private int maxTotalConnections = 200;
+        private int maxPerRoute = 20;
+        private int validateAfterInactivity = 5000;
+        private long closeTimeout = Long.MAX_VALUE;
+        private TimeUnit closeTimeoutUnit = TimeUnit.MILLISECONDS;
+
+        public Builder withQueueCapacity(int queueCapacity) {
+            this.queueCapacity = queueCapacity;
+            return this;
+        }
+
+        public Builder withNumWorkers(int numWorkers) {
+            this.numWorkers = numWorkers;
+            return this;
+        }
+
+        public Builder withMaxTotalConnections(int maxTotalConnections) {
+            this.maxTotalConnections = maxTotalConnections;
+            return this;
+        }
+
+        public Builder withMaxPerRoute(int maxPerRoute) {
+            this.maxPerRoute = maxPerRoute;
+            return this;
+        }
+
+        public Builder withValidateAfterInactivity(int validateAfterInactivity) {
+            this.validateAfterInactivity = validateAfterInactivity;
+            return this;
+        }
+
+        public Builder withCloseTimeout(long closeTimeout, TimeUnit unit) {
+            this.closeTimeout = closeTimeout;
+            this.closeTimeoutUnit = unit;
+            return this;
+        }
+
+        public AsyncEventHandler build() {
+            return new AsyncEventHandler(
+                queueCapacity,
+                numWorkers,
+                maxTotalConnections,
+                maxPerRoute,
+                validateAfterInactivity,
+                closeTimeout,
+                closeTimeoutUnit
+            );
         }
     }
 }
