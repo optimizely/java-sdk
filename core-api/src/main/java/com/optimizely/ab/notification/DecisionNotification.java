@@ -79,6 +79,17 @@ public final class DecisionNotification {
         return decisionInfo;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("DecisionNotification{");
+        sb.append("type='").append(type).append('\'');
+        sb.append(", userId='").append(userId).append('\'');
+        sb.append(", attributes=").append(attributes);
+        sb.append(", decisionInfo=").append(decisionInfo);
+        sb.append('}');
+        return sb.toString();
+    }
+
     public static ExperimentDecisionNotificationBuilder newExperimentDecisionNotificationBuilder() {
         return new ExperimentDecisionNotificationBuilder();
     }
@@ -303,7 +314,7 @@ public final class DecisionNotification {
             decisionInfo.put(FEATURE_KEY, featureKey);
             decisionInfo.put(FEATURE_ENABLED, featureEnabled);
             decisionInfo.put(VARIABLE_KEY, variableKey);
-            decisionInfo.put(VARIABLE_TYPE, variableType);
+            decisionInfo.put(VARIABLE_TYPE, variableType.toString());
             decisionInfo.put(VARIABLE_VALUE, variableValue);
             SourceInfo sourceInfo = new RolloutSourceInfo();
 

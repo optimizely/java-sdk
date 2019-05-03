@@ -96,6 +96,11 @@ public class FeatureVariable implements IdKeyMapped {
 
             return null;
         }
+
+        @Override
+        public String toString() {
+            return variableType;
+        }
     }
 
     private final String id;
