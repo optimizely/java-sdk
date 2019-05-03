@@ -37,11 +37,13 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 import static com.optimizely.ab.config.HttpProjectConfigManager.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -185,6 +187,27 @@ public class HttpProjectConfigManagerTest {
         getResponse.setEntity(new StringEntity(datafileString));
 
         projectConfigManager.getDatafileFromResponse(getResponse);
+    }
+
+    public void testInvalidPayload() throws Exception {
+        reset(mockHttpClient);
+        CloseableHttpResponse invalidPayloadResponse = mock(CloseableHttpResponse.class);
+        StatusLine statusLine = mock(StatusLine.class);
+
+        when(statusLine.getStatusCode()).thenReturn(200);
+        when(invalidPayloadResponse.getStatusLine()).thenReturn(statusLine);
+        when(invalidPayloadResponse.getEntity()).thenReturn(new StringEntity("I am an invalid response!"));
+
+        when(mockHttpClient.execute(any(HttpGet.class)))
+            .thenReturn(invalidPayloadResponse);
+
+        projectConfigManager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("sdk-key")
+            .withBlockingTimeout(10, TimeUnit.MILLISECONDS)
+            .build();
+
+        assertNull(projectConfigManager.getConfig());
     }
 
     @Test
