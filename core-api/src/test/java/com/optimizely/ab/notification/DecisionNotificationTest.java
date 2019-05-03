@@ -39,11 +39,14 @@ public class DecisionNotificationTest {
     private static final String EXPERIMENT_KEY = "experimentKey";
     private static final String FEATURE_KEY = "featureKey";
     private static final String FEATURE_VARIABLE_KEY = "featureVariableKey";
+    private static final String FEATURE_TEST = "featureTest";
+    private static final String FEATURE_TEST_VARIATION = "featureTestVariation";
     private static final String USER_ID = "userID";
     private static final Map<String, String> USER_ATTRIBUTES = Collections.singletonMap("user", "attr");
-    private static final RolloutSourceInfo rolloutSourceInfo = mock(RolloutSourceInfo.class);
     private static final Variation VARIATION = mock(Variation.class);
 
+    private FeatureTestSourceInfo featureTestSourceInfo;
+    private RolloutSourceInfo rolloutSourceInfo;
     private DecisionNotification experimentDecisionNotification;
     private DecisionNotification featureDecisionNotification;
     private DecisionNotification featureVariableDecisionNotification;
@@ -57,13 +60,15 @@ public class DecisionNotificationTest {
             .withVariation(VARIATION)
             .withType(NotificationCenter.DecisionNotificationType.AB_TEST.toString())
             .build();
+        featureTestSourceInfo = new FeatureTestSourceInfo(FEATURE_TEST, FEATURE_TEST_VARIATION);
+        rolloutSourceInfo = new RolloutSourceInfo();
         featureDecisionNotification = DecisionNotification.newFeatureDecisionNotificationBuilder()
             .withUserId(USER_ID)
             .withFeatureKey(FEATURE_KEY)
             .withFeatureEnabled(FEATURE_ENABLED)
-            .withSource(FeatureDecision.DecisionSource.ROLLOUT)
+            .withSource(FeatureDecision.DecisionSource.FEATURE_TEST)
             .withAttributes(USER_ATTRIBUTES)
-            .withSourceInfo(rolloutSourceInfo)
+            .withSourceInfo(featureTestSourceInfo)
             .build();
         featureVariableDecisionNotification = DecisionNotification.newFeatureVariableDecisionNotificationBuilder()
             .withUserId(USER_ID)
@@ -108,17 +113,24 @@ public class DecisionNotificationTest {
         Map<String, ?> actualFeatureDecisionInfo = featureDecisionNotification.getDecisionInfo();
         assertFalse((Boolean) actualFeatureDecisionInfo.get(DecisionNotification.FeatureDecisionNotificationBuilder.FEATURE_ENABLED));
         assertEquals(FEATURE_KEY, actualFeatureDecisionInfo.get(DecisionNotification.FeatureDecisionNotificationBuilder.FEATURE_KEY));
-        assertEquals(FeatureDecision.DecisionSource.ROLLOUT.toString(), actualFeatureDecisionInfo.get(DecisionNotification.FeatureDecisionNotificationBuilder.SOURCE));
-        assertEquals(rolloutSourceInfo.get(), actualFeatureDecisionInfo.get(DecisionNotification.FeatureDecisionNotificationBuilder.SOURCE_INFO));
+        assertEquals(FeatureDecision.DecisionSource.FEATURE_TEST.toString(), actualFeatureDecisionInfo.get(DecisionNotification.FeatureDecisionNotificationBuilder.SOURCE));
+        assertEquals(featureTestSourceInfo.get(), actualFeatureDecisionInfo.get(DecisionNotification.FeatureDecisionNotificationBuilder.SOURCE_INFO));
 
         // Assert for Feature Variable's DecisionInfo
         Map<String, ?> actualFeatureVariableDecisionInfo = featureVariableDecisionNotification.getDecisionInfo();
         assertTrue((Boolean) actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.FEATURE_ENABLED));
         assertEquals(FEATURE_KEY, actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.FEATURE_KEY));
         assertEquals(FEATURE_VARIABLE_KEY, actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.VARIABLE_KEY));
-        assertEquals(FeatureVariable.VariableType.STRING, actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.VARIABLE_TYPE));
+        assertEquals(FeatureVariable.VariableType.STRING.toString(), actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.VARIABLE_TYPE));
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT.toString(), actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.SOURCE));
         assertEquals(rolloutSourceInfo.get(), actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.SOURCE_INFO));
+    }
+
+    @Test
+    public void testToString() {
+        assertEquals("DecisionNotification{type='ab-test', userId='userID', attributes={user=attr}, decisionInfo={experimentKey=experimentKey, variationKey=null}}", experimentDecisionNotification.toString());
+        assertEquals("DecisionNotification{type='feature', userId='userID', attributes={user=attr}, decisionInfo={featureEnabled=false, sourceInfo={experimentKey=featureTest, variationKey=featureTestVariation}, source=feature-test, featureKey=featureKey}}", featureDecisionNotification.toString());
+        assertEquals("DecisionNotification{type='feature-variable', userId='userID', attributes={user=attr}, decisionInfo={variableType=string, featureEnabled=true, sourceInfo={}, variableValue=null, variableKey=featureVariableKey, source=rollout, featureKey=featureKey}}", featureVariableDecisionNotification.toString());
     }
 
     @Test(expected = OptimizelyRuntimeException.class)
