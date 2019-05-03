@@ -2,3 +2,4 @@ rootProject.name = 'ab-sdk'
 
 include 'core-api'
 include 'core-httpclient-impl'
+include 'java-quickstart'

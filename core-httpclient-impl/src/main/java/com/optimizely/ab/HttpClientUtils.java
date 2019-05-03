@@ -35,4 +35,8 @@ public final class HttpClientUtils {
         .setConnectionRequestTimeout(CONNECTION_REQUEST_TIMEOUT_MS)
         .setSocketTimeout(SOCKET_TIMEOUT_MS)
         .build();
+
+    public static OptimizelyHttpClient getDefaultHttpClient() {
+        return OptimizelyHttpClient.builder().build();
+    }
 }

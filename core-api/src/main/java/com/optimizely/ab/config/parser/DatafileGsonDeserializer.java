@@ -22,13 +22,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
-import com.optimizely.ab.config.Attribute;
-import com.optimizely.ab.config.EventType;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.FeatureFlag;
-import com.optimizely.ab.config.Group;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.Rollout;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.TypedAudience;
 
@@ -37,9 +31,9 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * GSON {@link ProjectConfig} deserializer to allow the constructor to be used.
+ * GSON {@link DatafileProjectConfig} deserializer to allow the constructor to be used.
  */
-public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectConfig> {
+public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig> {
 
     @Override
     public ProjectConfig deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
@@ -85,14 +79,14 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
             typedAudiences = context.deserialize(jsonObject.get("typedAudiences").getAsJsonArray(), typedAudienceType);
         }
         boolean anonymizeIP = false;
-        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V3.toString())) {
+        if (datafileVersion >= Integer.parseInt(DatafileProjectConfig.Version.V3.toString())) {
             anonymizeIP = jsonObject.get("anonymizeIP").getAsBoolean();
         }
 
         List<FeatureFlag> featureFlags = null;
         List<Rollout> rollouts = null;
         Boolean botFiltering = null;
-        if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
+        if (datafileVersion >= Integer.parseInt(DatafileProjectConfig.Version.V4.toString())) {
             Type featureFlagsType = new TypeToken<List<FeatureFlag>>() {
             }.getType();
             featureFlags = context.deserialize(jsonObject.getAsJsonArray("featureFlags"), featureFlagsType);
@@ -103,7 +97,7 @@ public class ProjectConfigGsonDeserializer implements JsonDeserializer<ProjectCo
                 botFiltering = jsonObject.get("botFiltering").getAsBoolean();
         }
 
-        return new ProjectConfig(
+        return new DatafileProjectConfig(
             accountId,
             anonymizeIP,
             botFiltering,

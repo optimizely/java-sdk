@@ -1,65 +1,76 @@
+/****************************************************************************
+ * Copyright 2018-2019, Optimizely, Inc. and contributors                   *
+ *                                                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");          *
+ * you may not use this file except in compliance with the License.         *
+ * You may obtain a copy of the License at                                  *
+ *                                                                          *
+ *    http://www.apache.org/licenses/LICENSE-2.0                            *
+ *                                                                          *
+ * Unless required by applicable law or agreed to in writing, software      *
+ * distributed under the License is distributed on an "AS IS" BASIS,        *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ * See the License for the specific language governing permissions and      *
+ * limitations under the License.                                           *
+ ***************************************************************************/
 package com.optimizely;
 
 import com.optimizely.ab.Optimizely;
-import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.config.parser.ConfigParseException;
+import com.optimizely.ab.config.HttpProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
+import com.optimizely.ab.event.EventHandler;
+import com.optimizely.ab.config.Variation;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 public class Example {
-    public static void main(String[] args) {
 
-        String datafile = getDatafile();
+    private final Optimizely optimizely;
 
-        try {
-            Optimizely optimizely = Optimizely.builder(datafile, new AsyncEventHandler(100,2)).build();
-            System.out.println("hello world");
-            Random random = new Random();
-            String user = String.valueOf(random.nextInt());
-            Map<String,String> attributes = new HashMap<>();
-            attributes.put("browser_type", "chrome");
-            Variation v = optimizely.activate("background_experiment", user, attributes);
-
-            if (v != null) {
-                optimizely.track("sample_conversion", user, null);
-                System.out.println(String.format("Found variation %s", v.getKey()));
-                Thread.sleep(10000);
-            }
-            else {
-                System.out.println("didn't get a variation");
-            }
-
-            if (optimizely.isFeatureEnabled("eet_feature", user, attributes)) {
-                optimizely.track("eet_conversion", user, null);
-                System.out.println("feature enabled");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return;
+    private Example(Optimizely optimizely) {
+        this.optimizely = optimizely;
     }
 
-    public static String getDatafile() {
-        try {
-            String url = "https://cdn.optimizely.com/datafiles/BX9Y3bTa4YErpHZEMpAwHm.json";
-            CloseableHttpClient httpclient = HttpClients.createDefault();
-            HttpGet httpget = new HttpGet(url);
-            String datafile = EntityUtils.toString(
-                    httpclient.execute(httpget).getEntity());
-            return datafile;
+    private void processVisitor(String userId, Map<String, String> attributes) {
+        Variation variation = optimizely.activate("background_experiment", userId, attributes);
+
+        if (variation != null) {
+            optimizely.track("sample_conversion", userId, attributes);
+            System.out.println(String.format("Found variation %s", variation.getKey()));
         }
-        catch (Exception e) {
-            System.out.print(e);
-            return null;
+        else {
+            System.out.println("didn't get a variation");
+        }
+
+        if (optimizely.isFeatureEnabled("eet_feature", userId, attributes)) {
+            optimizely.track("eet_conversion", userId, attributes);
+            System.out.println("feature enabled");
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        EventHandler eventHandler = new AsyncEventHandler(100,2);
+        HttpProjectConfigManager projectConfigManager = HttpProjectConfigManager.builder()
+            .withSdkKey("BX9Y3bTa4YErpHZEMpAwHm")
+            .withPollingInterval(1, TimeUnit.SECONDS)
+            .build(); // Block here since no default was provided.
+
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(projectConfigManager)
+            .withEventHandler(eventHandler)
+            .build();
+
+        Example example = new Example(optimizely);
+        Random random = new Random();
+
+        for (int i = 0; i < 10; i++) {
+            String userId = String.valueOf(random.nextInt());
+            example.processVisitor(userId, Collections.emptyMap());
+            TimeUnit.MILLISECONDS.sleep(500);
         }
     }
 }
