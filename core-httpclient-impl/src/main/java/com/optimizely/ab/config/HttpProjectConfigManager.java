@@ -18,27 +18,27 @@ package com.optimizely.ab.config;
 
 import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.OptimizelyHttpClient;
-import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.parser.ConfigParseException;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
+import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
 /**
- * HttpProjectConfigManager is an implementation of a {@link PollingProjectConfigManager}
+ * HttpProjectConfigManager is an implementation of a ProjectConfigManager
  * backed by a datafile. Currently this is loosely tied to Apache HttpClient
  * implementation which is the client of choice in this package.
+ *
+ * Note that this implementation is blocking and stateless. This is best used in
+ * conjunction with the {@link PollingProjectConfigManager} to provide caching
+ * and asynchronous fetching.
  */
 public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
@@ -46,16 +46,49 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
     private final OptimizelyHttpClient httpClient;
     private final URI uri;
-    private final ResponseHandler<String> responseHandler = new ProjectConfigResponseHandler();
+    private String datafileLastModified;
 
-    private HttpProjectConfigManager(long period, TimeUnit timeUnit, OptimizelyHttpClient httpClient, String url, long blockingTimeoutPeriod, TimeUnit blockingTimeoutUnit) {
-        super(period, timeUnit, blockingTimeoutPeriod, blockingTimeoutUnit);
+    private HttpProjectConfigManager(long period, TimeUnit timeUnit, OptimizelyHttpClient httpClient, String url) {
+        super(period, timeUnit);
         this.httpClient = httpClient;
         this.uri = URI.create(url);
     }
 
     public URI getUri() {
         return uri;
+    }
+
+    @VisibleForTesting
+    public String getLastModified() {
+        return datafileLastModified;
+    }
+
+    public String getDatafileFromResponse(HttpResponse response) throws NullPointerException, IOException {
+        StatusLine statusLine = response.getStatusLine();
+
+        if (statusLine == null) {
+            throw new ClientProtocolException("unexpected response from event endpoint, status is null");
+        }
+
+        int status = statusLine.getStatusCode();
+
+        // Datafile has not updated
+        if (status == HttpStatus.SC_NOT_MODIFIED) {
+            logger.debug("Not updating ProjectConfig as datafile has not updated since " + datafileLastModified);
+            return null;
+        }
+
+        if (status >= 200 && status < 300) {
+            // read the response, so we can close the connection
+            HttpEntity entity = response.getEntity();
+            Header lastModifiedHeader = response.getFirstHeader(HttpHeaders.LAST_MODIFIED);
+            if (lastModifiedHeader != null) {
+                datafileLastModified = lastModifiedHeader.getValue();
+            }
+            return EntityUtils.toString(entity, "UTF-8");
+        } else {
+            throw new ClientProtocolException("unexpected response from event endpoint, status: " + status);
+        }
     }
 
     static ProjectConfig parseProjectConfig(String datafile) throws ConfigParseException {
@@ -65,9 +98,18 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     @Override
     protected ProjectConfig poll() {
         HttpGet httpGet = new HttpGet(uri);
+
+        if (datafileLastModified != null) {
+            httpGet.setHeader(HttpHeaders.IF_MODIFIED_SINCE, datafileLastModified);
+        }
+
         logger.info("Fetching datafile from: {}", httpGet.getURI());
         try {
-            String datafile = httpClient.execute(httpGet, responseHandler);
+            HttpResponse response = httpClient.execute(httpGet);
+            String datafile = getDatafileFromResponse(response);
+            if (datafile == null) {
+                return null;
+            }
             return parseProjectConfig(datafile);
         } catch (ConfigParseException | IOException e) {
             logger.error("Error fetching datafile", e);
@@ -86,12 +128,8 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         private String url;
         private String format = "https://cdn.optimizely.com/datafiles/%s.json";
         private OptimizelyHttpClient httpClient;
-
         private long period = 5;
         private TimeUnit timeUnit = TimeUnit.MINUTES;
-
-        private long blockingTimeoutPeriod = 10;
-        private TimeUnit blockingTimeoutUnit = TimeUnit.SECONDS;
 
         public Builder withDatafile(String datafile) {
             this.datafile = datafile;
@@ -115,23 +153,6 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
         public Builder withOptimizelyHttpClient(OptimizelyHttpClient httpClient) {
             this.httpClient = httpClient;
-            return this;
-        }
-
-        /**
-         * Configure time to block before Completing the future. This timeout is used on the first call
-         * to {@link PollingProjectConfigManager#getConfig()}. If the timeout is exceeded then the
-         * PollingProjectConfigManager will begin returning null immediately until the call to Poll
-         * succeeds.
-         */
-        public Builder withBlockingTimeout(long period, TimeUnit timeUnit) {
-            if (timeUnit == null) {
-                throw new NullPointerException("Must provide valid timeUnit");
-            }
-
-            this.blockingTimeoutPeriod = period;
-            this.blockingTimeoutUnit = timeUnit;
-
             return this;
         }
 
@@ -165,15 +186,17 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                 httpClient = HttpClientUtils.getDefaultHttpClient();
             }
 
-            if (url == null) {
-                if (sdkKey == null) {
-                    throw new NullPointerException("sdkKey cannot be null");
-                }
-
-                url = String.format(format, sdkKey);
+            if (url != null) {
+                return new HttpProjectConfigManager(period, timeUnit, httpClient, url);
             }
 
-            HttpProjectConfigManager httpProjectManager = new HttpProjectConfigManager(period, timeUnit, httpClient, url, blockingTimeoutPeriod, blockingTimeoutUnit);
+            if (sdkKey == null) {
+                throw new NullPointerException("sdkKey cannot be null");
+            }
+
+            url = String.format(format, sdkKey);
+
+            HttpProjectConfigManager httpProjectManager = new HttpProjectConfigManager(period, timeUnit, httpClient, url);
 
             if (datafile != null) {
                 try {
@@ -192,26 +215,6 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
             }
 
             return httpProjectManager;
-        }
-    }
-
-    /**
-     * Handler for the event request that returns nothing (i.e., Void)
-     */
-    static final class ProjectConfigResponseHandler implements ResponseHandler<String> {
-
-        @Override
-        @CheckForNull
-        public String handleResponse(HttpResponse response) throws IOException {
-            int status = response.getStatusLine().getStatusCode();
-            if (status >= 200 && status < 300) {
-                // read the response, so we can close the connection
-                HttpEntity entity = response.getEntity();
-                return EntityUtils.toString(entity, "UTF-8");
-            } else {
-                // TODO handle unmodifed response.
-                throw new ClientProtocolException("unexpected response from event endpoint, status: " + status);
-            }
         }
     }
 }
