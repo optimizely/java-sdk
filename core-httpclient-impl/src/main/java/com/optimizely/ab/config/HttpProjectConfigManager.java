@@ -18,19 +18,14 @@ package com.optimizely.ab.config;
 
 import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.OptimizelyHttpClient;
-import com.optimizely.ab.OptimizelyRuntimeException;
-import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.parser.ConfigParseException;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
+import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
@@ -46,7 +41,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
     private final OptimizelyHttpClient httpClient;
     private final URI uri;
-    private final ResponseHandler<String> responseHandler = new ProjectConfigResponseHandler();
+    private String datafileLastModified;
 
     private HttpProjectConfigManager(long period, TimeUnit timeUnit, OptimizelyHttpClient httpClient, String url, long blockingTimeoutPeriod, TimeUnit blockingTimeoutUnit) {
         super(period, timeUnit, blockingTimeoutPeriod, blockingTimeoutUnit);
@@ -58,6 +53,38 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         return uri;
     }
 
+    public String getLastModified() {
+        return datafileLastModified;
+    }
+
+    public String getDatafileFromResponse(HttpResponse response) throws NullPointerException, IOException {
+        StatusLine statusLine = response.getStatusLine();
+
+        if (statusLine == null) {
+            throw new ClientProtocolException("unexpected response from event endpoint, status is null");
+        }
+
+        int status = statusLine.getStatusCode();
+
+        // Datafile has not updated
+        if (status == HttpStatus.SC_NOT_MODIFIED) {
+            logger.debug("Not updating ProjectConfig as datafile has not updated since " + datafileLastModified);
+            return null;
+        }
+
+        if (status >= 200 && status < 300) {
+            // read the response, so we can close the connection
+            HttpEntity entity = response.getEntity();
+            Header lastModifiedHeader = response.getFirstHeader(HttpHeaders.LAST_MODIFIED);
+            if (lastModifiedHeader != null) {
+                datafileLastModified = lastModifiedHeader.getValue();
+            }
+            return EntityUtils.toString(entity, "UTF-8");
+        } else {
+            throw new ClientProtocolException("unexpected response from event endpoint, status: " + status);
+        }
+    }
+
     static ProjectConfig parseProjectConfig(String datafile) throws ConfigParseException {
         return new DatafileProjectConfig.Builder().withDatafile(datafile).build();
     }
@@ -65,9 +92,18 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     @Override
     protected ProjectConfig poll() {
         HttpGet httpGet = new HttpGet(uri);
+
+        if (datafileLastModified != null) {
+            httpGet.setHeader(HttpHeaders.IF_MODIFIED_SINCE, datafileLastModified);
+        }
+
         logger.info("Fetching datafile from: {}", httpGet.getURI());
         try {
-            String datafile = httpClient.execute(httpGet, responseHandler);
+            HttpResponse response = httpClient.execute(httpGet);
+            String datafile = getDatafileFromResponse(response);
+            if (datafile == null) {
+                return null;
+            }
             return parseProjectConfig(datafile);
         } catch (ConfigParseException | IOException e) {
             logger.error("Error fetching datafile", e);
@@ -192,26 +228,6 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
             }
 
             return httpProjectManager;
-        }
-    }
-
-    /**
-     * Handler for the event request that returns nothing (i.e., Void)
-     */
-    static final class ProjectConfigResponseHandler implements ResponseHandler<String> {
-
-        @Override
-        @CheckForNull
-        public String handleResponse(HttpResponse response) throws IOException {
-            int status = response.getStatusLine().getStatusCode();
-            if (status >= 200 && status < 300) {
-                // read the response, so we can close the connection
-                HttpEntity entity = response.getEntity();
-                return EntityUtils.toString(entity, "UTF-8");
-            } else {
-                // TODO handle unmodifed response.
-                throw new ClientProtocolException("unexpected response from event endpoint, status: " + status);
-            }
         }
     }
 }

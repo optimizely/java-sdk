@@ -19,6 +19,7 @@ package com.optimizely.ab;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -57,6 +58,10 @@ public class OptimizelyHttpClient implements Closeable {
 
     public <T> T execute(final HttpUriRequest request, final ResponseHandler<? extends T> responseHandler) throws IOException {
         return httpClient.execute(request, responseHandler);
+    }
+
+    public CloseableHttpResponse execute(final HttpUriRequest request) throws IOException {
+        return httpClient.execute(request);
     }
 
     public static class Builder {
