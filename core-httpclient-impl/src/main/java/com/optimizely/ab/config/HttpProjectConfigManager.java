@@ -18,7 +18,6 @@ package com.optimizely.ab.config;
 
 import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.OptimizelyHttpClient;
-import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
@@ -54,7 +53,6 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         return uri;
     }
 
-    @VisibleForTesting
     public String getLastModified() {
         return datafileLastModified;
     }
