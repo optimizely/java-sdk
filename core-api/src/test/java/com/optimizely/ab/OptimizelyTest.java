@@ -54,9 +54,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
@@ -64,8 +61,6 @@ import static com.optimizely.ab.event.LogEvent.RequestMethod;
 import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.EXPERIMENT_KEY;
 import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_KEY;
 import static com.optimizely.ab.notification.DecisionNotification.FeatureVariableDecisionNotificationBuilder.*;
-import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.EXPERIMENT_KEY;
-import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_KEY;
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
@@ -114,10 +109,6 @@ public class OptimizelyTest {
     @Rule
     public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
-    @Mock(extraInterfaces = Closeable.class)
-    EventHandler mockCloseableEventHandler;
-    @Mock(extraInterfaces = Closeable.class)
-    ProjectConfigManager mockCloseableProjectConfigManager;
     @Mock
     EventHandler mockEventHandler;
     @Mock
@@ -151,18 +142,6 @@ public class OptimizelyTest {
         //assertEquals(validProjectConfig.getVersion(), noAudienceProjectConfig.getVersion());
 
         this.datafileVersion = Integer.parseInt(validProjectConfig.getVersion());
-    }
-
-    @Test
-    public void testClose() throws IOException {
-        Optimizely optimizely = Optimizely.builder()
-            .withEventHandler(mockCloseableEventHandler)
-            .withConfigManager(mockCloseableProjectConfigManager)
-            .build();
-
-        optimizely.close();
-        verify(mockCloseableEventHandler).close();
-        verify(mockCloseableProjectConfigManager).close();
     }
 
     //======== activate tests ========//
