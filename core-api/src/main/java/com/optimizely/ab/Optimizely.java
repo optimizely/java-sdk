@@ -37,6 +37,8 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,7 +71,7 @@ import java.util.Map;
  * to be logged, and for the "control" variation to be returned.
  */
 @ThreadSafe
-public class Optimizely {
+public class Optimizely implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
 
@@ -113,6 +115,17 @@ public class Optimizely {
      */
     public boolean isValid() {
         return getProjectConfig() != null;
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (this.eventHandler instanceof Closeable) {
+            ((Closeable) this.eventHandler).close();
+        }
+
+        if (this.projectConfigManager instanceof Closeable) {
+            ((Closeable) this.projectConfigManager).close();
+        }
     }
 
     //======== activate calls ========//

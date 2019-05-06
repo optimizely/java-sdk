@@ -45,6 +45,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import javax.annotation.Nonnull;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -113,6 +114,10 @@ public class OptimizelyTest {
     @Rule
     public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
+    @Mock(extraInterfaces = Closeable.class)
+    EventHandler mockCloseableEventHandler;
+    @Mock(extraInterfaces = Closeable.class)
+    ProjectConfigManager mockCloseableProjectConfigManager;
     @Mock
     EventHandler mockEventHandler;
     @Mock
@@ -146,6 +151,18 @@ public class OptimizelyTest {
         //assertEquals(validProjectConfig.getVersion(), noAudienceProjectConfig.getVersion());
 
         this.datafileVersion = Integer.parseInt(validProjectConfig.getVersion());
+    }
+
+    @Test
+    public void testClose() throws IOException {
+        Optimizely optimizely = Optimizely.builder()
+            .withEventHandler(mockCloseableEventHandler)
+            .withConfigManager(mockCloseableProjectConfigManager)
+            .build();
+
+        optimizely.close();
+        verify(mockCloseableEventHandler).close();
+        verify(mockCloseableProjectConfigManager).close();
     }
 
     //======== activate tests ========//
