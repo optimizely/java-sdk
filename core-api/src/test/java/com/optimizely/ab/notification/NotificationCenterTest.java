@@ -48,7 +48,7 @@ public class NotificationCenterTest {
 
     @Before
     public void setUp() {
-        notificationCenter = new NotificationCenter();
+        notificationCenter = NotificationCenter.getInstance();
         activateNotification = mock(ActivateNotificationListener.class);
         trackNotification = mock(TrackNotificationListener.class);
     }

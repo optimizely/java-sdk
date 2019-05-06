@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config;
 
+import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.notification.UpdateConfigNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +40,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public abstract class PollingProjectConfigManager implements ProjectConfigManager, AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(PollingProjectConfigManager.class);
+    private static final UpdateConfigNotification SIGNAL = new UpdateConfigNotification();
 
     private final AtomicReference<ProjectConfig> currentProjectConfig = new AtomicReference<>();
     private final ScheduledExecutorService scheduledExecutorService;
@@ -46,6 +49,7 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
     private final long blockingTimeoutPeriod;
     private final TimeUnit blockingTimeoutUnit;
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
+    private final NotificationCenter notificationCenter = NotificationCenter.getInstance();
 
     private volatile boolean started;
     private ScheduledFuture<?> scheduledFuture;
@@ -89,6 +93,7 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         logger.info("New datafile set with revision: {}. Old revision: {}", projectConfig.getRevision(), previousRevision);
 
         currentProjectConfig.set(projectConfig);
+        notificationCenter.send(SIGNAL);
         countDownLatch.countDown();
     }
 

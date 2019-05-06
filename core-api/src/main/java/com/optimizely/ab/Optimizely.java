@@ -85,7 +85,8 @@ public class Optimizely implements AutoCloseable {
 
     private final ProjectConfigManager projectConfigManager;
 
-    public final NotificationCenter notificationCenter = new NotificationCenter();
+    // TODO should be private
+    public final NotificationCenter notificationCenter = NotificationCenter.getInstance();
 
     @Nullable
     private final UserProfileService userProfileService;
@@ -951,9 +952,15 @@ public class Optimizely implements AutoCloseable {
      * Convenience method for adding DecisionNotification Handlers
      */
     public int addDecisionNotificationHandler(NotificationHandler<DecisionNotification> handler) {
-        NotificationManager<DecisionNotification> manager = notificationCenter
-            .getNotificationManager(DecisionNotification.class);
-        return manager.addHandler(handler);
+        NotificationManager<DecisionNotification> notificationManager =
+            notificationCenter.getNotificationManager(DecisionNotification.class);
+
+        if (notificationManager == null) {
+            logger.warn("DecisionNotification not supported by the NotificationCenter.");
+            return -1;
+        }
+
+        return notificationManager.addHandler(handler);
     }
 
     /**
@@ -962,6 +969,27 @@ public class Optimizely implements AutoCloseable {
     public int addTrackNotificationHandler(NotificationHandler<TrackNotification> handler) {
         NotificationManager<TrackNotification> notificationManager =
             notificationCenter.getNotificationManager(TrackNotification.class);
+
+        if (notificationManager == null) {
+            logger.warn("TrackNotification not supported by the NotificationCenter.");
+            return -1;
+        }
+
+        return notificationManager.addHandler(handler);
+    }
+
+    /**
+     * Convenience method for adding UpdateConfigNotification Handlers
+     */
+    public int addUpdateConfigNotificationHandler(NotificationHandler<UpdateConfigNotification> handler) {
+        NotificationManager<UpdateConfigNotification> notificationManager =
+            notificationCenter.getNotificationManager(UpdateConfigNotification.class);
+
+        if (notificationManager == null) {
+            logger.warn("UpdateConfigNotification not supported by the NotificationCenter.");
+            return -1;
+        }
+
         return notificationManager.addHandler(handler);
     }
 

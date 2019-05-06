@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config;
 
+import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.notification.UpdateConfigNotification;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -182,6 +184,15 @@ public class PollingProjectConfigManagerTest {
         Thread.sleep(2 * PROJECT_CONFIG_DELAY);
         assertEquals(projectConfig, testProjectConfigManager.getConfig());
 
+    }
+
+    @Test
+    public void testUpdateConfigNotificationGetsTriggered() throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        NotificationCenter.getInstance().<UpdateConfigNotification>getNotificationManager(UpdateConfigNotification.class)
+            .addHandler(message -> {countDownLatch.countDown();});
+
+        assertTrue(countDownLatch.await(500, TimeUnit.MILLISECONDS));
     }
 
     private static class TestProjectConfigManager extends PollingProjectConfigManager {

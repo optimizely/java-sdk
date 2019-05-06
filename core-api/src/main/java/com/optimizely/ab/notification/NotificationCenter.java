@@ -87,12 +87,17 @@ public class NotificationCenter {
         }
     }
 
-    public NotificationCenter() {
+    public static NotificationCenter getInstance() {
+        return NotificationCenter.LazyHolder.INSTANCE;
+    }
+
+    private NotificationCenter() {
         AtomicInteger counter = new AtomicInteger();
         Map<Class, NotificationManager> validManagers = new HashMap<>();
         validManagers.put(ActivateNotification.class, new NotificationManager<>(ActivateNotification.class, counter));
         validManagers.put(TrackNotification.class, new NotificationManager<>(TrackNotification.class, counter));
         validManagers.put(DecisionNotification.class, new NotificationManager<>(DecisionNotification.class, counter));
+        validManagers.put(UpdateConfigNotification.class, new NotificationManager<>(UpdateConfigNotification.class, counter));
 
         notifierMap = Collections.unmodifiableMap(validManagers);
     }
@@ -257,5 +262,11 @@ public class NotificationCenter {
         }
 
         handler.send(notification);
+    }
+
+    //======== Lazy-init Holder ========//
+
+    private static class LazyHolder {
+        private static final NotificationCenter INSTANCE = new NotificationCenter();
     }
 }
