@@ -166,6 +166,22 @@ public class OptimizelyTest {
         verify((Closeable) mockCloseableProjectConfigManager).close();
     }
 
+    @Test(expected = IOException.class)
+    public void testCloseExceptionThrown() throws IOException {
+        ProjectConfigManager mockCloseableProjectConfigManager = mock(
+            ProjectConfigManager.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+
+        doThrow(new IOException()).when((Closeable) mockCloseableProjectConfigManager).close();
+
+        Optimizely optimizely = Optimizely.builder()
+            .withEventHandler(mockEventHandler)
+            .withConfigManager(mockCloseableProjectConfigManager)
+            .build();
+
+        optimizely.close();
+    }
     //======== activate tests ========//
 
     /**
