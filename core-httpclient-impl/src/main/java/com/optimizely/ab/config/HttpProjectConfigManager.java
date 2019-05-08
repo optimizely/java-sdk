@@ -19,6 +19,7 @@ package com.optimizely.ab.config;
 import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.config.parser.ConfigParseException;
+import com.optimizely.ab.notification.NotificationCenter;
 import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
@@ -43,8 +44,8 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     private final URI uri;
     private String datafileLastModified;
 
-    private HttpProjectConfigManager(long period, TimeUnit timeUnit, OptimizelyHttpClient httpClient, String url, long blockingTimeoutPeriod, TimeUnit blockingTimeoutUnit) {
-        super(period, timeUnit, blockingTimeoutPeriod, blockingTimeoutUnit);
+    private HttpProjectConfigManager(long period, TimeUnit timeUnit, OptimizelyHttpClient httpClient, String url, long blockingTimeoutPeriod, TimeUnit blockingTimeoutUnit, NotificationCenter notificationCenter) {
+        super(period, timeUnit, blockingTimeoutPeriod, blockingTimeoutUnit, notificationCenter);
         this.httpClient = httpClient;
         this.uri = URI.create(url);
     }
@@ -122,6 +123,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         private String url;
         private String format = "https://cdn.optimizely.com/datafiles/%s.json";
         private OptimizelyHttpClient httpClient;
+        private NotificationCenter notificationCenter;
 
         private long period = 5;
         private TimeUnit timeUnit = TimeUnit.MINUTES;
@@ -182,6 +184,11 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
             return this;
         }
 
+        public Builder withNotificationCenter(NotificationCenter notificationCenter) {
+            this.notificationCenter = notificationCenter;
+            return this;
+        }
+
         /**
          * HttpProjectConfigManager.Builder that builds and starts a HttpProjectConfigManager.
          * This is the default builder which will block until a config is available.
@@ -209,7 +216,11 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                 url = String.format(format, sdkKey);
             }
 
-            HttpProjectConfigManager httpProjectManager = new HttpProjectConfigManager(period, timeUnit, httpClient, url, blockingTimeoutPeriod, blockingTimeoutUnit);
+            if (notificationCenter == null) {
+                notificationCenter = new NotificationCenter();
+            }
+
+            HttpProjectConfigManager httpProjectManager = new HttpProjectConfigManager(period, timeUnit, httpClient, url, blockingTimeoutPeriod, blockingTimeoutUnit, notificationCenter);
 
             if (datafile != null) {
                 try {

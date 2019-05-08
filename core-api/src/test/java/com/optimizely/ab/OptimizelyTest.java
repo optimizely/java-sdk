@@ -5865,27 +5865,37 @@ public class OptimizelyTest {
 
     @Test
     public void testGetNotificationCenter() {
-        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        Optimizely optimizely = Optimizely.builder().withConfigManager(() -> null).build();
         assertEquals(optimizely.notificationCenter, optimizely.getNotificationCenter());
     }
 
     @Test
     public void testAddTrackNotificationHandler() {
-        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        Optimizely optimizely = Optimizely.builder().withConfigManager(() -> null).build();
         NotificationManager<TrackNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(TrackNotification.class);
 
-        int notificationId = optimizely.addTrackNotificationHandler(trackNotification -> {});
+        int notificationId = optimizely.addTrackNotificationHandler(message -> {});
         assertTrue(manager.remove(notificationId));
     }
 
     @Test
     public void testAddDecisionNotificationHandler() {
-        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        Optimizely optimizely = Optimizely.builder().withConfigManager(() -> null).build();
         NotificationManager<DecisionNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(DecisionNotification.class);
 
-        int notificationId = optimizely.addDecisionNotificationHandler(decisionNotification -> {});
+        int notificationId = optimizely.addDecisionNotificationHandler(message -> {});
+        assertTrue(manager.remove(notificationId));
+    }
+
+    @Test
+    public void testAddUpdateConfigNotificationHandler() {
+        Optimizely optimizely = Optimizely.builder().withConfigManager(() -> null).build();
+        NotificationManager<UpdateConfigNotification> manager = optimizely.getNotificationCenter()
+            .getNotificationManager(UpdateConfigNotification.class);
+
+        int notificationId = optimizely.addUpdateConfigNotificationHandler(message -> {});
         assertTrue(manager.remove(notificationId));
     }
 

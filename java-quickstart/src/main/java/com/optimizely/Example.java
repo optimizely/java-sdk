@@ -16,6 +16,7 @@
 package com.optimizely;
 
 import com.optimizely.ab.Optimizely;
+import com.optimizely.ab.OptimizelyClients;
 import com.optimizely.ab.config.HttpProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
 import com.optimizely.ab.event.EventHandler;
@@ -53,20 +54,7 @@ public class Example {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        EventHandler eventHandler = AsyncEventHandler.builder()
-            .withQueueCapacity(100)
-            .withNumWorkers(2)
-            .build();
-
-        HttpProjectConfigManager projectConfigManager = HttpProjectConfigManager.builder()
-            .withSdkKey("BX9Y3bTa4YErpHZEMpAwHm")
-            .withPollingInterval(1, TimeUnit.SECONDS)
-            .build(); // Block here since no default was provided.
-
-        Optimizely optimizely = Optimizely.builder()
-            .withConfigManager(projectConfigManager)
-            .withEventHandler(eventHandler)
-            .build();
+        Optimizely optimizely = OptimizelyClients.newDefaultInstance("BX9Y3bTa4YErpHZEMpAwHm");
 
         Example example = new Example(optimizely);
         Random random = new Random();

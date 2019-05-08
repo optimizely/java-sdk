@@ -86,7 +86,7 @@ public class Optimizely implements AutoCloseable {
     private final ProjectConfigManager projectConfigManager;
 
     // TODO should be private
-    public final NotificationCenter notificationCenter = NotificationCenter.getInstance();
+    public final NotificationCenter notificationCenter;
 
     @Nullable
     private final UserProfileService userProfileService;
@@ -96,7 +96,8 @@ public class Optimizely implements AutoCloseable {
                        @Nonnull ErrorHandler errorHandler,
                        @Nonnull DecisionService decisionService,
                        @Nonnull UserProfileService userProfileService,
-                       @Nonnull ProjectConfigManager projectConfigManager
+                       @Nonnull ProjectConfigManager projectConfigManager,
+                       @Nonnull NotificationCenter notificationCenter
     ) {
         this.decisionService = decisionService;
         this.eventHandler = eventHandler;
@@ -104,6 +105,7 @@ public class Optimizely implements AutoCloseable {
         this.errorHandler = errorHandler;
         this.userProfileService = userProfileService;
         this.projectConfigManager = projectConfigManager;
+        this.notificationCenter = notificationCenter;
     }
 
     /**
@@ -1027,6 +1029,7 @@ public class Optimizely implements AutoCloseable {
         private ProjectConfig projectConfig;
         private ProjectConfigManager projectConfigManager;
         private UserProfileService userProfileService;
+        private NotificationCenter notificationCenter;
 
         // For backwards compatibility
         private AtomicProjectConfigManager fallbackConfigManager = new AtomicProjectConfigManager();
@@ -1091,6 +1094,11 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
+        protected Builder withNotificationCenter(NotificationCenter notificationCenter) {
+            this.notificationCenter = notificationCenter;
+            return this;
+        }
+
         public Optimizely build() {
 
             if (clientEngine == null) {
@@ -1140,7 +1148,11 @@ public class Optimizely implements AutoCloseable {
                 projectConfigManager = fallbackConfigManager;
             }
 
-            return new Optimizely(eventHandler, eventFactory, errorHandler, decisionService, userProfileService, projectConfigManager);
+            if (notificationCenter == null) {
+                notificationCenter = new NotificationCenter();
+            }
+
+            return new Optimizely(eventHandler, eventFactory, errorHandler, decisionService, userProfileService, projectConfigManager, notificationCenter);
         }
     }
 }

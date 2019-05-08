@@ -87,11 +87,7 @@ public class NotificationCenter {
         }
     }
 
-    public static NotificationCenter getInstance() {
-        return NotificationCenter.LazyHolder.INSTANCE;
-    }
-
-    private NotificationCenter() {
+    public NotificationCenter() {
         AtomicInteger counter = new AtomicInteger();
         Map<Class, NotificationManager> validManagers = new HashMap<>();
         validManagers.put(ActivateNotification.class, new NotificationManager<>(ActivateNotification.class, counter));
@@ -262,11 +258,5 @@ public class NotificationCenter {
         }
 
         handler.send(notification);
-    }
-
-    //======== Lazy-init Holder ========//
-
-    private static class LazyHolder {
-        private static final NotificationCenter INSTANCE = new NotificationCenter();
     }
 }
