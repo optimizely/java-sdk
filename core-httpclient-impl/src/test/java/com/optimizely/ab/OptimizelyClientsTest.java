@@ -18,7 +18,8 @@ package com.optimizely.ab;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-import com.optimizely.ab.internal.ConfigUtil;
+import com.optimizely.ab.config.HttpProjectConfigManager;
+import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,13 +32,13 @@ public class OptimizelyClientsTest {
 
     @Before
     public void setUp() {
-        ConfigUtil.clear(OptimizelyClients.EVENT_QUEUE_CAPACITY);
-        ConfigUtil.clear(OptimizelyClients.EVENT_NUM_WORKERS);
-        ConfigUtil.clear(OptimizelyClients.CONFIG_POLLING_DURATION);
-        ConfigUtil.clear(OptimizelyClients.CONFIG_POLLING_UNIT);
-        ConfigUtil.clear(OptimizelyClients.CONFIG_BLOCKING_DURATION);
-        ConfigUtil.clear(OptimizelyClients.CONFIG_BLOCKING_UNIT);
-        ConfigUtil.clear(OptimizelyClients.CONFIG_SDK_KEY);
+        PropertyUtils.clear(OptimizelyClients.EVENT_QUEUE_CAPACITY);
+        PropertyUtils.clear(OptimizelyClients.EVENT_NUM_WORKERS);
+        PropertyUtils.clear(HttpProjectConfigManager.CONFIG_POLLING_DURATION);
+        PropertyUtils.clear(HttpProjectConfigManager.CONFIG_POLLING_UNIT);
+        PropertyUtils.clear(HttpProjectConfigManager.CONFIG_BLOCKING_DURATION);
+        PropertyUtils.clear(HttpProjectConfigManager.CONFIG_BLOCKING_UNIT);
+        PropertyUtils.clear(HttpProjectConfigManager.CONFIG_SDK_KEY);
     }
 
     @Test
@@ -46,8 +47,8 @@ public class OptimizelyClientsTest {
         int workers = 5;
         OptimizelyClients.setEventQueueParams(capacity, workers);
 
-        assertEquals(Integer.toString(capacity), ConfigUtil.get(OptimizelyClients.EVENT_QUEUE_CAPACITY));
-        assertEquals(Integer.toString(workers), ConfigUtil.get(OptimizelyClients.EVENT_NUM_WORKERS));
+        assertEquals(Integer.toString(capacity), PropertyUtils.get(OptimizelyClients.EVENT_QUEUE_CAPACITY));
+        assertEquals(Integer.toString(workers), PropertyUtils.get(OptimizelyClients.EVENT_NUM_WORKERS));
     }
 
     @Test
@@ -56,8 +57,8 @@ public class OptimizelyClientsTest {
         TimeUnit timeUnit = TimeUnit.MICROSECONDS;
         OptimizelyClients.setPollingInterval(duration, timeUnit);
 
-        assertEquals(Long.toString(duration), ConfigUtil.get(OptimizelyClients.CONFIG_POLLING_DURATION));
-        assertEquals(timeUnit.toString(), ConfigUtil.get(OptimizelyClients.CONFIG_POLLING_UNIT));
+        assertEquals(Long.toString(duration), PropertyUtils.get(HttpProjectConfigManager.CONFIG_POLLING_DURATION));
+        assertEquals(timeUnit.toString(), PropertyUtils.get(HttpProjectConfigManager.CONFIG_POLLING_UNIT));
     }
 
     @Test
@@ -66,8 +67,8 @@ public class OptimizelyClientsTest {
         TimeUnit timeUnit = TimeUnit.NANOSECONDS;
         OptimizelyClients.setBlockingTimeout(duration, timeUnit);
 
-        assertEquals(Long.toString(duration), ConfigUtil.get(OptimizelyClients.CONFIG_BLOCKING_DURATION));
-        assertEquals(timeUnit.toString(), ConfigUtil.get(OptimizelyClients.CONFIG_BLOCKING_UNIT));
+        assertEquals(Long.toString(duration), PropertyUtils.get(HttpProjectConfigManager.CONFIG_BLOCKING_DURATION));
+        assertEquals(timeUnit.toString(), PropertyUtils.get(HttpProjectConfigManager.CONFIG_BLOCKING_UNIT));
     }
 
     @Test
@@ -75,7 +76,7 @@ public class OptimizelyClientsTest {
         String expected = "sdk-key";
         OptimizelyClients.setSdkKey(expected);
 
-        assertEquals(expected, ConfigUtil.get(OptimizelyClients.CONFIG_SDK_KEY));
+        assertEquals(expected, PropertyUtils.get(HttpProjectConfigManager.CONFIG_SDK_KEY));
     }
 
     @Test

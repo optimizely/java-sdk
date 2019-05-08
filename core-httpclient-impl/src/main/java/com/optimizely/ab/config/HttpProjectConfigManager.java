@@ -19,6 +19,7 @@ package com.optimizely.ab.config;
 import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.config.parser.ConfigParseException;
+import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
@@ -37,6 +38,12 @@ import java.util.concurrent.TimeUnit;
  * implementation which is the client of choice in this package.
  */
 public class HttpProjectConfigManager extends PollingProjectConfigManager {
+
+    public static final String CONFIG_POLLING_DURATION  = "http.project.config.manager.polling.duration";
+    public static final String CONFIG_POLLING_UNIT      = "http.project.config.manager.polling.unit";
+    public static final String CONFIG_BLOCKING_DURATION = "http.project.config.manager.blocking.duration";
+    public static final String CONFIG_BLOCKING_UNIT     = "http.project.config.manager.blocking.unit";
+    public static final String CONFIG_SDK_KEY           = "http.project.config.manager.sdk.key";
 
     private static final Logger logger = LoggerFactory.getLogger(HttpProjectConfigManager.class);
 
@@ -125,11 +132,11 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         private OptimizelyHttpClient httpClient;
         private NotificationCenter notificationCenter;
 
-        private long period = 5;
-        private TimeUnit timeUnit = TimeUnit.MINUTES;
+        private long period = PropertyUtils.getLong(CONFIG_POLLING_UNIT, 5L);
+        private TimeUnit timeUnit = PropertyUtils.getEnum(CONFIG_POLLING_DURATION, TimeUnit.class, TimeUnit.MINUTES);
 
-        private long blockingTimeoutPeriod = 10;
-        private TimeUnit blockingTimeoutUnit = TimeUnit.SECONDS;
+        private long blockingTimeoutPeriod = PropertyUtils.getLong(CONFIG_BLOCKING_DURATION, 10L);
+        private TimeUnit blockingTimeoutUnit = PropertyUtils.getEnum(CONFIG_POLLING_DURATION, TimeUnit.class, TimeUnit.SECONDS);
 
         public Builder withDatafile(String datafile) {
             this.datafile = datafile;

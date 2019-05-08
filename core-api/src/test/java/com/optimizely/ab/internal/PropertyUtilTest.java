@@ -21,7 +21,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class ConfigUtilTest {
+public class PropertyUtilTest {
 
     private static final String SHARED_KEY = "test.prop";
     private static final String EXPECTED = "bar";
@@ -35,17 +35,17 @@ public class ConfigUtilTest {
     public void testSystemPropBeforeOptimizelyProp() {
         String expected = "foo";
         System.setProperty("optimizely." + SHARED_KEY, expected);
-        assertEquals(expected, ConfigUtil.get(SHARED_KEY));
+        assertEquals(expected, PropertyUtils.get(SHARED_KEY));
     }
 
     @Test
     public void getFromOptimizelyProp() {
-        assertEquals(EXPECTED, ConfigUtil.get("file.only"));
+        assertEquals(EXPECTED, PropertyUtils.get("file.only"));
     }
 
     @Test
     public void getFromSystemProp() {
         System.setProperty("optimizely.sys.only", EXPECTED);
-        assertEquals(EXPECTED, ConfigUtil.get("sys.only"));
+        assertEquals(EXPECTED, PropertyUtils.get("sys.only"));
     }
 }
