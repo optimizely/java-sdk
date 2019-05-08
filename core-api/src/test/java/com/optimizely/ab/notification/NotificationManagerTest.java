@@ -32,14 +32,14 @@ public class NotificationManagerTest {
     @Before
     public void setUp() {
         counter = new AtomicInteger();
-        notificationManager = new NotificationManager<>(counter);
+        notificationManager = new NotificationManager<>(TestNotification.class, counter);
     }
 
     @Test
     public void testAddListener() {
-        assertEquals(1, notificationManager.addHandler(new TestNotificationHandler()));
-        assertEquals(2, notificationManager.addHandler(new TestNotificationHandler()));
-        assertEquals(3, notificationManager.addHandler(new TestNotificationHandler()));
+        assertEquals(1, notificationManager.addHandler(new TestNotificationHandler<>()));
+        assertEquals(2, notificationManager.addHandler(new TestNotificationHandler<>()));
+        assertEquals(3, notificationManager.addHandler(new TestNotificationHandler<>()));
     }
 
     @Test
@@ -56,6 +56,18 @@ public class NotificationManagerTest {
         assertEquals("message1", messages.get(0).getMessage());
         assertEquals("message2", messages.get(1).getMessage());
         assertEquals("message3", messages.get(2).getMessage());
+    }
 
+    @Test
+    public void testSendWithError() {
+        TestNotificationHandler<TestNotification> handler = new TestNotificationHandler<>();
+        assertEquals(1, notificationManager.addHandler(message -> {throw new RuntimeException("handle me");}));
+        assertEquals(2, notificationManager.addHandler(handler));
+
+        notificationManager.send(new TestNotification("message1"));
+
+        List<TestNotification> messages = handler.getMessages();
+        assertEquals(1, messages.size());
+        assertEquals("message1", messages.get(0).getMessage());
     }
 }

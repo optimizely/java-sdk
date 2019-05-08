@@ -19,10 +19,12 @@ package com.optimizely.ab.config;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.optimizely.ab.OptimizelyHttpClient;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolVersion;
+import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHttpResponse;
@@ -56,8 +58,20 @@ public class HttpProjectConfigManagerTest {
     @Before
     public void setUp() throws Exception {
         datafileString = Resources.toString(Resources.getResource("valid-project-config-v4.json"), Charsets.UTF_8);
-        when(mockHttpClient.execute(any(HttpGet.class), any(ResponseHandler.class)))
-            .thenReturn(datafileString);
+        CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
+        StatusLine statusLine = mock(StatusLine.class);
+
+        when(statusLine.getStatusCode()).thenReturn(200);
+        when(httpResponse.getStatusLine()).thenReturn(statusLine);
+        when(httpResponse.getEntity()).thenReturn(new StringEntity(datafileString));
+
+        when(mockHttpClient.execute(any(HttpGet.class)))
+            .thenReturn(httpResponse);
+
+        projectConfigManager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("sdk-key")
+            .build();
     }
 
     @After
@@ -128,53 +142,64 @@ public class HttpProjectConfigManagerTest {
 
     @Test
     @Ignore
-    public void testProjectConfigResponseHandler2XX() throws Exception {
-        ResponseHandler<String> handler = new ProjectConfigResponseHandler();
-
+    public void testGetDatafileHttpResponse2XX() throws Exception {
+        String modifiedStamp = "Wed, 24 Apr 2019 07:07:07 GMT";
         HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 200, "TEST");
         getResponse.setEntity(new StringEntity(datafileString));
+        getResponse.setHeader(HttpHeaders.LAST_MODIFIED, modifiedStamp);
 
-        String datafile = handler.handleResponse(getResponse);
+        String datafile = projectConfigManager.getDatafileFromResponse(getResponse);
         assertNotNull(datafile);
 
         assertEquals("4", parseProjectConfig(datafile).getVersion());
+        // Confirm last modified time is set
+        assertEquals(modifiedStamp, projectConfigManager.getLastModified());
     }
 
     @Test(expected = ClientProtocolException.class)
-    public void testProjectConfigResponseHandler3XX() throws Exception {
-        ResponseHandler<String> handler = new ProjectConfigResponseHandler();
-
+    public void testGetDatafileHttpResponse3XX() throws Exception {
         HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 300, "TEST");
         getResponse.setEntity(new StringEntity(datafileString));
 
-        handler.handleResponse(getResponse);
-    }
-
-    @Test(expected = ClientProtocolException.class)
-    public void testProjectConfigResponseHandler4XX() throws Exception {
-        ResponseHandler<String> handler = new ProjectConfigResponseHandler();
-
-        HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 400, "TEST");
-        getResponse.setEntity(new StringEntity(datafileString));
-
-        handler.handleResponse(getResponse);
-    }
-
-    @Test(expected = ClientProtocolException.class)
-    public void testProjectConfigResponseHandler5XX() throws Exception {
-        ResponseHandler<String> handler = new ProjectConfigResponseHandler();
-
-        HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 500, "TEST");
-        getResponse.setEntity(new StringEntity(datafileString));
-
-        handler.handleResponse(getResponse);
+        projectConfigManager.getDatafileFromResponse(getResponse);
     }
 
     @Test
+    public void testGetDatafileHttpResponse304() throws Exception {
+        HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 304, "TEST");
+        getResponse.setEntity(new StringEntity(datafileString));
+
+        String datafile = projectConfigManager.getDatafileFromResponse(getResponse);
+        assertNull(datafile);
+    }
+
+    @Test(expected = ClientProtocolException.class)
+    public void testGetDatafileHttpResponse4XX() throws Exception {
+        HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 400, "TEST");
+        getResponse.setEntity(new StringEntity(datafileString));
+
+        projectConfigManager.getDatafileFromResponse(getResponse);
+    }
+
+    @Test(expected = ClientProtocolException.class)
+    public void testGetDatafileHttpResponse5XX() throws Exception {
+        HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 500, "TEST");
+        getResponse.setEntity(new StringEntity(datafileString));
+
+        projectConfigManager.getDatafileFromResponse(getResponse);
+    }
+
     public void testInvalidPayload() throws Exception {
         reset(mockHttpClient);
-        when(mockHttpClient.execute(any(HttpGet.class), any(ResponseHandler.class)))
-            .thenReturn("I am an invalid response!");
+        CloseableHttpResponse invalidPayloadResponse = mock(CloseableHttpResponse.class);
+        StatusLine statusLine = mock(StatusLine.class);
+
+        when(statusLine.getStatusCode()).thenReturn(200);
+        when(invalidPayloadResponse.getStatusLine()).thenReturn(statusLine);
+        when(invalidPayloadResponse.getEntity()).thenReturn(new StringEntity("I am an invalid response!"));
+
+        when(mockHttpClient.execute(any(HttpGet.class)))
+            .thenReturn(invalidPayloadResponse);
 
         projectConfigManager = builder()
             .withOptimizelyHttpClient(mockHttpClient)
@@ -195,5 +220,21 @@ public class HttpProjectConfigManagerTest {
         ProjectConfig actual = projectConfigManager.getConfig();
         assertNotNull(actual);
         assertNotNull(actual.getVersion());
+    }
+
+    @Test
+    @Ignore
+    public void testBasicFetchTwice() throws Exception {
+        projectConfigManager = builder()
+            .withSdkKey("7vPf3v7zye3fY4PcbejeCz")
+            .build();
+
+        ProjectConfig actual = projectConfigManager.getConfig();
+        assertNotNull(actual);
+        assertNotNull(actual.getVersion());
+
+        // Assert ProjectConfig when refetched as datafile has not changed
+        ProjectConfig latestConfig = projectConfigManager.getConfig();
+        assertEquals(actual, latestConfig);
     }
 }
