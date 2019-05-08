@@ -1,5 +1,9 @@
 # Optimizely Java X SDK Changelog
 
+## [Unreleased]
+Changes that have landed but are not yet released.
+* AudienceJacksonDeserializer: To handle and parse both single leaf node and arraylist of audience conditions.
+
 ## 2.1.4
 
 December 6th, 2018
