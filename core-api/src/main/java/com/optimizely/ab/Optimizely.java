@@ -119,7 +119,7 @@ public class Optimizely implements AutoCloseable {
 
   /**
    * Checks if eventHandler {@link EventHandler} and projectConfigManager {@link ProjectConfigManager}
-   * are Closeable {@link Closeable} and calls the close on them.
+   * are Closeable {@link Closeable} and calls close on them.
    *
    * <b>NOTE:</b> There is a chance that this could be long running if the implementations of close are long running.
    *
