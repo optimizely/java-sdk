@@ -126,17 +126,17 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
     public static class Builder {
         private String datafile;
-        private String sdkKey;
         private String url;
         private String format = "https://cdn.optimizely.com/datafiles/%s.json";
         private OptimizelyHttpClient httpClient;
         private NotificationCenter notificationCenter;
 
+        private String sdkKey = PropertyUtils.get(CONFIG_SDK_KEY);
         private long period = PropertyUtils.getLong(CONFIG_POLLING_UNIT, 5L);
         private TimeUnit timeUnit = PropertyUtils.getEnum(CONFIG_POLLING_DURATION, TimeUnit.class, TimeUnit.MINUTES);
 
         private long blockingTimeoutPeriod = PropertyUtils.getLong(CONFIG_BLOCKING_DURATION, 10L);
-        private TimeUnit blockingTimeoutUnit = PropertyUtils.getEnum(CONFIG_POLLING_DURATION, TimeUnit.class, TimeUnit.SECONDS);
+        private TimeUnit blockingTimeoutUnit = PropertyUtils.getEnum(CONFIG_BLOCKING_UNIT, TimeUnit.class, TimeUnit.SECONDS);
 
         public Builder withDatafile(String datafile) {
             this.datafile = datafile;

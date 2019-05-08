@@ -20,6 +20,7 @@ import com.optimizely.ab.NamedThreadFactory;
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
 
+import com.optimizely.ab.internal.PropertyUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
@@ -48,6 +49,9 @@ import javax.annotation.CheckForNull;
  * for the dispatch.
  */
 public class AsyncEventHandler implements EventHandler, AutoCloseable {
+
+    public static final String CONFIG_QUEUE_CAPACITY = "async.event.handler.queue.capacity";
+    public static final String CONFIG_NUM_WORKERS    = "async.event.handler.event.num.workers";
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncEventHandler.class);
     private static final ProjectConfigResponseHandler EVENT_RESPONSE_HANDLER = new ProjectConfigResponseHandler();
@@ -227,8 +231,8 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
     public static class Builder {
 
-        private int queueCapacity;
-        private int numWorkers;
+        private int queueCapacity = PropertyUtils.getInteger(CONFIG_QUEUE_CAPACITY, 10000);
+        private int numWorkers = PropertyUtils.getInteger(CONFIG_NUM_WORKERS, 2);
         private int maxTotalConnections = 200;
         private int maxPerRoute = 20;
         private int validateAfterInactivity = 5000;

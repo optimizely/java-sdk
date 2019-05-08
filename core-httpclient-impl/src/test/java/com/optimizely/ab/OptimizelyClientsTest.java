@@ -19,6 +19,7 @@ package com.optimizely.ab;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.optimizely.ab.config.HttpProjectConfigManager;
+import com.optimizely.ab.event.AsyncEventHandler;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.junit.Before;
@@ -32,8 +33,8 @@ public class OptimizelyClientsTest {
 
     @Before
     public void setUp() {
-        PropertyUtils.clear(OptimizelyClients.EVENT_QUEUE_CAPACITY);
-        PropertyUtils.clear(OptimizelyClients.EVENT_NUM_WORKERS);
+        PropertyUtils.clear(AsyncEventHandler.CONFIG_QUEUE_CAPACITY);
+        PropertyUtils.clear(AsyncEventHandler.CONFIG_NUM_WORKERS);
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_POLLING_DURATION);
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_POLLING_UNIT);
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_BLOCKING_DURATION);
@@ -43,32 +44,32 @@ public class OptimizelyClientsTest {
 
     @Test
     public void setEventQueueParams() {
-        int capacity = 10;
-        int workers = 5;
+        Integer capacity = 10;
+        Integer workers = 5;
         OptimizelyClients.setEventQueueParams(capacity, workers);
 
-        assertEquals(Integer.toString(capacity), PropertyUtils.get(OptimizelyClients.EVENT_QUEUE_CAPACITY));
-        assertEquals(Integer.toString(workers), PropertyUtils.get(OptimizelyClients.EVENT_NUM_WORKERS));
+        assertEquals(capacity, PropertyUtils.getInteger(AsyncEventHandler.CONFIG_QUEUE_CAPACITY));
+        assertEquals(workers, PropertyUtils.getInteger(AsyncEventHandler.CONFIG_NUM_WORKERS));
     }
 
     @Test
     public void setPollingInterval() {
-        long duration = 10;
+        Long duration = 10L;
         TimeUnit timeUnit = TimeUnit.MICROSECONDS;
         OptimizelyClients.setPollingInterval(duration, timeUnit);
 
-        assertEquals(Long.toString(duration), PropertyUtils.get(HttpProjectConfigManager.CONFIG_POLLING_DURATION));
-        assertEquals(timeUnit.toString(), PropertyUtils.get(HttpProjectConfigManager.CONFIG_POLLING_UNIT));
+        assertEquals(duration, PropertyUtils.getLong(HttpProjectConfigManager.CONFIG_POLLING_DURATION));
+        assertEquals(timeUnit, PropertyUtils.getEnum(HttpProjectConfigManager.CONFIG_POLLING_UNIT, TimeUnit.class));
     }
 
     @Test
     public void setBlockingTimeout() {
-        long duration = 20;
+        Long duration = 20L;
         TimeUnit timeUnit = TimeUnit.NANOSECONDS;
         OptimizelyClients.setBlockingTimeout(duration, timeUnit);
 
-        assertEquals(Long.toString(duration), PropertyUtils.get(HttpProjectConfigManager.CONFIG_BLOCKING_DURATION));
-        assertEquals(timeUnit.toString(), PropertyUtils.get(HttpProjectConfigManager.CONFIG_BLOCKING_UNIT));
+        assertEquals(duration, PropertyUtils.getLong(HttpProjectConfigManager.CONFIG_BLOCKING_DURATION));
+        assertEquals(timeUnit, PropertyUtils.getEnum(HttpProjectConfigManager.CONFIG_BLOCKING_UNIT, TimeUnit.class));
     }
 
     @Test
@@ -88,7 +89,7 @@ public class OptimizelyClientsTest {
     @Test
     public void newDefaultInstanceWithSdkKey() throws Exception {
         // Set a blocking timeout so we don't block for too long.
-        OptimizelyClients.setBlockingTimeout(10, TimeUnit.MICROSECONDS);
+        OptimizelyClients.setBlockingTimeout(5, TimeUnit.MICROSECONDS);
         Optimizely optimizely = OptimizelyClients.newDefaultInstance("sdk-key");
         assertFalse(optimizely.isValid());
     }

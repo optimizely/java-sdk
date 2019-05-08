@@ -123,10 +123,28 @@ public final class PropertyUtils {
         return dafault;
     }
 
+    /**
+     * Get a configuration value as Long from one of the supported locations. If a value cannot be found, or if
+     * the value is not a valid number, then null is returned.
+     * <ul>
+     *   <li>System Properties - Key is prepended with "optimizely."</li>
+     *   <li>Environment variables - Key is prepended with "optimizely.", upper cased and "."s are replaced with "_"s.</li>
+     *   <li>Optimizely Properties - Key is sourced as-is.</li>
+     * </ul>
+     */
     public static Long getLong(String key) {
         return getLong(key, null);
     }
 
+    /**
+     * Get a configuration value as Long from one of the supported locations. If a value cannot be found, then the default
+     * is returned.
+     * <ul>
+     *   <li>System Properties - Key is prepended with "optimizely."</li>
+     *   <li>Environment variables - Key is prepended with "optimizely.", upper cased and "."s are replaced with "_"s.</li>
+     *   <li>Optimizely Properties - Key is sourced as-is.</li>
+     * </ul>
+     */
     public static Long getLong(String key, Long dafault) {
         String value = get(key);
         if (value == null) {
@@ -142,10 +160,28 @@ public final class PropertyUtils {
         return dafault;
     }
 
+    /**
+     * Get a configuration value as Integer from one of the supported locations. If a value cannot be found, or if
+     *      * the value is not a valid number, then null is returned.
+     * <ul>
+     *   <li>System Properties - Key is prepended with "optimizely."</li>
+     *   <li>Environment variables - Key is prepended with "optimizely.", upper cased and "."s are replaced with "_"s.</li>
+     *   <li>Optimizely Properties - Key is sourced as-is.</li>
+     * </ul>
+     */
     public static Integer getInteger(String key) {
         return getInteger(key, null);
     }
 
+    /**
+     * Get a configuration value as Integer from one of the supported locations. If a value cannot be found, or if
+     * the value is not a valid number, then the default is returned.
+     * <ul>
+     *   <li>System Properties - Key is prepended with "optimizely."</li>
+     *   <li>Environment variables - Key is prepended with "optimizely.", upper cased and "."s are replaced with "_"s.</li>
+     *   <li>Optimizely Properties - Key is sourced as-is.</li>
+     * </ul>
+     */
     public static Integer getInteger(String key, Integer dafault) {
         String value = get(key);
         if (value == null) {
@@ -161,10 +197,27 @@ public final class PropertyUtils {
         return dafault;
     }
 
+    /**
+     * Get a configuration value as Enum from one of the supported locations. Of not a valid enum value, then null is returned.
+     * <ul>
+     *   <li>System Properties - Key is prepended with "optimizely."</li>
+     *   <li>Environment variables - Key is prepended with "optimizely.", upper cased and "."s are replaced with "_"s.</li>
+     *   <li>Optimizely Properties - Key is sourced as-is.</li>
+     * </ul>
+     */
     public static <T> T getEnum(String key, Class<T> clazz) {
         return getEnum(key, clazz, null);
     }
 
+    /**
+     * Get a configuration value as Enum from one of the supported locations. If a value cannot be found, or if it
+     * is not a valid enum value, then the default is returned.
+     * <ul>
+     *   <li>System Properties - Key is prepended with "optimizely."</li>
+     *   <li>Environment variables - Key is prepended with "optimizely.", upper cased and "."s are replaced with "_"s.</li>
+     *   <li>Optimizely Properties - Key is sourced as-is.</li>
+     * </ul>
+     */
     @SuppressWarnings("unchecked")
     public static <T> T getEnum(String key, Class<T> clazz,  T dafault) {
         String value = get(key);
@@ -173,7 +226,7 @@ public final class PropertyUtils {
         }
 
         try {
-            return (T)Enum.valueOf((Class<Enum>)clazz, key);
+            return (T)Enum.valueOf((Class<Enum>)clazz, value);
         } catch (Exception e) {
             logger.warn("Cannot convert {} to an integer.", value, e);
         }

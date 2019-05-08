@@ -43,19 +43,13 @@ import java.util.concurrent.TimeUnit;
 public final class OptimizelyClients {
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyClients.class);
 
-    public static final String EVENT_QUEUE_CAPACITY    = "event.queue.capacity";
-    public static final String EVENT_NUM_WORKERS       = "event.num.workers";
-
-    private static final int DEFAULT_QUEUE_CAPACITY     = 5000;
-    private static final int DEFAULT_NUM_WORKERS        = 2;
-
     /**
      * Convenience method for setting the required queueing parameters.
      * {@link AsyncEventHandler(int, int)}
      */
     public static void setEventQueueParams(int queueCapacity, int numberWorkers) {
-        PropertyUtils.set(EVENT_QUEUE_CAPACITY, Integer.toString(queueCapacity));
-        PropertyUtils.set(EVENT_NUM_WORKERS, Integer.toString(numberWorkers));
+        PropertyUtils.set(AsyncEventHandler.CONFIG_QUEUE_CAPACITY, Integer.toString(queueCapacity));
+        PropertyUtils.set(AsyncEventHandler.CONFIG_NUM_WORKERS, Integer.toString(numberWorkers));
     }
 
     /**
@@ -147,14 +141,7 @@ public final class OptimizelyClients {
      * @param notificationCenter The {@link NotificationCenter} supplied to Optimizely instance.
      */
     public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter) {
-        if (notificationCenter == null) {
-            notificationCenter = new NotificationCenter();
-        }
-
-        Integer queueCapacity = PropertyUtils.getInteger(EVENT_QUEUE_CAPACITY, DEFAULT_QUEUE_CAPACITY);
-        Integer numWorkers = PropertyUtils.getInteger(EVENT_NUM_WORKERS, DEFAULT_NUM_WORKERS);
-
-        EventHandler eventHandler = new AsyncEventHandler(queueCapacity, numWorkers);
+        EventHandler eventHandler = AsyncEventHandler.builder().build();
         return newDefaultInstance(configManager, notificationCenter, eventHandler);
     }
 
@@ -166,6 +153,10 @@ public final class OptimizelyClients {
      * @param eventHandler       The {@link EventHandler} supplied to Optimizely instance.
      */
     public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler) {
+        if (notificationCenter == null) {
+            notificationCenter = new NotificationCenter();
+        }
+
         return Optimizely.builder()
             .withEventHandler(eventHandler)
             .withConfigManager(configManager)
