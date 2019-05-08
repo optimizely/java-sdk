@@ -65,7 +65,10 @@ public class AsyncEventHandlerTest {
     @Test
     public void testQueueCapacityPreconditionCheck() throws Exception {
         thrown.expect(IllegalArgumentException.class);
-        new AsyncEventHandler(-1, 1);
+        AsyncEventHandler.builder()
+            .withQueueCapacity(-1)
+            .withNumWorkers(-1)
+            .build();
     }
 
     @Test

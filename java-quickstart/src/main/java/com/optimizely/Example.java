@@ -53,7 +53,11 @@ public class Example {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        EventHandler eventHandler = new AsyncEventHandler(100,2);
+        EventHandler eventHandler = AsyncEventHandler.builder()
+            .withQueueCapacity(100)
+            .withNumWorkers(2)
+            .build();
+
         HttpProjectConfigManager projectConfigManager = HttpProjectConfigManager.builder()
             .withSdkKey("BX9Y3bTa4YErpHZEMpAwHm")
             .withPollingInterval(1, TimeUnit.SECONDS)
