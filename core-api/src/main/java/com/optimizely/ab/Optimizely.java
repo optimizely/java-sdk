@@ -117,14 +117,22 @@ public class Optimizely implements AutoCloseable {
         return getProjectConfig() != null;
     }
 
-    @Override
+  /**
+   * Checks if eventHandler {@link EventHandler} and projectConfigManager {@link ProjectConfigManager}
+   * are Closeable {@link Closeable} and calls the close on them.
+   *
+   * <b>NOTE:</b> There is a chance that this could be long running if the implementations of close are long running.
+   *
+   * @throws IOException
+   */
+  @Override
     public void close() throws IOException {
-        if (this.eventHandler instanceof Closeable) {
-            ((Closeable) this.eventHandler).close();
+        if (eventHandler instanceof Closeable) {
+            ((Closeable) eventHandler).close();
         }
 
-        if (this.projectConfigManager instanceof Closeable) {
-            ((Closeable) this.projectConfigManager).close();
+        if (projectConfigManager instanceof Closeable) {
+            ((Closeable) projectConfigManager).close();
         }
     }
 
