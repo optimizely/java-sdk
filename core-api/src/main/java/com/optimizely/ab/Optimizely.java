@@ -122,17 +122,24 @@ public class Optimizely implements AutoCloseable {
    * are Closeable {@link Closeable} and calls close on them.
    *
    * <b>NOTE:</b> There is a chance that this could be long running if the implementations of close are long running.
-   *
-   * @throws IOException
    */
   @Override
-    public void close() throws IOException {
+    public void close() {
         if (eventHandler instanceof Closeable) {
-            ((Closeable) eventHandler).close();
+            try {
+                ((Closeable) eventHandler).close();
+            } catch (Exception e) {
+                logger.warn("Unexpected exception on trying to close event handler.");
+            }
+
         }
 
         if (projectConfigManager instanceof Closeable) {
-            ((Closeable) projectConfigManager).close();
+            try {
+                ((Closeable) projectConfigManager).close();
+            } catch (Exception e) {
+                logger.warn("Unexpected exception on trying to close config manager.");
+            }
         }
     }
 

@@ -166,22 +166,48 @@ public class OptimizelyTest {
         verify((Closeable) mockCloseableProjectConfigManager).close();
     }
 
-    @Test(expected = IOException.class)
-    public void testCloseExceptionThrown() throws IOException {
+    @Test
+    public void testCloseConfigManagerThrowsException() throws IOException {
+        EventHandler mockCloseableEventHandler = mock(
+            EventHandler.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
         ProjectConfigManager mockCloseableProjectConfigManager = mock(
             ProjectConfigManager.class,
             withSettings().extraInterfaces(Closeable.class)
         );
 
-        doThrow(new IOException()).when((Closeable) mockCloseableProjectConfigManager).close();
-
         Optimizely optimizely = Optimizely.builder()
-            .withEventHandler(mockEventHandler)
+            .withEventHandler(mockCloseableEventHandler)
             .withConfigManager(mockCloseableProjectConfigManager)
             .build();
 
+        doThrow(new IOException()).when((Closeable) mockCloseableProjectConfigManager).close();
+        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close config manager.");
         optimizely.close();
     }
+
+    @Test
+    public void testCloseEventHandlerThrowsException() throws IOException {
+        EventHandler mockCloseableEventHandler = mock(
+            EventHandler.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+        ProjectConfigManager mockCloseableProjectConfigManager = mock(
+            ProjectConfigManager.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+
+        Optimizely optimizely = Optimizely.builder()
+            .withEventHandler(mockCloseableEventHandler)
+            .withConfigManager(mockCloseableProjectConfigManager)
+            .build();
+
+        doThrow(new IOException()).when((Closeable) mockCloseableEventHandler).close();
+        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close event handler.");
+        optimizely.close();
+    }
+
     //======== activate tests ========//
 
     /**
