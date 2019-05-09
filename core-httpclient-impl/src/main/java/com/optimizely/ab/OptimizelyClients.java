@@ -50,6 +50,17 @@ public final class OptimizelyClients {
      * {@link AsyncEventHandler}
      */
     public static void setEventQueueParams(int queueCapacity, int numberWorkers) {
+        if (queueCapacity <= 0) {
+            logger.warn("Queue capacity cannot be <= 0. Reverting to default configuration.");
+            return;
+        }
+
+        if (numberWorkers <= 0) {
+            logger.warn("Number of workers cannot be <= 0. Reverting to default configuration.");
+            return;
+        }
+
+
         PropertyUtils.set(AsyncEventHandler.CONFIG_QUEUE_CAPACITY, Integer.toString(queueCapacity));
         PropertyUtils.set(AsyncEventHandler.CONFIG_NUM_WORKERS, Integer.toString(numberWorkers));
     }
@@ -59,6 +70,16 @@ public final class OptimizelyClients {
      * {@link HttpProjectConfigManager.Builder#withBlockingTimeout(long, TimeUnit)}
      */
     public static void setBlockingTimeout(long blockingDuration, TimeUnit blockingTimeout) {
+        if (blockingTimeout == null) {
+            logger.warn("TimeUnit cannot be null. Reverting to default configuration.");
+            return;
+        }
+
+        if (blockingDuration <= 0) {
+            logger.warn("Timeout cannot be <= 0. Reverting to default configuration.");
+            return;
+        }
+
         PropertyUtils.set(HttpProjectConfigManager.CONFIG_BLOCKING_DURATION, Long.toString(blockingDuration));
         PropertyUtils.set(HttpProjectConfigManager.CONFIG_BLOCKING_UNIT, blockingTimeout.toString());
     }
@@ -68,6 +89,16 @@ public final class OptimizelyClients {
      * {@link HttpProjectConfigManager.Builder#withPollingInterval(long, TimeUnit)}
      */
     public static void setPollingInterval(long pollingDuration, TimeUnit pollingTimeout) {
+        if (pollingTimeout == null) {
+            logger.warn("TimeUnit cannot be null. Reverting to default configuration.");
+            return;
+        }
+
+        if (pollingDuration <= 0) {
+            logger.warn("Interval cannot be <= 0. Reverting to default configuration.");
+            return;
+        }
+
         PropertyUtils.set(HttpProjectConfigManager.CONFIG_POLLING_DURATION, Long.toString(pollingDuration));
         PropertyUtils.set(HttpProjectConfigManager.CONFIG_POLLING_UNIT, pollingTimeout.toString());
     }
@@ -77,6 +108,11 @@ public final class OptimizelyClients {
      * {@link HttpProjectConfigManager.Builder#withSdkKey(String)}
      */
     public static void setSdkKey(String sdkKey) {
+        if (sdkKey == null) {
+            logger.warn("SDK key cannot be null. Reverting to default configuration.");
+            return;
+        }
+
         PropertyUtils.set(HttpProjectConfigManager.CONFIG_SDK_KEY, sdkKey);
     }
 

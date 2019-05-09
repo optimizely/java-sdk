@@ -131,12 +131,12 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         private OptimizelyHttpClient httpClient;
         private NotificationCenter notificationCenter;
 
-        private String sdkKey = PropertyUtils.get(CONFIG_SDK_KEY);
-        private long period = PropertyUtils.getLong(CONFIG_POLLING_DURATION, 5L);
-        private TimeUnit timeUnit = PropertyUtils.getEnum(CONFIG_POLLING_UNIT, TimeUnit.class, TimeUnit.MINUTES);
+        String sdkKey = PropertyUtils.get(CONFIG_SDK_KEY);
+        long period = PropertyUtils.getLong(CONFIG_POLLING_DURATION, 5L);
+        TimeUnit timeUnit = PropertyUtils.getEnum(CONFIG_POLLING_UNIT, TimeUnit.class, TimeUnit.MINUTES);
 
-        private long blockingTimeoutPeriod = PropertyUtils.getLong(CONFIG_BLOCKING_DURATION, 10L);
-        private TimeUnit blockingTimeoutUnit = PropertyUtils.getEnum(CONFIG_BLOCKING_UNIT, TimeUnit.class, TimeUnit.SECONDS);
+        long blockingTimeoutPeriod = PropertyUtils.getLong(CONFIG_BLOCKING_DURATION, 10L);
+        TimeUnit blockingTimeoutUnit = PropertyUtils.getEnum(CONFIG_BLOCKING_UNIT, TimeUnit.class, TimeUnit.SECONDS);
 
         public Builder withDatafile(String datafile) {
             this.datafile = datafile;
@@ -171,7 +171,13 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
          */
         public Builder withBlockingTimeout(long period, TimeUnit timeUnit) {
             if (timeUnit == null) {
-                throw new NullPointerException("Must provide valid timeUnit");
+                logger.warn("TimeUnit cannot be null. Keeping default period: {} and time unit: {}", this.blockingTimeoutPeriod, this.blockingTimeoutUnit);
+                return this;
+            }
+
+            if (period <= 0) {
+                logger.warn("Timeout cannot be <= 0. Keeping default period: {} and time unit: {}", this.blockingTimeoutPeriod, this.blockingTimeoutUnit);
+                return this;
             }
 
             this.blockingTimeoutPeriod = period;
@@ -182,7 +188,13 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
         public Builder withPollingInterval(long period, TimeUnit timeUnit) {
             if (timeUnit == null) {
-                throw new NullPointerException("Must provide valid timeUnit");
+                logger.warn("TimeUnit cannot be null. Keeping default period: {} and time unit: {}", this.period, this.timeUnit);
+                return this;
+            }
+
+            if (period <= 0) {
+                logger.warn("Interval cannot be <= 0. Keeping default period: {} and time unit: {}", this.period, this.timeUnit);
+                return this;
             }
 
             this.period = period;

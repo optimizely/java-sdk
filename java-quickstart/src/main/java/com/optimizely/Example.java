@@ -17,9 +17,6 @@ package com.optimizely;
 
 import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.OptimizelyClients;
-import com.optimizely.ab.config.HttpProjectConfigManager;
-import com.optimizely.ab.event.AsyncEventHandler;
-import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.config.Variation;
 
 import java.util.Collections;

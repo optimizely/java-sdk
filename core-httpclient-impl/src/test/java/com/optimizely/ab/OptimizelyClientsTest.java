@@ -53,6 +53,17 @@ public class OptimizelyClientsTest {
     }
 
     @Test
+    public void setInvalidEventQueueParams() {
+        OptimizelyClients.setEventQueueParams(-1, 1);
+        assertNull(PropertyUtils.getInteger(AsyncEventHandler.CONFIG_QUEUE_CAPACITY));
+        assertNull(PropertyUtils.getInteger(AsyncEventHandler.CONFIG_NUM_WORKERS));
+
+        OptimizelyClients.setEventQueueParams(1, -1);
+        assertNull(PropertyUtils.getInteger(AsyncEventHandler.CONFIG_QUEUE_CAPACITY));
+        assertNull(PropertyUtils.getInteger(AsyncEventHandler.CONFIG_NUM_WORKERS));
+    }
+
+    @Test
     public void setPollingInterval() {
         Long duration = 10L;
         TimeUnit timeUnit = TimeUnit.MICROSECONDS;
@@ -60,6 +71,17 @@ public class OptimizelyClientsTest {
 
         assertEquals(duration, PropertyUtils.getLong(HttpProjectConfigManager.CONFIG_POLLING_DURATION));
         assertEquals(timeUnit, PropertyUtils.getEnum(HttpProjectConfigManager.CONFIG_POLLING_UNIT, TimeUnit.class));
+    }
+
+    @Test
+    public void setInvalidPollingInterval() {
+        OptimizelyClients.setPollingInterval(-1, TimeUnit.MICROSECONDS);
+        assertNull(PropertyUtils.getLong(HttpProjectConfigManager.CONFIG_POLLING_DURATION));
+        assertNull(PropertyUtils.getEnum(HttpProjectConfigManager.CONFIG_POLLING_UNIT, TimeUnit.class));
+
+        OptimizelyClients.setPollingInterval(10, null);
+        assertNull(PropertyUtils.getLong(HttpProjectConfigManager.CONFIG_POLLING_DURATION));
+        assertNull(PropertyUtils.getEnum(HttpProjectConfigManager.CONFIG_POLLING_UNIT, TimeUnit.class));
     }
 
     @Test
@@ -73,10 +95,31 @@ public class OptimizelyClientsTest {
     }
 
     @Test
+    public void setInvalidBlockingTimeout() {
+        OptimizelyClients.setBlockingTimeout(-1, TimeUnit.MICROSECONDS);
+        assertNull(PropertyUtils.getLong(HttpProjectConfigManager.CONFIG_BLOCKING_DURATION));
+        assertNull(PropertyUtils.getEnum(HttpProjectConfigManager.CONFIG_BLOCKING_UNIT, TimeUnit.class));
+
+        OptimizelyClients.setBlockingTimeout(10, null);
+        assertNull(PropertyUtils.getLong(HttpProjectConfigManager.CONFIG_BLOCKING_DURATION));
+        assertNull(PropertyUtils.getEnum(HttpProjectConfigManager.CONFIG_POLLING_UNIT, TimeUnit.class));
+    }
+
+    @Test
     public void setSdkKey() {
         String expected = "sdk-key";
         OptimizelyClients.setSdkKey(expected);
 
+        assertEquals(expected, PropertyUtils.get(HttpProjectConfigManager.CONFIG_SDK_KEY));
+    }
+
+    @Test
+    public void setInvalidSdkKey() {
+        String expected = "sdk-key";
+        OptimizelyClients.setSdkKey(expected);
+        assertEquals(expected, PropertyUtils.get(HttpProjectConfigManager.CONFIG_SDK_KEY));
+
+        OptimizelyClients.setSdkKey(null);
         assertEquals(expected, PropertyUtils.get(HttpProjectConfigManager.CONFIG_SDK_KEY));
     }
 

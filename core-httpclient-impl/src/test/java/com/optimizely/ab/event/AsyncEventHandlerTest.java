@@ -41,6 +41,8 @@ import java.util.concurrent.TimeUnit;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import static com.optimizely.ab.event.AsyncEventHandler.builder;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doThrow;
@@ -65,7 +67,7 @@ public class AsyncEventHandlerTest {
     @Test
     public void testQueueCapacityPreconditionCheck() throws Exception {
         thrown.expect(IllegalArgumentException.class);
-        AsyncEventHandler.builder()
+        builder()
             .withQueueCapacity(-1)
             .withNumWorkers(-1)
             .build();
@@ -132,6 +134,22 @@ public class AsyncEventHandlerTest {
         verify(mockExecutorService).shutdown();
         verify(mockExecutorService).shutdownNow();
         verify(mockHttpClient).close();
+    }
+
+    @Test
+    public void testInvalidQueueCapacity() {
+        AsyncEventHandler.Builder builder = builder();
+        int expected = builder.queueCapacity;
+        builder.withQueueCapacity(-1);
+        assertEquals(expected, builder.queueCapacity);
+    }
+
+    @Test
+    public void testInvalidNumWorkers() {
+        AsyncEventHandler.Builder builder = builder();
+        int expected = builder.numWorkers;
+        builder.withNumWorkers(-1);
+        assertEquals(expected, builder.numWorkers);
     }
 
     //======== Helper methods ========//

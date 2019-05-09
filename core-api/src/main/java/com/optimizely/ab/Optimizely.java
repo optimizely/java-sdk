@@ -95,7 +95,7 @@ public class Optimizely implements AutoCloseable {
                        @Nonnull EventFactory eventFactory,
                        @Nonnull ErrorHandler errorHandler,
                        @Nonnull DecisionService decisionService,
-                       @Nonnull UserProfileService userProfileService,
+                       @Nullable UserProfileService userProfileService,
                        @Nonnull ProjectConfigManager projectConfigManager,
                        @Nonnull NotificationCenter notificationCenter
     ) {

@@ -231,8 +231,8 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
     public static class Builder {
 
-        private int queueCapacity = PropertyUtils.getInteger(CONFIG_QUEUE_CAPACITY, 10000);
-        private int numWorkers = PropertyUtils.getInteger(CONFIG_NUM_WORKERS, 2);
+        int queueCapacity = PropertyUtils.getInteger(CONFIG_QUEUE_CAPACITY, 10000);
+        int numWorkers = PropertyUtils.getInteger(CONFIG_NUM_WORKERS, 2);
         private int maxTotalConnections = 200;
         private int maxPerRoute = 20;
         private int validateAfterInactivity = 5000;
@@ -240,11 +240,21 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
         private TimeUnit closeTimeoutUnit = TimeUnit.MILLISECONDS;
 
         public Builder withQueueCapacity(int queueCapacity) {
+            if (queueCapacity <= 0) {
+                logger.warn("Queue capacity cannot be <= 0. Keeping default value: {}", this.queueCapacity);
+                return this;
+            }
+
             this.queueCapacity = queueCapacity;
             return this;
         }
 
         public Builder withNumWorkers(int numWorkers) {
+            if (numWorkers <= 0) {
+                logger.warn("Number of workers cannot be <= 0. Keeping default value: {}", this.numWorkers);
+                return this;
+            }
+
             this.numWorkers = numWorkers;
             return this;
         }
