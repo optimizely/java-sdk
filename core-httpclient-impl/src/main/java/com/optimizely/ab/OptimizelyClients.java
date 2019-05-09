@@ -31,14 +31,16 @@ import java.util.concurrent.TimeUnit;
  * OptimizelyClients is a utility class to instantiate an {@link Optimizely} client with a minimal
  * number of configuration options. Basic default parameters can be configured via system properties
  * or through the use of an optimizely.properties file. System properties takes precedence over
- * the properties file.
+ * the properties file and are managed via the {@link PropertyUtils} class.
  *
  * OptimizelyClients also provides setter methods to override the system properties at runtime.
  * <ul>
- *  <li></li>
+ *  <li>{@link OptimizelyClients#setEventQueueParams}</li>
+ *  <li>{@link OptimizelyClients#setBlockingTimeout}</li>
+ *  <li>{@link OptimizelyClients#setPollingInterval}</li>
+ *  <li>{@link OptimizelyClients#setSdkKey}</li>
  * </ul>
- * * {@link OptimizelyClients#setEventQueueParams}
- * {@link OptimizelyClients#setEventQueueParams}
+ *
  */
 public final class OptimizelyClients {
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyClients.class);
