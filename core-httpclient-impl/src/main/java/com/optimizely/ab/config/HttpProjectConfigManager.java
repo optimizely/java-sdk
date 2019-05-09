@@ -132,8 +132,8 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         private NotificationCenter notificationCenter;
 
         private String sdkKey = PropertyUtils.get(CONFIG_SDK_KEY);
-        private long period = PropertyUtils.getLong(CONFIG_POLLING_UNIT, 5L);
-        private TimeUnit timeUnit = PropertyUtils.getEnum(CONFIG_POLLING_DURATION, TimeUnit.class, TimeUnit.MINUTES);
+        private long period = PropertyUtils.getLong(CONFIG_POLLING_DURATION, 5L);
+        private TimeUnit timeUnit = PropertyUtils.getEnum(CONFIG_POLLING_UNIT, TimeUnit.class, TimeUnit.MINUTES);
 
         private long blockingTimeoutPeriod = PropertyUtils.getLong(CONFIG_BLOCKING_DURATION, 10L);
         private TimeUnit blockingTimeoutUnit = PropertyUtils.getEnum(CONFIG_BLOCKING_UNIT, TimeUnit.class, TimeUnit.SECONDS);
