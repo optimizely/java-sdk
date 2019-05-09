@@ -45,7 +45,7 @@ public final class OptimizelyClients {
 
     /**
      * Convenience method for setting the required queueing parameters.
-     * {@link AsyncEventHandler(int, int)}
+     * {@link AsyncEventHandler}
      */
     public static void setEventQueueParams(int queueCapacity, int numberWorkers) {
         PropertyUtils.set(AsyncEventHandler.CONFIG_QUEUE_CAPACITY, Integer.toString(queueCapacity));
