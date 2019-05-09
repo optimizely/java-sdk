@@ -183,7 +183,7 @@ public class OptimizelyTest {
             .build();
 
         doThrow(new IOException()).when((Closeable) mockCloseableProjectConfigManager).close();
-        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close config manager.");
+        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockCloseableProjectConfigManager + ".");
         optimizely.close();
     }
 
@@ -204,7 +204,7 @@ public class OptimizelyTest {
             .build();
 
         doThrow(new IOException()).when((Closeable) mockCloseableEventHandler).close();
-        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close event handler.");
+        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockCloseableEventHandler + ".");
         optimizely.close();
     }
 
