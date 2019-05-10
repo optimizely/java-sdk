@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,7 +70,7 @@ import java.util.Map;
  * to be logged, and for the "control" variation to be returned.
  */
 @ThreadSafe
-public class Optimizely {
+public class Optimizely implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
 
@@ -113,6 +114,33 @@ public class Optimizely {
      */
     public boolean isValid() {
         return getProjectConfig() != null;
+    }
+
+    /**
+     * Helper method which checks if Object is an instance of Closeable and calls close() on it.
+     */
+    private void tryClose(Object obj) {
+        if (!(obj instanceof Closeable)) {
+            return;
+        }
+
+        try {
+            ((Closeable) obj).close();
+        } catch (Exception e) {
+            logger.warn("Unexpected exception on trying to close {}.", obj);
+        }
+    }
+
+    /**
+     * Checks if eventHandler {@link EventHandler} and projectConfigManager {@link ProjectConfigManager}
+     * are Closeable {@link Closeable} and calls close on them.
+     *
+     * <b>NOTE:</b> There is a chance that this could be long running if the implementations of close are long running.
+     */
+    @Override
+    public void close() {
+        tryClose(eventHandler);
+        tryClose(projectConfigManager);
     }
 
     //======== activate calls ========//

@@ -45,6 +45,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import javax.annotation.Nonnull;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,9 +54,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
@@ -63,8 +61,6 @@ import static com.optimizely.ab.event.LogEvent.RequestMethod;
 import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.EXPERIMENT_KEY;
 import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_KEY;
 import static com.optimizely.ab.notification.DecisionNotification.FeatureVariableDecisionNotificationBuilder.*;
-import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.EXPERIMENT_KEY;
-import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_KEY;
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
@@ -146,6 +142,70 @@ public class OptimizelyTest {
         //assertEquals(validProjectConfig.getVersion(), noAudienceProjectConfig.getVersion());
 
         this.datafileVersion = Integer.parseInt(validProjectConfig.getVersion());
+    }
+
+    @Test
+    public void testClose() throws IOException {
+        EventHandler mockCloseableEventHandler = mock(
+            EventHandler.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+        ProjectConfigManager mockCloseableProjectConfigManager = mock(
+            ProjectConfigManager.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+
+        Optimizely optimizely = Optimizely.builder()
+            .withEventHandler(mockCloseableEventHandler)
+            .withConfigManager(mockCloseableProjectConfigManager)
+            .build();
+
+        optimizely.close();
+
+        verify((Closeable) mockCloseableEventHandler).close();
+        verify((Closeable) mockCloseableProjectConfigManager).close();
+    }
+
+    @Test
+    public void testCloseConfigManagerThrowsException() throws IOException {
+        EventHandler mockCloseableEventHandler = mock(
+            EventHandler.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+        ProjectConfigManager mockCloseableProjectConfigManager = mock(
+            ProjectConfigManager.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+
+        Optimizely optimizely = Optimizely.builder()
+            .withEventHandler(mockCloseableEventHandler)
+            .withConfigManager(mockCloseableProjectConfigManager)
+            .build();
+
+        doThrow(new IOException()).when((Closeable) mockCloseableProjectConfigManager).close();
+        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockCloseableProjectConfigManager + ".");
+        optimizely.close();
+    }
+
+    @Test
+    public void testCloseEventHandlerThrowsException() throws IOException {
+        EventHandler mockCloseableEventHandler = mock(
+            EventHandler.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+        ProjectConfigManager mockCloseableProjectConfigManager = mock(
+            ProjectConfigManager.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+
+        Optimizely optimizely = Optimizely.builder()
+            .withEventHandler(mockCloseableEventHandler)
+            .withConfigManager(mockCloseableProjectConfigManager)
+            .build();
+
+        doThrow(new IOException()).when((Closeable) mockCloseableEventHandler).close();
+        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockCloseableEventHandler + ".");
+        optimizely.close();
     }
 
     //======== activate tests ========//
