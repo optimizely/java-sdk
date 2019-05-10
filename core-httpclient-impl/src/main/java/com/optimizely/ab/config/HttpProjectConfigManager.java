@@ -45,6 +45,11 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     public static final String CONFIG_BLOCKING_UNIT     = "http.project.config.manager.blocking.unit";
     public static final String CONFIG_SDK_KEY           = "http.project.config.manager.sdk.key";
 
+    public static final long DEFAULT_POLLING_DURATION  = 5;
+    public static final TimeUnit DEFAULT_POLLING_UNIT  = TimeUnit.MINUTES;
+    public static final long DEFAULT_BLOCKING_DURATION = 10;
+    public static final TimeUnit DEFAULT_BLOCKING_UNIT = TimeUnit.SECONDS;
+
     private static final Logger logger = LoggerFactory.getLogger(HttpProjectConfigManager.class);
 
     private final OptimizelyHttpClient httpClient;
@@ -132,11 +137,11 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         private NotificationCenter notificationCenter;
 
         String sdkKey = PropertyUtils.get(CONFIG_SDK_KEY);
-        long period = PropertyUtils.getLong(CONFIG_POLLING_DURATION, 5L);
-        TimeUnit timeUnit = PropertyUtils.getEnum(CONFIG_POLLING_UNIT, TimeUnit.class, TimeUnit.MINUTES);
+        long period = PropertyUtils.getLong(CONFIG_POLLING_DURATION, DEFAULT_POLLING_DURATION);
+        TimeUnit timeUnit = PropertyUtils.getEnum(CONFIG_POLLING_UNIT, TimeUnit.class, DEFAULT_POLLING_UNIT);
 
-        long blockingTimeoutPeriod = PropertyUtils.getLong(CONFIG_BLOCKING_DURATION, 10L);
-        TimeUnit blockingTimeoutUnit = PropertyUtils.getEnum(CONFIG_BLOCKING_UNIT, TimeUnit.class, TimeUnit.SECONDS);
+        long blockingTimeoutPeriod = PropertyUtils.getLong(CONFIG_BLOCKING_DURATION, DEFAULT_BLOCKING_DURATION);
+        TimeUnit blockingTimeoutUnit = PropertyUtils.getEnum(CONFIG_BLOCKING_UNIT, TimeUnit.class, DEFAULT_BLOCKING_UNIT);
 
         public Builder withDatafile(String datafile) {
             this.datafile = datafile;
@@ -223,6 +228,16 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
          *              before returning the HttpProjectConfigManager instance.
          */
         public HttpProjectConfigManager build(boolean defer) {
+            if (period <= 0) {
+                logger.warn("Invalid polling interval {}, {}. Defaulting to {}, {}",
+                    period, timeUnit, DEFAULT_POLLING_DURATION, DEFAULT_POLLING_UNIT);
+            }
+
+            if (blockingTimeoutPeriod <= 0) {
+                logger.warn("Invalid polling interval {}, {}. Defaulting to {}, {}",
+                    blockingTimeoutPeriod, blockingTimeoutUnit, DEFAULT_BLOCKING_DURATION, DEFAULT_BLOCKING_UNIT);
+            }
+
             if (httpClient == null) {
                 httpClient = HttpClientUtils.getDefaultHttpClient();
             }

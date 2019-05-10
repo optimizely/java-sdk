@@ -60,7 +60,6 @@ public final class OptimizelyClients {
             return;
         }
 
-
         PropertyUtils.set(AsyncEventHandler.CONFIG_QUEUE_CAPACITY, Integer.toString(queueCapacity));
         PropertyUtils.set(AsyncEventHandler.CONFIG_NUM_WORKERS, Integer.toString(numberWorkers));
     }

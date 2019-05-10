@@ -56,22 +56,10 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class AsyncEventHandlerTest {
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     @Mock
     OptimizelyHttpClient mockHttpClient;
     @Mock
     ExecutorService mockExecutorService;
-
-    @Test
-    public void testQueueCapacityPreconditionCheck() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-        builder()
-            .withQueueCapacity(-1)
-            .withNumWorkers(-1)
-            .build();
-    }
 
     @Test
     public void testDispatch() throws Exception {
