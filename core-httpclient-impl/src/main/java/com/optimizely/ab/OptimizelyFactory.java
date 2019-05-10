@@ -35,15 +35,15 @@ import java.util.concurrent.TimeUnit;
  *
  * OptimizelyClients also provides setter methods to override the system properties at runtime.
  * <ul>
- *  <li>{@link OptimizelyClients#setEventQueueParams}</li>
- *  <li>{@link OptimizelyClients#setBlockingTimeout}</li>
- *  <li>{@link OptimizelyClients#setPollingInterval}</li>
- *  <li>{@link OptimizelyClients#setSdkKey}</li>
+ *  <li>{@link OptimizelyFactory#setEventQueueParams}</li>
+ *  <li>{@link OptimizelyFactory#setBlockingTimeout}</li>
+ *  <li>{@link OptimizelyFactory#setPollingInterval}</li>
+ *  <li>{@link OptimizelyFactory#setSdkKey}</li>
  * </ul>
  *
  */
-public final class OptimizelyClients {
-    private static final Logger logger = LoggerFactory.getLogger(OptimizelyClients.class);
+public final class OptimizelyFactory {
+    private static final Logger logger = LoggerFactory.getLogger(OptimizelyFactory.class);
 
     /**
      * Convenience method for setting the required queueing parameters.

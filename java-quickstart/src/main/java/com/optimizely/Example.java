@@ -16,7 +16,7 @@
 package com.optimizely;
 
 import com.optimizely.ab.Optimizely;
-import com.optimizely.ab.OptimizelyClients;
+import com.optimizely.ab.OptimizelyFactory;
 import com.optimizely.ab.config.Variation;
 
 import java.util.Collections;
@@ -51,7 +51,7 @@ public class Example {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        Optimizely optimizely = OptimizelyClients.newDefaultInstance("BX9Y3bTa4YErpHZEMpAwHm");
+        Optimizely optimizely = OptimizelyFactory.newDefaultInstance("BX9Y3bTa4YErpHZEMpAwHm");
 
         Example example = new Example(optimizely);
         Random random = new Random();
