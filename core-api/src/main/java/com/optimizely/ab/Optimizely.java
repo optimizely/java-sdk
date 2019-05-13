@@ -954,41 +954,31 @@ public class Optimizely implements AutoCloseable {
      * Convenience method for adding DecisionNotification Handlers
      */
     public int addDecisionNotificationHandler(NotificationHandler<DecisionNotification> handler) {
-        NotificationManager<DecisionNotification> notificationManager =
-            notificationCenter.getNotificationManager(DecisionNotification.class);
-
-        if (notificationManager == null) {
-            logger.warn("DecisionNotification not supported by the NotificationCenter.");
-            return -1;
-        }
-
-        return notificationManager.addHandler(handler);
+        return addNotificationHandler(DecisionNotification.class, handler);
     }
 
     /**
      * Convenience method for adding TrackNotification Handlers
      */
     public int addTrackNotificationHandler(NotificationHandler<TrackNotification> handler) {
-        NotificationManager<TrackNotification> notificationManager =
-            notificationCenter.getNotificationManager(TrackNotification.class);
-
-        if (notificationManager == null) {
-            logger.warn("TrackNotification not supported by the NotificationCenter.");
-            return -1;
-        }
-
-        return notificationManager.addHandler(handler);
+        return addNotificationHandler(TrackNotification.class, handler);
     }
 
     /**
      * Convenience method for adding UpdateConfigNotification Handlers
      */
     public int addUpdateConfigNotificationHandler(NotificationHandler<UpdateConfigNotification> handler) {
-        NotificationManager<UpdateConfigNotification> notificationManager =
-            notificationCenter.getNotificationManager(UpdateConfigNotification.class);
+        return addNotificationHandler(UpdateConfigNotification.class, handler);
+    }
+
+    /**
+     * Convenience method for adding UpdateConfigNotification Handlers
+     */
+    private <T> int addNotificationHandler(Class<T> clazz, NotificationHandler<T> handler) {
+        NotificationManager<T> notificationManager = notificationCenter.getNotificationManager(clazz);
 
         if (notificationManager == null) {
-            logger.warn("UpdateConfigNotification not supported by the NotificationCenter.");
+            logger.warn("{} not supported by the NotificationCenter.", clazz);
             return -1;
         }
 
