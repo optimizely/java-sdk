@@ -40,6 +40,7 @@ import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
 import static com.optimizely.ab.config.HttpProjectConfigManager.*;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -138,6 +139,44 @@ public class HttpProjectConfigManagerTest {
             .withOptimizelyHttpClient(mockHttpClient)
             .withSdkKey("sdk-key")
             .build(true);
+    }
+
+    @Test
+    public void testInvalidPollingInterval() {
+        Builder builder = builder();
+        long expectedPeriod = builder.period;
+        TimeUnit expectedTimeUnit = builder.timeUnit;
+
+        builder.withPollingInterval(-1, SECONDS);
+        assertEquals(expectedPeriod, builder.period);
+        assertEquals(expectedTimeUnit, builder.timeUnit);
+
+        builder.withPollingInterval(10, null);
+        assertEquals(expectedPeriod, builder.period);
+        assertEquals(expectedTimeUnit, builder.timeUnit);
+
+        builder.withPollingInterval(10, SECONDS);
+        assertEquals(10, builder.period);
+        assertEquals(SECONDS, builder.timeUnit);
+    }
+
+    @Test
+    public void testInvalidBlockingTimeout() {
+        Builder builder = builder();
+        long expectedPeriod = builder.blockingTimeoutPeriod;
+        TimeUnit expectedTimeUnit = builder.blockingTimeoutUnit;
+
+        builder.withBlockingTimeout(-1, SECONDS);
+        assertEquals(expectedPeriod, builder.blockingTimeoutPeriod);
+        assertEquals(expectedTimeUnit, builder.blockingTimeoutUnit);
+
+        builder.withBlockingTimeout(10, null);
+        assertEquals(expectedPeriod, builder.blockingTimeoutPeriod);
+        assertEquals(expectedTimeUnit, builder.blockingTimeoutUnit);
+
+        builder.withBlockingTimeout(10, SECONDS);
+        assertEquals(10, builder.blockingTimeoutPeriod);
+        assertEquals(SECONDS, builder.blockingTimeoutUnit);
     }
 
     @Test

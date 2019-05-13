@@ -37,7 +37,11 @@ public class NotificationManager<T> {
     private final AtomicInteger counter;
     private final Class<T> clazz;
 
-    NotificationManager(Class<T> clazz, AtomicInteger counter) {
+    public NotificationManager(Class<T> clazz) {
+        this(clazz, new AtomicInteger());
+    }
+
+    public NotificationManager(Class<T> clazz, AtomicInteger counter) {
         this.clazz = clazz;
         this.counter = counter;
     }

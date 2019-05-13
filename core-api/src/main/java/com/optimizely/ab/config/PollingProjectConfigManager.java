@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config;
 
+import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.notification.UpdateConfigNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +40,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public abstract class PollingProjectConfigManager implements ProjectConfigManager, AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(PollingProjectConfigManager.class);
+    private static final UpdateConfigNotification SIGNAL = new UpdateConfigNotification();
 
     private final AtomicReference<ProjectConfig> currentProjectConfig = new AtomicReference<>();
     private final ScheduledExecutorService scheduledExecutorService;
@@ -45,20 +48,27 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
     private final TimeUnit timeUnit;
     private final long blockingTimeoutPeriod;
     private final TimeUnit blockingTimeoutUnit;
+    private final NotificationCenter notificationCenter;
+
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
 
     private volatile boolean started;
     private ScheduledFuture<?> scheduledFuture;
 
     public PollingProjectConfigManager(long period, TimeUnit timeUnit)  {
-        this(period, timeUnit, Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+        this(period, timeUnit, Long.MAX_VALUE, TimeUnit.MILLISECONDS, new NotificationCenter());
     }
 
-    public PollingProjectConfigManager(long period, TimeUnit timeUnit, long blockingTimeoutPeriod, TimeUnit blockingTimeoutUnit)  {
+    public PollingProjectConfigManager(long period, TimeUnit timeUnit, NotificationCenter notificationCenter)  {
+        this(period, timeUnit, Long.MAX_VALUE, TimeUnit.MILLISECONDS, notificationCenter);
+    }
+
+    public PollingProjectConfigManager(long period, TimeUnit timeUnit, long blockingTimeoutPeriod, TimeUnit blockingTimeoutUnit, NotificationCenter notificationCenter)  {
         this.period = period;
         this.timeUnit = timeUnit;
         this.blockingTimeoutPeriod = blockingTimeoutPeriod;
         this.blockingTimeoutUnit = blockingTimeoutUnit;
+        this.notificationCenter = notificationCenter;
 
         final ThreadFactory threadFactory = Executors.defaultThreadFactory();
         this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(runnable -> {
@@ -89,7 +99,12 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         logger.info("New datafile set with revision: {}. Old revision: {}", projectConfig.getRevision(), previousRevision);
 
         currentProjectConfig.set(projectConfig);
+        notificationCenter.send(SIGNAL);
         countDownLatch.countDown();
+    }
+
+    public NotificationCenter getNotificationCenter() {
+        return notificationCenter;
     }
 
     /**

@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config;
 
+import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.notification.UpdateConfigNotification;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -148,7 +150,7 @@ public class PollingProjectConfigManagerTest {
     @Test
     public void testErroringProjectConfigManagerWithTimeout() throws Exception {
         PollingProjectConfigManager testProjectConfigManager =
-            new PollingProjectConfigManager(POLLING_PERIOD, POLLING_UNIT, POLLING_PERIOD / 2, POLLING_UNIT) {
+            new PollingProjectConfigManager(POLLING_PERIOD, POLLING_UNIT, POLLING_PERIOD / 2, POLLING_UNIT, new NotificationCenter()) {
             @Override
             protected ProjectConfig poll() {
                 throw new RuntimeException();
@@ -164,7 +166,7 @@ public class PollingProjectConfigManagerTest {
         AtomicBoolean throwError = new AtomicBoolean(true);
 
         PollingProjectConfigManager testProjectConfigManager =
-            new PollingProjectConfigManager(POLLING_PERIOD, POLLING_UNIT, POLLING_PERIOD / 2, POLLING_UNIT) {
+            new PollingProjectConfigManager(POLLING_PERIOD, POLLING_UNIT, POLLING_PERIOD / 2, POLLING_UNIT, new NotificationCenter()) {
                 @Override
                 protected ProjectConfig poll() {
                     if (throwError.get()) {
@@ -184,6 +186,16 @@ public class PollingProjectConfigManagerTest {
 
     }
 
+    @Test
+    public void testUpdateConfigNotificationGetsTriggered() throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        testProjectConfigManager.getNotificationCenter()
+            .<UpdateConfigNotification>getNotificationManager(UpdateConfigNotification.class)
+            .addHandler(message -> {countDownLatch.countDown();});
+
+        assertTrue(countDownLatch.await(500, TimeUnit.MILLISECONDS));
+    }
+
     private static class TestProjectConfigManager extends PollingProjectConfigManager {
         private final AtomicInteger counter = new AtomicInteger();
 
@@ -191,7 +203,7 @@ public class PollingProjectConfigManagerTest {
         private final ProjectConfig projectConfig;
 
         private TestProjectConfigManager(ProjectConfig projectConfig) {
-            super(POLLING_PERIOD, POLLING_UNIT, POLLING_PERIOD / 2, POLLING_UNIT);
+            super(POLLING_PERIOD, POLLING_UNIT, POLLING_PERIOD / 2, POLLING_UNIT, new NotificationCenter());
             this.projectConfig = projectConfig;
         }
 

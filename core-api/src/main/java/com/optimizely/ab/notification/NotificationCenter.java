@@ -93,6 +93,7 @@ public class NotificationCenter {
         validManagers.put(ActivateNotification.class, new NotificationManager<>(ActivateNotification.class, counter));
         validManagers.put(TrackNotification.class, new NotificationManager<>(TrackNotification.class, counter));
         validManagers.put(DecisionNotification.class, new NotificationManager<>(DecisionNotification.class, counter));
+        validManagers.put(UpdateConfigNotification.class, new NotificationManager<>(UpdateConfigNotification.class, counter));
 
         notifierMap = Collections.unmodifiableMap(validManagers);
     }

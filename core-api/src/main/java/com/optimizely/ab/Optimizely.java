@@ -85,7 +85,8 @@ public class Optimizely implements AutoCloseable {
 
     private final ProjectConfigManager projectConfigManager;
 
-    public final NotificationCenter notificationCenter = new NotificationCenter();
+    // TODO should be private
+    public final NotificationCenter notificationCenter;
 
     @Nullable
     private final UserProfileService userProfileService;
@@ -94,8 +95,9 @@ public class Optimizely implements AutoCloseable {
                        @Nonnull EventFactory eventFactory,
                        @Nonnull ErrorHandler errorHandler,
                        @Nonnull DecisionService decisionService,
-                       @Nonnull UserProfileService userProfileService,
-                       @Nonnull ProjectConfigManager projectConfigManager
+                       @Nullable UserProfileService userProfileService,
+                       @Nonnull ProjectConfigManager projectConfigManager,
+                       @Nonnull NotificationCenter notificationCenter
     ) {
         this.decisionService = decisionService;
         this.eventHandler = eventHandler;
@@ -103,6 +105,7 @@ public class Optimizely implements AutoCloseable {
         this.errorHandler = errorHandler;
         this.userProfileService = userProfileService;
         this.projectConfigManager = projectConfigManager;
+        this.notificationCenter = notificationCenter;
     }
 
     /**
@@ -951,17 +954,34 @@ public class Optimizely implements AutoCloseable {
      * Convenience method for adding DecisionNotification Handlers
      */
     public int addDecisionNotificationHandler(NotificationHandler<DecisionNotification> handler) {
-        NotificationManager<DecisionNotification> manager = notificationCenter
-            .getNotificationManager(DecisionNotification.class);
-        return manager.addHandler(handler);
+        return addNotificationHandler(DecisionNotification.class, handler);
     }
 
     /**
      * Convenience method for adding TrackNotification Handlers
      */
     public int addTrackNotificationHandler(NotificationHandler<TrackNotification> handler) {
-        NotificationManager<TrackNotification> notificationManager =
-            notificationCenter.getNotificationManager(TrackNotification.class);
+        return addNotificationHandler(TrackNotification.class, handler);
+    }
+
+    /**
+     * Convenience method for adding UpdateConfigNotification Handlers
+     */
+    public int addUpdateConfigNotificationHandler(NotificationHandler<UpdateConfigNotification> handler) {
+        return addNotificationHandler(UpdateConfigNotification.class, handler);
+    }
+
+    /**
+     * Convenience method for adding UpdateConfigNotification Handlers
+     */
+    private <T> int addNotificationHandler(Class<T> clazz, NotificationHandler<T> handler) {
+        NotificationManager<T> notificationManager = notificationCenter.getNotificationManager(clazz);
+
+        if (notificationManager == null) {
+            logger.warn("{} not supported by the NotificationCenter.", clazz);
+            return -1;
+        }
+
         return notificationManager.addHandler(handler);
     }
 
@@ -999,6 +1019,7 @@ public class Optimizely implements AutoCloseable {
         private ProjectConfig projectConfig;
         private ProjectConfigManager projectConfigManager;
         private UserProfileService userProfileService;
+        private NotificationCenter notificationCenter;
 
         // For backwards compatibility
         private AtomicProjectConfigManager fallbackConfigManager = new AtomicProjectConfigManager();
@@ -1063,6 +1084,11 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
+        protected Builder withNotificationCenter(NotificationCenter notificationCenter) {
+            this.notificationCenter = notificationCenter;
+            return this;
+        }
+
         public Optimizely build() {
 
             if (clientEngine == null) {
@@ -1112,7 +1138,11 @@ public class Optimizely implements AutoCloseable {
                 projectConfigManager = fallbackConfigManager;
             }
 
-            return new Optimizely(eventHandler, eventFactory, errorHandler, decisionService, userProfileService, projectConfigManager);
+            if (notificationCenter == null) {
+                notificationCenter = new NotificationCenter();
+            }
+
+            return new Optimizely(eventHandler, eventFactory, errorHandler, decisionService, userProfileService, projectConfigManager, notificationCenter);
         }
     }
 }
