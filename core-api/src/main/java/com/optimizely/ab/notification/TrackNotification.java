@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * TrackNotification encapsulates the arguments used to submit tracking calls.
  */
-public final class TrackNotification {
+public final class TrackNotification implements Notification {
 
     private final String eventKey;
     private final String userId;

@@ -41,7 +41,7 @@ import java.util.Map;
  *
  * @see <a href="https://docs.developers.optimizely.com/full-stack/docs/register-notification-listeners">Notification Listeners</a>
  */
-public final class DecisionNotification {
+public final class DecisionNotification implements Notification {
     protected String type;
     protected String userId;
     protected Map<String, ?> attributes;

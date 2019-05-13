@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * It replaces NotificationBroadcaster and is intended to be more flexible.
  *
  * NotificationCenter is a holder for a set of supported {@link NotificationManager} instances.
- * If a notification object is sent via {@link NotificationCenter#send(Object)} that is not supported
+ * If a notification object is sent via {@link NotificationCenter#send(Notification)} that is not supported
  * an {@link OptimizelyRuntimeException} will be thrown. This is an internal interface so
  * usage should be restricted to the SDK.
  *
@@ -99,7 +99,7 @@ public class NotificationCenter {
 
     @Nullable
     @SuppressWarnings("unchecked")
-    public <T> NotificationManager<T> getNotificationManager(Class clazz) {
+    public <T extends Notification> NotificationManager<T> getNotificationManager(Class<T> clazz) {
         return notifierMap.get(clazz);
     }
 
@@ -250,7 +250,7 @@ public class NotificationCenter {
     }
 
     @SuppressWarnings("unchecked")
-    public void send(Object notification) {
+    public void send(Notification notification) {
         NotificationManager handler = getNotificationManager(notification.getClass());
         if (handler == null) {
             throw new OptimizelyRuntimeException("Unsupported notificationType");

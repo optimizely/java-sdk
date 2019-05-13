@@ -2765,7 +2765,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(EXPERIMENT_KEY, activatedExperiment.getKey());
         testDecisionInfoMap.put(VARIATION_KEY, null);
 
-        int notificationId = optimizely.addDecisionNotificationHandler(
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class,
             getDecisionListener(NotificationCenter.DecisionNotificationType.AB_TEST.toString(),
                 null,
                 Collections.<String, Object>emptyMap(),
@@ -2805,7 +2805,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(EXPERIMENT_KEY, activatedExperiment.getKey());
         testDecisionInfoMap.put(VARIATION_KEY, null);
 
-        int notificationId = optimizely.addDecisionNotificationHandler(
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class,
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -2841,7 +2841,7 @@ public class OptimizelyTest {
             .withConfig(validProjectConfig)
             .build();
 
-        int notificationId = optimizely.addDecisionNotificationHandler(
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class,
             decisionNotification -> {
                 isListenerCalled = true;
                 assertEquals(decisionNotification.getType(), NotificationCenter.DecisionNotificationType.FEATURE.toString());
@@ -2880,7 +2880,7 @@ public class OptimizelyTest {
             eq(Collections.<String, String>emptyMap())
         );
 
-        int notificationId = spyOptimizely.addDecisionNotificationHandler( decisionNotification -> { });
+        int notificationId = spyOptimizely.addNotificationHandler(DecisionNotification.class, decisionNotification -> { });
 
         ArrayList<String> featureFlags = (ArrayList<String>) spyOptimizely.getEnabledFeatures(genericUserId,
             Collections.<String, String>emptyMap());
@@ -2924,7 +2924,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
 
-        int notificationId = optimizely.addDecisionNotificationHandler(
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class,
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -2980,7 +2980,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
 
-        int notificationId = optimizely.addDecisionNotificationHandler(
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class,
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -3037,7 +3037,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, new HashMap<>());
 
-        int notificationId = optimizely.addDecisionNotificationHandler(
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class,
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -3084,7 +3084,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, new HashMap<>());
 
-        int notificationId = optimizely.addDecisionNotificationHandler(
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class,
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -3139,7 +3139,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
 
-        int notificationId = optimizely.addDecisionNotificationHandler(
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class,
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
                 testUserId,
                 testUserAttributes,
@@ -3192,7 +3192,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
 
-        int notificationId = optimizely.addDecisionNotificationHandler(
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class,
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
                 userID,
                 testUserAttributes,
@@ -3242,7 +3242,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
 
-        int notificationId = optimizely.addDecisionNotificationHandler(
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class,
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -3292,7 +3292,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
 
-        int notificationId = optimizely.addDecisionNotificationHandler(
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class,
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -3341,7 +3341,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
 
-        int notificationId = optimizely.addDecisionNotificationHandler(
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class,
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -3393,7 +3393,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
 
-        int notificationId = optimizely.addDecisionNotificationHandler(
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class,
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -3889,7 +3889,7 @@ public class OptimizelyTest {
             }
         };
 
-        int notificationId = optimizely.addTrackNotificationHandler(trackNotification);
+        int notificationId = optimizely.addNotificationHandler(TrackNotification.class, trackNotification);
 
         // call track
         optimizely.track(eventType.getKey(), genericUserId, attributes);
@@ -5821,7 +5821,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(EXPERIMENT_KEY, experiment.getKey());
         testDecisionInfoMap.put(VARIATION_KEY, bucketedVariation.getKey());
 
-        int notificationId = optimizely.addDecisionNotificationHandler(
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class,
             getDecisionListener(NotificationCenter.DecisionNotificationType.AB_TEST.toString(),
                 testUserId,
                 testUserAttributes,
@@ -5875,7 +5875,7 @@ public class OptimizelyTest {
         NotificationManager<TrackNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(TrackNotification.class);
 
-        int notificationId = optimizely.addTrackNotificationHandler(trackNotification -> {});
+        int notificationId = optimizely.addNotificationHandler(TrackNotification.class, trackNotification -> {});
         assertTrue(manager.remove(notificationId));
     }
 
@@ -5885,7 +5885,7 @@ public class OptimizelyTest {
         NotificationManager<DecisionNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(DecisionNotification.class);
 
-        int notificationId = optimizely.addDecisionNotificationHandler(decisionNotification -> {});
+        int notificationId = optimizely.addNotificationHandler(DecisionNotification.class, decisionNotification -> {});
         assertTrue(manager.remove(notificationId));
     }
 

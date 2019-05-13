@@ -948,23 +948,19 @@ public class Optimizely implements AutoCloseable {
     }
 
     /**
-     * Convenience method for adding DecisionNotification Handlers
+     * addNotificationHandler is a generic method for adding notification handlers to the {@link NotificationCenter}.
+     * @return int corresponding to the reference id of the NotificationHandler which can be used to remove the
+     *             listener is it is no longer needed.
      */
-    public int addDecisionNotificationHandler(NotificationHandler<DecisionNotification> handler) {
-        NotificationManager<DecisionNotification> manager = notificationCenter
-            .getNotificationManager(DecisionNotification.class);
-        return manager.addHandler(handler);
-    }
+    public <T extends Notification> int addNotificationHandler(Class<T> clazz, NotificationHandler<T> handler) {
+        NotificationManager<T> notificationManager = notificationCenter.getNotificationManager(clazz);
+        if (notificationManager == null) {
+            logger.warn("Notification for class {}, is not supported.", clazz);
+            return -1;
+        }
 
-    /**
-     * Convenience method for adding TrackNotification Handlers
-     */
-    public int addTrackNotificationHandler(NotificationHandler<TrackNotification> handler) {
-        NotificationManager<TrackNotification> notificationManager =
-            notificationCenter.getNotificationManager(TrackNotification.class);
         return notificationManager.addHandler(handler);
     }
-
 
     //======== Builder ========//
     @Deprecated

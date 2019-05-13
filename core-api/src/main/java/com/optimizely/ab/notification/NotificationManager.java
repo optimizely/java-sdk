@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * The NotificationManager is responsible for storing a collection of NotificationHandlers and mapping
  * them to a globally unique integer so that they can be removed on demand.
  */
-public class NotificationManager<T> {
+public class NotificationManager<T extends Notification> {
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationManager.class);
 

@@ -30,7 +30,7 @@ import java.util.Map;
  * and Rollout decisions.
  */
 @Deprecated
-public final class ActivateNotification {
+public final class ActivateNotification implements Notification {
 
     private final Experiment experiment;
     private final String userId;

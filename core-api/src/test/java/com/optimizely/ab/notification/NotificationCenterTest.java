@@ -28,7 +28,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -224,7 +223,7 @@ public class NotificationCenterTest {
         testSendWithNotification(new ActivateNotification());
     }
 
-    private void testSendWithNotification(Object notification) {
+    private void testSendWithNotification(Notification notification) {
         TestNotificationHandler handler = new TestNotificationHandler<>();
         notificationCenter.getNotificationManager(notification.getClass()).addHandler(handler);
         notificationCenter.send(notification);
@@ -232,6 +231,5 @@ public class NotificationCenterTest {
         List messages = handler.getMessages();
         assertEquals(1, messages.size());
         assertEquals(notification, messages.get(0));
-
     }
 }

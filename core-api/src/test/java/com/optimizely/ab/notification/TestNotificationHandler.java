@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * TestNotificationHandler used for unit testing NotificationCenter and NotificationManager
  */
-class TestNotificationHandler<T> implements NotificationHandler<T> {
+class TestNotificationHandler<T extends Notification> implements NotificationHandler<T> {
     private final List<T> messages = new ArrayList<>();
 
     @Override
