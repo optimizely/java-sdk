@@ -411,7 +411,6 @@ public class Optimizely implements AutoCloseable {
                     userId, featureKey);
             }
             if (featureDecision.variation.getFeatureEnabled()) {
-                logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
                 featureEnabled = true;
             }
         }
@@ -427,7 +426,7 @@ public class Optimizely implements AutoCloseable {
 
         notificationCenter.send(decisionNotification);
 
-        logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
+        logger.info("Feature \"{}\" is enabled for user \"{}\"? {}", featureKey, userId, featureEnabled);
         return featureEnabled;
     }
 
