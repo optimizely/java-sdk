@@ -248,7 +248,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -308,7 +308,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -460,7 +460,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -520,7 +520,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -629,7 +629,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -2939,7 +2939,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? true"
         );
         verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
 
@@ -3002,7 +3002,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is not enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? false"
         );
         verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
 
@@ -3048,7 +3048,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is not enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? false"
         );
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
 
@@ -3095,7 +3095,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is not enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? true"
         );
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
 
@@ -4498,7 +4498,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is not enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? false"
         );
         verify(spyOptimizely).isFeatureEnabled(
             eq(validFeatureKey),
@@ -4555,7 +4555,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? true"
         );
         verify(spyOptimizely).isFeatureEnabled(
             eq(validFeatureKey),
@@ -4717,7 +4717,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is not enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? false"
         );
         verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
     }
@@ -4750,7 +4750,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? true"
         );
         verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
     }

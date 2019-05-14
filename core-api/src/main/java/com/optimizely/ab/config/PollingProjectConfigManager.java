@@ -176,14 +176,13 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
     }
 
     private class ProjectConfigFetcher implements Runnable {
-
         @Override
         public void run() {
             try {
                 ProjectConfig projectConfig = poll();
                 setConfig(projectConfig);
             } catch (Exception e) {
-                logger.error("Error polling ProjectConfigManager", e);
+                logger.error("Uncaught exception polling for ProjectConfig.", e);
             }
         }
     }

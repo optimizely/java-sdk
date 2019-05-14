@@ -141,14 +141,14 @@ public class DecisionService {
                 if (userProfileService != null) {
                     saveVariation(experiment, variation, userProfile);
                 } else {
-                    logger.info("This decision will not be saved since the UserProfileService is null.");
+                    logger.debug("This decision will not be saved since the UserProfileService is null.");
                 }
             }
 
             return variation;
         }
-        logger.info("User \"{}\" does not meet conditions to be in experiment \"{}\".", userId, experiment.getKey());
 
+        logger.info("User \"{}\" does not meet conditions to be in experiment \"{}\".", userId, experiment.getKey());
         return null;
     }
 
@@ -170,8 +170,7 @@ public class DecisionService {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
                 Variation variation = getVariation(experiment, userId, filteredAttributes, projectConfig);
                 if (variation != null) {
-                    return new FeatureDecision(experiment, variation,
-                        FeatureDecision.DecisionSource.FEATURE_TEST);
+                    return new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST);
                 }
             }
         } else {
