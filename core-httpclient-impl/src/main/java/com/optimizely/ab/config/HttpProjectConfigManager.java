@@ -174,9 +174,14 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
          * PollingProjectConfigManager will begin returning null immediately until the call to Poll
          * succeeds.
          */
-        public Builder withBlockingTimeout(long period, TimeUnit timeUnit) {
+        public Builder withBlockingTimeout(Long period, TimeUnit timeUnit) {
             if (timeUnit == null) {
                 logger.warn("TimeUnit cannot be null. Keeping default period: {} and time unit: {}", this.blockingTimeoutPeriod, this.blockingTimeoutUnit);
+                return this;
+            }
+
+            if (period == null) {
+                logger.warn("Timeout cannot be null. Keeping default period: {} and time unit: {}", this.blockingTimeoutPeriod, this.blockingTimeoutUnit);
                 return this;
             }
 
@@ -191,9 +196,14 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
             return this;
         }
 
-        public Builder withPollingInterval(long period, TimeUnit timeUnit) {
+        public Builder withPollingInterval(Long period, TimeUnit timeUnit) {
             if (timeUnit == null) {
                 logger.warn("TimeUnit cannot be null. Keeping default period: {} and time unit: {}", this.period, this.timeUnit);
+                return this;
+            }
+
+            if (period == null) {
+                logger.warn("Interval cannot be null. Keeping default period: {} and time unit: {}", this.period, this.timeUnit);
                 return this;
             }
 

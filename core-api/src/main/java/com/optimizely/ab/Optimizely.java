@@ -971,19 +971,11 @@ public class Optimizely implements AutoCloseable {
     }
 
     /**
-     * Convenience method for adding UpdateConfigNotification Handlers
+     * Convenience method for adding NotificationHandlers
      */
-    private <T> int addNotificationHandler(Class<T> clazz, NotificationHandler<T> handler) {
-        NotificationManager<T> notificationManager = notificationCenter.getNotificationManager(clazz);
-
-        if (notificationManager == null) {
-            logger.warn("{} not supported by the NotificationCenter.", clazz);
-            return -1;
-        }
-
-        return notificationManager.addHandler(handler);
+    public <T> int addNotificationHandler(Class<T> clazz, NotificationHandler<T> handler) {
+        return notificationCenter.addNotificationHandler(clazz, handler);
     }
-
 
     //======== Builder ========//
     @Deprecated
@@ -1062,6 +1054,11 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
+        public Builder withNotificationCenter(NotificationCenter notificationCenter) {
+            this.notificationCenter = notificationCenter;
+            return this;
+        }
+
         // Helper function for making testing easier
         protected Builder withBucketing(Bucketer bucketer) {
             this.bucketer = bucketer;
@@ -1080,11 +1077,6 @@ public class Optimizely implements AutoCloseable {
 
         protected Builder withEventBuilder(EventFactory eventFactory) {
             this.eventFactory = eventFactory;
-            return this;
-        }
-
-        protected Builder withNotificationCenter(NotificationCenter notificationCenter) {
-            this.notificationCenter = notificationCenter;
             return this;
         }
 

@@ -28,7 +28,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -64,7 +63,6 @@ public class NotificationCenterTest {
         logbackVerifier.expectMessage(Level.WARN, "Notification listener was the wrong type. It was not added to the notification center.");
         assertEquals(-1, notificationId);
         assertFalse(notificationCenter.removeNotificationListener(notificationId));
-
     }
 
     @Test
@@ -120,7 +118,7 @@ public class NotificationCenterTest {
         NotificationManager<DecisionNotification> manager = notificationCenter.getNotificationManager(DecisionNotification.class);
         int notificationId = manager.addHandler(decisionNotification -> { });
         assertNotSame(-1, notificationId);
-        assertTrue(notificationCenter.removeNotificationListener(notificationId));
+        assertTrue(manager.remove(notificationId));
     }
 
     @Test
@@ -172,6 +170,21 @@ public class NotificationCenterTest {
         });
         assertNotSame(-1, notificationId);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    @Test
+    public void testAddValidNotificationHandler() {
+        assertEquals(1, notificationCenter.addNotificationHandler(ActivateNotification.class, x -> {}));
+        assertEquals(2, notificationCenter.addNotificationHandler(DecisionNotification.class, x -> {}));
+        assertEquals(3, notificationCenter.addNotificationHandler(TrackNotification.class, x -> {}));
+        assertEquals(4, notificationCenter.addNotificationHandler(UpdateConfigNotification.class, x -> {}));
+
+    }
+
+    @Test
+    public void testAddInvalidNotificationHandler() {
+        int actual = notificationCenter.addNotificationHandler(Integer.class, i -> {});
+        assertEquals(-1, actual);
     }
 
     @Test
