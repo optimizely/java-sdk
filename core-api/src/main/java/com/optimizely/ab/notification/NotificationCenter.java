@@ -104,6 +104,17 @@ public class NotificationCenter {
         return notifierMap.get(clazz);
     }
 
+    public <T> int addNotificationHandler(Class<T> clazz, NotificationHandler<T> handler) {
+        NotificationManager<T> notificationManager = getNotificationManager(clazz);
+
+        if (notificationManager == null) {
+            logger.warn("{} not supported by the NotificationCenter.", clazz);
+            return -1;
+        }
+
+        return notificationManager.addHandler(handler);
+    }
+
     /**
      * Convenience method to support lambdas as callbacks in later version of Java (8+).
      *

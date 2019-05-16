@@ -66,7 +66,7 @@ public final class OptimizelyFactory {
 
     /**
      * Convenience method for setting the blocking timeout.
-     * {@link HttpProjectConfigManager.Builder#withBlockingTimeout(long, TimeUnit)}
+     * {@link HttpProjectConfigManager.Builder#withBlockingTimeout(Long, TimeUnit)}
      */
     public static void setBlockingTimeout(long blockingDuration, TimeUnit blockingTimeout) {
         if (blockingTimeout == null) {
@@ -85,7 +85,7 @@ public final class OptimizelyFactory {
 
     /**
      * Convenience method for setting the polling interval on System properties.
-     * {@link HttpProjectConfigManager.Builder#withPollingInterval(long, TimeUnit)}
+     * {@link HttpProjectConfigManager.Builder#withPollingInterval(Long, TimeUnit)}
      */
     public static void setPollingInterval(long pollingDuration, TimeUnit pollingTimeout) {
         if (pollingTimeout == null) {

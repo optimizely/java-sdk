@@ -147,15 +147,19 @@ public class HttpProjectConfigManagerTest {
         long expectedPeriod = builder.period;
         TimeUnit expectedTimeUnit = builder.timeUnit;
 
-        builder.withPollingInterval(-1, SECONDS);
+        builder.withPollingInterval(null, SECONDS);
         assertEquals(expectedPeriod, builder.period);
         assertEquals(expectedTimeUnit, builder.timeUnit);
 
-        builder.withPollingInterval(10, null);
+        builder.withPollingInterval(-1L, SECONDS);
         assertEquals(expectedPeriod, builder.period);
         assertEquals(expectedTimeUnit, builder.timeUnit);
 
-        builder.withPollingInterval(10, SECONDS);
+        builder.withPollingInterval(10L, null);
+        assertEquals(expectedPeriod, builder.period);
+        assertEquals(expectedTimeUnit, builder.timeUnit);
+
+        builder.withPollingInterval(10L, SECONDS);
         assertEquals(10, builder.period);
         assertEquals(SECONDS, builder.timeUnit);
     }
@@ -166,15 +170,19 @@ public class HttpProjectConfigManagerTest {
         long expectedPeriod = builder.blockingTimeoutPeriod;
         TimeUnit expectedTimeUnit = builder.blockingTimeoutUnit;
 
-        builder.withBlockingTimeout(-1, SECONDS);
+        builder.withBlockingTimeout(null, SECONDS);
         assertEquals(expectedPeriod, builder.blockingTimeoutPeriod);
         assertEquals(expectedTimeUnit, builder.blockingTimeoutUnit);
 
-        builder.withBlockingTimeout(10, null);
+        builder.withBlockingTimeout(-1L, SECONDS);
         assertEquals(expectedPeriod, builder.blockingTimeoutPeriod);
         assertEquals(expectedTimeUnit, builder.blockingTimeoutUnit);
 
-        builder.withBlockingTimeout(10, SECONDS);
+        builder.withBlockingTimeout(10L, null);
+        assertEquals(expectedPeriod, builder.blockingTimeoutPeriod);
+        assertEquals(expectedTimeUnit, builder.blockingTimeoutUnit);
+
+        builder.withBlockingTimeout(10L, SECONDS);
         assertEquals(10, builder.blockingTimeoutPeriod);
         assertEquals(SECONDS, builder.blockingTimeoutUnit);
     }
@@ -243,7 +251,7 @@ public class HttpProjectConfigManagerTest {
         projectConfigManager = builder()
             .withOptimizelyHttpClient(mockHttpClient)
             .withSdkKey("sdk-key")
-            .withBlockingTimeout(10, TimeUnit.MILLISECONDS)
+            .withBlockingTimeout(10L, TimeUnit.MILLISECONDS)
             .build();
 
         assertNull(projectConfigManager.getConfig());
