@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -266,17 +266,41 @@ final class JsonConfigParser implements ConfigParser {
         List<Audience> audiences = new ArrayList<Audience>(audienceJson.length());
 
         for (Object obj : audienceJson) {
-            JSONObject audienceObject = (JSONObject)obj;
+            JSONObject audienceObject = (JSONObject) obj;
             String id = audienceObject.getString("id");
             String key = audienceObject.getString("name");
             String conditionString = audienceObject.getString("conditions");
-
-            JSONArray conditionJson = new JSONArray(conditionString);
-            Condition conditions = parseConditions(conditionJson);
+            Condition conditions;
+            if (conditionString.startsWith("[")) {
+                JSONArray conditionJsonArray = new JSONArray(conditionString);
+                conditions = parseConditions(conditionJsonArray);
+            } else {
+                JSONObject conditionJsonObject = new JSONObject(conditionString);
+                conditions = parseConditions(conditionJsonObject);
+            }
             audiences.add(new Audience(id, key, conditions));
         }
 
         return audiences;
+    }
+
+    private Condition parseConditions(JSONObject conditionJson) {
+        List<Condition> conditions = new ArrayList<Condition>();
+
+        JSONObject conditionMap = conditionJson;
+        String value = null;
+        if (conditionMap.has("value")) {
+            value = conditionMap.getString("value");
+        }
+        conditions.add(new UserAttribute(
+                (String) conditionMap.get("name"),
+                (String) conditionMap.get("type"),
+                value
+        ));
+
+        Condition condition = new OrCondition(conditions);
+
+        return condition;
     }
 
     private Condition parseConditions(JSONArray conditionJson) {

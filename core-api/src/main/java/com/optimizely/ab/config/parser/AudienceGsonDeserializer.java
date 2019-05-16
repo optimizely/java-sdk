@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -36,7 +36,9 @@ import com.optimizely.ab.config.audience.UserAttribute;
 import java.lang.reflect.Type;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {
 
@@ -51,8 +53,13 @@ public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {
         String name = jsonObject.get("name").getAsString();
 
         JsonElement conditionsElement = parser.parse(jsonObject.get("conditions").getAsString());
-        List<Object> rawObjectList = gson.fromJson(conditionsElement, List.class);
-        Condition conditions = parseConditions(rawObjectList);
+        Object rawObject = gson.fromJson(conditionsElement, Object.class);
+        Condition conditions;
+        if (rawObject instanceof ArrayList) {
+            conditions = parseConditions((List<Object>) rawObject);
+        } else {
+            conditions = parseConditions(rawObject);
+        }
 
         return new Audience(id, name, conditions);
     }
@@ -81,6 +88,18 @@ public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {
         } else {
             condition = new NotCondition(conditions.get(0));
         }
+
+        return condition;
+    }
+
+    private Condition parseConditions(Object rawObject) {
+        List<Condition> conditions = new ArrayList<Condition>();
+
+        Map<String, String> conditionMap = (LinkedTreeMap<String, String>) rawObject;
+        conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
+                conditionMap.get("value")));
+
+        Condition condition = new OrCondition(conditions);
 
         return condition;
     }

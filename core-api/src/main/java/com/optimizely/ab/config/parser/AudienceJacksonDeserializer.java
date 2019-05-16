@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -44,7 +44,6 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
         String id = node.get("id").textValue();
         String name = node.get("name").textValue();
 
-
         Object rawObject = mapper.readValue(node.get("conditions").textValue(), Object.class);
         Condition conditions;
         if (rawObject instanceof ArrayList) {
@@ -57,17 +56,17 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
 
     private Condition parseConditions(List<Object> rawObjectList) {
         List<Condition> conditions = new ArrayList<Condition>();
-        String operand = (String)rawObjectList.get(0);
+        String operand = (String) rawObjectList.get(0);
 
         for (int i = 1; i < rawObjectList.size(); i++) {
             Object obj = rawObjectList.get(i);
             if (obj instanceof List) {
-                List<Object> objectList = (List<Object>)rawObjectList.get(i);
+                List<Object> objectList = (List<Object>) rawObjectList.get(i);
                 conditions.add(parseConditions(objectList));
             } else {
-                HashMap<String, String> conditionMap = (HashMap<String, String>)rawObjectList.get(i);
+                HashMap<String, String> conditionMap = (HashMap<String, String>) rawObjectList.get(i);
                 conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
-                               conditionMap.get("value")));
+                        conditionMap.get("value")));
             }
         }
 
@@ -86,7 +85,7 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
     private Condition parseConditions(Object rawObject) {
         List<Condition> conditions = new ArrayList<Condition>();
 
-        HashMap<String, String> conditionMap = (HashMap<String, String>)rawObject;
+        HashMap<String, String> conditionMap = (HashMap<String, String>) rawObject;
         conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
                 conditionMap.get("value")));
 

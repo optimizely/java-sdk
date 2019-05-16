@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -274,17 +274,33 @@ final class JsonSimpleConfigParser implements ConfigParser {
         List<Audience> audiences = new ArrayList<Audience>(audienceJson.size());
 
         for (Object obj : audienceJson) {
-            JSONObject audienceObject = (JSONObject)obj;
-            String id = (String)audienceObject.get("id");
-            String key = (String)audienceObject.get("name");
-            String conditionString = (String)audienceObject.get("conditions");
+            JSONObject audienceObject = (JSONObject) obj;
+            String id = (String) audienceObject.get("id");
+            String key = (String) audienceObject.get("name");
+            String conditionString = (String) audienceObject.get("conditions");
 
-            JSONArray conditionJson = (JSONArray)parser.parse(conditionString);
-            Condition conditions = parseConditions(conditionJson);
+            Object conditionJson = parser.parse(conditionString);
+            Condition conditions;
+            if (conditionJson instanceof JSONArray) {
+                conditions = parseConditions((JSONArray) conditionJson);
+            } else {
+                conditions = parseConditions((JSONObject) conditionJson);
+            }
             audiences.add(new Audience(id, key, conditions));
         }
 
         return audiences;
+    }
+
+    private Condition parseConditions(JSONObject conditionJson) {
+        List<Condition> conditions = new ArrayList<Condition>();
+
+        conditions.add(new UserAttribute((String) conditionJson.get("name"), (String) conditionJson.get("type"),
+                (String) conditionJson.get("value")));
+
+        Condition condition = new OrCondition(conditions);
+
+        return condition;
     }
 
     private Condition parseConditions(JSONArray conditionJson) {

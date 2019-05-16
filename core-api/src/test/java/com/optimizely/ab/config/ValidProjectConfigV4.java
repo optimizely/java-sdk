@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017-2018, Optimizely and contributors
+ *    Copyright 2017-2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -112,6 +112,17 @@ public class ValidProjectConfigV4 {
                             ))
                     ))
             ))
+    );
+
+    private static final String     UNTYPED_SINGLE_CONDITION_LEAF_ID = "10413101795";
+    private static final String     UNTYPED_SINGLE_CONDITION_LEAF_KEY = "untyped_single_condition_leaf_root";
+    public  static final String     UNTYPED_SINGLE_CONDITION_LEAF_VALUE = "leaf_root";
+    private static final Audience   UNTYPED_SINGLE_CONDITION_LEAF = new Audience(
+            UNTYPED_SINGLE_CONDITION_LEAF_ID,
+            UNTYPED_SINGLE_CONDITION_LEAF_KEY,
+            new OrCondition(Collections.singletonList((Condition) new UserAttribute("string_attribute",
+                    CUSTOM_DIMENSION_TYPE,
+                    UNTYPED_SINGLE_CONDITION_LEAF_VALUE)))
     );
 
     // features
@@ -1040,6 +1051,7 @@ public class ValidProjectConfigV4 {
         audiences.add(AUDIENCE_SLYTHERIN);
         audiences.add(AUDIENCE_ENGLISH_CITIZENS);
         audiences.add(AUDIENCE_WITH_MISSING_VALUE);
+        audiences.add(UNTYPED_SINGLE_CONDITION_LEAF);
 
         // list events
         List<EventType> events = new ArrayList<EventType>();

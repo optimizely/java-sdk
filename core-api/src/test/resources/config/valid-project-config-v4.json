@@ -25,6 +25,11 @@
       "id": "2196265320",
       "name": "audience_with_missing_value",
       "conditions": "[\"and\", [\"or\", [\"or\", {\"name\": \"nationality\", \"type\": \"custom_dimension\", \"value\": \"English\"}, {\"name\": \"nationality\", \"type\": \"custom_dimension\"}]]]"
+    },
+    {
+      "id": "10413101795",
+      "conditions": "{\"type\": \"custom_dimension\", \"name\": \"string_attribute\", \"match\": \"exact\", \"value\": \"leaf_root\"}",
+      "name": "untyped_single_condition_leaf_root"
     }
   ],
   "attributes": [
