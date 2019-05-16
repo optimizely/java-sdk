@@ -45,6 +45,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import javax.annotation.Nonnull;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,9 +54,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
@@ -63,8 +61,6 @@ import static com.optimizely.ab.event.LogEvent.RequestMethod;
 import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.EXPERIMENT_KEY;
 import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_KEY;
 import static com.optimizely.ab.notification.DecisionNotification.FeatureVariableDecisionNotificationBuilder.*;
-import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.EXPERIMENT_KEY;
-import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_KEY;
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
@@ -148,6 +144,70 @@ public class OptimizelyTest {
         this.datafileVersion = Integer.parseInt(validProjectConfig.getVersion());
     }
 
+    @Test
+    public void testClose() throws IOException {
+        EventHandler mockCloseableEventHandler = mock(
+            EventHandler.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+        ProjectConfigManager mockCloseableProjectConfigManager = mock(
+            ProjectConfigManager.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+
+        Optimizely optimizely = Optimizely.builder()
+            .withEventHandler(mockCloseableEventHandler)
+            .withConfigManager(mockCloseableProjectConfigManager)
+            .build();
+
+        optimizely.close();
+
+        verify((Closeable) mockCloseableEventHandler).close();
+        verify((Closeable) mockCloseableProjectConfigManager).close();
+    }
+
+    @Test
+    public void testCloseConfigManagerThrowsException() throws IOException {
+        EventHandler mockCloseableEventHandler = mock(
+            EventHandler.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+        ProjectConfigManager mockCloseableProjectConfigManager = mock(
+            ProjectConfigManager.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+
+        Optimizely optimizely = Optimizely.builder()
+            .withEventHandler(mockCloseableEventHandler)
+            .withConfigManager(mockCloseableProjectConfigManager)
+            .build();
+
+        doThrow(new IOException()).when((Closeable) mockCloseableProjectConfigManager).close();
+        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockCloseableProjectConfigManager + ".");
+        optimizely.close();
+    }
+
+    @Test
+    public void testCloseEventHandlerThrowsException() throws IOException {
+        EventHandler mockCloseableEventHandler = mock(
+            EventHandler.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+        ProjectConfigManager mockCloseableProjectConfigManager = mock(
+            ProjectConfigManager.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+
+        Optimizely optimizely = Optimizely.builder()
+            .withEventHandler(mockCloseableEventHandler)
+            .withConfigManager(mockCloseableProjectConfigManager)
+            .build();
+
+        doThrow(new IOException()).when((Closeable) mockCloseableEventHandler).close();
+        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockCloseableEventHandler + ".");
+        optimizely.close();
+    }
+
     //======== activate tests ========//
 
     /**
@@ -188,7 +248,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -248,7 +308,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -400,7 +460,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -460,7 +520,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -569,7 +629,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -2879,7 +2939,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? true"
         );
         verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
 
@@ -2942,7 +3002,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is not enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? false"
         );
         verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
 
@@ -2988,7 +3048,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is not enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? false"
         );
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
 
@@ -3035,7 +3095,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is not enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? true"
         );
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
 
@@ -4438,7 +4498,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is not enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? false"
         );
         verify(spyOptimizely).isFeatureEnabled(
             eq(validFeatureKey),
@@ -4495,7 +4555,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? true"
         );
         verify(spyOptimizely).isFeatureEnabled(
             eq(validFeatureKey),
@@ -4657,7 +4717,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is not enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? false"
         );
         verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
     }
@@ -4690,7 +4750,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? true"
         );
         verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
     }
@@ -5805,27 +5865,37 @@ public class OptimizelyTest {
 
     @Test
     public void testGetNotificationCenter() {
-        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        Optimizely optimizely = Optimizely.builder().withConfigManager(() -> null).build();
         assertEquals(optimizely.notificationCenter, optimizely.getNotificationCenter());
     }
 
     @Test
     public void testAddTrackNotificationHandler() {
-        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        Optimizely optimizely = Optimizely.builder().withConfigManager(() -> null).build();
         NotificationManager<TrackNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(TrackNotification.class);
 
-        int notificationId = optimizely.addTrackNotificationHandler(trackNotification -> {});
+        int notificationId = optimizely.addTrackNotificationHandler(message -> {});
         assertTrue(manager.remove(notificationId));
     }
 
     @Test
     public void testAddDecisionNotificationHandler() {
-        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler).build();
+        Optimizely optimizely = Optimizely.builder().withConfigManager(() -> null).build();
         NotificationManager<DecisionNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(DecisionNotification.class);
 
-        int notificationId = optimizely.addDecisionNotificationHandler(decisionNotification -> {});
+        int notificationId = optimizely.addDecisionNotificationHandler(message -> {});
+        assertTrue(manager.remove(notificationId));
+    }
+
+    @Test
+    public void testAddUpdateConfigNotificationHandler() {
+        Optimizely optimizely = Optimizely.builder().withConfigManager(() -> null).build();
+        NotificationManager<UpdateConfigNotification> manager = optimizely.getNotificationCenter()
+            .getNotificationManager(UpdateConfigNotification.class);
+
+        int notificationId = optimizely.addUpdateConfigNotificationHandler(message -> {});
         assertTrue(manager.remove(notificationId));
     }
 

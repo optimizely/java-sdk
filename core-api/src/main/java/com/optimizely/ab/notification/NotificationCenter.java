@@ -93,6 +93,7 @@ public class NotificationCenter {
         validManagers.put(ActivateNotification.class, new NotificationManager<>(ActivateNotification.class, counter));
         validManagers.put(TrackNotification.class, new NotificationManager<>(TrackNotification.class, counter));
         validManagers.put(DecisionNotification.class, new NotificationManager<>(DecisionNotification.class, counter));
+        validManagers.put(UpdateConfigNotification.class, new NotificationManager<>(UpdateConfigNotification.class, counter));
 
         notifierMap = Collections.unmodifiableMap(validManagers);
     }
@@ -101,6 +102,17 @@ public class NotificationCenter {
     @SuppressWarnings("unchecked")
     public <T> NotificationManager<T> getNotificationManager(Class clazz) {
         return notifierMap.get(clazz);
+    }
+
+    public <T> int addNotificationHandler(Class<T> clazz, NotificationHandler<T> handler) {
+        NotificationManager<T> notificationManager = getNotificationManager(clazz);
+
+        if (notificationManager == null) {
+            logger.warn("{} not supported by the NotificationCenter.", clazz);
+            return -1;
+        }
+
+        return notificationManager.addHandler(handler);
     }
 
     /**

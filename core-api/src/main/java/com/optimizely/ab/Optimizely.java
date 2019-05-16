@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,7 +70,7 @@ import java.util.Map;
  * to be logged, and for the "control" variation to be returned.
  */
 @ThreadSafe
-public class Optimizely {
+public class Optimizely implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
 
@@ -84,7 +85,8 @@ public class Optimizely {
 
     private final ProjectConfigManager projectConfigManager;
 
-    public final NotificationCenter notificationCenter = new NotificationCenter();
+    // TODO should be private
+    public final NotificationCenter notificationCenter;
 
     @Nullable
     private final UserProfileService userProfileService;
@@ -93,8 +95,9 @@ public class Optimizely {
                        @Nonnull EventFactory eventFactory,
                        @Nonnull ErrorHandler errorHandler,
                        @Nonnull DecisionService decisionService,
-                       @Nonnull UserProfileService userProfileService,
-                       @Nonnull ProjectConfigManager projectConfigManager
+                       @Nullable UserProfileService userProfileService,
+                       @Nonnull ProjectConfigManager projectConfigManager,
+                       @Nonnull NotificationCenter notificationCenter
     ) {
         this.decisionService = decisionService;
         this.eventHandler = eventHandler;
@@ -102,6 +105,7 @@ public class Optimizely {
         this.errorHandler = errorHandler;
         this.userProfileService = userProfileService;
         this.projectConfigManager = projectConfigManager;
+        this.notificationCenter = notificationCenter;
     }
 
     /**
@@ -113,6 +117,33 @@ public class Optimizely {
      */
     public boolean isValid() {
         return getProjectConfig() != null;
+    }
+
+    /**
+     * Helper method which checks if Object is an instance of Closeable and calls close() on it.
+     */
+    private void tryClose(Object obj) {
+        if (!(obj instanceof Closeable)) {
+            return;
+        }
+
+        try {
+            ((Closeable) obj).close();
+        } catch (Exception e) {
+            logger.warn("Unexpected exception on trying to close {}.", obj);
+        }
+    }
+
+    /**
+     * Checks if eventHandler {@link EventHandler} and projectConfigManager {@link ProjectConfigManager}
+     * are Closeable {@link Closeable} and calls close on them.
+     *
+     * <b>NOTE:</b> There is a chance that this could be long running if the implementations of close are long running.
+     */
+    @Override
+    public void close() {
+        tryClose(eventHandler);
+        tryClose(projectConfigManager);
     }
 
     //======== activate calls ========//
@@ -380,7 +411,6 @@ public class Optimizely {
                     userId, featureKey);
             }
             if (featureDecision.variation.getFeatureEnabled()) {
-                logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
                 featureEnabled = true;
             }
         }
@@ -396,7 +426,7 @@ public class Optimizely {
 
         notificationCenter.send(decisionNotification);
 
-        logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
+        logger.info("Feature \"{}\" is enabled for user \"{}\"? {}", featureKey, userId, featureEnabled);
         return featureEnabled;
     }
 
@@ -923,20 +953,29 @@ public class Optimizely {
      * Convenience method for adding DecisionNotification Handlers
      */
     public int addDecisionNotificationHandler(NotificationHandler<DecisionNotification> handler) {
-        NotificationManager<DecisionNotification> manager = notificationCenter
-            .getNotificationManager(DecisionNotification.class);
-        return manager.addHandler(handler);
+        return addNotificationHandler(DecisionNotification.class, handler);
     }
 
     /**
      * Convenience method for adding TrackNotification Handlers
      */
     public int addTrackNotificationHandler(NotificationHandler<TrackNotification> handler) {
-        NotificationManager<TrackNotification> notificationManager =
-            notificationCenter.getNotificationManager(TrackNotification.class);
-        return notificationManager.addHandler(handler);
+        return addNotificationHandler(TrackNotification.class, handler);
     }
 
+    /**
+     * Convenience method for adding UpdateConfigNotification Handlers
+     */
+    public int addUpdateConfigNotificationHandler(NotificationHandler<UpdateConfigNotification> handler) {
+        return addNotificationHandler(UpdateConfigNotification.class, handler);
+    }
+
+    /**
+     * Convenience method for adding NotificationHandlers
+     */
+    public <T> int addNotificationHandler(Class<T> clazz, NotificationHandler<T> handler) {
+        return notificationCenter.addNotificationHandler(clazz, handler);
+    }
 
     //======== Builder ========//
     @Deprecated
@@ -971,6 +1010,7 @@ public class Optimizely {
         private ProjectConfig projectConfig;
         private ProjectConfigManager projectConfigManager;
         private UserProfileService userProfileService;
+        private NotificationCenter notificationCenter;
 
         // For backwards compatibility
         private AtomicProjectConfigManager fallbackConfigManager = new AtomicProjectConfigManager();
@@ -1011,6 +1051,11 @@ public class Optimizely {
 
         public Builder withConfigManager(ProjectConfigManager projectConfigManager) {
             this.projectConfigManager = projectConfigManager;
+            return this;
+        }
+
+        public Builder withNotificationCenter(NotificationCenter notificationCenter) {
+            this.notificationCenter = notificationCenter;
             return this;
         }
 
@@ -1084,7 +1129,11 @@ public class Optimizely {
                 projectConfigManager = fallbackConfigManager;
             }
 
-            return new Optimizely(eventHandler, eventFactory, errorHandler, decisionService, userProfileService, projectConfigManager);
+            if (notificationCenter == null) {
+                notificationCenter = new NotificationCenter();
+            }
+
+            return new Optimizely(eventHandler, eventFactory, errorHandler, decisionService, userProfileService, projectConfigManager, notificationCenter);
         }
     }
 }

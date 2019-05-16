@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config;
 
+import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.notification.UpdateConfigNotification;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -123,9 +125,9 @@ public class PollingProjectConfigManagerTest {
 
     @Test
     public void testSetConfig() {
-        PollingProjectConfigManager testProjectConfigManager = new PollingProjectConfigManager(10, TimeUnit.MINUTES) {
+        testProjectConfigManager = new TestProjectConfigManager() {
             @Override
-            protected ProjectConfig poll() {
+            public ProjectConfig poll() {
                 return null;
             }
         };
@@ -147,10 +149,9 @@ public class PollingProjectConfigManagerTest {
 
     @Test
     public void testErroringProjectConfigManagerWithTimeout() throws Exception {
-        PollingProjectConfigManager testProjectConfigManager =
-            new PollingProjectConfigManager(POLLING_PERIOD, POLLING_UNIT, POLLING_PERIOD / 2, POLLING_UNIT) {
+        testProjectConfigManager = new TestProjectConfigManager() {
             @Override
-            protected ProjectConfig poll() {
+            public ProjectConfig poll() {
                 throw new RuntimeException();
             }
         };
@@ -163,10 +164,9 @@ public class PollingProjectConfigManagerTest {
     public void testRecoveringProjectConfigManagerWithTimeout() throws Exception {
         AtomicBoolean throwError = new AtomicBoolean(true);
 
-        PollingProjectConfigManager testProjectConfigManager =
-            new PollingProjectConfigManager(POLLING_PERIOD, POLLING_UNIT, POLLING_PERIOD / 2, POLLING_UNIT) {
+        testProjectConfigManager = new TestProjectConfigManager() {
                 @Override
-                protected ProjectConfig poll() {
+                public ProjectConfig poll() {
                     if (throwError.get()) {
                         throw new RuntimeException("Test class, expected failure");
                     }
@@ -181,7 +181,16 @@ public class PollingProjectConfigManagerTest {
         throwError.set(false);
         Thread.sleep(2 * PROJECT_CONFIG_DELAY);
         assertEquals(projectConfig, testProjectConfigManager.getConfig());
+    }
 
+    @Test
+    public void testUpdateConfigNotificationGetsTriggered() throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        testProjectConfigManager.getNotificationCenter()
+            .<UpdateConfigNotification>getNotificationManager(UpdateConfigNotification.class)
+            .addHandler(message -> {countDownLatch.countDown();});
+
+        assertTrue(countDownLatch.await(500, TimeUnit.MILLISECONDS));
     }
 
     private static class TestProjectConfigManager extends PollingProjectConfigManager {
@@ -190,8 +199,12 @@ public class PollingProjectConfigManagerTest {
         private final CountDownLatch countDownLatch = new CountDownLatch(1);
         private final ProjectConfig projectConfig;
 
+        private TestProjectConfigManager() {
+            this(null);
+        }
+
         private TestProjectConfigManager(ProjectConfig projectConfig) {
-            super(POLLING_PERIOD, POLLING_UNIT, POLLING_PERIOD / 2, POLLING_UNIT);
+            super(POLLING_PERIOD, POLLING_UNIT, POLLING_PERIOD / 2, POLLING_UNIT, new NotificationCenter());
             this.projectConfig = projectConfig;
         }
 

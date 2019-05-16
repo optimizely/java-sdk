@@ -20,6 +20,7 @@ import com.optimizely.ab.NamedThreadFactory;
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
 
+import com.optimizely.ab.internal.PropertyUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
@@ -49,6 +50,18 @@ import javax.annotation.CheckForNull;
  */
 public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
+    public static final String CONFIG_QUEUE_CAPACITY            = "async.event.handler.queue.capacity";
+    public static final String CONFIG_NUM_WORKERS               = "async.event.handler.num.workers";
+    public static final String CONFIG_MAX_CONNECTIONS           = "async.event.handler.max.connections";
+    public static final String CONFIG_MAX_PER_ROUTE             = "async.event.handler.event.max.per.route";
+    public static final String CONFIG_VALIDATE_AFTER_INACTIVITY = "async.event.handler.validate.after";
+
+    public static final int DEFAULT_QUEUE_CAPACITY = 10000;
+    public static final int DEFAULT_NUM_WORKERS = 2;
+    public static final int DEFAULT_MAX_CONNECTIONS = 200;
+    public static final int DEFAULT_MAX_PER_ROUTE = 20;
+    public static final int DEFAULT_VALIDATE_AFTER_INACTIVITY = 5000;
+
     private static final Logger logger = LoggerFactory.getLogger(AsyncEventHandler.class);
     private static final ProjectConfigResponseHandler EVENT_RESPONSE_HANDLER = new ProjectConfigResponseHandler();
 
@@ -65,9 +78,12 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
                              int validateAfter,
                              long closeTimeout,
                              TimeUnit closeTimeoutUnit) {
-        if (queueCapacity <= 0) {
-            throw new IllegalArgumentException("queue capacity must be > 0");
-        }
+
+        queueCapacity       = validateInput("queueCapacity", queueCapacity, DEFAULT_QUEUE_CAPACITY);
+        numWorkers          = validateInput("numWorkers", numWorkers, DEFAULT_NUM_WORKERS);
+        maxConnections      = validateInput("maxConnections", maxConnections, DEFAULT_MAX_CONNECTIONS);
+        connectionsPerRoute = validateInput("connectionsPerRoute", connectionsPerRoute, DEFAULT_MAX_PER_ROUTE);
+        validateAfter       = validateInput("validateAfter", validateAfter, DEFAULT_VALIDATE_AFTER_INACTIVITY);
 
         this.httpClient = OptimizelyHttpClient.builder()
             .withMaxTotalConnections(maxConnections)
@@ -227,20 +243,30 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
     public static class Builder {
 
-        private int queueCapacity;
-        private int numWorkers;
-        private int maxTotalConnections = 200;
-        private int maxPerRoute = 20;
-        private int validateAfterInactivity = 5000;
+        int queueCapacity = PropertyUtils.getInteger(CONFIG_QUEUE_CAPACITY, DEFAULT_QUEUE_CAPACITY);
+        int numWorkers = PropertyUtils.getInteger(CONFIG_NUM_WORKERS, DEFAULT_NUM_WORKERS);
+        int maxTotalConnections = PropertyUtils.getInteger(CONFIG_MAX_CONNECTIONS, DEFAULT_MAX_CONNECTIONS);
+        int maxPerRoute = PropertyUtils.getInteger(CONFIG_MAX_PER_ROUTE, DEFAULT_MAX_PER_ROUTE);
+        int validateAfterInactivity = PropertyUtils.getInteger(CONFIG_VALIDATE_AFTER_INACTIVITY, DEFAULT_VALIDATE_AFTER_INACTIVITY);
         private long closeTimeout = Long.MAX_VALUE;
         private TimeUnit closeTimeoutUnit = TimeUnit.MILLISECONDS;
 
         public Builder withQueueCapacity(int queueCapacity) {
+            if (queueCapacity <= 0) {
+                logger.warn("Queue capacity cannot be <= 0. Keeping default value: {}", this.queueCapacity);
+                return this;
+            }
+
             this.queueCapacity = queueCapacity;
             return this;
         }
 
         public Builder withNumWorkers(int numWorkers) {
+            if (numWorkers <= 0) {
+                logger.warn("Number of workers cannot be <= 0. Keeping default value: {}", this.numWorkers);
+                return this;
+            }
+
             this.numWorkers = numWorkers;
             return this;
         }
@@ -277,5 +303,14 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
                 closeTimeoutUnit
             );
         }
+    }
+
+    private int validateInput(String name, int input, int fallback) {
+        if (input <= 0) {
+            logger.warn("Invalid value for {}: {}. Defaulting to {}", name, input, fallback);
+            return fallback;
+        }
+
+        return input;
     }
 }

@@ -40,6 +40,7 @@ import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
 import static com.optimizely.ab.config.HttpProjectConfigManager.*;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -141,6 +142,52 @@ public class HttpProjectConfigManagerTest {
     }
 
     @Test
+    public void testInvalidPollingInterval() {
+        Builder builder = builder();
+        long expectedPeriod = builder.period;
+        TimeUnit expectedTimeUnit = builder.timeUnit;
+
+        builder.withPollingInterval(null, SECONDS);
+        assertEquals(expectedPeriod, builder.period);
+        assertEquals(expectedTimeUnit, builder.timeUnit);
+
+        builder.withPollingInterval(-1L, SECONDS);
+        assertEquals(expectedPeriod, builder.period);
+        assertEquals(expectedTimeUnit, builder.timeUnit);
+
+        builder.withPollingInterval(10L, null);
+        assertEquals(expectedPeriod, builder.period);
+        assertEquals(expectedTimeUnit, builder.timeUnit);
+
+        builder.withPollingInterval(10L, SECONDS);
+        assertEquals(10, builder.period);
+        assertEquals(SECONDS, builder.timeUnit);
+    }
+
+    @Test
+    public void testInvalidBlockingTimeout() {
+        Builder builder = builder();
+        long expectedPeriod = builder.blockingTimeoutPeriod;
+        TimeUnit expectedTimeUnit = builder.blockingTimeoutUnit;
+
+        builder.withBlockingTimeout(null, SECONDS);
+        assertEquals(expectedPeriod, builder.blockingTimeoutPeriod);
+        assertEquals(expectedTimeUnit, builder.blockingTimeoutUnit);
+
+        builder.withBlockingTimeout(-1L, SECONDS);
+        assertEquals(expectedPeriod, builder.blockingTimeoutPeriod);
+        assertEquals(expectedTimeUnit, builder.blockingTimeoutUnit);
+
+        builder.withBlockingTimeout(10L, null);
+        assertEquals(expectedPeriod, builder.blockingTimeoutPeriod);
+        assertEquals(expectedTimeUnit, builder.blockingTimeoutUnit);
+
+        builder.withBlockingTimeout(10L, SECONDS);
+        assertEquals(10, builder.blockingTimeoutPeriod);
+        assertEquals(SECONDS, builder.blockingTimeoutUnit);
+    }
+
+    @Test
     @Ignore
     public void testGetDatafileHttpResponse2XX() throws Exception {
         String modifiedStamp = "Wed, 24 Apr 2019 07:07:07 GMT";
@@ -204,7 +251,7 @@ public class HttpProjectConfigManagerTest {
         projectConfigManager = builder()
             .withOptimizelyHttpClient(mockHttpClient)
             .withSdkKey("sdk-key")
-            .withBlockingTimeout(10, TimeUnit.MILLISECONDS)
+            .withBlockingTimeout(10L, TimeUnit.MILLISECONDS)
             .build();
 
         assertNull(projectConfigManager.getConfig());
