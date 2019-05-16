@@ -3,6 +3,9 @@
 ## [Unreleased]
 Changes that have landed but are not yet released.
 * AudienceJacksonDeserializer: To handle and parse both single leaf node and arraylist of audience conditions.
+* AudienceGsonDeserializer: To handle and parse both single leaf node and arraylist of audience conditions.
+* JsonConfigParser: To handle and parse both single leaf node and arraylist of audience conditions.
+* JsonSimpleConfigParser: To handle and parse both single leaf node and arraylist of audience conditions.
 
 ## 2.1.4
 
