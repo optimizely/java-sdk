@@ -178,7 +178,6 @@ public class NotificationCenterTest {
         assertEquals(2, notificationCenter.addNotificationHandler(DecisionNotification.class, x -> {}));
         assertEquals(3, notificationCenter.addNotificationHandler(TrackNotification.class, x -> {}));
         assertEquals(4, notificationCenter.addNotificationHandler(UpdateConfigNotification.class, x -> {}));
-
     }
 
     @Test
@@ -245,6 +244,5 @@ public class NotificationCenterTest {
         List messages = handler.getMessages();
         assertEquals(1, messages.size());
         assertEquals(notification, messages.get(0));
-
     }
 }
