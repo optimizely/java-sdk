@@ -94,7 +94,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
             }
             return EntityUtils.toString(entity, "UTF-8");
         } else {
-            throw new ClientProtocolException("unexpected response from event endpoint, status: " + status);
+            throw new ClientProtocolException("unexpected response when trying to fetch datafile, status: " + status);
         }
     }
 
