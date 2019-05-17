@@ -114,10 +114,10 @@ public class ValidProjectConfigV4 {
             ))
     );
 
-    private static final String     UNTYPED_SINGLE_CONDITION_LEAF_ID = "10413101795";
-    private static final String     UNTYPED_SINGLE_CONDITION_LEAF_KEY = "untyped_single_condition_leaf_root";
-    public  static final String     UNTYPED_SINGLE_CONDITION_LEAF_VALUE = "leaf_root";
-    private static final Audience   UNTYPED_SINGLE_CONDITION_LEAF = new Audience(
+    private static final String UNTYPED_SINGLE_CONDITION_LEAF_ID = "10413101795";
+    private static final String UNTYPED_SINGLE_CONDITION_LEAF_KEY = "untyped_single_condition_leaf_root";
+    public static final String UNTYPED_SINGLE_CONDITION_LEAF_VALUE = "leaf_root";
+    private static final Audience UNTYPED_SINGLE_CONDITION_LEAF = new Audience(
             UNTYPED_SINGLE_CONDITION_LEAF_ID,
             UNTYPED_SINGLE_CONDITION_LEAF_KEY,
             new OrCondition(Collections.singletonList((Condition) new UserAttribute("string_attribute",

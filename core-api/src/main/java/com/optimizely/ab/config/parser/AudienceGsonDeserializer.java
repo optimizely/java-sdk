@@ -55,7 +55,7 @@ public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {
         JsonElement conditionsElement = parser.parse(jsonObject.get("conditions").getAsString());
         Object rawObject = gson.fromJson(conditionsElement, Object.class);
         Condition conditions;
-        if (rawObject instanceof ArrayList) {
+        if (rawObject instanceof List) {
             conditions = parseConditions((List<Object>) rawObject);
         } else {
             conditions = parseConditions(rawObject);
@@ -95,7 +95,7 @@ public class AudienceGsonDeserializer implements JsonDeserializer<Audience> {
     private Condition parseConditions(Object rawObject) {
         List<Condition> conditions = new ArrayList<Condition>();
 
-        Map<String, String> conditionMap = (LinkedTreeMap<String, String>) rawObject;
+        Map<String, String> conditionMap = (Map<String, String>) rawObject;
         conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
                 conditionMap.get("value")));
 

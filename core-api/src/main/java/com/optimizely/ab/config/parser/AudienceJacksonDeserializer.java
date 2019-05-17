@@ -31,8 +31,8 @@ import com.optimizely.ab.config.audience.OrCondition;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
 
@@ -46,7 +46,7 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
 
         Object rawObject = mapper.readValue(node.get("conditions").textValue(), Object.class);
         Condition conditions;
-        if (rawObject instanceof ArrayList) {
+        if (rawObject instanceof List) {
            conditions = parseConditions((List<Object>) rawObject);
         } else {
             conditions = parseConditions(rawObject);
@@ -64,7 +64,7 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
                 List<Object> objectList = (List<Object>) rawObjectList.get(i);
                 conditions.add(parseConditions(objectList));
             } else {
-                HashMap<String, String> conditionMap = (HashMap<String, String>) rawObjectList.get(i);
+                Map<String, String> conditionMap = (Map<String, String>) rawObjectList.get(i);
                 conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
                         conditionMap.get("value")));
             }
@@ -85,7 +85,7 @@ public class AudienceJacksonDeserializer extends JsonDeserializer<Audience> {
     private Condition parseConditions(Object rawObject) {
         List<Condition> conditions = new ArrayList<Condition>();
 
-        HashMap<String, String> conditionMap = (HashMap<String, String>) rawObject;
+        Map<String, String> conditionMap = (Map<String, String>) rawObject;
         conditions.add(new UserAttribute(conditionMap.get("name"), conditionMap.get("type"),
                 conditionMap.get("value")));
 

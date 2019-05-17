@@ -38,6 +38,7 @@ import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -271,11 +272,12 @@ final class JsonConfigParser implements ConfigParser {
             String key = audienceObject.getString("name");
             String conditionString = audienceObject.getString("conditions");
             Condition conditions;
-            if (conditionString.startsWith("[")) {
-                JSONArray conditionJsonArray = new JSONArray(conditionString);
+            Object conditionJsonTokener = new JSONTokener(conditionString).nextValue();
+            if (conditionJsonTokener instanceof JSONArray) {
+                JSONArray conditionJsonArray = (JSONArray) conditionJsonTokener;
                 conditions = parseConditions(conditionJsonArray);
             } else {
-                JSONObject conditionJsonObject = new JSONObject(conditionString);
+                JSONObject conditionJsonObject = (JSONObject) conditionJsonTokener;
                 conditions = parseConditions(conditionJsonObject);
             }
             audiences.add(new Audience(id, key, conditions));
@@ -293,8 +295,8 @@ final class JsonConfigParser implements ConfigParser {
             value = conditionMap.getString("value");
         }
         conditions.add(new UserAttribute(
-                (String) conditionMap.get("name"),
-                (String) conditionMap.get("type"),
+                conditionMap.getString("name"),
+                conditionMap.getString("type"),
                 value
         ));
 
@@ -318,8 +320,8 @@ final class JsonConfigParser implements ConfigParser {
                     value = conditionMap.getString("value");
                 }
                 conditions.add(new UserAttribute(
-                        (String)conditionMap.get("name"),
-                        (String)conditionMap.get("type"),
+                        conditionMap.getString("name"),
+                        conditionMap.getString("type"),
                                value
                 ));
             }
