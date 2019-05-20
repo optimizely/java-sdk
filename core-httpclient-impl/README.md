@@ -55,14 +55,14 @@ public class App {
             .withNumWorkers(5)
             .build();
 
-        ProjectConfigManager projectConfigManager = HttpProjectConfigManager.buidler()
+        ProjectConfigManager projectConfigManager = HttpProjectConfigManager.builder()
             .withSdkKey(sdkKey)
             .withPollingInterval(1, TimeUnit.MINUTES)
             .build();
 
         Optimizely optimizely = Optimizely.builder()
             .withConfig(projectConfigManager)
-            .withEventHandler(eventHandler
+            .withEventHandler(eventHandler)
             .build();
     }
 }
@@ -120,7 +120,7 @@ properties.
 ### Usage
 
 ```java
-ProjectConfigManager projectConfigManager = HttpProjectConfigManager.buidler()
+ProjectConfigManager projectConfigManager = HttpProjectConfigManager.builder()
     .withSdkKey(sdkKey)
     .withPollingInterval(1, TimeUnit.MINUTES)
     .build();
