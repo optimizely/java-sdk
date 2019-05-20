@@ -82,6 +82,11 @@ public class HttpProjectConfigManagerTest {
         }
 
         projectConfigManager.close();
+
+        System.clearProperty("optimizely." + HttpProjectConfigManager.CONFIG_BLOCKING_UNIT);
+        System.clearProperty("optimizely." + HttpProjectConfigManager.CONFIG_BLOCKING_DURATION);
+        System.clearProperty("optimizely." + HttpProjectConfigManager.CONFIG_POLLING_UNIT);
+        System.clearProperty("optimizely." + HttpProjectConfigManager.CONFIG_POLLING_DURATION);
     }
 
     @Test
@@ -236,6 +241,7 @@ public class HttpProjectConfigManagerTest {
         projectConfigManager.getDatafileFromResponse(getResponse);
     }
 
+    @Test
     public void testInvalidPayload() throws Exception {
         reset(mockHttpClient);
         CloseableHttpResponse invalidPayloadResponse = mock(CloseableHttpResponse.class);
@@ -255,6 +261,35 @@ public class HttpProjectConfigManagerTest {
             .build();
 
         assertNull(projectConfigManager.getConfig());
+    }
+
+    @Test
+    public void testInvalidPollingIntervalFromSystemProperties() throws Exception {
+        System.setProperty("optimizely." + HttpProjectConfigManager.CONFIG_POLLING_DURATION, "-1");
+        projectConfigManager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("sdk-key")
+            .build();
+    }
+
+    @Test
+    public void testInvalidBlockingIntervalFromSystemProperties() throws Exception {
+        reset(mockHttpClient);
+        CloseableHttpResponse invalidPayloadResponse = mock(CloseableHttpResponse.class);
+        StatusLine statusLine = mock(StatusLine.class);
+
+        when(statusLine.getStatusCode()).thenReturn(200);
+        when(invalidPayloadResponse.getStatusLine()).thenReturn(statusLine);
+        when(invalidPayloadResponse.getEntity()).thenReturn(new StringEntity("I am an invalid response!"));
+
+        when(mockHttpClient.execute(any(HttpGet.class)))
+            .thenReturn(invalidPayloadResponse);
+
+        System.setProperty("optimizely." + HttpProjectConfigManager.CONFIG_BLOCKING_DURATION, "-1");
+        projectConfigManager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("sdk-key")
+            .build();
     }
 
     @Test
