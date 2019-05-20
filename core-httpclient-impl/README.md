@@ -70,9 +70,9 @@ public class App {
 
 ## AsyncEventHandler
 
-The AsyncEventHandler provides an implementation of the the EventHandler backed by a `ThreadPoolExecutor`. When events are
-triggered from the Optimizely SDK, they are asynchronously queued as tasks to the executor and are processed in the
-order they were submitted via the executor workers. Each worker is responsible for making outbound http requests to the 
+The AsyncEventHandler provides an implementation of the the `EventHandler` backed by a `ThreadPoolExecutor`. When events are
+triggered from the Optimizely SDK, they are immediately queued as discrete tasks to the executor and processed in the
+order they were submitted. Each worker is responsible for making outbound http requests to the
 Optimizely log endpoint for metric tracking. The default queue size and the number of workers are configurable via
 global properties and can be overridden via the `AsyncEventHandler.Builder`.
 
@@ -90,7 +90,7 @@ EventHandler eventHandler = AsyncEventHandler.builder()
 #### Queue capacity
 
 The queue capacity can be set to initialize the backing queue for the executor service. If the queue fills up, then
-events will be dropped and exception will be logged. Setting a higher queue value will prevent event loss, but will 
+events will be dropped and exception will be logged. Setting a higher queue value will prevent event loss, but will
 use up more memory in the event the workers can not keep up if the production rate.
 
 #### Number of workers
@@ -110,11 +110,11 @@ The number of workers determines the number of threads used by the thread pool.
 
 ## HttpProjectConfigManager
 
-The HttpProjectConfigManager is an implementation of the abstract PollingProjectConfigManager. The `poll` 
-method is extended and makes an Http GET request to the configured url to asynchronously download the project data file
-and initialize an instance of the ProjectConfig. By default, the HttpProjectConfigManager will block until the
-first successful retrieval of the datafile, up to a configurable timeout. The frequency of the polling method and the 
-blocking timeout can be set via the HttpProjectConfigManager.Builder with the default values being pulled from global
+The `HttpProjectConfigManager` is an implementation of the abstract `PollingProjectConfigManager`. The `poll`
+method is extended and makes an http GET request to the configured url to asynchronously download the project data file
+and initialize an instance of the ProjectConfig. By default, the `HttpProjectConfigManager` will block until the
+first successful retrieval of the datafile, up to a configurable timeout. The frequency of the polling method and the
+blocking timeout can be set via the `HttpProjectConfigManager.Builder` with the default values being pulled from global
 properties.
 
 ### Usage
@@ -128,15 +128,15 @@ ProjectConfigManager projectConfigManager = HttpProjectConfigManager.buidler()
 
 #### SDK Key
 
- The SDK key is used to compose the outbound HTTP request to the default datafile location hosted on the Optimizely CDN.
+The SDK key is used to compose the outbound http request to the default datafile location hosted on the Optimizely CDN.
 
 #### Polling interval
 
-The polling interval is used to determine a fixed delay between consecutive HTTP requests for the datafile.
+The polling interval is used to determine a fixed delay between consecutive http requests for the datafile.
 
 #### Initial Datafile
 
-An initial datafile can be provided via the builder to bootstrap the the ProjectConfigManager so that it can be used 
+An initial datafile can be provided via the builder to bootstrap the the `ProjectConfigManager` so that it can be used 
 immediately without blocking execution.
 
 #### Advanced configurations
@@ -169,6 +169,17 @@ async.event.handler.num.workers = 5
 
 The `OptimizelyFactory` included in this package provides basic utility to instantiate the Optimizely SDK
 with a minimal number of provided configuration options. Configuration properties are sourced from Java system properties,
-environment variables or from an `optimizely.properties` file, in that order. Not all configuration and initialization 
+environment variables or from an `optimizely.properties` file, in that order. Not all configuration and initialization
 are captured via the `OptimizelyFactory`, for those use cases the resources can be built via their respective builder
 classes.
+
+### Usage
+The SDK key is required to be provided at runtime either directly via the factory method:
+```Java
+Optimizely optimizely = OptimizelyFactory.newDefaultInstance(<<SDK_KEY>>);
+```
+
+If the SDK is provided via a global property then the empty signature can be used:
+```Java
+Optimizely optimizely = OptimizelyFactory.newDefaultInstance();
+```
