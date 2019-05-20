@@ -37,7 +37,7 @@ public class App {
 
 ```
 
-## Advanced usage
+### Advanced usage
 ```java
 import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.config.HttpProjectConfigManager;
