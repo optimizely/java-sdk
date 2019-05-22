@@ -70,7 +70,9 @@ public class App {
 
 ## AsyncEventHandler
 
-The AsyncEventHandler provides an implementation of the the `EventHandler` backed by a `ThreadPoolExecutor`. When events are
+The [`AsyncEventHandler`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/event/AsyncEventHandler.java)
+provides an implementation of the the [`EventHandler`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/EventHandler.java)
+backed by a `ThreadPoolExecutor`. When events are
 triggered from the Optimizely SDK, they are immediately queued as discrete tasks to the executor and processed in the
 order they were submitted. Each worker is responsible for making outbound http requests to the
 Optimizely log endpoint for metric tracking. The default queue size and the number of workers are configurable via
@@ -110,8 +112,9 @@ The number of workers determines the number of threads used by the thread pool.
 
 ## HttpProjectConfigManager
 
-The `HttpProjectConfigManager` is an implementation of the abstract `PollingProjectConfigManager`. The `poll`
-method is extended and makes an http GET request to the configured url to asynchronously download the project data file
+The [`HttpProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/config/HttpProjectConfigManager.java)
+is an implementation of the abstract [`PollingProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/PollingProjectConfigManager.java).
+The `poll` method is extended and makes an http GET request to the configured url to asynchronously download the project data file
 and initialize an instance of the ProjectConfig. By default, the `HttpProjectConfigManager` will block until the
 first successful retrieval of the datafile, up to a configurable timeout. The frequency of the polling method and the
 blocking timeout can be set via the `HttpProjectConfigManager.Builder` with the default values being pulled from global
@@ -167,7 +170,8 @@ async.event.handler.num.workers = 5
 
 ## OptimizelyFactory
 
-The `OptimizelyFactory` included in this package provides basic utility to instantiate the Optimizely SDK
+The [`OptimizelyFactory`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/OptimizelyFactory.java)
+included in this package provides basic utility to instantiate the Optimizely SDK
 with a minimal number of provided configuration options. Configuration properties are sourced from Java system properties,
 environment variables or from an `optimizely.properties` file, in that order. Not all configuration and initialization
 are captured via the `OptimizelyFactory`, for those use cases the resources can be built via their respective builder
