@@ -241,11 +241,15 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
             if (period <= 0) {
                 logger.warn("Invalid polling interval {}, {}. Defaulting to {}, {}",
                     period, timeUnit, DEFAULT_POLLING_DURATION, DEFAULT_POLLING_UNIT);
+                period = DEFAULT_POLLING_DURATION;
+                timeUnit = DEFAULT_POLLING_UNIT;
             }
 
             if (blockingTimeoutPeriod <= 0) {
                 logger.warn("Invalid polling interval {}, {}. Defaulting to {}, {}",
                     blockingTimeoutPeriod, blockingTimeoutUnit, DEFAULT_BLOCKING_DURATION, DEFAULT_BLOCKING_UNIT);
+                blockingTimeoutPeriod = DEFAULT_BLOCKING_DURATION;
+                blockingTimeoutUnit = DEFAULT_BLOCKING_UNIT;
             }
 
             if (httpClient == null) {
