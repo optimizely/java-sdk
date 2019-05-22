@@ -23,6 +23,12 @@ import com.optimizely.ab.event.LogEvent;
 import javax.annotation.Nonnull;
 import java.util.Map;
 
+/**
+ * ActivateNotificationListenerInterface provides and interface for activate event notification.
+ *
+ * @deprecated along with {@link ActivateNotification} and {@link ActivateNotificationListener}
+ * and users should implement NotificationHandler&lt;DecisionNotification&gt; directly.
+ */
 @Deprecated
 public interface ActivateNotificationListenerInterface {
     /**

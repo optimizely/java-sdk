@@ -17,15 +17,18 @@
 package com.optimizely.ab.notification;
 
 import ch.qos.logback.classic.Level;
+import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.internal.LogbackVerifier;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 import java.util.Map;
 
 import static junit.framework.TestCase.assertNotSame;
@@ -43,43 +46,44 @@ public class NotificationCenterTest {
     public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
     @Before
-    public void initialize() {
+    public void setUp() {
         notificationCenter = new NotificationCenter();
         activateNotification = mock(ActivateNotificationListener.class);
         trackNotification = mock(TrackNotificationListener.class);
+    }
+
+    @After
+    public void tearDown() {
+        notificationCenter.clearAllNotificationListeners();
     }
 
     @Test
     public void testAddWrongTrackNotificationListener() {
         int notificationId = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Activate, trackNotification);
         logbackVerifier.expectMessage(Level.WARN, "Notification listener was the wrong type. It was not added to the notification center.");
-        assertEquals(notificationId, -1);
+        assertEquals(-1, notificationId);
         assertFalse(notificationCenter.removeNotificationListener(notificationId));
-
     }
 
     @Test
     public void testAddWrongActivateNotificationListener() {
         int notificationId = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Track, activateNotification);
         logbackVerifier.expectMessage(Level.WARN, "Notification listener was the wrong type. It was not added to the notification center.");
-        assertEquals(notificationId, -1);
+        assertEquals(-1, notificationId);
         assertFalse(notificationCenter.removeNotificationListener(notificationId));
     }
 
     @Test
     public void testAddDecisionNotificationTwice() {
-        DecisionNotificationListener listener = new DecisionNotificationListener() {
-            @Override
-            public void onDecision(@Nonnull DecisionNotification decisionNotification) {
+        NotificationHandler<DecisionNotification> handler = decisionNotification -> { };
+        NotificationManager<DecisionNotification> manager =
+            notificationCenter.getNotificationManager(DecisionNotification.class);
 
-            }
-        };
-        int notificationId = notificationCenter.addDecisionNotificationListener(listener);
-        int notificationId2 = notificationCenter.addDecisionNotificationListener(listener);
+        int notificationId = manager.addHandler(handler);
+        int notificationId2 = manager.addHandler(handler);
         logbackVerifier.expectMessage(Level.WARN, "Notification listener was already added");
-        assertEquals(notificationId2, -1);
+        assertEquals(-1, notificationId2);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
-        notificationCenter.clearAllNotificationListeners();
     }
 
     @Test
@@ -93,9 +97,8 @@ public class NotificationCenterTest {
         int notificationId = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Activate, listener);
         int notificationId2 = notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Activate, listener);
         logbackVerifier.expectMessage(Level.WARN, "Notification listener was already added");
-        assertEquals(notificationId2, -1);
+        assertEquals(-1, notificationId2);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
-        notificationCenter.clearAllNotificationListeners();
     }
 
     @Test
@@ -106,22 +109,16 @@ public class NotificationCenterTest {
 
             }
         });
-        assertNotSame(notificationId, -1);
+        assertNotSame(-1, notificationId);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
-        notificationCenter.clearAllNotificationListeners();
     }
 
     @Test
     public void testAddDecisionNotification() {
-        int notificationId = notificationCenter.addDecisionNotificationListener(new DecisionNotificationListener() {
-            @Override
-            public void onDecision(@Nonnull DecisionNotification decisionNotification) {
-
-            }
-        });
-        assertNotSame(notificationId, -1);
-        assertTrue(notificationCenter.removeNotificationListener(notificationId));
-        notificationCenter.clearAllNotificationListeners();
+        NotificationManager<DecisionNotification> manager = notificationCenter.getNotificationManager(DecisionNotification.class);
+        int notificationId = manager.addHandler(decisionNotification -> { });
+        assertNotSame(-1, notificationId);
+        assertTrue(manager.remove(notificationId));
     }
 
     @Test
@@ -132,9 +129,8 @@ public class NotificationCenterTest {
 
             }
         });
-        assertNotSame(notificationId, -1);
+        assertNotSame(-1, notificationId);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
-        notificationCenter.clearAllNotificationListeners();
     }
 
     @Test
@@ -152,22 +148,16 @@ public class NotificationCenterTest {
 
             }
         });
-        assertNotSame(notificationId, -1);
+        assertNotSame(-1, notificationId);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
-        notificationCenter.clearAllNotificationListeners();
     }
 
     @Test
     public void testAddDecisionNotificationInterface() {
-        int notificationId = notificationCenter.addDecisionNotificationListener(new DecisionNotificationListener() {
-            @Override
-            public void onDecision(@Nonnull DecisionNotification decisionNotification) {
-
-            }
-        });
-        assertNotSame(notificationId, -1);
-        assertTrue(notificationCenter.removeNotificationListener(notificationId));
-        notificationCenter.clearAllNotificationListeners();
+        NotificationManager<DecisionNotification> manager = notificationCenter.getNotificationManager(DecisionNotification.class);
+        int notificationId = manager.addHandler(decisionNotification -> { });
+        assertNotSame(-1, notificationId);
+        assertTrue(manager.remove(notificationId));
     }
 
     @Test
@@ -178,9 +168,81 @@ public class NotificationCenterTest {
 
             }
         });
-        assertNotSame(notificationId, -1);
+        assertNotSame(-1, notificationId);
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
-        notificationCenter.clearAllNotificationListeners();
     }
 
+    @Test
+    public void testAddValidNotificationHandler() {
+        assertEquals(1, notificationCenter.addNotificationHandler(ActivateNotification.class, x -> {}));
+        assertEquals(2, notificationCenter.addNotificationHandler(DecisionNotification.class, x -> {}));
+        assertEquals(3, notificationCenter.addNotificationHandler(TrackNotification.class, x -> {}));
+        assertEquals(4, notificationCenter.addNotificationHandler(UpdateConfigNotification.class, x -> {}));
+    }
+
+    @Test
+    public void testAddInvalidNotificationHandler() {
+        int actual = notificationCenter.addNotificationHandler(Integer.class, i -> {});
+        assertEquals(-1, actual);
+    }
+
+    @Test
+    @Deprecated
+    public void testClearNotificationByActivateType() {
+        NotificationManager<ActivateNotification> manager = notificationCenter.getNotificationManager(ActivateNotification.class);
+        int id = manager.addHandler(message -> {});
+
+        notificationCenter.clearNotificationListeners(NotificationCenter.NotificationType.Activate);
+        assertFalse(manager.remove(id));
+    }
+
+    @Test
+    @Deprecated
+    public void testClearNotificationByTrackType() {
+        NotificationManager<TrackNotification> manager = notificationCenter.getNotificationManager(TrackNotification.class);
+        int id = manager.addHandler(message -> {});
+
+        notificationCenter.clearNotificationListeners(NotificationCenter.NotificationType.Track);
+        assertFalse(manager.remove(id));
+    }
+
+    @Test
+    @Deprecated
+    public void testAddActivateListenerInterface() {
+        int id = notificationCenter.addActivateNotificationListener((experiment, userId, attributes, variation, event) -> { });
+
+        NotificationManager<ActivateNotification> manager = notificationCenter.getNotificationManager(ActivateNotification.class);
+        assertTrue(manager.remove(id));
+    }
+
+    @Test
+    @Deprecated
+    public void testAddTrackListenerInterface() {
+        int id = notificationCenter.addTrackNotificationListener((experiment, userId, attributes, variation, event) -> { });
+
+        NotificationManager<TrackNotification> manager = notificationCenter.getNotificationManager(TrackNotification.class);
+        assertTrue(manager.remove(id));
+    }
+
+    @Test(expected = OptimizelyRuntimeException.class)
+    public void testSendWithoutHandler() {
+        notificationCenter.send(new TestNotification(""));
+    }
+
+    @Test
+    public void testSendWithHandler() {
+        testSendWithNotification(new TrackNotification());
+        testSendWithNotification(new DecisionNotification());
+        testSendWithNotification(new ActivateNotification());
+    }
+
+    private void testSendWithNotification(Object notification) {
+        TestNotificationHandler handler = new TestNotificationHandler<>();
+        notificationCenter.getNotificationManager(notification.getClass()).addHandler(handler);
+        notificationCenter.send(notification);
+
+        List messages = handler.getMessages();
+        assertEquals(1, messages.size());
+        assertEquals(notification, messages.get(0));
+    }
 }

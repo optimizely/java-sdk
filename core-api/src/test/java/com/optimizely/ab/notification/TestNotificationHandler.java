@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, 2019 Optimizely and contributors
+ *    Copyright 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,22 +14,23 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab;
+package com.optimizely.ab.notification;
 
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.EventType;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Exception thrown when attempting to use/refer to an {@link EventType} that isn't present in the current
- * {@link ProjectConfig}.
+ * TestNotificationHandler used for unit testing NotificationCenter and NotificationManager
  */
-public class UnknownEventTypeException extends OptimizelyRuntimeException {
+class TestNotificationHandler<T> implements NotificationHandler<T> {
+    private final List<T> messages = new ArrayList<>();
 
-    public UnknownEventTypeException(String message) {
-        super(message);
+    @Override
+    public void handle(T message) {
+        messages.add(message);
     }
 
-    public UnknownEventTypeException(String message, Throwable cause) {
-        super(message, cause);
+    List<T> getMessages() {
+        return messages;
     }
 }

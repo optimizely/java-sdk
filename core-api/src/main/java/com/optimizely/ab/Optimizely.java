@@ -30,20 +30,19 @@ import com.optimizely.ab.event.NoopEventHandler;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
-import com.optimizely.ab.notification.DecisionNotification;
-import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.notification.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
 
 /**
  * Top-level container class for Optimizely functionality.
@@ -71,7 +70,7 @@ import java.util.concurrent.*;
  * to be logged, and for the "control" variation to be returned.
  */
 @ThreadSafe
-public class Optimizely {
+public class Optimizely implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
 
@@ -87,7 +86,7 @@ public class Optimizely {
     private final ProjectConfigManager projectConfigManager;
 
     // TODO should be private
-    public final NotificationCenter notificationCenter = new NotificationCenter();
+    public final NotificationCenter notificationCenter;
 
     @Nullable
     private final UserProfileService userProfileService;
@@ -96,8 +95,9 @@ public class Optimizely {
                        @Nonnull EventFactory eventFactory,
                        @Nonnull ErrorHandler errorHandler,
                        @Nonnull DecisionService decisionService,
-                       @Nonnull UserProfileService userProfileService,
-                       @Nonnull ProjectConfigManager projectConfigManager
+                       @Nullable UserProfileService userProfileService,
+                       @Nonnull ProjectConfigManager projectConfigManager,
+                       @Nonnull NotificationCenter notificationCenter
     ) {
         this.decisionService = decisionService;
         this.eventHandler = eventHandler;
@@ -105,6 +105,7 @@ public class Optimizely {
         this.errorHandler = errorHandler;
         this.userProfileService = userProfileService;
         this.projectConfigManager = projectConfigManager;
+        this.notificationCenter = notificationCenter;
     }
 
     /**
@@ -116,6 +117,33 @@ public class Optimizely {
      */
     public boolean isValid() {
         return getProjectConfig() != null;
+    }
+
+    /**
+     * Helper method which checks if Object is an instance of Closeable and calls close() on it.
+     */
+    private void tryClose(Object obj) {
+        if (!(obj instanceof Closeable)) {
+            return;
+        }
+
+        try {
+            ((Closeable) obj).close();
+        } catch (Exception e) {
+            logger.warn("Unexpected exception on trying to close {}.", obj);
+        }
+    }
+
+    /**
+     * Checks if eventHandler {@link EventHandler} and projectConfigManager {@link ProjectConfigManager}
+     * are Closeable {@link Closeable} and calls close on them.
+     *
+     * <b>NOTE:</b> There is a chance that this could be long running if the implementations of close are long running.
+     */
+    @Override
+    public void close() {
+        tryClose(eventHandler);
+        tryClose(projectConfigManager);
     }
 
     //======== activate calls ========//
@@ -223,8 +251,12 @@ public class Optimizely {
                 logger.error("Unexpected exception in event dispatcher", e);
             }
 
-            notificationCenter.sendNotifications(NotificationCenter.NotificationType.Activate, experiment, userId,
-                filteredAttributes, variation, impressionEvent);
+            // Kept For backwards compatibility.
+            // This notification is deprecated and the new DecisionNotifications
+            // are sent via their respective method calls.
+            ActivateNotification activateNotification = new ActivateNotification(
+                experiment, userId, filteredAttributes, variation, impressionEvent);
+            notificationCenter.send(activateNotification);
         } else {
             logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
         }
@@ -299,8 +331,10 @@ public class Optimizely {
             logger.error("Unexpected exception in event dispatcher", e);
         }
 
-        notificationCenter.sendNotifications(NotificationCenter.NotificationType.Track, eventName, userId,
+        TrackNotification notification = new TrackNotification(eventName, userId,
             copiedAttributes, eventTags, conversionEvent);
+
+        notificationCenter.send(notification);
     }
 
     //======== FeatureFlag APIs ========//
@@ -357,7 +391,10 @@ public class Optimizely {
         }
 
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
+        FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes, projectConfig);
+        Boolean featureEnabled = false;
+        SourceInfo sourceInfo = new RolloutSourceInfo();
 
         if (featureDecision.variation != null) {
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
@@ -367,18 +404,30 @@ public class Optimizely {
                     userId,
                     copiedAttributes,
                     featureDecision.variation);
+                decisionSource = featureDecision.decisionSource;
+                sourceInfo = new FeatureTestSourceInfo(featureDecision.experiment.getKey(), featureDecision.variation.getKey());
             } else {
                 logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
                     userId, featureKey);
             }
             if (featureDecision.variation.getFeatureEnabled()) {
-                logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
-                return true;
+                featureEnabled = true;
             }
         }
 
-        logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
-        return false;
+        DecisionNotification decisionNotification = DecisionNotification.newFeatureDecisionNotificationBuilder()
+            .withUserId(userId)
+            .withAttributes(copiedAttributes)
+            .withFeatureKey(featureKey)
+            .withFeatureEnabled(featureEnabled)
+            .withSource(decisionSource)
+            .withSourceInfo(sourceInfo)
+            .build();
+
+        notificationCenter.send(decisionNotification);
+
+        logger.info("Feature \"{}\" is enabled for user \"{}\"? {}", featureKey, userId, featureEnabled);
+        return featureEnabled;
     }
 
     /**
@@ -413,17 +462,13 @@ public class Optimizely {
                                              @Nonnull String userId,
                                              @Nonnull Map<String, ?> attributes) {
 
-        String variableValue = getFeatureVariableValueForType(
+        return getFeatureVariableValueForType(
             featureKey,
             variableKey,
             userId,
             attributes,
             FeatureVariable.VariableType.BOOLEAN
         );
-        if (variableValue != null) {
-            return Boolean.parseBoolean(variableValue);
-        }
-        return null;
     }
 
     /**
@@ -458,22 +503,21 @@ public class Optimizely {
                                            @Nonnull String userId,
                                            @Nonnull Map<String, ?> attributes) {
 
-        String variableValue = getFeatureVariableValueForType(
-            featureKey,
-            variableKey,
-            userId,
-            attributes,
-            FeatureVariable.VariableType.DOUBLE
-        );
-        if (variableValue != null) {
-            try {
-                return Double.parseDouble(variableValue);
-            } catch (NumberFormatException exception) {
-                logger.error("NumberFormatException while trying to parse \"" + variableValue +
-                    "\" as Double. " + exception);
-            }
+        Double variableValue = null;
+        try {
+            variableValue = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                FeatureVariable.VariableType.DOUBLE
+            );
+        } catch (Exception exception) {
+            logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                "\" as Double. " + exception);
         }
-        return null;
+
+        return variableValue;
     }
 
     /**
@@ -508,22 +552,22 @@ public class Optimizely {
                                              @Nonnull String userId,
                                              @Nonnull Map<String, ?> attributes) {
 
-        String variableValue = getFeatureVariableValueForType(
-            featureKey,
-            variableKey,
-            userId,
-            attributes,
-            FeatureVariable.VariableType.INTEGER
-        );
-        if (variableValue != null) {
-            try {
-                return Integer.parseInt(variableValue);
-            } catch (NumberFormatException exception) {
-                logger.error("NumberFormatException while trying to parse \"" + variableValue +
-                    "\" as Integer. " + exception.toString());
-            }
+        Integer variableValue = null;
+
+        try {
+            variableValue = getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                FeatureVariable.VariableType.INTEGER
+            );
+
+        } catch (Exception exception) {
+            logger.error("NumberFormatException while trying to parse value as Integer. " + exception.toString());
         }
-        return null;
+
+        return variableValue;
     }
 
     /**
@@ -567,7 +611,7 @@ public class Optimizely {
     }
 
     @VisibleForTesting
-    String getFeatureVariableValueForType(@Nonnull String featureKey,
+    <T> T getFeatureVariableValueForType(@Nonnull String featureKey,
                                           @Nonnull String variableKey,
                                           @Nonnull String userId,
                                           @Nonnull Map<String, ?> attributes,
@@ -611,6 +655,7 @@ public class Optimizely {
         String variableValue = variable.getDefaultValue();
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes, projectConfig);
+        Boolean featureEnabled = false;
         if (featureDecision.variation != null) {
             if (featureDecision.variation.getFeatureEnabled()) {
                 FeatureVariableUsageInstance featureVariableUsageInstance =
@@ -626,6 +671,7 @@ public class Optimizely {
                     featureKey, featureDecision.variation.getKey(), variableValue, variableKey
                 );
             }
+            featureEnabled = featureDecision.variation.getFeatureEnabled();
         } else {
             logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
                     "The default value \"{}\" for \"{}\" is being returned.",
@@ -633,7 +679,54 @@ public class Optimizely {
             );
         }
 
-        return variableValue;
+        Object convertedValue = convertStringToType(variableValue, variableType);
+
+        DecisionNotification decisionNotification = DecisionNotification.newFeatureVariableDecisionNotificationBuilder()
+            .withUserId(userId)
+            .withAttributes(copiedAttributes)
+            .withFeatureKey(featureKey)
+            .withFeatureEnabled(featureEnabled)
+            .withVariableKey(variableKey)
+            .withVariableType(variableType)
+            .withVariableValue(convertedValue)
+            .withFeatureDecision(featureDecision)
+            .build();
+
+
+        notificationCenter.send(decisionNotification);
+
+        return (T) convertedValue;
+    }
+
+    // Helper method which takes type and variable value and convert it to object to use in Listener DecisionInfo object variable value
+    @VisibleForTesting
+    Object convertStringToType(String variableValue, FeatureVariable.VariableType type) {
+        if (variableValue != null) {
+            switch (type) {
+                case DOUBLE:
+                    try {
+                        return Double.parseDouble(variableValue);
+                    } catch (NumberFormatException exception) {
+                        logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                            "\" as Double. " + exception);
+                    }
+                    break;
+                case STRING:
+                    return variableValue;
+                case BOOLEAN:
+                    return Boolean.parseBoolean(variableValue);
+                case INTEGER:
+                    try {
+                        return Integer.parseInt(variableValue);
+                    } catch (NumberFormatException exception) {
+                        logger.error("NumberFormatException while trying to parse \"" + variableValue +
+                            "\" as Integer. " + exception.toString());
+                    }
+                    break;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -705,7 +798,7 @@ public class Optimizely {
             .withType(notificationType)
             .build();
 
-        notificationCenter.sendNotifications(decisionNotification);
+        notificationCenter.send(decisionNotification);
 
         return variation;
     }
@@ -850,6 +943,40 @@ public class Optimizely {
         return copiedAttributes;
     }
 
+    //======== Notification APIs ========//
+
+    public NotificationCenter getNotificationCenter() {
+        return notificationCenter;
+    }
+
+    /**
+     * Convenience method for adding DecisionNotification Handlers
+     */
+    public int addDecisionNotificationHandler(NotificationHandler<DecisionNotification> handler) {
+        return addNotificationHandler(DecisionNotification.class, handler);
+    }
+
+    /**
+     * Convenience method for adding TrackNotification Handlers
+     */
+    public int addTrackNotificationHandler(NotificationHandler<TrackNotification> handler) {
+        return addNotificationHandler(TrackNotification.class, handler);
+    }
+
+    /**
+     * Convenience method for adding UpdateConfigNotification Handlers
+     */
+    public int addUpdateConfigNotificationHandler(NotificationHandler<UpdateConfigNotification> handler) {
+        return addNotificationHandler(UpdateConfigNotification.class, handler);
+    }
+
+    /**
+     * Convenience method for adding NotificationHandlers
+     */
+    public <T> int addNotificationHandler(Class<T> clazz, NotificationHandler<T> handler) {
+        return notificationCenter.addNotificationHandler(clazz, handler);
+    }
+
     //======== Builder ========//
     @Deprecated
     public static Builder builder(@Nonnull String datafile,
@@ -883,6 +1010,7 @@ public class Optimizely {
         private ProjectConfig projectConfig;
         private ProjectConfigManager projectConfigManager;
         private UserProfileService userProfileService;
+        private NotificationCenter notificationCenter;
 
         // For backwards compatibility
         private AtomicProjectConfigManager fallbackConfigManager = new AtomicProjectConfigManager();
@@ -923,6 +1051,11 @@ public class Optimizely {
 
         public Builder withConfigManager(ProjectConfigManager projectConfigManager) {
             this.projectConfigManager = projectConfigManager;
+            return this;
+        }
+
+        public Builder withNotificationCenter(NotificationCenter notificationCenter) {
+            this.notificationCenter = notificationCenter;
             return this;
         }
 
@@ -996,7 +1129,11 @@ public class Optimizely {
                 projectConfigManager = fallbackConfigManager;
             }
 
-            return new Optimizely(eventHandler, eventFactory, errorHandler, decisionService, userProfileService, projectConfigManager);
+            if (notificationCenter == null) {
+                notificationCenter = new NotificationCenter();
+            }
+
+            return new Optimizely(eventHandler, eventFactory, errorHandler, decisionService, userProfileService, projectConfigManager, notificationCenter);
         }
     }
 }

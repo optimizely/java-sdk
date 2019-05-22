@@ -18,48 +18,84 @@ package com.optimizely.ab.config;
 
 import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.OptimizelyHttpClient;
-import com.optimizely.ab.OptimizelyRuntimeException;
-import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.parser.ConfigParseException;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
+import com.optimizely.ab.internal.PropertyUtils;
+import com.optimizely.ab.notification.NotificationCenter;
+import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
 /**
- * HttpProjectConfigManager is an implementation of a ProjectConfigManager
+ * HttpProjectConfigManager is an implementation of a {@link PollingProjectConfigManager}
  * backed by a datafile. Currently this is loosely tied to Apache HttpClient
  * implementation which is the client of choice in this package.
- *
- * Note that this implementation is blocking and stateless. This is best used in
- * conjunction with the {@link PollingProjectConfigManager} to provide caching
- * and asynchronous fetching.
  */
 public class HttpProjectConfigManager extends PollingProjectConfigManager {
+
+    public static final String CONFIG_POLLING_DURATION  = "http.project.config.manager.polling.duration";
+    public static final String CONFIG_POLLING_UNIT      = "http.project.config.manager.polling.unit";
+    public static final String CONFIG_BLOCKING_DURATION = "http.project.config.manager.blocking.duration";
+    public static final String CONFIG_BLOCKING_UNIT     = "http.project.config.manager.blocking.unit";
+    public static final String CONFIG_SDK_KEY           = "http.project.config.manager.sdk.key";
+
+    public static final long DEFAULT_POLLING_DURATION  = 5;
+    public static final TimeUnit DEFAULT_POLLING_UNIT  = TimeUnit.MINUTES;
+    public static final long DEFAULT_BLOCKING_DURATION = 10;
+    public static final TimeUnit DEFAULT_BLOCKING_UNIT = TimeUnit.SECONDS;
 
     private static final Logger logger = LoggerFactory.getLogger(HttpProjectConfigManager.class);
 
     private final OptimizelyHttpClient httpClient;
     private final URI uri;
-    private final ResponseHandler<String> responseHandler = new ProjectConfigResponseHandler();
+    private String datafileLastModified;
 
-    private HttpProjectConfigManager(long period, TimeUnit timeUnit, OptimizelyHttpClient httpClient, String url) {
-        super(period, timeUnit);
+    private HttpProjectConfigManager(long period, TimeUnit timeUnit, OptimizelyHttpClient httpClient, String url, long blockingTimeoutPeriod, TimeUnit blockingTimeoutUnit, NotificationCenter notificationCenter) {
+        super(period, timeUnit, blockingTimeoutPeriod, blockingTimeoutUnit, notificationCenter);
         this.httpClient = httpClient;
         this.uri = URI.create(url);
     }
 
     public URI getUri() {
         return uri;
+    }
+
+    public String getLastModified() {
+        return datafileLastModified;
+    }
+
+    public String getDatafileFromResponse(HttpResponse response) throws NullPointerException, IOException {
+        StatusLine statusLine = response.getStatusLine();
+
+        if (statusLine == null) {
+            throw new ClientProtocolException("unexpected response from event endpoint, status is null");
+        }
+
+        int status = statusLine.getStatusCode();
+
+        // Datafile has not updated
+        if (status == HttpStatus.SC_NOT_MODIFIED) {
+            logger.debug("Not updating ProjectConfig as datafile has not updated since " + datafileLastModified);
+            return null;
+        }
+
+        if (status >= 200 && status < 300) {
+            // read the response, so we can close the connection
+            HttpEntity entity = response.getEntity();
+            Header lastModifiedHeader = response.getFirstHeader(HttpHeaders.LAST_MODIFIED);
+            if (lastModifiedHeader != null) {
+                datafileLastModified = lastModifiedHeader.getValue();
+            }
+            return EntityUtils.toString(entity, "UTF-8");
+        } else {
+            throw new ClientProtocolException("unexpected response when trying to fetch datafile, status: " + status);
+        }
     }
 
     static ProjectConfig parseProjectConfig(String datafile) throws ConfigParseException {
@@ -69,9 +105,18 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     @Override
     protected ProjectConfig poll() {
         HttpGet httpGet = new HttpGet(uri);
+
+        if (datafileLastModified != null) {
+            httpGet.setHeader(HttpHeaders.IF_MODIFIED_SINCE, datafileLastModified);
+        }
+
         logger.info("Fetching datafile from: {}", httpGet.getURI());
         try {
-            String datafile = httpClient.execute(httpGet, responseHandler);
+            HttpResponse response = httpClient.execute(httpGet);
+            String datafile = getDatafileFromResponse(response);
+            if (datafile == null) {
+                return null;
+            }
             return parseProjectConfig(datafile);
         } catch (ConfigParseException | IOException e) {
             logger.error("Error fetching datafile", e);
@@ -86,12 +131,17 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
     public static class Builder {
         private String datafile;
-        private String sdkKey;
         private String url;
         private String format = "https://cdn.optimizely.com/datafiles/%s.json";
         private OptimizelyHttpClient httpClient;
-        private long period = 5;
-        private TimeUnit timeUnit = TimeUnit.MINUTES;
+        private NotificationCenter notificationCenter;
+
+        String sdkKey = PropertyUtils.get(CONFIG_SDK_KEY);
+        long period = PropertyUtils.getLong(CONFIG_POLLING_DURATION, DEFAULT_POLLING_DURATION);
+        TimeUnit timeUnit = PropertyUtils.getEnum(CONFIG_POLLING_UNIT, TimeUnit.class, DEFAULT_POLLING_UNIT);
+
+        long blockingTimeoutPeriod = PropertyUtils.getLong(CONFIG_BLOCKING_DURATION, DEFAULT_BLOCKING_DURATION);
+        TimeUnit blockingTimeoutUnit = PropertyUtils.getEnum(CONFIG_BLOCKING_UNIT, TimeUnit.class, DEFAULT_BLOCKING_UNIT);
 
         public Builder withDatafile(String datafile) {
             this.datafile = datafile;
@@ -118,14 +168,58 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
             return this;
         }
 
-        public Builder withPollingInterval(long period, TimeUnit timeUnit) {
+        /**
+         * Configure time to block before Completing the future. This timeout is used on the first call
+         * to {@link PollingProjectConfigManager#getConfig()}. If the timeout is exceeded then the
+         * PollingProjectConfigManager will begin returning null immediately until the call to Poll
+         * succeeds.
+         */
+        public Builder withBlockingTimeout(Long period, TimeUnit timeUnit) {
             if (timeUnit == null) {
-                throw new NullPointerException("Must provide valid timeUnit");
+                logger.warn("TimeUnit cannot be null. Keeping default period: {} and time unit: {}", this.blockingTimeoutPeriod, this.blockingTimeoutUnit);
+                return this;
+            }
+
+            if (period == null) {
+                logger.warn("Timeout cannot be null. Keeping default period: {} and time unit: {}", this.blockingTimeoutPeriod, this.blockingTimeoutUnit);
+                return this;
+            }
+
+            if (period <= 0) {
+                logger.warn("Timeout cannot be <= 0. Keeping default period: {} and time unit: {}", this.blockingTimeoutPeriod, this.blockingTimeoutUnit);
+                return this;
+            }
+
+            this.blockingTimeoutPeriod = period;
+            this.blockingTimeoutUnit = timeUnit;
+
+            return this;
+        }
+
+        public Builder withPollingInterval(Long period, TimeUnit timeUnit) {
+            if (timeUnit == null) {
+                logger.warn("TimeUnit cannot be null. Keeping default period: {} and time unit: {}", this.period, this.timeUnit);
+                return this;
+            }
+
+            if (period == null) {
+                logger.warn("Interval cannot be null. Keeping default period: {} and time unit: {}", this.period, this.timeUnit);
+                return this;
+            }
+
+            if (period <= 0) {
+                logger.warn("Interval cannot be <= 0. Keeping default period: {} and time unit: {}", this.period, this.timeUnit);
+                return this;
             }
 
             this.period = period;
             this.timeUnit = timeUnit;
 
+            return this;
+        }
+
+        public Builder withNotificationCenter(NotificationCenter notificationCenter) {
+            this.notificationCenter = notificationCenter;
             return this;
         }
 
@@ -144,21 +238,37 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
          *              before returning the HttpProjectConfigManager instance.
          */
         public HttpProjectConfigManager build(boolean defer) {
+            if (period <= 0) {
+                logger.warn("Invalid polling interval {}, {}. Defaulting to {}, {}",
+                    period, timeUnit, DEFAULT_POLLING_DURATION, DEFAULT_POLLING_UNIT);
+                period = DEFAULT_POLLING_DURATION;
+                timeUnit = DEFAULT_POLLING_UNIT;
+            }
+
+            if (blockingTimeoutPeriod <= 0) {
+                logger.warn("Invalid polling interval {}, {}. Defaulting to {}, {}",
+                    blockingTimeoutPeriod, blockingTimeoutUnit, DEFAULT_BLOCKING_DURATION, DEFAULT_BLOCKING_UNIT);
+                blockingTimeoutPeriod = DEFAULT_BLOCKING_DURATION;
+                blockingTimeoutUnit = DEFAULT_BLOCKING_UNIT;
+            }
+
             if (httpClient == null) {
                 httpClient = HttpClientUtils.getDefaultHttpClient();
             }
 
-            if (url != null) {
-                return new HttpProjectConfigManager(period, timeUnit, httpClient, url);
+            if (url == null) {
+                if (sdkKey == null) {
+                    throw new NullPointerException("sdkKey cannot be null");
+                }
+
+                url = String.format(format, sdkKey);
             }
 
-            if (sdkKey == null) {
-                throw new NullPointerException("sdkKey cannot be null");
+            if (notificationCenter == null) {
+                notificationCenter = new NotificationCenter();
             }
 
-            url = String.format(format, sdkKey);
-
-            HttpProjectConfigManager httpProjectManager = new HttpProjectConfigManager(period, timeUnit, httpClient, url);
+            HttpProjectConfigManager httpProjectManager = new HttpProjectConfigManager(period, timeUnit, httpClient, url, blockingTimeoutPeriod, blockingTimeoutUnit, notificationCenter);
 
             if (datafile != null) {
                 try {
@@ -177,26 +287,6 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
             }
 
             return httpProjectManager;
-        }
-    }
-
-    /**
-     * Handler for the event request that returns nothing (i.e., Void)
-     */
-    static final class ProjectConfigResponseHandler implements ResponseHandler<String> {
-
-        @Override
-        @CheckForNull
-        public String handleResponse(HttpResponse response) throws IOException {
-            int status = response.getStatusLine().getStatusCode();
-            if (status >= 200 && status < 300) {
-                // read the response, so we can close the connection
-                HttpEntity entity = response.getEntity();
-                return EntityUtils.toString(entity, "UTF-8");
-            } else {
-                // TODO handle unmodifed response.
-                throw new ClientProtocolException("unexpected response from event endpoint, status: " + status);
-            }
         }
     }
 }

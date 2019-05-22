@@ -45,6 +45,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import javax.annotation.Nonnull;
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,15 +54,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
 import static com.optimizely.ab.event.LogEvent.RequestMethod;
 import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.EXPERIMENT_KEY;
 import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_KEY;
+import static com.optimizely.ab.notification.DecisionNotification.FeatureVariableDecisionNotificationBuilder.*;
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
@@ -145,6 +144,70 @@ public class OptimizelyTest {
         this.datafileVersion = Integer.parseInt(validProjectConfig.getVersion());
     }
 
+    @Test
+    public void testClose() throws IOException {
+        EventHandler mockCloseableEventHandler = mock(
+            EventHandler.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+        ProjectConfigManager mockCloseableProjectConfigManager = mock(
+            ProjectConfigManager.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+
+        Optimizely optimizely = Optimizely.builder()
+            .withEventHandler(mockCloseableEventHandler)
+            .withConfigManager(mockCloseableProjectConfigManager)
+            .build();
+
+        optimizely.close();
+
+        verify((Closeable) mockCloseableEventHandler).close();
+        verify((Closeable) mockCloseableProjectConfigManager).close();
+    }
+
+    @Test
+    public void testCloseConfigManagerThrowsException() throws IOException {
+        EventHandler mockCloseableEventHandler = mock(
+            EventHandler.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+        ProjectConfigManager mockCloseableProjectConfigManager = mock(
+            ProjectConfigManager.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+
+        Optimizely optimizely = Optimizely.builder()
+            .withEventHandler(mockCloseableEventHandler)
+            .withConfigManager(mockCloseableProjectConfigManager)
+            .build();
+
+        doThrow(new IOException()).when((Closeable) mockCloseableProjectConfigManager).close();
+        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockCloseableProjectConfigManager + ".");
+        optimizely.close();
+    }
+
+    @Test
+    public void testCloseEventHandlerThrowsException() throws IOException {
+        EventHandler mockCloseableEventHandler = mock(
+            EventHandler.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+        ProjectConfigManager mockCloseableProjectConfigManager = mock(
+            ProjectConfigManager.class,
+            withSettings().extraInterfaces(Closeable.class)
+        );
+
+        Optimizely optimizely = Optimizely.builder()
+            .withEventHandler(mockCloseableEventHandler)
+            .withConfigManager(mockCloseableProjectConfigManager)
+            .build();
+
+        doThrow(new IOException()).when((Closeable) mockCloseableEventHandler).close();
+        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockCloseableEventHandler + ".");
+        optimizely.close();
+    }
+
     //======== activate tests ========//
 
     /**
@@ -185,7 +248,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -245,7 +308,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -397,7 +460,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -457,7 +520,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -566,7 +629,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "BucketingId is valid: \"bucketingId\"");
 
-        logbackVerifier.expectMessage(Level.INFO, "This decision will not be saved since the UserProfileService is null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "This decision will not be saved since the UserProfileService is null.");
 
         logbackVerifier.expectMessage(Level.INFO, "Activating user \"userId\" in experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -2613,31 +2676,30 @@ public class OptimizelyTest {
 
     //======== Notification listeners ========//
 
-    Boolean isListenerCalled = false;
+    boolean isListenerCalled = false;
 
     /**
      * Helper method to return decisionListener
      **/
-    private DecisionNotificationListener getDecisionListener(final String testType,
-                                                             final String testUserId,
-                                                             final Map<String, ?> testUserAttributes,
-                                                             final Map<String, ?> testDecisionInfo) {
-        return new DecisionNotificationListener() {
-            @Override
-            public void onDecision(@Nonnull DecisionNotification decisionNotification) {
-                assertEquals(decisionNotification.getType(), testType);
-                assertEquals(decisionNotification.getUserId(), testUserId);
-                for (Map.Entry<String, ?> entry : decisionNotification.getAttributes().entrySet()) {
-                    assertEquals(testUserAttributes.get(entry.getKey()), entry.getValue());
-                }
-                for (Map.Entry<String, ?> entry : decisionNotification.getDecisionInfo().entrySet()) {
-                    assertEquals(testDecisionInfo.get(entry.getKey()), entry.getValue());
-                }
-                isListenerCalled = true;
+    private NotificationHandler<DecisionNotification> getDecisionListener(
+        final String testType,
+        final String testUserId,
+        final Map<String, ?> testUserAttributes,
+        final Map<String, ?> testDecisionInfo)
+    {
+        return decisionNotification -> {
+            assertEquals(decisionNotification.getType(), testType);
+            assertEquals(decisionNotification.getUserId(), testUserId);
+            assertEquals(decisionNotification.getAttributes(), testUserAttributes);
+            for (Map.Entry<String, ?> entry : decisionNotification.getAttributes().entrySet()) {
+                assertEquals(testUserAttributes.get(entry.getKey()), entry.getValue());
             }
+            for (Map.Entry<String, ?> entry : decisionNotification.getDecisionInfo().entrySet()) {
+                assertEquals(testDecisionInfo.get(entry.getKey()), entry.getValue());
+            }
+            isListenerCalled = true;
         };
     }
-
 
     //======Activate Notification TESTS======//
 
@@ -2663,7 +2725,8 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(EXPERIMENT_KEY, activatedExperiment.getKey());
         testDecisionInfoMap.put(VARIATION_KEY, "Gred");
 
-        int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
+        int notificationId = optimizely.notificationCenter.<DecisionNotification>getNotificationManager(DecisionNotification.class)
+            .addHandler(
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString(),
                 userId,
                 testUserAttributes,
@@ -2702,7 +2765,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(EXPERIMENT_KEY, activatedExperiment.getKey());
         testDecisionInfoMap.put(VARIATION_KEY, null);
 
-        int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
+        int notificationId = optimizely.addDecisionNotificationHandler(
             getDecisionListener(NotificationCenter.DecisionNotificationType.AB_TEST.toString(),
                 null,
                 Collections.<String, Object>emptyMap(),
@@ -2742,7 +2805,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(EXPERIMENT_KEY, activatedExperiment.getKey());
         testDecisionInfoMap.put(VARIATION_KEY, null);
 
-        int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
+        int notificationId = optimizely.addDecisionNotificationHandler(
             getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString(),
                 genericUserId,
                 testUserAttributes,
@@ -2760,6 +2823,593 @@ public class OptimizelyTest {
 
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
 
+    }
+
+    //======GetEnabledFeatures Notification TESTS======//
+
+    /**
+     * Verify that the {@link Optimizely#getEnabledFeatures(String, Map)}
+     * notification listener of getEnabledFeatures is called with multiple FeatureEnabled
+     */
+    @Test
+    public void getEnabledFeaturesWithListenerMultipleFeatureEnabled() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        isListenerCalled = false;
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        int notificationId = optimizely.addDecisionNotificationHandler(
+            decisionNotification -> {
+                isListenerCalled = true;
+                assertEquals(decisionNotification.getType(), NotificationCenter.DecisionNotificationType.FEATURE.toString());
+            });
+
+        ArrayList<String> featureFlags = (ArrayList<String>) optimizely.getEnabledFeatures(testUserId,
+            new HashMap<String, String>());
+        assertEquals(2, featureFlags.size());
+
+        verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify {@link Optimizely#getEnabledFeatures(String, Map)} calls into
+     * {@link Optimizely#isFeatureEnabled(String, String, Map)} for each featureFlag sending
+     * userId and emptyMap and Mocked {@link Optimizely#isFeatureEnabled(String, String, Map)}
+     * to return false so {@link Optimizely#getEnabledFeatures(String, Map)} will
+     * return empty List of FeatureFlags and no notification listener will get called.
+     */
+    @Test
+    public void getEnabledFeaturesWithNoFeatureEnabled() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        isListenerCalled = false;
+        Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build());
+        doReturn(false).when(spyOptimizely).isFeatureEnabled(
+            any(String.class),
+            eq(genericUserId),
+            eq(Collections.<String, String>emptyMap())
+        );
+
+        int notificationId = spyOptimizely.addDecisionNotificationHandler( decisionNotification -> { });
+
+        ArrayList<String> featureFlags = (ArrayList<String>) spyOptimizely.getEnabledFeatures(genericUserId,
+            Collections.<String, String>emptyMap());
+        assertTrue(featureFlags.isEmpty());
+
+        verify(mockEventHandler, times(0)).dispatchEvent(any(LogEvent.class));
+
+        // Verify that listener not being called
+        assertFalse(isListenerCalled);
+
+        assertTrue(spyOptimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    //======IsFeatureEnabled Notification TESTS======//
+
+    /**
+     * Verify that the {@link Optimizely#isFeatureEnabled(String, String, Map<String, String>)}
+     * notification listener of isFeatureEnabled is called when feature is in experiment and feature is true
+     */
+    @Test
+    public void isFeatureEnabledWithListenerUserInExperimentFeatureOn() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        isListenerCalled = false;
+        final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        final Map<String, String> testSourceInfo = new HashMap<>();
+        testSourceInfo.put(VARIATION_KEY, "George");
+        testSourceInfo.put(EXPERIMENT_KEY, "multivariate_experiment");
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
+        testDecisionInfoMap.put(FEATURE_ENABLED, true);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
+        testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
+
+        int notificationId = optimizely.addDecisionNotificationHandler(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE.toString(),
+                genericUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertTrue(optimizely.isFeatureEnabled(
+            validFeatureKey,
+            genericUserId,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)
+        ));
+
+        logbackVerifier.expectMessage(
+            Level.INFO,
+            "Feature \"" + validFeatureKey +
+                "\" is enabled for user \"" + genericUserId + "\"? true"
+        );
+        verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#isFeatureEnabled(String, String, Map<String, String>)}
+     * notification listener of isFeatureEnabled is called when feature is in experiment and feature is false
+     */
+    @Test
+    public void isFeatureEnabledWithListenerUserInExperimentFeatureOff() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        isListenerCalled = false;
+
+        final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+
+        Optimizely optimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .withDecisionService(mockDecisionService)
+            .build());
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+        testUserAttributes.put(testBucketingIdKey, testBucketingId);
+
+        final Map<String, String> testSourceInfo = new HashMap<>();
+        testSourceInfo.put(VARIATION_KEY, "variation_toggled_off");
+        testSourceInfo.put(EXPERIMENT_KEY, "multivariate_experiment");
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
+        testDecisionInfoMap.put(FEATURE_ENABLED, false);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
+        testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
+
+        int notificationId = optimizely.addDecisionNotificationHandler(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE.toString(),
+                genericUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        Experiment activatedExperiment = validProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY);
+        Variation variation = new Variation("2", "variation_toggled_off", false, null);
+
+        FeatureDecision featureDecision = new FeatureDecision(activatedExperiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST);
+        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+            any(FeatureFlag.class),
+            anyString(),
+            anyMapOf(String.class, String.class),
+            any(ProjectConfig.class)
+        );
+
+        assertFalse(optimizely.isFeatureEnabled(validFeatureKey, genericUserId, testUserAttributes));
+
+        logbackVerifier.expectMessage(
+            Level.INFO,
+            "Feature \"" + validFeatureKey +
+                "\" is enabled for user \"" + genericUserId + "\"? false"
+        );
+        verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#isFeatureEnabled(String, String, Map<String, String>)}
+     * notification listener of isFeatureEnabled is called when feature is not in experiment and not in rollout
+     * returns false
+     */
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
+    @Test
+    public void isFeatureEnabledWithListenerUserNotInExperimentAndNotInRollOut() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        isListenerCalled = false;
+        final String validFeatureKey = "boolean_feature";
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+        final Map<String, String> testUserAttributes = new HashMap<>();
+
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
+        testDecisionInfoMap.put(FEATURE_ENABLED, false);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
+        testDecisionInfoMap.put(SOURCE_INFO, new HashMap<>());
+
+        int notificationId = optimizely.addDecisionNotificationHandler(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE.toString(),
+                genericUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertFalse(optimizely.isFeatureEnabled(validFeatureKey, genericUserId, null));
+
+        logbackVerifier.expectMessage(
+            Level.INFO,
+            "Feature \"" + validFeatureKey +
+                "\" is enabled for user \"" + genericUserId + "\"? false"
+        );
+        verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#isFeatureEnabled(String, String, Map<String, String>)}
+     * notification listener of isFeatureEnabled is called when feature is in rollout and featureEnabled is true
+     */
+    @Test
+    public void isFeatureEnabledWithListenerUserInRollOut() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        isListenerCalled = false;
+        final String validFeatureKey = "integer_single_variable_feature";
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+        testUserAttributes.put(testBucketingIdKey, testBucketingId);
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(VARIATION_KEY, null);
+        testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
+        testDecisionInfoMap.put(FEATURE_ENABLED, true);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
+        testDecisionInfoMap.put(SOURCE_INFO, new HashMap<>());
+
+        int notificationId = optimizely.addDecisionNotificationHandler(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE.toString(),
+                genericUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertTrue(optimizely.isFeatureEnabled(validFeatureKey, genericUserId, testUserAttributes));
+
+        logbackVerifier.expectMessage(
+            Level.INFO,
+            "Feature \"" + validFeatureKey +
+                "\" is enabled for user \"" + genericUserId + "\"? true"
+        );
+        verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    //======GetFeatureVariable Notification TESTS======//
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
+     * notification listener of getFeatureVariableString is called when feature is in experiment and feature is true
+     */
+    @Test
+    public void getFeatureVariableWithListenerUserInExperimentFeatureOn() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        isListenerCalled = false;
+        final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+        String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
+        String expectedValue = "F";
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        final Map<String, String> testSourceInfo = new HashMap<>();
+        testSourceInfo.put(EXPERIMENT_KEY, "multivariate_experiment");
+        testSourceInfo.put(VARIATION_KEY, "Fred");
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
+        testDecisionInfoMap.put(FEATURE_ENABLED, true);
+        testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING.toString());
+        testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
+        testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
+
+        int notificationId = optimizely.addDecisionNotificationHandler(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
+                testUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertEquals(optimizely.getFeatureVariableString(
+            validFeatureKey,
+            validVariableKey,
+            testUserId,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+            expectedValue);
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
+     * notification listener of getFeatureVariableString is called when feature is in experiment and feature enabled is false
+     * than default value will get returned and passing null attribute will send empty map instead of null
+     */
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
+    @Test
+    public void getFeatureVariableWithListenerUserInExperimentFeatureOff() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        isListenerCalled = false;
+        final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+        String validVariableKey = VARIABLE_FIRST_LETTER_KEY;
+        String expectedValue = "H";
+        String userID = "Gred";
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+
+        final Map<String, String> testSourceInfo = new HashMap<>();
+        testSourceInfo.put(EXPERIMENT_KEY, "multivariate_experiment");
+        testSourceInfo.put(VARIATION_KEY, "Gred");
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
+        testDecisionInfoMap.put(FEATURE_ENABLED, false);
+        testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING.toString());
+        testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
+        testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
+
+        int notificationId = optimizely.addDecisionNotificationHandler(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
+                userID,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertEquals(optimizely.getFeatureVariableString(
+            validFeatureKey,
+            validVariableKey,
+            userID,
+            null),
+            expectedValue);
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
+     * notification listener of getFeatureVariableString is called when feature is in rollout and feature enabled is true
+     */
+    @Test
+    public void getFeatureVariableWithListenerUserInRollOutFeatureOn() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        isListenerCalled = false;
+        final String validFeatureKey = FEATURE_SINGLE_VARIABLE_STRING_KEY;
+        String validVariableKey = VARIABLE_STRING_VARIABLE_KEY;
+        String expectedValue = "lumos";
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+
+        testDecisionInfoMap.put(EXPERIMENT_KEY, null);
+        testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
+        testDecisionInfoMap.put(FEATURE_ENABLED, true);
+        testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING.toString());
+        testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
+        testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
+
+        int notificationId = optimizely.addDecisionNotificationHandler(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
+                genericUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertEquals(optimizely.getFeatureVariableString(
+            validFeatureKey,
+            validVariableKey,
+            genericUserId,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+            expectedValue);
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableBoolean(String, String, String, Map)}
+     * notification listener of getFeatureVariableBoolean is called when feature is not in rollout and feature enabled is false
+     */
+    @Test
+    public void getFeatureVariableWithListenerUserNotInRollOutFeatureOff() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        isListenerCalled = false;
+        final String validFeatureKey = FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY;
+        String validVariableKey = VARIABLE_BOOLEAN_VARIABLE_KEY;
+        Boolean expectedValue = true;
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+
+        testDecisionInfoMap.put(EXPERIMENT_KEY, null);
+        testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
+        testDecisionInfoMap.put(FEATURE_ENABLED, false);
+        testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.BOOLEAN.toString());
+        testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
+        testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
+
+        int notificationId = optimizely.addDecisionNotificationHandler(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
+                genericUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertEquals(optimizely.getFeatureVariableBoolean(
+            validFeatureKey,
+            validVariableKey,
+            genericUserId,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+            expectedValue);
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableInteger(String, String, String, Map)}
+     * notification listener of getFeatureVariableInteger is called when feature is in rollout and feature enabled is true
+     */
+    @Test
+    public void getFeatureVariableIntegerWithListenerUserInRollOutFeatureOn() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        isListenerCalled = false;
+        final String validFeatureKey = FEATURE_SINGLE_VARIABLE_INTEGER_KEY;
+        String validVariableKey = VARIABLE_INTEGER_VARIABLE_KEY;
+        int expectedValue = 7;
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(EXPERIMENT_KEY, null);
+        testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
+        testDecisionInfoMap.put(FEATURE_ENABLED, true);
+        testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.INTEGER.toString());
+        testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
+        testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
+
+        int notificationId = optimizely.addDecisionNotificationHandler(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
+                genericUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertEquals((long) optimizely.getFeatureVariableInteger(
+            validFeatureKey,
+            validVariableKey,
+            genericUserId,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+            (long) expectedValue);
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableDouble(String, String, String, Map)}
+     * notification listener of getFeatureVariableDouble is called when feature is in experiment and feature enabled is true
+     */
+    @SuppressFBWarnings("CNT_ROUGH_CONSTANT_VALUE")
+    @Test
+    public void getFeatureVariableDoubleWithListenerUserInExperimentFeatureOn() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        isListenerCalled = false;
+        final String validFeatureKey = FEATURE_SINGLE_VARIABLE_DOUBLE_KEY;
+        String validVariableKey = VARIABLE_DOUBLE_VARIABLE_KEY;
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_SLYTHERIN_VALUE);
+
+        final Map<String, String> testSourceInfo = new HashMap<>();
+        testSourceInfo.put(EXPERIMENT_KEY, "double_single_variable_feature_experiment");
+        testSourceInfo.put(VARIATION_KEY, "pi_variation");
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
+        testDecisionInfoMap.put(FEATURE_ENABLED, true);
+        testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.DOUBLE.toString());
+        testDecisionInfoMap.put(VARIABLE_VALUE, 3.14);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
+        testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
+
+        int notificationId = optimizely.addDecisionNotificationHandler(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
+                genericUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertEquals(optimizely.getFeatureVariableDouble(
+            validFeatureKey,
+            validVariableKey,
+            genericUserId,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_SLYTHERIN_VALUE)),
+            Math.PI, 2);
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
 
     /**
@@ -3234,12 +3884,12 @@ public class OptimizelyTest {
             public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
                 assertEquals(eventType.getKey(), eventKey);
                 assertEquals(genericUserId, userId);
-                assertNull(attributes.isEmpty());
+                assertNull(attributes);
                 assertTrue(eventTags.isEmpty());
             }
         };
 
-        int notificationId = optimizely.notificationCenter.addNotificationListener(NotificationCenter.NotificationType.Track, trackNotification);
+        int notificationId = optimizely.addTrackNotificationHandler(trackNotification);
 
         // call track
         optimizely.track(eventType.getKey(), genericUserId, attributes);
@@ -3396,14 +4046,14 @@ public class OptimizelyTest {
 
         String validFeatureKey = FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY;
         String validVariableKey = VARIABLE_BOOLEAN_VARIABLE_KEY;
-        String defaultValue = VARIABLE_BOOLEAN_VARIABLE_DEFAULT_VALUE;
+        Boolean defaultValue = Boolean.parseBoolean(VARIABLE_BOOLEAN_VARIABLE_DEFAULT_VALUE);
         Map<String, String> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
             .withConfig(validProjectConfig)
             .build();
 
-        String value = optimizely.getFeatureVariableValueForType(
+        Boolean value = optimizely.getFeatureVariableValueForType(
             validFeatureKey,
             validVariableKey,
             genericUserId,
@@ -3441,7 +4091,7 @@ public class OptimizelyTest {
 
         String validFeatureKey = FEATURE_SINGLE_VARIABLE_DOUBLE_KEY;
         String validVariableKey = VARIABLE_DOUBLE_VARIABLE_KEY;
-        String expectedValue = VARIABLE_DOUBLE_DEFAULT_VALUE;
+        Double expectedValue = Double.parseDouble(VARIABLE_DOUBLE_DEFAULT_VALUE);
         FeatureFlag featureFlag = FEATURE_FLAG_SINGLE_VARIABLE_DOUBLE;
         Experiment experiment = validProjectConfig.getExperimentIdMapping().get(featureFlag.getExperimentIds().get(0));
 
@@ -3449,7 +4099,7 @@ public class OptimizelyTest {
             .withConfig(validProjectConfig)
             .build();
 
-        String valueWithImproperAttributes = optimizely.getFeatureVariableValueForType(
+        Double valueWithImproperAttributes = optimizely.getFeatureVariableValueForType(
             validFeatureKey,
             validVariableKey,
             genericUserId,
@@ -3554,7 +4204,7 @@ public class OptimizelyTest {
      */
     @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     @Test
-    public void getFeatureVariableWithListenerUserInExperimentFeatureOff() {
+    public void getFeatureVariableUserInExperimentFeatureOff() {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
         final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
@@ -3572,7 +4222,7 @@ public class OptimizelyTest {
             userID,
             null),
             expectedValue);
-     }
+    }
 
     /**
      * Verify that the {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
@@ -3687,13 +4337,13 @@ public class OptimizelyTest {
         String validFeatureKey = FEATURE_SINGLE_VARIABLE_INTEGER_KEY;
         String validVariableKey = VARIABLE_INTEGER_VARIABLE_KEY;
         FeatureVariable variable = FEATURE_FLAG_SINGLE_VARIABLE_INTEGER.getVariableKeyToFeatureVariableMap().get(validVariableKey);
-        String expectedValue = variable.getDefaultValue();
+        Integer expectedValue = Integer.parseInt(variable.getDefaultValue());
 
         Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
             .withConfig(validProjectConfig)
             .build();
 
-        String value = optimizely.getFeatureVariableValueForType(
+        Integer value = optimizely.getFeatureVariableValueForType(
             validFeatureKey,
             validVariableKey,
             genericUserId,
@@ -3848,7 +4498,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is not enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? false"
         );
         verify(spyOptimizely).isFeatureEnabled(
             eq(validFeatureKey),
@@ -3905,7 +4555,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? true"
         );
         verify(spyOptimizely).isFeatureEnabled(
             eq(validFeatureKey),
@@ -4067,7 +4717,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is not enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? false"
         );
         verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
     }
@@ -4100,7 +4750,7 @@ public class OptimizelyTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "Feature \"" + validFeatureKey +
-                "\" is enabled for user \"" + genericUserId + "\"."
+                "\" is enabled for user \"" + genericUserId + "\"? true"
         );
         verify(mockEventHandler, times(1)).dispatchEvent(any(LogEvent.class));
     }
@@ -4583,7 +5233,7 @@ public class OptimizelyTest {
             .build());
 
 
-        doReturn(valueNoAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+        doReturn(valueNoAttributes).when(spyOptimizely).getFeatureVariableValueForType(
             eq(featureKey),
             eq(variableKey),
             eq(genericUserId),
@@ -4591,7 +5241,7 @@ public class OptimizelyTest {
             eq(FeatureVariable.VariableType.BOOLEAN)
         );
 
-        doReturn(valueWithAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+        doReturn(valueWithAttributes).when(spyOptimizely).getFeatureVariableValueForType(
             eq(featureKey),
             eq(variableKey),
             eq(genericUserId),
@@ -4681,7 +5331,7 @@ public class OptimizelyTest {
             .build());
 
 
-        doReturn(valueNoAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+        doReturn(valueNoAttributes).when(spyOptimizely).getFeatureVariableValueForType(
             eq(featureKey),
             eq(variableKey),
             eq(genericUserId),
@@ -4689,7 +5339,7 @@ public class OptimizelyTest {
             eq(FeatureVariable.VariableType.DOUBLE)
         );
 
-        doReturn(valueWithAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+        doReturn(valueWithAttributes).when(spyOptimizely).getFeatureVariableValueForType(
             eq(featureKey),
             eq(variableKey),
             eq(genericUserId),
@@ -4888,17 +5538,62 @@ public class OptimizelyTest {
             anyMapOf(String.class, String.class),
             eq(FeatureVariable.VariableType.DOUBLE)
         );
-
         assertNull(spyOptimizely.getFeatureVariableDouble(
             featureKey,
             variableKey,
             genericUserId
+        ));
+    }
+
+    /**
+     * Verify that {@link Optimizely#convertStringToType(String, FeatureVariable.VariableType)}
+     * do not throw errors when they are unable to parse the value into an Double.
+     *
+     * @throws NumberFormatException
+     */
+    @Test
+    public void convertStringToTypeDoubleCatchesExceptionFromParsing() throws NumberFormatException {
+        String unParsableValue = "not_a_double";
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        assertNull(optimizely.convertStringToType(
+            unParsableValue,
+            FeatureVariable.VariableType.DOUBLE
         ));
 
         logbackVerifier.expectMessage(
             Level.ERROR,
             "NumberFormatException while trying to parse \"" + unParsableValue +
                 "\" as Double. "
+        );
+    }
+
+    /**
+     * Verify that {@link Optimizely#convertStringToType(String, FeatureVariable.VariableType)}
+     * do not throw errors when they are unable to parse the value into an Integer.
+     *
+     * @throws NumberFormatException
+     */
+    @Test
+    public void convertStringToTypeIntegerCatchesExceptionFromParsing() throws NumberFormatException {
+        String unParsableValue = "not_a_integer";
+
+        Optimizely optimizely = Optimizely.builder(validDatafile, mockEventHandler)
+            .withConfig(validProjectConfig)
+            .build();
+
+        assertNull(optimizely.convertStringToType(
+            unParsableValue,
+            FeatureVariable.VariableType.INTEGER
+        ));
+
+        logbackVerifier.expectMessage(
+            Level.ERROR,
+            "NumberFormatException while trying to parse \"" + unParsableValue +
+                "\" as Integer. "
         );
     }
 
@@ -5029,7 +5724,7 @@ public class OptimizelyTest {
             .build());
 
 
-        doReturn(valueNoAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+        doReturn(valueNoAttributes).when(spyOptimizely).getFeatureVariableValueForType(
             eq(featureKey),
             eq(variableKey),
             eq(genericUserId),
@@ -5037,7 +5732,7 @@ public class OptimizelyTest {
             eq(FeatureVariable.VariableType.INTEGER)
         );
 
-        doReturn(valueWithAttributes.toString()).when(spyOptimizely).getFeatureVariableValueForType(
+        doReturn(valueWithAttributes).when(spyOptimizely).getFeatureVariableValueForType(
             eq(featureKey),
             eq(variableKey),
             eq(genericUserId),
@@ -5096,12 +5791,6 @@ public class OptimizelyTest {
             variableKey,
             genericUserId
         ));
-
-        logbackVerifier.expectMessage(
-            Level.ERROR,
-            "NumberFormatException while trying to parse \"" + unParsableValue +
-                "\" as Integer. "
-        );
     }
 
     /**
@@ -5132,7 +5821,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(EXPERIMENT_KEY, experiment.getKey());
         testDecisionInfoMap.put(VARIATION_KEY, bucketedVariation.getKey());
 
-        int notificationId = optimizely.notificationCenter.addDecisionNotificationListener(
+        int notificationId = optimizely.addDecisionNotificationHandler(
             getDecisionListener(NotificationCenter.DecisionNotificationType.AB_TEST.toString(),
                 testUserId,
                 testUserAttributes,
@@ -5170,6 +5859,44 @@ public class OptimizelyTest {
             .build();
 
         assertTrue(optimizely.isValid());
+    }
+
+    //======== Test Notification APIs ========//
+
+    @Test
+    public void testGetNotificationCenter() {
+        Optimizely optimizely = Optimizely.builder().withConfigManager(() -> null).build();
+        assertEquals(optimizely.notificationCenter, optimizely.getNotificationCenter());
+    }
+
+    @Test
+    public void testAddTrackNotificationHandler() {
+        Optimizely optimizely = Optimizely.builder().withConfigManager(() -> null).build();
+        NotificationManager<TrackNotification> manager = optimizely.getNotificationCenter()
+            .getNotificationManager(TrackNotification.class);
+
+        int notificationId = optimizely.addTrackNotificationHandler(message -> {});
+        assertTrue(manager.remove(notificationId));
+    }
+
+    @Test
+    public void testAddDecisionNotificationHandler() {
+        Optimizely optimizely = Optimizely.builder().withConfigManager(() -> null).build();
+        NotificationManager<DecisionNotification> manager = optimizely.getNotificationCenter()
+            .getNotificationManager(DecisionNotification.class);
+
+        int notificationId = optimizely.addDecisionNotificationHandler(message -> {});
+        assertTrue(manager.remove(notificationId));
+    }
+
+    @Test
+    public void testAddUpdateConfigNotificationHandler() {
+        Optimizely optimizely = Optimizely.builder().withConfigManager(() -> null).build();
+        NotificationManager<UpdateConfigNotification> manager = optimizely.getNotificationCenter()
+            .getNotificationManager(UpdateConfigNotification.class);
+
+        int notificationId = optimizely.addUpdateConfigNotificationHandler(message -> {});
+        assertTrue(manager.remove(notificationId));
     }
 
     //======== Helper methods ========//

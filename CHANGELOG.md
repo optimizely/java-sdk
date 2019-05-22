@@ -1,5 +1,32 @@
 # Optimizely Java X SDK Changelog
 
+## 3.1.0
+May 6th, 2019
+
+### New Features:
+- Introduced Decision notification listener to be able to record:
+    - Variation assignments for users activated in an experiment.
+    - Feature access for users.
+    - Feature variable value for users.
+- Added APIs to be able to conveniently add Decision notification handler (`addDecisionNotificationHandler`) and Track notification handler (`addTrackNotificationHandler`).
+
+### Bug Fixes:
+- Feature variable APIs return default variable value when featureEnabled property is false. ([#274](https://github.com/optimizely/java-sdk/pull/274))
+
+### Deprecated
+- Activate notification listener is deprecated as of this release. Recommendation is to use the new Decision notification listener. Activate notification listener will be removed in the next major release.
+- `addActivateNotificationListener`, `addTrackNotificationListener` and `addNotificationListener` APIs on `NotificationCenter`.
+
+## 3.0.1
+
+April 23, 2019
+
+This is a simple fix so that older versions of org.json can still parse the datafile.  
+
+### Bug Fix
+We use org.json.JSONArray. Older versions do not support the iterator.  In order to ensure that the datafile is still parsable if you use a older version, we changed to use the get method instead of the iterator.
+([#283](https://github.com/optimizely/java-sdk/pull/283))
+
 ## 3.0.0
 
 February 13, 2019

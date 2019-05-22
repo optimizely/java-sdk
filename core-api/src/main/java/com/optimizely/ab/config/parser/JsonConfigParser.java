@@ -115,7 +115,8 @@ final class JsonConfigParser implements ConfigParser {
     private List<Experiment> parseExperiments(JSONArray experimentJson, String groupId) {
         List<Experiment> experiments = new ArrayList<Experiment>(experimentJson.length());
 
-        for (Object obj : experimentJson) {
+        for (int i = 0; i < experimentJson.length(); i++) {
+            Object obj = experimentJson.get(i);
             JSONObject experimentObject = (JSONObject) obj;
             String id = experimentObject.getString("id");
             String key = experimentObject.getString("key");
@@ -126,7 +127,8 @@ final class JsonConfigParser implements ConfigParser {
             JSONArray audienceIdsJson = experimentObject.getJSONArray("audienceIds");
             List<String> audienceIds = new ArrayList<String>(audienceIdsJson.length());
 
-            for (Object audienceIdObj : audienceIdsJson) {
+            for (int j = 0; j < audienceIdsJson.length(); j++) {
+                Object audienceIdObj = audienceIdsJson.get(j);
                 audienceIds.add((String) audienceIdObj);
             }
 
@@ -153,7 +155,8 @@ final class JsonConfigParser implements ConfigParser {
     private List<String> parseExperimentIds(JSONArray experimentIdsJson) {
         ArrayList<String> experimentIds = new ArrayList<String>(experimentIdsJson.length());
 
-        for (Object experimentIdObj : experimentIdsJson) {
+        for (int i = 0; i < experimentIdsJson.length(); i++) {
+            Object experimentIdObj = experimentIdsJson.get(i);
             experimentIds.add((String) experimentIdObj);
         }
 
@@ -163,7 +166,8 @@ final class JsonConfigParser implements ConfigParser {
     private List<FeatureFlag> parseFeatureFlags(JSONArray featureFlagJson) {
         List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>(featureFlagJson.length());
 
-        for (Object obj : featureFlagJson) {
+        for (int i = 0; i < featureFlagJson.length();i++) {
+            Object obj = featureFlagJson.get(i);
             JSONObject featureFlagObject = (JSONObject) obj;
             String id = featureFlagObject.getString("id");
             String key = featureFlagObject.getString("key");
@@ -188,7 +192,8 @@ final class JsonConfigParser implements ConfigParser {
     private List<Variation> parseVariations(JSONArray variationJson) {
         List<Variation> variations = new ArrayList<Variation>(variationJson.length());
 
-        for (Object obj : variationJson) {
+        for (int i = 0; i < variationJson.length(); i++) {
+            Object obj = variationJson.get(i);
             JSONObject variationObject = (JSONObject) obj;
             String id = variationObject.getString("id");
             String key = variationObject.getString("key");
@@ -224,7 +229,8 @@ final class JsonConfigParser implements ConfigParser {
     private List<TrafficAllocation> parseTrafficAllocation(JSONArray trafficAllocationJson) {
         List<TrafficAllocation> trafficAllocation = new ArrayList<TrafficAllocation>(trafficAllocationJson.length());
 
-        for (Object obj : trafficAllocationJson) {
+        for (int i = 0; i < trafficAllocationJson.length();i++) {
+            Object obj = trafficAllocationJson.get(i);
             JSONObject allocationObject = (JSONObject) obj;
             String entityId = allocationObject.getString("entityId");
             int endOfRange = allocationObject.getInt("endOfRange");
@@ -238,7 +244,8 @@ final class JsonConfigParser implements ConfigParser {
     private List<Attribute> parseAttributes(JSONArray attributeJson) {
         List<Attribute> attributes = new ArrayList<Attribute>(attributeJson.length());
 
-        for (Object obj : attributeJson) {
+        for (int i = 0; i < attributeJson.length();i++) {
+            Object obj = attributeJson.get(i);
             JSONObject attributeObject = (JSONObject) obj;
             String id = attributeObject.getString("id");
             String key = attributeObject.getString("key");
@@ -252,7 +259,8 @@ final class JsonConfigParser implements ConfigParser {
     private List<EventType> parseEvents(JSONArray eventJson) {
         List<EventType> events = new ArrayList<EventType>(eventJson.length());
 
-        for (Object obj : eventJson) {
+        for (int i = 0; i < eventJson.length(); i++) {
+            Object obj = eventJson.get(i);
             JSONObject eventObject = (JSONObject) obj;
             List<String> experimentIds = parseExperimentIds(eventObject.getJSONArray("experimentIds"));
 
@@ -268,7 +276,8 @@ final class JsonConfigParser implements ConfigParser {
     private List<Audience> parseAudiences(JSONArray audienceJson) {
         List<Audience> audiences = new ArrayList<Audience>(audienceJson.length());
 
-        for (Object obj : audienceJson) {
+        for (int i = 0; i < audienceJson.length(); i++) {
+            Object obj = audienceJson.get(i);
             JSONObject audienceObject = (JSONObject) obj;
             String id = audienceObject.getString("id");
             String key = audienceObject.getString("name");
@@ -294,7 +303,8 @@ final class JsonConfigParser implements ConfigParser {
     private List<Audience> parseTypedAudiences(JSONArray audienceJson) {
         List<Audience> audiences = new ArrayList<Audience>(audienceJson.length());
 
-        for (Object obj : audienceJson) {
+        for (int i = 0; i < audienceJson.length(); i++) {
+            Object obj = audienceJson.get(i);
             JSONObject audienceObject = (JSONObject) obj;
             String id = audienceObject.getString("id");
             String key = audienceObject.getString("name");
@@ -310,7 +320,8 @@ final class JsonConfigParser implements ConfigParser {
     private List<Group> parseGroups(JSONArray groupJson) {
         List<Group> groups = new ArrayList<Group>(groupJson.length());
 
-        for (Object obj : groupJson) {
+        for (int i = 0; i < groupJson.length(); i++) {
+            Object obj = groupJson.get(i);
             JSONObject groupObject = (JSONObject) obj;
             String id = groupObject.getString("id");
             String policy = groupObject.getString("policy");
@@ -324,10 +335,11 @@ final class JsonConfigParser implements ConfigParser {
         return groups;
     }
 
-    private List<FeatureVariable> parseFeatureVariables(JSONArray FeatureVariablesJson) {
-        List<FeatureVariable> FeatureVariables = new ArrayList<FeatureVariable>(FeatureVariablesJson.length());
+    private List<FeatureVariable> parseFeatureVariables(JSONArray featureVariablesJson) {
+        List<FeatureVariable> featureVariables = new ArrayList<FeatureVariable>(featureVariablesJson.length());
 
-        for (Object obj : FeatureVariablesJson) {
+        for (int i = 0; i < featureVariablesJson.length();i++) {
+            Object obj = featureVariablesJson.get(i);
             JSONObject FeatureVariableObject = (JSONObject) obj;
             String id = FeatureVariableObject.getString("id");
             String key = FeatureVariableObject.getString("key");
@@ -338,19 +350,20 @@ final class JsonConfigParser implements ConfigParser {
                 status = FeatureVariable.VariableStatus.fromString(FeatureVariableObject.getString("status"));
             }
 
-            FeatureVariables.add(new FeatureVariable(id, key, defaultValue, status, type));
+            featureVariables.add(new FeatureVariable(id, key, defaultValue, status, type));
         }
 
-        return FeatureVariables;
+        return featureVariables;
     }
 
-    private List<FeatureVariableUsageInstance> parseFeatureVariableInstances(JSONArray FeatureVariableInstancesJson) {
-        List<FeatureVariableUsageInstance> featureVariableUsageInstances = new ArrayList<FeatureVariableUsageInstance>(FeatureVariableInstancesJson.length());
+    private List<FeatureVariableUsageInstance> parseFeatureVariableInstances(JSONArray featureVariableInstancesJson) {
+        List<FeatureVariableUsageInstance> featureVariableUsageInstances = new ArrayList<FeatureVariableUsageInstance>(featureVariableInstancesJson.length());
 
-        for (Object obj : FeatureVariableInstancesJson) {
-            JSONObject FeatureVariableInstanceObject = (JSONObject) obj;
-            String id = FeatureVariableInstanceObject.getString("id");
-            String value = FeatureVariableInstanceObject.getString("value");
+        for (int i = 0; i < featureVariableInstancesJson.length(); i++) {
+            Object obj = featureVariableInstancesJson.get(i);
+            JSONObject featureVariableInstanceObject = (JSONObject) obj;
+            String id = featureVariableInstanceObject.getString("id");
+            String value = featureVariableInstanceObject.getString("value");
 
             featureVariableUsageInstances.add(new FeatureVariableUsageInstance(id, value));
         }
@@ -361,7 +374,8 @@ final class JsonConfigParser implements ConfigParser {
     private List<Rollout> parseRollouts(JSONArray rolloutsJson) {
         List<Rollout> rollouts = new ArrayList<Rollout>(rolloutsJson.length());
 
-        for (Object obj : rolloutsJson) {
+        for (int i = 0; i < rolloutsJson.length(); i++) {
+            Object obj = rolloutsJson.get(i);
             JSONObject rolloutObject = (JSONObject) obj;
             String id = rolloutObject.getString("id");
             List<Experiment> experiments = parseExperiments(rolloutObject.getJSONArray("experiments"));

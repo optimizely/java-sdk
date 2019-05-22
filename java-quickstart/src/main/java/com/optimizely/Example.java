@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2016-2019, Optimizely, Inc. and contributors                   *
+ * Copyright 2018-2019, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -16,9 +16,7 @@
 package com.optimizely;
 
 import com.optimizely.ab.Optimizely;
-import com.optimizely.ab.config.HttpProjectConfigManager;
-import com.optimizely.ab.event.AsyncEventHandler;
-import com.optimizely.ab.event.EventHandler;
+import com.optimizely.ab.OptimizelyFactory;
 import com.optimizely.ab.config.Variation;
 
 import java.util.Collections;
@@ -53,16 +51,7 @@ public class Example {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        EventHandler eventHandler = new AsyncEventHandler(100,2);
-        HttpProjectConfigManager projectConfigManager = HttpProjectConfigManager.builder()
-            .withSdkKey("BX9Y3bTa4YErpHZEMpAwHm")
-            .withPollingInterval(1, TimeUnit.SECONDS)
-            .build(); // Block here since no default was provided.
-
-        Optimizely optimizely = Optimizely.builder()
-            .withConfigManager(projectConfigManager)
-            .withEventHandler(eventHandler)
-            .build();
+        Optimizely optimizely = OptimizelyFactory.newDefaultInstance("BX9Y3bTa4YErpHZEMpAwHm");
 
         Example example = new Example(optimizely);
         Random random = new Random();

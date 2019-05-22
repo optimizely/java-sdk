@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, 2019 Optimizely and contributors
+ *    Copyright 2019, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,22 +14,15 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab;
-
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.EventType;
+package com.optimizely.ab.notification;
 
 /**
- * Exception thrown when attempting to use/refer to an {@link EventType} that isn't present in the current
- * {@link ProjectConfig}.
+ * NotificationHandler is a generic interface Optimizely notification listeners.
+ * This interface replaces {@link NotificationListener} which didn't provide adequate type safety.
+ *
+ * While this class adds generic handler implementations to be created, the domain of supported
+ * implementations is maintained by the {@link NotificationCenter}
  */
-public class UnknownEventTypeException extends OptimizelyRuntimeException {
-
-    public UnknownEventTypeException(String message) {
-        super(message);
-    }
-
-    public UnknownEventTypeException(String message, Throwable cause) {
-        super(message, cause);
-    }
+public interface NotificationHandler<T> {
+    void handle(T message);
 }
