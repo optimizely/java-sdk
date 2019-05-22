@@ -1,7 +1,7 @@
 # Optimizely Java X SDK Changelog
 
-## 3.2.0
-May 22th, 2019
+## 3.2.0-alpha
+May 22nd, 2019
 
 ### New Features:
 - Added support for automatic datafile management via `HttpProjectConfigManager`:
@@ -13,6 +13,7 @@ May 22th, 2019
     - Requests for the datafile are made in a separate thread and are scheduled with fixed delay.
     - Configuration updates can be subscribed to via the `Optimizely#addUpdateConfigNotificationHandler` or by subscribing to
       the NotificationCenter built with the `HttpProjectConfigManager`.
+- Added `AsyncEventHandler.Builder` to be consistent with other Optimizely resources.
 - The [`OptimizelyFactory`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/OptimizelyFactory.java)
   was included in the `core-httpclient-impl` package and provides basic methods for instantiating the Optimizely SDK with a minimal number of parameters.
 - Default configuration options for `HttpProjectConfigManager` and `AsyncEventHandler` can be overwritten using Java system properties, environment variables or via an `optimizely.properties` file
