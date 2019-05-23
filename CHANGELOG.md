@@ -1,7 +1,7 @@
 # Optimizely Java X SDK Changelog
 
 ## 3.2.0-alpha
-May 22nd, 2019
+May 23rd, 2019
 
 ### New Features:
 - Added support for automatic datafile management via `HttpProjectConfigManager`:
