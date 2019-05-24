@@ -1,13 +1,12 @@
-# Java SDK Async Http Client
+# Java SDK Async HTTP Client
 
-This package provides default implementations of an Optimizely `EventHandler` and `ProjectConfigManager`. Also included
-in this package is a factory class, `OptimizelyFactory`, which can be used to reliably instantiate the Optimizely SDK
-with the default configuration of the `AsyncEventHandler` and `HttpProjectConfigManager`.
+This package provides default implementations of an Optimizely `EventHandler` and `ProjectConfigManager`.
+The package also includes a factory class, `OptimizelyFactory`, which you can use to instantiate the Optimizely SDK
+with the default configuration of `AsyncEventHandler` and `HttpProjectConfigManager`.
 
 ## Installation
 
 ### Gradle
-
 ```groovy
 compile 'com.optimizely.ab:core-httpclient-impl:{VERSION}'
 ```
@@ -22,7 +21,8 @@ compile 'com.optimizely.ab:core-httpclient-impl:{VERSION}'
 
 ```
 
-### Basic usage
+
+## Basic usage
 ```java
 import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.OptimizelyFactory;
@@ -34,22 +34,19 @@ public class App {
         Optimizely optimizely = OptimizelyFactory.newDefaultInstance(sdkKey);
     }
 }
-
 ```
 
-### Advanced usage
+## Advanced usage
 ```java
 import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.config.HttpProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
-
 import java.util.concurrent.TimeUnit;
 
 public class App {
 
     public static void main(String[] args) {
         String sdkKey = args[0];
-
         EventHandler eventHandler = AsyncEventHandler.builder()
             .withQueueCapacity(20000)
             .withNumWorkers(5)
@@ -68,19 +65,20 @@ public class App {
 }
 ```
 
-## AsyncEventHandler
+## `AsyncEventHandler`
 
-The [`AsyncEventHandler`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/event/AsyncEventHandler.java)
-provides an implementation of the the [`EventHandler`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/EventHandler.java)
-backed by a `ThreadPoolExecutor`. When events are
-triggered from the Optimizely SDK, they are immediately queued as discrete tasks to the executor and processed in the
-order they were submitted. Each worker is responsible for making outbound http requests to the
-Optimizely log endpoint for metric tracking. The default queue size and the number of workers are configurable via
-global properties and can be overridden via the `AsyncEventHandler.Builder`.
+[`AsyncEventHandler`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/event/AsyncEventHandler.java)
+provides an implementation of [`EventHandler`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/EventHandler.java)
+backed by a `ThreadPoolExecutor`. Events triggered from the Optimizely SDK are queued immediately as discrete tasks to 
+the executor and processed in the order they were submitted.
 
-### Usage
+Each worker is responsible for making outbound HTTP requests to the Optimizely log endpoint for metrics tracking.
+Configure the default queue size and number of workers via global properties. Use `AsyncEventHandler.Builder` to
+override the default queue size and number of workers.
 
-To use the AsyncEventHandler, an instance must be built via the `AsyncEventHandler.Builder` then passed to the `Optimizely.Builder`
+### Use `AsyncEventHandler`
+
+To use `AsyncEventHandler`, you must build an instance with `AsyncEventHandler.Builder` and pass the instance to the `Optimizely.Builder`:
 
 ```java
 EventHandler eventHandler = AsyncEventHandler.builder()
@@ -91,36 +89,37 @@ EventHandler eventHandler = AsyncEventHandler.builder()
 
 #### Queue capacity
 
-The queue capacity can be set to initialize the backing queue for the executor service. If the queue fills up, then
-events will be dropped and exception will be logged. Setting a higher queue value will prevent event loss, but will
-use up more memory in the event the workers can not keep up if the production rate.
+You can set the queue capacity to initialize the backing queue for the executor service. If the queue fills up, events
+will be dropped and an exception will be logged. Setting a higher queue value will prevent event loss but will use more
+memory if the workers cannot keep up with the production rate.
 
 #### Number of workers
 
-The number of workers determines the number of threads used by the thread pool.
+The number of workers determines the number of threads the thread pool uses.
 
-#### Advanced configurations
+### Advanced configuration
 
 |Property Name|Default Value|Description|
 |---|---|---|
-|async.event.handler.queue.capacity|10000|Queue size for pending LogEvents|
-|async.event.handler.num.workers|2|Number of worker threads|
-|async.event.handler.max.connections|200|Max number of connections|
-|async.event.handler.event.max.per.route|20|Max number of connections per route|
-|async.event.handler.validate.after|5000|Time in milliseconds to maintain idol connections|
+|`async.event.handler.queue.capacity`|10000|Queue size for pending logEvents|
+|`async.event.handler.num.workers`|2|Number of worker threads|
+|`async.event.handler.max.connections`|200|Maximum number of connections|
+|`async.event.handler.event.max.per.route`|20|Maximum number of connections per route|
+|`async.event.handler.validate.after`|5000|Time to maintain idol connections (in milliseconds)|
 
 
-## HttpProjectConfigManager
+## `HttpProjectConfigManager`
 
-The [`HttpProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/config/HttpProjectConfigManager.java)
-is an implementation of the abstract [`PollingProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/PollingProjectConfigManager.java).
-The `poll` method is extended and makes an http GET request to the configured url to asynchronously download the project data file
-and initialize an instance of the ProjectConfig. By default, the `HttpProjectConfigManager` will block until the
-first successful retrieval of the datafile, up to a configurable timeout. The frequency of the polling method and the
-blocking timeout can be set via the `HttpProjectConfigManager.Builder` with the default values being pulled from global
-properties.
+[`HttpProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/config/HttpProjectConfigManager.java)
+is an implementation of the abstract [`PollingProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/PollingProjectConfigManager.java). 
+The `poll` method is extended and makes an HTTP GET request to the configured URL to asynchronously download the
+project datafile and initialize an instance of the ProjectConfig.
 
-### Usage
+By default, `HttpProjectConfigManager` will block until the first successful datafile retrieval, up to a configurable timeout.
+Set the frequency of the polling method and the blocking timeout with `HttpProjectConfigManager.Builder`,
+pulling the default values from global properties.
+
+### Use `HttpProjectConfigManager`
 
 ```java
 ProjectConfigManager projectConfigManager = HttpProjectConfigManager.builder()
@@ -129,37 +128,37 @@ ProjectConfigManager projectConfigManager = HttpProjectConfigManager.builder()
     .build();
 ```
 
-#### SDK Key
+#### SDK key
 
-The SDK key is used to compose the outbound http request to the default datafile location hosted on the Optimizely CDN.
+The SDK key is used to compose the outbound HTTP request to the default datafile location on the Optimizely CDN.
 
 #### Polling interval
 
-The polling interval is used to determine a fixed delay between consecutive http requests for the datafile.
+The polling interval is used to specify a fixed delay between consecutive HTTP requests for the datafile.
 
-#### Initial Datafile
+#### Initial datafile
 
-An initial datafile can be provided via the builder to bootstrap the the `ProjectConfigManager` so that it can be used 
+You can provide an initial datafile via the builder to bootstrap the `ProjectConfigManager` so that it can be used 
 immediately without blocking execution.
 
-#### Advanced configurations
+### Advanced configuration
 
 |Property Name|Default Value|Description|
 |---|---|---|
-|http.project.config.manager.polling.duration|5|Fixed delay between fetches for the datafile|
-|http.project.config.manager.polling.unit|MINUTES|Time unit corresponding to polling interval|
-|http.project.config.manager.blocking.duration|10|Max duration spent waiting for initial bootstrapping|
-|http.project.config.manager.blocking.unit|SECONDS|Time unit corresponding to blocking duration|
-|http.project.config.manager.sdk.key|null|Optimizely project SDK key|
+|`http.project.config.manager.polling.duration`|5|Fixed delay between fetches for the datafile|
+|`http.project.config.manager.polling.unit`|MINUTES|Time unit corresponding to polling interval|
+|`http.project.config.manager.blocking.duration`|10|Maximum time to wait for initial bootstrapping|
+|`http.project.config.manager.blocking.unit`|SECONDS|Time unit corresponding to blocking duration|
+|`http.project.config.manager.sdk.key`|null|Optimizely project SDK key|
 
 
-## Optimizely properties file
+## `optimizely.properties`
 
-An Optimizely properties file, `optimizely.properties`, that is available within the runtime classpath can be used to configure
-the default values of a given Optimizely resource. Refer to the resource implementation for available configuration
-parameters.
+When an `optimizely.properties` file is available within the runtime classpath it can be used to provide
+default values of a given Optimizely resource. Refer to the resource implementation for available configuration parameters.
 
-#### Example:
+### Example `optimizely.properties` file
+
 ```properties
 http.project.config.manager.polling.duration = 1
 http.project.config.manager.polling.unit = MINUTES
@@ -168,22 +167,25 @@ async.event.handler.queue.capacity = 20000
 async.event.handler.num.workers = 5
 ```
 
-## OptimizelyFactory
 
-The [`OptimizelyFactory`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/OptimizelyFactory.java)
-included in this package provides basic utility to instantiate the Optimizely SDK
-with a minimal number of provided configuration options. Configuration properties are sourced from Java system properties,
-environment variables or from an `optimizely.properties` file, in that order. Not all configuration and initialization
-are captured via the `OptimizelyFactory`, for those use cases the resources can be built via their respective builder
-classes.
+## `OptimizelyFactory`
 
-### Usage
-The SDK key is required to be provided at runtime either directly via the factory method:
+In this package, [`OptimizelyFactory`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/OptimizelyFactory.java)
+provides basic utility to instantiate the Optimizely SDK with a minimal number of configuration options.
+Configuration properties are sourced from Java system properties, environment variables, or an
+`optimizely.properties` file, in that order.
+
+`OptimizelyFactory` does not capture all configuration and initialization options. For more use cases,
+build the resources via their respective builder classes.
+
+### Use `OptimizelyFactory`
+
+You must provide the SDK key at runtime, either directly via the factory method:
 ```Java
 Optimizely optimizely = OptimizelyFactory.newDefaultInstance(<<SDK_KEY>>);
 ```
 
-If the SDK is provided via a global property then the empty signature can be used:
+If you provide the SDK via a global property, use the empty signature:
 ```Java
 Optimizely optimizely = OptimizelyFactory.newDefaultInstance();
 ```
