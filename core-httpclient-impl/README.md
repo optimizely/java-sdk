@@ -69,7 +69,7 @@ public class App {
 
 [`AsyncEventHandler`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/event/AsyncEventHandler.java)
 provides an implementation of [`EventHandler`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/EventHandler.java)
-backed by a `ThreadPoolExecutor`. Events triggered from the Optimizely SDK are queued immediately as discrete tasks to 
+backed by a `ThreadPoolExecutor`. Events triggered from the Optimizely SDK are queued immediately as discrete tasks to
 the executor and processed in the order they were submitted.
 
 Each worker is responsible for making outbound HTTP requests to the Optimizely log endpoint for metrics tracking.
@@ -111,7 +111,7 @@ The number of workers determines the number of threads the thread pool uses.
 ## `HttpProjectConfigManager`
 
 [`HttpProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/config/HttpProjectConfigManager.java)
-is an implementation of the abstract [`PollingProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/PollingProjectConfigManager.java). 
+is an implementation of the abstract [`PollingProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/PollingProjectConfigManager.java).
 The `poll` method is extended and makes an HTTP GET request to the configured URL to asynchronously download the
 project datafile and initialize an instance of the ProjectConfig.
 
@@ -138,7 +138,7 @@ The polling interval is used to specify a fixed delay between consecutive HTTP r
 
 #### Initial datafile
 
-You can provide an initial datafile via the builder to bootstrap the `ProjectConfigManager` so that it can be used 
+You can provide an initial datafile via the builder to bootstrap the `ProjectConfigManager` so that it can be used
 immediately without blocking execution.
 
 ### Advanced configuration
