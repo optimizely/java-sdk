@@ -71,6 +71,27 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
     private final long closeTimeout;
     private final TimeUnit closeTimeoutUnit;
 
+    /**
+     * @deprecated Use the builder {@link Builder}
+     */
+    @Deprecated
+    public AsyncEventHandler(int queueCapacity,
+                             int numWorkers) {
+        this(queueCapacity, numWorkers, 200, 20, 5000);
+    }
+
+    /**
+     * @deprecated Use the builder {@link Builder}
+     */
+    @Deprecated
+    public AsyncEventHandler(int queueCapacity,
+                             int numWorkers,
+                             int maxConnections,
+                             int connectionsPerRoute,
+                             int validateAfter) {
+        this(queueCapacity, numWorkers, maxConnections, connectionsPerRoute, validateAfter, Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+    }
+
     public AsyncEventHandler(int queueCapacity,
                              int numWorkers,
                              int maxConnections,
