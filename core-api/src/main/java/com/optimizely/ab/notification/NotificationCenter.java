@@ -90,10 +90,10 @@ public class NotificationCenter {
     public NotificationCenter() {
         AtomicInteger counter = new AtomicInteger();
         Map<Class, NotificationManager> validManagers = new HashMap<>();
-        validManagers.put(ActivateNotification.class, new NotificationManager<>(ActivateNotification.class, counter));
-        validManagers.put(TrackNotification.class, new NotificationManager<>(TrackNotification.class, counter));
-        validManagers.put(DecisionNotification.class, new NotificationManager<>(DecisionNotification.class, counter));
-        validManagers.put(UpdateConfigNotification.class, new NotificationManager<>(UpdateConfigNotification.class, counter));
+        validManagers.put(ActivateNotification.class, new NotificationManager<ActivateNotification>(counter));
+        validManagers.put(TrackNotification.class, new NotificationManager<TrackNotification>(counter));
+        validManagers.put(DecisionNotification.class, new NotificationManager<DecisionNotification>(counter));
+        validManagers.put(UpdateConfigNotification.class, new NotificationManager<UpdateConfigNotification>(counter));
 
         notifierMap = Collections.unmodifiableMap(validManagers);
     }
