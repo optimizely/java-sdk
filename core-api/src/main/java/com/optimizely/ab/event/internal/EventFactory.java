@@ -43,7 +43,7 @@ import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
 
 public class EventFactory {
     private static final Logger logger = LoggerFactory.getLogger(EventFactory.class);
-    static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";  // Should be part of the datafile
+    public static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";  // Should be part of the datafile
     static final String ACTIVATE_EVENT_KEY = "campaign_activated";
 
     @VisibleForTesting
@@ -60,11 +60,11 @@ public class EventFactory {
         this.clientVersion = clientVersion;
     }
 
-    public LogEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
-                                          @Nonnull Experiment activatedExperiment,
-                                          @Nonnull Variation variation,
-                                          @Nonnull String userId,
-                                          @Nonnull Map<String, ?> attributes) {
+    public Visitor createImpressionVisitor(@Nonnull ProjectConfig projectConfig,
+                                   @Nonnull Experiment activatedExperiment,
+                                   @Nonnull Variation variation,
+                                   @Nonnull String userId,
+                                   @Nonnull Map<String, ?> attributes) {
 
         Decision decision = new Decision.Builder()
             .setCampaignId(activatedExperiment.getLayerId())
@@ -81,31 +81,33 @@ public class EventFactory {
             .setType(ACTIVATE_EVENT_KEY)
             .build();
 
+        List<Event> events = new ArrayList<>();
+        events.add(impressionEvent);
+
         Snapshot snapshot = new Snapshot.Builder()
             .setDecisions(Collections.singletonList(decision))
-            .setEvents(Collections.singletonList(impressionEvent))
+            .setEvents(events)
             .build();
 
-        Visitor visitor = new Visitor.Builder()
+        return new Visitor.Builder()
             .setVisitorId(userId)
             .setAttributes(buildAttributeList(projectConfig, attributes))
             .setSnapshots(Collections.singletonList((snapshot)))
             .build();
-
-        EventBatch eventBatch = new EventBatch.Builder()
-            .setClientName(clientEngine.getClientEngineValue())
-            .setClientVersion(clientVersion)
-            .setAccountId(projectConfig.getAccountId())
-            .setVisitors(Collections.singletonList(visitor))
-            .setAnonymizeIp(projectConfig.getAnonymizeIP())
-            .setProjectId(projectConfig.getProjectId())
-            .setRevision(projectConfig.getRevision())
-            .build();
-
-        return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), eventBatch);
     }
 
-    public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
+    @Deprecated
+    public LogEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
+                                          @Nonnull Experiment activatedExperiment,
+                                          @Nonnull Variation variation,
+                                          @Nonnull String userId,
+                                          @Nonnull Map<String, ?> attributes) {
+
+        Visitor visitor = createImpressionVisitor(projectConfig, activatedExperiment, variation, userId, attributes);
+        return createBatch(projectConfig, visitor);
+    }
+
+    public Visitor createConversionVisitor(@Nonnull ProjectConfig projectConfig,
                                           @Nonnull String userId,
                                           @Nonnull String eventId, // Why is this not used?
                                           @Nonnull String eventName,
@@ -125,27 +127,30 @@ public class EventFactory {
             .setValue(EventTagUtils.getNumericValue(eventTags))
             .build();
 
-        Snapshot snapshot = new Snapshot.Builder()
-                .setEvents(Collections.singletonList(conversionEvent))
-                .build();
+        List<Event> events = new ArrayList<>();
+        events.add(conversionEvent);
 
-        Visitor visitor = new Visitor.Builder()
+        Snapshot snapshot = new Snapshot.Builder()
+            .setEvents(events)
+            .build();
+
+        return new Visitor.Builder()
             .setVisitorId(userId)
             .setAttributes(buildAttributeList(projectConfig, attributes))
             .setSnapshots(Collections.singletonList(snapshot))
             .build();
+    }
 
-        EventBatch eventBatch = new EventBatch.Builder()
-            .setClientName(clientEngine.getClientEngineValue())
-            .setClientVersion(clientVersion)
-            .setAccountId(projectConfig.getAccountId())
-            .setVisitors(Collections.singletonList(visitor))
-            .setAnonymizeIp(projectConfig.getAnonymizeIP())
-            .setProjectId(projectConfig.getProjectId())
-            .setRevision(projectConfig.getRevision())
-            .build();
+    @Deprecated
+    public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
+                                          @Nonnull String userId,
+                                          @Nonnull String eventId, // Why is this not used?
+                                          @Nonnull String eventName,
+                                          @Nonnull Map<String, ?> attributes,
+                                          @Nonnull Map<String, ?> eventTags) {
 
-        return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), eventBatch);
+        Visitor visitor = createConversionVisitor(projectConfig, userId, eventId, eventName, attributes, eventTags);
+        return createBatch(projectConfig, visitor);
     }
 
     private List<Attribute> buildAttributeList(ProjectConfig projectConfig, Map<String, ?> attributes) {
@@ -200,5 +205,26 @@ public class EventFactory {
         }
 
         return attributesList;
+    }
+
+    public LogEvent createBatch(ProjectConfig projectConfig, Visitor visitor) {
+        List<Visitor> visitors = new ArrayList<>();
+        visitors.add(visitor);
+
+        return createBatch(projectConfig, visitors);
+    }
+
+    public LogEvent createBatch(ProjectConfig projectConfig, List<Visitor> visitors) {
+        EventBatch eventBatch = new EventBatch.Builder()
+            .setClientName(clientEngine.getClientEngineValue())
+            .setClientVersion(clientVersion)
+            .setAccountId(projectConfig.getAccountId())
+            .setVisitors(visitors)
+            .setAnonymizeIp(projectConfig.getAnonymizeIP())
+            .setProjectId(projectConfig.getProjectId())
+            .setRevision(projectConfig.getRevision())
+            .build();
+
+        return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), eventBatch);
     }
 }

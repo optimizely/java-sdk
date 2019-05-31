@@ -114,7 +114,7 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
         this.workerExecutor = new ThreadPoolExecutor(numWorkers, numWorkers,
             0L, TimeUnit.MILLISECONDS,
-            new ArrayBlockingQueue<Runnable>(queueCapacity),
+            new ArrayBlockingQueue<>(queueCapacity),
             new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true));
 
         this.closeTimeout = closeTimeout;

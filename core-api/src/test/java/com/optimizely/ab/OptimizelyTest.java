@@ -24,6 +24,7 @@ import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
 import com.optimizely.ab.event.EventHandler;
+import com.optimizely.ab.event.EventProcessor;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.internal.LogbackVerifier;
@@ -34,13 +35,13 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -98,14 +99,17 @@ public class OptimizelyTest {
     @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
     public MockitoRule rule = MockitoJUnit.rule();
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    private ExpectedException thrown = ExpectedException.none();
+    private LogbackVerifier logbackVerifier = new LogbackVerifier();
+    private EventHandlerRule eventHandler = new EventHandlerRule();
+    private OptimizelyRule optimizelyBuilder = new OptimizelyRule();
 
     @Rule
-    public LogbackVerifier logbackVerifier = new LogbackVerifier();
-
-    @Rule
-    public EventHandlerRule eventHandler = new EventHandlerRule();
+    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
+    public RuleChain ruleChain = RuleChain.outerRule(thrown)
+        .around(logbackVerifier)
+        .around(eventHandler)
+        .around(optimizelyBuilder);
 
     @Mock
     EventHandler mockEventHandler;
@@ -130,7 +134,6 @@ public class OptimizelyTest {
 
     private ProjectConfig validProjectConfig;
     private ProjectConfig noAudienceProjectConfig;
-    private Optimizely.Builder optimizelyBuilder;
 
     @Before
     public void setUp() throws Exception {
@@ -140,16 +143,14 @@ public class OptimizelyTest {
         // FIX-ME
         //assertEquals(validProjectConfig.getVersion(), noAudienceProjectConfig.getVersion());
 
-        optimizelyBuilder = Optimizely.builder()
-            .withEventHandler(eventHandler)
-            .withConfig(validProjectConfig);
+        optimizelyBuilder.withEventHandler(eventHandler).withConfig(validProjectConfig);
     }
 
     @Test
     public void testClose() throws Exception {
         // Check for AutoCloseable
-        EventHandler mockAutoCloseableEventHandler = mock(
-            EventHandler.class,
+        EventProcessor mockAutoCloseableEventProcessor = mock(
+            EventProcessor.class,
             withSettings().extraInterfaces(AutoCloseable.class)
         );
         ProjectConfigManager mockAutoCloseableProjectConfigManager = mock(
@@ -157,35 +158,15 @@ public class OptimizelyTest {
             withSettings().extraInterfaces(AutoCloseable.class)
         );
 
-        Optimizely optimizely = Optimizely.builder()
-            .withEventHandler(mockAutoCloseableEventHandler)
+        Optimizely optimizely = optimizelyBuilder
+            .withEventProcessor(mockAutoCloseableEventProcessor)
             .withConfigManager(mockAutoCloseableProjectConfigManager)
             .build();
 
         optimizely.close();
 
-        verify((AutoCloseable) mockAutoCloseableEventHandler).close();
+        verify((AutoCloseable) mockAutoCloseableEventProcessor).close();
         verify((AutoCloseable) mockAutoCloseableProjectConfigManager).close();
-
-        // Check for Closeable
-        EventHandler mockCloseableEventHandler = mock(
-            EventHandler.class,
-            withSettings().extraInterfaces(Closeable.class)
-        );
-        ProjectConfigManager mockCloseableProjectConfigManager = mock(
-            ProjectConfigManager.class,
-            withSettings().extraInterfaces(Closeable.class)
-        );
-
-        optimizely = Optimizely.builder()
-            .withEventHandler(mockCloseableEventHandler)
-            .withConfigManager(mockCloseableProjectConfigManager)
-            .build();
-
-        optimizely.close();
-
-        verify((Closeable) mockCloseableEventHandler).close();
-        verify((Closeable) mockCloseableProjectConfigManager).close();
     }
 
     @Test
@@ -907,7 +888,6 @@ public class OptimizelyTest {
         assertThat(actualVariation, is(expectedVariation));
 
         eventHandler.expectImpression(experiment.getId(), actualVariation.getId(), whitelistedUserId);
-
     }
 
     /**
@@ -951,7 +931,7 @@ public class OptimizelyTest {
             .withConfig(noAudienceProjectConfig)
             .build();
 
-        logbackVerifier.expectMessage(Level.ERROR, "Unexpected exception in event dispatcher");
+        logbackVerifier.expectMessage(Level.WARN, "Catching exception sending notification");
         optimizely.activate(experiment.getKey(), testUserId);
     }
 
@@ -1259,7 +1239,7 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.withEventHandler(mockEventHandler).build();
         optimizely.track(eventType.getKey(), testUserId);
 
-        logbackVerifier.expectMessage(Level.ERROR, "Unexpected exception in event dispatcher");
+        logbackVerifier.expectMessage(Level.WARN, "Catching exception sending notification");
     }
 
     /**

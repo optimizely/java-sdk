@@ -32,7 +32,7 @@ public class NotificationManagerTest {
     @Before
     public void setUp() {
         counter = new AtomicInteger();
-        notificationManager = new NotificationManager<>(TestNotification.class, counter);
+        notificationManager = new NotificationManager<>(counter);
     }
 
     @Test

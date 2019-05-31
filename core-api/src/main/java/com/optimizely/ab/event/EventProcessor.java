@@ -14,15 +14,10 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.notification;
+package com.optimizely.ab.event;
 
-/**
- * NotificationHandler is a generic interface Optimizely notification listeners.
- * This interface replaces {@link NotificationListener} which didn't provide adequate type safety.
- *
- * While this class adds generic handler implementations to be created, the domain of supported
- * implementations is maintained by the {@link NotificationCenter}
- */
-public interface NotificationHandler<T> {
-    void handle(T message) throws Exception;
+import com.optimizely.ab.event.internal.payload.EventBatch;
+
+public interface EventProcessor {
+    void process(EventBatch eventBatch);
 }
