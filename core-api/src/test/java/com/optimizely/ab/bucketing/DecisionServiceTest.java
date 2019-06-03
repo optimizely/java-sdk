@@ -255,7 +255,7 @@ public class DecisionServiceTest {
 
         // we call getVariation 3 times on an experiment that is not running.
         logbackVerifier.expectMessage(Level.INFO,
-            "Experiment \"etag2\" is not running.", times(3));
+            "Experiment \"etag2\" is not running.", 3);
 
         // set a forced variation on the user that got back null
         assertTrue(decisionService.setForcedVariation(experiment, "userId", variation.getKey()));

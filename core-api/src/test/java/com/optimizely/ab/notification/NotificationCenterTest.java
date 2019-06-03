@@ -30,6 +30,7 @@ import org.junit.Test;
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static junit.framework.TestCase.assertNotSame;
 import static junit.framework.TestCase.assertTrue;
@@ -142,13 +143,12 @@ public class NotificationCenterTest {
 
     @Test
     public void testAddTrackNotificationInterface() {
-        int notificationId = notificationCenter.addTrackNotificationListener(new TrackNotificationListenerInterface() {
-            @Override
-            public void onTrack(@Nonnull String eventKey, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Map<String, ?> eventTags, @Nonnull LogEvent event) {
+        final AtomicBoolean triggered = new AtomicBoolean();
+        int notificationId = notificationCenter.addTrackNotificationListener((eventKey, userId, attributes, eventTags, event) -> triggered.set(true));
+        notificationCenter.send(new TrackNotification());
 
-            }
-        });
         assertNotSame(-1, notificationId);
+        assertTrue(triggered.get());
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
     }
 
@@ -162,13 +162,12 @@ public class NotificationCenterTest {
 
     @Test
     public void testAddActivateNotificationInterface() {
-        int notificationId = notificationCenter.addActivateNotificationListener(new ActivateNotificationListenerInterface() {
-            @Override
-            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+        final AtomicBoolean triggered = new AtomicBoolean();
+        int notificationId = notificationCenter.addActivateNotificationListener((experiment, userId, attributes, variation, event) -> triggered.set(true));
+        notificationCenter.send(new ActivateNotification());
 
-            }
-        });
         assertNotSame(-1, notificationId);
+        assertTrue(triggered.get());
         assertTrue(notificationCenter.removeNotificationListener(notificationId));
     }
 
