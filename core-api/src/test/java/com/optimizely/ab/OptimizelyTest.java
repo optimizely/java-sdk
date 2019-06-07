@@ -145,14 +145,14 @@ public class OptimizelyTest {
     }
 
     @Test
-    public void testClose() throws IOException {
+    public void testClose() throws Exception {
         EventHandler mockCloseableEventHandler = mock(
             EventHandler.class,
-            withSettings().extraInterfaces(Closeable.class)
+            withSettings().extraInterfaces(AutoCloseable.class)
         );
         ProjectConfigManager mockCloseableProjectConfigManager = mock(
             ProjectConfigManager.class,
-            withSettings().extraInterfaces(Closeable.class)
+            withSettings().extraInterfaces(AutoCloseable.class)
         );
 
         Optimizely optimizely = Optimizely.builder()
@@ -162,19 +162,19 @@ public class OptimizelyTest {
 
         optimizely.close();
 
-        verify((Closeable) mockCloseableEventHandler).close();
-        verify((Closeable) mockCloseableProjectConfigManager).close();
+        verify((AutoCloseable) mockCloseableEventHandler).close();
+        verify((AutoCloseable) mockCloseableProjectConfigManager).close();
     }
 
     @Test
-    public void testCloseConfigManagerThrowsException() throws IOException {
+    public void testCloseConfigManagerThrowsException() throws Exception {
         EventHandler mockCloseableEventHandler = mock(
             EventHandler.class,
-            withSettings().extraInterfaces(Closeable.class)
+            withSettings().extraInterfaces(AutoCloseable.class)
         );
         ProjectConfigManager mockCloseableProjectConfigManager = mock(
             ProjectConfigManager.class,
-            withSettings().extraInterfaces(Closeable.class)
+            withSettings().extraInterfaces(AutoCloseable.class)
         );
 
         Optimizely optimizely = Optimizely.builder()
@@ -182,20 +182,20 @@ public class OptimizelyTest {
             .withConfigManager(mockCloseableProjectConfigManager)
             .build();
 
-        doThrow(new IOException()).when((Closeable) mockCloseableProjectConfigManager).close();
+        doThrow(new IOException()).when((AutoCloseable) mockCloseableProjectConfigManager).close();
         logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockCloseableProjectConfigManager + ".");
         optimizely.close();
     }
 
     @Test
-    public void testCloseEventHandlerThrowsException() throws IOException {
+    public void testCloseEventHandlerThrowsException() throws Exception {
         EventHandler mockCloseableEventHandler = mock(
             EventHandler.class,
-            withSettings().extraInterfaces(Closeable.class)
+            withSettings().extraInterfaces(AutoCloseable.class)
         );
         ProjectConfigManager mockCloseableProjectConfigManager = mock(
             ProjectConfigManager.class,
-            withSettings().extraInterfaces(Closeable.class)
+            withSettings().extraInterfaces(AutoCloseable.class)
         );
 
         Optimizely optimizely = Optimizely.builder()
@@ -203,7 +203,7 @@ public class OptimizelyTest {
             .withConfigManager(mockCloseableProjectConfigManager)
             .build();
 
-        doThrow(new IOException()).when((Closeable) mockCloseableEventHandler).close();
+        doThrow(new IOException()).when((AutoCloseable) mockCloseableEventHandler).close();
         logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockCloseableEventHandler + ".");
         optimizely.close();
     }
@@ -4852,6 +4852,7 @@ public class OptimizelyTest {
             .withConfig(validProjectConfig)
             .build());
         doReturn(false).when(spyOptimizely).isFeatureEnabled(
+            validProjectConfig,
             any(String.class),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap())

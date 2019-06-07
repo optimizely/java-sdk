@@ -120,15 +120,15 @@ public class Optimizely implements AutoCloseable {
     }
 
     /**
-     * Helper method which checks if Object is an instance of Closeable and calls close() on it.
+     * Helper method which checks if Object is an instance of AutoCloseable and calls close() on it.
      */
     private void tryClose(Object obj) {
-        if (!(obj instanceof Closeable)) {
+        if (!(obj instanceof AutoCloseable)) {
             return;
         }
 
         try {
-            ((Closeable) obj).close();
+            ((AutoCloseable) obj).close();
         } catch (Exception e) {
             logger.warn("Unexpected exception on trying to close {}.", obj);
         }
@@ -370,17 +370,25 @@ public class Optimizely implements AutoCloseable {
     public Boolean isFeatureEnabled(@Nonnull String featureKey,
                                     @Nonnull String userId,
                                     @Nonnull Map<String, ?> attributes) {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
+            return false;
+        }
+
+        return isFeatureEnabled(projectConfig, featureKey, userId, attributes);
+    }
+
+    @Nonnull
+    private Boolean isFeatureEnabled(@Nonnull ProjectConfig projectConfig,
+                                     @Nonnull String featureKey,
+                                     @Nonnull String userId,
+                                     @Nonnull Map<String, ?> attributes) {
         if (featureKey == null) {
             logger.warn("The featureKey parameter must be nonnull.");
             return false;
         } else if (userId == null) {
             logger.warn("The userId parameter must be nonnull.");
-            return false;
-        }
-
-        ProjectConfig projectConfig = getProjectConfig();
-        if (projectConfig == null) {
-            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
             return false;
         }
 
@@ -753,7 +761,7 @@ public class Optimizely implements AutoCloseable {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         for (FeatureFlag featureFlag : projectConfig.getFeatureFlags()) {
             String featureKey = featureFlag.getKey();
-            if (isFeatureEnabled(featureKey, userId, copiedAttributes))
+            if (isFeatureEnabled(projectConfig, featureKey, userId, copiedAttributes))
                 enabledFeaturesList.add(featureKey);
         }
 
@@ -786,7 +794,7 @@ public class Optimizely implements AutoCloseable {
 
         String notificationType = NotificationCenter.DecisionNotificationType.AB_TEST.toString();
 
-        if (getProjectConfig().getExperimentFeatureKeyMapping().get(experiment.getId()) != null) {
+        if (projectConfig.getExperimentFeatureKeyMapping().get(experiment.getId()) != null) {
             notificationType = NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString();
         }
 
