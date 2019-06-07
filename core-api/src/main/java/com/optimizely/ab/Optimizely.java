@@ -214,7 +214,7 @@ public class Optimizely implements AutoCloseable {
         }
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         // bucket the user to the given experiment and dispatch an impression event
-        Variation variation = getVariation(experiment, userId, copiedAttributes, projectConfig);
+        Variation variation = getVariation(projectConfig, experiment, userId, copiedAttributes);
         if (variation == null) {
             logger.info("Not activating user \"{}\" for experiment \"{}\".", userId, experiment.getKey());
             return null;
@@ -781,14 +781,14 @@ public class Optimizely implements AutoCloseable {
     public Variation getVariation(@Nonnull Experiment experiment,
                                   @Nonnull String userId,
                                   @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
-        return getVariation(experiment, userId, attributes, getProjectConfig());
+        return getVariation(getProjectConfig(), experiment, userId, attributes);
     }
 
     @Nullable
-    public Variation getVariation(@Nonnull Experiment experiment,
-                                  @Nonnull String userId,
-                                  @Nonnull Map<String, ?> attributes,
-                                  @Nonnull ProjectConfig projectConfig) throws UnknownExperimentException {
+    private Variation getVariation(@Nonnull ProjectConfig projectConfig,
+                                   @Nonnull Experiment experiment,
+                                   @Nonnull String userId,
+                                   @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes, projectConfig);
 
@@ -843,7 +843,7 @@ public class Optimizely implements AutoCloseable {
             return null;
         }
 
-        return getVariation(experiment, userId, attributes, projectConfig);
+        return getVariation(projectConfig, experiment, userId, attributes);
     }
 
     /**

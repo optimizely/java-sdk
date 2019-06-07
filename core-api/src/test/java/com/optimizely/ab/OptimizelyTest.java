@@ -4852,7 +4852,6 @@ public class OptimizelyTest {
             .withConfig(validProjectConfig)
             .build());
         doReturn(false).when(spyOptimizely).isFeatureEnabled(
-            validProjectConfig,
             any(String.class),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap())
