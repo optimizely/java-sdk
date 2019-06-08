@@ -145,7 +145,28 @@ public class OptimizelyTest {
     }
 
     @Test
-    public void testClose() throws IOException {
+    public void testClose() throws Exception {
+        // Check for AutoCloseable
+        EventHandler mockAutoCloseableEventHandler = mock(
+            EventHandler.class,
+            withSettings().extraInterfaces(AutoCloseable.class)
+        );
+        ProjectConfigManager mockAutoCloseableProjectConfigManager = mock(
+            ProjectConfigManager.class,
+            withSettings().extraInterfaces(AutoCloseable.class)
+        );
+
+        Optimizely optimizely = Optimizely.builder()
+            .withEventHandler(mockAutoCloseableEventHandler)
+            .withConfigManager(mockAutoCloseableProjectConfigManager)
+            .build();
+
+        optimizely.close();
+
+        verify((AutoCloseable) mockAutoCloseableEventHandler).close();
+        verify((AutoCloseable) mockAutoCloseableProjectConfigManager).close();
+
+        // Check for Closeable
         EventHandler mockCloseableEventHandler = mock(
             EventHandler.class,
             withSettings().extraInterfaces(Closeable.class)
@@ -155,7 +176,7 @@ public class OptimizelyTest {
             withSettings().extraInterfaces(Closeable.class)
         );
 
-        Optimizely optimizely = Optimizely.builder()
+        optimizely = Optimizely.builder()
             .withEventHandler(mockCloseableEventHandler)
             .withConfigManager(mockCloseableProjectConfigManager)
             .build();
@@ -167,44 +188,44 @@ public class OptimizelyTest {
     }
 
     @Test
-    public void testCloseConfigManagerThrowsException() throws IOException {
-        EventHandler mockCloseableEventHandler = mock(
+    public void testCloseConfigManagerThrowsException() throws Exception {
+        EventHandler mockAutoCloseableEventHandler = mock(
             EventHandler.class,
-            withSettings().extraInterfaces(Closeable.class)
+            withSettings().extraInterfaces(AutoCloseable.class)
         );
-        ProjectConfigManager mockCloseableProjectConfigManager = mock(
+        ProjectConfigManager mockAutoCloseableProjectConfigManager = mock(
             ProjectConfigManager.class,
-            withSettings().extraInterfaces(Closeable.class)
+            withSettings().extraInterfaces(AutoCloseable.class)
         );
 
         Optimizely optimizely = Optimizely.builder()
-            .withEventHandler(mockCloseableEventHandler)
-            .withConfigManager(mockCloseableProjectConfigManager)
+            .withEventHandler(mockAutoCloseableEventHandler)
+            .withConfigManager(mockAutoCloseableProjectConfigManager)
             .build();
 
-        doThrow(new IOException()).when((Closeable) mockCloseableProjectConfigManager).close();
-        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockCloseableProjectConfigManager + ".");
+        doThrow(new IOException()).when((AutoCloseable) mockAutoCloseableProjectConfigManager).close();
+        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockAutoCloseableProjectConfigManager + ".");
         optimizely.close();
     }
 
     @Test
-    public void testCloseEventHandlerThrowsException() throws IOException {
-        EventHandler mockCloseableEventHandler = mock(
+    public void testCloseEventHandlerThrowsException() throws Exception {
+        EventHandler mockAutoCloseableEventHandler = mock(
             EventHandler.class,
-            withSettings().extraInterfaces(Closeable.class)
+            withSettings().extraInterfaces(AutoCloseable.class)
         );
-        ProjectConfigManager mockCloseableProjectConfigManager = mock(
+        ProjectConfigManager mockAutoCloseableProjectConfigManager = mock(
             ProjectConfigManager.class,
-            withSettings().extraInterfaces(Closeable.class)
+            withSettings().extraInterfaces(AutoCloseable.class)
         );
 
         Optimizely optimizely = Optimizely.builder()
-            .withEventHandler(mockCloseableEventHandler)
-            .withConfigManager(mockCloseableProjectConfigManager)
+            .withEventHandler(mockAutoCloseableEventHandler)
+            .withConfigManager(mockAutoCloseableProjectConfigManager)
             .build();
 
-        doThrow(new IOException()).when((Closeable) mockCloseableEventHandler).close();
-        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockCloseableEventHandler + ".");
+        doThrow(new IOException()).when((AutoCloseable) mockAutoCloseableEventHandler).close();
+        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockAutoCloseableEventHandler + ".");
         optimizely.close();
     }
 
@@ -2861,9 +2882,9 @@ public class OptimizelyTest {
 
     /**
      * Verify {@link Optimizely#getEnabledFeatures(String, Map)} calls into
-     * {@link Optimizely#isFeatureEnabled(String, String, Map)} for each featureFlag sending
+     * {@link DecisionService#getVariationForFeature} for each featureFlag sending
      * userId and emptyMap and Mocked {@link Optimizely#isFeatureEnabled(String, String, Map)}
-     * to return false so {@link Optimizely#getEnabledFeatures(String, Map)} will
+     * to return feature disabled so {@link Optimizely#getEnabledFeatures(String, Map)} will
      * return empty List of FeatureFlags and no notification listener will get called.
      */
     @Test
@@ -2873,13 +2894,16 @@ public class OptimizelyTest {
         isListenerCalled = false;
         Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
             .withConfig(validProjectConfig)
+            .withDecisionService(mockDecisionService)
             .build());
-        doReturn(false).when(spyOptimizely).isFeatureEnabled(
-            any(String.class),
-            eq(genericUserId),
-            eq(Collections.<String, String>emptyMap())
-        );
 
+        FeatureDecision featureDecision = new FeatureDecision(null, null, FeatureDecision.DecisionSource.ROLLOUT);
+        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+            any(FeatureFlag.class),
+            anyString(),
+            anyMapOf(String.class, String.class),
+            any(ProjectConfig.class)
+        );
         int notificationId = spyOptimizely.addDecisionNotificationHandler( decisionNotification -> { });
 
         ArrayList<String> featureFlags = (ArrayList<String>) spyOptimizely.getEnabledFeatures(genericUserId,
@@ -4839,23 +4863,27 @@ public class OptimizelyTest {
 
     /**
      * Verify {@link Optimizely#getEnabledFeatures(String, Map)} calls into
-     * {@link Optimizely#isFeatureEnabled(String, String, Map)} for each featureFlag sending
-     * userId and emptyMap and Mocked {@link Optimizely#isFeatureEnabled(String, String, Map)}
-     * to return false so {@link Optimizely#getEnabledFeatures(String, Map)} will
+     * {@link DecisionService#getVariationForFeature} to return feature
+     * disabled so {@link Optimizely#getEnabledFeatures(String, Map)} will
      * return empty List of FeatureFlags.
      */
     @Test
-    public void getEnabledFeatureWithMockIsFeatureEnabledToReturnFalse() throws ConfigParseException {
+    public void getEnabledFeatureWithMockDecisionService() throws ConfigParseException {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
         Optimizely spyOptimizely = spy(Optimizely.builder(validDatafile, mockEventHandler)
             .withConfig(validProjectConfig)
+            .withDecisionService(mockDecisionService)
             .build());
-        doReturn(false).when(spyOptimizely).isFeatureEnabled(
-            any(String.class),
-            eq(genericUserId),
-            eq(Collections.<String, String>emptyMap())
+
+        FeatureDecision featureDecision = new FeatureDecision(null, null, FeatureDecision.DecisionSource.ROLLOUT);
+        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+            any(FeatureFlag.class),
+            anyString(),
+            anyMapOf(String.class, String.class),
+            any(ProjectConfig.class)
         );
+
         ArrayList<String> featureFlags = (ArrayList<String>) spyOptimizely.getEnabledFeatures(genericUserId,
             Collections.<String, String>emptyMap());
         assertTrue(featureFlags.isEmpty());
