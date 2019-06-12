@@ -25,7 +25,11 @@ import com.optimizely.ab.event.EventProcessor;
 import org.junit.rules.ExternalResource;
 
 /**
- * Factory class for building and maintaining an Optimizely instance.
+ * Factory class for building and maintaining an Optimizely instance. The methods mirror the
+ * {@link Optimizely.Builder} methods so test can can use either class interchangeably.
+ *
+ * The main motivation of this class is to ensure that the built Optimizely resource get's
+ * explicitly closed at the end of each test run.
  */
 public class OptimizelyRule extends ExternalResource {
 

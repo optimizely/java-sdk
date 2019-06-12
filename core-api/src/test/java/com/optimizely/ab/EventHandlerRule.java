@@ -39,13 +39,10 @@ import static org.junit.Assert.fail;
  *
  * The List of "actual" events are compared, in order, against a list of "expected" events.
  *
- * Expected events are validated immediately against the head of actual events. If the queue is empty,
- * then a failure is raised. This is to make it easy to map back to the failing test line number.
+ * Expected events are validated at the end of the test to allow asynchronous event dispatching.
  *
  * A failure is raised if at the end of the test there remain non-validated actual events. This is by design
  * to ensure that all outbound traffic is known and validated.
- *
- * TODO this rule does not yet support validation of event tags found in the {@link Event} payload.
  */
 public class EventHandlerRule implements EventHandler, TestRule {
 
