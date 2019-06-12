@@ -1068,6 +1068,11 @@ public class Optimizely implements AutoCloseable {
         }
 
         // Helper function for making testing easier
+        protected Builder withDatafile(String datafile) {
+            this.datafile = datafile;
+            return this;
+        }
+
         protected Builder withBucketing(Bucketer bucketer) {
             this.bucketer = bucketer;
             return this;
@@ -1080,11 +1085,6 @@ public class Optimizely implements AutoCloseable {
 
         protected Builder withDecisionService(DecisionService decisionService) {
             this.decisionService = decisionService;
-            return this;
-        }
-
-        protected Builder withEventBuilder(EventFactory eventFactory) {
-            this.eventFactory = eventFactory;
             return this;
         }
 
