@@ -20,4 +20,5 @@ import com.optimizely.ab.event.internal.payload.EventBatch;
 
 public interface EventProcessor {
     void process(EventBatch eventBatch);
+    int addEventHandler(EventHandler handler);
 }

@@ -1099,22 +1099,13 @@ public class Optimizely implements AutoCloseable {
                 notificationCenter = new NotificationCenter();
             }
 
-            if (eventHandler == null) {
-                eventHandler = new NoopEventHandler();
-            }
-
             // Todo, move to OptimizelyFactory implementation to remove this complex logic.
             if (eventProcessor == null) {
-                BatchEventProcessor batchEventProcessor = new BatchEventProcessor();
-                batchEventProcessor.start();
-                batchEventProcessor.addEventHandler(eventHandler);
+                eventProcessor = new ForwardingEventProcessor();
+            }
 
-//                notificationCenter.addNotificationHandler(ActivateNotification.class,
-//                    message -> batchEventProcessor.process(message.getEvent().getEventBatch()));
-//                notificationCenter.addNotificationHandler(TrackNotification.class,
-//                    message -> batchEventProcessor.process(message.getEvent().getEventBatch()));
-
-                eventProcessor = batchEventProcessor;
+            if (eventHandler != null) {
+                eventProcessor.addEventHandler(eventHandler);
             }
 
             if (bucketer == null) {

@@ -80,7 +80,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         }
     }
 
-    public int addEventHandler(final EventHandler handler) {
+    public int addEventHandler(EventHandler handler) {
         return addHandler(handler::dispatchEvent);
     }
 
