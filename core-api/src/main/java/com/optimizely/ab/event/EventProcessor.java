@@ -18,6 +18,10 @@ package com.optimizely.ab.event;
 
 import com.optimizely.ab.event.internal.payload.EventBatch;
 
+/**
+ * EventProcessor interface is used to provide an intermediary processing stage within
+ * event production.
+ */
 public interface EventProcessor {
     void process(EventBatch eventBatch);
     int addEventHandler(EventHandler handler);

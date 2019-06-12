@@ -23,9 +23,7 @@ import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
-import com.optimizely.ab.event.EventHandler;
-import com.optimizely.ab.event.EventProcessor;
-import com.optimizely.ab.event.LogEvent;
+import com.optimizely.ab.event.*;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.internal.ControlAttribute;
@@ -49,6 +47,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
@@ -80,17 +79,26 @@ public class OptimizelyTest {
             {
                 validConfigJsonV2(),
                 noAudienceProjectConfigJsonV2(),
-                2
+                2,
+                (Supplier<EventProcessor>) () -> null
             },
             {
                 validConfigJsonV3(),
                 noAudienceProjectConfigJsonV3(),  // FIX-ME this is not a valid v3 datafile
-                3
+                3,
+                (Supplier<EventProcessor>) () -> null
             },
             {
                 validConfigJsonV4(),
                 validConfigJsonV4(),
-                4
+                4,
+                (Supplier<EventProcessor>) () -> null
+            },
+            {
+                validConfigJsonV4(),
+                validConfigJsonV4(),
+                4,
+                (Supplier<EventProcessor>) BatchEventProcessor::new
             }
         });
     }
@@ -132,6 +140,9 @@ public class OptimizelyTest {
     @Parameterized.Parameter(2)
     public int datafileVersion;
 
+    @Parameterized.Parameter(3)
+    public Supplier<EventProcessor> eventProcessorSupplier;
+
     private ProjectConfig validProjectConfig;
     private ProjectConfig noAudienceProjectConfig;
 
@@ -143,7 +154,10 @@ public class OptimizelyTest {
         // FIX-ME
         //assertEquals(validProjectConfig.getVersion(), noAudienceProjectConfig.getVersion());
 
-        optimizelyBuilder.withEventHandler(eventHandler).withConfig(validProjectConfig);
+        optimizelyBuilder
+            .withEventHandler(eventHandler)
+            .withEventProcessor(eventProcessorSupplier.get())
+            .withConfig(validProjectConfig);
     }
 
     @Test

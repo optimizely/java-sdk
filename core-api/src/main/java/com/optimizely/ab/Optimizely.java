@@ -132,7 +132,7 @@ public class Optimizely implements AutoCloseable {
         try {
             ((AutoCloseable) obj).close();
         } catch (Exception e) {
-            logger.warn("Unexpected exception on trying to close {}.", obj);
+            logger.warn("Unexpected exception on trying to close {}.", obj, e);
         }
     }
 
@@ -1099,7 +1099,6 @@ public class Optimizely implements AutoCloseable {
                 notificationCenter = new NotificationCenter();
             }
 
-            // Todo, move to OptimizelyFactory implementation to remove this complex logic.
             if (eventProcessor == null) {
                 eventProcessor = new ForwardingEventProcessor();
             }

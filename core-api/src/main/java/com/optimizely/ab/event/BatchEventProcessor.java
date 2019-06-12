@@ -27,6 +27,15 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.concurrent.*;
 
+/**
+ * BatchEventProcessor is a batched implementation of the {@link EventProcessor}
+ *
+ * Events passed to the BatchEventProcessor are immediately added to a BlockingQueue.
+ *
+ * The BatchEventProcessor maintains a single consumer thread that pulls events off of
+ * the BlockingQueue and buffers them for either a configured batch size or for a
+ * maximum duration before they resulting LogEvent is sent to the NotificationManager.
+ */
 public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(BatchEventProcessor.class);
@@ -47,6 +56,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
     private final ExecutorService executor;
 
     private Future<?> future;
+    private boolean isStarted = false;
 
     // TODO use a builder.
     public BatchEventProcessor() {
@@ -61,16 +71,35 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         this.eventQueue = eventQueue;
         this.batchSize = batchSize == null ? PropertyUtils.getInteger(CONFIG_BATCH_SIZE, DEFAULT_BATCH_SIZE) : batchSize;
         this.batchDuration = batchDuration == null ? PropertyUtils.getLong(CONFIG_BATCH_DURATION, DEFAULT_BATCH_DURATION) : batchDuration;
-        this.executor = executor;
+
+        if (executor == null) {
+            final ThreadFactory threadFactory = Executors.defaultThreadFactory();
+            this.executor = Executors.newSingleThreadExecutor(runnable -> {
+                Thread thread = threadFactory.newThread(runnable);
+                thread.setDaemon(true);
+                return thread;
+            });
+        } else {
+            this.executor = executor;
+        }
+
+        start();
     }
 
-    public void start() {
+    public synchronized void start() {
+        if (isStarted) {
+            logger.info("Executor already started.");
+            return;
+        }
+
+        isStarted = true;
         EventConsumer runnable = new EventConsumer();
         future = executor.submit(runnable);
     }
 
     @Override
     public void close() throws Exception {
+        logger.info("Start close");
         process(SHUTDOWN_SIGNAL);
         try {
             future.get(5, TimeUnit.SECONDS);
@@ -85,10 +114,12 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
     }
 
     public int addHandler(NotificationHandler<LogEvent> handler) {
+        logger.debug("Adding notification handler: {}", handler);
         return notificationManager.addHandler(handler);
     }
 
     public void process(EventBatch eventBatch) {
+
         if (executor.isShutdown()) {
             logger.warn("Executor shutdown, not accepting tasks.");
             return;
@@ -110,13 +141,12 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
                     if (System.currentTimeMillis() - lastFlushTimeMillis > batchDuration) {
                         logger.debug("Deadline exceeded flushing current batch.");
                         flush();
-                        continue;
                     }
 
                     EventBatch item = eventQueue.poll(50, TimeUnit.MILLISECONDS);
                     if (item == null) {
                         logger.info("Empty item, sleeping for 500ms.");
-                        Thread.sleep(500);
+                        Thread.sleep(50);
                         continue;
                     }
 
@@ -155,11 +185,12 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
             if (currentBatch.getVisitors().size() >= batchSize) {
                 flush();
-                return;
             }
         }
 
         private void flush() {
+            lastFlushTimeMillis = System.currentTimeMillis();
+
             if (currentBatch == null) {
                 return;
             }
@@ -168,7 +199,6 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
                 Collections.emptyMap(), currentBatch);
 
             notificationManager.send(logEvent);
-            lastFlushTimeMillis = System.currentTimeMillis();
             currentBatch = null;
         }
     }

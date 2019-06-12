@@ -48,7 +48,7 @@ public class BatchEventProcessorTest {
     @Before
     public void setUp() throws Exception {
         eventQueue = new ArrayBlockingQueue<>(100);
-        eventProcessor = new BatchEventProcessor(eventQueue, MAX_BATCH_SIZE, MAX_DURATION_MS, Executors.newSingleThreadExecutor());
+        eventProcessor = new BatchEventProcessor(eventQueue, MAX_BATCH_SIZE, MAX_DURATION_MS, null);
         eventProcessor.addEventHandler(eventHandlerRule);
     }
 
@@ -73,15 +73,12 @@ public class BatchEventProcessorTest {
 
     @Test
     public void testFlushOnMaxTimeout() throws Exception {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        eventProcessor.addHandler(logEvent -> countDownLatch.countDown());
+
         EventBatch eventBatch = createEventBatch(EVENT_NAME);
         eventProcessor.process(eventBatch);
         eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
-        assertEquals(1, eventQueue.size());
-
-        eventProcessor.start();
-
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        eventProcessor.addHandler(logEvent -> countDownLatch.countDown());
 
         if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
             fail("Exceeded timeout waiting for notification.");
@@ -92,20 +89,18 @@ public class BatchEventProcessorTest {
 
     @Test
     public void testFlushMaxBatchSize() throws Exception {
-        for (int i = 0; i < MAX_BATCH_SIZE; i++) {
-            String eventName = EVENT_NAME + i;
-            EventBatch eventBatch = createEventBatch(eventName);
-            eventProcessor.process(eventBatch);
-            eventHandlerRule.expectConversion(eventName, USER_ID);
-        }
-
         CountDownLatch countDownLatch = new CountDownLatch(1);
         eventProcessor.addHandler(logEvent -> {
             assertEquals(MAX_BATCH_SIZE, logEvent.getEventBatch().getVisitors().size());
             countDownLatch.countDown();
         });
 
-        eventProcessor.start();
+        for (int i = 0; i < MAX_BATCH_SIZE; i++) {
+            String eventName = EVENT_NAME + i;
+            EventBatch eventBatch = createEventBatch(eventName);
+            eventProcessor.process(eventBatch);
+            eventHandlerRule.expectConversion(eventName, USER_ID);
+        }
 
         countDownLatch.await();
         assertEquals(0, eventQueue.size());
