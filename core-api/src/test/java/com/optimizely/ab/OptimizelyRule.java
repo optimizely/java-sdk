@@ -21,7 +21,7 @@ import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.ProjectConfigManager;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.event.EventHandler;
-import com.optimizely.ab.event.BatchEventProcessor;
+import com.optimizely.ab.event.EventProcessor;
 import org.junit.rules.ExternalResource;
 
 /**
@@ -32,7 +32,7 @@ public class OptimizelyRule extends ExternalResource {
     private Optimizely.Builder builder;
     private Optimizely optimizely;
 
-    public OptimizelyRule withEventProcessor(BatchEventProcessor eventProcessor) {
+    public OptimizelyRule withEventProcessor(EventProcessor eventProcessor) {
         builder.withEventProcessor(eventProcessor);
         return this;
     }

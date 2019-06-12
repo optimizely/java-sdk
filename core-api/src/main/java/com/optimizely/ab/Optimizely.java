@@ -146,6 +146,7 @@ public class Optimizely implements AutoCloseable {
     public void close() {
         tryClose(projectConfigManager);
         tryClose(eventProcessor);
+        tryClose(eventHandler);
     }
 
     //======== activate calls ========//
@@ -241,7 +242,7 @@ public class Optimizely implements AutoCloseable {
                 filteredAttributes);
 
             logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
-//            eventProcessor.process(impressionEvent.getEventBatch());
+            eventProcessor.process(impressionEvent.getEventBatch());
 
             // Kept For backwards compatibility.
             // This notification is deprecated and the new DecisionNotifications
@@ -311,7 +312,7 @@ public class Optimizely implements AutoCloseable {
             eventTags);
 
         logger.info("Tracking event \"{}\" for user \"{}\".", eventName, userId);
-//        eventProcessor.process(conversionEvent.getEventBatch());
+        eventProcessor.process(conversionEvent.getEventBatch());
 
         TrackNotification notification = new TrackNotification(eventName, userId,
             copiedAttributes, eventTags, conversionEvent);
@@ -995,7 +996,7 @@ public class Optimizely implements AutoCloseable {
         private ErrorHandler errorHandler;
         private EventHandler eventHandler;
         private EventFactory eventFactory;
-        private BatchEventProcessor eventProcessor;
+        private EventProcessor eventProcessor;
         private ClientEngine clientEngine;
         private String clientVersion;
         private ProjectConfig projectConfig;
@@ -1071,7 +1072,7 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
-        protected Builder withEventProcessor(BatchEventProcessor eventProcessor) {
+        protected Builder withEventProcessor(EventProcessor eventProcessor) {
             this.eventProcessor = eventProcessor;
             return this;
         }
@@ -1098,17 +1099,22 @@ public class Optimizely implements AutoCloseable {
                 notificationCenter = new NotificationCenter();
             }
 
-            if (eventProcessor == null) {
-                eventProcessor = new BatchEventProcessor();
-                eventProcessor.start();
-                notificationCenter.addNotificationHandler(ActivateNotification.class,
-                    message -> eventProcessor.process(message.getEvent().getEventBatch()));
-                notificationCenter.addNotificationHandler(TrackNotification.class,
-                    message -> eventProcessor.process(message.getEvent().getEventBatch()));
+            if (eventHandler == null) {
+                eventHandler = new NoopEventHandler();
             }
 
-            if (eventHandler != null) {
-                eventProcessor.addEventHandler(eventHandler);
+            // Todo, move to OptimizelyFactory implementation to remove this complex logic.
+            if (eventProcessor == null) {
+                BatchEventProcessor batchEventProcessor = new BatchEventProcessor();
+                batchEventProcessor.start();
+                batchEventProcessor.addEventHandler(eventHandler);
+
+//                notificationCenter.addNotificationHandler(ActivateNotification.class,
+//                    message -> batchEventProcessor.process(message.getEvent().getEventBatch()));
+//                notificationCenter.addNotificationHandler(TrackNotification.class,
+//                    message -> batchEventProcessor.process(message.getEvent().getEventBatch()));
+
+                eventProcessor = batchEventProcessor;
             }
 
             if (bucketer == null) {
