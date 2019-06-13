@@ -110,10 +110,6 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         }
     }
 
-    public int addEventHandler(EventHandler handler) {
-        return addHandler(handler::dispatchEvent);
-    }
-
     public int addHandler(NotificationHandler<LogEvent> handler) {
         logger.debug("Adding notification handler: {}", handler);
         return notificationManager.addHandler(handler);

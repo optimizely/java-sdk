@@ -17,6 +17,7 @@
 package com.optimizely.ab.event;
 
 import com.optimizely.ab.event.internal.payload.EventBatch;
+import com.optimizely.ab.notification.NotificationHandler;
 
 /**
  * EventProcessor interface is used to provide an intermediary processing stage within
@@ -24,5 +25,5 @@ import com.optimizely.ab.event.internal.payload.EventBatch;
  */
 public interface EventProcessor {
     void process(EventBatch eventBatch);
-    int addEventHandler(EventHandler handler);
+    int addHandler(NotificationHandler<LogEvent> handler);
 }

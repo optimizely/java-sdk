@@ -45,7 +45,7 @@ import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
 
 public class EventFactory {
     private static final Logger logger = LoggerFactory.getLogger(EventFactory.class);
-    static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";  // Should be part of the datafile
+    public static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";  // Should be part of the datafile
     static final String ACTIVATE_EVENT_KEY = "campaign_activated";
 
     @VisibleForTesting

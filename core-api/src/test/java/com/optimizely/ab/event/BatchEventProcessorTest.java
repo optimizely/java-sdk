@@ -49,7 +49,7 @@ public class BatchEventProcessorTest {
     public void setUp() throws Exception {
         eventQueue = new ArrayBlockingQueue<>(100);
         eventProcessor = new BatchEventProcessor(eventQueue, MAX_BATCH_SIZE, MAX_DURATION_MS, null);
-        eventProcessor.addEventHandler(eventHandlerRule);
+        eventProcessor.addHandler(eventHandlerRule::dispatchEvent);
     }
 
     @After

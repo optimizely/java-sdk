@@ -125,6 +125,10 @@ public class Optimizely implements AutoCloseable {
      * Helper method which checks if Object is an instance of AutoCloseable and calls close() on it.
      */
     private void tryClose(Object obj) {
+        if (obj == null) {
+            return;
+        }
+
         if (!(obj instanceof AutoCloseable)) {
             return;
         }
@@ -1097,15 +1101,15 @@ public class Optimizely implements AutoCloseable {
                 notificationCenter = new NotificationCenter();
             }
 
-            if (eventProcessor != null) {
-                eventFactory.addHandler(eventProcessor::process);
+            if (eventProcessor == null) {
+                eventProcessor = new ForwardingEventProcessor();
+            }
 
-                if (eventHandler != null) {
-                    eventProcessor.addEventHandler(eventHandler);
-                }
+            // Subscribe to event factory EventBatch notifications.
+            eventFactory.addHandler(eventProcessor::process);
 
-            } else {
-                eventFactory.addHandler(eventBatch -> eventHandler.dispatchEvent(eventFactory.createLogEvent(eventBatch)));
+            if (eventHandler != null) {
+                eventProcessor.addHandler(eventHandler::dispatchEvent);
             }
 
             if (bucketer == null) {
