@@ -27,6 +27,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Represents Optimizely tracking and activation events.
@@ -69,10 +70,6 @@ public class LogEvent implements Message<EventBatch> {
         return requestParams;
     }
 
-    public EventBatch getEventBatch() {
-        return eventBatch;
-    }
-
     public String getBody() {
         if (eventBatch == null) {
             return "";
@@ -80,6 +77,10 @@ public class LogEvent implements Message<EventBatch> {
 
         Serializer serializer = DefaultJsonSerializer.getInstance();
         return serializer.serialize(eventBatch);
+    }
+
+    public EventBatch getEventBatch() {
+        return eventBatch;
     }
 
     //======== Overriding method ========//
@@ -107,6 +108,21 @@ public class LogEvent implements Message<EventBatch> {
     @Override
     public void markFailure(@Nonnull Throwable ex) {
         callback.failure(getValue(), ex);
+    }
+
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LogEvent logEvent = (LogEvent) o;
+        return requestMethod == logEvent.requestMethod &&
+            Objects.equals(endpointUrl, logEvent.endpointUrl) &&
+            Objects.equals(requestParams, logEvent.requestParams) &&
+            Objects.equals(eventBatch, logEvent.eventBatch);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(requestMethod, endpointUrl, requestParams, eventBatch);
     }
 
     //======== Helper classes ========//

@@ -1,5 +1,27 @@
 # Optimizely Java X SDK Changelog
 
+## 3.2.0-alpha
+May 23rd, 2019
+
+### New Features:
+- Added support for automatic datafile management via `HttpProjectConfigManager`:
+    - The [`HttpProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/config/HttpProjectConfigManager.java)
+      is part of the `core-httpclient-impl` package and is an implementation of the abstract
+      [`PollingProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/PollingProjectConfigManager.java) class.
+    - Users must first build the `HttpProjectConfigManager` with an SDK key and then and provide that instance to the Optimizely.Builder.
+    - An initial datafile can be provided to the `HttpProjectConfigManager` to bootstrap before making http requests for the hosted datafile.
+    - Requests for the datafile are made in a separate thread and are scheduled with fixed delay.
+    - Configuration updates can be subscribed to via the `Optimizely#addUpdateConfigNotificationHandler` or by subscribing to
+      the NotificationCenter built with the `HttpProjectConfigManager`.
+- Added `AsyncEventHandler.Builder` to be consistent with other Optimizely resources.
+- The [`OptimizelyFactory`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/OptimizelyFactory.java)
+  was included in the `core-httpclient-impl` package and provides basic methods for instantiating the Optimizely SDK with a minimal number of parameters.
+- Default configuration options for `HttpProjectConfigManager` and `AsyncEventHandler` can be overwritten using Java system properties, environment variables or via an `optimizely.properties` file
+  to avoid hard coding the configuration options.
+
+### Deprecated
+- `Optimizely.builder(String, EventHandler)` was deprecated in favor of pure builder methods `withConfigManager` and `withEventHandler`. 
+
 ## 3.1.0
 May 6th, 2019
 
