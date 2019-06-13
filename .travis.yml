@@ -5,6 +5,8 @@ jdk:
   - oraclejdk8
   - oraclejdk9
 install: true
+addons:
+  srcclr: true
 script:
     - "./gradlew clean"
     - "./gradlew exhaustiveTest"
@@ -36,6 +38,7 @@ stages:
 jobs:
   include:
     - stage: 'Integration tests'
+      merge_mode: replace
       env: SDK=java
       cache: false
       language: minimal
