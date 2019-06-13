@@ -54,7 +54,6 @@ public class BatchEventProcessorTest {
 
     @After
     public void tearDown() throws Exception {
-        System.out.println("tearDown");
         eventProcessor.close();
     }
 
@@ -62,9 +61,6 @@ public class BatchEventProcessorTest {
     public void testDrainOnClose() throws Exception {
         EventBatch eventBatch = createEventBatch(EVENT_NAME);
         eventProcessor.process(eventBatch);
-        assertEquals(1, eventQueue.size());
-
-        eventProcessor.start();
         eventProcessor.close();
 
         assertEquals(0, eventQueue.size());
@@ -84,6 +80,7 @@ public class BatchEventProcessorTest {
             fail("Exceeded timeout waiting for notification.");
         }
 
+        eventProcessor.close();
         assertEquals(0, eventQueue.size());
     }
 

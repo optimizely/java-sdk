@@ -242,7 +242,6 @@ public class Optimizely implements AutoCloseable {
                 filteredAttributes);
 
             logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
-            eventProcessor.process(impressionEvent.getEventBatch());
 
             // Kept For backwards compatibility.
             // This notification is deprecated and the new DecisionNotifications
@@ -312,7 +311,6 @@ public class Optimizely implements AutoCloseable {
             eventTags);
 
         logger.info("Tracking event \"{}\" for user \"{}\".", eventName, userId);
-        eventProcessor.process(conversionEvent.getEventBatch());
 
         TrackNotification notification = new TrackNotification(eventName, userId,
             copiedAttributes, eventTags, conversionEvent);
@@ -1099,12 +1097,15 @@ public class Optimizely implements AutoCloseable {
                 notificationCenter = new NotificationCenter();
             }
 
-            if (eventProcessor == null) {
-                eventProcessor = new ForwardingEventProcessor();
-            }
+            if (eventProcessor != null) {
+                eventFactory.addHandler(eventProcessor::process);
 
-            if (eventHandler != null) {
-                eventProcessor.addEventHandler(eventHandler);
+                if (eventHandler != null) {
+                    eventProcessor.addEventHandler(eventHandler);
+                }
+
+            } else {
+                eventFactory.addHandler(eventBatch -> eventHandler.dispatchEvent(eventFactory.createLogEvent(eventBatch)));
             }
 
             if (bucketer == null) {

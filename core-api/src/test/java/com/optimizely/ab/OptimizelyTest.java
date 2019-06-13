@@ -1298,7 +1298,9 @@ public class OptimizelyTest {
      */
     @Test
     public void trackWithInvalidDatafile() throws Exception {
-        Optimizely optimizely = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler)
+        Optimizely optimizely = optimizelyBuilder
+            .withDatafile(invalidProjectConfigV5())
+            .withConfig(null)
             .withBucketing(mockBucketer)
             .build();
         optimizely.track("event_with_launched_and_running_experiments", genericUserId);
@@ -1580,7 +1582,9 @@ public class OptimizelyTest {
      */
     @Test
     public void getVariationWithInvalidDatafile() throws Exception {
-        Optimizely optimizely = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler)
+        Optimizely optimizely = optimizelyBuilder
+            .withDatafile(invalidProjectConfigV5())
+            .withConfig(null)
             .withBucketing(mockBucketer)
             .build();
         Variation variation = optimizely.getVariation("etag1", genericUserId);
@@ -4142,7 +4146,10 @@ public class OptimizelyTest {
      */
     @Test
     public void isValidReturnsFalseWhenClientIsInvalid() throws Exception {
-        Optimizely optimizely = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler).build();
+        Optimizely optimizely = optimizelyBuilder
+            .withDatafile(invalidProjectConfigV5())
+            .withConfig(null)
+            .build();
 
         assertFalse(optimizely.isValid());
     }

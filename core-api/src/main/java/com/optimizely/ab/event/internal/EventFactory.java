@@ -30,6 +30,8 @@ import com.optimizely.ab.event.internal.payload.Snapshot;
 import com.optimizely.ab.event.internal.payload.Visitor;
 import com.optimizely.ab.internal.EventTagUtils;
 import com.optimizely.ab.internal.ControlAttribute;
+import com.optimizely.ab.notification.NotificationHandler;
+import com.optimizely.ab.notification.NotificationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
@@ -43,13 +45,15 @@ import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
 
 public class EventFactory {
     private static final Logger logger = LoggerFactory.getLogger(EventFactory.class);
-    public static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";  // Should be part of the datafile
+    static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";  // Should be part of the datafile
     static final String ACTIVATE_EVENT_KEY = "campaign_activated";
 
     @VisibleForTesting
     public final String clientVersion;
     @VisibleForTesting
     public final EventBatch.ClientEngine clientEngine;
+
+    public final NotificationManager<EventBatch> notificationManager = new NotificationManager<>();
 
     public EventFactory() {
         this(EventBatch.ClientEngine.JAVA_SDK, BuildVersionInfo.VERSION);
@@ -60,11 +64,19 @@ public class EventFactory {
         this.clientVersion = clientVersion;
     }
 
-    public Visitor createImpressionVisitor(@Nonnull ProjectConfig projectConfig,
-                                   @Nonnull Experiment activatedExperiment,
-                                   @Nonnull Variation variation,
-                                   @Nonnull String userId,
-                                   @Nonnull Map<String, ?> attributes) {
+    public int addHandler(NotificationHandler<EventBatch> handler) {
+        return notificationManager.addHandler(handler);
+    }
+
+    public static LogEvent createLogEvent(EventBatch eventBatch) {
+        return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.emptyMap(), eventBatch);
+    }
+
+    public LogEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
+                                          @Nonnull Experiment activatedExperiment,
+                                          @Nonnull Variation variation,
+                                          @Nonnull String userId,
+                                          @Nonnull Map<String, ?> attributes) {
 
         Decision decision = new Decision.Builder()
             .setCampaignId(activatedExperiment.getLayerId())
@@ -81,33 +93,32 @@ public class EventFactory {
             .setType(ACTIVATE_EVENT_KEY)
             .build();
 
-        List<Event> events = new ArrayList<>();
-        events.add(impressionEvent);
-
         Snapshot snapshot = new Snapshot.Builder()
             .setDecisions(Collections.singletonList(decision))
-            .setEvents(events)
+            .setEvents(Collections.singletonList(impressionEvent))
             .build();
 
-        return new Visitor.Builder()
+        Visitor visitor = new Visitor.Builder()
             .setVisitorId(userId)
             .setAttributes(buildAttributeList(projectConfig, attributes))
             .setSnapshots(Collections.singletonList((snapshot)))
             .build();
+
+        EventBatch eventBatch = new EventBatch.Builder()
+            .setClientName(clientEngine.getClientEngineValue())
+            .setClientVersion(clientVersion)
+            .setAccountId(projectConfig.getAccountId())
+            .setVisitors(Collections.singletonList(visitor))
+            .setAnonymizeIp(projectConfig.getAnonymizeIP())
+            .setProjectId(projectConfig.getProjectId())
+            .setRevision(projectConfig.getRevision())
+            .build();
+
+        notificationManager.send(eventBatch);
+        return createLogEvent(eventBatch);
     }
 
-    @Deprecated
-    public LogEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
-                                          @Nonnull Experiment activatedExperiment,
-                                          @Nonnull Variation variation,
-                                          @Nonnull String userId,
-                                          @Nonnull Map<String, ?> attributes) {
-
-        Visitor visitor = createImpressionVisitor(projectConfig, activatedExperiment, variation, userId, attributes);
-        return createBatch(projectConfig, visitor);
-    }
-
-    public Visitor createConversionVisitor(@Nonnull ProjectConfig projectConfig,
+    public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
                                           @Nonnull String userId,
                                           @Nonnull String eventId, // Why is this not used?
                                           @Nonnull String eventName,
@@ -127,30 +138,28 @@ public class EventFactory {
             .setValue(EventTagUtils.getNumericValue(eventTags))
             .build();
 
-        List<Event> events = new ArrayList<>();
-        events.add(conversionEvent);
-
         Snapshot snapshot = new Snapshot.Builder()
-            .setEvents(events)
-            .build();
+                .setEvents(Collections.singletonList(conversionEvent))
+                .build();
 
-        return new Visitor.Builder()
+        Visitor visitor = new Visitor.Builder()
             .setVisitorId(userId)
             .setAttributes(buildAttributeList(projectConfig, attributes))
             .setSnapshots(Collections.singletonList(snapshot))
             .build();
-    }
 
-    @Deprecated
-    public LogEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
-                                          @Nonnull String userId,
-                                          @Nonnull String eventId, // Why is this not used?
-                                          @Nonnull String eventName,
-                                          @Nonnull Map<String, ?> attributes,
-                                          @Nonnull Map<String, ?> eventTags) {
+        EventBatch eventBatch = new EventBatch.Builder()
+            .setClientName(clientEngine.getClientEngineValue())
+            .setClientVersion(clientVersion)
+            .setAccountId(projectConfig.getAccountId())
+            .setVisitors(Collections.singletonList(visitor))
+            .setAnonymizeIp(projectConfig.getAnonymizeIP())
+            .setProjectId(projectConfig.getProjectId())
+            .setRevision(projectConfig.getRevision())
+            .build();
 
-        Visitor visitor = createConversionVisitor(projectConfig, userId, eventId, eventName, attributes, eventTags);
-        return createBatch(projectConfig, visitor);
+        notificationManager.send(eventBatch);
+        return createLogEvent(eventBatch);
     }
 
     private List<Attribute> buildAttributeList(ProjectConfig projectConfig, Map<String, ?> attributes) {
@@ -205,26 +214,5 @@ public class EventFactory {
         }
 
         return attributesList;
-    }
-
-    public LogEvent createBatch(ProjectConfig projectConfig, Visitor visitor) {
-        List<Visitor> visitors = new ArrayList<>();
-        visitors.add(visitor);
-
-        return createBatch(projectConfig, visitors);
-    }
-
-    public LogEvent createBatch(ProjectConfig projectConfig, List<Visitor> visitors) {
-        EventBatch eventBatch = new EventBatch.Builder()
-            .setClientName(clientEngine.getClientEngineValue())
-            .setClientVersion(clientVersion)
-            .setAccountId(projectConfig.getAccountId())
-            .setVisitors(visitors)
-            .setAnonymizeIp(projectConfig.getAnonymizeIP())
-            .setProjectId(projectConfig.getProjectId())
-            .setRevision(projectConfig.getRevision())
-            .build();
-
-        return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.<String, String>emptyMap(), eventBatch);
     }
 }

@@ -24,6 +24,7 @@ import com.optimizely.ab.notification.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.*;
 
@@ -169,20 +170,17 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
         private void addToBatch(EventBatch eventBatch) {
             if (currentBatch == null) {
-                currentBatch = eventBatch;
+                currentBatch = copyEventBatch(eventBatch);
             } else {
                 // Separate batches based on config revision.
                 if (!currentBatch.getRevision().equals(eventBatch.getRevision())) {
                     flush();
-                    currentBatch = eventBatch;
+                    currentBatch = copyEventBatch(eventBatch);
                     return;
-                }
-
-                for (Visitor visitor: eventBatch.getVisitors()) {
-                    currentBatch.getVisitors().add(visitor);
                 }
             }
 
+            currentBatch.getVisitors().addAll(eventBatch.getVisitors());
             if (currentBatch.getVisitors().size() >= batchSize) {
                 flush();
             }
@@ -195,11 +193,22 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
                 return;
             }
 
-            LogEvent logEvent = new LogEvent(LogEvent.RequestMethod.POST, EventFactory.EVENT_ENDPOINT,
-                Collections.emptyMap(), currentBatch);
+            LogEvent logEvent = EventFactory.createLogEvent(currentBatch);
 
             notificationManager.send(logEvent);
             currentBatch = null;
+        }
+
+        private EventBatch copyEventBatch(EventBatch eventBatch) {
+            return new EventBatch.Builder()
+                .setAccountId(eventBatch.getAccountId())
+                .setAnonymizeIp(eventBatch.getAnonymizeIp())
+                .setClientName(eventBatch.getClientName())
+                .setClientVersion(eventBatch.getClientVersion())
+                .setProjectId(eventBatch.getProjectId())
+                .setRevision(eventBatch.getRevision())
+                .setVisitors(new ArrayList<>())
+                .build();
         }
     }
 }
