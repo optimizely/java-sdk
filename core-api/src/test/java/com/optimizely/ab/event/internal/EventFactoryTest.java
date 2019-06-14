@@ -27,7 +27,6 @@ import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.ReservedEventKey;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -565,7 +564,6 @@ public class EventFactoryTest {
      * results in impression events being sent with the overriden values.
      */
     @Test
-    @Ignore
     public void createImpressionEventAndroidTVClientEngineClientVersion() throws Exception {
         String clientVersion = "0.0.0";
         ClientEngineInfo.setClientEngine(EventBatch.ClientEngine.ANDROID_TV_SDK);
@@ -667,7 +665,7 @@ public class EventFactoryTest {
                 eventType.getKey(),
                 attributeMap,
                 eventTagMap);
-        
+
         // verify that the request endpoint is correct
         assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
 
