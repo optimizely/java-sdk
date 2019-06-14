@@ -17,6 +17,8 @@
 package com.optimizely.ab.event.internal;
 
 
+import com.optimizely.ab.annotations.VisibleForTesting;
+
 /**
  * ImpressionEvent encapsulates information specific to conversion events.
  */
@@ -26,6 +28,11 @@ public class ImpressionEvent {
     private final String experimentKey;
     private final String variationKey;
     private final String variationId;
+
+    @VisibleForTesting
+    ImpressionEvent() {
+        this(null, null, null, null, null);
+    }
 
     private ImpressionEvent(String layerId, String experimentId, String experimentKey, String variationKey, String variationId) {
         this.layerId = layerId;

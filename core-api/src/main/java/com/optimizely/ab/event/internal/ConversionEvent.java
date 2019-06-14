@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.event.internal;
 
+import com.optimizely.ab.annotations.VisibleForTesting;
+
 import java.util.Map;
 
 /**
@@ -28,14 +30,19 @@ public class ConversionEvent {
 
     private final Number revenue;
     private final Number value;
-    private final Map<String, ?> Tags;
+    private final Map<String, ?> tags;
+
+    @VisibleForTesting
+    ConversionEvent() {
+        this(null, null, null, null, null);
+    }
 
     private ConversionEvent(String eventId, String eventKey, Number revenue, Number value, Map<String, ?> tags) {
         this.eventId = eventId;
         this.eventKey = eventKey;
         this.revenue = revenue;
         this.value = value;
-        Tags = tags;
+        this.tags = tags;
     }
 
     public String getEventId() {
@@ -55,7 +62,7 @@ public class ConversionEvent {
     }
 
     public Map<String, ?> getTags() {
-        return Tags;
+        return tags;
     }
 
     public static class Builder {

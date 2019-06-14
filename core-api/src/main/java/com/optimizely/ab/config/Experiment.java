@@ -17,6 +17,7 @@
 package com.optimizely.ab.config;
 
 import com.fasterxml.jackson.annotation.*;
+import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 
@@ -67,6 +68,11 @@ public class Experiment implements IdKeyMapped {
         public String toString() {
             return experimentStatus;
         }
+    }
+
+    @VisibleForTesting
+    public Experiment(String id, String key, String layerId) {
+        this(id, key, null, layerId, Collections.emptyList(), null, Collections.emptyList(), null, Collections.emptyList(), "");
     }
 
     @JsonCreator

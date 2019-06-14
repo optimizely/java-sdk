@@ -32,7 +32,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -1055,11 +1054,11 @@ public class LogEventFactoryTest {
             .build();
     }
 
-    public static LogEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
-                                                  @Nonnull Experiment activatedExperiment,
-                                                  @Nonnull Variation variation,
-                                                  @Nonnull String userId,
-                                                  @Nonnull Map<String, ?> attributes) {
+    public static LogEvent createImpressionEvent(ProjectConfig projectConfig,
+                                                 Experiment activatedExperiment,
+                                                 Variation variation,
+                                                 String userId,
+                                                 Map<String, ?> attributes) {
 
         UserEvent userEvent = EventFactory.createImpressionEvent(
             projectConfig,
