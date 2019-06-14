@@ -231,14 +231,14 @@ public class Optimizely implements AutoCloseable {
         }
 
         logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
-        UserEvent userEvent = EventFactory.createImpressionEvent(
+        UserEvent userEvent = UserEventFactory.createImpressionEvent(
             projectConfig,
             experiment,
             variation,
             userId,
             filteredAttributes);
 
-        LogEvent impressionEvent = LogEventFactory.createLogEvent(userEvent);
+        LogEvent impressionEvent = EventFactory.createLogEvent(userEvent);
 
         try {
             eventHandler.dispatchEvent(impressionEvent);
@@ -301,7 +301,7 @@ public class Optimizely implements AutoCloseable {
             logger.warn("Event tags is null when non-null was expected. Defaulting to an empty event tags map.");
         }
 
-        UserEvent event = EventFactory.createConversionEvent(
+        UserEvent event = UserEventFactory.createConversionEvent(
             projectConfig,
             userId,
             eventType.getId(),
@@ -310,7 +310,7 @@ public class Optimizely implements AutoCloseable {
             eventTags);
 
         // create the conversion event request parameters, then dispatch
-        LogEvent conversionEvent = LogEventFactory.createLogEvent(Collections.singletonList(event));
+        LogEvent conversionEvent = EventFactory.createLogEvent(Collections.singletonList(event));
         logger.info("Tracking event \"{}\" for user \"{}\".", eventName, userId);
 
         try {
