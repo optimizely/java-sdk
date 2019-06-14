@@ -27,9 +27,8 @@ import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.NoopEventHandler;
-import com.optimizely.ab.event.internal.BuildVersionInfo;
-import com.optimizely.ab.event.internal.EventFactory;
-import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
+import com.optimizely.ab.event.internal.*;
+import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.notification.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,8 +76,6 @@ public class Optimizely implements AutoCloseable {
     @VisibleForTesting
     final DecisionService decisionService;
     @VisibleForTesting
-    final EventFactory eventFactory;
-    @VisibleForTesting
     final EventHandler eventHandler;
     @VisibleForTesting
     final ErrorHandler errorHandler;
@@ -92,17 +89,15 @@ public class Optimizely implements AutoCloseable {
     private final UserProfileService userProfileService;
 
     private Optimizely(@Nonnull EventHandler eventHandler,
-                       @Nonnull EventFactory eventFactory,
                        @Nonnull ErrorHandler errorHandler,
                        @Nonnull DecisionService decisionService,
                        @Nullable UserProfileService userProfileService,
                        @Nonnull ProjectConfigManager projectConfigManager,
                        @Nonnull NotificationCenter notificationCenter
     ) {
-        this.decisionService = decisionService;
         this.eventHandler = eventHandler;
-        this.eventFactory = eventFactory;
         this.errorHandler = errorHandler;
+        this.decisionService = decisionService;
         this.userProfileService = userProfileService;
         this.projectConfigManager = projectConfigManager;
         this.notificationCenter = notificationCenter;
@@ -230,36 +225,33 @@ public class Optimizely implements AutoCloseable {
                                 @Nonnull String userId,
                                 @Nonnull Map<String, ?> filteredAttributes,
                                 @Nonnull Variation variation) {
-        if (experiment.isRunning()) {
-            LogEvent impressionEvent = eventFactory.createImpressionEvent(
-                projectConfig,
-                experiment,
-                variation,
-                userId,
-                filteredAttributes);
-            logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
-
-            if (logger.isDebugEnabled()) {
-                logger.debug(
-                    "Dispatching impression event to URL {} with params {} and payload \"{}\".",
-                    impressionEvent.getEndpointUrl(), impressionEvent.getRequestParams(), impressionEvent.getBody());
-            }
-
-            try {
-                eventHandler.dispatchEvent(impressionEvent);
-            } catch (Exception e) {
-                logger.error("Unexpected exception in event dispatcher", e);
-            }
-
-            // Kept For backwards compatibility.
-            // This notification is deprecated and the new DecisionNotifications
-            // are sent via their respective method calls.
-            ActivateNotification activateNotification = new ActivateNotification(
-                experiment, userId, filteredAttributes, variation, impressionEvent);
-            notificationCenter.send(activateNotification);
-        } else {
+        if (!experiment.isRunning()) {
             logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
+            return;
         }
+
+        logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
+        UserEvent userEvent = EventFactory.createImpressionEvent(
+            projectConfig,
+            experiment,
+            variation,
+            userId,
+            filteredAttributes);
+
+        LogEvent impressionEvent = LogEventFactory.createLogEvent(userEvent);
+
+        try {
+            eventHandler.dispatchEvent(impressionEvent);
+        } catch (Exception e) {
+            logger.error("Unexpected exception in event dispatcher", e);
+        }
+
+        // Kept For backwards compatibility.
+        // This notification is deprecated and the new DecisionNotifications
+        // are sent via their respective method calls.
+        ActivateNotification activateNotification = new ActivateNotification(
+            experiment, userId, filteredAttributes, variation, impressionEvent);
+        notificationCenter.send(activateNotification);
     }
 
     //======== track calls ========//
@@ -309,8 +301,7 @@ public class Optimizely implements AutoCloseable {
             logger.warn("Event tags is null when non-null was expected. Defaulting to an empty event tags map.");
         }
 
-        // create the conversion event request parameters, then dispatch
-        LogEvent conversionEvent = eventFactory.createConversionEvent(
+        UserEvent event = EventFactory.createConversionEvent(
             projectConfig,
             userId,
             eventType.getId(),
@@ -318,12 +309,9 @@ public class Optimizely implements AutoCloseable {
             copiedAttributes,
             eventTags);
 
+        // create the conversion event request parameters, then dispatch
+        LogEvent conversionEvent = LogEventFactory.createLogEvent(Collections.singletonList(event));
         logger.info("Tracking event \"{}\" for user \"{}\".", eventName, userId);
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("Dispatching conversion event to URL {} with params {} and payload \"{}\".",
-                conversionEvent.getEndpointUrl(), conversionEvent.getRequestParams(), conversionEvent.getBody());
-        }
 
         try {
             eventHandler.dispatchEvent(conversionEvent);
@@ -1012,9 +1000,6 @@ public class Optimizely implements AutoCloseable {
         private DecisionService decisionService;
         private ErrorHandler errorHandler;
         private EventHandler eventHandler;
-        private EventFactory eventFactory;
-        private ClientEngine clientEngine;
-        private String clientVersion;
         private ProjectConfig projectConfig;
         private ProjectConfigManager projectConfigManager;
         private UserProfileService userProfileService;
@@ -1047,13 +1032,15 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
-        public Builder withClientEngine(ClientEngine clientEngine) {
-            this.clientEngine = clientEngine;
+        @Deprecated
+        public Builder withClientEngine(EventBatch.ClientEngine clientEngine) {
+            logger.info("Explicitly setting the ClientEngine is no longer supported.");
             return this;
         }
 
+        @Deprecated
         public Builder withClientVersion(String clientVersion) {
-            this.clientVersion = clientVersion;
+            logger.info("Explicitly setting the ClientVersion is no longer supported.");
             return this;
         }
 
@@ -1089,18 +1076,6 @@ public class Optimizely implements AutoCloseable {
         }
 
         public Optimizely build() {
-
-            if (clientEngine == null) {
-                clientEngine = ClientEngine.JAVA_SDK;
-            }
-
-            if (clientVersion == null) {
-                clientVersion = BuildVersionInfo.VERSION;
-            }
-
-            if (eventFactory == null) {
-                eventFactory = new EventFactory(clientEngine, clientVersion);
-            }
 
             if (errorHandler == null) {
                 errorHandler = new NoOpErrorHandler();
@@ -1141,7 +1116,7 @@ public class Optimizely implements AutoCloseable {
                 notificationCenter = new NotificationCenter();
             }
 
-            return new Optimizely(eventHandler, eventFactory, errorHandler, decisionService, userProfileService, projectConfigManager, notificationCenter);
+            return new Optimizely(eventHandler, errorHandler, decisionService, userProfileService, projectConfigManager, notificationCenter);
         }
     }
 }

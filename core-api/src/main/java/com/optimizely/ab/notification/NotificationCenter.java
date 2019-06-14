@@ -17,6 +17,7 @@
 package com.optimizely.ab.notification;
 
 import com.optimizely.ab.OptimizelyRuntimeException;
+import com.optimizely.ab.event.LogEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,6 +95,7 @@ public class NotificationCenter {
         validManagers.put(TrackNotification.class, new NotificationManager<>(TrackNotification.class, counter));
         validManagers.put(DecisionNotification.class, new NotificationManager<>(DecisionNotification.class, counter));
         validManagers.put(UpdateConfigNotification.class, new NotificationManager<>(UpdateConfigNotification.class, counter));
+        validManagers.put(LogEvent.class, new NotificationManager<>(LogEvent.class, counter));
 
         notifierMap = Collections.unmodifiableMap(validManagers);
     }

@@ -24,5 +24,5 @@ package com.optimizely.ab.notification;
  * implementations is maintained by the {@link NotificationCenter}
  */
 public interface NotificationHandler<T> {
-    void handle(T message);
+    void handle(T message) throws Exception;
 }
