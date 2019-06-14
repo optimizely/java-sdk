@@ -72,7 +72,7 @@ public class Experiment implements IdKeyMapped {
 
     @VisibleForTesting
     public Experiment(String id, String key, String layerId) {
-        this(id, key, null, layerId, Collections.emptyList(), null, Collections.emptyList(), null, Collections.emptyList(), "");
+        this(id, key, null, layerId, Collections.emptyList(), null, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList(), "");
     }
 
     @JsonCreator

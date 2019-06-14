@@ -539,7 +539,7 @@ public class EventFactoryTest {
     }
 
     /**
-     * Verify that supplying {@link UserEventFactory} with a custom client engine and client version results in impression
+     * Verify that supplying {@link ClientEngineInfo} with a custom client engine and client version results in impression
      * events being sent with the overriden values.
      */
     @Test
@@ -561,7 +561,7 @@ public class EventFactoryTest {
     }
 
     /**
-     * Verify that supplying {@link UserEventFactory} with a custom Android TV client engine and client version
+     * Verify that supplying {@link ClientEngineInfo} with a custom Android TV client engine and client version
      * results in impression events being sent with the overriden values.
      */
     @Test
@@ -598,15 +598,13 @@ public class EventFactoryTest {
         Map<String, Object> eventTagMap = new HashMap<String, Object>();
         eventTagMap.put("boolean_param", false);
         eventTagMap.put("string_param", "123");
-        UserEvent userEvent = UserEventFactory.createConversionEvent(
+        LogEvent conversionEvent = createConversionEvent(
                 validProjectConfig,
                 userId,
                 eventType.getId(),
                 eventType.getKey(),
                 attributeMap,
                 eventTagMap);
-
-        LogEvent conversionEvent = EventFactory.createLogEvent(userEvent);
 
         // verify that the request endpoint is correct
         assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
@@ -662,15 +660,13 @@ public class EventFactoryTest {
         Map<String, Object> eventTagMap = new HashMap<String, Object>();
         eventTagMap.put("boolean_param", false);
         eventTagMap.put("string_param", "123");
-        UserEvent userEvent = UserEventFactory.createConversionEvent(
+        LogEvent conversionEvent = createConversionEvent(
                 validProjectConfig,
                 userId,
                 eventType.getId(),
                 eventType.getKey(),
                 attributeMap,
                 eventTagMap);
-
-        LogEvent conversionEvent = EventFactory.createLogEvent(userEvent);
         
         // verify that the request endpoint is correct
         assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
@@ -741,15 +737,13 @@ public class EventFactoryTest {
         eventTagMap.put(ReservedEventKey.REVENUE.toString(), revenue);
         eventTagMap.put(ReservedEventKey.VALUE.toString(), value);
 
-        UserEvent userEvent = UserEventFactory.createConversionEvent(
+        LogEvent conversionEvent = createConversionEvent(
             validProjectConfig, 
             userId,
             eventType.getId(), 
             eventType.getKey(), 
             attributeMap, 
             eventTagMap);
-        
-        LogEvent conversionEvent = EventFactory.createLogEvent(userEvent);
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
         // we're not going to verify everything, only the event metrics
@@ -772,15 +766,13 @@ public class EventFactoryTest {
             whitelistedUserId = "testUser1";
         }
 
-        UserEvent userEvent = UserEventFactory.createConversionEvent(
+        LogEvent conversionEvent = createConversionEvent(
                 validProjectConfig,
                 whitelistedUserId,
                 eventType.getId(),
                 eventType.getKey(),
                 Collections.emptyMap(),
                 Collections.emptyMap());
-        
-        LogEvent conversionEvent = EventFactory.createLogEvent(userEvent);
         
         assertNotNull(conversionEvent);
     }
@@ -798,7 +790,7 @@ public class EventFactoryTest {
         }
         String whitelistedUserId = PAUSED_EXPERIMENT_FORCED_VARIATION_USER_ID_CONTROL;
 
-        UserEvent userEvent = UserEventFactory.createConversionEvent(
+        LogEvent conversionEvent = createConversionEvent(
             validProjectConfig,
             whitelistedUserId,
             eventType.getId(),
@@ -806,13 +798,11 @@ public class EventFactoryTest {
             Collections.emptyMap(),
             Collections.emptyMap());
 
-        LogEvent conversionEvent = EventFactory.createLogEvent(userEvent);
-
         assertNotNull(conversionEvent);
     }
 
     /**
-     * Verify that supplying {@link UserEventFactory} with a custom client engine and client version results in conversion
+     * Verify that supplying {@link ClientEngineInfo} with a custom client engine and client version results in conversion
      * events being sent with the overriden values.
      */
     @Test
@@ -829,15 +819,13 @@ public class EventFactoryTest {
 
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
 
-        UserEvent userEvent = UserEventFactory.createConversionEvent(
+        LogEvent conversionEvent = createConversionEvent(
             validProjectConfig,
             userId,
             eventType.getId(),
             eventType.getKey(),
             attributeMap,
             Collections.emptyMap());
-
-        LogEvent conversionEvent = EventFactory.createLogEvent(userEvent);
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
@@ -846,7 +834,7 @@ public class EventFactoryTest {
     }
 
     /**
-     * Verify that supplying {@link UserEventFactory} with a Android TV client engine and client version results in
+     * Verify that supplying {@link ClientEngineInfo} with a Android TV client engine and client version results in
      * conversion events being sent with the overriden values.
      */
     @Test
@@ -866,15 +854,13 @@ public class EventFactoryTest {
 
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
 
-        UserEvent userEvent = UserEventFactory.createConversionEvent(
+        LogEvent conversionEvent = createConversionEvent(
             projectConfig,
             userId,
             eventType.getId(),
             eventType.getKey(),
             attributeMap,
             Collections.emptyMap());
-
-        LogEvent conversionEvent = EventFactory.createLogEvent(userEvent);
         
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
@@ -883,9 +869,7 @@ public class EventFactoryTest {
     }
 
     /**
-     * Verify that supplying an empty Experiment Variation map to
-     * {@link UserEventFactory#createConversionEvent(ProjectConfig, String, String, String, Map, Map)}
-     * returns an Event {@link LogEvent}.
+     * Verify that supplying an empty Experiment Variation map returns an Event {@link LogEvent}.
      */
     @Test
     public void createConversionEventReturnsNotNullWhenExperimentVariationMapIsEmpty() {
@@ -1054,6 +1038,9 @@ public class EventFactoryTest {
             .build();
     }
 
+    /**
+     * Helper method for generating an impression based LogEvent.
+     */
     public static LogEvent createImpressionEvent(ProjectConfig projectConfig,
                                                  Experiment activatedExperiment,
                                                  Variation variation,
@@ -1071,6 +1058,9 @@ public class EventFactoryTest {
         
     }
 
+    /**
+     * Helper method for generating a conversion based LogEvent.
+     */
     private static LogEvent createConversionEvent(ProjectConfig projectConfig,
                                                   String userId,
                                                   String eventId,

@@ -62,7 +62,7 @@ public class NotificationManager<T> {
         return notificationId;
     }
 
-    public void send(T message) {
+    void send(T message) {
         for (Map.Entry<Integer, NotificationHandler<T>> handler: handlers.entrySet()) {
             try {
                 handler.getValue().handle(message);
@@ -70,14 +70,6 @@ public class NotificationManager<T> {
                 logger.warn("Catching exception sending notification for class: {}, handler: {}", clazz, handler.getKey());
             }
         }
-    }
-
-    public int size() {
-        return handlers.size();
-    }
-
-    public boolean isEmpty() {
-        return handlers.isEmpty();
     }
 
     public void clear() {
