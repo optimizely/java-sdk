@@ -16,7 +16,6 @@
  */
 package com.optimizely.ab.event.internal;
 
-import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.Attribute;
@@ -32,14 +31,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
 
 public class LogEventFactory {
     private static final Logger logger = LoggerFactory.getLogger(LogEventFactory.class);
     public static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";  // Should be part of the datafile
-    static final String ACTIVATE_EVENT_KEY = "campaign_activated";
+    private static final String ACTIVATE_EVENT_KEY = "campaign_activated";
 
     public static LogEvent createLogEvent(UserEvent userEvent) {
         return createLogEvent(Collections.singletonList(userEvent));
@@ -98,8 +96,8 @@ public class LogEventFactory {
             .build();
 
         Event event = new Event.Builder()
-            .setTimestamp(System.currentTimeMillis())
-            .setUuid(UUID.randomUUID().toString())
+            .setTimestamp(userEvent.getTimestamp())
+            .setUuid(userEvent.getUUID())
             .setEntityId(impressionEvent.getLayerId())
             .setKey(ACTIVATE_EVENT_KEY)
             .setType(ACTIVATE_EVENT_KEY)
@@ -124,8 +122,8 @@ public class LogEventFactory {
         }
 
         Event event = new Event.Builder()
-            .setTimestamp(System.currentTimeMillis())
-            .setUuid(UUID.randomUUID().toString())
+            .setTimestamp(userEvent.getTimestamp())
+            .setUuid(userEvent.getUUID())
             .setEntityId(conversionEvent.getEventId())
             .setKey(conversionEvent.getEventKey())
             .setRevenue(conversionEvent.getRevenue())

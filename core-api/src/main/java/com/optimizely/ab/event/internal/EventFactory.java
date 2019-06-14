@@ -49,6 +49,7 @@ public class EventFactory {
             .withProjectConfig(projectConfig)
             .withImpressionEvent(impressionEvent)
             .withUUID(UUID.randomUUID().toString())
+            .withTimestamp(System.currentTimeMillis())
             .build();
     }
 
@@ -73,6 +74,7 @@ public class EventFactory {
             .withProjectConfig(projectConfig)
             .withConversionEvent(conversionEvent)
             .withUUID(UUID.randomUUID().toString())
+            .withTimestamp(System.currentTimeMillis())
             .build();
     }
 }
