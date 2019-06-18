@@ -34,6 +34,12 @@ import java.util.Map;
 
 import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
 
+/**
+ * EventFactory builds {@link LogEvent} objects from a given {@link UserEvent}
+ *
+ * This class serves to separate concerns between events in the SDK and the API used
+ * to record the events via the <a href="https://developers.optimizely.com/x/events/api/index.html">Optimizely Events API</a>.
+ */
 public class EventFactory {
     private static final Logger logger = LoggerFactory.getLogger(EventFactory.class);
     public static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";  // Should be part of the datafile
@@ -116,7 +122,7 @@ public class EventFactory {
             .build();
     }
 
-    public static Visitor createVisitor(ConversionEvent conversionEvent) {
+    private static Visitor createVisitor(ConversionEvent conversionEvent) {
         if (conversionEvent == null) {
             return null;
         }

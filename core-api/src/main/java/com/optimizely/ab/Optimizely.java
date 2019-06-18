@@ -310,7 +310,7 @@ public class Optimizely implements AutoCloseable {
             eventTags);
 
         // create the conversion event request parameters, then dispatch
-        LogEvent conversionEvent = EventFactory.createLogEvent(Collections.singletonList(event));
+        LogEvent conversionEvent = EventFactory.createLogEvent(event);
         logger.info("Tracking event \"{}\" for user \"{}\".", eventName, userId);
 
         try {
@@ -1034,7 +1034,8 @@ public class Optimizely implements AutoCloseable {
 
         @Deprecated
         public Builder withClientEngine(EventBatch.ClientEngine clientEngine) {
-            logger.info("Explicitly setting the ClientEngine is no longer supported.");
+            logger.info("Deprecated. Setting ClientEngine is now set via ClientEngineInfo.");
+            ClientEngineInfo.setClientEngine(clientEngine);
             return this;
         }
 
