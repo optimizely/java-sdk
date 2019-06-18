@@ -16,31 +16,36 @@
  */
 package com.optimizely.ab.event.internal;
 
-
-import com.optimizely.ab.annotations.VisibleForTesting;
-
 /**
  * ImpressionEvent encapsulates information specific to conversion events.
  */
-public class ImpressionEvent {
+public class ImpressionEvent implements UserEvent {
+    private final UserContext userContext;
     private final String layerId;
     private final String experimentId;
     private final String experimentKey;
     private final String variationKey;
     private final String variationId;
 
-    @VisibleForTesting
-    ImpressionEvent() {
-        this(null, null, null, null, null);
-    }
 
-    private ImpressionEvent(String layerId, String experimentId, String experimentKey, String variationKey, String variationId) {
+    private ImpressionEvent(UserContext userContext,
+                            String layerId,
+                            String experimentId,
+                            String experimentKey,
+                            String variationKey,
+                            String variationId) {
+        this.userContext = userContext;
         this.layerId = layerId;
         this.experimentId = experimentId;
         this.experimentKey = experimentKey;
         this.variationKey = variationKey;
         this.variationId = variationId;
     }
+
+    public UserContext getUserContext() {
+        return userContext;
+    }
+
 
     public String getLayerId() {
         return layerId;
@@ -64,11 +69,17 @@ public class ImpressionEvent {
 
     public static class Builder {
 
+        private UserContext userContext;
         private String layerId;
         private String experimentId;
         private String experimentKey;
         private String variationKey;
         private String variationId;
+
+        public Builder withUserContext(UserContext userContext) {
+            this.userContext = userContext;
+            return this;
+        }
 
         public Builder withLayerId(String layerId) {
             this.layerId = layerId;
@@ -96,7 +107,7 @@ public class ImpressionEvent {
         }
 
         public ImpressionEvent build() {
-            return new ImpressionEvent(layerId, experimentId, experimentKey, variationKey, variationId);
+            return new ImpressionEvent(userContext, layerId, experimentId, experimentKey, variationKey, variationId);
         }
     }
 }

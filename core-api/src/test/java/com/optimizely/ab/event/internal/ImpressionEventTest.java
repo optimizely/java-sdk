@@ -20,9 +20,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 public class ImpressionEventTest {
 
+    private static final UserContext USER_CONTEXT = mock(UserContext.class);
     private static final String LAYER_ID       = "layerId";
     private static final String EXPERIMENT_ID  = "experimentId";
     private static final String EXPERIMENT_KEY = "experimentKey";
@@ -34,12 +36,18 @@ public class ImpressionEventTest {
     @Before
     public void setUp() throws Exception {
         impressionEvent = new ImpressionEvent.Builder()
+            .withUserContext(USER_CONTEXT)
             .withLayerId(LAYER_ID)
             .withExperimentId(EXPERIMENT_ID)
             .withExperimentKey(EXPERIMENT_KEY)
             .withVariationId(VARIATION_ID)
             .withVariationKey(VARIATION_KEY)
             .build();
+    }
+
+    @Test
+    public void getUserContext() {
+        assertSame(USER_CONTEXT, impressionEvent.getUserContext());
     }
 
     @Test

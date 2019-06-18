@@ -16,33 +16,32 @@
  */
 package com.optimizely.ab.event.internal;
 
-import com.optimizely.ab.annotations.VisibleForTesting;
-
 import java.util.Map;
 
 /**
  * ConversionEvent encapsulates information specific to conversion events.
  */
-public class ConversionEvent {
+public class ConversionEvent implements UserEvent {
 
+    private final UserContext userContext;
     private final String eventId;
     private final String eventKey;
-
     private final Number revenue;
     private final Number value;
     private final Map<String, ?> tags;
 
-    @VisibleForTesting
-    ConversionEvent() {
-        this(null, null, null, null, null);
-    }
 
-    private ConversionEvent(String eventId, String eventKey, Number revenue, Number value, Map<String, ?> tags) {
+    private ConversionEvent(UserContext userContext, String eventId, String eventKey, Number revenue, Number value, Map<String, ?> tags) {
+        this.userContext = userContext;
         this.eventId = eventId;
         this.eventKey = eventKey;
         this.revenue = revenue;
         this.value = value;
         this.tags = tags;
+    }
+
+    public UserContext getUserContext() {
+        return userContext;
     }
 
     public String getEventId() {
@@ -67,11 +66,17 @@ public class ConversionEvent {
 
     public static class Builder {
 
+        private UserContext userContext;
         private String eventId;
         private String eventKey;
         private Number revenue;
         private Number value;
         private Map<String, ?> tags;
+
+        public Builder withUserContext(UserContext userContext) {
+            this.userContext = userContext;
+            return this;
+        }
 
         public Builder withEventId(String eventId) {
             this.eventId = eventId;
@@ -99,7 +104,7 @@ public class ConversionEvent {
         }
 
         public ConversionEvent build() {
-            return new ConversionEvent(eventId, eventKey, revenue, value, tags);
+            return new ConversionEvent(userContext, eventId, eventKey, revenue, value, tags);
         }
     }
 }

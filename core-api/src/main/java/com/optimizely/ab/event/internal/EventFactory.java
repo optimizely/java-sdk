@@ -53,17 +53,17 @@ public class EventFactory {
                 continue;
             }
 
-            Visitor impressionVisitor = createImpressionEvent(userEvent);
-            if (impressionVisitor != null) {
-                visitors.add(impressionVisitor);
+            if (userEvent instanceof ImpressionEvent) {
+                visitors.add(createVisitor((ImpressionEvent) userEvent));
             }
 
-            Visitor conversionVisitor = createConversionEvent(userEvent);
-            if (conversionVisitor != null) {
-                visitors.add(conversionVisitor);
+            if (userEvent instanceof ConversionEvent) {
+                visitors.add(createVisitor((ConversionEvent) userEvent));
             }
 
-            ProjectConfig projectConfig = userEvent.getProjectConfig();
+            // This needs an interface.
+            UserContext userContext = userEvent.getUserContext();
+            ProjectConfig projectConfig = userContext.getProjectConfig();
 
             builder
                 .setClientName(ClientEngineInfo.getClientEngine().getClientEngineValue())
@@ -82,11 +82,12 @@ public class EventFactory {
         return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.emptyMap(), builder.build());
     }
 
-    private static Visitor createImpressionEvent(UserEvent userEvent) {
-        ImpressionEvent impressionEvent = userEvent.getImpressionEvent();
+    private static Visitor createVisitor(ImpressionEvent impressionEvent) {
         if (impressionEvent == null) {
             return null;
         }
+
+        UserContext userContext = impressionEvent.getUserContext();
 
         Decision decision = new Decision.Builder()
             .setCampaignId(impressionEvent.getLayerId())
@@ -96,8 +97,8 @@ public class EventFactory {
             .build();
 
         Event event = new Event.Builder()
-            .setTimestamp(userEvent.getTimestamp())
-            .setUuid(userEvent.getUUID())
+            .setTimestamp(userContext.getTimestamp())
+            .setUuid(userContext.getUUID())
             .setEntityId(impressionEvent.getLayerId())
             .setKey(ACTIVATE_EVENT_KEY)
             .setType(ACTIVATE_EVENT_KEY)
@@ -109,21 +110,22 @@ public class EventFactory {
             .build();
 
         return new Visitor.Builder()
-            .setVisitorId(userEvent.getUserId())
-            .setAttributes(buildAttributeList(userEvent.getProjectConfig(), userEvent.getAttributes()))
+            .setVisitorId(userContext.getUserId())
+            .setAttributes(buildAttributeList(userContext.getProjectConfig(), userContext.getAttributes()))
             .setSnapshots(Collections.singletonList((snapshot)))
             .build();
     }
 
-    public static Visitor createConversionEvent(UserEvent userEvent) {
-        ConversionEvent conversionEvent = userEvent.getConversionEvent();
+    public static Visitor createVisitor(ConversionEvent conversionEvent) {
         if (conversionEvent == null) {
             return null;
         }
 
+        UserContext userContext = conversionEvent.getUserContext();
+
         Event event = new Event.Builder()
-            .setTimestamp(userEvent.getTimestamp())
-            .setUuid(userEvent.getUUID())
+            .setTimestamp(userContext.getTimestamp())
+            .setUuid(userContext.getUUID())
             .setEntityId(conversionEvent.getEventId())
             .setKey(conversionEvent.getEventKey())
             .setRevenue(conversionEvent.getRevenue())
@@ -137,8 +139,8 @@ public class EventFactory {
             .build();
 
         return new Visitor.Builder()
-            .setVisitorId(userEvent.getUserId())
-            .setAttributes(buildAttributeList(userEvent.getProjectConfig(), userEvent.getAttributes()))
+            .setVisitorId(userContext.getUserId())
+            .setAttributes(buildAttributeList(userContext.getProjectConfig(), userContext.getAttributes()))
             .setSnapshots(Collections.singletonList(snapshot))
             .build();
     }

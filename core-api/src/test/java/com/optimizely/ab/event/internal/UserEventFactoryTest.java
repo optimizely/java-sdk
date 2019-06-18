@@ -69,7 +69,7 @@ public class UserEventFactoryTest {
 
     @Test
     public void createImpressionEvent() {
-        UserEvent actual = UserEventFactory.createImpressionEvent(
+        ImpressionEvent actual = UserEventFactory.createImpressionEvent(
             projectConfig,
             experiment,
             variation,
@@ -77,26 +77,24 @@ public class UserEventFactoryTest {
             ATTRIBUTES
         );
 
-        assertTrue(actual.getTimestamp() > 0);
-        assertNotNull(actual.getUUID());
+        assertTrue(actual.getUserContext().getTimestamp() > 0);
+        assertNotNull(actual.getUserContext().getUUID());
 
-        assertSame(projectConfig, actual.getProjectConfig());
+        assertSame(projectConfig, actual.getUserContext().getProjectConfig());
 
-        assertEquals(USER_ID, actual.getUserId());
-        assertEquals(ATTRIBUTES, actual.getAttributes());
+        assertEquals(USER_ID, actual.getUserContext().getUserId());
+        assertEquals(ATTRIBUTES, actual.getUserContext().getAttributes());
 
-        assertEquals(LAYER_ID, actual.getImpressionEvent().getLayerId());
-        assertEquals(EXPERIMENT_ID, actual.getImpressionEvent().getExperimentId());
-        assertEquals(EXPERIMENT_KEY, actual.getImpressionEvent().getExperimentKey());
-        assertEquals(VARIATION_ID, actual.getImpressionEvent().getVariationId());
-        assertEquals(VARIATION_KEY, actual.getImpressionEvent().getVariationKey());
-
-        assertNull(actual.getConversionEvent());
+        assertEquals(LAYER_ID, actual.getLayerId());
+        assertEquals(EXPERIMENT_ID, actual.getExperimentId());
+        assertEquals(EXPERIMENT_KEY, actual.getExperimentKey());
+        assertEquals(VARIATION_ID, actual.getVariationId());
+        assertEquals(VARIATION_KEY, actual.getVariationKey());
     }
 
     @Test
     public void createConversionEvent() {
-        UserEvent actual = UserEventFactory.createConversionEvent(
+        ConversionEvent actual = UserEventFactory.createConversionEvent(
             projectConfig,
             USER_ID,
             EVENT_ID,
@@ -105,20 +103,18 @@ public class UserEventFactoryTest {
             TAGS
         );
 
-        assertTrue(actual.getTimestamp() > 0);
-        assertNotNull(actual.getUUID());
+        assertTrue(actual.getUserContext().getTimestamp() > 0);
+        assertNotNull(actual.getUserContext().getUUID());
 
-        assertSame(projectConfig, actual.getProjectConfig());
+        assertSame(projectConfig, actual.getUserContext().getProjectConfig());
 
-        assertEquals(USER_ID, actual.getUserId());
-        assertEquals(ATTRIBUTES, actual.getAttributes());
+        assertEquals(USER_ID, actual.getUserContext().getUserId());
+        assertEquals(ATTRIBUTES, actual.getUserContext().getAttributes());
 
-        assertEquals(EVENT_ID, actual.getConversionEvent().getEventId());
-        assertEquals(EVENT_KEY, actual.getConversionEvent().getEventKey());
-        assertEquals(REVENUE, actual.getConversionEvent().getRevenue());
-        assertEquals(VALUE, actual.getConversionEvent().getValue());
-        assertEquals(TAGS, actual.getConversionEvent().getTags());
-
-        assertNull(actual.getImpressionEvent());
+        assertEquals(EVENT_ID, actual.getEventId());
+        assertEquals(EVENT_KEY, actual.getEventKey());
+        assertEquals(REVENUE, actual.getRevenue());
+        assertEquals(VALUE, actual.getValue());
+        assertEquals(TAGS, actual.getTags());
     }
 }

@@ -23,9 +23,11 @@ import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
 public class ConversionEventTest {
 
+    private static final UserContext USER_CONTEXT = mock(UserContext.class);
     private static final String EVENT_ID     = "layerId";
     private static final String EVENT_KEY    = "experimentKey";
     private static final Number REVENUE      = 100;
@@ -37,12 +39,18 @@ public class ConversionEventTest {
     @Before
     public void setUp() throws Exception {
         conversionEvent = new ConversionEvent.Builder()
+            .withUserContext(USER_CONTEXT)
             .withEventId(EVENT_ID)
             .withEventKey(EVENT_KEY)
             .withRevenue(REVENUE)
             .withValue(VALUE)
             .withTags(TAGS)
             .build();
+    }
+
+    @Test
+    public void getUserContext() {
+        assertSame(USER_CONTEXT, conversionEvent.getUserContext());
     }
 
     @Test

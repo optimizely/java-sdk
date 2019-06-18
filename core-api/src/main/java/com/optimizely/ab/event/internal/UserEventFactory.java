@@ -29,52 +29,53 @@ import java.util.UUID;
 public class UserEventFactory {
     private static final Logger logger = LoggerFactory.getLogger(UserEventFactory.class);
 
-    public static UserEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
-                                                  @Nonnull Experiment activatedExperiment,
-                                                  @Nonnull Variation variation,
-                                                  @Nonnull String userId,
-                                                  @Nonnull Map<String, ?> attributes) {
+    public static ImpressionEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
+                                                        @Nonnull Experiment activatedExperiment,
+                                                        @Nonnull Variation variation,
+                                                        @Nonnull String userId,
+                                                        @Nonnull Map<String, ?> attributes) {
 
-        ImpressionEvent impressionEvent = new ImpressionEvent.Builder()
+        UserContext userContext = new UserContext.Builder()
+            .withUserId(userId)
+            .withAttributes(attributes)
+            .withProjectConfig(projectConfig)
+            .withUUID(UUID.randomUUID().toString())
+            .withTimestamp(System.currentTimeMillis())
+            .build();
+
+        return new ImpressionEvent.Builder()
+            .withUserContext(userContext)
             .withLayerId(activatedExperiment.getLayerId())
             .withExperimentId(activatedExperiment.getId())
             .withExperimentKey(activatedExperiment.getKey())
             .withVariationId(variation.getId())
             .withVariationKey(variation.getKey())
             .build();
+    }
 
-        return new UserEvent.Builder()
+    public static ConversionEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
+                                                        @Nonnull String userId,
+                                                        @Nonnull String eventId, // Why is this not used?
+                                                        @Nonnull String eventName,
+                                                        @Nonnull Map<String, ?> attributes,
+                                                        @Nonnull Map<String, ?> eventTags) {
+
+
+        UserContext userContext = new UserContext.Builder()
             .withUserId(userId)
             .withAttributes(attributes)
             .withProjectConfig(projectConfig)
-            .withImpressionEvent(impressionEvent)
             .withUUID(UUID.randomUUID().toString())
             .withTimestamp(System.currentTimeMillis())
             .build();
-    }
 
-    public static UserEvent createConversionEvent(@Nonnull ProjectConfig projectConfig,
-                                                  @Nonnull String userId,
-                                                  @Nonnull String eventId, // Why is this not used?
-                                                  @Nonnull String eventName,
-                                                  @Nonnull Map<String, ?> attributes,
-                                                  @Nonnull Map<String, ?> eventTags) {
-
-        ConversionEvent conversionEvent = new ConversionEvent.Builder()
+        return new ConversionEvent.Builder()
+            .withUserContext(userContext)
             .withEventId(eventId)
             .withEventKey(eventName)
             .withRevenue(EventTagUtils.getRevenueValue(eventTags))
             .withValue(EventTagUtils.getNumericValue(eventTags))
             .withTags(eventTags)
-            .build();
-
-        return new UserEvent.Builder()
-            .withUserId(userId)
-            .withAttributes(attributes)
-            .withProjectConfig(projectConfig)
-            .withConversionEvent(conversionEvent)
-            .withUUID(UUID.randomUUID().toString())
-            .withTimestamp(System.currentTimeMillis())
             .build();
     }
 }

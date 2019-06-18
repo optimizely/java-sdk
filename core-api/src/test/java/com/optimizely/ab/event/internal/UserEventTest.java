@@ -32,21 +32,17 @@ public class UserEventTest {
     private static final long TIMESTAMP = 100L;
     private static final String USER_ID = "USER_ID";
     private static final Map<String, ?> ATTRIBUTES = Collections.singletonMap("KEY", "VALUE");
-    private static final ConversionEvent CONVERSION = new ConversionEvent();
-    private static final ImpressionEvent IMPRESSION = new ImpressionEvent();
     private static final ProjectConfig PROJECT_CONFIG = mock(ProjectConfig.class);
 
-    private UserEvent userEvent;
+    private UserContext userEvent;
 
     @Before
     public void setUp() {
-        userEvent = new UserEvent.Builder()
+        userEvent = new UserContext.Builder()
             .withUUID(UUID)
             .withTimestamp(TIMESTAMP)
             .withUserId(USER_ID)
             .withAttributes(ATTRIBUTES)
-            .withConversionEvent(CONVERSION)
-            .withImpressionEvent(IMPRESSION)
             .withProjectConfig(PROJECT_CONFIG)
             .build();
     }
@@ -74,15 +70,5 @@ public class UserEventTest {
     @Test
     public void getAttributes() {
         assertSame(ATTRIBUTES, userEvent.getAttributes());
-    }
-
-    @Test
-    public void getConversionEvent() {
-        assertSame(CONVERSION, userEvent.getConversionEvent());
-    }
-
-    @Test
-    public void getImpressionEvent() {
-        assertSame(IMPRESSION, userEvent.getImpressionEvent());
     }
 }
