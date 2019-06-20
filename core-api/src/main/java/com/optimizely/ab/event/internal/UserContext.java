@@ -21,9 +21,7 @@ import com.optimizely.ab.config.ProjectConfig;
 import java.util.Map;
 
 /**
- * UserContext stores the user and project context timestamp and global id.
- *
- * Alt name EventContext?
+ * UserContext stores the user id, attributes and a reference to the current {@link ProjectConfig}.
  */
 public class UserContext {
     private final ProjectConfig projectConfig;
