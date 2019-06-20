@@ -25,7 +25,7 @@ import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
-import com.optimizely.ab.event.internal.EventFactory;
+import com.optimizely.ab.event.internal.UserEventFactory;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.notification.*;
@@ -1144,7 +1144,7 @@ public class OptimizelyTest {
 
     /**
      * Verify that {@link Optimizely#track(String, String, Map, Map)} passes event features to
-     * {@link EventFactory#createConversionEvent(ProjectConfig, String, String, String, Map, Map)}
+     * {@link UserEventFactory#createConversionEvent(ProjectConfig, String, String, String, Map, Map)}
      */
     @Test
     public void trackEventWithEventTags() throws Exception {
@@ -1169,7 +1169,7 @@ public class OptimizelyTest {
 
     /**
      * Verify that {@link Optimizely#track(String, String, Map, Map)} called with null event tags will return null eventTag
-     * when calling {@link EventFactory#createConversionEvent(ProjectConfig, String, String, String, Map, Map)}
+     * when calling {@link UserEventFactory#createConversionEvent(ProjectConfig, String, String, String, Map, Map)}
      */
     @Test
     @SuppressFBWarnings(

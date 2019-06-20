@@ -21,9 +21,6 @@ import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.EventHandler;
-import com.optimizely.ab.event.internal.BuildVersionInfo;
-import com.optimizely.ab.event.internal.EventFactory;
-import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
 import org.junit.Test;
@@ -108,49 +105,6 @@ public class OptimizelyBuilderTest {
             .build();
 
         assertThat(optimizelyClient.getUserProfileService(), is(userProfileService));
-    }
-
-    @Test
-    public void withDefaultClientEngine() throws Exception {
-        Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-            .build();
-
-        assertThat(((EventFactory) optimizelyClient.eventFactory).clientEngine, is(ClientEngine.JAVA_SDK));
-    }
-
-    @Test
-    public void withAndroidSDKClientEngine() throws Exception {
-        Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-            .withClientEngine(ClientEngine.ANDROID_SDK)
-            .build();
-
-        assertThat(((EventFactory) optimizelyClient.eventFactory).clientEngine, is(ClientEngine.ANDROID_SDK));
-    }
-
-    @Test
-    public void withAndroidTVSDKClientEngine() throws Exception {
-        Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-            .withClientEngine(ClientEngine.ANDROID_TV_SDK)
-            .build();
-
-        assertThat(((EventFactory) optimizelyClient.eventFactory).clientEngine, is(ClientEngine.ANDROID_TV_SDK));
-    }
-
-    @Test
-    public void withDefaultClientVersion() throws Exception {
-        Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-            .build();
-
-        assertThat(((EventFactory) optimizelyClient.eventFactory).clientVersion, is(BuildVersionInfo.VERSION));
-    }
-
-    @Test
-    public void withCustomClientVersion() throws Exception {
-        Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-            .withClientVersion("0.0.0")
-            .build();
-
-        assertThat(((EventFactory) optimizelyClient.eventFactory).clientVersion, is("0.0.0"));
     }
 
     @SuppressFBWarnings(value = "NP_NONNULL_PARAM_VIOLATION", justification = "Testing nullness contract violation")
