@@ -77,8 +77,8 @@ public class UserEventFactoryTest {
             ATTRIBUTES
         );
 
-        assertTrue(actual.getUserContext().getTimestamp() > 0);
-        assertNotNull(actual.getUserContext().getUUID());
+        assertTrue(actual.getTimestamp() > 0);
+        assertNotNull(actual.getUUID());
 
         assertSame(projectConfig, actual.getUserContext().getProjectConfig());
 
@@ -103,8 +103,8 @@ public class UserEventFactoryTest {
             TAGS
         );
 
-        assertTrue(actual.getUserContext().getTimestamp() > 0);
-        assertNotNull(actual.getUserContext().getUUID());
+        assertTrue(actual.getTimestamp() > 0);
+        assertNotNull(actual.getUUID());
 
         assertSame(projectConfig, actual.getUserContext().getProjectConfig());
 

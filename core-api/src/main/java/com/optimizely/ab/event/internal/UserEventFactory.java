@@ -39,8 +39,6 @@ public class UserEventFactory {
             .withUserId(userId)
             .withAttributes(attributes)
             .withProjectConfig(projectConfig)
-            .withUUID(UUID.randomUUID().toString())
-            .withTimestamp(System.currentTimeMillis())
             .build();
 
         return new ImpressionEvent.Builder()
@@ -65,8 +63,6 @@ public class UserEventFactory {
             .withUserId(userId)
             .withAttributes(attributes)
             .withProjectConfig(projectConfig)
-            .withUUID(UUID.randomUUID().toString())
-            .withTimestamp(System.currentTimeMillis())
             .build();
 
         return new ConversionEvent.Builder()

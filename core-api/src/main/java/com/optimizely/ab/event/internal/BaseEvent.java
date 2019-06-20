@@ -16,16 +16,21 @@
  */
 package com.optimizely.ab.event.internal;
 
+import java.util.UUID;
+
 /**
- * UserEvent interface is used to identify events containing a {@link UserContext}
- * Examples include:
- * <ul>
- *     <li>{@link ConversionEvent}</li>
- *     <li>{@link ImpressionEvent}</li>
- * </ul>
+ * BaseEvent provides a GUID implementation along with a system timestamp.
  */
-public interface UserEvent {
-    UserContext getUserContext();
-    String getUUID();
-    long getTimestamp();
+public class BaseEvent {
+
+    private final String uuid = UUID.randomUUID().toString();
+    private final long timestamp = System.currentTimeMillis();
+
+    public final String getUUID() {
+        return uuid;
+    }
+
+    public final long getTimestamp() {
+        return timestamp;
+    }
 }

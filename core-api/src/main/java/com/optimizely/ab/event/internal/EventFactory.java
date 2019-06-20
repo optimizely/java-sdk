@@ -103,8 +103,8 @@ public class EventFactory {
             .build();
 
         Event event = new Event.Builder()
-            .setTimestamp(userContext.getTimestamp())
-            .setUuid(userContext.getUUID())
+            .setTimestamp(impressionEvent.getTimestamp())
+            .setUuid(impressionEvent.getUUID())
             .setEntityId(impressionEvent.getLayerId())
             .setKey(ACTIVATE_EVENT_KEY)
             .setType(ACTIVATE_EVENT_KEY)
@@ -130,8 +130,8 @@ public class EventFactory {
         UserContext userContext = conversionEvent.getUserContext();
 
         Event event = new Event.Builder()
-            .setTimestamp(userContext.getTimestamp())
-            .setUuid(userContext.getUUID())
+            .setTimestamp(conversionEvent.getTimestamp())
+            .setUuid(conversionEvent.getUUID())
             .setEntityId(conversionEvent.getEventId())
             .setKey(conversionEvent.getEventKey())
             .setRevenue(conversionEvent.getRevenue())
@@ -152,7 +152,7 @@ public class EventFactory {
     }
 
     private static List<Attribute> buildAttributeList(ProjectConfig projectConfig, Map<String, ?> attributes) {
-        List<Attribute> attributesList = new ArrayList<Attribute>();
+        List<Attribute> attributesList = new ArrayList<>();
 
         if (attributes != null) {
             for (Map.Entry<String, ?> entry : attributes.entrySet()) {

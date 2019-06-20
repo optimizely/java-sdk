@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * ConversionEvent encapsulates information specific to conversion events.
  */
-public class ConversionEvent implements UserEvent {
+public class ConversionEvent extends BaseEvent implements UserEvent {
 
     private final UserContext userContext;
     private final String eventId;
@@ -40,6 +40,7 @@ public class ConversionEvent implements UserEvent {
         this.tags = tags;
     }
 
+    @Override
     public UserContext getUserContext() {
         return userContext;
     }

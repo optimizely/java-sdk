@@ -16,16 +16,28 @@
  */
 package com.optimizely.ab.event.internal;
 
-/**
- * UserEvent interface is used to identify events containing a {@link UserContext}
- * Examples include:
- * <ul>
- *     <li>{@link ConversionEvent}</li>
- *     <li>{@link ImpressionEvent}</li>
- * </ul>
- */
-public interface UserEvent {
-    UserContext getUserContext();
-    String getUUID();
-    long getTimestamp();
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
+
+public class BaseEventTest {
+
+    private BaseEvent baseEvent;
+
+    @Before
+    public void setUp() {
+        this.baseEvent = new BaseEvent();
+    }
+
+    @Test
+    public void getUUID() {
+        assertNotNull(baseEvent.getUUID());
+        assertFalse(baseEvent.getUUID().isEmpty());
+    }
+
+    @Test
+    public void getTimestamp() {
+        assertTrue(baseEvent.getTimestamp() >= System.currentTimeMillis());
+    }
 }

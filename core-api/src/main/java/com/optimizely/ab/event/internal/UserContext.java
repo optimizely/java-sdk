@@ -27,29 +27,17 @@ import java.util.Map;
  */
 public class UserContext {
     private final ProjectConfig projectConfig;
-    private final String UUID;
-    private final long timestamp;
     private final String userId;
     private final Map<String, ?> attributes;
 
-    private UserContext(ProjectConfig projectConfig, String UUID, long timestamp, String userId, Map<String, ?> attributes) {
+    private UserContext(ProjectConfig projectConfig, String userId, Map<String, ?> attributes) {
         this.projectConfig = projectConfig;
-        this.UUID = UUID;
-        this.timestamp = timestamp;
         this.userId = userId;
         this.attributes = attributes;
     }
 
     public ProjectConfig getProjectConfig() {
         return projectConfig;
-    }
-
-    public String getUUID() {
-        return UUID;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
     }
 
     public String getUserId() {
@@ -63,23 +51,11 @@ public class UserContext {
     public static class Builder {
 
         private ProjectConfig projectConfig;
-        private String uuid;
-        private long timestamp;
         private String userId;
         private Map<String, ?> attributes;
 
         public Builder withProjectConfig(ProjectConfig projectConfig) {
             this.projectConfig = projectConfig;
-            return this;
-        }
-
-        public Builder withUUID(String uuid) {
-            this.uuid = uuid;
-            return this;
-        }
-
-        public Builder withTimestamp(long timestamp) {
-            this.timestamp = timestamp;
             return this;
         }
 
@@ -94,7 +70,7 @@ public class UserContext {
         }
 
         public UserContext build() {
-            return new UserContext(projectConfig, uuid, timestamp, userId, attributes);
+            return new UserContext(projectConfig, userId, attributes);
         }
     }
 }

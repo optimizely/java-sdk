@@ -19,14 +19,13 @@ package com.optimizely.ab.event.internal;
 /**
  * ImpressionEvent encapsulates information specific to conversion events.
  */
-public class ImpressionEvent implements UserEvent {
+public class ImpressionEvent extends BaseEvent implements UserEvent {
     private final UserContext userContext;
     private final String layerId;
     private final String experimentId;
     private final String experimentKey;
     private final String variationKey;
     private final String variationId;
-
 
     private ImpressionEvent(UserContext userContext,
                             String layerId,
@@ -42,10 +41,10 @@ public class ImpressionEvent implements UserEvent {
         this.variationId = variationId;
     }
 
+    @Override
     public UserContext getUserContext() {
         return userContext;
     }
-
 
     public String getLayerId() {
         return layerId;
