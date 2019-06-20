@@ -38,6 +38,6 @@ public class BaseEventTest {
 
     @Test
     public void getTimestamp() {
-        assertTrue(baseEvent.getTimestamp() >= System.currentTimeMillis());
+        assertTrue(baseEvent.getTimestamp() > 0);
     }
 }

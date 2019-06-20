@@ -203,6 +203,11 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
         @Override
         public void run() {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Dispatching event to URL {} with params {} and payload \"{}\".",
+                    logEvent.getEndpointUrl(), logEvent.getRequestParams(), logEvent.getBody());
+            }
+
             try {
                 HttpRequestBase request;
                 if (logEvent.getRequestMethod() == LogEvent.RequestMethod.GET) {

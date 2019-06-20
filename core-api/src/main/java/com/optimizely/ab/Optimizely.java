@@ -301,7 +301,7 @@ public class Optimizely implements AutoCloseable {
             logger.warn("Event tags is null when non-null was expected. Defaulting to an empty event tags map.");
         }
 
-        UserEvent event = UserEventFactory.createConversionEvent(
+        UserEvent userEvent = UserEventFactory.createConversionEvent(
             projectConfig,
             userId,
             eventType.getId(),
@@ -310,7 +310,7 @@ public class Optimizely implements AutoCloseable {
             eventTags);
 
         // create the conversion event request parameters, then dispatch
-        LogEvent conversionEvent = EventFactory.createLogEvent(event);
+        LogEvent conversionEvent = EventFactory.createLogEvent(userEvent);
         logger.info("Tracking event \"{}\" for user \"{}\".", eventName, userId);
 
         try {
@@ -1034,7 +1034,7 @@ public class Optimizely implements AutoCloseable {
 
         @Deprecated
         public Builder withClientEngine(EventBatch.ClientEngine clientEngine) {
-            logger.info("Deprecated. Setting ClientEngine is now set via ClientEngineInfo.");
+            logger.info("Deprecated. In the future, set ClientEngine via ClientEngineInfo#setClientEngine.");
             ClientEngineInfo.setClientEngine(clientEngine);
             return this;
         }
