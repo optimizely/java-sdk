@@ -36,10 +36,10 @@ public class OptimizelyRule extends ExternalResource {
     private Optimizely.Builder builder;
     private Optimizely optimizely;
 
-//    public OptimizelyRule withEventProcessor(EventProcessor eventProcessor) {
-//        builder.withEventProcessor(eventProcessor);
-//        return this;
-//    }
+    public OptimizelyRule withEventProcessor(EventProcessor eventProcessor) {
+        builder.withEventProcessor(eventProcessor);
+        return this;
+    }
 
     public OptimizelyRule withDecisionService(DecisionService decisionService) {
         builder.withDecisionService(decisionService);

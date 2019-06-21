@@ -139,6 +139,7 @@ public class Optimizely implements AutoCloseable {
      */
     @Override
     public void close() {
+        tryClose(eventProcessor);
         tryClose(eventHandler);
         tryClose(projectConfigManager);
     }
@@ -1099,8 +1100,9 @@ public class Optimizely implements AutoCloseable {
             // For backwards compatibility
             if (eventProcessor == null) {
                 eventProcessor = new ForwardingEventProcessor();
-                eventProcessor.addHandler(eventHandler::dispatchEvent);
             }
+
+            eventProcessor.addHandler(eventHandler::dispatchEvent);
 
             if (projectConfig == null && datafile != null && !datafile.isEmpty()) {
                 try {

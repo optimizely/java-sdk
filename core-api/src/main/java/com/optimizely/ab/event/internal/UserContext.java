@@ -19,6 +19,7 @@ package com.optimizely.ab.event.internal;
 import com.optimizely.ab.config.ProjectConfig;
 
 import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * UserContext stores the user id, attributes and a reference to the current {@link ProjectConfig}.
@@ -70,5 +71,14 @@ public class UserContext {
         public UserContext build() {
             return new UserContext(projectConfig, userId, attributes);
         }
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", UserContext.class.getSimpleName() + "[", "]")
+            .add("projectConfig=" + projectConfig.getRevision())
+            .add("userId='" + userId + "'")
+            .add("attributes=" + attributes)
+            .toString();
     }
 }

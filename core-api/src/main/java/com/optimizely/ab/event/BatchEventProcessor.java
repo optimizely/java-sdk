@@ -117,6 +117,8 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
     }
 
     public void process(UserEvent userEvent) {
+        logger.debug("Received userEvent: {}", userEvent);
+
 
         if (executor.isShutdown()) {
             logger.warn("Executor shutdown, not accepting tasks.");
@@ -143,7 +145,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
                     Object item = eventQueue.poll(50, TimeUnit.MILLISECONDS);
                     if (item == null) {
-                        logger.info("Empty item, sleeping for 500ms.");
+                        logger.info("Empty item, sleeping for 50ms.");
                         Thread.sleep(50);
                         continue;
                     }

@@ -23,7 +23,9 @@ import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
+import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.event.EventHandler;
+import com.optimizely.ab.event.EventProcessor;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.UserEventFactory;
 import com.optimizely.ab.internal.LogbackVerifier;
@@ -34,6 +36,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.Mock;
@@ -48,6 +51,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
@@ -79,17 +83,26 @@ public class OptimizelyTest {
             {
                 validConfigJsonV2(),
                 noAudienceProjectConfigJsonV2(),
-                2
+                2,
+                (Supplier<EventProcessor>) () -> null
             },
             {
                 validConfigJsonV3(),
                 noAudienceProjectConfigJsonV3(),  // FIX-ME this is not a valid v3 datafile
-                3
+                3,
+                (Supplier<EventProcessor>) () -> null
             },
             {
                 validConfigJsonV4(),
                 validConfigJsonV4(),
-                4
+                4,
+                (Supplier<EventProcessor>) () -> null
+            },
+            {
+                validConfigJsonV4(),
+                validConfigJsonV4(),
+                4,
+                (Supplier<EventProcessor>) BatchEventProcessor::new
             }
         });
     }
@@ -98,14 +111,17 @@ public class OptimizelyTest {
     @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
     public MockitoRule rule = MockitoJUnit.rule();
 
-    @Rule
     public ExpectedException thrown = ExpectedException.none();
-
-    @Rule
     public LogbackVerifier logbackVerifier = new LogbackVerifier();
+    public OptimizelyRule optimizelyBuilder = new OptimizelyRule();
+    public EventHandlerRule eventHandler = new EventHandlerRule();
 
     @Rule
-    public EventHandlerRule eventHandler = new EventHandlerRule();
+    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
+    public RuleChain ruleChain = RuleChain.outerRule(thrown)
+        .around(logbackVerifier)
+        .around(eventHandler)
+        .around(optimizelyBuilder);
 
     @Mock
     EventHandler mockEventHandler;
@@ -128,9 +144,11 @@ public class OptimizelyTest {
     @Parameterized.Parameter(2)
     public int datafileVersion;
 
+    @Parameterized.Parameter(3)
+    public Supplier<EventProcessor> eventProcessorSupplier;
+
     private ProjectConfig validProjectConfig;
     private ProjectConfig noAudienceProjectConfig;
-    private Optimizely.Builder optimizelyBuilder;
 
     @Before
     public void setUp() throws Exception {
@@ -140,7 +158,8 @@ public class OptimizelyTest {
         // FIX-ME
         //assertEquals(validProjectConfig.getVersion(), noAudienceProjectConfig.getVersion());
 
-        optimizelyBuilder = Optimizely.builder()
+        optimizelyBuilder
+            .withEventProcessor(eventProcessorSupplier.get())
             .withEventHandler(eventHandler)
             .withConfig(validProjectConfig);
     }

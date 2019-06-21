@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.event.internal;
 
+import java.util.StringJoiner;
+
 /**
  * ImpressionEvent encapsulates information specific to conversion events.
  */
@@ -108,5 +110,17 @@ public class ImpressionEvent extends BaseEvent implements UserEvent {
         public ImpressionEvent build() {
             return new ImpressionEvent(userContext, layerId, experimentId, experimentKey, variationKey, variationId);
         }
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", ImpressionEvent.class.getSimpleName() + "[", "]")
+            .add("userContext=" + userContext)
+            .add("layerId='" + layerId + "'")
+            .add("experimentId='" + experimentId + "'")
+            .add("experimentKey='" + experimentKey + "'")
+            .add("variationKey='" + variationKey + "'")
+            .add("variationId='" + variationId + "'")
+            .toString();
     }
 }
