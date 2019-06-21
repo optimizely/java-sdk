@@ -937,25 +937,6 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify that {@link Optimizely#activate(String, String)} handles exceptions thrown by
-     * {@link EventHandler#dispatchEvent(LogEvent)} gracefully.
-     */
-    @Test
-    public void activateDispatchEventThrowsException() throws Exception {
-        Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
-
-        doThrow(new Exception("Test Exception")).when(mockEventHandler).dispatchEvent(any(LogEvent.class));
-
-        Optimizely optimizely = optimizelyBuilder
-            .withEventHandler(mockEventHandler)
-            .withConfig(noAudienceProjectConfig)
-            .build();
-
-        logbackVerifier.expectMessage(Level.ERROR, "Unexpected exception in event dispatcher");
-        optimizely.activate(experiment.getKey(), testUserId);
-    }
-
-    /**
      * Verify that {@link Optimizely#activate(String, String)} doesn't dispatch an event for an experiment with a
      * "Launched" status.
      */
@@ -1244,22 +1225,6 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.build();
         optimizely.track(eventType.getKey(), genericUserId, attributes);
         eventHandler.expectConversion(eventType.getKey(), genericUserId, attributes);
-    }
-
-    /**
-     * Verify that {@link Optimizely#track(String, String)} handles exceptions thrown by
-     * {@link EventHandler#dispatchEvent(LogEvent)} gracefully.
-     */
-    @Test
-    public void trackDispatchEventThrowsException() throws Exception {
-        EventType eventType = noAudienceProjectConfig.getEventTypes().get(0);
-
-        doThrow(new Exception("Test Exception")).when(mockEventHandler).dispatchEvent(any(LogEvent.class));
-
-        Optimizely optimizely = optimizelyBuilder.withEventHandler(mockEventHandler).build();
-        optimizely.track(eventType.getKey(), testUserId);
-
-        logbackVerifier.expectMessage(Level.ERROR, "Unexpected exception in event dispatcher");
     }
 
     /**

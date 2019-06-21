@@ -45,8 +45,6 @@ public class BatchEventProcessorTest {
     private static final String EVENT_ID = "eventId";
     private static final String EVENT_NAME = "eventName";
     private static final String USER_ID = "userId";
-    private static final Experiment EXPERIMENT = new Experiment("EXP_ID", "EXP_KEY", "LAYER_ID");
-    private static final Variation VARIATION = new Variation("VAR_ID", "VAR_KEY");
 
     private static final int MAX_BATCH_SIZE = 10;
     private static final int MAX_DURATION_MS = 1000;
@@ -123,22 +121,5 @@ public class BatchEventProcessorTest {
     private ConversionEvent buildConversionEvent(String eventName) {
         return UserEventFactory.createConversionEvent(projectConfig, USER_ID, EVENT_ID, eventName,
             Collections.emptyMap(), Collections.emptyMap());
-    }
-
-    // Not used
-    private static class BasicEvent implements UserEvent {
-
-        UserContext userContext;
-
-        private BasicEvent(ProjectConfig projectConfig) {
-            userContext = new UserContext.Builder()
-                .withProjectConfig(projectConfig)
-                .build();
-        }
-
-        @Override
-        public UserContext getUserContext() {
-            return userContext;
-        }
     }
 }

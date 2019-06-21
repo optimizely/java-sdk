@@ -78,4 +78,8 @@ public class NotificationManager<T> {
         NotificationHandler<T> handler = handlers.remove(notificationID);
         return handler != null;
     }
+
+    public int size() {
+        return handlers.size();
+    }
 }

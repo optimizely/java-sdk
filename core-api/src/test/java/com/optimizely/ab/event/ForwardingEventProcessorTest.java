@@ -16,22 +16,30 @@
  */
 package com.optimizely.ab.event;
 
-import com.optimizely.ab.event.internal.EventFactory;
-import com.optimizely.ab.event.internal.UserContext;
-import com.optimizely.ab.event.internal.UserEvent;
-import com.optimizely.ab.event.internal.payload.EventBatch;
+import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.event.internal.*;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.*;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ForwardingEventProcessorTest {
 
-    private static final UserEvent SENTINAL = () -> null;
+    private static final String EVENT_ID = "eventId";
+    private static final String EVENT_NAME = "eventName";
+    private static final String USER_ID = "userId";
+
     private ForwardingEventProcessor eventProcessor;
+
+    @Mock
+    private ProjectConfig projectConfig;
 
     @Before
     public void setUp() throws Exception {
@@ -39,17 +47,40 @@ public class ForwardingEventProcessorTest {
     }
 
     @Test
-    @Ignore("FIXME")
     public void testAddHandler() {
         AtomicBoolean atomicBoolean = new AtomicBoolean();
         eventProcessor.addHandler(logEvent -> {
-            assertEquals(logEvent.getEventBatch(), SENTINAL);
+            assertNotNull(logEvent.getEventBatch());
             assertEquals(logEvent.getRequestMethod(), LogEvent.RequestMethod.POST);
             assertEquals(logEvent.getEndpointUrl(), EventFactory.EVENT_ENDPOINT);
             atomicBoolean.set(true);
         });
 
-        eventProcessor.process(SENTINAL);
+        UserEvent userEvent = buildConversionEvent(EVENT_NAME);
+        eventProcessor.process(userEvent);
         assertTrue(atomicBoolean.get());
+    }
+
+    private static class BasicEvent implements UserEvent {
+
+        @Override
+        public UserContext getUserContext() {
+            return null;
+        }
+
+        @Override
+        public String getUUID() {
+            return null;
+        }
+
+        @Override
+        public long getTimestamp() {
+            return 0;
+        }
+    }
+
+    private ConversionEvent buildConversionEvent(String eventName) {
+        return UserEventFactory.createConversionEvent(projectConfig, USER_ID, EVENT_ID, eventName,
+            Collections.emptyMap(), Collections.emptyMap());
     }
 }
