@@ -99,8 +99,8 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         logger.info("New datafile set with revision: {}. Old revision: {}", projectConfig.getRevision(), previousRevision);
 
         currentProjectConfig.set(projectConfig);
-        notificationCenter.send(SIGNAL);
         countDownLatch.countDown();
+        notificationCenter.send(SIGNAL);
     }
 
     public NotificationCenter getNotificationCenter() {

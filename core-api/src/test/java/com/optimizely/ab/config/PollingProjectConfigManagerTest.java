@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -195,6 +196,20 @@ public class PollingProjectConfigManagerTest {
         assertTrue(countDownLatch.await(500, TimeUnit.MILLISECONDS));
     }
 
+    @Test
+    public void testUpdateConfigNotificationDoesNotResultInDeadlock() throws Exception {
+        NotificationCenter notificationCenter = new NotificationCenter();
+
+        TestProjectConfigManager testProjectConfigManager = new TestProjectConfigManager(projectConfig, TimeUnit.SECONDS.toMillis(10), notificationCenter);
+        notificationCenter.getNotificationManager(UpdateConfigNotification.class)
+            .addHandler(message -> {
+                assertNotNull(testProjectConfigManager.getConfig());
+            });
+
+        testProjectConfigManager.start();
+        CompletableFuture.runAsync(testProjectConfigManager::getConfig).get(5, TimeUnit.SECONDS);
+    }
+
     private static class TestProjectConfigManager extends PollingProjectConfigManager {
         private final AtomicInteger counter = new AtomicInteger();
 
@@ -206,7 +221,11 @@ public class PollingProjectConfigManagerTest {
         }
 
         private TestProjectConfigManager(ProjectConfig projectConfig) {
-            super(POLLING_PERIOD, POLLING_UNIT, POLLING_PERIOD / 2, POLLING_UNIT, new NotificationCenter());
+            this(projectConfig, POLLING_PERIOD / 2, new NotificationCenter());
+        }
+
+        private TestProjectConfigManager(ProjectConfig projectConfig, long blockPeriod, NotificationCenter notificationCenter) {
+            super(POLLING_PERIOD, POLLING_UNIT, blockPeriod, POLLING_UNIT, notificationCenter);
             this.projectConfig = projectConfig;
         }
 
