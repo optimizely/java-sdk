@@ -18,13 +18,10 @@ package com.optimizely.ab.event;
 
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.UserEvent;
-import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.notification.NotificationHandler;
 import com.optimizely.ab.notification.NotificationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
 
 /**
  * ForwardingEventProcessor is a basic transformation stage for converting
@@ -38,7 +35,6 @@ public class ForwardingEventProcessor implements EventProcessor {
 
     @Override
     public void process(UserEvent userEvent) {
-        logger.debug("Not processing event");
         notificationManager.send(EventFactory.createLogEvent(userEvent));
     }
 

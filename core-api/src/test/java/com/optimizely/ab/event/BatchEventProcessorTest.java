@@ -37,6 +37,8 @@ import java.util.UUID;
 import java.util.concurrent.*;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -118,7 +120,37 @@ public class BatchEventProcessorTest {
         assertEquals(0, eventQueue.size());
     }
 
+    @Test
+    public void testFlushOnMismatchRevision() throws Exception {
+        CountDownLatch countDownLatch = new CountDownLatch(2);
+        eventProcessor.addHandler(logEvent -> {
+            countDownLatch.countDown();
+            System.out.println(logEvent);
+        });
+
+        ProjectConfig projectConfig1 = mock(ProjectConfig.class);
+        when(projectConfig1.getRevision()).thenReturn("1");
+        UserEvent userEvent1 = buildConversionEvent(EVENT_NAME, projectConfig1);
+        eventProcessor.process(userEvent1);
+        eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
+
+        ProjectConfig projectConfig2 = mock(ProjectConfig.class);
+        when(projectConfig2.getRevision()).thenReturn("2");
+        UserEvent userEvent2 = buildConversionEvent(EVENT_NAME, projectConfig2);
+        eventProcessor.process(userEvent2);
+        eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
+
+        eventProcessor.close();
+        if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
+            fail("Exceeded timeout waiting for notification.");
+        }
+    }
+
     private ConversionEvent buildConversionEvent(String eventName) {
+        return buildConversionEvent(eventName, projectConfig);
+    }
+
+    private static ConversionEvent buildConversionEvent(String eventName, ProjectConfig projectConfig) {
         return UserEventFactory.createConversionEvent(projectConfig, USER_ID, EVENT_ID, eventName,
             Collections.emptyMap(), Collections.emptyMap());
     }

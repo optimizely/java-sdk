@@ -18,15 +18,12 @@ package com.optimizely.ab.event;
 
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.UserEvent;
-import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.*;
 
 /**
@@ -175,7 +172,6 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
                 if (!currentRevision.equals(userEvent.getUserContext().getProjectConfig().getRevision())) {
                     flush();
                     currentBatch = new LinkedList<>();
-                    return;
                 }
             }
 
