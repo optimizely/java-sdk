@@ -17,11 +17,8 @@
 package com.optimizely.ab.event;
 
 import com.optimizely.ab.EventHandlerRule;
-import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.internal.*;
-import com.optimizely.ab.event.internal.payload.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -30,15 +27,11 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.*;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -49,7 +42,7 @@ public class BatchEventProcessorTest {
     private static final String USER_ID = "userId";
 
     private static final int MAX_BATCH_SIZE = 10;
-    private static final int MAX_DURATION_MS = 1000;
+    private static final long MAX_DURATION_MS = 1000;
 
     @Mock
     private ProjectConfig projectConfig;
@@ -65,7 +58,11 @@ public class BatchEventProcessorTest {
         when(projectConfig.getRevision()).thenReturn("1");
 
         eventQueue = new ArrayBlockingQueue<>(100);
-        eventProcessor = new BatchEventProcessor(eventQueue, MAX_BATCH_SIZE, MAX_DURATION_MS, null);
+        eventProcessor = BatchEventProcessor.builder()
+            .setEventQueue(eventQueue)
+            .setBatchSize(MAX_BATCH_SIZE)
+            .setFlushInterval(MAX_DURATION_MS)
+            .build();
         eventProcessor.addHandler(eventHandlerRule::dispatchEvent);
     }
 

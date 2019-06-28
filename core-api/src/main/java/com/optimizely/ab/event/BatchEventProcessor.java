@@ -33,17 +33,18 @@ import java.util.concurrent.*;
  *
  * The BatchEventProcessor maintains a single consumer thread that pulls events off of
  * the BlockingQueue and buffers them for either a configured batch size or for a
- * maximum duration before they resulting LogEvent is sent to the NotificationManager.
+ * maximum duration before the resulting LogEvent is sent to the NotificationManager.
  */
 public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(BatchEventProcessor.class);
 
     public static final String CONFIG_BATCH_SIZE     = "event.processor.batch.size";
-    public static final String CONFIG_BATCH_DURATION = "event.processor.batch.duration.ms";
+    public static final String CONFIG_BATCH_INTERVAL = "event.processor.batch.interval";
 
-    public static final int  DEFAULT_BATCH_SIZE     = 50;
-    public static final long DEFAULT_BATCH_DURATION = TimeUnit.MINUTES.toMillis(1);
+    public static final int DEFAULT_QUEUE_CAPACITY  = 1000;
+    public static final int DEFAULT_BATCH_SIZE      = 50;
+    public static final long DEFAULT_BATCH_INTERVAL = TimeUnit.MINUTES.toMillis(1);
 
     private static final Object SHUTDOWN_SIGNAL = new Object();
 
@@ -51,25 +52,16 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
     private final BlockingQueue<Object> eventQueue;
 
     private final int batchSize;
-    private final long batchDuration;
+    private final long flushInterval;
     private final ExecutorService executor;
 
     private Future<?> future;
     private boolean isStarted = false;
 
-    // TODO use a builder.
-    public BatchEventProcessor() {
-        this(new ArrayBlockingQueue<>(1000));
-    }
-
-    public BatchEventProcessor(BlockingQueue<Object> eventQueue) {
-        this(eventQueue, null, null, Executors.newSingleThreadExecutor());
-    }
-
-    public BatchEventProcessor(BlockingQueue<Object> eventQueue, Integer batchSize, Integer batchDuration, ExecutorService executor) {
+    private BatchEventProcessor(BlockingQueue<Object> eventQueue, Integer batchSize, Long flushInterval, ExecutorService executor) {
         this.eventQueue = eventQueue;
         this.batchSize = batchSize == null ? PropertyUtils.getInteger(CONFIG_BATCH_SIZE, DEFAULT_BATCH_SIZE) : batchSize;
-        this.batchDuration = batchDuration == null ? PropertyUtils.getLong(CONFIG_BATCH_DURATION, DEFAULT_BATCH_DURATION) : batchDuration;
+        this.flushInterval = flushInterval == null ? PropertyUtils.getLong(CONFIG_BATCH_INTERVAL, DEFAULT_BATCH_INTERVAL) : flushInterval;
 
         if (executor == null) {
             final ThreadFactory threadFactory = Executors.defaultThreadFactory();
@@ -129,7 +121,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
     public class EventConsumer implements Runnable {
         private LinkedList<UserEvent> currentBatch = new LinkedList<>();
-        private long deadline = System.currentTimeMillis() + batchDuration;
+        private long deadline = System.currentTimeMillis() + flushInterval;
 
         @Override
         public void run() {
@@ -177,7 +169,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
             // Reset the deadline if starting a new batch.
             if (currentBatch.isEmpty()) {
-                deadline = System.currentTimeMillis() + batchDuration;
+                deadline = System.currentTimeMillis() + flushInterval;
             }
 
             currentBatch.add(userEvent);
@@ -197,4 +189,40 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
             currentBatch = new LinkedList<>();
         }
     }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private BlockingQueue<Object> eventQueue = new ArrayBlockingQueue<>(DEFAULT_QUEUE_CAPACITY);
+        private Integer batchSize = null;
+        private Long flushInterval = null;
+        private ExecutorService executor = null;
+
+        public Builder setEventQueue(BlockingQueue<Object> eventQueue) {
+            this.eventQueue = eventQueue;
+            return this;
+        }
+
+        public Builder setBatchSize(Integer batchSize) {
+            this.batchSize = batchSize;
+            return this;
+        }
+
+        public Builder setFlushInterval(Long flushInterval) {
+            this.flushInterval = flushInterval;
+            return this;
+        }
+
+        public Builder setExecutor(ExecutorService executor) {
+            this.executor = executor;
+            return this;
+        }
+
+        public BatchEventProcessor build() {
+            return new BatchEventProcessor(eventQueue, batchSize, flushInterval, executor);
+        }
+    }
+
 }

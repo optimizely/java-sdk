@@ -102,7 +102,7 @@ public class OptimizelyTest {
                 validConfigJsonV4(),
                 validConfigJsonV4(),
                 4,
-                (Supplier<EventProcessor>) BatchEventProcessor::new
+                (Supplier<EventProcessor>) () -> BatchEventProcessor.builder().build()
             }
         });
     }
