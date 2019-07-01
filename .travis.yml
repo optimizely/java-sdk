@@ -8,10 +8,10 @@ install: true
 addons:
   srcclr: true
 env:
-  - DEFAULT_PARSER="com.google.gson.Gson"
-  - DEFAULT_PARSER="com.fasterxml.jackson.databind.ObjectMapper"
-  - DEFAULT_PARSER="org.json.JSONObject"
-  - DEFAULT_PARSER="org.json.simple.JSONObject"
+  - DEFAULT_PARSER=com.google.gson.Gson
+  - DEFAULT_PARSER=com.fasterxml.jackson.databind.ObjectMapper
+  - DEFAULT_PARSER=org.json.JSONObject
+  - DEFAULT_PARSER=org.json.simple.JSONObject
 script:
     - "./gradlew clean"
     - "./gradlew exhaustiveTest"
