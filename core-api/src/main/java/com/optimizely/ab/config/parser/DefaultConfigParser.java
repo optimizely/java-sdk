@@ -37,6 +37,23 @@ public final class DefaultConfigParser {
 
     //======== Helper methods ========//
 
+    public enum ConfigParsers {
+        GSON_CONFIG_PARSER("com.google.gson.Gson"),
+        JACKSON_CONFIG_PARSER("com.fasterxml.jackson.databind.ObjectMapper"),
+        JSON_CONFIG_PARSER("org.json.JSONObject"),
+        JSON_SIMPLE_CONFIG_PARSER("org.json.simple.JSONObject");
+
+        private final String configParserValue;
+
+        ConfigParsers(String configParserValue) {
+            this.configParserValue = configParserValue;
+        }
+
+        @Override
+        public String toString() {
+            return configParserValue;
+        }
+    }
     /**
      * Creates and returns a {@link ConfigParser} using a json parser available on the classpath.
      *
@@ -46,8 +63,25 @@ public final class DefaultConfigParser {
     private static @Nonnull
     ConfigParser create() {
         ConfigParser configParser;
+        String configParserName = null;
+        if(System.getenv().containsKey("DEFAULT_PARSER") && isPresent(System.getenv("DEFAULT_PARSER"))) {
+            configParserName = System.getenv("DEFAULT_PARSER");
+        }
 
-        if (isPresent("com.fasterxml.jackson.databind.ObjectMapper")) {
+        if(configParserName != null){
+            if (ConfigParsers.JACKSON_CONFIG_PARSER.toString().equals(configParserName)) {
+                configParser = new JacksonConfigParser();
+            } else if (ConfigParsers.GSON_CONFIG_PARSER.toString().equals(configParserName)) {
+                configParser = new GsonConfigParser();
+            } else if (ConfigParsers.JSON_SIMPLE_CONFIG_PARSER.toString().equals(configParserName)) {
+                configParser = new JsonSimpleConfigParser();
+            } else if (ConfigParsers.JSON_CONFIG_PARSER.toString().equals(configParserName)) {
+                configParser = new JsonConfigParser();
+            } else {
+                throw new MissingJsonParserException("unable to locate a JSON parser. "
+                    + "Please see <link> for more information");
+            }
+        } else if (isPresent("com.fasterxml.jackson.databind.ObjectMapper")) {
             configParser = new JacksonConfigParser();
         } else if (isPresent("com.google.gson.Gson")) {
             configParser = new GsonConfigParser();
@@ -66,7 +100,8 @@ public final class DefaultConfigParser {
 
     private static boolean isPresent(@Nonnull String className) {
         try {
-            Class.forName(className);
+            if (!className.equals(null))
+                Class.forName(className);
             return true;
         } catch (ClassNotFoundException e) {
             return false;
