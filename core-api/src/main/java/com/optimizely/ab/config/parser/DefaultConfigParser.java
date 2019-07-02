@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config.parser;
 
+import com.optimizely.ab.internal.PropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,12 +64,10 @@ public final class DefaultConfigParser {
     private static @Nonnull
     ConfigParser create() {
         ConfigParser configParser;
-        String configParserName = null;
-        if(System.getenv().containsKey("DEFAULT_PARSER") && isPresent(System.getenv("DEFAULT_PARSER"))) {
-            configParserName = System.getenv("DEFAULT_PARSER");
-        }
 
-        if(configParserName != null){
+        String configParserName = PropertyUtils.get("default_parser");
+
+        if(configParserName != null && isPresent(configParserName)) {
             if (ConfigParsers.JACKSON_CONFIG_PARSER.toString().equals(configParserName)) {
                 configParser = new JacksonConfigParser();
             } else if (ConfigParsers.GSON_CONFIG_PARSER.toString().equals(configParserName)) {
@@ -94,14 +93,13 @@ public final class DefaultConfigParser {
                 + "Please see <link> for more information");
         }
 
-        logger.info("using json parser: {}", configParser.getClass().getSimpleName());
+        logger.debug("using json parser: {}", configParser.getClass().getSimpleName());
         return configParser;
     }
 
     private static boolean isPresent(@Nonnull String className) {
         try {
-            if (!className.equals(null))
-                Class.forName(className);
+            Class.forName(className);
             return true;
         } catch (ClassNotFoundException e) {
             return false;
