@@ -63,9 +63,9 @@ public class DefaultConfigParserTest {
 
     /**
      * This method is to test DefaultConfigParser when different default_parser gets set.
-     * For example: when optimizely_default_parser environment variable will be set to "com.google.gson.Gson" than
+     * For example: when optimizely_default_parser environment variable will be set to "GSON_CONFIG_PARSER" than
      * "DefaultConfigParser.getInstance()" returns "GsonConfigParser" and parse ProjectConfig using it. Also
-     * this test will assertThat "configParser" is instance of "GsonConfigParser.class"
+     * this test will assertThat "configParser" (Provided in env variable) is instance of "GsonConfigParser.class"
      *
      * @throws Exception
      */
@@ -77,15 +77,19 @@ public class DefaultConfigParserTest {
         ProjectConfig expected = validProjectConfig;
         verifyProjectConfig(actual, expected);
         if(defaultParser != null) {
-            if (DefaultConfigParser.ConfigParsers.GSON_CONFIG_PARSER.toString().equals(defaultParser)) {
+            DefaultConfigParser.ConfigParserSupplier defaultParserSupplier = DefaultConfigParser.ConfigParserSupplier.valueOf(defaultParser);
+
+            if (DefaultConfigParser.ConfigParserSupplier.GSON_CONFIG_PARSER.equals(defaultParserSupplier)) {
                 Assert.assertThat(configParser, CoreMatchers.instanceOf(GsonConfigParser.class));
-            } else if (DefaultConfigParser.ConfigParsers.JACKSON_CONFIG_PARSER.toString().equals(defaultParser)) {
+            } else if (DefaultConfigParser.ConfigParserSupplier.JACKSON_CONFIG_PARSER.equals(defaultParserSupplier)) {
                 Assert.assertThat(configParser, CoreMatchers.instanceOf(JacksonConfigParser.class));
-            } else if (DefaultConfigParser.ConfigParsers.JSON_CONFIG_PARSER.toString().equals(defaultParser)) {
+            } else if (DefaultConfigParser.ConfigParserSupplier.JSON_CONFIG_PARSER.equals(defaultParserSupplier)) {
                 Assert.assertThat(configParser, CoreMatchers.instanceOf(JsonConfigParser.class));
-            } else if (DefaultConfigParser.ConfigParsers.JSON_SIMPLE_CONFIG_PARSER.toString().equals(defaultParser)) {
+            } else if (DefaultConfigParser.ConfigParserSupplier.JSON_SIMPLE_CONFIG_PARSER.equals(defaultParserSupplier)) {
                 Assert.assertThat(configParser, CoreMatchers.instanceOf(JsonSimpleConfigParser.class));
             }
+        } else {
+            Assert.assertThat(configParser, CoreMatchers.instanceOf(GsonConfigParser.class));
         }
     }
 }

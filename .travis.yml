@@ -8,10 +8,10 @@ install: true
 addons:
   srcclr: true
 env:
-  - optimizely_default_parser=com.google.gson.Gson
-  - optimizely_default_parser=com.fasterxml.jackson.databind.ObjectMapper
-  - optimizely_default_parser=org.json.JSONObject
-  - optimizely_default_parser=org.json.simple.JSONObject
+  - optimizely_default_parser=GSON_CONFIG_PARSER
+  - optimizely_default_parser=JACKSON_CONFIG_PARSER
+  - optimizely_default_parser=JSON_CONFIG_PARSER
+  - optimizely_default_parser=JSON_SIMPLE_CONFIG_PARSER
 script:
     - "./gradlew clean"
     - "./gradlew exhaustiveTest"

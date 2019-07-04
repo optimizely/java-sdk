@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.util.function.Supplier;
 
 /**
  * Factory for generating {@link ConfigParser} instances, based on the json parser available on the classpath.
@@ -38,21 +39,31 @@ public final class DefaultConfigParser {
 
     //======== Helper methods ========//
 
-    public enum ConfigParsers {
-        GSON_CONFIG_PARSER("com.google.gson.Gson"),
-        JACKSON_CONFIG_PARSER("com.fasterxml.jackson.databind.ObjectMapper"),
-        JSON_CONFIG_PARSER("org.json.JSONObject"),
-        JSON_SIMPLE_CONFIG_PARSER("org.json.simple.JSONObject");
+    public enum ConfigParserSupplier {
+        GSON_CONFIG_PARSER("com.google.gson.Gson", GsonConfigParser::new),
+        JACKSON_CONFIG_PARSER("com.fasterxml.jackson.databind.ObjectMapper", JacksonConfigParser::new),
+        JSON_CONFIG_PARSER("org.json.JSONObject", JsonConfigParser::new),
+        JSON_SIMPLE_CONFIG_PARSER("org.json.simple.JSONObject", JsonSimpleConfigParser::new);
 
-        private final String configParserValue;
+        private final String className;
+        private final Supplier<ConfigParser> supplier;
 
-        ConfigParsers(String configParserValue) {
-            this.configParserValue = configParserValue;
+        ConfigParserSupplier(String className, Supplier<ConfigParser> supplier) {
+            this.className = className;
+            this.supplier = supplier;
         }
 
-        @Override
-        public String toString() {
-            return configParserValue;
+        ConfigParser get() {
+            return supplier.get();
+        }
+
+        private boolean isPresent() {
+            try {
+                Class.forName(className);
+                return true;
+            } catch (ClassNotFoundException e) {
+                return false;
+            }
         }
     }
     /**
@@ -63,50 +74,39 @@ public final class DefaultConfigParser {
      */
     private static @Nonnull
     ConfigParser create() {
-        ConfigParser configParser;
 
         String configParserName = PropertyUtils.get("default_parser");
 
-        if(configParserName != null && isPresent(configParserName)) {
-            if (ConfigParsers.JACKSON_CONFIG_PARSER.toString().equals(configParserName)) {
-                configParser = new JacksonConfigParser();
-            } else if (ConfigParsers.GSON_CONFIG_PARSER.toString().equals(configParserName)) {
-                configParser = new GsonConfigParser();
-            } else if (ConfigParsers.JSON_SIMPLE_CONFIG_PARSER.toString().equals(configParserName)) {
-                configParser = new JsonSimpleConfigParser();
-            } else if (ConfigParsers.JSON_CONFIG_PARSER.toString().equals(configParserName)) {
-                configParser = new JsonConfigParser();
-            } else {
-                throw new MissingJsonParserException("unable to locate a JSON parser. "
-                    + "Please see <link> for more information");
+        if (configParserName != null) {
+            try {
+                ConfigParserSupplier supplier = ConfigParserSupplier.valueOf(configParserName);
+                if (supplier.isPresent()) {
+                    ConfigParser configParser = supplier.get();
+                    logger.debug("using json parser: {}, based on override config", configParser.getClass().getSimpleName());
+                    return configParser;
+                }
+
+                logger.warn("configured parser {} is not available in the classpath", configParserName);
+            } catch (IllegalArgumentException e) {
+                logger.warn("configured parser {} is not a valid value", configParserName);
             }
-        } else if (isPresent("com.fasterxml.jackson.databind.ObjectMapper")) {
-            configParser = new JacksonConfigParser();
-        } else if (isPresent("com.google.gson.Gson")) {
-            configParser = new GsonConfigParser();
-        } else if (isPresent("org.json.simple.JSONObject")) {
-            configParser = new JsonSimpleConfigParser();
-        } else if (isPresent("org.json.JSONObject")) {
-            configParser = new JsonConfigParser();
-        } else {
-            throw new MissingJsonParserException("unable to locate a JSON parser. "
-                + "Please see <link> for more information");
         }
 
-        logger.debug("using json parser: {}", configParser.getClass().getSimpleName());
-        return configParser;
-    }
+        for (ConfigParserSupplier supplier: ConfigParserSupplier.values()) {
+            if (!supplier.isPresent()) {
+                continue;
+            }
 
-    private static boolean isPresent(@Nonnull String className) {
-        try {
-            Class.forName(className);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
+            ConfigParser configParser = supplier.get();
+            logger.info("using json parser: {}", configParser.getClass().getSimpleName());
+            return configParser;
         }
+
+        throw new MissingJsonParserException("unable to locate a JSON parser. "
+            + "Please see <link> for more information");
     }
 
-    //======== Lazy-init Holder ========//
+   //======== Lazy-init Holder ========//
 
     private static class LazyHolder {
         private static final ConfigParser INSTANCE = create();
