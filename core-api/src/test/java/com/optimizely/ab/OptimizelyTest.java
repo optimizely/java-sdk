@@ -51,6 +51,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
@@ -84,25 +85,27 @@ public class OptimizelyTest {
                 validConfigJsonV2(),
                 noAudienceProjectConfigJsonV2(),
                 2,
-                (Supplier<EventProcessor>) () -> null
+                (Function<EventHandler, EventProcessor>) (eventHandler) -> null
             },
             {
                 validConfigJsonV3(),
                 noAudienceProjectConfigJsonV3(),  // FIX-ME this is not a valid v3 datafile
                 3,
-                (Supplier<EventProcessor>) () -> null
+                (Function<EventHandler, EventProcessor>) (eventHandler) -> null
             },
             {
                 validConfigJsonV4(),
                 validConfigJsonV4(),
                 4,
-                (Supplier<EventProcessor>) () -> null
+                (Function<EventHandler, EventProcessor>) (eventHandler) -> null
             },
             {
                 validConfigJsonV4(),
                 validConfigJsonV4(),
                 4,
-                (Supplier<EventProcessor>) () -> BatchEventProcessor.builder().build()
+                (Function<EventHandler, EventProcessor>) (eventHandler) -> BatchEventProcessor.builder()
+                    .setEventHandler(eventHandler)
+                    .build()
             }
         });
     }
@@ -145,7 +148,7 @@ public class OptimizelyTest {
     public int datafileVersion;
 
     @Parameterized.Parameter(3)
-    public Supplier<EventProcessor> eventProcessorSupplier;
+    public Function<EventHandler, EventProcessor> eventProcessorSupplier;
 
     private ProjectConfig validProjectConfig;
     private ProjectConfig noAudienceProjectConfig;
@@ -159,7 +162,7 @@ public class OptimizelyTest {
         //assertEquals(validProjectConfig.getVersion(), noAudienceProjectConfig.getVersion());
 
         optimizelyBuilder
-            .withEventProcessor(eventProcessorSupplier.get())
+            .withEventProcessor(eventProcessorSupplier.apply(eventHandler))
             .withEventHandler(eventHandler)
             .withConfig(validProjectConfig);
     }

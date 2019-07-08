@@ -1099,10 +1099,8 @@ public class Optimizely implements AutoCloseable {
 
             // For backwards compatibility
             if (eventProcessor == null) {
-                eventProcessor = new ForwardingEventProcessor();
+                eventProcessor = new ForwardingEventProcessor(eventHandler);
             }
-
-            eventProcessor.addHandler(eventHandler::dispatchEvent);
 
             if (projectConfig == null && datafile != null && !datafile.isEmpty()) {
                 try {

@@ -37,46 +37,27 @@ public class ForwardingEventProcessorTest {
     private static final String USER_ID = "userId";
 
     private ForwardingEventProcessor eventProcessor;
+    private AtomicBoolean atomicBoolean = new AtomicBoolean();
 
     @Mock
     private ProjectConfig projectConfig;
 
     @Before
     public void setUp() throws Exception {
-        eventProcessor = new ForwardingEventProcessor();
-    }
-
-    @Test
-    public void testAddHandler() {
-        AtomicBoolean atomicBoolean = new AtomicBoolean();
-        eventProcessor.addHandler(logEvent -> {
+        atomicBoolean.set(false);
+        eventProcessor = new ForwardingEventProcessor(logEvent -> {
             assertNotNull(logEvent.getEventBatch());
             assertEquals(logEvent.getRequestMethod(), LogEvent.RequestMethod.POST);
             assertEquals(logEvent.getEndpointUrl(), EventFactory.EVENT_ENDPOINT);
             atomicBoolean.set(true);
         });
+    }
 
+    @Test
+    public void testAddHandler() {
         UserEvent userEvent = buildConversionEvent(EVENT_NAME);
         eventProcessor.process(userEvent);
         assertTrue(atomicBoolean.get());
-    }
-
-    private static class BasicEvent implements UserEvent {
-
-        @Override
-        public UserContext getUserContext() {
-            return null;
-        }
-
-        @Override
-        public String getUUID() {
-            return null;
-        }
-
-        @Override
-        public long getTimestamp() {
-            return 0;
-        }
     }
 
     private ConversionEvent buildConversionEvent(String eventName) {

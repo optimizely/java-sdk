@@ -58,12 +58,6 @@ public class BatchEventProcessorTest {
         when(projectConfig.getRevision()).thenReturn("1");
 
         eventQueue = new ArrayBlockingQueue<>(100);
-        eventProcessor = BatchEventProcessor.builder()
-            .setEventQueue(eventQueue)
-            .setBatchSize(MAX_BATCH_SIZE)
-            .setFlushInterval(MAX_DURATION_MS)
-            .build();
-        eventProcessor.addHandler(eventHandlerRule::dispatchEvent);
     }
 
     @After
@@ -74,6 +68,7 @@ public class BatchEventProcessorTest {
     @Test
     public void testDrainOnClose() throws Exception {
         UserEvent userEvent = buildConversionEvent(EVENT_NAME);
+        setEventProcessor(eventHandlerRule);
         eventProcessor.process(userEvent);
         eventProcessor.close();
 
@@ -84,7 +79,10 @@ public class BatchEventProcessorTest {
     @Test
     public void testFlushOnMaxTimeout() throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(1);
-        eventProcessor.addHandler(logEvent -> countDownLatch.countDown());
+        setEventProcessor(logEvent -> {
+            eventHandlerRule.dispatchEvent(logEvent);
+            countDownLatch.countDown();
+        });
 
         UserEvent userEvent = buildConversionEvent(EVENT_NAME);
         eventProcessor.process(userEvent);
@@ -101,8 +99,9 @@ public class BatchEventProcessorTest {
     @Test
     public void testFlushMaxBatchSize() throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(1);
-        eventProcessor.addHandler(logEvent -> {
+        setEventProcessor(logEvent -> {
             assertEquals(MAX_BATCH_SIZE, logEvent.getEventBatch().getVisitors().size());
+            eventHandlerRule.dispatchEvent(logEvent);
             countDownLatch.countDown();
         });
 
@@ -120,9 +119,9 @@ public class BatchEventProcessorTest {
     @Test
     public void testFlushOnMismatchRevision() throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(2);
-        eventProcessor.addHandler(logEvent -> {
+        setEventProcessor(logEvent -> {
+            eventHandlerRule.dispatchEvent(logEvent);
             countDownLatch.countDown();
-            System.out.println(logEvent);
         });
 
         ProjectConfig projectConfig1 = mock(ProjectConfig.class);
@@ -141,6 +140,15 @@ public class BatchEventProcessorTest {
         if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
             fail("Exceeded timeout waiting for notification.");
         }
+    }
+
+    private void setEventProcessor(EventHandler eventHandler) {
+        eventProcessor = BatchEventProcessor.builder()
+            .setEventQueue(eventQueue)
+            .setBatchSize(MAX_BATCH_SIZE)
+            .setFlushInterval(MAX_DURATION_MS)
+            .setEventHandler(eventHandler)
+            .build();
     }
 
     private ConversionEvent buildConversionEvent(String eventName) {

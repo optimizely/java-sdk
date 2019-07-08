@@ -19,7 +19,6 @@ package com.optimizely.ab.event;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.UserEvent;
 import com.optimizely.ab.internal.PropertyUtils;
-import com.optimizely.ab.notification.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +47,8 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
     private static final Object SHUTDOWN_SIGNAL = new Object();
 
-    private final NotificationManager<LogEvent> notificationManager = new NotificationManager<>();
     private final BlockingQueue<Object> eventQueue;
+    private final EventHandler eventHandler;
 
     private final int batchSize;
     private final long flushInterval;
@@ -58,7 +57,8 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
     private Future<?> future;
     private boolean isStarted = false;
 
-    private BatchEventProcessor(BlockingQueue<Object> eventQueue, Integer batchSize, Long flushInterval, ExecutorService executor) {
+    private BatchEventProcessor(BlockingQueue<Object> eventQueue, EventHandler eventHandler, Integer batchSize, Long flushInterval, ExecutorService executor) {
+        this.eventHandler = eventHandler;
         this.eventQueue = eventQueue;
         this.batchSize = batchSize == null ? PropertyUtils.getInteger(CONFIG_BATCH_SIZE, DEFAULT_BATCH_SIZE) : batchSize;
         this.flushInterval = flushInterval == null ? PropertyUtils.getLong(CONFIG_BATCH_INTERVAL, DEFAULT_BATCH_INTERVAL) : flushInterval;
@@ -100,14 +100,8 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         }
     }
 
-    public int addHandler(NotificationHandler<LogEvent> handler) {
-        logger.debug("Adding notification handler: {}", handler);
-        return notificationManager.addHandler(handler);
-    }
-
     public void process(UserEvent userEvent) {
         logger.debug("Received userEvent: {}", userEvent);
-
 
         if (executor.isShutdown()) {
             logger.warn("Executor shutdown, not accepting tasks.");
@@ -185,7 +179,11 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
             LogEvent logEvent = EventFactory.createLogEvent(currentBatch);
 
-            notificationManager.send(logEvent);
+            try {
+                eventHandler.dispatchEvent(logEvent);
+            } catch (Exception e) {
+                logger.error("Error dispatching event: {}", logEvent, e);
+            }
             currentBatch = new LinkedList<>();
         }
     }
@@ -196,9 +194,15 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
     public static class Builder {
         private BlockingQueue<Object> eventQueue = new ArrayBlockingQueue<>(DEFAULT_QUEUE_CAPACITY);
+        private EventHandler eventHandler = null;
         private Integer batchSize = null;
         private Long flushInterval = null;
         private ExecutorService executor = null;
+
+        public Builder setEventHandler(EventHandler eventHandler) {
+            this.eventHandler = eventHandler;
+            return this;
+        }
 
         public Builder setEventQueue(BlockingQueue<Object> eventQueue) {
             this.eventQueue = eventQueue;
@@ -221,7 +225,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         }
 
         public BatchEventProcessor build() {
-            return new BatchEventProcessor(eventQueue, batchSize, flushInterval, executor);
+            return new BatchEventProcessor(eventQueue, eventHandler, batchSize, flushInterval, executor);
         }
     }
 

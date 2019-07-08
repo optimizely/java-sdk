@@ -22,9 +22,9 @@ import com.optimizely.ab.notification.NotificationHandler;
 
 /**
  * EventProcessor interface is used to provide an intermediary processing stage within
- * event production.
+ * event production. It's assumed that the EventProcessor dispatches events via a provided
+ * {@link EventHandler}.
  */
 public interface EventProcessor {
     void process(UserEvent userEvent);
-    int addHandler(NotificationHandler<LogEvent> handler);
 }
