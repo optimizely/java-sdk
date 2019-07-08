@@ -32,8 +32,8 @@ after_failure:
 
 # Integration tests need to run first to reset the PR build status to pending
 stages:
-  - 'Integration Tests'
-  - 'Benchmarking Tests'
+  - 'Integration tests'
+  - 'Benchmarking tests'
   - 'Test'
 
 jobs:
