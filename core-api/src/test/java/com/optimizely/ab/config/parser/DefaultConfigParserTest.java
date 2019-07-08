@@ -30,6 +30,7 @@ import java.util.Collection;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV4;
+import static junit.framework.TestCase.fail;
 
 /**
  * Tests for {@link DefaultConfigParser}.
@@ -76,20 +77,28 @@ public class DefaultConfigParserTest {
         ProjectConfig actual = configParser.parseProjectConfig(validDatafile);
         ProjectConfig expected = validProjectConfig;
         verifyProjectConfig(actual, expected);
+        Class expectedParser = GsonConfigParser.class;
+
         if(defaultParser != null) {
             DefaultConfigParser.ConfigParserSupplier defaultParserSupplier = DefaultConfigParser.ConfigParserSupplier.valueOf(defaultParser);
-
-            if (DefaultConfigParser.ConfigParserSupplier.GSON_CONFIG_PARSER.equals(defaultParserSupplier)) {
-                Assert.assertThat(configParser, CoreMatchers.instanceOf(GsonConfigParser.class));
-            } else if (DefaultConfigParser.ConfigParserSupplier.JACKSON_CONFIG_PARSER.equals(defaultParserSupplier)) {
-                Assert.assertThat(configParser, CoreMatchers.instanceOf(JacksonConfigParser.class));
-            } else if (DefaultConfigParser.ConfigParserSupplier.JSON_CONFIG_PARSER.equals(defaultParserSupplier)) {
-                Assert.assertThat(configParser, CoreMatchers.instanceOf(JsonConfigParser.class));
-            } else if (DefaultConfigParser.ConfigParserSupplier.JSON_SIMPLE_CONFIG_PARSER.equals(defaultParserSupplier)) {
-                Assert.assertThat(configParser, CoreMatchers.instanceOf(JsonSimpleConfigParser.class));
+            switch (defaultParserSupplier) {
+                case GSON_CONFIG_PARSER:
+                    expectedParser = GsonConfigParser.class;
+                    break;
+                case JACKSON_CONFIG_PARSER:
+                    expectedParser = JacksonConfigParser.class;
+                    break;
+                case JSON_CONFIG_PARSER:
+                    expectedParser = JsonConfigParser.class;
+                    break;
+                case JSON_SIMPLE_CONFIG_PARSER:
+                    expectedParser = JsonSimpleConfigParser.class;
+                    break;
+                default:
+                    fail("Not a valid config parser");
             }
-        } else {
-            Assert.assertThat(configParser, CoreMatchers.instanceOf(GsonConfigParser.class));
         }
+
+        Assert.assertThat(configParser, CoreMatchers.instanceOf(expectedParser));
     }
 }
