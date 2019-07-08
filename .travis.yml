@@ -32,12 +32,14 @@ after_failure:
 
 # Integration tests need to run first to reset the PR build status to pending
 stages:
-  - 'Integration tests'
+  - 'Integration Tests'
+  - 'Benchmarking Tests'
   - 'Test'
 
 jobs:
   include:
-    - stage: 'Integration tests'
+    - &integrationtest
+      stage: 'Integration tests'
       merge_mode: replace
       env: SDK=java
       cache: false
@@ -45,18 +47,10 @@ jobs:
       before_install: skip
       install: skip
       before_script:
-        - mkdir $HOME/travisci-tools && pushd $HOME/travisci-tools && git init && git pull https://$CI_USER_TOKEN@github.com/optimizely/travisci-tools.git && popd
+        - mkdir $HOME/travisci-tools && pushd $HOME/travisci-tools && git init && git pull https://$CI_USER_TOKEN@github.com/optimizely/travisci-tools.git sohail/refactorscript && popd
       script:
-        - "$HOME/travisci-tools/fsc-trigger/trigger_fullstack-sdk-compat.sh"
-    - stage: 'Benchmarking tests'
-      merge_mode: replace
-      env: SDK=java
-      cache: false
-      language: minimal
-      before_install: skip
-      install: skip
-      before_script:
-        - mkdir $HOME/travisci-tools && pushd $HOME/travisci-tools && git init && git pull https://$CI_USER_TOKEN@github.com/optimizely/travisci-tools.git && popd
-      script:
-        - "$HOME/travisci-tools/fsc-trigger/trigger_fullstack-benchmark-suite.sh"
+        - "$HOME/travisci-tools/trigger-script-with-status-update.sh"
       after_success: travis_terminate 0
+    - <<: *integrationtest
+      stage: 'Benchmarking Tests'
+      env: SDK=java REPO_SLUG=Benchmarking
