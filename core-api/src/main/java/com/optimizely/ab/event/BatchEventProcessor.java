@@ -199,27 +199,27 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         private Long flushInterval = null;
         private ExecutorService executor = null;
 
-        public Builder setEventHandler(EventHandler eventHandler) {
+        public Builder withEventHandler(EventHandler eventHandler) {
             this.eventHandler = eventHandler;
             return this;
         }
 
-        public Builder setEventQueue(BlockingQueue<Object> eventQueue) {
+        public Builder withEventQueue(BlockingQueue<Object> eventQueue) {
             this.eventQueue = eventQueue;
             return this;
         }
 
-        public Builder setBatchSize(Integer batchSize) {
+        public Builder withBatchSize(Integer batchSize) {
             this.batchSize = batchSize;
             return this;
         }
 
-        public Builder setFlushInterval(Long flushInterval) {
+        public Builder withFlushInterval(Long flushInterval) {
             this.flushInterval = flushInterval;
             return this;
         }
 
-        public Builder setExecutor(ExecutorService executor) {
+        public Builder withExecutor(ExecutorService executor) {
             this.executor = executor;
             return this;
         }

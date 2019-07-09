@@ -52,7 +52,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
@@ -104,7 +103,7 @@ public class OptimizelyTest {
                 validConfigJsonV4(),
                 4,
                 (Function<EventHandler, EventProcessor>) (eventHandler) -> BatchEventProcessor.builder()
-                    .setEventHandler(eventHandler)
+                    .withEventHandler(eventHandler)
                     .build()
             }
         });

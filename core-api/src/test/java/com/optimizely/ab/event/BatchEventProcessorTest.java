@@ -144,10 +144,10 @@ public class BatchEventProcessorTest {
 
     private void setEventProcessor(EventHandler eventHandler) {
         eventProcessor = BatchEventProcessor.builder()
-            .setEventQueue(eventQueue)
-            .setBatchSize(MAX_BATCH_SIZE)
-            .setFlushInterval(MAX_DURATION_MS)
-            .setEventHandler(eventHandler)
+            .withEventQueue(eventQueue)
+            .withBatchSize(MAX_BATCH_SIZE)
+            .withFlushInterval(MAX_DURATION_MS)
+            .withEventHandler(eventHandler)
             .build();
     }
 
