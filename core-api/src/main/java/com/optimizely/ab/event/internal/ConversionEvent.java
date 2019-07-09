@@ -17,6 +17,7 @@
 package com.optimizely.ab.event.internal;
 
 import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * ConversionEvent encapsulates information specific to conversion events.
@@ -107,5 +108,17 @@ public class ConversionEvent extends BaseEvent implements UserEvent {
         public ConversionEvent build() {
             return new ConversionEvent(userContext, eventId, eventKey, revenue, value, tags);
         }
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", ConversionEvent.class.getSimpleName() + "[", "]")
+            .add("userContext=" + userContext)
+            .add("eventId='" + eventId + "'")
+            .add("eventKey='" + eventKey + "'")
+            .add("revenue=" + revenue)
+            .add("value=" + value)
+            .add("tags=" + tags)
+            .toString();
     }
 }

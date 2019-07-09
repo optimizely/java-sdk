@@ -35,14 +35,12 @@ public class NotificationManager<T> {
 
     private final Map<Integer, NotificationHandler<T>> handlers = new LinkedHashMap<>();
     private final AtomicInteger counter;
-    private final Class<T> clazz;
 
-    public NotificationManager(Class<T> clazz) {
-        this(clazz, new AtomicInteger());
+    public NotificationManager() {
+        this(new AtomicInteger());
     }
 
-    public NotificationManager(Class<T> clazz, AtomicInteger counter) {
-        this.clazz = clazz;
+    public NotificationManager(AtomicInteger counter) {
         this.counter = counter;
     }
 
@@ -62,12 +60,12 @@ public class NotificationManager<T> {
         return notificationId;
     }
 
-    void send(T message) {
+    public void send(final T message) {
         for (Map.Entry<Integer, NotificationHandler<T>> handler: handlers.entrySet()) {
             try {
                 handler.getValue().handle(message);
             } catch (Exception e) {
-                logger.warn("Catching exception sending notification for class: {}, handler: {}", clazz, handler.getKey());
+                logger.warn("Catching exception sending notification for class: {}, handler: {}", message.getClass(), handler.getKey());
             }
         }
     }
@@ -79,5 +77,9 @@ public class NotificationManager<T> {
     public boolean remove(int notificationID) {
         NotificationHandler<T> handler = handlers.remove(notificationID);
         return handler != null;
+    }
+
+    public int size() {
+        return handlers.size();
     }
 }
