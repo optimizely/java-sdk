@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.event;
 
+import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.UserEvent;
 import com.optimizely.ab.internal.PropertyUtils;
@@ -128,7 +129,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
                     Object item = eventQueue.poll(50, TimeUnit.MILLISECONDS);
                     if (item == null) {
-                        logger.info("Empty item, sleeping for 50ms.");
+                        logger.debug("Empty item, sleeping for 50ms.");
                         Thread.sleep(50);
                         continue;
                     }
@@ -151,14 +152,9 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         }
 
         private void addToBatch(UserEvent userEvent) {
-            if (!currentBatch.isEmpty()) {
-                String currentRevision = currentBatch.peekLast().getUserContext().getProjectConfig().getRevision();
-
-                // Separate batches based on config revision.
-                if (!currentRevision.equals(userEvent.getUserContext().getProjectConfig().getRevision())) {
-                    flush();
-                    currentBatch = new LinkedList<>();
-                }
+            if (shouldSplit(userEvent)) {
+                flush();
+                currentBatch = new LinkedList<>();
             }
 
             // Reset the deadline if starting a new batch.
@@ -170,6 +166,27 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
             if (currentBatch.size() >= batchSize) {
                 flush();
             }
+        }
+
+        private boolean shouldSplit(UserEvent userEvent) {
+            if (currentBatch.isEmpty()) {
+                return false;
+            }
+
+            ProjectConfig currentConfig = currentBatch.peekLast().getUserContext().getProjectConfig();
+            ProjectConfig newConfig = userEvent.getUserContext().getProjectConfig();
+
+            // Revisions should match
+            if (!currentConfig.getProjectId().equals(newConfig.getProjectId())) {
+                return true;
+            }
+
+            // Projects should match
+            if (!currentConfig.getRevision().equals(newConfig.getRevision())) {
+                return true;
+            }
+
+            return false;
         }
 
         private void flush() {

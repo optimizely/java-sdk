@@ -56,6 +56,7 @@ public class BatchEventProcessorTest {
     @Before
     public void setUp() throws Exception {
         when(projectConfig.getRevision()).thenReturn("1");
+        when(projectConfig.getProjectId()).thenReturn("X");
 
         eventQueue = new ArrayBlockingQueue<>(100);
     }
@@ -126,12 +127,42 @@ public class BatchEventProcessorTest {
 
         ProjectConfig projectConfig1 = mock(ProjectConfig.class);
         when(projectConfig1.getRevision()).thenReturn("1");
+        when(projectConfig1.getProjectId()).thenReturn("X");
         UserEvent userEvent1 = buildConversionEvent(EVENT_NAME, projectConfig1);
         eventProcessor.process(userEvent1);
         eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
 
         ProjectConfig projectConfig2 = mock(ProjectConfig.class);
         when(projectConfig2.getRevision()).thenReturn("2");
+        when(projectConfig1.getProjectId()).thenReturn("X");
+        UserEvent userEvent2 = buildConversionEvent(EVENT_NAME, projectConfig2);
+        eventProcessor.process(userEvent2);
+        eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
+
+        eventProcessor.close();
+        if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
+            fail("Exceeded timeout waiting for notification.");
+        }
+    }
+
+    @Test
+    public void testFlushOnMismatchProjectId() throws Exception {
+        CountDownLatch countDownLatch = new CountDownLatch(2);
+        setEventProcessor(logEvent -> {
+            eventHandlerRule.dispatchEvent(logEvent);
+            countDownLatch.countDown();
+        });
+
+        ProjectConfig projectConfig1 = mock(ProjectConfig.class);
+        when(projectConfig1.getRevision()).thenReturn("1");
+        when(projectConfig1.getProjectId()).thenReturn("X");
+        UserEvent userEvent1 = buildConversionEvent(EVENT_NAME, projectConfig1);
+        eventProcessor.process(userEvent1);
+        eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
+
+        ProjectConfig projectConfig2 = mock(ProjectConfig.class);
+        when(projectConfig1.getRevision()).thenReturn("1");
+        when(projectConfig2.getProjectId()).thenReturn("Y");
         UserEvent userEvent2 = buildConversionEvent(EVENT_NAME, projectConfig2);
         eventProcessor.process(userEvent2);
         eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
