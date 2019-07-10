@@ -151,9 +151,9 @@ The polling interval is used to specify a fixed delay between consecutive HTTP r
 #### Initial datafile
 
 You can provide an initial datafile via the builder to bootstrap the `ProjectConfigManager` so that it can be used
-immediately without blocking execution. This also serves as a "fallback" datafile if no HTTP connection can be established.
-This can be useful in a mobile environment where internet connectivity is not always guaranteed. This datafile will be
-discarded, however, after the first successful datafile poll.
+immediately without blocking execution. The initial datafile also serves as a fallback datafile if HTTP connection
+cannot be established. This is useful in mobile environments, where internet connectivity is not guaranteed.
+The initial datafile will be discarded after the first successful datafile poll.
 
 ### Builder Methods
 The following builder methods can be used to custom configure the `HttpProjectConfigManager`.
@@ -161,7 +161,7 @@ The following builder methods can be used to custom configure the `HttpProjectCo
 |Builder Method|Default Value|Description|
 |---|---|---|
 |`withDatafile(String)`|null|Initial datafile, typically sourced from a local cached source.|
-|`withUrl(String)`|null|Url override location used to specify custom HTTP source for the Optimizely datafile.|
+|`withUrl(String)`|null|URL override location used to specify custom HTTP source for the Optimizely datafile.|
 |`withFormat(String)`|https://cdn.optimizely.com/datafiles/%s.json|Parameterized datafile URL by SDK key.|
 |`withPollingInterval(Long, TimeUnit)`|5 minutes|Fixed delay between fetches for the datafile.|
 |`withBlockingTimeout(Long, TimeUnit)`|10 seconds|Maximum time to wait for initial bootstrapping.|
