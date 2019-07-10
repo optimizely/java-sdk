@@ -65,7 +65,7 @@ public class App {
 }
 ```
 
-## `AsyncEventHandler`
+## AsyncEventHandler
 
 [`AsyncEventHandler`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/event/AsyncEventHandler.java)
 provides an implementation of [`EventHandler`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/EventHandler.java)
@@ -97,18 +97,30 @@ memory if the workers cannot keep up with the production rate.
 
 The number of workers determines the number of threads the thread pool uses.
 
+### Builder Methods
+The following builder methods can be used to custom configure the `AsyncEventHandler`.
+
+|Method Name|Default Value|Description|
+|---|---|---|
+|`withQueueCapacity(int)`|10000|Queue size for pending logEvents|
+|`withNumWorkers(int)`|2|Number of worker threads|
+|`withMaxTotalConnections(int)`|200|Maximum number of connections|
+|`withMaxPerRoute(int)`|20|Maximum number of connections per route|
+|`withValidateAfterInactivity(int)`|5000|Time to maintain idol connections (in milliseconds)|
+
 ### Advanced configuration
+The following properties can be set to override the default configuration.
 
 |Property Name|Default Value|Description|
 |---|---|---|
-|`async.event.handler.queue.capacity`|10000|Queue size for pending logEvents|
-|`async.event.handler.num.workers`|2|Number of worker threads|
-|`async.event.handler.max.connections`|200|Maximum number of connections|
-|`async.event.handler.event.max.per.route`|20|Maximum number of connections per route|
-|`async.event.handler.validate.after`|5000|Time to maintain idol connections (in milliseconds)|
+|**async.event.handler.queue.capacity**|10000|Queue size for pending logEvents|
+|**async.event.handler.num.workers**|2|Number of worker threads|
+|**async.event.handler.max.connections**|200|Maximum number of connections|
+|**async.event.handler.event.max.per.route**|20|Maximum number of connections per route|
+|**async.event.handler.validate.after**|5000|Time to maintain idol connections (in milliseconds)|
 
 
-## `HttpProjectConfigManager`
+## HttpProjectConfigManager
 
 [`HttpProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/config/HttpProjectConfigManager.java)
 is an implementation of the abstract [`PollingProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/PollingProjectConfigManager.java).
@@ -139,20 +151,49 @@ The polling interval is used to specify a fixed delay between consecutive HTTP r
 #### Initial datafile
 
 You can provide an initial datafile via the builder to bootstrap the `ProjectConfigManager` so that it can be used
-immediately without blocking execution.
+immediately without blocking execution. The initial datafile also serves as a fallback datafile if HTTP connection
+cannot be established. This is useful in mobile environments, where internet connectivity is not guaranteed.
+The initial datafile will be discarded after the first successful datafile poll.
+
+### Builder Methods
+The following builder methods can be used to custom configure the `HttpProjectConfigManager`.
+
+|Builder Method|Default Value|Description|
+|---|---|---|
+|`withDatafile(String)`|null|Initial datafile, typically sourced from a local cached source.|
+|`withUrl(String)`|null|URL override location used to specify custom HTTP source for the Optimizely datafile.|
+|`withFormat(String)`|https://cdn.optimizely.com/datafiles/%s.json|Parameterized datafile URL by SDK key.|
+|`withPollingInterval(Long, TimeUnit)`|5 minutes|Fixed delay between fetches for the datafile.|
+|`withBlockingTimeout(Long, TimeUnit)`|10 seconds|Maximum time to wait for initial bootstrapping.|
+|`withSdkKey(String)`|null|Optimizely project SDK key. Required unless source URL is overridden.|
 
 ### Advanced configuration
+The following properties can be set to override the default configuration.
 
 |Property Name|Default Value|Description|
 |---|---|---|
-|`http.project.config.manager.polling.duration`|5|Fixed delay between fetches for the datafile|
-|`http.project.config.manager.polling.unit`|MINUTES|Time unit corresponding to polling interval|
-|`http.project.config.manager.blocking.duration`|10|Maximum time to wait for initial bootstrapping|
-|`http.project.config.manager.blocking.unit`|SECONDS|Time unit corresponding to blocking duration|
-|`http.project.config.manager.sdk.key`|null|Optimizely project SDK key|
+|**http.project.config.manager.polling.duration**|5|Fixed delay between fetches for the datafile|
+|**http.project.config.manager.polling.unit**|MINUTES|Time unit corresponding to polling interval|
+|**http.project.config.manager.blocking.duration**|10|Maximum time to wait for initial bootstrapping|
+|**http.project.config.manager.blocking.unit**|SECONDS|Time unit corresponding to blocking duration|
+|**http.project.config.manager.sdk.key**|null|Optimizely project SDK key|
 
+## Update Config Notifications
+A notification signal will be triggered whenever a _new_ datafile is fetched. To subscribe to these notifications you can
+use the `Optimizely.addUpdateConfigNotificationHandler`:
 
-## `optimizely.properties`
+```java
+NotificationHandler<UpdateConfigNotification> handler = message ->
+    System.out.println("Received new datafile configuration");
+
+optimizely.addUpdateConfigNotificationHandler(handler);
+```
+or add the handler directly to the `NotificationCenter`:
+```java
+notificationCenter.addNotificationHandler(UpdateConfigNotification.class, handler);
+```
+
+## optimizely.properties
 
 When an `optimizely.properties` file is available within the runtime classpath it can be used to provide
 default values of a given Optimizely resource. Refer to the resource implementation for available configuration parameters.
@@ -168,7 +209,7 @@ async.event.handler.num.workers = 5
 ```
 
 
-## `OptimizelyFactory`
+## OptimizelyFactory
 
 In this package, [`OptimizelyFactory`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/OptimizelyFactory.java)
 provides basic utility to instantiate the Optimizely SDK with a minimal number of configuration options.
