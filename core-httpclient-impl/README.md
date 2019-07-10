@@ -179,7 +179,7 @@ The following properties can be set to override the default configuration.
 |**http.project.config.manager.sdk.key**|null|Optimizely project SDK key|
 
 ## Update Config Notifications
-A notifcation signal will be triggered whenever a _new_ datafile is fetched. To subscribe to these notifications you can
+A notification signal will be triggered whenever a _new_ datafile is fetched. To subscribe to these notifications you can
 use the `Optimizely.addUpdateConfigNotificationHandler`:
 
 ```java
