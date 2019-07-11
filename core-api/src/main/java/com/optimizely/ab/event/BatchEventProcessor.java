@@ -42,10 +42,12 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
     public static final String CONFIG_BATCH_SIZE     = "event.processor.batch.size";
     public static final String CONFIG_BATCH_INTERVAL = "event.processor.batch.interval";
+    public static final String CONFIG_CLOSE_TIMEOUT  = "event.processor.close.timeout";
 
     public static final int DEFAULT_QUEUE_CAPACITY  = 1000;
     public static final int DEFAULT_BATCH_SIZE      = 50;
     public static final long DEFAULT_BATCH_INTERVAL = TimeUnit.MINUTES.toMillis(1);
+    public static final long DEFAULT_TIMEOUT_INTERVAL = TimeUnit.SECONDS.toMillis(5);
 
     private static final Object SHUTDOWN_SIGNAL = new Object();
 
@@ -54,17 +56,19 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
     private final int batchSize;
     private final long flushInterval;
+    private final long timeoutMillis;
     private final ExecutorService executor;
     private final NotificationCenter notificationCenter;
 
     private Future<?> future;
     private boolean isStarted = false;
 
-    private BatchEventProcessor(BlockingQueue<Object> eventQueue, EventHandler eventHandler, Integer batchSize, Long flushInterval, ExecutorService executor, NotificationCenter notificationCenter) {
+    private BatchEventProcessor(BlockingQueue<Object> eventQueue, EventHandler eventHandler, Integer batchSize, Long flushInterval, Long timeoutMillis, ExecutorService executor, NotificationCenter notificationCenter) {
         this.eventHandler = eventHandler;
         this.eventQueue = eventQueue;
         this.batchSize = batchSize == null ? PropertyUtils.getInteger(CONFIG_BATCH_SIZE, DEFAULT_BATCH_SIZE) : batchSize;
         this.flushInterval = flushInterval == null ? PropertyUtils.getLong(CONFIG_BATCH_INTERVAL, DEFAULT_BATCH_INTERVAL) : flushInterval;
+        this.timeoutMillis = timeoutMillis == null ? PropertyUtils.getLong(CONFIG_CLOSE_TIMEOUT, DEFAULT_TIMEOUT_INTERVAL) : timeoutMillis;
         this.notificationCenter = notificationCenter;
 
         if (executor == null) {
@@ -97,10 +101,12 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         logger.info("Start close");
         eventQueue.put(SHUTDOWN_SIGNAL);
         try {
-            future.get(5, TimeUnit.SECONDS);
+            future.get(timeoutMillis, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             logger.warn("Interrupted while awaiting termination.");
             Thread.currentThread().interrupt();
+        } catch (TimeoutException e) {
+            logger.error("Timeout exceeded attempting to close for {} ms", timeoutMillis);
         }
     }
 
@@ -223,6 +229,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         private Long flushInterval = null;
         private ExecutorService executor = null;
         private NotificationCenter notificationCenter = null;
+        private Long timeoutMillis = null;
 
         public Builder withEventHandler(EventHandler eventHandler) {
             this.eventHandler = eventHandler;
@@ -249,13 +256,18 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
             return this;
         }
 
+        public Builder withTimeout(long duration, TimeUnit timeUnit) {
+            this.timeoutMillis = timeUnit.toMillis(duration);
+            return this;
+        }
+
         public Builder withNotificationCenter(NotificationCenter notificationCenter) {
             this.notificationCenter = notificationCenter;
             return this;
         }
 
         public BatchEventProcessor build() {
-            return new BatchEventProcessor(eventQueue, eventHandler, batchSize, flushInterval, executor, notificationCenter);
+            return new BatchEventProcessor(eventQueue, eventHandler, batchSize, flushInterval, timeoutMillis, executor, notificationCenter);
         }
     }
 
