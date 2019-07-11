@@ -87,7 +87,8 @@ public class OptimizelyRule extends ExternalResource {
 
     public void after() {
         if (optimizely == null) {
-            return;
+            // Build so we can shut everything down.
+            build();
         }
 
         // Blocks and waits for graceful shutdown.
