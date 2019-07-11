@@ -28,6 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -177,6 +178,7 @@ public class NotificationCenterTest {
         assertEquals(2, notificationCenter.addNotificationHandler(DecisionNotification.class, x -> {}));
         assertEquals(3, notificationCenter.addNotificationHandler(TrackNotification.class, x -> {}));
         assertEquals(4, notificationCenter.addNotificationHandler(UpdateConfigNotification.class, x -> {}));
+        assertEquals(5, notificationCenter.addNotificationHandler(LogEvent.class, x -> {}));
     }
 
     @Test
@@ -233,6 +235,7 @@ public class NotificationCenterTest {
         testSendWithNotification(new TrackNotification());
         testSendWithNotification(new DecisionNotification());
         testSendWithNotification(new ActivateNotification());
+        testSendWithNotification(new LogEvent(LogEvent.RequestMethod.GET, "localhost", Collections.emptyMap(), null));
     }
 
     private void testSendWithNotification(Object notification) {

@@ -20,6 +20,7 @@ import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.UserEvent;
 import com.optimizely.ab.internal.PropertyUtils;
+import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,15 +55,17 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
     private final int batchSize;
     private final long flushInterval;
     private final ExecutorService executor;
+    private final NotificationCenter notificationCenter;
 
     private Future<?> future;
     private boolean isStarted = false;
 
-    private BatchEventProcessor(BlockingQueue<Object> eventQueue, EventHandler eventHandler, Integer batchSize, Long flushInterval, ExecutorService executor) {
+    private BatchEventProcessor(BlockingQueue<Object> eventQueue, EventHandler eventHandler, Integer batchSize, Long flushInterval, ExecutorService executor, NotificationCenter notificationCenter) {
         this.eventHandler = eventHandler;
         this.eventQueue = eventQueue;
         this.batchSize = batchSize == null ? PropertyUtils.getInteger(CONFIG_BATCH_SIZE, DEFAULT_BATCH_SIZE) : batchSize;
         this.flushInterval = flushInterval == null ? PropertyUtils.getLong(CONFIG_BATCH_INTERVAL, DEFAULT_BATCH_INTERVAL) : flushInterval;
+        this.notificationCenter = notificationCenter;
 
         if (executor == null) {
             final ThreadFactory threadFactory = Executors.defaultThreadFactory();
@@ -196,6 +199,10 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
             LogEvent logEvent = EventFactory.createLogEvent(currentBatch);
 
+            if (notificationCenter != null) {
+                notificationCenter.send(logEvent);
+            }
+
             try {
                 eventHandler.dispatchEvent(logEvent);
             } catch (Exception e) {
@@ -215,6 +222,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         private Integer batchSize = null;
         private Long flushInterval = null;
         private ExecutorService executor = null;
+        private NotificationCenter notificationCenter = null;
 
         public Builder withEventHandler(EventHandler eventHandler) {
             this.eventHandler = eventHandler;
@@ -241,8 +249,13 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
             return this;
         }
 
+        public Builder withNotificationCenter(NotificationCenter notificationCenter) {
+            this.notificationCenter = notificationCenter;
+            return this;
+        }
+
         public BatchEventProcessor build() {
-            return new BatchEventProcessor(eventQueue, eventHandler, batchSize, flushInterval, executor);
+            return new BatchEventProcessor(eventQueue, eventHandler, batchSize, flushInterval, executor, notificationCenter);
         }
     }
 
