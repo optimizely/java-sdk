@@ -964,6 +964,13 @@ public class Optimizely implements AutoCloseable {
     }
 
     /**
+     * Convenience method for adding LogEvent Notification Handlers
+     */
+    public int addLogEventNotificationHandler(NotificationHandler<LogEvent> handler) {
+        return addNotificationHandler(LogEvent.class, handler);
+    }
+
+    /**
      * Convenience method for adding NotificationHandlers
      */
     public <T> int addNotificationHandler(Class<T> clazz, NotificationHandler<T> handler) {
