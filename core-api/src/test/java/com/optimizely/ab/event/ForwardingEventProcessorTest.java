@@ -18,6 +18,7 @@ package com.optimizely.ab.event;
 
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.event.internal.*;
+import com.optimizely.ab.notification.NotificationCenter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,6 +39,7 @@ public class ForwardingEventProcessorTest {
 
     private ForwardingEventProcessor eventProcessor;
     private AtomicBoolean atomicBoolean = new AtomicBoolean();
+    private NotificationCenter notificationCenter = new NotificationCenter();
 
     @Mock
     private ProjectConfig projectConfig;
@@ -50,14 +52,24 @@ public class ForwardingEventProcessorTest {
             assertEquals(logEvent.getRequestMethod(), LogEvent.RequestMethod.POST);
             assertEquals(logEvent.getEndpointUrl(), EventFactory.EVENT_ENDPOINT);
             atomicBoolean.set(true);
-        });
+        }, notificationCenter);
     }
 
     @Test
-    public void testAddHandler() {
+    public void testEventHandler() {
         UserEvent userEvent = buildConversionEvent(EVENT_NAME);
         eventProcessor.process(userEvent);
         assertTrue(atomicBoolean.get());
+    }
+
+    @Test
+    public void testNotifications() {
+        AtomicBoolean notifcationTriggered = new AtomicBoolean();
+        notificationCenter.addNotificationHandler(LogEvent.class, x -> notifcationTriggered.set(true));
+        UserEvent userEvent = buildConversionEvent(EVENT_NAME);
+        eventProcessor.process(userEvent);
+        assertTrue(atomicBoolean.get());
+        assertTrue(notifcationTriggered.get());
     }
 
     private ConversionEvent buildConversionEvent(String eventName) {

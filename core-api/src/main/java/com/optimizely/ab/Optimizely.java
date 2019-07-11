@@ -964,6 +964,13 @@ public class Optimizely implements AutoCloseable {
     }
 
     /**
+     * Convenience method for adding LogEvent Notification Handlers
+     */
+    public int addLogEventNotificationHandler(NotificationHandler<LogEvent> handler) {
+        return addNotificationHandler(LogEvent.class, handler);
+    }
+
+    /**
      * Convenience method for adding NotificationHandlers
      */
     public <T> int addNotificationHandler(Class<T> clazz, NotificationHandler<T> handler) {
@@ -1097,11 +1104,6 @@ public class Optimizely implements AutoCloseable {
                 decisionService = new DecisionService(bucketer, errorHandler, userProfileService);
             }
 
-            // For backwards compatibility
-            if (eventProcessor == null) {
-                eventProcessor = new ForwardingEventProcessor(eventHandler);
-            }
-
             if (projectConfig == null && datafile != null && !datafile.isEmpty()) {
                 try {
                     projectConfig = new DatafileProjectConfig.Builder().withDatafile(datafile).build();
@@ -1123,6 +1125,11 @@ public class Optimizely implements AutoCloseable {
 
             if (notificationCenter == null) {
                 notificationCenter = new NotificationCenter();
+            }
+
+            // For backwards compatibility
+            if (eventProcessor == null) {
+                eventProcessor = new ForwardingEventProcessor(eventHandler, notificationCenter);
             }
 
             return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, notificationCenter);

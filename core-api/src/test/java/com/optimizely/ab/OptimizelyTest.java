@@ -4186,6 +4186,16 @@ public class OptimizelyTest {
         assertTrue(manager.remove(notificationId));
     }
 
+    @Test
+    public void testAddLogEventNotificationHandler() {
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
+        NotificationManager<LogEvent> manager = optimizely.getNotificationCenter()
+            .getNotificationManager(LogEvent.class);
+
+        int notificationId = optimizely.addLogEventNotificationHandler(message -> {});
+        assertTrue(manager.remove(notificationId));
+    }
+
     //======== Helper methods ========//
 
     private Experiment createUnknownExperiment() {

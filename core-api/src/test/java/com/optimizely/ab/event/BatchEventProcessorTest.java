@@ -19,6 +19,7 @@ package com.optimizely.ab.event;
 import com.optimizely.ab.EventHandlerRule;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.event.internal.*;
+import com.optimizely.ab.notification.NotificationCenter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -52,6 +53,7 @@ public class BatchEventProcessorTest {
 
     private BlockingQueue<Object> eventQueue;
     private BatchEventProcessor eventProcessor;
+    private NotificationCenter notificationCenter;
 
     @Before
     public void setUp() throws Exception {
@@ -59,6 +61,7 @@ public class BatchEventProcessorTest {
         when(projectConfig.getProjectId()).thenReturn("X");
 
         eventQueue = new ArrayBlockingQueue<>(100);
+        notificationCenter = new NotificationCenter();
     }
 
     @After
@@ -173,12 +176,28 @@ public class BatchEventProcessorTest {
         }
     }
 
+    @Test
+    public void testNotificationCenter() throws Exception {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        notificationCenter.addNotificationHandler(LogEvent.class, x -> countDownLatch.countDown());
+        setEventProcessor(logEvent -> {});
+
+        UserEvent userEvent = buildConversionEvent(EVENT_NAME);
+        eventProcessor.process(userEvent);
+        eventProcessor.close();
+
+        if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
+            fail("Exceeded timeout waiting for notification.");
+        }
+    }
+
     private void setEventProcessor(EventHandler eventHandler) {
         eventProcessor = BatchEventProcessor.builder()
             .withEventQueue(eventQueue)
             .withBatchSize(MAX_BATCH_SIZE)
             .withFlushInterval(MAX_DURATION_MS)
             .withEventHandler(eventHandler)
+            .withNotificationCenter(notificationCenter)
             .build();
     }
 

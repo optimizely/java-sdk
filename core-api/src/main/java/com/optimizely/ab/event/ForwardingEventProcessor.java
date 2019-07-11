@@ -18,6 +18,7 @@ package com.optimizely.ab.event;
 
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.UserEvent;
+import com.optimizely.ab.notification.NotificationCenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,14 +31,20 @@ public class ForwardingEventProcessor implements EventProcessor {
     private static final Logger logger = LoggerFactory.getLogger(ForwardingEventProcessor.class);
 
     private final EventHandler eventHandler;
+    private final NotificationCenter notificationCenter;
 
-    public ForwardingEventProcessor(EventHandler eventHandler) {
+    public ForwardingEventProcessor(EventHandler eventHandler, NotificationCenter notificationCenter) {
         this.eventHandler = eventHandler;
+        this.notificationCenter = notificationCenter;
     }
 
     @Override
     public void process(UserEvent userEvent) {
         LogEvent logEvent = EventFactory.createLogEvent(userEvent);
+
+        if (notificationCenter != null) {
+            notificationCenter.send(logEvent);
+        }
 
         try {
             eventHandler.dispatchEvent(logEvent);
