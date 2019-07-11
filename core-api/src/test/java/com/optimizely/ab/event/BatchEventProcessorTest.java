@@ -122,6 +122,24 @@ public class BatchEventProcessorTest {
     }
 
     @Test
+    public void testFlush() throws Exception {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        setEventProcessor(logEvent -> {
+            eventHandlerRule.dispatchEvent(logEvent);
+            countDownLatch.countDown();
+        });
+
+        UserEvent userEvent = buildConversionEvent(EVENT_NAME);
+        eventProcessor.process(userEvent);
+        eventProcessor.flush();
+        eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
+
+        if (!countDownLatch.await(MAX_DURATION_MS / 2, TimeUnit.MILLISECONDS)) {
+            fail("Exceeded timeout waiting for notification.");
+        }
+    }
+
+    @Test
     public void testFlushOnMismatchRevision() throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(2);
         setEventProcessor(logEvent -> {
@@ -170,6 +188,31 @@ public class BatchEventProcessorTest {
         UserEvent userEvent2 = buildConversionEvent(EVENT_NAME, projectConfig2);
         eventProcessor.process(userEvent2);
         eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
+
+        eventProcessor.close();
+        if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
+            fail("Exceeded timeout waiting for notification.");
+        }
+    }
+
+    @Test
+    public void testStopAndStart() throws Exception {
+        CountDownLatch countDownLatch = new CountDownLatch(2);
+        setEventProcessor(logEvent -> {
+            eventHandlerRule.dispatchEvent(logEvent);
+            countDownLatch.countDown();
+        });
+
+        UserEvent userEvent = buildConversionEvent(EVENT_NAME);
+        eventProcessor.process(userEvent);
+        eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
+
+        eventProcessor.close();
+
+        eventProcessor.process(userEvent);
+        eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
+
+        eventProcessor.start();
 
         eventProcessor.close();
         if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
