@@ -44,6 +44,7 @@ public class BatchEventProcessorTest {
 
     private static final int MAX_BATCH_SIZE = 10;
     private static final long MAX_DURATION_MS = 1000;
+    private static final long TIMEOUT_MS = 5000;
 
     @Mock
     private ProjectConfig projectConfig;
@@ -191,6 +192,22 @@ public class BatchEventProcessorTest {
         }
     }
 
+    @Test
+    public void testCloseTimeout() throws Exception {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        setEventProcessor(logEvent -> {
+            if (!countDownLatch.await(TIMEOUT_MS * 2, TimeUnit.SECONDS)) {
+                fail("Exceeded timeout waiting for close.");
+            }
+        });
+
+        UserEvent userEvent = buildConversionEvent(EVENT_NAME);
+        eventProcessor.process(userEvent);
+        eventProcessor.close();
+
+        countDownLatch.countDown();
+    }
+
     private void setEventProcessor(EventHandler eventHandler) {
         eventProcessor = BatchEventProcessor.builder()
             .withEventQueue(eventQueue)
@@ -198,6 +215,7 @@ public class BatchEventProcessorTest {
             .withFlushInterval(MAX_DURATION_MS)
             .withEventHandler(eventHandler)
             .withNotificationCenter(notificationCenter)
+            .withTimeout(TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .build();
     }
 
