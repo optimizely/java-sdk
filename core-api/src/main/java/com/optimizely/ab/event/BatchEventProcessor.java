@@ -50,6 +50,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
     public static final long DEFAULT_TIMEOUT_INTERVAL = TimeUnit.SECONDS.toMillis(5);
 
     private static final Object SHUTDOWN_SIGNAL = new Object();
+    private static final Object FLUSH_SIGNAL    = new Object();
 
     private final BlockingQueue<Object> eventQueue;
     private final EventHandler eventHandler;
@@ -81,8 +82,6 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         } else {
             this.executor = executor;
         }
-
-        start();
     }
 
     public synchronized void start() {
@@ -107,6 +106,8 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
             Thread.currentThread().interrupt();
         } catch (TimeoutException e) {
             logger.error("Timeout exceeded attempting to close for {} ms", timeoutMillis);
+        } finally {
+            isStarted = false;
         }
     }
 
@@ -121,6 +122,10 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         if (!eventQueue.offer(userEvent)) {
             logger.warn("Payload not accepted by the queue. Current size: {}", eventQueue.size());
         }
+    }
+
+    public void flush() throws InterruptedException {
+        eventQueue.put(FLUSH_SIGNAL);
     }
 
     public class EventConsumer implements Runnable {
@@ -146,6 +151,12 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
                     if (item == SHUTDOWN_SIGNAL) {
                         logger.info("Received shutdown signal.");
                         break;
+                    }
+
+                    if (item == FLUSH_SIGNAL) {
+                        logger.debug("Received flush signal.");
+                        flush();
+                        continue;
                     }
 
                     addToBatch((UserEvent) item);
@@ -267,8 +278,17 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         }
 
         public BatchEventProcessor build() {
-            return new BatchEventProcessor(eventQueue, eventHandler, batchSize, flushInterval, timeoutMillis, executor, notificationCenter);
+            return build(true);
+        }
+
+        public BatchEventProcessor build(boolean shouldStart) {
+            BatchEventProcessor batchEventProcessor = new BatchEventProcessor(eventQueue, eventHandler, batchSize, flushInterval, timeoutMillis, executor, notificationCenter);
+
+            if (shouldStart) {
+                batchEventProcessor.start();
+            }
+
+            return batchEventProcessor;
         }
     }
-
 }
