@@ -123,13 +123,17 @@ public class BatchEventProcessorTest {
 
     @Test
     public void testFlush() throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(2);
         setEventProcessor(logEvent -> {
             eventHandlerRule.dispatchEvent(logEvent);
             countDownLatch.countDown();
         });
 
         UserEvent userEvent = buildConversionEvent(EVENT_NAME);
+        eventProcessor.process(userEvent);
+        eventProcessor.flush();
+        eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
+
         eventProcessor.process(userEvent);
         eventProcessor.flush();
         eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);

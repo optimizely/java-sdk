@@ -156,7 +156,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
                     if (item == FLUSH_SIGNAL) {
                         logger.debug("Received flush signal.");
                         flush();
-                        break;
+                        continue;
                     }
 
                     addToBatch((UserEvent) item);
