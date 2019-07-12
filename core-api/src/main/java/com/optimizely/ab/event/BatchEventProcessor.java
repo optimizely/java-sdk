@@ -185,12 +185,12 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
             ProjectConfig currentConfig = currentBatch.peekLast().getUserContext().getProjectConfig();
             ProjectConfig newConfig = userEvent.getUserContext().getProjectConfig();
 
-            // Revisions should match
+            // Projects should match
             if (!currentConfig.getProjectId().equals(newConfig.getProjectId())) {
                 return true;
             }
 
-            // Projects should match
+            // Revisions should match
             if (!currentConfig.getRevision().equals(newConfig.getRevision())) {
                 return true;
             }
