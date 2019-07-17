@@ -40,10 +40,13 @@ public final class DefaultConfigParser {
     //======== Helper methods ========//
 
     public enum ConfigParserSupplier {
-        GSON_CONFIG_PARSER("com.google.gson.Gson", GsonConfigParser::new),
-        JACKSON_CONFIG_PARSER("com.fasterxml.jackson.databind.ObjectMapper", JacksonConfigParser::new),
-        JSON_CONFIG_PARSER("org.json.JSONObject", JsonConfigParser::new),
-        JSON_SIMPLE_CONFIG_PARSER("org.json.simple.JSONObject", JsonSimpleConfigParser::new);
+        // WARNING THESE MUST REMAIN LAMBDAS!!!
+        // SWITCHING TO METHOD REFERENCES REQUIRES REQUIRES
+        // ALL PARSERS IN THE CLASSPATH.
+        GSON_CONFIG_PARSER("com.google.gson.Gson", () -> { return new GsonConfigParser(); }),
+        JACKSON_CONFIG_PARSER("com.fasterxml.jackson.databind.ObjectMapper", () -> { return new JacksonConfigParser(); }),
+        JSON_CONFIG_PARSER("org.json.JSONObject", () -> { return new JsonConfigParser(); }),
+        JSON_SIMPLE_CONFIG_PARSER("org.json.simple.JSONObject", () -> { return new JsonSimpleConfigParser(); });
 
         private final String className;
         private final Supplier<ConfigParser> supplier;
