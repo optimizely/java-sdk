@@ -54,5 +54,3 @@ jobs:
     - <<: *integrationtest
       stage: 'Benchmarking tests'
       env: SDK=java FULLSTACK_TEST_REPO=Benchmarking
-      script:
-        - "$HOME/travisci-tools/trigger-script-with-status-update.sh yasir/bench-exp-support"
