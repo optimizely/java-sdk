@@ -23,7 +23,9 @@ import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
+import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.event.EventHandler;
+import com.optimizely.ab.event.EventProcessor;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.UserEventFactory;
 import com.optimizely.ab.internal.LogbackVerifier;
@@ -34,6 +36,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.Mock;
@@ -48,6 +51,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
@@ -79,17 +83,28 @@ public class OptimizelyTest {
             {
                 validConfigJsonV2(),
                 noAudienceProjectConfigJsonV2(),
-                2
+                2,
+                (Function<EventHandler, EventProcessor>) (eventHandler) -> null
             },
             {
                 validConfigJsonV3(),
                 noAudienceProjectConfigJsonV3(),  // FIX-ME this is not a valid v3 datafile
-                3
+                3,
+                (Function<EventHandler, EventProcessor>) (eventHandler) -> null
             },
             {
                 validConfigJsonV4(),
                 validConfigJsonV4(),
-                4
+                4,
+                (Function<EventHandler, EventProcessor>) (eventHandler) -> null
+            },
+            {
+                validConfigJsonV4(),
+                validConfigJsonV4(),
+                4,
+                (Function<EventHandler, EventProcessor>) (eventHandler) -> BatchEventProcessor.builder()
+                    .withEventHandler(eventHandler)
+                    .build()
             }
         });
     }
@@ -98,14 +113,17 @@ public class OptimizelyTest {
     @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
     public MockitoRule rule = MockitoJUnit.rule();
 
-    @Rule
     public ExpectedException thrown = ExpectedException.none();
-
-    @Rule
     public LogbackVerifier logbackVerifier = new LogbackVerifier();
+    public OptimizelyRule optimizelyBuilder = new OptimizelyRule();
+    public EventHandlerRule eventHandler = new EventHandlerRule();
 
     @Rule
-    public EventHandlerRule eventHandler = new EventHandlerRule();
+    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
+    public RuleChain ruleChain = RuleChain.outerRule(thrown)
+        .around(logbackVerifier)
+        .around(eventHandler)
+        .around(optimizelyBuilder);
 
     @Mock
     EventHandler mockEventHandler;
@@ -128,9 +146,11 @@ public class OptimizelyTest {
     @Parameterized.Parameter(2)
     public int datafileVersion;
 
+    @Parameterized.Parameter(3)
+    public Function<EventHandler, EventProcessor> eventProcessorSupplier;
+
     private ProjectConfig validProjectConfig;
     private ProjectConfig noAudienceProjectConfig;
-    private Optimizely.Builder optimizelyBuilder;
 
     @Before
     public void setUp() throws Exception {
@@ -140,7 +160,8 @@ public class OptimizelyTest {
         // FIX-ME
         //assertEquals(validProjectConfig.getVersion(), noAudienceProjectConfig.getVersion());
 
-        optimizelyBuilder = Optimizely.builder()
+        optimizelyBuilder
+            .withEventProcessor(eventProcessorSupplier.apply(eventHandler))
             .withEventHandler(eventHandler)
             .withConfig(validProjectConfig);
     }
@@ -937,25 +958,6 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify that {@link Optimizely#activate(String, String)} handles exceptions thrown by
-     * {@link EventHandler#dispatchEvent(LogEvent)} gracefully.
-     */
-    @Test
-    public void activateDispatchEventThrowsException() throws Exception {
-        Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
-
-        doThrow(new Exception("Test Exception")).when(mockEventHandler).dispatchEvent(any(LogEvent.class));
-
-        Optimizely optimizely = optimizelyBuilder
-            .withEventHandler(mockEventHandler)
-            .withConfig(noAudienceProjectConfig)
-            .build();
-
-        logbackVerifier.expectMessage(Level.ERROR, "Unexpected exception in event dispatcher");
-        optimizely.activate(experiment.getKey(), testUserId);
-    }
-
-    /**
      * Verify that {@link Optimizely#activate(String, String)} doesn't dispatch an event for an experiment with a
      * "Launched" status.
      */
@@ -1244,22 +1246,6 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.build();
         optimizely.track(eventType.getKey(), genericUserId, attributes);
         eventHandler.expectConversion(eventType.getKey(), genericUserId, attributes);
-    }
-
-    /**
-     * Verify that {@link Optimizely#track(String, String)} handles exceptions thrown by
-     * {@link EventHandler#dispatchEvent(LogEvent)} gracefully.
-     */
-    @Test
-    public void trackDispatchEventThrowsException() throws Exception {
-        EventType eventType = noAudienceProjectConfig.getEventTypes().get(0);
-
-        doThrow(new Exception("Test Exception")).when(mockEventHandler).dispatchEvent(any(LogEvent.class));
-
-        Optimizely optimizely = optimizelyBuilder.withEventHandler(mockEventHandler).build();
-        optimizely.track(eventType.getKey(), testUserId);
-
-        logbackVerifier.expectMessage(Level.ERROR, "Unexpected exception in event dispatcher");
     }
 
     /**
@@ -4197,6 +4183,16 @@ public class OptimizelyTest {
             .getNotificationManager(UpdateConfigNotification.class);
 
         int notificationId = optimizely.addUpdateConfigNotificationHandler(message -> {});
+        assertTrue(manager.remove(notificationId));
+    }
+
+    @Test
+    public void testAddLogEventNotificationHandler() {
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
+        NotificationManager<LogEvent> manager = optimizely.getNotificationCenter()
+            .getNotificationManager(LogEvent.class);
+
+        int notificationId = optimizely.addLogEventNotificationHandler(message -> {});
         assertTrue(manager.remove(notificationId));
     }
 

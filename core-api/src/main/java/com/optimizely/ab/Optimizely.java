@@ -24,9 +24,7 @@ import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
-import com.optimizely.ab.event.EventHandler;
-import com.optimizely.ab.event.LogEvent;
-import com.optimizely.ab.event.NoopEventHandler;
+import com.optimizely.ab.event.*;
 import com.optimizely.ab.event.internal.*;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.notification.*;
@@ -78,6 +76,8 @@ public class Optimizely implements AutoCloseable {
     @VisibleForTesting
     final EventHandler eventHandler;
     @VisibleForTesting
+    final EventProcessor eventProcessor;
+    @VisibleForTesting
     final ErrorHandler errorHandler;
 
     private final ProjectConfigManager projectConfigManager;
@@ -89,6 +89,7 @@ public class Optimizely implements AutoCloseable {
     private final UserProfileService userProfileService;
 
     private Optimizely(@Nonnull EventHandler eventHandler,
+                       @Nonnull EventProcessor eventProcessor,
                        @Nonnull ErrorHandler errorHandler,
                        @Nonnull DecisionService decisionService,
                        @Nullable UserProfileService userProfileService,
@@ -96,6 +97,7 @@ public class Optimizely implements AutoCloseable {
                        @Nonnull NotificationCenter notificationCenter
     ) {
         this.eventHandler = eventHandler;
+        this.eventProcessor = eventProcessor;
         this.errorHandler = errorHandler;
         this.decisionService = decisionService;
         this.userProfileService = userProfileService;
@@ -137,6 +139,7 @@ public class Optimizely implements AutoCloseable {
      */
     @Override
     public void close() {
+        tryClose(eventProcessor);
         tryClose(eventHandler);
         tryClose(projectConfigManager);
     }
@@ -230,7 +233,6 @@ public class Optimizely implements AutoCloseable {
             return;
         }
 
-        logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
         UserEvent userEvent = UserEventFactory.createImpressionEvent(
             projectConfig,
             experiment,
@@ -238,20 +240,18 @@ public class Optimizely implements AutoCloseable {
             userId,
             filteredAttributes);
 
-        LogEvent impressionEvent = EventFactory.createLogEvent(userEvent);
-
-        try {
-            eventHandler.dispatchEvent(impressionEvent);
-        } catch (Exception e) {
-            logger.error("Unexpected exception in event dispatcher", e);
-        }
+        eventProcessor.process(userEvent);
+        logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
 
         // Kept For backwards compatibility.
         // This notification is deprecated and the new DecisionNotifications
         // are sent via their respective method calls.
-        ActivateNotification activateNotification = new ActivateNotification(
-            experiment, userId, filteredAttributes, variation, impressionEvent);
-        notificationCenter.send(activateNotification);
+        if (notificationCenter.getNotificationManager(ActivateNotification.class).size() > 0) {
+            LogEvent impressionEvent = EventFactory.createLogEvent(userEvent);
+            ActivateNotification activateNotification = new ActivateNotification(
+                experiment, userId, filteredAttributes, variation, impressionEvent);
+            notificationCenter.send(activateNotification);
+        }
     }
 
     //======== track calls ========//
@@ -309,20 +309,17 @@ public class Optimizely implements AutoCloseable {
             copiedAttributes,
             eventTags);
 
-        // create the conversion event request parameters, then dispatch
-        LogEvent conversionEvent = EventFactory.createLogEvent(userEvent);
+        eventProcessor.process(userEvent);
         logger.info("Tracking event \"{}\" for user \"{}\".", eventName, userId);
 
-        try {
-            eventHandler.dispatchEvent(conversionEvent);
-        } catch (Exception e) {
-            logger.error("Unexpected exception in event dispatcher", e);
+        if (notificationCenter.getNotificationManager(TrackNotification.class).size() > 0) {
+            // create the conversion event request parameters, then dispatch
+            LogEvent conversionEvent = EventFactory.createLogEvent(userEvent);
+            TrackNotification notification = new TrackNotification(eventName, userId,
+                copiedAttributes, eventTags, conversionEvent);
+
+            notificationCenter.send(notification);
         }
-
-        TrackNotification notification = new TrackNotification(eventName, userId,
-            copiedAttributes, eventTags, conversionEvent);
-
-        notificationCenter.send(notification);
     }
 
     //======== FeatureFlag APIs ========//
@@ -967,6 +964,13 @@ public class Optimizely implements AutoCloseable {
     }
 
     /**
+     * Convenience method for adding LogEvent Notification Handlers
+     */
+    public int addLogEventNotificationHandler(NotificationHandler<LogEvent> handler) {
+        return addNotificationHandler(LogEvent.class, handler);
+    }
+
+    /**
      * Convenience method for adding NotificationHandlers
      */
     public <T> int addNotificationHandler(Class<T> clazz, NotificationHandler<T> handler) {
@@ -1000,6 +1004,7 @@ public class Optimizely implements AutoCloseable {
         private DecisionService decisionService;
         private ErrorHandler errorHandler;
         private EventHandler eventHandler;
+        private EventProcessor eventProcessor;
         private ProjectConfig projectConfig;
         private ProjectConfigManager projectConfigManager;
         private UserProfileService userProfileService;
@@ -1024,6 +1029,11 @@ public class Optimizely implements AutoCloseable {
 
         public Builder withEventHandler(EventHandler eventHandler) {
             this.eventHandler = eventHandler;
+            return this;
+        }
+
+        public Builder withEventProcessor(EventProcessor eventProcessor) {
+            this.eventProcessor = eventProcessor;
             return this;
         }
 
@@ -1117,7 +1127,12 @@ public class Optimizely implements AutoCloseable {
                 notificationCenter = new NotificationCenter();
             }
 
-            return new Optimizely(eventHandler, errorHandler, decisionService, userProfileService, projectConfigManager, notificationCenter);
+            // For backwards compatibility
+            if (eventProcessor == null) {
+                eventProcessor = new ForwardingEventProcessor(eventHandler, notificationCenter);
+            }
+
+            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, notificationCenter);
         }
     }
 }
