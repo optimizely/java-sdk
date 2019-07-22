@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedList;
 import java.util.concurrent.*;
 
+import static com.optimizely.ab.internal.SafetyUtils.tryClose;
+
 /**
  * BatchEventProcessor is a batched implementation of the {@link EventProcessor}
  *
@@ -108,6 +110,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
             logger.error("Timeout exceeded attempting to close for {} ms", timeoutMillis);
         } finally {
             isStarted = false;
+            tryClose(eventHandler);
         }
     }
 

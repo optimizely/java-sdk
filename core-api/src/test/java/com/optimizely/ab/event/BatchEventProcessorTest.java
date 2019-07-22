@@ -32,8 +32,7 @@ import java.util.Collections;
 import java.util.concurrent.*;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BatchEventProcessorTest {
@@ -253,6 +252,18 @@ public class BatchEventProcessorTest {
         eventProcessor.close();
 
         countDownLatch.countDown();
+    }
+
+    @Test
+    public void testCloseEventHandler() throws Exception {
+        EventHandler mockEventHandler = mock(
+            EventHandler.class,
+            withSettings().extraInterfaces(AutoCloseable.class)
+        );
+
+        setEventProcessor(mockEventHandler);
+        eventProcessor.close();
+        verify((AutoCloseable) mockEventHandler).close();
     }
 
     private void setEventProcessor(EventHandler eventHandler) {
