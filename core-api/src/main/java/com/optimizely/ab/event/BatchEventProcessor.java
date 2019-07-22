@@ -44,9 +44,9 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
     public static final String CONFIG_BATCH_INTERVAL = "event.processor.batch.interval";
     public static final String CONFIG_CLOSE_TIMEOUT  = "event.processor.close.timeout";
 
-    public static final int DEFAULT_QUEUE_CAPACITY  = 1000;
-    public static final int DEFAULT_BATCH_SIZE      = 50;
-    public static final long DEFAULT_BATCH_INTERVAL = TimeUnit.MINUTES.toMillis(1);
+    public static final int DEFAULT_QUEUE_CAPACITY    = 1000;
+    public static final int DEFAULT_BATCH_SIZE        = 10;
+    public static final long DEFAULT_BATCH_INTERVAL   = TimeUnit.MINUTES.toMillis(1);
     public static final long DEFAULT_TIMEOUT_INTERVAL = TimeUnit.SECONDS.toMillis(5);
 
     private static final Object SHUTDOWN_SIGNAL = new Object();
