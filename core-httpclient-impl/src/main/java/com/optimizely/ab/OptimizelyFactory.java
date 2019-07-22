@@ -19,6 +19,7 @@ package com.optimizely.ab;
 import com.optimizely.ab.config.HttpProjectConfigManager;
 import com.optimizely.ab.config.ProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
+import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
@@ -35,6 +36,8 @@ import java.util.concurrent.TimeUnit;
  *
  * OptimizelyClients also provides setter methods to override the system properties at runtime.
  * <ul>
+ *  <li>{@link OptimizelyFactory#setMaxEventBatchSize}</li>
+ *  <li>{@link OptimizelyFactory#setMaxEventBatchInterval}</li>
  *  <li>{@link OptimizelyFactory#setEventQueueParams}</li>
  *  <li>{@link OptimizelyFactory#setBlockingTimeout}</li>
  *  <li>{@link OptimizelyFactory#setPollingInterval}</li>
@@ -46,7 +49,33 @@ public final class OptimizelyFactory {
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyFactory.class);
 
     /**
-     * Convenience method for setting the required queueing parameters.
+     * Convenience method for setting the maximum number of events contained within a batch.
+     * {@link AsyncEventHandler}
+     */
+    public static void setMaxEventBatchSize(int batchSize) {
+        if (batchSize <= 0) {
+            logger.warn("Batch size cannot be <= 0. Reverting to default configuration.");
+            return;
+        }
+
+        PropertyUtils.set(BatchEventProcessor.CONFIG_BATCH_SIZE, Integer.toString(batchSize));
+    }
+
+    /**
+     * Convenience method for setting the maximum time interval in milliseconds between event dispatches.
+     * {@link AsyncEventHandler}
+     */
+    public static void setMaxEventBatchInterval(long batchInterval) {
+        if (batchInterval <= 0) {
+            logger.warn("Batch interval cannot be <= 0. Reverting to default configuration.");
+            return;
+        }
+
+        PropertyUtils.set(BatchEventProcessor.CONFIG_BATCH_INTERVAL, Long.toString(batchInterval));
+    }
+
+    /**
+     * Convenience method for setting the required queueing parameters for event dispatching.
      * {@link AsyncEventHandler}
      */
     public static void setEventQueueParams(int queueCapacity, int numberWorkers) {
@@ -194,8 +223,13 @@ public final class OptimizelyFactory {
             notificationCenter = new NotificationCenter();
         }
 
-        return Optimizely.builder()
+        BatchEventProcessor eventProcessor = BatchEventProcessor.builder()
             .withEventHandler(eventHandler)
+            .withNotificationCenter(notificationCenter)
+            .build();
+
+        return Optimizely.builder()
+            .withEventProcessor(eventProcessor)
             .withConfigManager(configManager)
             .withNotificationCenter(notificationCenter)
             .build();

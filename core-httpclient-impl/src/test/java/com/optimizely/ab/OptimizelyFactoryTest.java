@@ -20,8 +20,10 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.optimizely.ab.config.HttpProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
+import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -31,8 +33,12 @@ import static org.junit.Assert.*;
 
 public class OptimizelyFactoryTest {
 
+    private Optimizely optimizely;
+
     @Before
     public void setUp() {
+        PropertyUtils.clear(BatchEventProcessor.CONFIG_BATCH_SIZE);
+        PropertyUtils.clear(BatchEventProcessor.CONFIG_BATCH_INTERVAL);
         PropertyUtils.clear(AsyncEventHandler.CONFIG_QUEUE_CAPACITY);
         PropertyUtils.clear(AsyncEventHandler.CONFIG_NUM_WORKERS);
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_POLLING_DURATION);
@@ -40,6 +46,47 @@ public class OptimizelyFactoryTest {
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_BLOCKING_DURATION);
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_BLOCKING_UNIT);
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_SDK_KEY);
+    }
+
+    @After
+    public void tearDown() {
+        if (optimizely == null) {
+            return;
+        }
+
+        optimizely.close();
+    }
+
+    @Test
+    public void setMaxEventBatchSize() {
+        Integer batchSize = 10;
+        OptimizelyFactory.setMaxEventBatchSize(batchSize);
+
+        assertEquals(batchSize, PropertyUtils.getInteger(BatchEventProcessor.CONFIG_BATCH_SIZE));
+    }
+
+    @Test
+    public void setInvalidMaxEventBatchSize() {
+        Integer batchSize = 0;
+        OptimizelyFactory.setMaxEventBatchSize(batchSize);
+
+        assertNull(PropertyUtils.getInteger(BatchEventProcessor.CONFIG_BATCH_SIZE));
+    }
+
+    @Test
+    public void setMaxEventBatchInterval() {
+        Long batchInterval = 100L;
+        OptimizelyFactory.setMaxEventBatchInterval(batchInterval);
+
+        assertEquals(batchInterval, PropertyUtils.getLong(BatchEventProcessor.CONFIG_BATCH_INTERVAL));
+    }
+
+    @Test
+    public void setInvalidMaxEventBatchInterval() {
+        Long batchInterval = 0L;
+        OptimizelyFactory.setMaxEventBatchInterval(batchInterval);
+
+        assertNull(PropertyUtils.getLong(BatchEventProcessor.CONFIG_BATCH_INTERVAL));
     }
 
     @Test
@@ -125,7 +172,7 @@ public class OptimizelyFactoryTest {
 
     @Test
     public void newDefaultInstanceInvalid() {
-        Optimizely optimizely = OptimizelyFactory.newDefaultInstance();
+        optimizely = OptimizelyFactory.newDefaultInstance();
         assertFalse(optimizely.isValid());
     }
 
@@ -133,27 +180,27 @@ public class OptimizelyFactoryTest {
     public void newDefaultInstanceWithSdkKey() throws Exception {
         // Set a blocking timeout so we don't block for too long.
         OptimizelyFactory.setBlockingTimeout(5, TimeUnit.MICROSECONDS);
-        Optimizely optimizely = OptimizelyFactory.newDefaultInstance("sdk-key");
+        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key");
         assertFalse(optimizely.isValid());
     }
 
     @Test
     public void newDefaultInstanceWithFallback() throws Exception {
         String datafileString = Resources.toString(Resources.getResource("valid-project-config-v4.json"), Charsets.UTF_8);
-        Optimizely optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString);
+        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString);
         assertTrue(optimizely.isValid());
     }
 
     @Test
     public void newDefaultInstanceWithProjectConfig() throws Exception {
-        Optimizely optimizely = OptimizelyFactory.newDefaultInstance(() -> null);
+        optimizely = OptimizelyFactory.newDefaultInstance(() -> null);
         assertFalse(optimizely.isValid());
     }
 
     @Test
     public void newDefaultInstanceWithProjectConfigAndNotificationCenter() throws Exception {
         NotificationCenter notificationCenter = new NotificationCenter();
-        Optimizely optimizely = OptimizelyFactory.newDefaultInstance(() -> null, notificationCenter);
+        optimizely = OptimizelyFactory.newDefaultInstance(() -> null, notificationCenter);
         assertFalse(optimizely.isValid());
         assertEquals(notificationCenter, optimizely.getNotificationCenter());
     }
@@ -161,7 +208,7 @@ public class OptimizelyFactoryTest {
     @Test
     public void newDefaultInstanceWithProjectConfigAndNotificationCenterAndEventHandler() {
         NotificationCenter notificationCenter = new NotificationCenter();
-        Optimizely optimizely = OptimizelyFactory.newDefaultInstance(() -> null, notificationCenter, logEvent -> {});
+        optimizely = OptimizelyFactory.newDefaultInstance(() -> null, notificationCenter, logEvent -> {});
         assertFalse(optimizely.isValid());
         assertEquals(notificationCenter, optimizely.getNotificationCenter());
     }
