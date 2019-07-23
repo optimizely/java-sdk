@@ -1,4 +1,4 @@
-/****************************************************************************
+  /****************************************************************************
  * Copyright 2016-2019, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
@@ -28,18 +28,18 @@ import com.optimizely.ab.event.*;
 import com.optimizely.ab.event.internal.*;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.notification.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.ThreadSafe;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.ThreadSafe;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * Top-level container class for Optimizely functionality.
@@ -602,6 +602,19 @@ public class Optimizely implements AutoCloseable {
             attributes,
             FeatureVariable.VariableType.STRING);
     }
+    
+    @Nullable
+    public <T> T getFeatureVariable(@Nonnull String featureKey,
+                                    @Nonnull String variableKey,
+                                    @Nonnull String userId,
+                                    @Nonnull Map<String, ?> attributes) {
+        return getFeatureVariableValueForType(
+            featureKey,
+            variableKey,
+            userId,
+            attributes,
+            null);
+    }
 
     @VisibleForTesting
     <T> T getFeatureVariableValueForType(@Nonnull String featureKey,
@@ -637,6 +650,10 @@ public class Optimizely implements AutoCloseable {
             logger.info("No feature variable was found for key \"{}\" in feature flag \"{}\".",
                 variableKey, featureKey);
             return null;
+        }
+        
+        if (!variableType) {
+            variableType = variable.getType();
         } else if (!variable.getType().equals(variableType)) {
             logger.info("The feature variable \"" + variableKey +
                 "\" is actually of type \"" + variable.getType().toString() +
@@ -687,7 +704,7 @@ public class Optimizely implements AutoCloseable {
 
 
         notificationCenter.send(decisionNotification);
-
+ 
         return (T) convertedValue;
     }
 
