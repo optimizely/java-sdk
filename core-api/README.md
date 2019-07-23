@@ -58,12 +58,12 @@ configured batch size or for a maximum duration before the resulting `LogEvent` 
 
 ### ForwardingEventProcessor
 [`ForwardingEventProcessor`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/ForwardingEventProcessor.java)
-implements `EventProcessor` for backwards compatibility. Each event Processed is translated into a [`LogEvent`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/ForwardingEventProcessor.java)
-before getting synchronously sent along to the supplied `EventHandler`.
+implements `EventProcessor` for backwards compatibility. Each event processed is converted into a [`LogEvent`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/ForwardingEventProcessor.java)
+message before getting synchronously sent to the supplied `EventHandler`.
 
 ## EventHandler
 [`EventHandler`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/EventHandler.java)
-interface is used for dispatching events to the Optimizely event end-point. Implementations of `dispatchEvent(LogEvent)` are expected
+interface is used for dispatching events to the Optimizely event end-point. Implementations of `EventHandler#dispatchEvent(LogEvent)` are expected
 to make an HTTP request of type `getRequestMethod()` to the `LogEvent#getEndpointUrl()` location. The corresponding request parameters and body
 are available via `LogEvent#getRequestParams()` and `LogEvent#getBody()` respectively.
 
@@ -84,13 +84,13 @@ The interface is currently unstable and used only internally. All public access 
 with each subsequent version.
 
 ### DatafileProjectConfig
-[`DatafileProjecyConfig](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/DatafileProjectConfig.java)
-is an implementation of `ProjectConfig` backed by a file typically located within the Optimizely CDN.
+[`DatafileProjectConfig`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/DatafileProjectConfig.java)
+is an implementation of `ProjectConfig` backed by a file, typically sourced from the Optimizely CDN.
 
 ## ProjectConfigManager
 [`ProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/ProjectConfigManager.java)
-is a factory class that serves a `ProjectConfig`. Implementations of this class serve to provide a consistent representation
-of a `ProjectConfig` that can be passed between services.
+is a factory class that serves a `ProjectConfig`. Implementations of this class provide a consistent representation
+of a `ProjectConfig` that can be references between service calls.
 
 ### AtomicProjectConfigManager
 [`AtomicProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/AtomicProjectConfigManager.java)
@@ -98,5 +98,5 @@ is a static provider that can be updated atomically to provide a consistent view
 
 ### PollingProjectConfigManager
 [`PollingProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/PollingProjectConfigManager.java)
-ia a abstract class that provides the foundation for a dynamic factory that updates asynchronously within a background thread.
-Implementations of this class can be used to poll from a HTTP or file based datafile location.
+ia a abstract class that provides the framework for a dynamic factory that updates asynchronously within a background thread.
+Implementations of this class can be used to poll from externalized sourced without blocking the main application thread.
