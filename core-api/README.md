@@ -55,8 +55,8 @@ It's assumed that the `EventProcessor` dispatches events via a provided `EventHa
 
 ### BatchEventProcessor
 [`BatchEventProcessor`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/BatchEventProcessor.java)
-is a batched implementation of the `EventProcessor`. Events passed to the BatchEventProcessor are immediately added to a BlockingQueue.
-The BatchEventProcessor maintains a single consumer thread that pulls events off of the BlockingQueue and buffers them for either a 
+is a batched implementation of the `EventProcessor`. Events passed to the `BatchEventProcessor` are immediately "offered" to a `BlockingQueue`.
+The `BatchEventProcessor` maintains a single consumer thread that pulls events off of the `BlockingQueue` and buffers them for either a 
 configured batch size or for a maximum duration before the resulting `LogEvent` is sent to the `EventDispatcher` and `NoticifactionCenter`.
 
 ### ForwardingEventProcessor
