@@ -27,8 +27,8 @@ The full product documentation can be found on the the Optimizely developers sit
 ### Usage
 ```Java
 Optimizely optimizely = Optimizely.builder()
-    .withConfigManager()
-    .withEventProcessor()
+    .withConfigManager(configManager)
+    .withEventProcessor(eventProcessor)
     .build();
 
 Variation variation = optimizely.activate("ad-test");
@@ -40,10 +40,13 @@ optimizely.track("conversion");
 interface is available for handling errors from the SDK without interfering with the host application.
 
 ### NoOpErrorHandler
-[`NoOpErrorHandler`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/error/ErrorHandler.java)
+[`NoOpErrorHandler`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/error/NoOpErrorHandler.java)
+is the default `ErrorHandler` implemetation that silently consumes all errors raised from the SDK.
 
 ### RaiseExceptionErrorHandler
 [`RaiseExceptionErrorHandler`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/error/RaiseExceptionErrorHandler.java)
+is an implementation of `ErrorHandler` best suited for testing and development where **all** errors are raised, potentially crashing
+the hosting application.
 
 ## EventProcessor
 [`EventProcessor`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/EventProcessor.java) 
