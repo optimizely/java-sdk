@@ -232,7 +232,7 @@ Optimizely optimizely = OptimizelyFactory.newDefaultInstance();
 
 ### Event batching
 `OptimizelyFactory` uses the [`BatchEventProcessor`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/BatchEventProcessor.java)
-to enabled request batching to the Optimizely logging endpoint. by default, a maximum of 10 events are included in each batch
-for a maximum interval of 30 seconds. These parameters are configurable via systems properties or through the 
-`OptimizelyFactory#setMaxEventBatchSize` and `OptimizelyFactory#setMaxEventBatchInterval` respectively.
-  
+to enabled request batching to the Optimizely logging endpoint. By default, a maximum of 10 events are included in each batch
+for a maximum interval of 30 seconds. These parameters are configurable via systems properties or through the
+`OptimizelyFactory#setMaxEventBatchSize` and `OptimizelyFactory#setMaxEventBatchInterval` methods.
+ 
