@@ -41,6 +41,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.optimizely.ab.internal.SafetyUtils.tryClose;
+
 /**
  * Top-level container class for Optimizely functionality.
  * Thread-safe, so can be created as a singleton and safely passed around.
@@ -116,20 +118,7 @@ public class Optimizely implements AutoCloseable {
         return getProjectConfig() != null;
     }
 
-    /**
-     * Helper method which checks if Object is an instance of AutoCloseable and calls close() on it.
-     */
-    private void tryClose(Object obj) {
-        if (!(obj instanceof AutoCloseable)) {
-            return;
-        }
 
-        try {
-            ((AutoCloseable) obj).close();
-        } catch (Exception e) {
-            logger.warn("Unexpected exception on trying to close {}.", obj);
-        }
-    }
 
     /**
      * Checks if eventHandler {@link EventHandler} and projectConfigManager {@link ProjectConfigManager}
