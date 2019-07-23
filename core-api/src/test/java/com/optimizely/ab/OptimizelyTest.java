@@ -168,87 +168,33 @@ public class OptimizelyTest {
 
     @Test
     public void testClose() throws Exception {
-        // Check for AutoCloseable
-        EventHandler mockAutoCloseableEventHandler = mock(
+        EventHandler mockEventHandler = mock(
             EventHandler.class,
             withSettings().extraInterfaces(AutoCloseable.class)
         );
-        ProjectConfigManager mockAutoCloseableProjectConfigManager = mock(
+
+        ProjectConfigManager mockProjectConfigManager = mock(
             ProjectConfigManager.class,
+            withSettings().extraInterfaces(AutoCloseable.class)
+        );
+
+        EventProcessor mockEventProcessor = mock(
+            EventProcessor.class,
             withSettings().extraInterfaces(AutoCloseable.class)
         );
 
         Optimizely optimizely = Optimizely.builder()
-            .withEventHandler(mockAutoCloseableEventHandler)
-            .withConfigManager(mockAutoCloseableProjectConfigManager)
+            .withEventHandler(mockEventHandler)
+            .withEventProcessor(mockEventProcessor)
+            .withConfigManager(mockProjectConfigManager)
             .build();
 
         optimizely.close();
 
-        verify((AutoCloseable) mockAutoCloseableEventHandler).close();
-        verify((AutoCloseable) mockAutoCloseableProjectConfigManager).close();
+        verify((AutoCloseable) mockEventHandler).close();
+        verify((AutoCloseable) mockProjectConfigManager).close();
+        verify((AutoCloseable) mockEventProcessor).close();
 
-        // Check for Closeable
-        EventHandler mockCloseableEventHandler = mock(
-            EventHandler.class,
-            withSettings().extraInterfaces(Closeable.class)
-        );
-        ProjectConfigManager mockCloseableProjectConfigManager = mock(
-            ProjectConfigManager.class,
-            withSettings().extraInterfaces(Closeable.class)
-        );
-
-        optimizely = Optimizely.builder()
-            .withEventHandler(mockCloseableEventHandler)
-            .withConfigManager(mockCloseableProjectConfigManager)
-            .build();
-
-        optimizely.close();
-
-        verify((Closeable) mockCloseableEventHandler).close();
-        verify((Closeable) mockCloseableProjectConfigManager).close();
-    }
-
-    @Test
-    public void testCloseConfigManagerThrowsException() throws Exception {
-        EventHandler mockAutoCloseableEventHandler = mock(
-            EventHandler.class,
-            withSettings().extraInterfaces(AutoCloseable.class)
-        );
-        ProjectConfigManager mockAutoCloseableProjectConfigManager = mock(
-            ProjectConfigManager.class,
-            withSettings().extraInterfaces(AutoCloseable.class)
-        );
-
-        Optimizely optimizely = optimizelyBuilder
-            .withEventHandler(mockAutoCloseableEventHandler)
-            .withConfigManager(mockAutoCloseableProjectConfigManager)
-            .build();
-
-        doThrow(new IOException()).when((AutoCloseable) mockAutoCloseableProjectConfigManager).close();
-        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockAutoCloseableProjectConfigManager + ".");
-        optimizely.close();
-    }
-
-    @Test
-    public void testCloseEventHandlerThrowsException() throws Exception {
-        EventHandler mockAutoCloseableEventHandler = mock(
-            EventHandler.class,
-            withSettings().extraInterfaces(AutoCloseable.class)
-        );
-        ProjectConfigManager mockAutoCloseableProjectConfigManager = mock(
-            ProjectConfigManager.class,
-            withSettings().extraInterfaces(AutoCloseable.class)
-        );
-
-        Optimizely optimizely = optimizelyBuilder
-            .withEventHandler(mockAutoCloseableEventHandler)
-            .withConfigManager(mockAutoCloseableProjectConfigManager)
-            .build();
-
-        doThrow(new IOException()).when((AutoCloseable) mockAutoCloseableEventHandler).close();
-        logbackVerifier.expectMessage(Level.WARN, "Unexpected exception on trying to close " + mockAutoCloseableEventHandler + ".");
-        optimizely.close();
     }
 
     //======== activate tests ========//
