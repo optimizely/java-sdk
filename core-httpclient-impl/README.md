@@ -119,7 +119,6 @@ The following properties can be set to override the default configuration.
 |**async.event.handler.event.max.per.route**|20|Maximum number of connections per route|
 |**async.event.handler.validate.after**|5000|Time to maintain idol connections (in milliseconds)|
 
-
 ## HttpProjectConfigManager
 
 [`HttpProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/config/HttpProjectConfigManager.java)
@@ -230,3 +229,12 @@ If you provide the SDK via a global property, use the empty signature:
 ```Java
 Optimizely optimizely = OptimizelyFactory.newDefaultInstance();
 ```
+
+### Convenience APIs
+|Method Name|Description|
+|---|---|
+|||
+
+### Event batching
+`OptimizelyFactory` uses the [`BatchEventProcessor`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/BatchEventProcessor.java)
+to enabled request batching to the Optimizely logging endpoint. The `Batch` 
