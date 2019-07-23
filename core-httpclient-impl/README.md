@@ -230,11 +230,9 @@ If you provide the SDK via a global property, use the empty signature:
 Optimizely optimizely = OptimizelyFactory.newDefaultInstance();
 ```
 
-### Convenience APIs
-|Method Name|Description|
-|---|---|
-|||
-
 ### Event batching
 `OptimizelyFactory` uses the [`BatchEventProcessor`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/BatchEventProcessor.java)
-to enabled request batching to the Optimizely logging endpoint. The `Batch` 
+to enabled request batching to the Optimizely logging endpoint. by default, a maximum of 10 events are included in each batch
+for a maximum interval of 30 seconds. These parameters are configurable via systems properties or through the 
+`OptimizelyFactory#setMaxEventBatchSize` and `OptimizelyFactory#setMaxEventBatchInterval` respectively.
+  
