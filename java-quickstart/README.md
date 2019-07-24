@@ -7,7 +7,7 @@ From there you can test different attributes setups and other Optimizely Java SD
 This is just a simple example that gets you up and running quickly!
 
 ## Getting Started
-Create an experiment on app.optimizely.com named "background_experiment" with variation_a and variation_b and one conversion event "simple_conversion.".
+Create an experiment on app.optimizely.com named "background_experiment" with variations "variation_a" and "variation_b" and one conversion event "sample_conversion.".
 Use that SDK key in the [`com.optimizely.Example.java`](https://github.com/optimizely/java-sdk/blob/master/java-quickstart/src/main/java/com/optimizely/Example.java) 
 and you are set to test.
 
