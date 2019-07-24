@@ -55,7 +55,7 @@ It's assumed that the `EventProcessor` dispatches events via a provided `EventHa
 
 ### BatchEventProcessor
 [`BatchEventProcessor`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/event/BatchEventProcessor.java)
-is an implemntation of `EventProcessor` where where events are batched prior to dispatch. The class maintains a single consumer thread that pulls 
+is an implementation of `EventProcessor` where events are batched. The class maintains a single consumer thread that pulls
 events off of the `BlockingQueue` and buffers them for either a
 configured batch size or a maximum duration before the resulting `LogEvent` is sent to the `EventDispatcher` and `NotificationCenter`.
 
@@ -77,8 +77,8 @@ implements `EventHandler` with no side-effects. `NoopEventHandler` is useful for
 ## NotificationCenter
 The [`NotificationCenter`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/notification/NotificationCenter.java)
 is the centralized component for subscribing to notifications from the SDK. Subscribers must implement the `NotificationHandler<T>` interface
-and are registered via `NotificationCenter#addNotificationHandler`. Notifications are currently sent synchronously, so be sure that 
-implementations do not block unnecessarily.
+and are registered via `NotificationCenterxaddNotificationHandler`. Note that notifications are called synchronously and have the potential to
+block the main thread.
 
 ## ProjectConfig
 The [`ProjectConfig`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/ProjectConfig.java)
@@ -98,7 +98,6 @@ of a `ProjectConfig` that can be references between service calls.
 ### AtomicProjectConfigManager
 The [`AtomicProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/AtomicProjectConfigManager.java)
 is a static provider that can be updated atomically to provide a consistent view of a `ProjectConfig`.
-is a staconfigured batch sizetic provider that can be updated atomically to provide a consistent view of a `ProjectConfig`.
 
 ### PollingProjectConfigManager
 The [`PollingProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/PollingProjectConfigManager.java)
