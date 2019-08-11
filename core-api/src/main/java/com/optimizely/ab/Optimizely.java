@@ -986,6 +986,22 @@ public class Optimizely implements AutoCloseable {
     }
 
     //======== Builder ========//
+
+    /**
+     * This overloaded factory method is deprecated in favor of pure builder methods.
+     * Please use {@link com.optimizely.ab.Optimizely#builder()} along with
+     * {@link Builder#withDatafile(java.lang.String)} and
+     * {@link Builder#withEventHandler(com.optimizely.ab.event.EventHandler)}
+     * respectively.
+     *
+     * Example:
+     * <pre>
+     *     Optimizely optimizely = Optimizely.builder()
+     *         .withDatafile(datafile)
+     *         .withEventHandler(eventHandler)
+     *         .build();
+     * </pre>
+     */
     @Deprecated
     public static Builder builder(@Nonnull String datafile,
                                   @Nonnull EventHandler eventHandler) {
@@ -1067,12 +1083,12 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
-        // Helper function for making testing easier
-        protected Builder withDatafile(String datafile) {
+        public Builder withDatafile(String datafile) {
             this.datafile = datafile;
             return this;
         }
 
+        // Helper functions for making testing easier
         protected Builder withBucketing(Bucketer bucketer) {
             this.bucketer = bucketer;
             return this;
