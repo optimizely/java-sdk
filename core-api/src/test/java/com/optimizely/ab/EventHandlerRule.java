@@ -51,6 +51,8 @@ public class EventHandlerRule implements EventHandler, TestRule {
 
     private List<CanonicalEvent> expectedEvents;
     private LinkedList<CanonicalEvent> actualEvents;
+    private int actualCalls;
+    private Integer expectedCalls;
 
     @Override
     public Statement apply(final Statement base, Description description) {
@@ -71,12 +73,19 @@ public class EventHandlerRule implements EventHandler, TestRule {
     private void before() {
         expectedEvents = new LinkedList<>();
         actualEvents = new LinkedList<>();
+
+        expectedCalls = null;
+        actualCalls = 0;
     }
 
     private void after() {
     }
 
     private void verify() {
+        if (expectedCalls != null) {
+            assertEquals(expectedCalls.intValue(), actualCalls);
+        }
+
         assertEquals(expectedEvents.size(), actualEvents.size());
 
         ListIterator<CanonicalEvent> expectedIterator = expectedEvents.listIterator();
@@ -88,6 +97,10 @@ public class EventHandlerRule implements EventHandler, TestRule {
 
             assertEquals(expected, actual);
         }
+    }
+
+    public void expectCalls(int expected) {
+        expectedCalls = expected;
     }
 
     public void expectImpression(String experientId, String variationId, String userId) {
@@ -119,6 +132,7 @@ public class EventHandlerRule implements EventHandler, TestRule {
     @Override
     public void dispatchEvent(LogEvent logEvent) {
         logger.info("Receiving event: {}", logEvent);
+        actualCalls++;
 
         List<Visitor> visitors = logEvent.getEventBatch().getVisitors();
 
