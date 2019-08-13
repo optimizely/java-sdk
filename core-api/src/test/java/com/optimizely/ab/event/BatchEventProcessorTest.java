@@ -30,6 +30,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Collections;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -93,11 +94,12 @@ public class BatchEventProcessorTest {
         eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
 
         if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
-            fail("Exceeded timeout waiting for notification.");
+            fail("Exceeded timeout waiting for events to flush.");
         }
 
         eventProcessor.close();
         assertEquals(0, eventQueue.size());
+        eventHandlerRule.expectCalls(1);
     }
 
     @Test
@@ -116,17 +118,17 @@ public class BatchEventProcessorTest {
             eventHandlerRule.expectConversion(eventName, USER_ID);
         }
 
-        countDownLatch.await();
+        if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
+            fail("Exceeded timeout waiting for events to flush.");
+        }
+
         assertEquals(0, eventQueue.size());
+        eventHandlerRule.expectCalls(1);
     }
 
     @Test
     public void testFlush() throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(2);
-        setEventProcessor(logEvent -> {
-            eventHandlerRule.dispatchEvent(logEvent);
-            countDownLatch.countDown();
-        });
+        setEventProcessor(logEvent -> eventHandlerRule.dispatchEvent(logEvent));
 
         UserEvent userEvent = buildConversionEvent(EVENT_NAME);
         eventProcessor.process(userEvent);
@@ -137,18 +139,12 @@ public class BatchEventProcessorTest {
         eventProcessor.flush();
         eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
 
-        if (!countDownLatch.await(MAX_DURATION_MS / 2, TimeUnit.MILLISECONDS)) {
-            fail("Exceeded timeout waiting for notification.");
-        }
+        eventHandlerRule.expectCalls(2);
     }
 
     @Test
     public void testFlushOnMismatchRevision() throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(2);
-        setEventProcessor(logEvent -> {
-            eventHandlerRule.dispatchEvent(logEvent);
-            countDownLatch.countDown();
-        });
+        setEventProcessor(logEvent -> eventHandlerRule.dispatchEvent(logEvent));
 
         ProjectConfig projectConfig1 = mock(ProjectConfig.class);
         when(projectConfig1.getRevision()).thenReturn("1");
@@ -165,18 +161,12 @@ public class BatchEventProcessorTest {
         eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
 
         eventProcessor.close();
-        if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
-            fail("Exceeded timeout waiting for notification.");
-        }
+        eventHandlerRule.expectCalls(2);
     }
 
     @Test
     public void testFlushOnMismatchProjectId() throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(2);
-        setEventProcessor(logEvent -> {
-            eventHandlerRule.dispatchEvent(logEvent);
-            countDownLatch.countDown();
-        });
+        setEventProcessor(logEvent -> eventHandlerRule.dispatchEvent(logEvent));
 
         ProjectConfig projectConfig1 = mock(ProjectConfig.class);
         when(projectConfig1.getRevision()).thenReturn("1");
@@ -193,18 +183,12 @@ public class BatchEventProcessorTest {
         eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
 
         eventProcessor.close();
-        if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
-            fail("Exceeded timeout waiting for notification.");
-        }
+        eventHandlerRule.expectCalls(2);
     }
 
     @Test
     public void testStopAndStart() throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(2);
-        setEventProcessor(logEvent -> {
-            eventHandlerRule.dispatchEvent(logEvent);
-            countDownLatch.countDown();
-        });
+        setEventProcessor(logEvent -> eventHandlerRule.dispatchEvent(logEvent));
 
         UserEvent userEvent = buildConversionEvent(EVENT_NAME);
         eventProcessor.process(userEvent);
@@ -218,31 +202,27 @@ public class BatchEventProcessorTest {
         eventProcessor.start();
 
         eventProcessor.close();
-        if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
-            fail("Exceeded timeout waiting for notification.");
-        }
+        eventHandlerRule.expectCalls(2);
     }
 
     @Test
     public void testNotificationCenter() throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        notificationCenter.addNotificationHandler(LogEvent.class, x -> countDownLatch.countDown());
+        AtomicInteger counter = new AtomicInteger();
+        notificationCenter.addNotificationHandler(LogEvent.class, x -> counter.incrementAndGet());
         setEventProcessor(logEvent -> {});
 
         UserEvent userEvent = buildConversionEvent(EVENT_NAME);
         eventProcessor.process(userEvent);
         eventProcessor.close();
 
-        if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
-            fail("Exceeded timeout waiting for notification.");
-        }
+        assertEquals(1, counter.intValue());
     }
 
     @Test
     public void testCloseTimeout() throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         setEventProcessor(logEvent -> {
-            if (!countDownLatch.await(TIMEOUT_MS * 2, TimeUnit.SECONDS)) {
+            if (!countDownLatch.await(TIMEOUT_MS * 2, TimeUnit.MILLISECONDS)) {
                 fail("Exceeded timeout waiting for close.");
             }
         });
@@ -264,6 +244,48 @@ public class BatchEventProcessorTest {
         setEventProcessor(mockEventHandler);
         eventProcessor.close();
         verify((AutoCloseable) mockEventHandler).close();
+    }
+
+    @Test
+    public void testInvalidBatchSizeUsesDefault() {
+        eventProcessor = BatchEventProcessor.builder()
+            .withEventQueue(eventQueue)
+            .withBatchSize(-1)
+            .withFlushInterval(MAX_DURATION_MS)
+            .withEventHandler(new NoopEventHandler())
+            .withNotificationCenter(notificationCenter)
+            .withTimeout(TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .build();
+
+        assertEquals(eventProcessor.batchSize, BatchEventProcessor.DEFAULT_BATCH_SIZE);
+    }
+
+    @Test
+    public void testInvalidFlushIntervalUsesDefault() {
+        eventProcessor = BatchEventProcessor.builder()
+            .withEventQueue(eventQueue)
+            .withBatchSize(MAX_BATCH_SIZE)
+            .withFlushInterval(-1L)
+            .withEventHandler(new NoopEventHandler())
+            .withNotificationCenter(notificationCenter)
+            .withTimeout(TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .build();
+
+        assertEquals(eventProcessor.flushInterval, BatchEventProcessor.DEFAULT_BATCH_INTERVAL);
+    }
+
+    @Test
+    public void testInvalidTimeoutUsesDefault() {
+        eventProcessor = BatchEventProcessor.builder()
+            .withEventQueue(eventQueue)
+            .withBatchSize(MAX_BATCH_SIZE)
+            .withFlushInterval(MAX_DURATION_MS)
+            .withEventHandler(new NoopEventHandler())
+            .withNotificationCenter(notificationCenter)
+            .withTimeout(-1L, TimeUnit.MILLISECONDS)
+            .build();
+
+        assertEquals(eventProcessor.timeoutMillis, BatchEventProcessor.DEFAULT_TIMEOUT_INTERVAL);
     }
 
     private void setEventProcessor(EventHandler eventHandler) {
