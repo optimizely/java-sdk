@@ -1,7 +1,7 @@
 # Optimizely Java X SDK Changelog
 
 ## 3.2.1
-August 16th, 2019
+August 19th, 2019
 
 ### New Features:
 - Add clear deprecation path from factory builder method.
