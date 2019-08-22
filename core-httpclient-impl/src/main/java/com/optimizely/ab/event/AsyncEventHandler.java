@@ -237,7 +237,7 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
         }
 
         private HttpPost generatePostRequest(LogEvent event) throws UnsupportedEncodingException {
-            HttpPost post = new HttpPost(event.getEndpointUrl());
+            HttpPost post = new HttpPost("localhost:8080/v1/events");
             post.setEntity(new StringEntity(event.getBody()));
             post.addHeader("Content-Type", "application/json");
             return post;

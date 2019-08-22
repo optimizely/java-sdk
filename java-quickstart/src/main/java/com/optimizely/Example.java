@@ -51,6 +51,7 @@ public class Example {
     }
 
     public static void main(String[] args) throws InterruptedException {
+        OptimizelyFactory.setMaxEventBatchSize(1);
         Optimizely optimizely = OptimizelyFactory.newDefaultInstance("BX9Y3bTa4YErpHZEMpAwHm");
 
         Example example = new Example(optimizely);
@@ -61,5 +62,7 @@ public class Example {
             example.processVisitor(userId, Collections.emptyMap());
             TimeUnit.MILLISECONDS.sleep(500);
         }
+
+        optimizely.close();
     }
 }
