@@ -20,6 +20,5 @@ package com.optimizely.ab.event;
  * Implementations are responsible for dispatching event's to the Optimizely event end-point.
  */
 public interface EventHandler {
-
     void dispatchEvent(LogEvent logEvent) throws Exception;
 }

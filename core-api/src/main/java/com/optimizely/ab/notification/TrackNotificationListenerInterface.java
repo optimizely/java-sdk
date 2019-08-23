@@ -21,6 +21,12 @@ import com.optimizely.ab.event.LogEvent;
 import javax.annotation.Nonnull;
 import java.util.Map;
 
+/**
+ * TrackNotificationListenerInterface provides an interface for track event notification.
+ *
+ * @deprecated and users should implement NotificationHandler&lt;TrackNotification&gt; directly.
+ */
+@Deprecated
 public interface TrackNotificationListenerInterface {
     /**
      * onTrack is called when a track event is triggered

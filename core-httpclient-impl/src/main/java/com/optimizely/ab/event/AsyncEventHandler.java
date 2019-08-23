@@ -16,10 +16,11 @@
  */
 package com.optimizely.ab.event;
 
-import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.NamedThreadFactory;
+import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
 
+import com.optimizely.ab.internal.PropertyUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
@@ -28,9 +29,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,60 +48,85 @@ import javax.annotation.CheckForNull;
  * {@link EventHandler} implementation that queues events and has a separate pool of threads responsible
  * for the dispatch.
  */
-public class AsyncEventHandler implements EventHandler {
+public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
-    // The following static values are public so that they can be tweaked if necessary.
-    // These are the recommended settings for http protocol.  https://hc.apache.org/httpcomponents-client-ga/tutorial/html/connmgmt.html
-    // The maximum number of connections allowed across all routes.
-    private int maxTotalConnections = 200;
-    // The maximum number of connections allowed for a route
-    private int maxPerRoute = 20;
-    // Defines period of inactivity in milliseconds after which persistent connections must be re-validated prior to being leased to the consumer.
-    private int validateAfterInactivity = 5000;
+    public static final String CONFIG_QUEUE_CAPACITY            = "async.event.handler.queue.capacity";
+    public static final String CONFIG_NUM_WORKERS               = "async.event.handler.num.workers";
+    public static final String CONFIG_MAX_CONNECTIONS           = "async.event.handler.max.connections";
+    public static final String CONFIG_MAX_PER_ROUTE             = "async.event.handler.event.max.per.route";
+    public static final String CONFIG_VALIDATE_AFTER_INACTIVITY = "async.event.handler.validate.after";
+
+    public static final int DEFAULT_QUEUE_CAPACITY = 10000;
+    public static final int DEFAULT_NUM_WORKERS = 2;
+    public static final int DEFAULT_MAX_CONNECTIONS = 200;
+    public static final int DEFAULT_MAX_PER_ROUTE = 20;
+    public static final int DEFAULT_VALIDATE_AFTER_INACTIVITY = 5000;
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncEventHandler.class);
     private static final ProjectConfigResponseHandler EVENT_RESPONSE_HANDLER = new ProjectConfigResponseHandler();
 
-    private final CloseableHttpClient httpClient;
+    private final OptimizelyHttpClient httpClient;
     private final ExecutorService workerExecutor;
 
-    public AsyncEventHandler(int queueCapacity, int numWorkers) {
+    private final long closeTimeout;
+    private final TimeUnit closeTimeoutUnit;
+
+    /**
+     * @deprecated Use the builder {@link Builder}
+     */
+    @Deprecated
+    public AsyncEventHandler(int queueCapacity,
+                             int numWorkers) {
         this(queueCapacity, numWorkers, 200, 20, 5000);
     }
 
-    public AsyncEventHandler(int queueCapacity, int numWorkers, int maxConnections, int connectionsPerRoute, int validateAfter) {
-        if (queueCapacity <= 0) {
-            throw new IllegalArgumentException("queue capacity must be > 0");
-        }
+    /**
+     * @deprecated Use the builder {@link Builder}
+     */
+    @Deprecated
+    public AsyncEventHandler(int queueCapacity,
+                             int numWorkers,
+                             int maxConnections,
+                             int connectionsPerRoute,
+                             int validateAfter) {
+        this(queueCapacity, numWorkers, maxConnections, connectionsPerRoute, validateAfter, Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+    }
 
-        this.maxTotalConnections = maxConnections;
-        this.maxPerRoute = connectionsPerRoute;
-        this.validateAfterInactivity = validateAfter;
+    public AsyncEventHandler(int queueCapacity,
+                             int numWorkers,
+                             int maxConnections,
+                             int connectionsPerRoute,
+                             int validateAfter,
+                             long closeTimeout,
+                             TimeUnit closeTimeoutUnit) {
 
-        this.httpClient = HttpClients.custom()
-            .setDefaultRequestConfig(HttpClientUtils.DEFAULT_REQUEST_CONFIG)
-            .setConnectionManager(poolingHttpClientConnectionManager())
-            .disableCookieManagement()
+        queueCapacity       = validateInput("queueCapacity", queueCapacity, DEFAULT_QUEUE_CAPACITY);
+        numWorkers          = validateInput("numWorkers", numWorkers, DEFAULT_NUM_WORKERS);
+        maxConnections      = validateInput("maxConnections", maxConnections, DEFAULT_MAX_CONNECTIONS);
+        connectionsPerRoute = validateInput("connectionsPerRoute", connectionsPerRoute, DEFAULT_MAX_PER_ROUTE);
+        validateAfter       = validateInput("validateAfter", validateAfter, DEFAULT_VALIDATE_AFTER_INACTIVITY);
+
+        this.httpClient = OptimizelyHttpClient.builder()
+            .withMaxTotalConnections(maxConnections)
+            .withMaxPerRoute(connectionsPerRoute)
+            .withValidateAfterInactivity(validateAfter)
             .build();
 
         this.workerExecutor = new ThreadPoolExecutor(numWorkers, numWorkers,
             0L, TimeUnit.MILLISECONDS,
-            new ArrayBlockingQueue<Runnable>(queueCapacity),
+            new ArrayBlockingQueue<>(queueCapacity),
             new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true));
+
+        this.closeTimeout = closeTimeout;
+        this.closeTimeoutUnit = closeTimeoutUnit;
     }
 
     @VisibleForTesting
-    public AsyncEventHandler(CloseableHttpClient httpClient, ExecutorService workerExecutor) {
+    public AsyncEventHandler(OptimizelyHttpClient httpClient, ExecutorService workerExecutor) {
         this.httpClient = httpClient;
         this.workerExecutor = workerExecutor;
-    }
-
-    private PoolingHttpClientConnectionManager poolingHttpClientConnectionManager() {
-        PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager();
-        poolingHttpClientConnectionManager.setMaxTotal(maxTotalConnections);
-        poolingHttpClientConnectionManager.setDefaultMaxPerRoute(maxPerRoute);
-        poolingHttpClientConnectionManager.setValidateAfterInactivity(validateAfterInactivity);
-        return poolingHttpClientConnectionManager;
+        this.closeTimeout = Long.MAX_VALUE;
+        this.closeTimeoutUnit = TimeUnit.MILLISECONDS;
     }
 
     @Override
@@ -160,6 +183,11 @@ public class AsyncEventHandler implements EventHandler {
         logger.info("event handler shutdown complete");
     }
 
+    @Override
+    public void close() {
+        shutdownAndAwaitTermination(closeTimeout, closeTimeoutUnit);
+    }
+
     //======== Helper classes ========//
 
     /**
@@ -175,6 +203,11 @@ public class AsyncEventHandler implements EventHandler {
 
         @Override
         public void run() {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Dispatching event to URL {} with params {} and payload \"{}\".",
+                    logEvent.getEndpointUrl(), logEvent.getRequestParams(), logEvent.getBody());
+            }
+
             try {
                 HttpRequestBase request;
                 if (logEvent.getRequestMethod() == LogEvent.RequestMethod.GET) {
@@ -212,7 +245,7 @@ public class AsyncEventHandler implements EventHandler {
     }
 
     /**
-     * Handler for the event request that returns nothing (i.e., Void)
+     * Handler for the event request.
      */
     private static final class ProjectConfigResponseHandler implements ResponseHandler<Void> {
 
@@ -228,5 +261,82 @@ public class AsyncEventHandler implements EventHandler {
                 throw new ClientProtocolException("unexpected response from event endpoint, status: " + status);
             }
         }
+    }
+
+    //======== Builder ========//
+
+    public static Builder builder() { return new Builder(); }
+
+    public static class Builder {
+
+        int queueCapacity = PropertyUtils.getInteger(CONFIG_QUEUE_CAPACITY, DEFAULT_QUEUE_CAPACITY);
+        int numWorkers = PropertyUtils.getInteger(CONFIG_NUM_WORKERS, DEFAULT_NUM_WORKERS);
+        int maxTotalConnections = PropertyUtils.getInteger(CONFIG_MAX_CONNECTIONS, DEFAULT_MAX_CONNECTIONS);
+        int maxPerRoute = PropertyUtils.getInteger(CONFIG_MAX_PER_ROUTE, DEFAULT_MAX_PER_ROUTE);
+        int validateAfterInactivity = PropertyUtils.getInteger(CONFIG_VALIDATE_AFTER_INACTIVITY, DEFAULT_VALIDATE_AFTER_INACTIVITY);
+        private long closeTimeout = Long.MAX_VALUE;
+        private TimeUnit closeTimeoutUnit = TimeUnit.MILLISECONDS;
+
+        public Builder withQueueCapacity(int queueCapacity) {
+            if (queueCapacity <= 0) {
+                logger.warn("Queue capacity cannot be <= 0. Keeping default value: {}", this.queueCapacity);
+                return this;
+            }
+
+            this.queueCapacity = queueCapacity;
+            return this;
+        }
+
+        public Builder withNumWorkers(int numWorkers) {
+            if (numWorkers <= 0) {
+                logger.warn("Number of workers cannot be <= 0. Keeping default value: {}", this.numWorkers);
+                return this;
+            }
+
+            this.numWorkers = numWorkers;
+            return this;
+        }
+
+        public Builder withMaxTotalConnections(int maxTotalConnections) {
+            this.maxTotalConnections = maxTotalConnections;
+            return this;
+        }
+
+        public Builder withMaxPerRoute(int maxPerRoute) {
+            this.maxPerRoute = maxPerRoute;
+            return this;
+        }
+
+        public Builder withValidateAfterInactivity(int validateAfterInactivity) {
+            this.validateAfterInactivity = validateAfterInactivity;
+            return this;
+        }
+
+        public Builder withCloseTimeout(long closeTimeout, TimeUnit unit) {
+            this.closeTimeout = closeTimeout;
+            this.closeTimeoutUnit = unit;
+            return this;
+        }
+
+        public AsyncEventHandler build() {
+            return new AsyncEventHandler(
+                queueCapacity,
+                numWorkers,
+                maxTotalConnections,
+                maxPerRoute,
+                validateAfterInactivity,
+                closeTimeout,
+                closeTimeoutUnit
+            );
+        }
+    }
+
+    private int validateInput(String name, int input, int fallback) {
+        if (input <= 0) {
+            logger.warn("Invalid value for {}: {}. Defaulting to {}", name, input, fallback);
+            return fallback;
+        }
+
+        return input;
     }
 }

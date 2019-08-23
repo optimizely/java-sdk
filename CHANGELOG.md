@@ -1,5 +1,94 @@
 # Optimizely Java X SDK Changelog
 
+## 3.2.1
+August 19th, 2019
+
+### New Features:
+- Add clear deprecation path from factory builder method.
+- Make Optimizely#withDatafile public.
+
+## 3.4.0-beta
+July 24th, 2019
+
+### New Features:
+- Introduced `EventProcessor` interface with `BatchEventProcessor` implementation.
+- Introduced `LogEvent` notification.
+- Added `BatchEventProcessor` as the default implementation within the `OptimizelyFactory` class.
+
+### Deprecated
+- `LogEvent` was deprecated from `TrackNotification` and `ActivateNotification` notifications in favor of explicit `LogEvent` notification.
+
+## 3.2.0
+June 26th, 2019
+
+### New Features:
+- Added support for automatic datafile management via `HttpProjectConfigManager`:
+    - The [`HttpProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/config/HttpProjectConfigManager.java)
+      is part of the `core-httpclient-impl` package and is an implementation of the abstract
+      [`PollingProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/PollingProjectConfigManager.java) class.
+    - Users must first build the `HttpProjectConfigManager` with an SDK key and then and provide that instance to the Optimizely.Builder.
+    - An initial datafile can be provided to the `HttpProjectConfigManager` to bootstrap before making http requests for the hosted datafile.
+    - Requests for the datafile are made in a separate thread and are scheduled with fixed delay.
+    - Configuration updates can be subscribed to via the `Optimizely#addUpdateConfigNotificationHandler` or by subscribing to
+      the NotificationCenter built with the `HttpProjectConfigManager`.
+- Added `AsyncEventHandler.Builder` to be consistent with other Optimizely resources.
+- The [`OptimizelyFactory`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/OptimizelyFactory.java)
+  was included in the `core-httpclient-impl` package and provides basic methods for instantiating the Optimizely SDK with a minimal number of parameters.
+- Default configuration options for `HttpProjectConfigManager` and `AsyncEventHandler` can be overwritten using Java system properties, environment variables or via an `optimizely.properties` file
+  to avoid hard coding the configuration options.
+
+### Deprecated
+- `Optimizely.builder(String, EventHandler)` was deprecated in favor of pure builder methods `withConfigManager` and `withEventHandler`.
+
+## 3.2.0-alpha
+May 23rd, 2019
+
+### New Features:
+- Added support for automatic datafile management via `HttpProjectConfigManager`:
+    - The [`HttpProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/config/HttpProjectConfigManager.java)
+      is part of the `core-httpclient-impl` package and is an implementation of the abstract
+      [`PollingProjectConfigManager`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/config/PollingProjectConfigManager.java) class.
+    - Users must first build the `HttpProjectConfigManager` with an SDK key and then and provide that instance to the Optimizely.Builder.
+    - An initial datafile can be provided to the `HttpProjectConfigManager` to bootstrap before making http requests for the hosted datafile.
+    - Requests for the datafile are made in a separate thread and are scheduled with fixed delay.
+    - Configuration updates can be subscribed to via the `Optimizely#addUpdateConfigNotificationHandler` or by subscribing to
+      the NotificationCenter built with the `HttpProjectConfigManager`.
+- Added `AsyncEventHandler.Builder` to be consistent with other Optimizely resources.
+- The [`OptimizelyFactory`](https://github.com/optimizely/java-sdk/blob/master/core-httpclient-impl/src/main/java/com/optimizely/ab/OptimizelyFactory.java)
+  was included in the `core-httpclient-impl` package and provides basic methods for instantiating the Optimizely SDK with a minimal number of parameters.
+- Default configuration options for `HttpProjectConfigManager` and `AsyncEventHandler` can be overwritten using Java system properties, environment variables or via an `optimizely.properties` file
+  to avoid hard coding the configuration options.
+
+### Deprecated
+- `Optimizely.builder(String, EventHandler)` was deprecated in favor of pure builder methods `withConfigManager` and `withEventHandler`. 
+
+## 3.1.0
+May 6th, 2019
+
+### New Features:
+- Introduced Decision notification listener to be able to record:
+    - Variation assignments for users activated in an experiment.
+    - Feature access for users.
+    - Feature variable value for users.
+- Added APIs to be able to conveniently add Decision notification handler (`addDecisionNotificationHandler`) and Track notification handler (`addTrackNotificationHandler`).
+
+### Bug Fixes:
+- Feature variable APIs return default variable value when featureEnabled property is false. ([#274](https://github.com/optimizely/java-sdk/pull/274))
+
+### Deprecated
+- Activate notification listener is deprecated as of this release. Recommendation is to use the new Decision notification listener. Activate notification listener will be removed in the next major release.
+- `addActivateNotificationListener`, `addTrackNotificationListener` and `addNotificationListener` APIs on `NotificationCenter`.
+
+## 3.0.1
+
+April 23, 2019
+
+This is a simple fix so that older versions of org.json can still parse the datafile.  
+
+### Bug Fix
+We use org.json.JSONArray. Older versions do not support the iterator.  In order to ensure that the datafile is still parsable if you use a older version, we changed to use the get method instead of the iterator.
+([#283](https://github.com/optimizely/java-sdk/pull/283))
+
 ## 3.0.0
 
 February 13, 2019
@@ -9,7 +98,7 @@ The 3.0 release improves event tracking and supports additional audience targeti
 ### New Features:
 * Event tracking:
     * The `track` method now dispatches its conversion event _unconditionally_, without first determining whether the user is targeted by a known experiment that uses the event. This may increase outbound network traffic.
-    * In Optimizely results, conversion events sent by 3.0 SDKs are automatically attributed to variations that the user has previously seen, as long as our backend has actually received the impression events for those variations.
+    * In Optimizely results, conversion events sent by 3.0 SDKs don't explicitly name the experiments and variations that are currently targeted to the user. Instead, conversions are automatically attributed to variations that the user has previously seen, as long as those variations were served via 3.0 SDKs or by other clients capable of automatic attribution, and as long as our backend actually received the impression events for those variations.
     * Altogether, this allows you to track conversion events and attribute them to variations even when you don't know all of a user's attribute values, and even if the user's attribute values or the experiment's configuration have changed such that the user is no longer affected by the experiment. As a result, **you may observe an increase in the conversion rate for previously-instrumented events.** If that is undesirable, you can reset the results of previously-running experiments after upgrading to the 3.0 SDK.
     * This will also allow you to attribute events to variations from other Optimizely projects in your account, even though those experiments don't appear in the same datafile.
     * Note that for results segmentation in Optimizely results, the user attribute values from one event are automatically applied to all other events in the same session, as long as the events in question were actually received by our backend. This behavior was already in place and is not affected by the 3.0 release.
@@ -30,6 +119,7 @@ The 3.0 release improves event tracking and supports additional audience targeti
 
 ### Breaking Changes:
 * Java 7 is no longer supported.
+* Conversion events sent by 3.0 SDKs don't explicitly name the experiments and variations that are currently targeted to the user, so these events are unattributed in raw events data export. You must use the new _results_ export to determine the variations to which events have been attributed.
 * Previously, notification listeners were only given string-valued user attributes because only strings could be passed into various method calls. That is no longer the case. The `ActivateNotificationListener` and `TrackNotificationListener` interfaces now receive user attributes as `Map<String, ?>` instead of `Map<String, String>`.
 
 ### Bug Fixes:

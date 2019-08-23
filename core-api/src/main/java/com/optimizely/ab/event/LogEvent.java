@@ -21,6 +21,7 @@ import com.optimizely.ab.event.internal.serializer.DefaultJsonSerializer;
 import com.optimizely.ab.event.internal.serializer.Serializer;
 
 import java.util.Map;
+import java.util.Objects;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
@@ -69,6 +70,10 @@ public class LogEvent {
         return serializer.serialize(eventBatch);
     }
 
+    public EventBatch getEventBatch() {
+        return eventBatch;
+    }
+
     //======== Overriding method ========//
 
     @Override
@@ -79,6 +84,22 @@ public class LogEvent {
             ", requestParams=" + requestParams +
             ", body='" + getBody() + '\'' +
             '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LogEvent logEvent = (LogEvent) o;
+        return requestMethod == logEvent.requestMethod &&
+            Objects.equals(endpointUrl, logEvent.endpointUrl) &&
+            Objects.equals(requestParams, logEvent.requestParams) &&
+            Objects.equals(eventBatch, logEvent.eventBatch);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(requestMethod, endpointUrl, requestParams, eventBatch);
     }
 
     //======== Helper classes ========//

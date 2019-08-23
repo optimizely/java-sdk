@@ -17,14 +17,10 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.bucketing.UserProfileService;
-import com.optimizely.ab.config.ProjectConfigTestUtils;
-import com.optimizely.ab.config.parser.ConfigParseException;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.EventHandler;
-import com.optimizely.ab.event.internal.BuildVersionInfo;
-import com.optimizely.ab.event.internal.EventFactory;
-import com.optimizely.ab.event.internal.payload.EventBatch.ClientEngine;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,12 +29,11 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import static com.optimizely.ab.config.ProjectConfigTestUtils.*;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for {@link Optimizely#builder(String, EventHandler)}.
@@ -58,6 +53,9 @@ public class OptimizelyBuilderTest {
     @Mock
     private ErrorHandler mockErrorHandler;
 
+    @Mock
+    ProjectConfigManager mockProjectConfigManager;
+
     @Test
     public void withEventHandler() throws Exception {
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
@@ -71,7 +69,7 @@ public class OptimizelyBuilderTest {
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
             .build();
 
-        ProjectConfigTestUtils.verifyProjectConfig(optimizelyClient.getProjectConfig(), validProjectConfigV2());
+        DatafileProjectConfigTestUtils.verifyProjectConfig(optimizelyClient.getProjectConfig(), validProjectConfigV2());
     }
 
     @Test
@@ -79,7 +77,7 @@ public class OptimizelyBuilderTest {
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV3(), mockEventHandler)
             .build();
 
-        ProjectConfigTestUtils.verifyProjectConfig(optimizelyClient.getProjectConfig(), validProjectConfigV3());
+        DatafileProjectConfigTestUtils.verifyProjectConfig(optimizelyClient.getProjectConfig(), validProjectConfigV3());
     }
 
     @Test
@@ -109,53 +107,10 @@ public class OptimizelyBuilderTest {
         assertThat(optimizelyClient.getUserProfileService(), is(userProfileService));
     }
 
-    @Test
-    public void withDefaultClientEngine() throws Exception {
-        Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-            .build();
-
-        assertThat(((EventFactory) optimizelyClient.eventFactory).clientEngine, is(ClientEngine.JAVA_SDK));
-    }
-
-    @Test
-    public void withAndroidSDKClientEngine() throws Exception {
-        Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-            .withClientEngine(ClientEngine.ANDROID_SDK)
-            .build();
-
-        assertThat(((EventFactory) optimizelyClient.eventFactory).clientEngine, is(ClientEngine.ANDROID_SDK));
-    }
-
-    @Test
-    public void withAndroidTVSDKClientEngine() throws Exception {
-        Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-            .withClientEngine(ClientEngine.ANDROID_TV_SDK)
-            .build();
-
-        assertThat(((EventFactory) optimizelyClient.eventFactory).clientEngine, is(ClientEngine.ANDROID_TV_SDK));
-    }
-
-    @Test
-    public void withDefaultClientVersion() throws Exception {
-        Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-            .build();
-
-        assertThat(((EventFactory) optimizelyClient.eventFactory).clientVersion, is(BuildVersionInfo.VERSION));
-    }
-
-    @Test
-    public void withCustomClientVersion() throws Exception {
-        Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV2(), mockEventHandler)
-            .withClientVersion("0.0.0")
-            .build();
-
-        assertThat(((EventFactory) optimizelyClient.eventFactory).clientVersion, is("0.0.0"));
-    }
-
     @SuppressFBWarnings(value = "NP_NONNULL_PARAM_VIOLATION", justification = "Testing nullness contract violation")
     @Test
     public void nullDatafileResultsInInvalidOptimizelyInstance() throws Exception {
-        Optimizely optimizelyClient = Optimizely.builder(null, mockEventHandler).build();
+        Optimizely optimizelyClient = Optimizely.builder((String) null, mockEventHandler).build();
 
         assertFalse(optimizelyClient.isValid());
     }
@@ -179,6 +134,39 @@ public class OptimizelyBuilderTest {
         Optimizely optimizelyClient = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler)
             .build();
 
+        assertFalse(optimizelyClient.isValid());
+    }
+
+    @Test
+    public void withValidProjectConfigManagerOnly() throws Exception {
+        ProjectConfig projectConfig = new DatafileProjectConfig.Builder().withDatafile(validConfigJsonV4()).build();
+        when(mockProjectConfigManager.getConfig()).thenReturn(projectConfig);
+
+        Optimizely optimizelyClient = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withEventHandler(mockEventHandler)
+            .build();
+
+        assertTrue(optimizelyClient.isValid());
+        verifyProjectConfig(optimizelyClient.getProjectConfig(), projectConfig);
+    }
+
+    @Test
+    public void withInvalidProjectConfigManagerOnly() throws Exception {
+        Optimizely optimizelyClient = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withEventHandler(mockEventHandler)
+            .build();
+        assertFalse(optimizelyClient.isValid());
+    }
+
+    @Test
+    public void withProjectConfigManagerAndFallbackDatafile() throws Exception {
+        Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV4(), mockEventHandler)
+            .withConfigManager(new AtomicProjectConfigManager())
+            .build();
+
+        // Project Config manager takes precedence.
         assertFalse(optimizelyClient.isValid());
     }
 }

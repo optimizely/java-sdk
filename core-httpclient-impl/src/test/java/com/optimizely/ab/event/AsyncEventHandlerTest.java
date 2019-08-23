@@ -18,6 +18,7 @@ package com.optimizely.ab.event;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
+import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -25,6 +26,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -37,7 +39,10 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.mockito.runners.MockitoJUnitRunner;
 
+import static com.optimizely.ab.event.AsyncEventHandler.builder;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doThrow;
@@ -48,25 +53,13 @@ import static org.mockito.Mockito.when;
 /**
  * Tests for {@link AsyncEventHandler}.
  */
+@RunWith(MockitoJUnitRunner.class)
 public class AsyncEventHandlerTest {
 
-    @Rule
-    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
-    public MockitoRule rule = MockitoJUnit.rule();
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     @Mock
-    CloseableHttpClient mockHttpClient;
+    OptimizelyHttpClient mockHttpClient;
     @Mock
     ExecutorService mockExecutorService;
-
-    @Test
-    public void testQueueCapacityPreconditionCheck() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-        new AsyncEventHandler(-1, 1);
-    }
 
     @Test
     public void testDispatch() throws Exception {
@@ -129,6 +122,22 @@ public class AsyncEventHandlerTest {
         verify(mockExecutorService).shutdown();
         verify(mockExecutorService).shutdownNow();
         verify(mockHttpClient).close();
+    }
+
+    @Test
+    public void testInvalidQueueCapacity() {
+        AsyncEventHandler.Builder builder = builder();
+        int expected = builder.queueCapacity;
+        builder.withQueueCapacity(-1);
+        assertEquals(expected, builder.queueCapacity);
+    }
+
+    @Test
+    public void testInvalidNumWorkers() {
+        AsyncEventHandler.Builder builder = builder();
+        int expected = builder.numWorkers;
+        builder.withNumWorkers(-1);
+        assertEquals(expected, builder.numWorkers);
     }
 
     //======== Helper methods ========//

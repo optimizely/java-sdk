@@ -28,14 +28,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static com.optimizely.ab.config.ProjectConfigTestUtils.nullFeatureEnabledConfigJsonV4;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV3;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validConfigJsonV4;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV2;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV3;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.validProjectConfigV4;
-import static com.optimizely.ab.config.ProjectConfigTestUtils.verifyProjectConfig;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.nullFeatureEnabledConfigJsonV4;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV2;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV3;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV4;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV2;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV3;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV4;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.verifyProjectConfig;
 import static org.junit.Assert.assertNotNull;
 
 /**

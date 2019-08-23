@@ -27,7 +27,11 @@ Refer to the [Google Java Style Guide](https://google.github.io/styleguide/javag
 
 ## License
 
-All contributions are under the CLA mentioned above. For this project, Optimizely uses the Apache 2.0 license, and so asks that by contributing your code, you agree to license your contribution under the terms of the [Apache License v2.0](http://www.apache.org/licenses/LICENSE-2.0). Your contributions should also include the following header:
+All contributions are under the CLA mentioned above.
+
+For this project, Optimizely uses the Apache 2.0 license, and so asks that by contributing your code, you agree to license your contribution under the terms of the [Apache License v2.0](http://www.apache.org/licenses/LICENSE-2.0).
+
+Your contributions should also include the following header:
 
 ```
 /****************************************************************************
@@ -48,6 +52,10 @@ All contributions are under the CLA mentioned above. For this project, Optimizel
  ```
 
 The YEAR above should be the year of the contribution. If work on the file has been done over multiple years, list each year in the section above. Example: Optimizely writes the file and releases it in 2014. No changes are made in 2015. Change made in 2016. YEAR should be “2014, 2016”.
+
+This project contains Gradle tasks that check the correct license header exists
+in each file. Contributors can use the `./gradlew licenseFormat` command to
+automatically insert missing license headers.
 
 ## Contact
 

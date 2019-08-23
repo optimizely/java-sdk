@@ -62,7 +62,7 @@ public final class DefaultJsonSerializer {
                 + "Please see <link> for more information");
         }
 
-        logger.info("using json serializer: {}", serializer.getClass().getSimpleName());
+        logger.debug("using json serializer: {}", serializer.getClass().getSimpleName());
         return serializer;
     }
 
