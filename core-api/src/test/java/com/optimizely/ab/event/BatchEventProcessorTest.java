@@ -252,7 +252,6 @@ public class BatchEventProcessorTest {
             .withEventQueue(eventQueue)
             .withBatchSize(-1)
             .withFlushInterval(MAX_DURATION_MS)
-            .withEventHandler(new NoopEventHandler())
             .withNotificationCenter(notificationCenter)
             .withTimeout(TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .build();
@@ -266,7 +265,6 @@ public class BatchEventProcessorTest {
             .withEventQueue(eventQueue)
             .withBatchSize(MAX_BATCH_SIZE)
             .withFlushInterval(-1L)
-            .withEventHandler(new NoopEventHandler())
             .withNotificationCenter(notificationCenter)
             .withTimeout(TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .build();
@@ -280,12 +278,17 @@ public class BatchEventProcessorTest {
             .withEventQueue(eventQueue)
             .withBatchSize(MAX_BATCH_SIZE)
             .withFlushInterval(MAX_DURATION_MS)
-            .withEventHandler(new NoopEventHandler())
             .withNotificationCenter(notificationCenter)
             .withTimeout(-1L, TimeUnit.MILLISECONDS)
             .build();
 
         assertEquals(eventProcessor.timeoutMillis, BatchEventProcessor.DEFAULT_TIMEOUT_INTERVAL);
+    }
+
+    @Test
+    public void testDefaultEventHandler() throws InterruptedException {
+        eventProcessor = BatchEventProcessor.builder().build();
+        assertNotNull(eventProcessor.eventHandler);
     }
 
     private void setEventProcessor(EventHandler eventHandler) {
