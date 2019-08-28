@@ -56,7 +56,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
     private static final Object FLUSH_SIGNAL    = new Object();
 
     private final BlockingQueue<Object> eventQueue;
-    final EventHandler eventHandler;
+    private final EventHandler eventHandler;
 
     final int batchSize;
     final long flushInterval;
@@ -314,8 +314,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
             }
 
             if (eventHandler == null) {
-                logger.warn("EventHandler was not configured, defaulting to a no-op handler.");
-                eventHandler = new NoopEventHandler();
+                throw new IllegalArgumentException("EventHandler was not configured");
             }
 
             if (executor == null) {
