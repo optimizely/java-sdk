@@ -67,7 +67,9 @@ public class BatchEventProcessorTest {
 
     @After
     public void tearDown() throws Exception {
-        eventProcessor.close();
+        if (eventProcessor != null) {
+            eventProcessor.close();
+        }
     }
 
     @Test
@@ -286,6 +288,11 @@ public class BatchEventProcessorTest {
             .build();
 
         assertEquals(eventProcessor.timeoutMillis, BatchEventProcessor.DEFAULT_TIMEOUT_INTERVAL);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testDefaultEventHandler() {
+        eventProcessor = BatchEventProcessor.builder().build();
     }
 
     private void setEventProcessor(EventHandler eventHandler) {

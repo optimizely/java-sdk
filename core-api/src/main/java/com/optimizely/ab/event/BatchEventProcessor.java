@@ -313,6 +313,10 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
                 timeoutMillis = DEFAULT_TIMEOUT_INTERVAL;
             }
 
+            if (eventHandler == null) {
+                throw new IllegalArgumentException("EventHandler was not configured");
+            }
+
             if (executor == null) {
                 final ThreadFactory threadFactory = Executors.defaultThreadFactory();
                 executor = Executors.newSingleThreadExecutor(runnable -> {

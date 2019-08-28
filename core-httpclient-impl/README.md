@@ -24,6 +24,8 @@ compile 'com.optimizely.ab:core-httpclient-impl:{VERSION}'
 
 ## Basic usage
 ```java
+package com.optimizely;
+
 import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.OptimizelyFactory;
 
@@ -38,9 +40,13 @@ public class App {
 
 ## Advanced usage
 ```java
+package com.optimizely;
+
 import com.optimizely.ab.Optimizely;
+import com.optimizely.ab.config.ProjectConfigManager;
 import com.optimizely.ab.config.HttpProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
+import com.optimizely.ab.event.EventHandler;
 import java.util.concurrent.TimeUnit;
 
 public class App {
@@ -54,12 +60,12 @@ public class App {
 
         ProjectConfigManager projectConfigManager = HttpProjectConfigManager.builder()
             .withSdkKey(sdkKey)
-            .withPollingInterval(1, TimeUnit.MINUTES)
+            .withPollingInterval(1L, TimeUnit.MINUTES)
             .build();
 
         Optimizely optimizely = Optimizely.builder()
-            .withConfig(projectConfigManager)
             .withEventHandler(eventHandler)
+            .withConfigManager(projectConfigManager)
             .build();
     }
 }
