@@ -169,7 +169,7 @@ public class Bucketer {
      * @return a value in the range closed-open range, [0, {@link #MAX_TRAFFIC_VALUE})
      */
     @VisibleForTesting
-    int generateBucketValue(int hashCode) {
+    public int generateBucketValue(int hashCode) {
         // map the hashCode into the range [0, BucketAlgorithm.MAX_TRAFFIC_VALUE)
         double ratio = (double) (hashCode & 0xFFFFFFFFL) / Math.pow(2, 32);
         return (int) Math.floor(MAX_TRAFFIC_VALUE * ratio);

@@ -383,7 +383,7 @@ public class BucketerTest {
     private static Bucketer testBucketAlgorithm(final AtomicInteger bucketValue) {
         return new Bucketer() {
             @Override
-            int generateBucketValue(int hashCode) {
+            public int generateBucketValue(int hashCode) {
                 return bucketValue.get();
             }
         };
