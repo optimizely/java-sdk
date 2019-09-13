@@ -29,4 +29,18 @@ public class DecisionStatus {
         this.decisionMade = decisionMade;
         this.reason = reason;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DecisionStatus that = (DecisionStatus) o;
+        return (reason != null ? reason.equals(that.reason) : that.reason == null) && decisionMade == that.decisionMade;
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * (reason != null ? reason.hashCode() : 0);
+    }
 }
