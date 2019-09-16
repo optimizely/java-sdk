@@ -17,6 +17,8 @@ package com.optimizely.ab.decision.experiment;
 
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.decision.audience.AudienceEvaluator;
+import com.optimizely.ab.decision.audience.IAudienceEvaluator;
 import com.optimizely.ab.decision.entities.DecisionStatus;
 import com.optimizely.ab.decision.entities.ExperimentDecision;
 import com.optimizely.ab.decision.entities.Reason;
@@ -37,6 +39,7 @@ import org.slf4j.LoggerFactory;
  */
 public class CompositeExperimentService implements IExperimentDecisionService {
 
+    private IAudienceEvaluator evaluator = new AudienceEvaluator();
     private static final Logger logger = LoggerFactory.getLogger(CompositeExperimentService.class);
 
     /**
@@ -49,15 +52,19 @@ public class CompositeExperimentService implements IExperimentDecisionService {
     @Override
     public ExperimentDecision getDecision(@Nonnull Experiment experiment,
                                           @Nonnull UserContext userContext) {
+        ExperimentDecision experimentDecision;
         // check experiment status before proceeding
         if (!ExperimentUtils.isExperimentActive(experiment)) {
             return null;
         }
         // loop through different experiment decision services until we get a decision
         for (IExperimentDecisionService experimentDecisionService : getExperimentServices()) {
-            ExperimentDecision experimentDecision = experimentDecisionService.getDecision(experiment, userContext);
+            experimentDecision = experimentDecisionService.getDecision(experiment, userContext);
             if (experimentDecision != null)
-                return experimentDecision;
+                break;
+        }
+        if(experimentDecision.variation != null && evaluator.evaluate(experiment, userContext)) {
+            return new ExperimentBucketerDecisionService().getDecision(experiment, userContext);
         }
         logger.info("User \"{}\" does not meet conditions to be in experiment \"{}\".", userContext.getUserId(), experiment.getKey());
         return new ExperimentDecision(null,
