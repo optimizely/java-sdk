@@ -15,7 +15,6 @@
  ***************************************************************************/
 package com.optimizely.ab.decision.experiment;
 
-import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.decision.entities.DecisionStatus;
 import com.optimizely.ab.decision.entities.ExperimentDecision;
@@ -37,24 +36,13 @@ import org.slf4j.LoggerFactory;
  */
 public class CompositeExperimentDecisionService implements IExperimentDecisionService {
 
-    private final Bucketer bucketer;
     private static final Logger logger = LoggerFactory.getLogger(CompositeExperimentDecisionService.class);
-
-    /**
-     * Initialize a CompositeExperimentDecisionService for the Optimizely client.
-     *
-     * @param bucketer to allocate new users to an experiment.
-     */
-    public CompositeExperimentDecisionService(@Nonnull Bucketer bucketer) {
-        this.bucketer = bucketer;
-    }
-
     /**
      * @return List of Decision service for experiment
      */
     private List<IExperimentDecisionService> getExperimentServices() {
         return Arrays.asList(
-            new ExperimentBucketerDecisionService(bucketer)
+            new ExperimentBucketerDecisionService()
         );
     }
 

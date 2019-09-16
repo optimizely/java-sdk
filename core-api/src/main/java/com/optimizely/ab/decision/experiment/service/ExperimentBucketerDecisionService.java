@@ -37,25 +37,18 @@ import java.util.Map;
  */
 public class ExperimentBucketerDecisionService implements IExperimentDecisionService {
 
-    private final Bucketer bucketer;
+    private final Bucketer bucketer = new Bucketer();
     private static final Logger logger = LoggerFactory.getLogger(ExperimentBucketerDecisionService.class);
-
-    /**
-     * Initialize Bucketer
-     */
-    public ExperimentBucketerDecisionService(@Nonnull Bucketer bucketer) {
-        this.bucketer = bucketer;
-    }
 
     @Override
     public ExperimentDecision getDecision(@Nonnull Experiment experiment,
                                           @Nonnull UserContext userContext) {
-        if (ExperimentUtils.isUserInExperiment(userContext.getProjectConfig(), experiment, userContext.getAttributes())) {
-            String bucketingId = getBucketingId(userContext.getUserId(), userContext.getAttributes());
-            Variation variation = bucketer.bucket(experiment, bucketingId, userContext.getProjectConfig());
+        String bucketingId = getBucketingId(userContext.getUserId(), userContext.getAttributes());
+        Variation variation = bucketer.bucket(experiment, bucketingId, userContext.getProjectConfig());
+        if(variation != null)
             return new ExperimentDecision(variation,
                 new DecisionStatus(false, Reason.BucketedIntoVariation));
-        }
+
         return new ExperimentDecision(null,
             new DecisionStatus(false, Reason.NotBucketedIntoVariation));
     }
