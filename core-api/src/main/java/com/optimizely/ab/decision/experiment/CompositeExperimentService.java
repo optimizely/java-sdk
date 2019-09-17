@@ -15,6 +15,7 @@
  ***************************************************************************/
 package com.optimizely.ab.decision.experiment;
 
+import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.decision.audience.AudienceEvaluator;
@@ -23,13 +24,20 @@ import com.optimizely.ab.decision.entities.DecisionStatus;
 import com.optimizely.ab.decision.entities.ExperimentDecision;
 import com.optimizely.ab.decision.entities.Reason;
 import com.optimizely.ab.decision.experiment.service.ExperimentBucketerService;
+import com.optimizely.ab.decision.experiment.service.ExperimentBucketerDecisionService;
+import com.optimizely.ab.decision.experiment.service.ForcedVariationService;
+import com.optimizely.ab.decision.experiment.service.UserProfileDecisionService;
+import com.optimizely.ab.decision.experiment.service.WhitelistingService;
 import com.optimizely.ab.event.internal.UserContext;
 import com.optimizely.ab.internal.ExperimentUtils;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +48,20 @@ import org.slf4j.LoggerFactory;
  */
 public class CompositeExperimentService implements IExperimentDecisionService {
 
+    private UserProfileService userProfileService;
+    private transient ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping;
     private IAudienceEvaluator evaluator = new AudienceEvaluator();
     private static final Logger logger = LoggerFactory.getLogger(CompositeExperimentService.class);
+
+    /**
+     * Initialize a decision service for the Optimizely client.
+     * @param userProfileService UserProfileService implementation for storing user info.
+     */
+    public CompositeExperimentDecisionService(@Nullable UserProfileService userProfileService,
+                                              @Nullable ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping) {
+        this.userProfileService = userProfileService;
+        this.forcedVariationMapping = forcedVariationMapping;
+    }
 
     /**
      * Evaluate user IDs and attributes to determine which variation user should see.
@@ -74,12 +94,17 @@ public class CompositeExperimentService implements IExperimentDecisionService {
     }
 
     /**
-     * Returns Experiment Decision Services for evaluation and decision of Variation that user should see
+     * Evaluate user IDs and attributes to determine which variation user should see.
      *
-     * @return List of {@link IExperimentDecisionService}
+     * @param experiment  The Experiment the user will be bucketed into.
+     * @param userContext It have user id, attributes and a reference to the current {@link ProjectConfig}
+     * @return {@link ExperimentDecision}
      */
     private List<IExperimentDecisionService> getExperimentServices() {
-        //TODO: All the Experiment Services will be added here
-        return Collections.emptyList();
+        return Arrays.asList(
+            new ForcedVariationService(forcedVariationMapping),
+            new WhitelistingService(),
+            new UserProfileDecisionService(userProfileService)
+        );
     }
 }

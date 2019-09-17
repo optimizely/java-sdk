@@ -47,4 +47,18 @@ public final class DecisionUtils {
         }
         return bucketingId;
     }
+
+    /**
+     * Helper function to check that the provided userId is valid
+     *
+     * @param userId the userId being validated
+     * @return whether the user ID is valid
+     */
+    public static boolean validateUserId(String userId) {
+        if (userId == null) {
+            logger.error("The user ID parameter must be nonnull.");
+            return false;
+        }
+        return true;
+    }
 }
