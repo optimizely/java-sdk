@@ -22,6 +22,7 @@ import com.optimizely.ab.decision.audience.IAudienceEvaluator;
 import com.optimizely.ab.decision.entities.DecisionStatus;
 import com.optimizely.ab.decision.entities.ExperimentDecision;
 import com.optimizely.ab.decision.entities.Reason;
+import com.optimizely.ab.decision.experiment.service.ExperimentBucketerService;
 import com.optimizely.ab.event.internal.UserContext;
 import com.optimizely.ab.internal.ExperimentUtils;
 
@@ -52,7 +53,8 @@ public class CompositeExperimentService implements IExperimentDecisionService {
     @Override
     public ExperimentDecision getDecision(@Nonnull Experiment experiment,
                                           @Nonnull UserContext userContext) {
-        ExperimentDecision experimentDecision;
+        ExperimentDecision experimentDecision =
+            new ExperimentDecision(null, new DecisionStatus(false, null));
         // check experiment status before proceeding
         if (!ExperimentUtils.isExperimentActive(experiment)) {
             return null;
@@ -64,7 +66,7 @@ public class CompositeExperimentService implements IExperimentDecisionService {
                 break;
         }
         if(experimentDecision.variation != null && evaluator.evaluate(experiment, userContext)) {
-            return new ExperimentBucketerDecisionService().getDecision(experiment, userContext);
+            return new ExperimentBucketerService().getDecision(experiment, userContext);
         }
         logger.info("User \"{}\" does not meet conditions to be in experiment \"{}\".", userContext.getUserId(), experiment.getKey());
         return new ExperimentDecision(null,

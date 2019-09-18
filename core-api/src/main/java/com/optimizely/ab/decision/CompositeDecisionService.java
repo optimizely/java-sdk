@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2016-2019, Optimizely, Inc. and contributors                   *
+ * Copyright 2019, Optimizely, Inc. and contributors                        *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -16,8 +16,9 @@
 package com.optimizely.ab.decision;
 
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.decision.entities.ExperimentDecision;
-import com.optimizely.ab.decision.experiment.CompositeExperimentDecisionService;
+import com.optimizely.ab.decision.experiment.CompositeExperimentService;
 import com.optimizely.ab.event.internal.UserContext;
 
 import javax.annotation.Nonnull;
@@ -27,14 +28,15 @@ import javax.annotation.Nonnull;
  */
 public class CompositeDecisionService implements IDecisionService {
     /**
-     * Get the ExperimentDecision the user is bucketed into for the FeatureFlag
+     * Returns a ExperimentDecision for the given user and experiment
      *
+     * @param experiment  The Experiment the user will be bucketed into.
+     * @param userContext It have user id, attributes and a reference to the current {@link ProjectConfig}
      * @return {@link ExperimentDecision}
      */
     @Override
     public ExperimentDecision getExperimentDecision(@Nonnull Experiment experiment,
                                                     @Nonnull UserContext userContext) {
-        return new CompositeExperimentDecisionService().
-            getDecision(experiment, userContext);
+        return new CompositeExperimentService().getDecision(experiment, userContext);
     }
 }
