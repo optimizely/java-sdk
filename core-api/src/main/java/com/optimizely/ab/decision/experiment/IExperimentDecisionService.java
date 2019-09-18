@@ -15,21 +15,24 @@
  ***************************************************************************/
 package com.optimizely.ab.decision.experiment;
 
-import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.decision.entities.ExperimentDecision;
 import com.optimizely.ab.event.internal.UserContext;
 
 import javax.annotation.Nonnull;
 
 /**
- * ExperimentDecisionService can make a decision about an experiment
+ * Experiment Decision Service can make a decision about which variation of an experiment the user will be
+ * allocated to.
  */
 public interface IExperimentDecisionService {
     /**
-     * getDecision returns a variation for the given experiment and user context
+     * Get a {@link ExperimentDecision} of an {@link Experiment} for a user to be allocated into.
      *
-     * @return {@link Variation}
+     * @param experiment  The Experiment the user will be bucketed into.
+     * @param userContext It have user id, attributes and a reference to the current {@link ProjectConfig}
+     * @return {@link ExperimentDecision}
      */
     ExperimentDecision getDecision(@Nonnull Experiment experiment,
                                    @Nonnull UserContext userContext);

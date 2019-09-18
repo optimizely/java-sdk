@@ -13,23 +13,27 @@
  * See the License for the specific language governing permissions and      *
  * limitations under the License.                                           *
  ***************************************************************************/
-package com.optimizely.ab.decision.entities;
+package com.optimizely.ab.decision.bucketer;
 
-public enum Reason {
-    // BucketedIntoVariation - the user is bucketed into a variation for the given experiment
-    BucketedIntoVariation("Bucketed into variation"),
-    // NotBucketedIntoVariation - the user is not bucketed into a variation for the given experiment
-    NotBucketedIntoVariation("Not bucketed into a variation"),
-    // FailedToMeetExperimentConditions - the user does not meet conditions for the given experiment
-    FailedToMeetExperimentConditions("User does not meet conditions to be in experiment");
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.Variation;
 
-    private String reason;
+import javax.annotation.Nonnull;
 
-    Reason(String reason) {
-        this.reason = reason;
-    }
-
-    public String toString() {
-        return reason;
-    }
+/**
+ * Default Optimizely bucketing algorithm that evenly distributes users using the Murmur3 hash of some provided
+ * identifier.
+ */
+public interface IBucketer {
+    /**
+     * Assign a {@link Variation} of an {@link Experiment} to a user based on hashed value from murmurhash3.
+     *
+     * @param experiment  The Experiment the user will be bucketed into.
+     * @param bucketingId String A customer-assigned value used to create the key for the murmur hash.
+     * @return {@link Variation} the user is bucketed into or null.
+     */
+    Variation bucket(@Nonnull Experiment experiment,
+                     @Nonnull String bucketingId,
+                     @Nonnull ProjectConfig projectConfig);
 }

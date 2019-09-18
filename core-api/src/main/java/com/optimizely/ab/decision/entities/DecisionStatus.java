@@ -25,6 +25,11 @@ public class DecisionStatus {
      */
     public Reason reason;
 
+    /**
+     * Initialize Decision Status
+     * @param decisionMade Flag for decision status
+     * @param reason  Possible Reason decision is made for
+     */
     public DecisionStatus(boolean decisionMade, Reason reason) {
         this.decisionMade = decisionMade;
         this.reason = reason;

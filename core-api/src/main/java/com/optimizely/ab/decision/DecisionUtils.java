@@ -13,45 +13,18 @@
  * See the License for the specific language governing permissions and      *
  * limitations under the License.                                           *
  ***************************************************************************/
-package com.optimizely.ab.decision.experiment.service;
-
-import com.optimizely.ab.bucketing.Bucketer;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.decision.entities.DecisionStatus;
-import com.optimizely.ab.decision.entities.ExperimentDecision;
-import com.optimizely.ab.decision.entities.Reason;
-import com.optimizely.ab.decision.experiment.IExperimentDecisionService;
-import com.optimizely.ab.event.internal.UserContext;
+package com.optimizely.ab.decision;
 
 import com.optimizely.ab.internal.ControlAttribute;
-import com.optimizely.ab.internal.ExperimentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
 
-/**
- * ExperimentBucketerDecisionService makes a decision using the experiment bucketer
- */
-public class ExperimentBucketerDecisionService implements IExperimentDecisionService {
+public final class DecisionUtils {
 
-    private final Bucketer bucketer = new Bucketer();
-    private static final Logger logger = LoggerFactory.getLogger(ExperimentBucketerDecisionService.class);
-
-    @Override
-    public ExperimentDecision getDecision(@Nonnull Experiment experiment,
-                                          @Nonnull UserContext userContext) {
-        String bucketingId = getBucketingId(userContext.getUserId(), userContext.getAttributes());
-        Variation variation = bucketer.bucket(experiment, bucketingId, userContext.getProjectConfig());
-        if(variation != null)
-            return new ExperimentDecision(variation,
-                new DecisionStatus(false, Reason.BucketedIntoVariation));
-
-        return new ExperimentDecision(null,
-            new DecisionStatus(false, Reason.NotBucketedIntoVariation));
-    }
+    private static final Logger logger = LoggerFactory.getLogger(DecisionUtils.class);
 
     /**
      * Get the bucketingId of a user if a bucketingId exists in attributes, or else default to userId.
@@ -61,8 +34,8 @@ public class ExperimentBucketerDecisionService implements IExperimentDecisionSer
      * @return bucketingId if it is a String type in attributes.
      * else return userId
      */
-    private String getBucketingId(@Nonnull String userId,
-                                  @Nonnull Map<String, ?> filteredAttributes) {
+    public static String getBucketingId(@Nonnull String userId,
+                                        @Nonnull Map<String, ?> filteredAttributes) {
         String bucketingId = userId;
         if (filteredAttributes != null && filteredAttributes.containsKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())) {
             if (String.class.isInstance(filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString()))) {
