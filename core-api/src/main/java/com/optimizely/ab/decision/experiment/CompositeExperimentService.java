@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * CompositeExperimentDecisionService contains the information needed to be able to make a decision for a
+ * CompositeExperimentService contains the information needed to be able to make a decision for a
  * given experiment
  */
 public class CompositeExperimentService implements IExperimentDecisionService {
