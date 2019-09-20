@@ -18,7 +18,10 @@ package com.optimizely;
 import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.OptimizelyFactory;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.event.BatchEventProcessor;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
 
@@ -51,7 +54,7 @@ public class Example {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        Optimizely optimizely = OptimizelyFactory.newDefaultInstance("BX9Y3bTa4YErpHZEMpAwHm");
+        Optimizely optimizely = OptimizelyFactory.newDefaultInstance("H3Exzej57s5EobSTQnLNXQ");
 
         Example example = new Example(optimizely);
         Random random = new Random();
@@ -60,6 +63,19 @@ public class Example {
             String userId = String.valueOf(random.nextInt());
             example.processVisitor(userId, Collections.emptyMap());
             TimeUnit.MILLISECONDS.sleep(500);
+        }
+
+        try {
+            Field eventProcossor = Optimizely.class.getDeclaredField("eventProcessor");
+            eventProcossor.setAccessible(true);
+            BatchEventProcessor ep =  (BatchEventProcessor)(eventProcossor.get(optimizely));
+            ep.close();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e1) {
+            e1.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
