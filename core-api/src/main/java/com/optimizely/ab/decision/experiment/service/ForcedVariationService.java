@@ -16,12 +16,13 @@
 package com.optimizely.ab.decision.experiment.service;
 
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.decision.DecisionUtils;
+import com.optimizely.ab.decision.entities.Reason;
 import com.optimizely.ab.decision.entities.DecisionStatus;
 import com.optimizely.ab.decision.entities.ExperimentDecision;
-import com.optimizely.ab.decision.entities.Reason;
-import com.optimizely.ab.decision.experiment.IExperimentDecisionService;
+import com.optimizely.ab.decision.experiment.ExperimentDecisionService;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,18 +36,25 @@ import javax.annotation.Nonnull;
 /**
  * Gets the forced variation for a given user and experiment if present.
  */
-public class ForcedVariationService implements IExperimentDecisionService {
+public class ForcedVariationService implements ExperimentDecisionService {
 
     private transient ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping;
     private static final Logger logger = LoggerFactory.getLogger(ForcedVariationService.class);
 
+    /**
+     * Initialize Force Variation Service
+     *
+     * @param forcedVariationMapping Forced Variation for user if exists
+     */
     public ForcedVariationService(ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping) {
         this.forcedVariationMapping = forcedVariationMapping;
     }
 
     /**
-     * @return {@link Variation} of an {@link Experiment} the user was bucketed into. This value can be null if the
-     * forced variation fails.
+     * Evaluate which forced variation user should see.
+     * @param experiment  The Experiment the user will be bucketed into.
+     * @param userContext It have user id, attributes and a reference to the current {@link ProjectConfig}
+     * @return {@link ExperimentDecision}
      */
     @Override
     public ExperimentDecision getDecision(@Nonnull Experiment experiment,
@@ -71,7 +79,7 @@ public class ForcedVariationService implements IExperimentDecisionService {
             } else {
                 logger.debug("No variation for experiment \"{}\" mapped to user \"{}\" in the forced variation map ", experiment.getKey(), userId);
                 return new ExperimentDecision(null,
-                    new DecisionStatus(true, Reason.NoVariationForExperiment) );
+                    new DecisionStatus(true, Reason.NoVariationForExperiment));
             }
         }
         return null;

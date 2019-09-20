@@ -21,7 +21,17 @@ public enum Reason {
     // NotBucketedIntoVariation - the user is not bucketed into a variation for the given experiment
     NotBucketedIntoVariation("Not bucketed into a variation"),
     // FailedToMeetExperimentConditions - the user does not meet conditions for the given experiment
-    FailedToMeetExperimentConditions("User does not meet conditions to be in experiment");
+    FailedToMeetExperimentConditions("User does not meet conditions to be in experiment"),
+    // Mapped into Forced Variation
+    ForcedVariationMapped("Variation is mapped to experiment and user in the forced variation map"),
+    // No forced variation for experiment
+    NoVariationForExperiment("No variation for experiment mapped to user in the forced variation map"),
+    // Forced to white listed variation
+    ForcedToWhitelistedVariation("User is forced in white listed variation"),
+    // No Variation Whitelisted
+    NoVariationWhitelisted("Variation is not in the datafile. Not activating user"),
+    // Bucketed to variation in user profile
+    BucketedToVariationInUserProfile("Bucketed to variation in user profile");
 
     private String reason;
 

@@ -23,9 +23,9 @@ import com.optimizely.ab.event.internal.UserContext;
 import javax.annotation.Nonnull;
 
 /**
- * DecisionService interface is used to make a decision for a given feature or experiment
+ * DecisionService is used to make a decision for a given feature or experiment
  */
-public interface IDecisionService {
+public interface DecisionService {
     /**
      * Returns a ExperimentDecision for the given user and experiment
      *
@@ -35,4 +35,6 @@ public interface IDecisionService {
      */
     ExperimentDecision getExperimentDecision(@Nonnull Experiment experiment,
                                              @Nonnull UserContext userContext);
+
+    // TODO getFeatureDecision needs to be added
 }

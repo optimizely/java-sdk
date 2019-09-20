@@ -16,11 +16,12 @@
 package com.optimizely.ab.decision.experiment.service;
 
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.decision.entities.DecisionStatus;
 import com.optimizely.ab.decision.entities.ExperimentDecision;
 import com.optimizely.ab.decision.entities.Reason;
-import com.optimizely.ab.decision.experiment.IExperimentDecisionService;
+import com.optimizely.ab.decision.experiment.ExperimentDecisionService;
 import com.optimizely.ab.event.internal.UserContext;
 
 import java.util.Map;
@@ -32,13 +33,16 @@ import org.slf4j.LoggerFactory;
 /**
  * Check for whitelisting for a given user in experiment, then they are forced into their specified variation
  */
-public class WhitelistingService implements IExperimentDecisionService {
+public class WhitelistingService implements ExperimentDecisionService {
 
     private static final Logger logger = LoggerFactory.getLogger(WhitelistingService.class);
 
     /**
-     * Get the variation the user has been whitelisted into.
-     * {@link Variation} the user is bucketed into if the user has a specified whitelisted variation.
+     * Get the ExperimentDecision the user has been whitelisted into
+     *
+     * @param experiment  The Experiment the user will be bucketed into.
+     * @param userContext It have user id, attributes and a reference to the current {@link ProjectConfig}
+     * @return {@link Variation} the user is bucketed into if the user has a specified whitelisted variation.
      */
     @Override
     public ExperimentDecision getDecision(@Nonnull Experiment experiment,

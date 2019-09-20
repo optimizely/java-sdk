@@ -25,7 +25,7 @@ import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.decision.entities.DecisionStatus;
 import com.optimizely.ab.decision.entities.ExperimentDecision;
 import com.optimizely.ab.decision.entities.Reason;
-import com.optimizely.ab.decision.experiment.IExperimentDecisionService;
+import com.optimizely.ab.decision.experiment.ExperimentDecisionService;
 import com.optimizely.ab.event.internal.UserContext;
 
 import java.util.Map;
@@ -38,19 +38,25 @@ import org.slf4j.LoggerFactory;
 /**
  * User Profile already exists with a valid variation in case User Profiles are enabled in SDK
  */
-public class UserProfileDecisionService implements IExperimentDecisionService {
+public class UserProfileDecisionService implements ExperimentDecisionService {
 
     private final UserProfileService userProfileService;
     private static final Logger logger = LoggerFactory.getLogger(UserProfileDecisionService.class);
 
+    /**
+     * Initialize User Profile Decision Service
+     *
+     * @param userProfileService UserProfileService implementation for storing user info.
+     */
     public UserProfileDecisionService(UserProfileService userProfileService) {
         this.userProfileService = userProfileService;
     }
 
     /**
-     * fetch the user profile map from the user profile service
-     *
-     * @return {@link ExperimentDecision} of an {@link Experiment} the user was bucketed into.
+     * Returns ExperimentDecision based on UserProfileService
+     * @param experiment  The Experiment the user will be bucketed into.
+     * @param userContext It have user id, attributes and a reference to the current {@link ProjectConfig}
+     * @return {@link ExperimentDecision}
      */
     @Override
     public ExperimentDecision getDecision(@Nonnull Experiment experiment,

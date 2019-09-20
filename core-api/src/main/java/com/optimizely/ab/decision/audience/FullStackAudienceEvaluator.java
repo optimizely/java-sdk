@@ -13,27 +13,29 @@
  * See the License for the specific language governing permissions and      *
  * limitations under the License.                                           *
  ***************************************************************************/
-package com.optimizely.ab.decision.experiment;
+package com.optimizely.ab.decision.audience;
 
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.decision.entities.ExperimentDecision;
 import com.optimizely.ab.event.internal.UserContext;
+import com.optimizely.ab.internal.ExperimentUtils;
 
 import javax.annotation.Nonnull;
 
 /**
- * Experiment Decision Service can make a decision about which variation of an experiment the user will be
- * allocated to.
+ * Determines whether a user satisfies audience conditions for the experiment.
  */
-public interface IExperimentDecisionService {
+public class FullStackAudienceEvaluator implements AudienceEvaluator {
     /**
-     * Get a {@link ExperimentDecision} of an {@link Experiment} for a user to be allocated into.
+     * Validate Audience conditions for the experiment
      *
      * @param experiment  The Experiment the user will be bucketed into.
      * @param userContext It have user id, attributes and a reference to the current {@link ProjectConfig}
-     * @return {@link ExperimentDecision}
+     * @return flag if audience attributes are valid
      */
-    ExperimentDecision getDecision(@Nonnull Experiment experiment,
-                                   @Nonnull UserContext userContext);
+    @Override
+    public boolean evaluate(@Nonnull Experiment experiment,
+                            @Nonnull UserContext userContext) {
+        return ExperimentUtils.isUserInExperiment(userContext.getProjectConfig(), experiment, userContext.getAttributes());
+    }
 }

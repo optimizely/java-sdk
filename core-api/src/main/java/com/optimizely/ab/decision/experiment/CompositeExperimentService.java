@@ -15,25 +15,23 @@
  ***************************************************************************/
 package com.optimizely.ab.decision.experiment;
 
-import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.decision.audience.AudienceEvaluator;
-import com.optimizely.ab.decision.audience.IAudienceEvaluator;
+import com.optimizely.ab.decision.audience.FullStackAudienceEvaluator;
+import com.optimizely.ab.decision.bucketer.FullStackBucketer;
+import com.optimizely.ab.decision.entities.Reason;
+import com.optimizely.ab.internal.ExperimentUtils;
+import com.optimizely.ab.event.internal.UserContext;
+import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.decision.entities.DecisionStatus;
 import com.optimizely.ab.decision.entities.ExperimentDecision;
-import com.optimizely.ab.decision.entities.Reason;
-import com.optimizely.ab.decision.experiment.service.ExperimentBucketerService;
-import com.optimizely.ab.decision.experiment.service.ExperimentBucketerDecisionService;
-import com.optimizely.ab.decision.experiment.service.ForcedVariationService;
-import com.optimizely.ab.decision.experiment.service.UserProfileDecisionService;
 import com.optimizely.ab.decision.experiment.service.WhitelistingService;
-import com.optimizely.ab.event.internal.UserContext;
-import com.optimizely.ab.internal.ExperimentUtils;
+import com.optimizely.ab.decision.experiment.service.ForcedVariationService;
+import com.optimizely.ab.decision.experiment.service.ExperimentBucketerService;
+import com.optimizely.ab.decision.experiment.service.UserProfileDecisionService;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
@@ -43,28 +41,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * CompositeExperimentService contains the information needed to be able to make a decision for a
- * given experiment
+ * CompositeExperimentService contains the information needed to be able to make a decision for a given experiment
  */
-public class CompositeExperimentService implements IExperimentDecisionService {
+public class CompositeExperimentService implements ExperimentDecisionService {
 
-    private UserProfileService userProfileService;
-    private transient ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping;
-    private IAudienceEvaluator evaluator = new AudienceEvaluator();
     private static final Logger logger = LoggerFactory.getLogger(CompositeExperimentService.class);
 
+    private final UserProfileService userProfileService;
+    private transient ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping;
+
     /**
-     * Initialize a decision service for the Optimizely client.
-     * @param userProfileService UserProfileService implementation for storing user info.
+     * Initialize composite experiment service for decision service
+     *
+     * @param userProfileService     UserProfileService implementation for storing user info.
+     * @param forcedVariationMapping Forced Variation for user if exists
      */
-    public CompositeExperimentDecisionService(@Nullable UserProfileService userProfileService,
-                                              @Nullable ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping) {
+    public CompositeExperimentService(@Nullable UserProfileService userProfileService,
+                                      @Nullable ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping) {
         this.userProfileService = userProfileService;
         this.forcedVariationMapping = forcedVariationMapping;
     }
 
     /**
-     * Evaluate user IDs and attributes to determine which variation user should see.
+     * Evaluate which variation user should see.
      *
      * @param experiment  The Experiment the user will be bucketed into.
      * @param userContext It have user id, attributes and a reference to the current {@link ProjectConfig}
@@ -73,20 +72,16 @@ public class CompositeExperimentService implements IExperimentDecisionService {
     @Override
     public ExperimentDecision getDecision(@Nonnull Experiment experiment,
                                           @Nonnull UserContext userContext) {
-        ExperimentDecision experimentDecision =
-            new ExperimentDecision(null, new DecisionStatus(false, null));
+        ExperimentDecision experimentDecision;
         // check experiment status before proceeding
         if (!ExperimentUtils.isExperimentActive(experiment)) {
             return null;
         }
         // loop through different experiment decision services until we get a decision
-        for (IExperimentDecisionService experimentDecisionService : getExperimentServices()) {
+        for (ExperimentDecisionService experimentDecisionService : getExperimentServices()) {
             experimentDecision = experimentDecisionService.getDecision(experiment, userContext);
             if (experimentDecision != null)
-                break;
-        }
-        if(experimentDecision.variation != null && evaluator.evaluate(experiment, userContext)) {
-            return new ExperimentBucketerService().getDecision(experiment, userContext);
+                return experimentDecision;
         }
         logger.info("User \"{}\" does not meet conditions to be in experiment \"{}\".", userContext.getUserId(), experiment.getKey());
         return new ExperimentDecision(null,
@@ -94,17 +89,19 @@ public class CompositeExperimentService implements IExperimentDecisionService {
     }
 
     /**
-     * Evaluate user IDs and attributes to determine which variation user should see.
+     * Get Experiment Services
      *
-     * @param experiment  The Experiment the user will be bucketed into.
-     * @param userContext It have user id, attributes and a reference to the current {@link ProjectConfig}
-     * @return {@link ExperimentDecision}
+     * @return List of {@link ExperimentDecisionService}
      */
-    private List<IExperimentDecisionService> getExperimentServices() {
+    private List<ExperimentDecisionService> getExperimentServices() {
         return Arrays.asList(
             new ForcedVariationService(forcedVariationMapping),
             new WhitelistingService(),
-            new UserProfileDecisionService(userProfileService)
+            new UserProfileDecisionService(userProfileService),
+            new ExperimentBucketerService.Builder()
+                .withBucketer(new FullStackBucketer())
+                .withAudienceEvaluator(new FullStackAudienceEvaluator())
+                .build()
         );
     }
 }

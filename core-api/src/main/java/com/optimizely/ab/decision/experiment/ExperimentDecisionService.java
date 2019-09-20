@@ -13,27 +13,27 @@
  * See the License for the specific language governing permissions and      *
  * limitations under the License.                                           *
  ***************************************************************************/
-package com.optimizely.ab.decision.bucketer;
+package com.optimizely.ab.decision.experiment;
 
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.event.internal.UserContext;
+import com.optimizely.ab.decision.entities.ExperimentDecision;
 
 import javax.annotation.Nonnull;
 
 /**
- * Default Optimizely bucketing algorithm that evenly distributes users using the Murmur3 hash of some provided
- * identifier.
+ * Experiment Decision Service can make a decision about which variation of an experiment the user will be
+ * allocated to.
  */
-public interface IBucketer {
+public interface ExperimentDecisionService {
     /**
-     * Assign a {@link Variation} of an {@link Experiment} to a user based on hashed value from murmurhash3.
+     * Get a {@link ExperimentDecision} of an {@link Experiment} for a user to be allocated into.
      *
      * @param experiment  The Experiment the user will be bucketed into.
-     * @param bucketingId String A customer-assigned value used to create the key for the murmur hash.
-     * @return {@link Variation} the user is bucketed into or null.
+     * @param userContext It have user id, attributes and a reference to the current {@link ProjectConfig}
+     * @return {@link ExperimentDecision}
      */
-    Variation bucket(@Nonnull Experiment experiment,
-                     @Nonnull String bucketingId,
-                     @Nonnull ProjectConfig projectConfig);
+    ExperimentDecision getDecision(@Nonnull Experiment experiment,
+                                   @Nonnull UserContext userContext);
 }

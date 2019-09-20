@@ -15,32 +15,31 @@
  ***************************************************************************/
 package com.optimizely.ab.decision;
 
-import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.decision.entities.ExperimentDecision;
-import com.optimizely.ab.decision.experiment.CompositeExperimentService;
 import com.optimizely.ab.event.internal.UserContext;
+import com.optimizely.ab.bucketing.UserProfileService;
+import com.optimizely.ab.decision.entities.ExperimentDecision;
+import com.optimizely.ab.decision.experiment.ExperimentDecisionService;
+import com.optimizely.ab.decision.experiment.CompositeExperimentService;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Optimizely's decision service that determines which variation of an experiment the user will be allocated to.
+ * CompositeDecisionService determines which variation of an experiment the user will be allocated to.
  */
-public class CompositeDecisionService implements IDecisionService {
+public class CompositeDecisionService implements DecisionService {
 
-    private UserProfileService userProfileService;
-    private transient ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping;
+    private ExperimentDecisionService experimentDecisionService;
 
     /**
      * Initialize a decision service for the Optimizely client.
+     *
+     * @param experimentDecisionService ExperimentDecisionService provided from Optimizely Client
      */
-    private CompositeDecisionService(@Nullable UserProfileService userProfileService,
-                                     @Nullable ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping) {
-        this.userProfileService = userProfileService;
-        this.forcedVariationMapping = forcedVariationMapping;
+    private CompositeDecisionService(ExperimentDecisionService experimentDecisionService) {
+        this.experimentDecisionService = experimentDecisionService;
     }
 
     /**
@@ -53,30 +52,50 @@ public class CompositeDecisionService implements IDecisionService {
     @Override
     public ExperimentDecision getExperimentDecision(@Nonnull Experiment experiment,
                                                     @Nonnull UserContext userContext) {
-        return new CompositeExperimentService().getDecision(experiment, userContext);
+        return experimentDecisionService.getDecision(experiment, userContext);
     }
 
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * {@link CompositeDecisionService} instance builder.
+     */
     public static class Builder {
-
         private UserProfileService userProfileService;
         private transient ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping;
 
+        /**
+         * Set User Profile Service
+         *
+         * @param userProfileService UserProfileService implementation for storing user info.
+         * @return {@link Builder}
+         */
         public Builder withUserProfileService(UserProfileService userProfileService) {
             this.userProfileService = userProfileService;
             return this;
         }
 
+        /**
+         * Set ForcedVariation map
+         *
+         * @param forcedVariationMapping Forced Variation for user if exists
+         * @return {@link Builder}
+         */
         public Builder withForcedVariation(ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping) {
             this.forcedVariationMapping = forcedVariationMapping;
             return this;
         }
 
+        /**
+         * Create actual object of {@link CompositeDecisionService}
+         *
+         * @return {@link CompositeDecisionService}
+         */
         public CompositeDecisionService build() {
-            return new CompositeDecisionService(userProfileService, forcedVariationMapping);
+            return new CompositeDecisionService(
+                new CompositeExperimentService(userProfileService, forcedVariationMapping));
         }
     }
 }
