@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and      *
  * limitations under the License.                                           *
  ***************************************************************************/
-package com.optimizely.ab.decision.audience;
+package com.optimizely.ab.decision.evaluator;
 
 import ch.qos.logback.classic.Level;
 import com.optimizely.ab.config.Experiment;
@@ -37,7 +37,6 @@ import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProje
 import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_NATIONALITY_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_WITH_MISSING_VALUE_VALUE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY;
-import static com.optimizely.ab.internal.ExperimentUtils.isUserInExperiment;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
