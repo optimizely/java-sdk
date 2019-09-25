@@ -18,8 +18,7 @@ package com.optimizely.ab.decision.bucketer;
 import com.optimizely.ab.annotations.VisibleForTesting;
 
 /**
- * Default Optimizely bucketing algorithm that evenly distributes users using the Murmur3 hash of some provided
- * identifier.
+ Generate bucket value with in the provided range
  */
 public class DecisionBucketer implements Bucketer {
 
