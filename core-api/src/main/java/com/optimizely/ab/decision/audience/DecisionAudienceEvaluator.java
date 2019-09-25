@@ -47,8 +47,7 @@ public class DecisionAudienceEvaluator implements AudienceEvaluator {
     public boolean evaluate(@Nonnull Experiment experiment,
                             @Nonnull UserContext userContext) {
         if (experiment.getAudienceConditions() != null) {
-            Boolean resolveReturn = evaluateAudienceConditions(experiment, userContext);
-            return resolveReturn == null ? false : resolveReturn;
+            return evaluateAudienceConditions(experiment, userContext);
         } else {
             Boolean resolveReturn = evaluateAudience(experiment, userContext);
             return Boolean.TRUE.equals(resolveReturn);
@@ -95,7 +94,7 @@ public class DecisionAudienceEvaluator implements AudienceEvaluator {
     private static Boolean evaluateAudienceConditions(@Nonnull Experiment experiment,
                                                       @Nonnull UserContext userContext) {
         Condition conditions = experiment.getAudienceConditions();
-        if (conditions == null) return null;
+        if (conditions == null) return false;
         logger.debug("Evaluating audiences for experiment \"{}\": \"{}\"", experiment.getKey(), conditions.toString());
         try {
             Boolean result = conditions.evaluate(userContext.getProjectConfig(), userContext.getAttributes());
@@ -103,7 +102,7 @@ public class DecisionAudienceEvaluator implements AudienceEvaluator {
             return result;
         } catch (Exception e) {
             logger.error("Condition invalid", e);
-            return null;
+            return false;
         }
     }
 }
