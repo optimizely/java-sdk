@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and      *
  * limitations under the License.                                           *
  ***************************************************************************/
-package com.optimizely.ab.decision.bucketer;
+package com.optimizely.ab.decision;
 
 import ch.qos.logback.classic.Level;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.decision.bucketer.Bucketer;
+import com.optimizely.ab.decision.bucketer.MurmurhashBucketer;
 import com.optimizely.ab.decision.experiment.ExperimentService;
 import com.optimizely.ab.decision.experiment.services.ExperimentBucketerService;
 import com.optimizely.ab.event.internal.UserContext;
@@ -398,7 +400,7 @@ public class ExperimentBucketerTest {
      * @return the mock bucket algorithm
      */
     private static Bucketer testBucketAlgorithm(final AtomicInteger bucketValue) {
-        return new DecisionBucketer() {
+        return new MurmurhashBucketer() {
             @Override
             public int generateBucketValue(int hashCode) {
                 return bucketValue.get();

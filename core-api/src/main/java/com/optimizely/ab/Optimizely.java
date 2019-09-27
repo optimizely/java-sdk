@@ -22,6 +22,8 @@ import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
+import com.optimizely.ab.decision.experiment.ExperimentService;
+import com.optimizely.ab.decision.experiment.services.ExperimentBucketerService;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.*;
@@ -1005,7 +1007,7 @@ public class Optimizely implements AutoCloseable {
     public static class Builder {
 
         private String datafile;
-        private Bucketer bucketer;
+        private ExperimentService experimentService;
         private DecisionService decisionService;
         private ErrorHandler errorHandler;
         private EventHandler eventHandler;
@@ -1076,8 +1078,8 @@ public class Optimizely implements AutoCloseable {
         }
 
         // Helper functions for making testing easier
-        protected Builder withBucketing(Bucketer bucketer) {
-            this.bucketer = bucketer;
+        protected Builder withExperimentService(ExperimentService experimentService) {
+            this.experimentService = experimentService;
             return this;
         }
 
@@ -1101,12 +1103,12 @@ public class Optimizely implements AutoCloseable {
                 eventHandler = new NoopEventHandler();
             }
 
-            if (bucketer == null) {
-                bucketer = new Bucketer();
+            if (experimentService == null) {
+                experimentService = new ExperimentBucketerService.Builder().build();
             }
 
             if (decisionService == null) {
-                decisionService = new DecisionService(bucketer, errorHandler, userProfileService);
+                decisionService = new DecisionService(experimentService, errorHandler, userProfileService);
             }
 
             if (projectConfig == null && datafile != null && !datafile.isEmpty()) {

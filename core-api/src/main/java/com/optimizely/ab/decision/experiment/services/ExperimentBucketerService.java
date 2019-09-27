@@ -19,10 +19,10 @@ import com.optimizely.ab.config.*;
 import com.optimizely.ab.decision.bucketer.Bucketer;
 import com.optimizely.ab.event.internal.UserContext;
 import com.optimizely.ab.bucketing.internal.MurmurHash3;
-import com.optimizely.ab.decision.bucketer.DecisionBucketer;
+import com.optimizely.ab.decision.bucketer.MurmurhashBucketer;
 import com.optimizely.ab.decision.evaluator.AudienceEvaluator;
 import com.optimizely.ab.decision.experiment.ExperimentService;
-import com.optimizely.ab.decision.evaluator.DecisionAudienceEvaluator;
+import com.optimizely.ab.decision.evaluator.ExperimentAudienceEvaluator;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ExperimentBucketerService buckets {@link Variation} of an {@link Experiment} to a user
+ * Experiment Bucketer Service buckets {@link Variation} of an {@link Experiment} to a user
  */
 public class ExperimentBucketerService implements ExperimentService {
 
@@ -44,12 +44,11 @@ public class ExperimentBucketerService implements ExperimentService {
     private final Bucketer bucketer;
     private final AudienceEvaluator audienceEvaluator;
 
-    private static final int MURMUR_HASH_SEED = 1;
-
     /**
-     * Intialize Experiment Bucketer Service
-     * @param bucketer
-     * @param audienceEvaluator
+     * Initialize Experiment Bucketer Service
+     *
+     * @param bucketer          Bucketer for bucketing
+     * @param audienceEvaluator Experiment Audience Evaluator
      */
     private ExperimentBucketerService(@Nonnull Bucketer bucketer,
                                       @Nonnull AudienceEvaluator audienceEvaluator) {
@@ -83,8 +82,8 @@ public class ExperimentBucketerService implements ExperimentService {
      */
     @Nullable
     private Variation bucket(@Nonnull Experiment experiment,
-                            @Nonnull String bucketingId,
-                            @Nonnull ProjectConfig projectConfig) {
+                             @Nonnull String bucketingId,
+                             @Nonnull ProjectConfig projectConfig) {
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group
         if (!groupId.isEmpty()) {
@@ -127,7 +126,7 @@ public class ExperimentBucketerService implements ExperimentService {
         // combining bucket id with group id
         String bucketKey = bucketingId + group.getId();
         // generating hashcode for getting bucket value
-        int hashCode = MurmurHash3.murmurhash3_x86_32(bucketKey, 0, bucketKey.length(), MURMUR_HASH_SEED);
+        int hashCode = MurmurHash3.murmurhash3_x86_32(bucketKey, 0, bucketKey.length(), MurmurhashBucketer.MURMUR_HASH_SEED);
         int bucketValue = bucketer.generateBucketValue(hashCode);
         logger.debug("Assigned bucket {} to user with bucketingId \"{}\" during experiment bucketing.",
             bucketValue,
@@ -174,7 +173,7 @@ public class ExperimentBucketerService implements ExperimentService {
         String experimentKey = experiment.getKey();
         String combinedBucketId = experimentKey + experiment.getId();
         int hashCode = MurmurHash3.murmurhash3_x86_32(combinedBucketId, 0, combinedBucketId.length(),
-            MURMUR_HASH_SEED);
+            MurmurhashBucketer.MURMUR_HASH_SEED);
         int bucketValue = bucketer.generateBucketValue(hashCode);
         logger.debug("Assigned bucket {} to user with bucketingId \"{}\" when bucketing to a variation.",
             bucketValue,
@@ -260,10 +259,10 @@ public class ExperimentBucketerService implements ExperimentService {
          */
         public ExperimentBucketerService build() {
             if (bucketer == null)
-                bucketer = new DecisionBucketer();
+                bucketer = new MurmurhashBucketer();
 
             if (audienceEvaluator == null) {
-                audienceEvaluator = new DecisionAudienceEvaluator();
+                audienceEvaluator = new ExperimentAudienceEvaluator();
             }
             return new ExperimentBucketerService(bucketer, audienceEvaluator);
         }

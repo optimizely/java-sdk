@@ -18,10 +18,13 @@ package com.optimizely.ab.bucketing;
 import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.decision.experiment.ExperimentService;
+import com.optimizely.ab.decision.experiment.services.ExperimentBucketerService;
 import com.optimizely.ab.error.ErrorHandler;
-import com.optimizely.ab.internal.ExperimentUtils;
+import com.optimizely.ab.event.internal.UserContext;
 import com.optimizely.ab.internal.ControlAttribute;
 
+import com.optimizely.ab.internal.ExperimentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,9 +47,9 @@ import javax.annotation.Nullable;
  */
 public class DecisionService {
 
-    private final Bucketer bucketer;
     private final ErrorHandler errorHandler;
     private final UserProfileService userProfileService;
+    private ExperimentService experimentService;
     private static final Logger logger = LoggerFactory.getLogger(DecisionService.class);
 
     /**
@@ -61,14 +64,14 @@ public class DecisionService {
     /**
      * Initialize a decision service for the Optimizely client.
      *
-     * @param bucketer           Base bucketer to allocate new users to an experiment.
+     * @param experimentService  Bucketer Service to allocate new users to an experiment.
      * @param errorHandler       The error handler of the Optimizely client.
      * @param userProfileService UserProfileService implementation for storing user info.
      */
-    public DecisionService(@Nonnull Bucketer bucketer,
+    public DecisionService(@Nonnull ExperimentService experimentService,
                            @Nonnull ErrorHandler errorHandler,
                            @Nullable UserProfileService userProfileService) {
-        this.bucketer = bucketer;
+        this.experimentService = experimentService;
         this.errorHandler = errorHandler;
         this.userProfileService = userProfileService;
     }
@@ -86,11 +89,6 @@ public class DecisionService {
                                   @Nonnull String userId,
                                   @Nonnull Map<String, ?> filteredAttributes,
                                   @Nonnull ProjectConfig projectConfig) {
-
-        if (!ExperimentUtils.isExperimentActive(experiment)) {
-            return null;
-        }
-
         // look for forced bucketing first.
         Variation variation = getForcedVariation(experiment, userId);
 
@@ -133,23 +131,26 @@ public class DecisionService {
             userProfile = new UserProfile(userId, new HashMap<String, Decision>());
         }
 
-        if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
-            String bucketingId = getBucketingId(userId, filteredAttributes);
-            variation = bucketer.bucket(experiment, bucketingId, projectConfig);
+        variation = experimentService.getDecision(experiment, new UserContext.Builder()
+            .withProjectConfig(projectConfig)
+            .withAttributes(filteredAttributes)
+            .withUserId(userId)
+            .build());
 
-            if (variation != null) {
-                if (userProfileService != null) {
-                    saveVariation(experiment, variation, userProfile);
-                } else {
-                    logger.debug("This decision will not be saved since the UserProfileService is null.");
-                }
+        if (variation != null) {
+            if (userProfileService != null) {
+                saveVariation(experiment, variation, userProfile);
+            } else {
+                logger.debug("This decision will not be saved since the UserProfileService is null.");
             }
-
             return variation;
         }
-
-        logger.info("User \"{}\" does not meet conditions to be in experiment \"{}\".", userId, experiment.getKey());
-        return null;
+        else {
+            logger.info("User \"{}\" does not meet conditions to be in experiment \"{}\".",
+                userId,
+                experiment.getKey());
+            return null;
+        }
     }
 
     /**
@@ -222,27 +223,33 @@ public class DecisionService {
         for (int i = 0; i < rolloutRulesLength - 1; i++) {
             Experiment rolloutRule = rollout.getExperiments().get(i);
             Audience audience = projectConfig.getAudienceIdMapping().get(rolloutRule.getAudienceIds().get(0));
-            if (ExperimentUtils.isUserInExperiment(projectConfig, rolloutRule, filteredAttributes)) {
-                variation = bucketer.bucket(rolloutRule, bucketingId, projectConfig);
-                if (variation == null) {
-                    break;
-                }
-                return new FeatureDecision(rolloutRule, variation,
-                    FeatureDecision.DecisionSource.ROLLOUT);
+
+            variation = experimentService.getDecision(rolloutRule, new UserContext.Builder()
+                .withProjectConfig(projectConfig)
+                .withAttributes(filteredAttributes)
+                .withUserId(bucketingId)
+                .build());
+
+            if (variation == null) {
+                break;
             } else {
                 logger.debug("User \"{}\" did not meet the conditions to be in rollout rule for audience \"{}\".",
                     userId, audience.getName());
             }
+            return new FeatureDecision(rolloutRule, variation,
+                FeatureDecision.DecisionSource.ROLLOUT);
         }
 
         // get last rule which is the fall back rule
         Experiment finalRule = rollout.getExperiments().get(rolloutRulesLength - 1);
-        if (ExperimentUtils.isUserInExperiment(projectConfig, finalRule, filteredAttributes)) {
-            variation = bucketer.bucket(finalRule, bucketingId, projectConfig);
-            if (variation != null) {
-                return new FeatureDecision(finalRule, variation,
-                    FeatureDecision.DecisionSource.ROLLOUT);
-            }
+        variation = experimentService.getDecision(finalRule, new UserContext.Builder()
+            .withProjectConfig(projectConfig)
+            .withAttributes(filteredAttributes)
+            .withUserId(bucketingId)
+            .build());
+        if (variation != null) {
+            return new FeatureDecision(finalRule, variation,
+                FeatureDecision.DecisionSource.ROLLOUT);
         }
         return new FeatureDecision(null, null, null);
     }
