@@ -49,8 +49,8 @@ public class DecisionAudienceEvaluator implements AudienceEvaluator {
         if (experiment.getAudienceConditions() != null) {
             return evaluateAudienceConditions(experiment, userContext);
         } else {
-            Boolean resolveReturn = evaluateAudience(experiment, userContext);
-            return Boolean.TRUE.equals(resolveReturn);
+            Boolean isAudienceValid = evaluateAudience(experiment, userContext);
+            return Boolean.TRUE.equals(isAudienceValid);
         }
     }
 
