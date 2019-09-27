@@ -20,7 +20,7 @@ package com.optimizely.ab.decision.bucketer;
  */
 public interface Bucketer {
     /**
-     * Map the given 32-bit hashcode into the range [0, MAX_TRAFFIC_VALUE]).
+     * Generate value for bucketing
      *
      * @param hashCode the provided hashcode
      * @return a value in the range closed-open range, [0, MAX_TRAFFIC_VALUE])

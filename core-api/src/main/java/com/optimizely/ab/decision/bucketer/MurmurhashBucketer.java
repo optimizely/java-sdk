@@ -16,11 +16,16 @@
 package com.optimizely.ab.decision.bucketer;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ProjectConfig;
 
 /**
- Generate bucket value with in the provided range
+ * Default Optimizely bucketing algorithm that evenly distributes users using the Murmur3 hash of some provided
+ * identifier.
+ * <p>
+ * @see <a href="https://en.wikipedia.org/wiki/MurmurHash">MurmurHash</a>
  */
-public class DecisionBucketer implements Bucketer {
+public class MurmurhashBucketer implements Bucketer {
 
     /**
      * The maximum bucket value (represents 100 Basis Points).

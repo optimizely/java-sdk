@@ -32,22 +32,22 @@ public class BucketerTest {
 
     @Before
     public void setUp() {
-        algorithm = new DecisionBucketer();
+        algorithm = new MurmurhashBucketer();
     }
 
     /**
-     * Verify that {@link DecisionBucketer#generateBucketValue(int)} correctly handles negative hashCodes.
+     * Verify that {@link MurmurhashBucketer#generateBucketValue(int)} correctly handles negative hashCodes.
      */
     @Test
     public void generateBucketValueForNegativeHashCodes() throws Exception {
         int actual = algorithm.generateBucketValue(-1);
         assertTrue("generated bucket value is not in range: " + actual,
-            actual > 0 && actual < DecisionBucketer.MAX_TRAFFIC_VALUE);
+            actual > 0 && actual < MurmurhashBucketer.MAX_TRAFFIC_VALUE);
     }
 
     /**
      * Verify that across the entire 32-bit hashCode space, all generated bucket values fall within the range
-     * [0, {@link DecisionBucketer#MAX_TRAFFIC_VALUE}) and that there's an even distribution over 50/50 split.
+     * [0, {@link MurmurhashBucketer#MAX_TRAFFIC_VALUE}) and that there's an even distribution over 50/50 split.
      */
     @Test
     @Category(ExhaustiveTest.class)
@@ -61,10 +61,10 @@ public class BucketerTest {
             int bucketValue = algorithm.generateBucketValue(i);
 
             totalCount++;
-            if (bucketValue < (DecisionBucketer.MAX_TRAFFIC_VALUE / 2)) {
+            if (bucketValue < (MurmurhashBucketer.MAX_TRAFFIC_VALUE / 2)) {
                 lowerHalfCount++;
             }
-            if (bucketValue < 0 || bucketValue >= DecisionBucketer.MAX_TRAFFIC_VALUE) {
+            if (bucketValue < 0 || bucketValue >= MurmurhashBucketer.MAX_TRAFFIC_VALUE) {
                 outOfRangeCount++;
             }
         }
