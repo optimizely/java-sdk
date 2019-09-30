@@ -15,10 +15,10 @@
  */
 package com.optimizely.ab;
 
-import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.ProjectConfigManager;
+import com.optimizely.ab.decision.experiment.ExperimentService;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.EventProcessor;
@@ -56,8 +56,8 @@ public class OptimizelyRule extends ExternalResource {
         return this;
     }
 
-    public OptimizelyRule withBucketing(Bucketer bucketer) {
-        builder.withBucketing(bucketer);
+    protected OptimizelyRule withExperimentService(ExperimentService experimentService) {
+        builder.withExperimentService(experimentService);
         return this;
     }
 

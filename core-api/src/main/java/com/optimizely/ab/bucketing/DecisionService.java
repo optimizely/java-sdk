@@ -89,6 +89,11 @@ public class DecisionService {
                                   @Nonnull String userId,
                                   @Nonnull Map<String, ?> filteredAttributes,
                                   @Nonnull ProjectConfig projectConfig) {
+
+        if (!ExperimentUtils.isExperimentActive(experiment)) {
+            return null;
+        }
+
         // look for forced bucketing first.
         Variation variation = getForcedVariation(experiment, userId);
 
@@ -131,11 +136,13 @@ public class DecisionService {
             userProfile = new UserProfile(userId, new HashMap<String, Decision>());
         }
 
-        variation = experimentService.getDecision(experiment, new UserContext.Builder()
+        UserContext userContext = new UserContext.Builder()
             .withProjectConfig(projectConfig)
             .withAttributes(filteredAttributes)
             .withUserId(userId)
-            .build());
+            .build();
+
+        variation = experimentService.getDecision(experiment, userContext);
 
         if (variation != null) {
             if (userProfileService != null) {
@@ -224,32 +231,39 @@ public class DecisionService {
             Experiment rolloutRule = rollout.getExperiments().get(i);
             Audience audience = projectConfig.getAudienceIdMapping().get(rolloutRule.getAudienceIds().get(0));
 
-            variation = experimentService.getDecision(rolloutRule, new UserContext.Builder()
+            UserContext userContext = new UserContext.Builder()
                 .withProjectConfig(projectConfig)
                 .withAttributes(filteredAttributes)
                 .withUserId(bucketingId)
-                .build());
+                .build();
 
-            if (variation == null) {
-                break;
+
+            if (ExperimentUtils.isUserInExperiment(projectConfig, rolloutRule, filteredAttributes)) {
+                variation = experimentService.getDecision(rolloutRule, userContext);
+                if (variation == null) {
+                    break;
+                }
+                return new FeatureDecision(rolloutRule, variation,
+                    FeatureDecision.DecisionSource.ROLLOUT);
             } else {
                 logger.debug("User \"{}\" did not meet the conditions to be in rollout rule for audience \"{}\".",
                     userId, audience.getName());
             }
-            return new FeatureDecision(rolloutRule, variation,
-                FeatureDecision.DecisionSource.ROLLOUT);
         }
 
         // get last rule which is the fall back rule
         Experiment finalRule = rollout.getExperiments().get(rolloutRulesLength - 1);
-        variation = experimentService.getDecision(finalRule, new UserContext.Builder()
-            .withProjectConfig(projectConfig)
-            .withAttributes(filteredAttributes)
-            .withUserId(bucketingId)
-            .build());
-        if (variation != null) {
-            return new FeatureDecision(finalRule, variation,
-                FeatureDecision.DecisionSource.ROLLOUT);
+        if (ExperimentUtils.isUserInExperiment(projectConfig, finalRule, filteredAttributes)) {
+            UserContext userContext = new UserContext.Builder()
+                .withProjectConfig(projectConfig)
+                .withAttributes(filteredAttributes)
+                .withUserId(bucketingId)
+                .build();
+            variation = experimentService.getDecision(finalRule, userContext);
+            if (variation != null) {
+                return new FeatureDecision(finalRule, variation,
+                    FeatureDecision.DecisionSource.ROLLOUT);
+            }
         }
         return new FeatureDecision(null, null, null);
     }

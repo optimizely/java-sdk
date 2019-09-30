@@ -126,7 +126,10 @@ public class ExperimentBucketerService implements ExperimentService {
         // combining bucket id with group id
         String bucketKey = bucketingId + group.getId();
         // generating hashcode for getting bucket value
-        int hashCode = MurmurHash3.murmurhash3_x86_32(bucketKey, 0, bucketKey.length(), MurmurhashBucketer.MURMUR_HASH_SEED);
+        int hashCode = MurmurHash3.murmurhash3_x86_32(bucketKey,
+            0,
+            bucketKey.length(),
+            MurmurhashBucketer.MURMUR_HASH_SEED);
         int bucketValue = bucketer.generateBucketValue(hashCode);
         logger.debug("Assigned bucket {} to user with bucketingId \"{}\" during experiment bucketing.",
             bucketValue,
@@ -171,8 +174,10 @@ public class ExperimentBucketerService implements ExperimentService {
                                         @Nonnull String bucketingId) {
         // combining bucket id with group id
         String experimentKey = experiment.getKey();
-        String combinedBucketId = experimentKey + experiment.getId();
-        int hashCode = MurmurHash3.murmurhash3_x86_32(combinedBucketId, 0, combinedBucketId.length(),
+        String combinedBucketId = bucketingId + experiment.getId();
+        int hashCode = MurmurHash3.murmurhash3_x86_32(combinedBucketId,
+            0,
+            combinedBucketId.length(),
             MurmurhashBucketer.MURMUR_HASH_SEED);
         int bucketValue = bucketer.generateBucketValue(hashCode);
         logger.debug("Assigned bucket {} to user with bucketingId \"{}\" when bucketing to a variation.",

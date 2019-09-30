@@ -23,7 +23,7 @@ public interface Bucketer {
      * Generate value for bucketing
      *
      * @param hashCode the provided hashcode
-     * @return a value for bucketing)
+     * @return a value for bucketing
      */
     int generateBucketValue(int hashCode);
 }

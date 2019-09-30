@@ -17,10 +17,11 @@ package com.optimizely.ab.decision.evaluator;
 
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
-import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.event.internal.UserContext;
+import com.optimizely.ab.config.audience.OrCondition;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

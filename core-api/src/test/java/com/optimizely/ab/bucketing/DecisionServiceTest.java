@@ -26,6 +26,7 @@ import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.decision.experiment.ExperimentService;
 import com.optimizely.ab.decision.experiment.services.ExperimentBucketerService;
 import com.optimizely.ab.error.ErrorHandler;
+import com.optimizely.ab.event.internal.UserContext;
 import com.optimizely.ab.internal.LogbackVerifier;
 
 import com.optimizely.ab.internal.ControlAttribute;
@@ -136,10 +137,10 @@ public class DecisionServiceTest {
         verify(decisionService, never()).getStoredVariation(eq(experiment), any(UserProfile.class), any(ProjectConfig.class));
     }
 
-   /* *//**
+    /**
      * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)}
      * gives precedence to forced variation bucketing over whitelisting.
-     *//*
+     */
     @Test
     public void getForcedVariationBeforeWhitelisting() throws Exception {
         Experiment experiment = validProjectConfig.getExperiments().get(0);
@@ -162,10 +163,10 @@ public class DecisionServiceTest {
         assertThat(decisionService.getVariation(experiment, whitelistedUserId, Collections.<String, String>emptyMap(), validProjectConfig), is(whitelistVariation));
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)}
      * gives precedence to forced variation bucketing over audience evaluation.
-     *//*
+     */
     @Test
     public void getVariationForcedPrecedesAudienceEval() throws Exception {
         Experiment experiment = validProjectConfig.getExperiments().get(0);
@@ -184,10 +185,10 @@ public class DecisionServiceTest {
         assertNull(decisionService.getForcedVariation(experiment, genericUserId));
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)}
      * gives precedence to forced variation bucketing over user profile.
-     *//*
+     */
     @Test
     public void getVariationForcedBeforeUserProfile() throws Exception {
         Experiment experiment = validProjectConfig.getExperiments().get(0);
@@ -198,7 +199,7 @@ public class DecisionServiceTest {
         UserProfileService userProfileService = mock(UserProfileService.class);
         when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
-        DecisionService decisionService = spy(new DecisionService(new Bucketer(), mockErrorHandler, userProfileService));
+        DecisionService decisionService = spy(new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, userProfileService));
 
         // ensure that normal users still get excluded from the experiment when they fail audience evaluation
         assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap(), validProjectConfig));
@@ -215,10 +216,10 @@ public class DecisionServiceTest {
         assertNull(decisionService.getForcedVariation(experiment, userProfileId));
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)}
      * gives precedence to user profile over audience evaluation.
-     *//*
+     */
     @Test
     public void getVariationEvaluatesUserProfileBeforeAudienceTargeting() throws Exception {
         Experiment experiment = validProjectConfig.getExperiments().get(0);
@@ -229,7 +230,7 @@ public class DecisionServiceTest {
         UserProfileService userProfileService = mock(UserProfileService.class);
         when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
-        DecisionService decisionService = spy(new DecisionService(new Bucketer(), mockErrorHandler, userProfileService));
+        DecisionService decisionService = spy(new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, userProfileService));
 
         // ensure that normal users still get excluded from the experiment when they fail audience evaluation
         assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap(), validProjectConfig));
@@ -240,12 +241,12 @@ public class DecisionServiceTest {
 
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)}
      * gives a null variation on a Experiment that is not running. Set the forced variation.
      * And, test to make sure that after setting forced variation, the getVariation still returns
      * null.
-     *//*
+     */
     @Test
     public void getVariationOnNonRunningExperimentWithForcedVariation() {
         Experiment experiment = validProjectConfig.getExperiments().get(1);
@@ -276,10 +277,10 @@ public class DecisionServiceTest {
 
     //========== get Variation for Feature tests ==========//
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map, ProjectConfig)}
      * returns null when the {@link FeatureFlag} is not used in any experiments or rollouts.
-     *//*
+     */
     @Test
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     public void getVariationForFeatureReturnsNullWhenFeatureFlagExperimentIdsIsEmpty() {
@@ -310,10 +311,10 @@ public class DecisionServiceTest {
         verify(emptyFeatureFlag, times(3)).getKey();
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map, ProjectConfig)}
      * returns null when the user is not bucketed into any experiments or rollouts for the {@link FeatureFlag}.
-     *//*
+     */
     @Test
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     public void getVariationForFeatureReturnsNullWhenItGetsNoVariationsForExperimentsAndRollouts() {
@@ -352,10 +353,10 @@ public class DecisionServiceTest {
         verify(spyFeatureFlag, times(1)).getKey();
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map, ProjectConfig)}
      * returns the variation of the experiment a user gets bucketed into for an experiment.
-     *//*
+     */
     @Test
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     public void getVariationForFeatureReturnsVariationReturnedFromGetVariation() {
@@ -388,13 +389,13 @@ public class DecisionServiceTest {
         verify(spyFeatureFlag, never()).getKey();
     }
 
-    *//**
+    /**
      * Verify that when getting a {@link Variation} for a {@link FeatureFlag} in
      * {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map, ProjectConfig)},
      * check first if the user is bucketed to an {@link Experiment}
      * then check if the user is not bucketed to an experiment,
      * check for a {@link Rollout}.
-     *//*
+     */
     @Test
     public void getVariationForFeatureReturnsVariationFromExperimentBeforeRollout() {
         FeatureFlag featureFlag = FEATURE_FLAG_MULTI_VARIATE_FEATURE;
@@ -450,12 +451,12 @@ public class DecisionServiceTest {
         );
     }
 
-    *//**
+    /**
      * Verify that when getting a {@link Variation} for a {@link FeatureFlag} in
      * {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map, ProjectConfig)},
      * check first if the user is bucketed to an {@link Rollout}
      * if the user is not bucketed to an experiment.
-     *//*
+     */
     @Test
     public void getVariationForFeatureReturnsVariationFromRolloutWhenExperimentFails() {
         FeatureFlag featureFlag = FEATURE_FLAG_MULTI_VARIATE_FEATURE;
@@ -518,11 +519,11 @@ public class DecisionServiceTest {
 
     //========== getVariationForFeatureInRollout tests ==========//
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
      * returns null when trying to bucket a user into a {@link FeatureFlag}
      * that does not have a {@link Rollout} attached.
-     *//*
+     */
     @Test
     public void getVariationForFeatureInRolloutReturnsNullWhenFeatureIsNotAttachedToRollout() {
         FeatureFlag mockFeatureFlag = mock(FeatureFlag.class);
@@ -545,14 +546,14 @@ public class DecisionServiceTest {
         );
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
      * return null when a user is excluded from every rule of a rollout due to traffic allocation.
-     *//*
+     */
     @Test
     public void getVariationForFeatureInRolloutReturnsNullWhenUserIsExcludedFromAllTraffic() {
-        Bucketer mockBucketer = mock(Bucketer.class);
-        when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class))).thenReturn(null);
+        ExperimentBucketerService mockBucketer = mock(ExperimentBucketerService.class);
+        when(mockBucketer.getDecision(any(Experiment.class), any(UserContext.class))).thenReturn(null);
 
         DecisionService decisionService = new DecisionService(
             mockBucketer,
@@ -574,20 +575,20 @@ public class DecisionServiceTest {
         // with fall back bucketing, the user has at most 2 chances to get bucketed with traffic allocation
         // one chance with the audience rollout rule
         // one chance with the everyone else rule
-        verify(mockBucketer, atMost(2)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+        verify(mockBucketer, atMost(2)).getDecision(any(Experiment.class), any(UserContext.class));
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
      * returns null when a user is excluded from every rule of a rollout due to targeting
      * and also fails traffic allocation in the everyone else rollout.
-     *//*
+     */
     @Test
     public void getVariationForFeatureInRolloutReturnsNullWhenUserFailsAllAudiencesAndTraffic() {
         Bucketer mockBucketer = mock(Bucketer.class);
         when(mockBucketer.bucket(any(Experiment.class), anyString(),  any(ProjectConfig.class))).thenReturn(null);
 
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
+        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, null);
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
@@ -602,11 +603,11 @@ public class DecisionServiceTest {
         verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
      * returns the variation of "Everyone Else" rule
      * when the user fails targeting for all rules, but is bucketed into the "Everyone Else" rule.
-     *//*
+     */
     @Test
     public void getVariationForFeatureInRolloutReturnsVariationWhenUserFailsAllAudienceButSatisfiesTraffic() {
         Bucketer mockBucketer = mock(Bucketer.class);
@@ -616,7 +617,7 @@ public class DecisionServiceTest {
         when(mockBucketer.bucket(eq(everyoneElseRule), anyString(), any(ProjectConfig.class))).thenReturn(expectedVariation);
 
         DecisionService decisionService = new DecisionService(
-            mockBucketer,
+            new ExperimentBucketerService.Builder().build(),
             mockErrorHandler,
             null
         );
@@ -634,12 +635,12 @@ public class DecisionServiceTest {
         verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
      * returns the variation of "Everyone Else" rule
      * when the user passes targeting for a rule, but was failed the traffic allocation for that rule,
      * and is bucketed successfully into the "Everyone Else" rule.
-     *//*
+     */
     @Test
     public void getVariationForFeatureInRolloutReturnsVariationWhenUserFailsTrafficInRuleAndPassesInEveryoneElse() {
         Bucketer mockBucketer = mock(Bucketer.class);
@@ -650,7 +651,7 @@ public class DecisionServiceTest {
         when(mockBucketer.bucket(eq(everyoneElseRule), anyString(), any(ProjectConfig.class))).thenReturn(expectedVariation);
 
         DecisionService decisionService = new DecisionService(
-            mockBucketer,
+            new ExperimentBucketerService.Builder().build(),
             mockErrorHandler,
             null
         );
@@ -670,14 +671,14 @@ public class DecisionServiceTest {
         verify(mockBucketer, times(2)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
      * returns the variation of "Everyone Else" rule
      * when the user passes targeting for a rule, but was failed the traffic allocation for that rule,
      * and is bucketed successfully into the "Everyone Else" rule.
      * Fallback bucketing should not evaluate any other audiences.
      * Even though the user would satisfy a later rollout rule, they are never evaluated for it or bucketed into it.
-     *//*
+     */
     @Test
     public void getVariationForFeatureInRolloutReturnsVariationWhenUserFailsTrafficInRuleButWouldPassForAnotherRuleAndPassesInEveryoneElse() {
         Bucketer mockBucketer = mock(Bucketer.class);
@@ -691,7 +692,7 @@ public class DecisionServiceTest {
         when(mockBucketer.bucket(eq(englishCitizensRule), anyString(), any(ProjectConfig.class))).thenReturn(englishCitizenVariation);
 
         DecisionService decisionService = new DecisionService(
-            mockBucketer,
+            new ExperimentBucketerService.Builder().build(),
             mockErrorHandler,
             null
         );
@@ -716,11 +717,11 @@ public class DecisionServiceTest {
         verify(mockBucketer, times(2)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
      * returns the variation of "English Citizens" rule
      * when the user fails targeting for previous rules, but passes targeting and traffic for Rule 3.
-     *//*
+     */
     @Test
     public void getVariationForFeatureInRolloutReturnsVariationWhenUserFailsTargetingInPreviousRulesButPassesRule3() {
         Bucketer mockBucketer = mock(Bucketer.class);
@@ -733,7 +734,7 @@ public class DecisionServiceTest {
         when(mockBucketer.bucket(eq(everyoneElseRule), anyString(), any(ProjectConfig.class))).thenReturn(everyoneElseVariation);
         when(mockBucketer.bucket(eq(englishCitizensRule), anyString(), any(ProjectConfig.class))).thenReturn(englishCitizenVariation);
 
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
+        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, null);
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
@@ -752,9 +753,9 @@ public class DecisionServiceTest {
 
     //========= white list tests ==========/
 
-    *//**
+    /**
      * Test {@link DecisionService#getWhitelistedVariation(Experiment, String)} correctly returns a whitelisted variation.
-     *//*
+     */
     @Test
     public void getWhitelistedReturnsForcedVariation() {
         logbackVerifier.expectMessage(Level.INFO, "User \"" + whitelistedUserId + "\" is forced in variation \""
@@ -762,10 +763,10 @@ public class DecisionServiceTest {
         assertEquals(whitelistedVariation, decisionService.getWhitelistedVariation(whitelistedExperiment, whitelistedUserId));
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getWhitelistedVariation(Experiment, String)} returns null
      * when an invalid variation key is found in the forced variations mapping.
-     *//*
+     */
     @Test
     public void getWhitelistedWithInvalidVariation() throws Exception {
         String userId = "testUser1";
@@ -791,9 +792,9 @@ public class DecisionServiceTest {
         assertNull(decisionService.getWhitelistedVariation(experiment, userId));
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getWhitelistedVariation(Experiment, String)} returns null when user is not whitelisted.
-     *//*
+     */
     @Test
     public void getWhitelistedReturnsNullWhenUserIsNotWhitelisted() throws Exception {
         assertNull(decisionService.getWhitelistedVariation(whitelistedExperiment, genericUserId));
@@ -801,10 +802,10 @@ public class DecisionServiceTest {
 
     //======== User Profile tests =========//
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getStoredVariation(Experiment, UserProfile, ProjectConfig)} returns a variation that is
      * stored in the provided {@link UserProfile}.
-     *//*
+     */
     @SuppressFBWarnings
     @Test
     public void bucketReturnsVariationStoredInUserProfile() throws Exception {
@@ -818,7 +819,7 @@ public class DecisionServiceTest {
         when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
         Bucketer bucketer = new Bucketer();
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, userProfileService);
 
         logbackVerifier.expectMessage(Level.INFO,
             "Returning previously activated variation \"" + variation.getKey() + "\" of experiment \"" + experiment.getKey() + "\""
@@ -831,10 +832,10 @@ public class DecisionServiceTest {
         verify(userProfileService).lookup(userProfileId);
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getStoredVariation(Experiment, UserProfile, ProjectConfig)} returns null and logs properly
      * when there is no stored variation for that user in that {@link Experiment} in the {@link UserProfileService}.
-     *//*
+     */
     @Test
     public void getStoredVariationLogsWhenLookupReturnsNull() throws Exception {
         final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
@@ -844,7 +845,7 @@ public class DecisionServiceTest {
         UserProfile userProfile = new UserProfile(userProfileId, Collections.<String, Decision>emptyMap());
         when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, userProfileService);
 
         logbackVerifier.expectMessage(Level.INFO, "No previously activated variation of experiment " +
             "\"" + experiment.getKey() + "\" for user \"" + userProfileId + "\" found in user profile.");
@@ -852,11 +853,11 @@ public class DecisionServiceTest {
         assertNull(decisionService.getStoredVariation(experiment, userProfile, noAudienceProjectConfig));
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getStoredVariation(Experiment, UserProfile, ProjectConfig)} returns null
      * when a {@link UserProfile} is present, contains a decision for the experiment in question,
      * but the variation ID for that decision does not exist in the datafile.
-     *//*
+     */
     @Test
     public void getStoredVariationReturnsNullWhenVariationIsNoLongerInConfig() throws Exception {
         final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
@@ -871,7 +872,7 @@ public class DecisionServiceTest {
         UserProfileService userProfileService = mock(UserProfileService.class);
         when(userProfileService.lookup(userProfileId)).thenReturn(storedUserProfile.toMap());
 
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, userProfileService);
 
         logbackVerifier.expectMessage(Level.INFO,
             "User \"" + userProfileId + "\" was previously bucketed into variation with ID \"" + storedVariationId + "\" for " +
@@ -881,10 +882,10 @@ public class DecisionServiceTest {
         assertNull(decisionService.getStoredVariation(experiment, storedUserProfile, noAudienceProjectConfig));
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)}
      * saves a {@link Variation}of an {@link Experiment} for a user when a {@link UserProfileService} is present.
-     *//*
+     */
     @SuppressFBWarnings
     @Test
     public void getVariationSavesBucketedVariationIntoUserProfile() throws Exception {
@@ -902,7 +903,7 @@ public class DecisionServiceTest {
         Bucketer mockBucketer = mock(Bucketer.class);
         when(mockBucketer.bucket(experiment, userProfileId, noAudienceProjectConfig)).thenReturn(variation);
 
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, userProfileService);
 
         assertEquals(variation, decisionService.getVariation(
             experiment, userProfileId, Collections.<String, String>emptyMap(), noAudienceProjectConfig)
@@ -914,10 +915,10 @@ public class DecisionServiceTest {
         verify(userProfileService).save(eq(expectedUserProfile.toMap()));
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)} logs correctly
      * when a {@link UserProfileService} is present but fails to save an activation.
-     *//*
+     */
     @Test
     public void bucketLogsCorrectlyWhenUserProfileFailsToSave() throws Exception {
         final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
@@ -934,7 +935,7 @@ public class DecisionServiceTest {
         UserProfile saveUserProfile = new UserProfile(userProfileId,
             new HashMap<String, Decision>());
 
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, userProfileService);
 
 
         decisionService.saveVariation(experiment, variation, saveUserProfile);
@@ -946,10 +947,10 @@ public class DecisionServiceTest {
         verify(userProfileService).save(eq(expectedUserProfile.toMap()));
     }
 
-    *//**
+    /**
      * Verify that a {@link UserProfile} is saved when the user is brand new and did not have anything returned from
      * {@link UserProfileService#lookup(String)}.
-     *//*
+     */
     @Test
     public void getVariationSavesANewUserProfile() throws Exception {
         final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
@@ -960,7 +961,7 @@ public class DecisionServiceTest {
 
         Bucketer bucketer = mock(Bucketer.class);
         UserProfileService userProfileService = mock(UserProfileService.class);
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, userProfileService);
 
         when(bucketer.bucket(experiment, userProfileId, noAudienceProjectConfig)).thenReturn(variation);
         when(userProfileService.lookup(userProfileId)).thenReturn(null);
@@ -972,7 +973,7 @@ public class DecisionServiceTest {
     @Test
     public void getVariationBucketingId() throws Exception {
         Bucketer bucketer = mock(Bucketer.class);
-        DecisionService decisionService = spy(new DecisionService(bucketer, mockErrorHandler, null));
+        DecisionService decisionService = spy(new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, null));
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation expectedVariation = experiment.getVariations().get(0);
 
@@ -985,10 +986,10 @@ public class DecisionServiceTest {
 
     }
 
-    *//**
+    /**
      * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
      * uses bucketing ID to bucket the user into rollouts.
-     *//*
+     */
     @Test
     public void getVariationForRolloutWithBucketingId() {
         Experiment rolloutRuleExperiment = ROLLOUT_3_EVERYONE_ELSE_RULE;
@@ -1004,7 +1005,7 @@ public class DecisionServiceTest {
         when(bucketer.bucket(rolloutRuleExperiment, bucketingId, v4ProjectConfig)).thenReturn(rolloutVariation);
 
         DecisionService decisionService = spy(new DecisionService(
-            bucketer,
+            new ExperimentBucketerService.Builder().build(),
             mockErrorHandler,
             null
         ));
@@ -1019,7 +1020,7 @@ public class DecisionServiceTest {
         assertEquals(expectedFeatureDecision, featureDecision);
     }
 
-    *//**
+    /**
      * Invalid User IDs
      * <p>
      * User ID is null
@@ -1039,8 +1040,8 @@ public class DecisionServiceTest {
      * Call set variation with different variations on one user/experiment to confirm that each set is expected.
      * Set variation on multiple variations for one user.
      * Set variations for multiple users.
-     *//*
-    *//* UserID test *//*
+     */
+    /* UserID test */
     @Test
     @SuppressFBWarnings("NP")
     public void setForcedVariationNullUserId() {
@@ -1068,7 +1069,7 @@ public class DecisionServiceTest {
         assertNull(decisionService.getForcedVariation(experiment, ""));
     }
 
-    *//* Invalid Variation Id (set only *//*
+    /* Invalid Variation Id (set only */
     @Test
     public void setForcedVariationWrongVariationKey() {
         Experiment experiment = validProjectConfig.getExperimentKeyMapping().get("etag1");
@@ -1088,7 +1089,7 @@ public class DecisionServiceTest {
         assertFalse(decisionService.setForcedVariation(experiment, "testUser1", ""));
     }
 
-    *//* Multiple set calls (set only *//*
+    /* Multiple set calls (set only */
     @Test
     public void setForcedVariationDifferentVariations() {
         Experiment experiment = validProjectConfig.getExperimentKeyMapping().get("etag1");
@@ -1154,5 +1155,4 @@ public class DecisionServiceTest {
         assertNull(decisionService.getForcedVariation(experiment2, "testUser1"));
         assertNull(decisionService.getForcedVariation(experiment2, "testUser2"));
     }
-*/
 }
