@@ -47,6 +47,26 @@ public class UserContext {
         return attributes;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        UserContext userContext = (UserContext) o;
+        if(!userId.equals(userContext.getUserId())) return false;
+        if(!projectConfig.equals(userContext.getProjectConfig())) return false;
+        return attributes != null ? attributes.equals(userContext.attributes)
+            : (userContext.getAttributes() == null || userContext.getAttributes().isEmpty()) ;
+    }
+
+
+    @Override
+    public int hashCode() {
+        int result = userId.hashCode();
+        result = 31 * result + projectConfig.hashCode();
+        return result;
+    }
+
     public static class Builder {
 
         private ProjectConfig projectConfig;

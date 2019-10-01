@@ -585,10 +585,10 @@ public class DecisionServiceTest {
      */
     @Test
     public void getVariationForFeatureInRolloutReturnsNullWhenUserFailsAllAudiencesAndTraffic() {
-        Bucketer mockBucketer = mock(Bucketer.class);
-        when(mockBucketer.bucket(any(Experiment.class), anyString(),  any(ProjectConfig.class))).thenReturn(null);
+        ExperimentBucketerService mockBucketer = mock(ExperimentBucketerService.class);
+        when(mockBucketer.getDecision(any(Experiment.class), any(UserContext.class))).thenReturn(null);
 
-        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, null);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
@@ -600,7 +600,7 @@ public class DecisionServiceTest {
         assertNull(featureDecision.decisionSource);
 
         // user is only bucketed once for the everyone else rule
-        verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+        verify(mockBucketer, times(1)).getDecision(any(Experiment.class), any(UserContext.class));
     }
 
     /**
@@ -610,14 +610,14 @@ public class DecisionServiceTest {
      */
     @Test
     public void getVariationForFeatureInRolloutReturnsVariationWhenUserFailsAllAudienceButSatisfiesTraffic() {
-        Bucketer mockBucketer = mock(Bucketer.class);
+        ExperimentBucketerService mockBucketer = mock(ExperimentBucketerService.class);
         Rollout rollout = ROLLOUT_2;
         Experiment everyoneElseRule = rollout.getExperiments().get(rollout.getExperiments().size() - 1);
         Variation expectedVariation = everyoneElseRule.getVariations().get(0);
-        when(mockBucketer.bucket(eq(everyoneElseRule), anyString(), any(ProjectConfig.class))).thenReturn(expectedVariation);
+        when(mockBucketer.getDecision(eq(everyoneElseRule), any(UserContext.class))).thenReturn(expectedVariation);
 
         DecisionService decisionService = new DecisionService(
-            new ExperimentBucketerService.Builder().build(),
+            mockBucketer,
             mockErrorHandler,
             null
         );
@@ -632,7 +632,7 @@ public class DecisionServiceTest {
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
 
         // verify user is only bucketed once for everyone else rule
-        verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+        verify(mockBucketer, times(1)).getDecision(any(Experiment.class), any(UserContext.class));
     }
 
     /**
@@ -643,15 +643,15 @@ public class DecisionServiceTest {
      */
     @Test
     public void getVariationForFeatureInRolloutReturnsVariationWhenUserFailsTrafficInRuleAndPassesInEveryoneElse() {
-        Bucketer mockBucketer = mock(Bucketer.class);
+        ExperimentBucketerService mockBucketer = mock(ExperimentBucketerService.class);
         Rollout rollout = ROLLOUT_2;
         Experiment everyoneElseRule = rollout.getExperiments().get(rollout.getExperiments().size() - 1);
         Variation expectedVariation = everyoneElseRule.getVariations().get(0);
-        when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class))).thenReturn(null);
-        when(mockBucketer.bucket(eq(everyoneElseRule), anyString(), any(ProjectConfig.class))).thenReturn(expectedVariation);
+        when(mockBucketer.getDecision(any(Experiment.class), any(UserContext.class))).thenReturn(null);
+        when(mockBucketer.getDecision(eq(everyoneElseRule), any(UserContext.class))).thenReturn(expectedVariation);
 
         DecisionService decisionService = new DecisionService(
-            new ExperimentBucketerService.Builder().build(),
+            mockBucketer,
             mockErrorHandler,
             null
         );
@@ -668,7 +668,7 @@ public class DecisionServiceTest {
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
 
         // verify user is only bucketed once for everyone else rule
-        verify(mockBucketer, times(2)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+        verify(mockBucketer, times(2)).getDecision(any(Experiment.class), any(UserContext.class));
     }
 
     /**
@@ -681,18 +681,18 @@ public class DecisionServiceTest {
      */
     @Test
     public void getVariationForFeatureInRolloutReturnsVariationWhenUserFailsTrafficInRuleButWouldPassForAnotherRuleAndPassesInEveryoneElse() {
-        Bucketer mockBucketer = mock(Bucketer.class);
+        ExperimentBucketerService mockBucketer = mock(ExperimentBucketerService.class);
         Rollout rollout = ROLLOUT_2;
         Experiment englishCitizensRule = rollout.getExperiments().get(2);
         Variation englishCitizenVariation = englishCitizensRule.getVariations().get(0);
         Experiment everyoneElseRule = rollout.getExperiments().get(rollout.getExperiments().size() - 1);
         Variation expectedVariation = everyoneElseRule.getVariations().get(0);
-        when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class))).thenReturn(null);
-        when(mockBucketer.bucket(eq(everyoneElseRule), anyString(), any(ProjectConfig.class))).thenReturn(expectedVariation);
-        when(mockBucketer.bucket(eq(englishCitizensRule), anyString(), any(ProjectConfig.class))).thenReturn(englishCitizenVariation);
+        when(mockBucketer.getDecision(any(Experiment.class), any(UserContext.class))).thenReturn(null);
+        when(mockBucketer.getDecision(eq(everyoneElseRule), any(UserContext.class))).thenReturn(expectedVariation);
+        when(mockBucketer.getDecision(eq(englishCitizensRule), any(UserContext.class))).thenReturn(englishCitizenVariation);
 
         DecisionService decisionService = new DecisionService(
-            new ExperimentBucketerService.Builder().build(),
+            mockBucketer,
             mockErrorHandler,
             null
         );
@@ -714,7 +714,7 @@ public class DecisionServiceTest {
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
 
         // verify user is only bucketed once for everyone else rule
-        verify(mockBucketer, times(2)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+        verify(mockBucketer, times(2)).getDecision(any(Experiment.class), any(UserContext.class));
     }
 
     /**
@@ -724,17 +724,17 @@ public class DecisionServiceTest {
      */
     @Test
     public void getVariationForFeatureInRolloutReturnsVariationWhenUserFailsTargetingInPreviousRulesButPassesRule3() {
-        Bucketer mockBucketer = mock(Bucketer.class);
+        ExperimentBucketerService mockBucketer = mock(ExperimentBucketerService.class);
         Rollout rollout = ROLLOUT_2;
         Experiment englishCitizensRule = rollout.getExperiments().get(2);
         Variation englishCitizenVariation = englishCitizensRule.getVariations().get(0);
         Experiment everyoneElseRule = rollout.getExperiments().get(rollout.getExperiments().size() - 1);
         Variation everyoneElseVariation = everyoneElseRule.getVariations().get(0);
-        when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class))).thenReturn(null);
-        when(mockBucketer.bucket(eq(everyoneElseRule), anyString(), any(ProjectConfig.class))).thenReturn(everyoneElseVariation);
-        when(mockBucketer.bucket(eq(englishCitizensRule), anyString(), any(ProjectConfig.class))).thenReturn(englishCitizenVariation);
+        when(mockBucketer.getDecision(any(Experiment.class), any(UserContext.class))).thenReturn(null);
+        when(mockBucketer.getDecision(eq(everyoneElseRule), any(UserContext.class))).thenReturn(everyoneElseVariation);
+        when(mockBucketer.getDecision(eq(englishCitizensRule), any(UserContext.class))).thenReturn(englishCitizenVariation);
 
-        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, null);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
@@ -748,7 +748,7 @@ public class DecisionServiceTest {
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
 
         // verify user is only bucketed once for everyone else rule
-        verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+        verify(mockBucketer, times(1)).getDecision(any(Experiment.class), any(UserContext.class));
     }
 
     //========= white list tests ==========/
@@ -818,8 +818,8 @@ public class DecisionServiceTest {
         UserProfileService userProfileService = mock(UserProfileService.class);
         when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
-        Bucketer bucketer = new Bucketer();
-        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, userProfileService);
+        ExperimentBucketerService mockBucketer = mock(ExperimentBucketerService.class);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, userProfileService);
 
         logbackVerifier.expectMessage(Level.INFO,
             "Returning previously activated variation \"" + variation.getKey() + "\" of experiment \"" + experiment.getKey() + "\""
@@ -840,12 +840,12 @@ public class DecisionServiceTest {
     public void getStoredVariationLogsWhenLookupReturnsNull() throws Exception {
         final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
 
-        Bucketer bucketer = new Bucketer();
+        ExperimentBucketerService mockBucketer = mock(ExperimentBucketerService.class);
         UserProfileService userProfileService = mock(UserProfileService.class);
         UserProfile userProfile = new UserProfile(userProfileId, Collections.<String, Decision>emptyMap());
         when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
-        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, userProfileService);
 
         logbackVerifier.expectMessage(Level.INFO, "No previously activated variation of experiment " +
             "\"" + experiment.getKey() + "\" for user \"" + userProfileId + "\" found in user profile.");
@@ -868,11 +868,11 @@ public class DecisionServiceTest {
         final UserProfile storedUserProfile = new UserProfile(userProfileId,
             storedDecisions);
 
-        Bucketer bucketer = mock(Bucketer.class);
+        ExperimentBucketerService mockBucketer = mock(ExperimentBucketerService.class);
         UserProfileService userProfileService = mock(UserProfileService.class);
         when(userProfileService.lookup(userProfileId)).thenReturn(storedUserProfile.toMap());
 
-        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, userProfileService);
 
         logbackVerifier.expectMessage(Level.INFO,
             "User \"" + userProfileId + "\" was previously bucketed into variation with ID \"" + storedVariationId + "\" for " +
@@ -900,10 +900,10 @@ public class DecisionServiceTest {
         UserProfile expectedUserProfile = new UserProfile(userProfileId,
             Collections.singletonMap(experiment.getId(), decision));
 
-        Bucketer mockBucketer = mock(Bucketer.class);
-        when(mockBucketer.bucket(experiment, userProfileId, noAudienceProjectConfig)).thenReturn(variation);
+        ExperimentBucketerService mockBucketer = mock(ExperimentBucketerService.class);
+        when(mockBucketer.getDecision(any(Experiment.class), any(UserContext.class))).thenReturn(variation);
 
-        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, userProfileService);
 
         assertEquals(variation, decisionService.getVariation(
             experiment, userProfileId, Collections.<String, String>emptyMap(), noAudienceProjectConfig)
@@ -924,7 +924,7 @@ public class DecisionServiceTest {
         final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
         final Variation variation = experiment.getVariations().get(0);
         Decision decision = new Decision(variation.getId());
-        Bucketer bucketer = new Bucketer();
+        ExperimentBucketerService mockBucketer = mock(ExperimentBucketerService.class);
         UserProfileService userProfileService = mock(UserProfileService.class);
         doThrow(new Exception()).when(userProfileService).save(anyMapOf(String.class, Object.class));
 
@@ -935,7 +935,7 @@ public class DecisionServiceTest {
         UserProfile saveUserProfile = new UserProfile(userProfileId,
             new HashMap<String, Decision>());
 
-        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, userProfileService);
 
 
         decisionService.saveVariation(experiment, variation, saveUserProfile);
@@ -959,11 +959,11 @@ public class DecisionServiceTest {
         final UserProfile expectedUserProfile = new UserProfile(userProfileId,
             Collections.singletonMap(experiment.getId(), decision));
 
-        Bucketer bucketer = mock(Bucketer.class);
+        ExperimentBucketerService mockBucketer = mock(ExperimentBucketerService.class);
         UserProfileService userProfileService = mock(UserProfileService.class);
-        DecisionService decisionService = new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, userProfileService);
 
-        when(bucketer.bucket(experiment, userProfileId, noAudienceProjectConfig)).thenReturn(variation);
+        when(mockBucketer.getDecision(any(Experiment.class), any(UserContext.class))).thenReturn(variation);
         when(userProfileService.lookup(userProfileId)).thenReturn(null);
 
         assertEquals(variation, decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap(), noAudienceProjectConfig));
@@ -972,12 +972,12 @@ public class DecisionServiceTest {
 
     @Test
     public void getVariationBucketingId() throws Exception {
-        Bucketer bucketer = mock(Bucketer.class);
-        DecisionService decisionService = spy(new DecisionService(new ExperimentBucketerService.Builder().build(), mockErrorHandler, null));
+        ExperimentBucketerService mockBucketer = mock(ExperimentBucketerService.class);
+        DecisionService decisionService = spy(new DecisionService(mockBucketer, mockErrorHandler, null));
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation expectedVariation = experiment.getVariations().get(0);
 
-        when(bucketer.bucket(experiment, "bucketId", validProjectConfig)).thenReturn(expectedVariation);
+        when(mockBucketer.getDecision(any(Experiment.class), any(UserContext.class))).thenReturn(expectedVariation);
 
         Map<String, String> attr = new HashMap<String, String>();
         attr.put(ControlAttribute.BUCKETING_ATTRIBUTE.toString(), "bucketId");
@@ -1000,12 +1000,21 @@ public class DecisionServiceTest {
         Map<String, String> attributes = new HashMap<String, String>();
         attributes.put(ControlAttribute.BUCKETING_ATTRIBUTE.toString(), bucketingId);
 
-        Bucketer bucketer = mock(Bucketer.class);
-        when(bucketer.bucket(rolloutRuleExperiment, userId, v4ProjectConfig)).thenReturn(null);
-        when(bucketer.bucket(rolloutRuleExperiment, bucketingId, v4ProjectConfig)).thenReturn(rolloutVariation);
+        ExperimentBucketerService mockBucketer = mock(ExperimentBucketerService.class);
+
+        when(mockBucketer.getDecision(eq(rolloutRuleExperiment), eq(new UserContext.Builder()
+            .withUserId(userId)
+            .withProjectConfig(v4ProjectConfig)
+            .withAttributes(attributes)
+            .build()))).thenReturn(null);
+        when(mockBucketer.getDecision(eq(rolloutRuleExperiment), eq(new UserContext.Builder()
+            .withUserId(bucketingId)
+            .withProjectConfig(v4ProjectConfig)
+            .withAttributes(attributes)
+            .build()))).thenReturn(rolloutVariation);
 
         DecisionService decisionService = spy(new DecisionService(
-            new ExperimentBucketerService.Builder().build(),
+            mockBucketer,
             mockErrorHandler,
             null
         ));

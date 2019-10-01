@@ -48,7 +48,8 @@ public class ExperimentAudienceEvaluator implements AudienceEvaluator {
     public boolean evaluate(@Nonnull Experiment experiment,
                             @Nonnull UserContext userContext) {
         if (experiment.getAudienceConditions() != null) {
-            return evaluateAudienceConditions(experiment, userContext);
+            Boolean conditionsValid = evaluateAudienceConditions(experiment, userContext);
+            return conditionsValid == null ? false : conditionsValid;
         } else {
             Boolean isAudienceValid = evaluateAudience(experiment, userContext);
             return Boolean.TRUE.equals(isAudienceValid);
