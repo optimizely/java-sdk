@@ -35,11 +35,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.optimizely.ab.internal.SafetyUtils.tryClose;
 
@@ -920,7 +916,7 @@ public class Optimizely implements AutoCloseable {
     private Map<String, ?> copyAttributes(Map<String, ?> attributes) {
         Map<String, ?> copiedAttributes = null;
         if (attributes != null) {
-            copiedAttributes = new HashMap<>(attributes);
+            copiedAttributes = new LinkedHashMap<>(attributes);
         }
         return copiedAttributes;
     }
