@@ -15,15 +15,37 @@
  ***************************************************************************/
 package com.optimizely.ab.decision.bucketer;
 
+import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ProjectConfig;
+
 /**
- * Generate bucket value with in the provided range
+ * Default Optimizely bucketing algorithm that evenly distributes users using the Murmur3 hash of some provided
+ * identifier.
+ *
+ * @see <a href="https://en.wikipedia.org/wiki/MurmurHash">MurmurHash</a>
  */
-public interface Bucketer {
+public class MurmurhashBucketer implements Bucketer {
+
+
     /**
-     * Generate value for bucketing
+     * The maximum bucket value (represents 100 Basis Points).
+     */
+    @VisibleForTesting
+    static final int MAX_TRAFFIC_VALUE = 10000;
+
+    public static final int MURMUR_HASH_SEED = 1;
+
+    /**
+     * Map the given 32-bit hashcode into the range [0, MAX_TRAFFIC_VALUE]).
      *
      * @param hashCode the provided hashcode
      * @return a value in the range closed-open range, [0, MAX_TRAFFIC_VALUE])
      */
-    int generateBucketValue(int hashCode);
+    @Override
+    public int generateBucketValue(int hashCode) {
+        // map the hashCode into the range [0, BucketAlgorithm.MAX_TRAFFIC_VALUE)
+        double ratio = (double) (hashCode & 0xFFFFFFFFL) / Math.pow(2, 32);
+        return (int) Math.floor(MAX_TRAFFIC_VALUE * ratio);
+    }
 }
