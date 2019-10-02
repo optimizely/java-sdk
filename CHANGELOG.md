@@ -1,5 +1,23 @@
 # Optimizely Java X SDK Changelog
 
+## 3.3.0
+October 1st, 2019
+
+### New Features:
+- Introduced `EventProcessor` interface with `BatchEventProcessor` implementation.
+- Introduced `LogEvent` notification.
+- Added `BatchEventProcessor` as the default implementation within the `OptimizelyFactory` class.
+
+### Deprecated
+- `LogEvent` was deprecated from `TrackNotification` and `ActivateNotification` notifications in favor of explicit `LogEvent` notification.
+
+## 3.2.1
+August 19th, 2019
+
+### New Features:
+- Add clear deprecation path from factory builder method.
+- Make Optimizely#withDatafile public.
+
 ## 3.4.0-beta
 July 24th, 2019
 
