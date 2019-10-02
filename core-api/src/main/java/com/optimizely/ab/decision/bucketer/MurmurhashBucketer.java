@@ -21,7 +21,9 @@ import com.optimizely.ab.annotations.VisibleForTesting;
  * Default Optimizely bucketing algorithm that evenly distributes users using the Murmur3 hash of some provided
  * identifier.
  * <p>
+ *
  * @see <a href="https://en.wikipedia.org/wiki/MurmurHash">MurmurHash</a>
+ * </p>
  */
 public class MurmurhashBucketer implements Bucketer {
 
@@ -32,6 +34,7 @@ public class MurmurhashBucketer implements Bucketer {
     static final int MAX_TRAFFIC_VALUE = 10000;
 
     public static final int MURMUR_HASH_SEED = 1;
+
     /**
      * Map the given 32-bit hashcode into the range [0, MAX_TRAFFIC_VALUE]).
      *

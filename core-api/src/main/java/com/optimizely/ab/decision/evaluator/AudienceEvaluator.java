@@ -22,7 +22,9 @@ import com.optimizely.ab.event.internal.UserContext;
 import javax.annotation.Nonnull;
 
 /**
- * Determines whether a user satisfies audience conditions for the experiment.
+ * AudienceEvaluator is an interface which evaluates audience
+ *
+ *  The default implementation of AudienceEvaluator can be found in {@link ExperimentAudienceEvaluator}.
  */
 public interface AudienceEvaluator
 {

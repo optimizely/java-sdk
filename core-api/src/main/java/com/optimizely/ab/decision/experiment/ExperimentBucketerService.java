@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and      *
  * limitations under the License.                                           *
  ***************************************************************************/
-package com.optimizely.ab.decision.experiment.services;
+package com.optimizely.ab.decision.experiment;
 
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.decision.bucketer.Bucketer;
@@ -21,7 +21,6 @@ import com.optimizely.ab.event.internal.UserContext;
 import com.optimizely.ab.bucketing.internal.MurmurHash3;
 import com.optimizely.ab.decision.bucketer.MurmurhashBucketer;
 import com.optimizely.ab.decision.evaluator.AudienceEvaluator;
-import com.optimizely.ab.decision.experiment.ExperimentService;
 import com.optimizely.ab.decision.evaluator.ExperimentAudienceEvaluator;
 
 import javax.annotation.Nonnull;
@@ -77,8 +76,8 @@ public class ExperimentBucketerService implements ExperimentService {
      * Assign a {@link Variation} of an {@link Experiment} to a user based on hashed value from murmurhash3.
      *
      * @param experiment  The Experiment in which the user is to be bucketed.
-     * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
-     * @return {@link Variation} the user is bucketed into or null.
+     * @param bucketingId A user-assigned value, to create the key for the murmur hash.
+     * @return The {@link Variation} user is bucketed into or null.
      */
     @Nullable
     private Variation bucket(@Nonnull Experiment experiment,
@@ -208,7 +207,7 @@ public class ExperimentBucketerService implements ExperimentService {
      * @return bucketingId if it is a String type in attributes.
      * else return userId
      */
-    String getBucketingId(@Nonnull String userId,
+    private String getBucketingId(@Nonnull String userId,
                           @Nonnull Map<String, ?> filteredAttributes) {
         String bucketingId = userId;
         String bucketingAttribute = ControlAttribute.BUCKETING_ATTRIBUTE.toString();
@@ -218,14 +217,14 @@ public class ExperimentBucketerService implements ExperimentService {
                     bucketingId = (String) filteredAttributes.get(bucketingAttribute);
                     logger.debug("BucketingId is valid: \"{}\"", bucketingId);
                 } else {
-                    logger.warn("BucketingID attribute is not a string. Defaulted to userId");
+                    logger.warn("BucketingId attribute is not a string. Defaulted to userId");
                 }
             }
         }
         return bucketingId;
     }
 
-    //////////////////// Builder ////////////////////
+    //========  Builder ========//
 
     public static Builder builder() {
         return new Builder();

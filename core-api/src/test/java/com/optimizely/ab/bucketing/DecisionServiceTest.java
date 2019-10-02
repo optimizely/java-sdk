@@ -24,7 +24,7 @@ import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.ValidProjectConfigV4;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.decision.experiment.ExperimentService;
-import com.optimizely.ab.decision.experiment.services.ExperimentBucketerService;
+import com.optimizely.ab.decision.experiment.ExperimentBucketerService;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.event.internal.UserContext;
 import com.optimizely.ab.internal.LogbackVerifier;

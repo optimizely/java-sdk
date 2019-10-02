@@ -19,7 +19,6 @@ import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.decision.experiment.ExperimentService;
-import com.optimizely.ab.decision.experiment.services.ExperimentBucketerService;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.event.internal.UserContext;
 import com.optimizely.ab.internal.ControlAttribute;
@@ -39,17 +38,17 @@ import javax.annotation.Nullable;
  * Optimizely's decision service that determines which variation of an experiment the user will be allocated to.
  *
  * The decision service contains all logic around how a user decision is made. This includes all of the following:
- *   1. Checking experiment status
- *   2. Checking whitelisting
- *   3. Checking sticky bucketing
- *   4. Checking audience targeting
- *   5. Using Murmurhash3 to bucket the user.
+ * 1. Checking experiment status
+ * 2. Checking whitelisting
+ * 3. Checking sticky bucketing
+ * 4. Checking audience targeting
+ * 5. Using Murmurhash3 to bucket the user.
  */
 public class DecisionService {
 
     private final ErrorHandler errorHandler;
     private final UserProfileService userProfileService;
-    private ExperimentService experimentService;
+    private final ExperimentService experimentService;
     private static final Logger logger = LoggerFactory.getLogger(DecisionService.class);
 
     /**
@@ -151,8 +150,7 @@ public class DecisionService {
                 logger.debug("This decision will not be saved since the UserProfileService is null.");
             }
             return variation;
-        }
-        else {
+        } else {
             logger.info("User \"{}\" does not meet conditions to be in experiment \"{}\".",
                 userId,
                 experiment.getKey());
@@ -404,16 +402,15 @@ public class DecisionService {
      * The forced variation value does not persist across application launches.
      * If the experiment key is not in the project file, this call fails and returns false.
      *
-     * @param experiment    The experiment to override.
-     * @param userId        The user ID to be used for bucketing.
-     * @param variationKey  The variation key to force the user into.  If the variation key is null
-     *                      then the forcedVariation for that experiment is removed.
+     * @param experiment   The experiment to override.
+     * @param userId       The user ID to be used for bucketing.
+     * @param variationKey The variation key to force the user into.  If the variation key is null
+     *                     then the forcedVariation for that experiment is removed.
      * @return boolean A boolean value that indicates if the set completed successfully.
      */
     public boolean setForcedVariation(@Nonnull Experiment experiment,
                                       @Nonnull String userId,
                                       @Nullable String variationKey) {
-
 
 
         Variation variation = null;
@@ -474,8 +471,8 @@ public class DecisionService {
     /**
      * Gets the forced variation for a given user and experiment.
      *
-     * @param experiment    The experiment forced.
-     * @param userId        The user ID to be used for bucketing.
+     * @param experiment The experiment forced.
+     * @param userId     The user ID to be used for bucketing.
      * @return The variation the user was bucketed into. This value can be null if the
      * forced variation fails.
      */

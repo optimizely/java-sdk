@@ -23,8 +23,10 @@ import com.optimizely.ab.event.internal.UserContext;
 import javax.annotation.Nonnull;
 
 /**
- * Experiment Decision Service can make a decision about which variation of an experiment the user will be
- * allocated to.
+ * ExperimentService is an interface whose implementations can make a decision about which variation of an
+ * experiment the user will be allocated to.
+ *
+ * One of its implementation can be found in {@link ExperimentBucketerService}.
  */
 public interface ExperimentService {
     /**

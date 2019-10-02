@@ -56,7 +56,7 @@ public class OptimizelyRule extends ExternalResource {
         return this;
     }
 
-    protected OptimizelyRule withExperimentService(ExperimentService experimentService) {
+    public OptimizelyRule withExperimentService(ExperimentService experimentService) {
         builder.withExperimentService(experimentService);
         return this;
     }

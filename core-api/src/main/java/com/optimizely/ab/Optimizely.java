@@ -16,14 +16,13 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
-import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.decision.experiment.ExperimentService;
-import com.optimizely.ab.decision.experiment.services.ExperimentBucketerService;
+import com.optimizely.ab.decision.experiment.ExperimentBucketerService;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.*;

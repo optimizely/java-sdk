@@ -23,7 +23,7 @@ import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.decision.bucketer.Bucketer;
 import com.optimizely.ab.decision.bucketer.MurmurhashBucketer;
 import com.optimizely.ab.decision.experiment.ExperimentService;
-import com.optimizely.ab.decision.experiment.services.ExperimentBucketerService;
+import com.optimizely.ab.decision.experiment.ExperimentBucketerService;
 import com.optimizely.ab.event.internal.UserContext;
 import com.optimizely.ab.internal.LogbackVerifier;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
