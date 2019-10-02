@@ -16,7 +16,11 @@
 package com.optimizely.ab.decision;
 
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.decision.entities.FeatureDecision;
+import com.optimizely.ab.decision.feature.CompositeFeatureService;
+import com.optimizely.ab.decision.feature.FeatureDecisionService;
 import com.optimizely.ab.event.internal.UserContext;
 import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.decision.entities.ExperimentDecision;
@@ -32,14 +36,17 @@ import java.util.concurrent.ConcurrentHashMap;
 public class CompositeDecisionService implements DecisionService {
 
     private ExperimentDecisionService experimentDecisionService;
+    private FeatureDecisionService featureDecisionService;
 
     /**
      * Initialize a decision service for the Optimizely client.
      *
      * @param experimentDecisionService ExperimentDecisionService provided from Optimizely Client
+     * @param featureDecisionService FeatureDecisionService provided from Optimizely Client
      */
-    private CompositeDecisionService(ExperimentDecisionService experimentDecisionService) {
+    private CompositeDecisionService(ExperimentDecisionService experimentDecisionService, FeatureDecisionService featureDecisionService) {
         this.experimentDecisionService = experimentDecisionService;
+        this.featureDecisionService = featureDecisionService;
     }
 
     /**
@@ -53,6 +60,12 @@ public class CompositeDecisionService implements DecisionService {
     public ExperimentDecision getExperimentDecision(@Nonnull Experiment experiment,
                                                     @Nonnull UserContext userContext) {
         return experimentDecisionService.getDecision(experiment, userContext);
+    }
+
+    @Override
+    public FeatureDecision getFeatureDecision(@Nonnull FeatureFlag featureFlag,
+                                              @Nonnull UserContext userContext) {
+        return featureDecisionService.getDecision(featureFlag, userContext);
     }
 
     public static Builder builder() {
@@ -95,7 +108,8 @@ public class CompositeDecisionService implements DecisionService {
          */
         public CompositeDecisionService build() {
             return new CompositeDecisionService(
-                new CompositeExperimentService(userProfileService, forcedVariationMapping));
+                new CompositeExperimentService(userProfileService, forcedVariationMapping),
+                new CompositeFeatureService(userProfileService, forcedVariationMapping));
         }
     }
 }

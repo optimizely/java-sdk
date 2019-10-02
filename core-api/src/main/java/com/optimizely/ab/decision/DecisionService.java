@@ -16,8 +16,10 @@
 package com.optimizely.ab.decision;
 
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.decision.entities.ExperimentDecision;
+import com.optimizely.ab.decision.entities.FeatureDecision;
 import com.optimizely.ab.event.internal.UserContext;
 
 import javax.annotation.Nonnull;
@@ -36,5 +38,6 @@ public interface DecisionService {
     ExperimentDecision getExperimentDecision(@Nonnull Experiment experiment,
                                              @Nonnull UserContext userContext);
 
-    // TODO getFeatureDecision needs to be added
+    FeatureDecision getFeatureDecision(@Nonnull FeatureFlag featureFlag,
+                                       @Nonnull UserContext userContext);
 }
