@@ -1,3 +1,18 @@
+/****************************************************************************
+ * Copyright 2019, Optimizely, Inc. and contributors                        *
+ *                                                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");          *
+ * you may not use this file except in compliance with the License.         *
+ * You may obtain a copy of the License at                                  *
+ *                                                                          *
+ *    http://www.apache.org/licenses/LICENSE-2.0                            *
+ *                                                                          *
+ * Unless required by applicable law or agreed to in writing, software      *
+ * distributed under the License is distributed on an "AS IS" BASIS,        *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ * See the License for the specific language governing permissions and      *
+ * limitations under the License.                                           *
+ ***************************************************************************/
 package com.optimizely.ab.decision.feature.service;
 
 import com.optimizely.ab.config.*;
@@ -41,8 +56,8 @@ public class FeatureRolloutService implements FeatureDecisionService {
      * @param userContext Contains UserID and FilteredAttributes
      * @return {@link FeatureDecision}
      */
-    FeatureDecision getVariationForFeatureInRollout(@Nonnull FeatureFlag featureFlag,
-                                                    @Nonnull UserContext userContext) {
+    private FeatureDecision getVariationForFeatureInRollout(@Nonnull FeatureFlag featureFlag,
+                                                            @Nonnull UserContext userContext) {
         // use rollout to get variation for feature
         if (featureFlag.getRolloutId().isEmpty()) {
             logger.info("The feature flag \"{}\" is not used in a rollout.", featureFlag.getKey());
@@ -61,7 +76,6 @@ public class FeatureRolloutService implements FeatureDecisionService {
 
         // for all rules before the everyone else rule
         int rolloutRulesLength = rollout.getExperiments().size();
-        Variation variation;
         for (int i = 0; i < rolloutRulesLength - 1; i++) {
             Experiment rolloutRule = rollout.getExperiments().get(i);
             Audience audience = userContext.getProjectConfig().getAudienceIdMapping().get(rolloutRule.getAudienceIds().get(0));

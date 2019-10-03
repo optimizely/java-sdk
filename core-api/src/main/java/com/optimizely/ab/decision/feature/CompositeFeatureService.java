@@ -1,27 +1,26 @@
+/****************************************************************************
+ * Copyright 2019, Optimizely, Inc. and contributors                        *
+ *                                                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");          *
+ * you may not use this file except in compliance with the License.         *
+ * You may obtain a copy of the License at                                  *
+ *                                                                          *
+ *    http://www.apache.org/licenses/LICENSE-2.0                            *
+ *                                                                          *
+ * Unless required by applicable law or agreed to in writing, software      *
+ * distributed under the License is distributed on an "AS IS" BASIS,        *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ * See the License for the specific language governing permissions and      *
+ * limitations under the License.                                           *
+ ***************************************************************************/
 package com.optimizely.ab.decision.feature;
 
 import com.optimizely.ab.bucketing.UserProfileService;
-import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.FeatureFlag;
-import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.decision.audience.FullStackAudienceEvaluator;
-import com.optimizely.ab.decision.bucketer.MurmurhashBucketer;
-import com.optimizely.ab.decision.entities.DecisionStatus;
-import com.optimizely.ab.decision.entities.ExperimentDecision;
 import com.optimizely.ab.decision.entities.FeatureDecision;
-import com.optimizely.ab.decision.entities.Reason;
-import com.optimizely.ab.decision.experiment.CompositeExperimentService;
-import com.optimizely.ab.decision.experiment.ExperimentDecisionService;
-import com.optimizely.ab.decision.experiment.service.ExperimentBucketerService;
-import com.optimizely.ab.decision.experiment.service.ForcedVariationService;
-import com.optimizely.ab.decision.experiment.service.UserProfileDecisionService;
-import com.optimizely.ab.decision.experiment.service.WhitelistingService;
 import com.optimizely.ab.decision.feature.service.FeatureExperimentService;
 import com.optimizely.ab.decision.feature.service.FeatureRolloutService;
 import com.optimizely.ab.event.internal.UserContext;
-import com.optimizely.ab.internal.ExperimentUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -29,9 +28,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * CompositeFeatureService contains the information needed to be able to make a decision for a given featureFlag
+ */
 public class CompositeFeatureService implements FeatureDecisionService {
-    private static final Logger logger = LoggerFactory.getLogger(CompositeExperimentService.class);
-
     private final UserProfileService userProfileService;
     private transient ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping;
 
@@ -50,7 +50,7 @@ public class CompositeFeatureService implements FeatureDecisionService {
     @Override
     public FeatureDecision getDecision(@Nonnull FeatureFlag featureFlag, @Nonnull UserContext userContext) {
         FeatureDecision featureDecision;
-        // loop through different experiment decision services until we get a decision
+        // loop through different feature decision services until we get a decision
         for (FeatureDecisionService featureDecisionService : getFeatureServices()) {
             featureDecision = featureDecisionService.getDecision(featureFlag, userContext);
             if (featureDecision != null)
@@ -64,7 +64,7 @@ public class CompositeFeatureService implements FeatureDecisionService {
     }
 
     /**
-     * Get Experiment Services
+     * Get Feature Services
      *
      * @return List of {@link FeatureDecisionService}
      */
@@ -75,3 +75,4 @@ public class CompositeFeatureService implements FeatureDecisionService {
         );
     }
 }
+

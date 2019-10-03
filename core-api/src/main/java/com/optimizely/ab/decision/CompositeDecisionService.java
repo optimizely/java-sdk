@@ -42,7 +42,7 @@ public class CompositeDecisionService implements DecisionService {
      * Initialize a decision service for the Optimizely client.
      *
      * @param experimentDecisionService ExperimentDecisionService provided from Optimizely Client
-     * @param featureDecisionService FeatureDecisionService provided from Optimizely Client
+     * @param featureDecisionService    FeatureDecisionService provided from Optimizely Client
      */
     private CompositeDecisionService(ExperimentDecisionService experimentDecisionService, FeatureDecisionService featureDecisionService) {
         this.experimentDecisionService = experimentDecisionService;
@@ -62,6 +62,13 @@ public class CompositeDecisionService implements DecisionService {
         return experimentDecisionService.getDecision(experiment, userContext);
     }
 
+    /**
+     * Returns a FeatureDecision for the given featureFlag and userId
+     *
+     * @param featureFlag The FeatureFlag used to bucket into experiment.
+     * @param userContext It have user id, attributes and a reference to the current {@link ProjectConfig}
+     * @return {@link FeatureDecision}
+     */
     @Override
     public FeatureDecision getFeatureDecision(@Nonnull FeatureFlag featureFlag,
                                               @Nonnull UserContext userContext) {
