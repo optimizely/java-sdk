@@ -17,10 +17,10 @@ package com.optimizely.ab.decision.feature.service;
 
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
-import com.optimizely.ab.decision.audience.FullStackAudienceEvaluator;
 import com.optimizely.ab.decision.bucketer.MurmurhashBucketer;
 import com.optimizely.ab.decision.entities.ExperimentDecision;
 import com.optimizely.ab.decision.entities.FeatureDecision;
+import com.optimizely.ab.decision.evaluator.DecisionAudienceEvaluator;
 import com.optimizely.ab.decision.experiment.service.ExperimentBucketerService;
 import com.optimizely.ab.decision.feature.FeatureDecisionService;
 import com.optimizely.ab.event.internal.UserContext;
@@ -71,7 +71,7 @@ public class FeatureRolloutService implements FeatureDecisionService {
         }
         ExperimentBucketerService experimentBucketerService = new ExperimentBucketerService.Builder()
             .withBucketer(new MurmurhashBucketer())
-            .withAudienceEvaluator(new FullStackAudienceEvaluator())
+            .withAudienceEvaluator(new DecisionAudienceEvaluator())
             .build();
 
         // for all rules before the everyone else rule

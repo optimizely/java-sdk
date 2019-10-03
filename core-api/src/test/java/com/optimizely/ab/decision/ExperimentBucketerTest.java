@@ -20,9 +20,10 @@ import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.decision.audience.FullStackAudienceEvaluator;
 import com.optimizely.ab.decision.bucketer.Bucketer;
 import com.optimizely.ab.decision.bucketer.MurmurhashBucketer;
+import com.optimizely.ab.decision.evaluator.AudienceEvaluator;
+import com.optimizely.ab.decision.evaluator.DecisionAudienceEvaluator;
 import com.optimizely.ab.decision.experiment.ExperimentDecisionService;
 import com.optimizely.ab.decision.experiment.service.ExperimentBucketerService;
 import com.optimizely.ab.event.internal.UserContext;
@@ -50,10 +51,12 @@ public class ExperimentBucketerTest {
 
     private ProjectConfig projectConfig;
     private ExperimentDecisionService experimentBucketerService;
+    private AudienceEvaluator audienceEvaluator;
 
     @Before
     public void setUp() {
         projectConfig = validProjectConfigV2();
+        audienceEvaluator = new DecisionAudienceEvaluator();
     }
 
     /**
@@ -90,7 +93,7 @@ public class ExperimentBucketerTest {
         final AtomicInteger bucketValue = new AtomicInteger();
         experimentBucketerService = new ExperimentBucketerService.Builder()
             .withBucketer(testBucketAlgorithm(bucketValue))
-            .withAudienceEvaluator(new FullStackAudienceEvaluator())
+            .withAudienceEvaluator(audienceEvaluator)
             .build();
 
         // verify bucketing to the first variation
@@ -179,7 +182,7 @@ public class ExperimentBucketerTest {
         final AtomicInteger bucketValue = new AtomicInteger();
         experimentBucketerService = new ExperimentBucketerService.Builder()
             .withBucketer(testBucketAlgorithm(bucketValue))
-            .withAudienceEvaluator(new FullStackAudienceEvaluator())
+            .withAudienceEvaluator(audienceEvaluator)
             .build();
 
         logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 0 to user with bucketingId \"" + bucketingId + "\" when bucketing to a variation.");
@@ -216,7 +219,7 @@ public class ExperimentBucketerTest {
         final AtomicInteger bucketValue = new AtomicInteger();
         experimentBucketerService = new ExperimentBucketerService.Builder()
             .withBucketer(testBucketAlgorithm(bucketValue))
-            .withAudienceEvaluator(new FullStackAudienceEvaluator())
+            .withAudienceEvaluator(audienceEvaluator)
             .build();
         bucketValue.set(3000);
 
@@ -246,7 +249,7 @@ public class ExperimentBucketerTest {
         final AtomicInteger bucketValue = new AtomicInteger();
         experimentBucketerService = new ExperimentBucketerService.Builder()
             .withBucketer(testBucketAlgorithm(bucketValue))
-            .withAudienceEvaluator(new FullStackAudienceEvaluator())
+            .withAudienceEvaluator(audienceEvaluator)
             .build();
         bucketValue.set(3000);
 
@@ -277,7 +280,7 @@ public class ExperimentBucketerTest {
         final int bucketIntVal = 9000;
         experimentBucketerService = new ExperimentBucketerService.Builder()
             .withBucketer(testBucketAlgorithm(bucketValue))
-            .withAudienceEvaluator(new FullStackAudienceEvaluator())
+            .withAudienceEvaluator(audienceEvaluator)
             .build();
         bucketValue.set(bucketIntVal);
 
@@ -304,7 +307,7 @@ public class ExperimentBucketerTest {
         final AtomicInteger bucketValue = new AtomicInteger();
         experimentBucketerService = new ExperimentBucketerService.Builder()
             .withBucketer(testBucketAlgorithm(bucketValue))
-            .withAudienceEvaluator(new FullStackAudienceEvaluator())
+            .withAudienceEvaluator(audienceEvaluator)
             .build();
         bucketValue.set(0);
 
@@ -333,7 +336,7 @@ public class ExperimentBucketerTest {
         final AtomicInteger bucketValue = new AtomicInteger();
         experimentBucketerService = new ExperimentBucketerService.Builder()
             .withBucketer(testBucketAlgorithm(bucketValue))
-            .withAudienceEvaluator(new FullStackAudienceEvaluator())
+            .withAudienceEvaluator(audienceEvaluator)
             .build();
         bucketValue.set(3000);
 
@@ -356,7 +359,7 @@ public class ExperimentBucketerTest {
         final AtomicInteger bucketValue = new AtomicInteger();
         experimentBucketerService = new ExperimentBucketerService.Builder()
             .withBucketer(testBucketAlgorithm(bucketValue))
-            .withAudienceEvaluator(new FullStackAudienceEvaluator())
+            .withAudienceEvaluator(audienceEvaluator)
             .build();
         bucketValue.set(0);
         String bucketingId = "blah";
@@ -384,7 +387,7 @@ public class ExperimentBucketerTest {
         final AtomicInteger bucketValue = new AtomicInteger();
         experimentBucketerService = new ExperimentBucketerService.Builder()
             .withBucketer(testBucketAlgorithm(bucketValue))
-            .withAudienceEvaluator(new FullStackAudienceEvaluator())
+            .withAudienceEvaluator(audienceEvaluator)
             .build();
         bucketValue.set(0);
 

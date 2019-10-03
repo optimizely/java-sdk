@@ -17,9 +17,9 @@ package com.optimizely.ab.decision.experiment;
 
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.decision.audience.FullStackAudienceEvaluator;
 import com.optimizely.ab.decision.bucketer.MurmurhashBucketer;
 import com.optimizely.ab.decision.entities.Reason;
+import com.optimizely.ab.decision.evaluator.DecisionAudienceEvaluator;
 import com.optimizely.ab.internal.ExperimentUtils;
 import com.optimizely.ab.event.internal.UserContext;
 import com.optimizely.ab.bucketing.UserProfileService;
@@ -100,7 +100,7 @@ public class CompositeExperimentService implements ExperimentDecisionService {
             new UserProfileDecisionService(userProfileService),
             new ExperimentBucketerService.Builder()
                 .withBucketer(new MurmurhashBucketer())
-                .withAudienceEvaluator(new FullStackAudienceEvaluator())
+                .withAudienceEvaluator(new DecisionAudienceEvaluator())
                 .build()
         );
     }

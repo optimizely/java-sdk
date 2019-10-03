@@ -17,13 +17,12 @@ package com.optimizely.ab.decision.experiment.service;
 
 import com.optimizely.ab.bucketing.internal.MurmurHash3;
 import com.optimizely.ab.config.*;
-import com.optimizely.ab.decision.DecisionUtils;
-import com.optimizely.ab.decision.audience.AudienceEvaluator;
 import com.optimizely.ab.decision.bucketer.Bucketer;
 import com.optimizely.ab.decision.bucketer.MurmurhashBucketer;
 import com.optimizely.ab.decision.entities.DecisionStatus;
 import com.optimizely.ab.decision.entities.ExperimentDecision;
 import com.optimizely.ab.decision.entities.Reason;
+import com.optimizely.ab.decision.evaluator.AudienceEvaluator;
 import com.optimizely.ab.decision.experiment.ExperimentDecisionService;
 import com.optimizely.ab.event.internal.UserContext;
 
