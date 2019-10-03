@@ -31,15 +31,19 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
-import static com.optimizely.ab.config.ValidProjectConfigV4.*;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.noAudienceProjectConfigV2;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV2;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV4;
+import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_NATIONALITY_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_WITH_MISSING_VALUE_VALUE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
  * Test Audience Evaluator
  */
-public class ExperimentAudienceEvaluatorTest {
+public class AudienceEvaluatorTest {
 
     @Rule
     public LogbackVerifier logbackVerifier = new LogbackVerifier();
