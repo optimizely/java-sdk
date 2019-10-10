@@ -38,6 +38,16 @@ public final class DefaultConfigParser {
     }
 
     //======== Helper methods ========//
+    @FunctionalInterface
+    public interface ParserSupplier<T> {
+
+        /**
+         * Gets a result.
+         *
+         * @return a result
+         */
+        T get();
+    }
 
     public enum ConfigParserSupplier {
         // WARNING THESE MUST REMAIN LAMBDAS!!!
@@ -49,9 +59,9 @@ public final class DefaultConfigParser {
         JSON_SIMPLE_CONFIG_PARSER("org.json.simple.JSONObject", () -> { return new JsonSimpleConfigParser(); });
 
         private final String className;
-        private final Supplier<ConfigParser> supplier;
+        private final ParserSupplier<ConfigParser> supplier;
 
-        ConfigParserSupplier(String className, Supplier<ConfigParser> supplier) {
+        ConfigParserSupplier(String className, ParserSupplier<ConfigParser> supplier) {
             this.className = className;
             this.supplier = supplier;
         }
