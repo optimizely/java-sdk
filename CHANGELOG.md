@@ -1,5 +1,11 @@
 # Optimizely Java X SDK Changelog
 
+## 3.3.1
+October 11th, 2019
+
+### New Features:
+- java.util.Supplier is not supported below Android API 24.  In order to support Android 22 which still has more than 10% market share, we have changed our implementation to use our own config supplier interface. 
+
 ## 3.3.0
 October 1st, 2019
 
