@@ -39,14 +39,14 @@ public final class DefaultConfigParser {
 
     //======== Helper methods ========//
     @FunctionalInterface
-    public interface ParserSupplier<T> {
+    public interface ParserSupplier {
 
         /**
          * Gets a result.
          *
          * @return a result
          */
-        T get();
+        ConfigParser get();
     }
 
     public enum ConfigParserSupplier {
@@ -59,9 +59,9 @@ public final class DefaultConfigParser {
         JSON_SIMPLE_CONFIG_PARSER("org.json.simple.JSONObject", () -> { return new JsonSimpleConfigParser(); });
 
         private final String className;
-        private final ParserSupplier<ConfigParser> supplier;
+        private final ParserSupplier supplier;
 
-        ConfigParserSupplier(String className, ParserSupplier<ConfigParser> supplier) {
+        ConfigParserSupplier(String className, ParserSupplier supplier) {
             this.className = className;
             this.supplier = supplier;
         }
