@@ -136,10 +136,11 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
                         deadline = System.currentTimeMillis() + flushInterval;
                     }
 
-                    Object item = eventQueue.poll(50, TimeUnit.MILLISECONDS);
+                    Object item = eventQueue.poll(flushInterval, TimeUnit.MILLISECONDS);
                     if (item == null) {
-                        logger.debug("Empty item, sleeping for 50ms.");
-                        Thread.sleep(50);
+                        logger.debug("Empty item after waiting flush interval. Flushing.");
+                        flush();
+                        deadline = System.currentTimeMillis() + flushInterval;
                         continue;
                     }
 
