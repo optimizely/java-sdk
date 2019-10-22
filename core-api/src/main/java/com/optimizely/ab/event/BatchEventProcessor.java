@@ -48,7 +48,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
     public static final String CONFIG_CLOSE_TIMEOUT  = "event.processor.close.timeout";
 
     public static final int DEFAULT_QUEUE_CAPACITY    = 1000;
-    public static final int DEFAULT_WAIT_COUNT        = 2;
+    public static final int DEFAULT_EMPTY_COUNT = 2;
     public static final int DEFAULT_BATCH_SIZE        = 10;
     public static final long DEFAULT_BATCH_INTERVAL   = TimeUnit.SECONDS.toMillis(30);
     public static final long DEFAULT_TIMEOUT_INTERVAL = TimeUnit.SECONDS.toMillis(5);
@@ -123,10 +123,6 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         eventQueue.put(FLUSH_SIGNAL);
     }
 
-    private interface QueueService {
-        Object get() throws InterruptedException;
-    }
-
     public class EventConsumer implements Runnable {
         private LinkedList<UserEvent> currentBatch = new LinkedList<>();
         private long deadline = System.currentTimeMillis() + flushInterval;
@@ -134,11 +130,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         @Override
         public void run() {
             try {
-                int waitCount = 0;
-
-                QueueService polling = () -> eventQueue.poll(System.currentTimeMillis() - flushInterval, TimeUnit.MILLISECONDS);
-                QueueService take = () -> eventQueue.take();
-                QueueService using = polling;
+                int emptyCount = 0;
 
                 while (true) {
                     if (System.currentTimeMillis() > deadline) {
@@ -147,19 +139,16 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
                         deadline = System.currentTimeMillis() + flushInterval;
                     }
 
-                    Object item = using.get();
+                    long timeout = deadline - System.currentTimeMillis();
+                    Object item = emptyCount > DEFAULT_EMPTY_COUNT ? eventQueue.take() : eventQueue.poll(timeout, TimeUnit.MILLISECONDS);
 
                     if (item == null) {
                         logger.debug("Empty item after waiting flush interval. Flushing.");
-                        waitCount++;
-                        if (waitCount > DEFAULT_WAIT_COUNT) {
-                            using = take;
-                        }
+                        emptyCount++;
                         continue;
                     }
 
-                    waitCount = 0;
-                    using = polling;
+                    emptyCount = 0;
 
                     if (item == SHUTDOWN_SIGNAL) {
                         logger.info("Received shutdown signal.");
