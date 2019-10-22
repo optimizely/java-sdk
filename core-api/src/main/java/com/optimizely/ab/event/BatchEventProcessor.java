@@ -143,7 +143,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
                     Object item = emptyCount > DEFAULT_EMPTY_COUNT ? eventQueue.take() : eventQueue.poll(timeout, TimeUnit.MILLISECONDS);
 
                     if (item == null) {
-                        logger.debug("Empty item after waiting flush interval. Flushing.");
+                        logger.debug("Empty item after waiting flush interval.");
                         emptyCount++;
                         continue;
                     }
