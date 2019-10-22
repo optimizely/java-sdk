@@ -48,6 +48,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
     public static final String CONFIG_CLOSE_TIMEOUT  = "event.processor.close.timeout";
 
     public static final int DEFAULT_QUEUE_CAPACITY    = 1000;
+    public static final int DEFAULT_WAIT_COUNT        = 2;
     public static final int DEFAULT_BATCH_SIZE        = 10;
     public static final long DEFAULT_BATCH_INTERVAL   = TimeUnit.SECONDS.toMillis(30);
     public static final long DEFAULT_TIMEOUT_INTERVAL = TimeUnit.SECONDS.toMillis(5);
@@ -122,6 +123,10 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         eventQueue.put(FLUSH_SIGNAL);
     }
 
+    private interface QueueService {
+        Object get() throws InterruptedException;
+    }
+
     public class EventConsumer implements Runnable {
         private LinkedList<UserEvent> currentBatch = new LinkedList<>();
         private long deadline = System.currentTimeMillis() + flushInterval;
@@ -129,6 +134,12 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         @Override
         public void run() {
             try {
+                int waitCount = 0;
+
+                QueueService polling = () -> eventQueue.poll(flushInterval, TimeUnit.MILLISECONDS);
+                QueueService take = () -> eventQueue.take();
+                QueueService using = polling;
+
                 while (true) {
                     if (System.currentTimeMillis() > deadline) {
                         logger.debug("Deadline exceeded flushing current batch.");
@@ -136,13 +147,21 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
                         deadline = System.currentTimeMillis() + flushInterval;
                     }
 
-                    Object item = eventQueue.poll(flushInterval, TimeUnit.MILLISECONDS);
+                    Object item = using.get();
+
                     if (item == null) {
                         logger.debug("Empty item after waiting flush interval. Flushing.");
                         flush();
+                        waitCount++;
+                        if (waitCount > DEFAULT_WAIT_COUNT) {
+                            using = take;
+                        }
                         deadline = System.currentTimeMillis() + flushInterval;
                         continue;
                     }
+
+                    waitCount = 0;
+                    using = polling;
 
                     if (item == SHUTDOWN_SIGNAL) {
                         logger.info("Received shutdown signal.");
