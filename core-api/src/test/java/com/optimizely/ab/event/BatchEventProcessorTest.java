@@ -84,27 +84,6 @@ public class BatchEventProcessorTest {
     }
 
     @Test
-    public void testFlushOnMaxTimeout() throws Exception {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        setEventProcessor(logEvent -> {
-            eventHandlerRule.dispatchEvent(logEvent);
-            countDownLatch.countDown();
-        });
-
-        UserEvent userEvent = buildConversionEvent(EVENT_NAME);
-        eventProcessor.process(userEvent);
-        eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
-
-        if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
-            fail("Exceeded timeout waiting for events to flush.");
-        }
-
-        eventProcessor.close();
-        assertEquals(0, eventQueue.size());
-        eventHandlerRule.expectCalls(1);
-    }
-
-    @Test
     public void testFlushMaxBatchSize() throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         setEventProcessor(logEvent -> {
@@ -121,6 +100,29 @@ public class BatchEventProcessorTest {
         }
 
         if (!countDownLatch.await(MAX_DURATION_MS * 3, TimeUnit.MILLISECONDS)) {
+            fail("Exceeded timeout waiting for events to flush.");
+        }
+
+        assertEquals(0, eventQueue.size());
+        eventHandlerRule.expectCalls(1);
+    }
+
+    @Test
+    public void testFlushOnMaxTimeout() throws Exception {
+        UserEvent userEvent = buildConversionEvent(EVENT_NAME);
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        setEventProcessor(logEvent -> {
+            eventHandlerRule.dispatchEvent(logEvent);
+            countDownLatch.countDown();
+        });
+
+        eventProcessor.process(userEvent);
+        eventHandlerRule.expectConversion(EVENT_NAME, USER_ID);
+
+        eventProcessor.close();
+
+        if (!countDownLatch.await( TIMEOUT_MS * 3, TimeUnit.MILLISECONDS)) {
             fail("Exceeded timeout waiting for events to flush.");
         }
 

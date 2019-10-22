@@ -136,7 +136,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
             try {
                 int waitCount = 0;
 
-                QueueService polling = () -> eventQueue.poll(flushInterval, TimeUnit.MILLISECONDS);
+                QueueService polling = () -> eventQueue.poll(System.currentTimeMillis() - flushInterval, TimeUnit.MILLISECONDS);
                 QueueService take = () -> eventQueue.take();
                 QueueService using = polling;
 
@@ -151,12 +151,10 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
                     if (item == null) {
                         logger.debug("Empty item after waiting flush interval. Flushing.");
-                        flush();
                         waitCount++;
                         if (waitCount > DEFAULT_WAIT_COUNT) {
                             using = take;
                         }
-                        deadline = System.currentTimeMillis() + flushInterval;
                         continue;
                     }
 
