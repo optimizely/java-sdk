@@ -133,7 +133,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
                 int emptyCount = 0;
 
                 while (true) {
-                    if (System.currentTimeMillis() > deadline) {
+                    if (System.currentTimeMillis() >= deadline) {
                         logger.debug("Deadline exceeded flushing current batch.");
                         flush();
                         deadline = System.currentTimeMillis() + flushInterval;
