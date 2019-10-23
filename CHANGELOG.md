@@ -1,5 +1,11 @@
 # Optimizely Java X SDK Changelog
 
+## 3.3.2
+October 23rd, 2019
+
+### New Features:
+- The BatchEventProcessor was refactored for performance so that it ends up hanging on the blocking queue if there is nothing to processes. ([#343](https://github.com/optimizely/java-sdk/pull/343))
+
 ## 3.3.1
 October 11th, 2019
 
