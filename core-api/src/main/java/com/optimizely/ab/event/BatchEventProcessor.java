@@ -48,6 +48,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
     public static final String CONFIG_CLOSE_TIMEOUT  = "event.processor.close.timeout";
 
     public static final int DEFAULT_QUEUE_CAPACITY    = 1000;
+    public static final int DEFAULT_EMPTY_COUNT = 2;
     public static final int DEFAULT_BATCH_SIZE        = 10;
     public static final long DEFAULT_BATCH_INTERVAL   = TimeUnit.SECONDS.toMillis(30);
     public static final long DEFAULT_TIMEOUT_INTERVAL = TimeUnit.SECONDS.toMillis(5);
@@ -129,18 +130,25 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         @Override
         public void run() {
             try {
+                int emptyCount = 0;
+
                 while (true) {
-                    if (System.currentTimeMillis() > deadline) {
+                    if (System.currentTimeMillis() >= deadline) {
                         logger.debug("Deadline exceeded flushing current batch.");
                         flush();
+                        deadline = System.currentTimeMillis() + flushInterval;
                     }
 
-                    Object item = eventQueue.poll(50, TimeUnit.MILLISECONDS);
+                    long timeout = deadline - System.currentTimeMillis();
+                    Object item = emptyCount > DEFAULT_EMPTY_COUNT ? eventQueue.take() : eventQueue.poll(timeout, TimeUnit.MILLISECONDS);
+
                     if (item == null) {
-                        logger.debug("Empty item, sleeping for 50ms.");
-                        Thread.sleep(50);
+                        logger.debug("Empty item after waiting flush interval.");
+                        emptyCount++;
                         continue;
                     }
+
+                    emptyCount = 0;
 
                     if (item == SHUTDOWN_SIGNAL) {
                         logger.info("Received shutdown signal.");

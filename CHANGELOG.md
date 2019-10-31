@@ -1,5 +1,28 @@
 # Optimizely Java X SDK Changelog
 
+## 3.3.2
+October 23rd, 2019
+
+### New Features:
+- The BatchEventProcessor was refactored for performance so that it ends up hanging on the blocking queue if there is nothing to processes. ([#343](https://github.com/optimizely/java-sdk/pull/343))
+
+## 3.3.1
+October 11th, 2019
+
+### New Features:
+- java.util.Supplier is not supported below Android API 24.  In order to support Android 22 which still has more than 10% market share, we have changed our implementation to use our own config supplier interface. 
+
+## 3.3.0
+October 1st, 2019
+
+### New Features:
+- Introduced `EventProcessor` interface with `BatchEventProcessor` implementation.
+- Introduced `LogEvent` notification.
+- Added `BatchEventProcessor` as the default implementation within the `OptimizelyFactory` class.
+
+### Deprecated
+- `LogEvent` was deprecated from `TrackNotification` and `ActivateNotification` notifications in favor of explicit `LogEvent` notification.
+
 ## 3.2.1
 August 19th, 2019
 
