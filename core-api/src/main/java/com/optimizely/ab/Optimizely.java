@@ -76,6 +76,7 @@ public class Optimizely implements AutoCloseable {
     @VisibleForTesting
     final DecisionService decisionService;
     @VisibleForTesting
+    @Deprecated
     final EventHandler eventHandler;
     @VisibleForTesting
     final EventProcessor eventProcessor;
@@ -1032,11 +1033,21 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
+        /**
+         * The withEventHandler has has been moved to the EventProcessor which takes a EventHandler in it's builder
+         * method.
+         * {@link com.optimizely.ab.event.BatchEventProcessor.Builder#withEventHandler(com.optimizely.ab.event.EventHandler)}  label}
+         * Please use that builder method instead.
+         */
+        @Deprecated
         public Builder withEventHandler(EventHandler eventHandler) {
             this.eventHandler = eventHandler;
             return this;
         }
 
+        /**
+         * You can instantiate a BatchEventProcessor or a ForwardingEventProcessor or supply your own.
+         */
         public Builder withEventProcessor(EventProcessor eventProcessor) {
             this.eventProcessor = eventProcessor;
             return this;
