@@ -1,5 +1,12 @@
 # Optimizely Java X SDK Changelog
 
+## 3.3.3
+November 14th, 2019
+
+### New Features:
+- Require EventHandler in BatchEventProcessor builder. ([#333](https://github.com/optimizely/java-sdk/pull/333))
+- Defend against invalid BatchEventProcessor configuration overrides. i([#331](https://github.com/optimizely/java-sdk/pull/331))
+
 ## 3.3.2
 October 23rd, 2019
 
