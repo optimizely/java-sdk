@@ -21,6 +21,7 @@ import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.*;
+import com.optimizely.ab.config.optimizely.OptimizelyConfig;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
@@ -84,6 +85,8 @@ public class Optimizely implements AutoCloseable {
     final EventProcessor eventProcessor;
     @VisibleForTesting
     final ErrorHandler errorHandler;
+    @VisibleForTesting
+    final OptimizelyConfig optimizelyConfig;
 
     private final ProjectConfigManager projectConfigManager;
 
@@ -99,7 +102,8 @@ public class Optimizely implements AutoCloseable {
                        @Nonnull DecisionService decisionService,
                        @Nullable UserProfileService userProfileService,
                        @Nonnull ProjectConfigManager projectConfigManager,
-                       @Nonnull NotificationCenter notificationCenter
+                       @Nonnull NotificationCenter notificationCenter,
+                       @Nonnull OptimizelyConfig optimizelyConfig
     ) {
         this.eventHandler = eventHandler;
         this.eventProcessor = eventProcessor;
@@ -108,6 +112,7 @@ public class Optimizely implements AutoCloseable {
         this.userProfileService = userProfileService;
         this.projectConfigManager = projectConfigManager;
         this.notificationCenter = notificationCenter;
+        this.optimizelyConfig = optimizelyConfig;
     }
 
     /**
@@ -454,6 +459,25 @@ public class Optimizely implements AutoCloseable {
             attributes,
             FeatureVariable.VariableType.BOOLEAN
         );
+    }
+
+    /**
+     * Get {@link OptimizelyConfig} containing experiments and features
+     *
+     * @return {@link OptimizelyConfig}
+     */
+    public OptimizelyConfig getOptimizelyConfig() {
+        try {
+            ProjectConfig projectConfig = getProjectConfig();
+            if (projectConfig == null) {
+                logger.error("Optimizely instance is not valid, failing getOptimizelyConfig call.");
+                return null;
+            }
+            return optimizelyConfig.getOptimizelyConfig(projectConfig);
+        } catch (Exception exception) {
+            logger.error("Unable to fetch config due to error:" + exception);
+        }
+        return null;
     }
 
     /**
@@ -1052,7 +1076,7 @@ public class Optimizely implements AutoCloseable {
         /**
          * The withEventHandler has has been moved to the EventProcessor which takes a EventHandler in it's builder
          * method.
-         * {@link com.optimizely.ab.event.BatchEventProcessor.Builder#withEventHandler(com.optimizely.ab.event.EventHandler)}  label}
+         * {@link BatchEventProcessor.Builder#withEventHandler(EventHandler)}  label}
          * Please use that builder method instead.
          */
         @Deprecated
@@ -1164,7 +1188,17 @@ public class Optimizely implements AutoCloseable {
                 eventProcessor = new ForwardingEventProcessor(eventHandler, notificationCenter);
             }
 
-            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, notificationCenter);
+            // Default Optimizely Config Provider
+            OptimizelyConfig optimizelyConfig = new OptimizelyConfig();
+
+            return new Optimizely(eventHandler,
+                eventProcessor,
+                errorHandler,
+                decisionService,
+                userProfileService,
+                projectConfigManager,
+                notificationCenter,
+                optimizelyConfig);
         }
     }
 }
