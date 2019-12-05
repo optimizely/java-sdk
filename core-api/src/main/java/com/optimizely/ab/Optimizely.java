@@ -22,6 +22,7 @@ import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.optimizely.OptimizelyConfig;
+import com.optimizely.ab.config.optimizely.OptimizelyConfigService;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
@@ -84,7 +85,7 @@ public class Optimizely implements AutoCloseable {
     @VisibleForTesting
     final ErrorHandler errorHandler;
     @VisibleForTesting
-    final OptimizelyConfig optimizelyConfig;
+    final OptimizelyConfigService optimizelyConfig;
 
     private final ProjectConfigManager projectConfigManager;
 
@@ -101,7 +102,7 @@ public class Optimizely implements AutoCloseable {
                        @Nullable UserProfileService userProfileService,
                        @Nonnull ProjectConfigManager projectConfigManager,
                        @Nonnull NotificationCenter notificationCenter,
-                       @Nonnull OptimizelyConfig optimizelyConfig
+                       @Nonnull OptimizelyConfigService optimizelyConfig
     ) {
         this.eventHandler = eventHandler;
         this.eventProcessor = eventProcessor;
@@ -1173,7 +1174,7 @@ public class Optimizely implements AutoCloseable {
             }
 
             // Default Optimizely Config Provider
-            OptimizelyConfig optimizelyConfig = new OptimizelyConfig();
+            OptimizelyConfigService optimizelyConfig = new OptimizelyConfigService();
 
             return new Optimizely(eventHandler,
                 eventProcessor,
