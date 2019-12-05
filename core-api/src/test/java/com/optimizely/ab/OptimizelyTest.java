@@ -21,6 +21,7 @@ import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.*;
+import com.optimizely.ab.config.optimizely.OptimizelyConfig;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
 import com.optimizely.ab.event.BatchEventProcessor;
@@ -248,6 +249,13 @@ public class OptimizelyTest {
         assertNotNull(actualVariation);
 
         eventHandler.expectImpression(activatedExperiment.getId(), actualVariation.getId(), testUserId, testUserAttributes);
+    }
+
+    @Test
+    public void testOptimizelyConfig() throws Exception {
+        Optimizely optimizely = optimizelyBuilder.build();
+        OptimizelyConfig optimizelyConfig = optimizely.getOptimizelyConfig();
+        assertNotNull(optimizelyConfig);
     }
 
     /**
