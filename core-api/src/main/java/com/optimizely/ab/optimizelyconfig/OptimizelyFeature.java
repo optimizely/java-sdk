@@ -35,52 +35,29 @@ public class OptimizelyFeature {
     @JsonProperty("variablesMap")
     private Map<String, OptimizelyVariable> variablesMap;
 
+    public OptimizelyFeature(String id,
+                              String key, 
+                              Map<String, OptimizelyExperiment> experimentsMap,
+                              Map<String, OptimizelyVariable> variablesMap) {
+        this.id = id;
+        this.key = key;
+        this.experimentsMap = experimentsMap;
+        this.variablesMap = variablesMap;
+    }
+
     public String getId() {
         return id;
     }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
+    
     public String getKey() {
         return key;
-    }
-
-    public void setKey(String key) {
-        this.key = key;
     }
 
     public Map<String, OptimizelyExperiment> getExperimentsMap() {
         return experimentsMap;
     }
 
-    public void setExperimentsMap(Map<String, OptimizelyExperiment> experimentsMap) {
-        this.experimentsMap = experimentsMap;
-    }
-
     public Map<String, OptimizelyVariable> getVariablesMap() {
         return variablesMap;
-    }
-
-    public void setVariablesMap(Map<String, OptimizelyVariable> variablesMap) {
-        this.variablesMap = variablesMap;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null || getClass() != obj.getClass()) return false;
-        if (obj == this) return true;
-        OptimizelyFeature optimizelyFeature = (OptimizelyFeature) obj;
-        return id.equals(optimizelyFeature.getId())
-            && experimentsMap.equals(optimizelyFeature.getExperimentsMap())
-            && variablesMap.equals(optimizelyFeature.getVariablesMap());
-    }
-
-    @Override
-    public int hashCode() {
-        int result = id.hashCode();
-        result = 31 * result + experimentsMap.hashCode() + variablesMap.hashCode();
-        return result;
     }
 }

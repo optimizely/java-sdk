@@ -36,36 +36,30 @@ public class OptimizelyVariation {
     @JsonProperty("variablesMap")
     private Map<String, OptimizelyVariable> variablesMap;
 
-    public String getId() {
-        return id;
+    public OptimizelyVariation(String id, 
+                              String key, 
+                              Boolean featureEnabled, 
+                              Map<String, OptimizelyVariable> variablesMap) {
+        this.id = id;
+        this.key = key;
+        this.featureEnabled = featureEnabled;
+        this.variablesMap = variablesMap;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public String getId() {
+        return id;
     }
 
     public String getKey() {
         return key;
     }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    public Boolean isFeatureEnabled() {
+    public Boolean getFeatureEnabled() {
         return featureEnabled;
-    }
-
-    public void setFeatureEnabled(Boolean featureEnabled) {
-        this.featureEnabled = featureEnabled;
     }
 
     public Map<String, OptimizelyVariable> getVariablesMap() {
         return variablesMap;
-    }
-
-    public void setVariablesMap(Map<String, OptimizelyVariable> variablesMap) {
-        this.variablesMap = variablesMap;
     }
 
     @Override
