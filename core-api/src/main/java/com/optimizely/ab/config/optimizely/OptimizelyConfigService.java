@@ -47,6 +47,7 @@ public class OptimizelyConfigService {
         // reduce feature variables to key value pair map
         Map<String, FeatureVariable> featureVariablesMap = getFeatureVariablesMap(projectConfig.getFeatureFlags());
         List<Experiment> experiments = projectConfig.getExperiments();
+
         if(experiments != null)
             for (Experiment experiment : experiments)
                 if (!rolloutExperimentIds.contains(experiment.getId())) {
@@ -227,7 +228,13 @@ public class OptimizelyConfigService {
         return optimizelyVariableMap;
     }
 
-    public static Map<String, List<String>> generateExperimentFeatureIdMapping(List<FeatureFlag> featureFlags) {
+    /**
+     * get experiment feature id mappings
+     *
+     * @param featureFlags all the feature flags in project config
+     * @return map of experiments feature id's
+     */
+    private static Map<String, List<String>> generateExperimentFeatureIdMapping(List<FeatureFlag> featureFlags) {
         Map<String, List<String>> experimentFeatureMap = new HashMap<>();
         for (FeatureFlag featureFlag : featureFlags) {
             for (String experimentId : featureFlag.getExperimentIds()) {
