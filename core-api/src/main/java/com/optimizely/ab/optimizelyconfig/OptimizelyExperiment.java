@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and      *
  * limitations under the License.                                           *
  ***************************************************************************/
-package com.optimizely.ab.config.optimizely;
+package com.optimizely.ab.optimizelyconfig;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -21,19 +21,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 
 /**
- * Represents the feature's map in {@link OptimizelyConfig}
+ * Represents the experiment's map in {@link OptimizelyConfig}
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OptimizelyFeature {
+public class OptimizelyExperiment {
 
     @JsonProperty("id")
     private String id;
     @JsonProperty("key")
     private String key;
-    @JsonProperty("experimentsMap")
-    private Map<String, OptimizelyExperiment> experimentsMap;
-    @JsonProperty("variablesMap")
-    private Map<String, OptimizelyVariable> variablesMap;
+    @JsonProperty("variationsMap")
+    private Map<String, OptimizelyVariation> variationsMap;
 
     public String getId() {
         return id;
@@ -51,36 +49,26 @@ public class OptimizelyFeature {
         this.key = key;
     }
 
-    public Map<String, OptimizelyExperiment> getExperimentsMap() {
-        return experimentsMap;
+    public Map<String, OptimizelyVariation> getVariationsMap() {
+        return variationsMap;
     }
 
-    public void setExperimentsMap(Map<String, OptimizelyExperiment> experimentsMap) {
-        this.experimentsMap = experimentsMap;
-    }
-
-    public Map<String, OptimizelyVariable> getVariablesMap() {
-        return variablesMap;
-    }
-
-    public void setVariablesMap(Map<String, OptimizelyVariable> variablesMap) {
-        this.variablesMap = variablesMap;
+    public void setVariationsMap(Map<String, OptimizelyVariation> variationsMap) {
+        this.variationsMap = variationsMap;
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj == null || getClass() != obj.getClass()) return false;
         if (obj == this) return true;
-        OptimizelyFeature optimizelyFeature = (OptimizelyFeature) obj;
-        return id.equals(optimizelyFeature.getId())
-            && experimentsMap.equals(optimizelyFeature.getExperimentsMap())
-            && variablesMap.equals(optimizelyFeature.getVariablesMap());
+        OptimizelyExperiment optimizelyExperiment = (OptimizelyExperiment) obj;
+        return id.equals(optimizelyExperiment.getId()) && variationsMap.equals(optimizelyExperiment.getVariationsMap());
     }
 
     @Override
     public int hashCode() {
-        int result = id.hashCode();
-        result = 31 * result + experimentsMap.hashCode() + variablesMap.hashCode();
-        return result;
+        int hash = id.hashCode();
+        hash = 31 * hash + variationsMap.hashCode();
+        return hash;
     }
 }
