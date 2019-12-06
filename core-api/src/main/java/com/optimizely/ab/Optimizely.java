@@ -86,8 +86,6 @@ public class Optimizely implements AutoCloseable {
     final EventProcessor eventProcessor;
     @VisibleForTesting
     final ErrorHandler errorHandler;
-    @VisibleForTesting
-    final OptimizelyConfigService optimizelyConfig;
 
     private final ProjectConfigManager projectConfigManager;
 
@@ -103,8 +101,7 @@ public class Optimizely implements AutoCloseable {
                        @Nonnull DecisionService decisionService,
                        @Nullable UserProfileService userProfileService,
                        @Nonnull ProjectConfigManager projectConfigManager,
-                       @Nonnull NotificationCenter notificationCenter,
-                       @Nonnull OptimizelyConfigService optimizelyConfig
+                       @Nonnull NotificationCenter notificationCenter
     ) {
         this.eventHandler = eventHandler;
         this.eventProcessor = eventProcessor;
@@ -113,7 +110,6 @@ public class Optimizely implements AutoCloseable {
         this.userProfileService = userProfileService;
         this.projectConfigManager = projectConfigManager;
         this.notificationCenter = notificationCenter;
-        this.optimizelyConfig = optimizelyConfig;
     }
 
     /**
@@ -474,7 +470,7 @@ public class Optimizely implements AutoCloseable {
                 logger.error("Optimizely instance is not valid, failing getOptimizelyConfig call.");
                 return null;
             }
-            return optimizelyConfig.getOptimizelyConfig(projectConfig);
+            return new OptimizelyConfigService().getOptimizelyConfig(projectConfig);
         } catch (Exception exception) {
             logger.error("Unable to fetch config due to error:" + exception);
         }
@@ -1189,17 +1185,14 @@ public class Optimizely implements AutoCloseable {
                 eventProcessor = new ForwardingEventProcessor(eventHandler, notificationCenter);
             }
 
-            // Default Optimizely Config Provider
-            OptimizelyConfigService optimizelyConfig = new OptimizelyConfigService();
-
             return new Optimizely(eventHandler,
                 eventProcessor,
                 errorHandler,
                 decisionService,
                 userProfileService,
                 projectConfigManager,
-                notificationCenter,
-                optimizelyConfig);
+                notificationCenter
+            );
         }
     }
 }
