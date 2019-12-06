@@ -13,70 +13,49 @@
  * See the License for the specific language governing permissions and      *
  * limitations under the License.                                           *
  ***************************************************************************/
-package com.optimizely.ab.config.optimizely;
+package com.optimizely.ab.optimizelyconfig;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.*;
+
 /**
- * Details of feature variable in {@link OptimizelyConfig}
+ * Interface for OptimizleyConfig
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OptimizelyVariable {
+public class OptimizelyConfig {
 
-    @JsonProperty("id")
-    private String id;
-    @JsonProperty("key")
-    private String key;
-    @JsonProperty("type")
-    private String type;
-    @JsonProperty("value")
-    private String value;
+    @JsonProperty("experimentsMap")
+    private Map<String, OptimizelyExperiment> experimentsMap;
 
-    public String getId() {
-        return id;
+    @JsonProperty("featuresMap")
+    private Map<String, OptimizelyFeature> featuresMap;
+
+    @JsonProperty("revision")
+    private String revision;
+
+    public Map<String, OptimizelyExperiment> getExperimentsMap() {
+        return experimentsMap;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setExperimentsMap(Map<String, OptimizelyExperiment> experimentsMap) {
+        this.experimentsMap = experimentsMap;
     }
 
-    public String getKey() {
-        return key;
+    public Map<String, OptimizelyFeature> getFeaturesMap() {
+        return featuresMap;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setFeaturesMap(Map<String, OptimizelyFeature> featuresMap) {
+        this.featuresMap = featuresMap;
     }
 
-    public String getType() {
-        return type;
+    public String getRevision() {
+        return revision;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null || getClass() != obj.getClass()) return false;
-        if (obj == this) return true;
-        OptimizelyVariable optimizelyVariable = (OptimizelyVariable) obj;
-        return id.equals(optimizelyVariable.getId()) && value.equals(optimizelyVariable.getValue());
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = id.hashCode();
-        hash = 31 * hash + value.hashCode();
-        return hash;
+    public void setRevision(String revision) {
+        this.revision = revision;
     }
 }

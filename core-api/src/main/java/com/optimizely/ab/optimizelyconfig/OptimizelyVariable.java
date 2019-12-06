@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and      *
  * limitations under the License.                                           *
  ***************************************************************************/
-package com.optimizely.ab.config.optimizely;
+package com.optimizely.ab.optimizelyconfig;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Map;
-
 /**
- * Represents the experiment's map in {@link OptimizelyConfig}
+ * Details of feature variable in {@link OptimizelyConfig}
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OptimizelyExperiment {
+public class OptimizelyVariable {
 
     @JsonProperty("id")
     private String id;
     @JsonProperty("key")
     private String key;
-    @JsonProperty("variationsMap")
-    private Map<String, OptimizelyVariation> variationsMap;
+    @JsonProperty("type")
+    private String type;
+    @JsonProperty("value")
+    private String value;
 
     public String getId() {
         return id;
@@ -49,26 +49,34 @@ public class OptimizelyExperiment {
         this.key = key;
     }
 
-    public Map<String, OptimizelyVariation> getVariationsMap() {
-        return variationsMap;
+    public String getType() {
+        return type;
     }
 
-    public void setVariationsMap(Map<String, OptimizelyVariation> variationsMap) {
-        this.variationsMap = variationsMap;
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj == null || getClass() != obj.getClass()) return false;
         if (obj == this) return true;
-        OptimizelyExperiment optimizelyExperiment = (OptimizelyExperiment) obj;
-        return id.equals(optimizelyExperiment.getId()) && variationsMap.equals(optimizelyExperiment.getVariationsMap());
+        OptimizelyVariable optimizelyVariable = (OptimizelyVariable) obj;
+        return id.equals(optimizelyVariable.getId()) && value.equals(optimizelyVariable.getValue());
     }
 
     @Override
     public int hashCode() {
         int hash = id.hashCode();
-        hash = 31 * hash + variationsMap.hashCode();
+        hash = 31 * hash + value.hashCode();
         return hash;
     }
 }
