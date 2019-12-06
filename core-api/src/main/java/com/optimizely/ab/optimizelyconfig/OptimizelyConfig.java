@@ -25,37 +25,28 @@ import java.util.*;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OptimizelyConfig {
-
-    @JsonProperty("experimentsMap")
+    
     private Map<String, OptimizelyExperiment> experimentsMap;
-
-    @JsonProperty("featuresMap")
     private Map<String, OptimizelyFeature> featuresMap;
-
-    @JsonProperty("revision")
     private String revision;
+
+    public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap, 
+                            Map<String, OptimizelyFeature> featuresMap,
+                            String revision) {
+        this.experimentsMap = experimentsMap;
+        this.featuresMap = featuresMap;
+        this.revision = revision;                          
+    }
 
     public Map<String, OptimizelyExperiment> getExperimentsMap() {
         return experimentsMap;
-    }
-
-    public void setExperimentsMap(Map<String, OptimizelyExperiment> experimentsMap) {
-        this.experimentsMap = experimentsMap;
     }
 
     public Map<String, OptimizelyFeature> getFeaturesMap() {
         return featuresMap;
     }
 
-    public void setFeaturesMap(Map<String, OptimizelyFeature> featuresMap) {
-        this.featuresMap = featuresMap;
-    }
-
     public String getRevision() {
         return revision;
-    }
-
-    public void setRevision(String revision) {
-        this.revision = revision;
     }
 }

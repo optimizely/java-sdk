@@ -33,42 +33,21 @@ public class OptimizelyExperiment {
     @JsonProperty("variationsMap")
     private Map<String, OptimizelyVariation> variationsMap;
 
-    public String getId() {
-        return id;
+    public OptimizelyExperiment(String id, String key, Map<String, OptimizelyVariation> variationsMap) {
+        this.id = id;
+        this.key = key;
+        this.variationsMap = variationsMap;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public String getId() {
+        return id;
     }
 
     public String getKey() {
         return key;
     }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
-
     public Map<String, OptimizelyVariation> getVariationsMap() {
         return variationsMap;
-    }
-
-    public void setVariationsMap(Map<String, OptimizelyVariation> variationsMap) {
-        this.variationsMap = variationsMap;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null || getClass() != obj.getClass()) return false;
-        if (obj == this) return true;
-        OptimizelyExperiment optimizelyExperiment = (OptimizelyExperiment) obj;
-        return id.equals(optimizelyExperiment.getId()) && variationsMap.equals(optimizelyExperiment.getVariationsMap());
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = id.hashCode();
-        hash = 31 * hash + variationsMap.hashCode();
-        return hash;
     }
 }
