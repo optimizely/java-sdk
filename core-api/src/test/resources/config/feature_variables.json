@@ -1,0 +1,594 @@
+{
+  "accountId": "2692180134",
+  "anonymizeIP": true,
+  "attributes": [],
+  "audiences": [
+    {
+      "id": "10413101794",
+      "conditions": "[\"and\", [\"or\", [\"or\", {\"type\": \"custom_attribute\", \"name\": \"string_attribute\", \"value\": \"exact_match\"}]]]",
+      "name": "untyped_single_condition_exact_string_match"
+    }
+  ],
+  "events": [],
+  "experiments": [
+    {
+      "audienceIds": [],
+      "forcedVariations": {},
+      "id": "2698060077",
+      "key": "feature_exp_running_enabled_with_variable_overrides",
+      "layerId": "2696280073",
+      "status": "Running",
+      "trafficAllocation": [
+        {
+          "endOfRange": 10000,
+          "entityId": "2688510107"
+        }
+      ],
+      "variations": [
+        {
+          "featureEnabled": true,
+          "id": "2688510107",
+          "key": "all_traffic_variation",
+          "variables": [
+            {
+              "value": "43",
+              "id": "2687470095"
+            },
+            {
+              "value": "4.3",
+              "id": "2689280165"
+            },
+            {
+              "value": "false",
+              "id": "2689660112"
+            },
+            {
+              "value": "foo bar",
+              "id": "2696150066"
+            }
+          ]
+        },
+        {
+          "featureEnabled": true,
+          "id": "2688510108",
+          "key": "no_traffic_variation",
+          "variables": [
+            {
+              "value": "44",
+              "id": "2687470095"
+            },
+            {
+              "value": "4.4",
+              "id": "2689280165"
+            },
+            {
+              "value": "true",
+              "id": "2689660112"
+            },
+            {
+              "value": "bar foo",
+              "id": "2696150066"
+            }
+          ]
+        },
+        {
+          "featureEnabled": true,
+          "id": "2688510110",
+          "key": "variation_b",
+          "variables": [
+            {
+              "value": "46",
+              "id": "2687470095"
+            },
+            {
+              "value": "4.6",
+              "id": "2689280165"
+            },
+            {
+              "value": "false",
+              "id": "2689660112"
+            },
+            {
+              "value": "foo foo",
+              "id": "2696150066"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "audienceIds": [],
+      "forcedVariations": {},
+      "id": "2698060078",
+      "key": "feature_exp_running_disabled_with_variable_overrides",
+      "layerId": "2696280074",
+      "status": "Running",
+      "trafficAllocation": [
+        {
+          "endOfRange": 10000,
+          "entityId": "2693550078"
+        }
+      ],
+      "variations": [
+        {
+          "featureEnabled": false,
+          "id": "2693550078",
+          "key": "all_traffic_variation_disabled",
+          "variables": [
+            {
+              "value": "43",
+              "id": "2687470096"
+            },
+            {
+              "value": "4.3",
+              "id": "2689280166"
+            },
+            {
+              "value": "false",
+              "id": "2689660113"
+            },
+            {
+              "value": "foo bar",
+              "id": "2696150067"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "audienceIds": [],
+      "forcedVariations": {},
+      "id": "2698060079",
+      "key": "feature_exp_running_enabled_with_variables_no_overrides",
+      "layerId": "2696280075",
+      "status": "Running",
+      "trafficAllocation": [
+        {
+          "endOfRange": 10000,
+          "entityId": "2693550079"
+        }
+      ],
+      "variations": [
+        {
+          "featureEnabled": true,
+          "id": "2693550079",
+          "key": "all_traffic_variation",
+          "variables": []
+        }
+      ]
+    },
+    {
+      "audienceIds": [],
+      "forcedVariations": {},
+      "id": "2698060080",
+      "key": "feature_exp_paused_with_variable_overrides",
+      "layerId": "2696280076",
+      "status": "Paused",
+      "trafficAllocation": [
+        {
+          "endOfRange": 10000,
+          "entityId": "2693550080"
+        }
+      ],
+      "variations": [
+        {
+          "featureEnabled": true,
+          "id": "2693550080",
+          "key": "all_traffic_variation",
+          "variables": [
+            {
+              "value": "43",
+              "id": "2687470098"
+            },
+            {
+              "value": "4.3",
+              "id": "2689280168"
+            },
+            {
+              "value": "false",
+              "id": "2689660115"
+            },
+            {
+              "value": "foo bar",
+              "id": "2696150069"
+            }
+          ]
+        },
+        {
+          "featureEnabled": true,
+          "id": "2693550083",
+          "key": "no_traffic_variation",
+          "variables": [
+            {
+              "value": "44",
+              "id": "2687470098"
+            },
+            {
+              "value": "4.4",
+              "id": "2689280168"
+            },
+            {
+              "value": "true",
+              "id": "2689660115"
+            },
+            {
+              "value": "bar foo",
+              "id": "2696150069"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "audienceIds": ["10413101794"],
+      "audienceConditions": ["or", "10413101794"],
+      "forcedVariations": {},
+      "id": "2698060081",
+      "key": "feature_running_exp_enabled_targeted_with_variable_overrides",
+      "layerId": "2696280077",
+      "status": "Running",
+      "trafficAllocation": [
+        {
+          "endOfRange": 10000,
+          "entityId": "2693550081"
+        }
+      ],
+      "variations": [
+        {
+          "featureEnabled": true,
+          "id": "2693550081",
+          "key": "all_traffic_variation",
+          "variables": [
+            {
+              "value": "43",
+              "id": "2687470099"
+            },
+            {
+              "value": "4.3",
+              "id": "2689280169"
+            },
+            {
+              "value": "false",
+              "id": "2689660116"
+            },
+            {
+              "value": "foo bar",
+              "id": "2696150070"
+            }
+          ]
+        },
+        {
+          "featureEnabled": true,
+          "id": "2693550082",
+          "key": "no_traffic_variation",
+          "variables": [
+            {
+              "value": "44",
+              "id": "2687470099"
+            },
+            {
+              "value": "4.4",
+              "id": "2689280169"
+            },
+            {
+              "value": "true",
+              "id": "2689660116"
+            },
+            {
+              "value": "bar foo",
+              "id": "2696150070"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "audienceIds": [],
+      "id": "4493830388",
+      "key": "feature_running_exp_enabled_whitelisted",
+      "layerId": "4525908869",
+      "status": "Running",
+      "trafficAllocation": [
+        {
+          "endOfRange": 10000,
+          "entityId": "4489910598"
+        }
+      ],
+      "variations": [
+        {
+          "featureEnabled": true,
+          "id": "4489910598",
+          "key": "all_traffic_variation",
+          "variables": [
+            {
+              "value": "43",
+              "id": "2687470100"
+            },
+            {
+              "value": "4.3",
+              "id": "2689280170"
+            },
+            {
+              "value": "false",
+              "id": "2689660117"
+            },
+            {
+              "value": "foo bar",
+              "id": "2696150071"
+            }
+          ]
+        },
+        {
+          "featureEnabled": true,
+          "id": "4489910599",
+          "key": "variation_a",
+          "variables": [
+            {
+              "value": "45",
+              "id": "2687470100"
+            },
+            {
+              "value": "4.5",
+              "id": "2689280170"
+            },
+            {
+              "value": "false",
+              "id": "2689660117"
+            },
+            {
+              "value": "bar bar",
+              "id": "2696150071"
+            }
+          ]
+        }
+      ],
+      "forcedVariations": {
+          "whitelisted_user_variation_a": "variation_a"
+      }
+    }
+  ],
+  "featureFlags": [
+    {
+      "experimentIds": [
+        "2698060077"
+      ],
+      "id": "2692620111",
+      "key": "feature_exp_running_enabled_with_variable_overrides",
+      "rolloutId": "",
+      "variables": [
+        {
+          "defaultValue": "42",
+          "id": "2687470095",
+          "key": "i_42",
+          "type": "integer"
+        },
+        {
+          "defaultValue": "4.2",
+          "id": "2689280165",
+          "key": "d_4_2",
+          "type": "double"
+        },
+        {
+          "defaultValue": "true",
+          "id": "2689660112",
+          "key": "b_true",
+          "type": "boolean"
+        },
+        {
+          "defaultValue": "foo",
+          "id": "2696150066",
+          "key": "s_foo",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "experimentIds": [
+        "2698060078"
+      ],
+      "id": "2692620112",
+      "key": "feature_exp_running_disabled_with_variable_overrides",
+      "rolloutId": "",
+      "variables": [
+        {
+          "defaultValue": "42",
+          "id": "2687470096",
+          "key": "i_42",
+          "type": "integer"
+        },
+        {
+          "defaultValue": "4.2",
+          "id": "2689280166",
+          "key": "d_4_2",
+          "type": "double"
+        },
+        {
+          "defaultValue": "true",
+          "id": "2689660113",
+          "key": "b_true",
+          "type": "boolean"
+        },
+        {
+          "defaultValue": "foo",
+          "id": "2696150067",
+          "key": "s_foo",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "experimentIds": [
+        "2698060079"
+      ],
+      "id": "2692620113",
+      "key": "feature_exp_running_enabled_with_variables_no_overrides",
+      "rolloutId": "",
+      "variables": [
+        {
+          "defaultValue": "42",
+          "id": "2687470097",
+          "key": "i_42",
+          "type": "integer"
+        },
+        {
+          "defaultValue": "4.2",
+          "id": "2689280167",
+          "key": "d_4_2",
+          "type": "double"
+        },
+        {
+          "defaultValue": "true",
+          "id": "2689660114",
+          "key": "b_true",
+          "type": "boolean"
+        },
+        {
+          "defaultValue": "foo",
+          "id": "2696150068",
+          "key": "s_foo",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "experimentIds": [
+        "2698060080"
+      ],
+      "id": "2692620114",
+      "key": "feature_exp_paused_with_variable_overrides",
+      "rolloutId": "",
+      "variables": [
+        {
+          "defaultValue": "42",
+          "id": "2687470098",
+          "key": "i_42",
+          "type": "integer"
+        },
+        {
+          "defaultValue": "4.2",
+          "id": "2689280168",
+          "key": "d_4_2",
+          "type": "double"
+        },
+        {
+          "defaultValue": "true",
+          "id": "2689660115",
+          "key": "b_true",
+          "type": "boolean"
+        },
+        {
+          "defaultValue": "foo",
+          "id": "2696150069",
+          "key": "s_foo",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "experimentIds": [],
+      "id": "2692620115",
+      "key": "feature_orphaned_with_variables",
+      "rolloutId": "",
+      "variables": [
+        {
+          "defaultValue": "42",
+          "id": "2687470099",
+          "key": "i_42_not_attached",
+          "type": "integer"
+        },
+        {
+          "defaultValue": "4.2",
+          "id": "2687470099",
+          "key": "d_4_2_not_attached",
+          "type": "double"
+        },
+        {
+          "defaultValue": "true",
+          "id": "2687470099",
+          "key": "b_true_not_attached",
+          "type": "boolean"
+        },
+        {
+          "defaultValue": "foo",
+          "id": "2687470099",
+          "key": "s_foo_not_attached",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "experimentIds": [
+        "2698060081"
+      ],
+      "id": "2692620116",
+      "key": "feature_running_exp_enabled_targeted_with_variable_overrides",
+      "rolloutId": "",
+      "variables": [
+        {
+          "defaultValue": "42",
+          "id": "2687470099",
+          "key": "i_42",
+          "type": "integer"
+        },
+        {
+          "defaultValue": "4.2",
+          "id": "2689280169",
+          "key": "d_4_2",
+          "type": "double"
+        },
+        {
+          "defaultValue": "true",
+          "id": "2689660116",
+          "key": "b_true",
+          "type": "boolean"
+        },
+        {
+          "defaultValue": "foo",
+          "id": "2696150070",
+          "key": "s_foo",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "experimentIds": [
+        "4493830388"
+      ],
+      "id": "2692620117",
+      "key": "feature_running_exp_enabled_whitelisted",
+      "rolloutId": "",
+      "variables": [
+        {
+          "defaultValue": "42",
+          "id": "2687470100",
+          "key": "i_42",
+          "type": "integer"
+        },
+        {
+          "defaultValue": "4.2",
+          "id": "2689280170",
+          "key": "d_4_2",
+          "type": "double"
+        },
+        {
+          "defaultValue": "true",
+          "id": "2689660117",
+          "key": "b_true",
+          "type": "boolean"
+        },
+        {
+          "defaultValue": "foo",
+          "id": "2696150071",
+          "key": "s_foo",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "groups": [],
+  "projectId": "2692180134",
+  "revision": "34",
+  "rollouts": [],
+  "variables": [],
+  "version": "4"
+}
