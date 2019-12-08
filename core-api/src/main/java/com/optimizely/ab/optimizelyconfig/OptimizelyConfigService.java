@@ -21,6 +21,9 @@ import java.util.*;
 
 public class OptimizelyConfigService {
 
+    private ProjectConfig projectConfig;
+    Map<String, List<FeatureVariable>> featureKeyToVariablesMap;
+
     /**
      * create maps for experiment and features to be returned as one object
      *
@@ -28,30 +31,49 @@ public class OptimizelyConfigService {
      * @return {@link OptimizelyConfig} containing experiments and features
      */
     public OptimizelyConfig getOptimizelyConfig(ProjectConfig projectConfig) {
-        Map<String, OptimizelyExperiment> experimentsMap = getExperimentsMap(projectConfig);
+        this.projectConfig = projectConfig;
+        this.featureKeyToVariablesMap = generateFeatureKeyToVariablesMap();
+        Map<String, OptimizelyExperiment> experimentsMap = getExperimentsMap();
         OptimizelyConfig optimizelyConfig = new OptimizelyConfig(
             experimentsMap,
-            getFeaturesMap(projectConfig, experimentsMap),
+            getFeaturesMap(experimentsMap),
             projectConfig.getRevision()
         );
         return optimizelyConfig;
     }
 
+    private Map<String, List<FeatureVariable>> generateFeatureKeyToVariablesMap() {
+        Map<String, List<FeatureVariable>> featureKeyToVariablesMap = new HashMap();            
+        List<FeatureFlag> featureFlags = this.projectConfig.getFeatureFlags();
+        if (featureFlags != null) {
+            for (FeatureFlag featureFlag : featureFlags) {
+                featureKeyToVariablesMap.put(featureFlag.getKey(), featureFlag.getVariables());
+            }
+        }
+        return featureKeyToVariablesMap;
+    }
+
+    private String getExperimentFeatureKey(String experimentId) {
+        // Get Key of the feature associated with this experiment
+        List<String> featureKeys = this.projectConfig.getExperimentFeatureKeyMapping().get(experimentId);
+        String featureKey = featureKeys != null ? featureKeys.get(0) : null;
+        return featureKey;
+    }
+
     /**
      * gets map of {@link Experiment} except rollouts
      *
-     * @param   projectConfig the current projectConfig
      * @return  map of experiments
      */
-    private Map<String, OptimizelyExperiment> getExperimentsMap(ProjectConfig projectConfig) {
+    private Map<String, OptimizelyExperiment> getExperimentsMap() {
         Map<String, OptimizelyExperiment> experimentsMap = new HashMap<>();
-        List<Experiment> experiments = projectConfig.getExperiments();
+        List<Experiment> experiments = this.projectConfig.getExperiments();
         if(experiments != null) {
             for (Experiment experiment : experiments) {
                 OptimizelyExperiment optimizelyExperiment = new OptimizelyExperiment(
                     experiment.getId(),
                     experiment.getKey(),
-                    getVariationsMap(projectConfig, experiment.getVariations(), experiment.getId())
+                    getVariationsMap(experiment.getVariations(), experiment.getId())
                 );
                 experimentsMap.put(experiment.getKey(), optimizelyExperiment);            
             }
@@ -59,17 +81,17 @@ public class OptimizelyConfigService {
         return experimentsMap;
     }
 
-    private Map<String, OptimizelyVariation> getVariationsMap(ProjectConfig projectConfig, List<Variation> variations, String experimentId) {
+    private Map<String, OptimizelyVariation> getVariationsMap(List<Variation> variations, String experimentId) {
         Map<String, OptimizelyVariation> variationsMap = new HashMap<>();
         if (variations != null) {
             for (Variation variation : variations) {
-                List<String> features = projectConfig.getExperimentFeatureKeyMapping().get(experimentId);
+                List<String> features = this.projectConfig.getExperimentFeatureKeyMapping().get(experimentId);
                 Boolean isFeatureEnabled = features != null && !features.isEmpty() ? variation.getFeatureEnabled() : null;
                 OptimizelyVariation optimizelyVariation = new OptimizelyVariation(
                     variation.getId(),
                     variation.getKey(),
                     isFeatureEnabled,
-                    getMergedVariablesMap(projectConfig, variation, experimentId)
+                    getMergedVariablesMap(variation, experimentId)
                 );
                 variationsMap.put(variation.getKey(), optimizelyVariation);
             }
@@ -80,35 +102,29 @@ public class OptimizelyConfigService {
     /**
      * Merges feature key and type from feature variables to variation variables
      *
-     * @param projectConfig             the current projectConfig
      * @param variation                 variation for which the value of {@link FeatureVariable} needs to be merged
      * @param experimentId              {@link Experiment} id for getting its feature id
      * @param featureVariablesMap       map for {@link FeatureVariable} of a {@link FeatureFlag}
      * @return optimizelyVariableMap    returns the map after merging the value of {@link FeatureVariable}
      */
-    private Map<String, OptimizelyVariable> getMergedVariablesMap(ProjectConfig projectConfig, Variation variation, String experimentId) {
+    private Map<String, OptimizelyVariable> getMergedVariablesMap(Variation variation, String experimentId) {
 
         Map<String, OptimizelyVariable> optimizelyVariableMap = new HashMap<>();
-        Map<String, List<FeatureVariable>> featureIDVariablesMap = new HashMap<>();
+        String featureKey = this.getExperimentFeatureKey(experimentId);
         
-        List<String> featureKeys = projectConfig.getExperimentFeatureKeyMapping().get(experimentId);
-        String featureKey = featureKeys != null ? featureKeys.get(0) : null;
-
-        List<FeatureFlag> featureFlags = projectConfig.getFeatureFlags();
-        if (featureFlags != null) {
-            for (FeatureFlag featureFlag : featureFlags) {
-                featureIDVariablesMap.put(featureFlag.getKey(), featureFlag.getVariables());
-            }
-        }
-
-        Map<String, OptimizelyVariable> tempVariableIdMap = new HashMap();
         if (featureKey != null) {
+            // Generate temp map of all the available variable values from variation.
+            Map<String, OptimizelyVariable> tempVariableIdMap = new HashMap();            
             for (FeatureVariableUsageInstance variable : variation.getFeatureVariableUsageInstances()) {
                 OptimizelyVariable tempVariable = new OptimizelyVariable(variable.getId(), null, null, variable.getValue());
                 tempVariableIdMap.put(tempVariable.getId(), tempVariable);
             }
-            if(featureIDVariablesMap.get(featureKey) != null) {
-                featureIDVariablesMap.get(featureKey).forEach(featureVariable -> {
+
+            // Iterate over all the variables available in associated feature.
+            // Use value from variation variable if variable is available in variation and feature is enabled, otherwise use defaultValue from feature variable.
+            List<FeatureVariable> featureVariables = this.featureKeyToVariablesMap.get(featureKey);
+            if(featureVariables != null) {
+                featureVariables.forEach(featureVariable -> {
                     OptimizelyVariable tempVariable = tempVariableIdMap.get(featureVariable.getId());
                     String variableValue = variation.getFeatureEnabled() && tempVariable != null ? tempVariable.getValue() : featureVariable.getDefaultValue();
                     OptimizelyVariable optimizelyVariable = new OptimizelyVariable(
@@ -127,12 +143,11 @@ public class OptimizelyConfigService {
     /**
      * gets map of all {@link FeatureFlag}s and associated {@link Experiment} map inside it
      *
-     * @param projectConfig the current projectConfig
      * @return map of {@link FeatureFlag} key and {@link OptimizelyFeature}
      */
-    private Map<String, OptimizelyFeature> getFeaturesMap(ProjectConfig projectConfig, Map<String, OptimizelyExperiment> experimentMap) {
+    private Map<String, OptimizelyFeature> getFeaturesMap(Map<String, OptimizelyExperiment> experimentMap) {
         Map<String, OptimizelyFeature> featuresMap = new HashMap<>();
-        List<FeatureFlag> featureFlags = projectConfig.getFeatureFlags();
+        List<FeatureFlag> featureFlags = this.projectConfig.getFeatureFlags();
         if(featureFlags != null) {
             for (FeatureFlag featureFlag : featureFlags) {
                 OptimizelyFeature optimizelyFeature = new OptimizelyFeature(
@@ -153,14 +168,14 @@ public class OptimizelyConfigService {
      * @param experimentIds feature experiments to be filtered for feature map
      * @return experimentMap for feature map
      */
-    private Map<String, OptimizelyExperiment> getFeatureExperimentMap(List<String> experimentIds,
-                                                                      Map<String, OptimizelyExperiment> experimentsMap) {
+    private Map<String, OptimizelyExperiment> getFeatureExperimentMap(List<String> experimentIds, Map<String, OptimizelyExperiment> experimentsMap) {
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = new HashMap<>();
         if (experimentIds != null) {
             for (String experimentId : experimentIds) {
                 experimentsMap.forEach((experimentKey, experiment) -> {
-                    if(experiment.getId().equals(experimentId))
+                    if(experiment.getId().equals(experimentId)) {
                         optimizelyExperimentMap.put(experimentKey, experiment);
+                    }
                 });
             }
         }
@@ -178,10 +193,10 @@ public class OptimizelyConfigService {
         if (featureVariables != null) {
             for (FeatureVariable featureVariable : featureVariables) {
                 OptimizelyVariable optimizelyVariable = new OptimizelyVariable(
-                  featureVariable.getId(),
-                  featureVariable.getKey(),
-                  featureVariable.getType().getVariableType().toLowerCase(),
-                  featureVariable.getDefaultValue()
+                    featureVariable.getId(),
+                    featureVariable.getKey(),
+                    featureVariable.getType().getVariableType().toLowerCase(),
+                    featureVariable.getDefaultValue()
                 );
                 optimizelyVariableMap.put(featureVariable.getKey(), optimizelyVariable);
             }
