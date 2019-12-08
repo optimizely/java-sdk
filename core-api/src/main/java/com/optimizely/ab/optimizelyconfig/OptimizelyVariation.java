@@ -15,6 +15,7 @@
  ***************************************************************************/
 package com.optimizely.ab.optimizelyconfig;
 
+import com.optimizely.ab.config.IdKeyMapped;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Map;
@@ -22,7 +23,7 @@ import java.util.Map;
  * Details of variation in {@link OptimizelyExperiment}
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class OptimizelyVariation {
+public class OptimizelyVariation implements IdKeyMapped {
 
     private String id;
     private String key;

@@ -15,12 +15,14 @@
  ***************************************************************************/
 package com.optimizely.ab.optimizelyconfig;
 
+import com.optimizely.ab.config.IdKeyMapped;
+
 import java.util.Map;
 
 /**
  * Represents the feature's map in {@link OptimizelyConfig}
  */
-public class OptimizelyFeature {
+public class OptimizelyFeature implements IdKeyMapped {
 
     private String id;
     private String key;

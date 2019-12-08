@@ -15,10 +15,12 @@
  ***************************************************************************/
 package com.optimizely.ab.optimizelyconfig;
 
+import com.optimizely.ab.config.IdKeyMapped;
+
 /**
  * Details of feature variable in {@link OptimizelyConfig}
  */
-public class OptimizelyVariable {
+public class OptimizelyVariable implements IdKeyMapped {
 
     private String id;
     private String key;
