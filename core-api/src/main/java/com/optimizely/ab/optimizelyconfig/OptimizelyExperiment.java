@@ -15,22 +15,15 @@
  ***************************************************************************/
 package com.optimizely.ab.optimizelyconfig;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Map;
 
 /**
  * Represents the experiment's map in {@link OptimizelyConfig}
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class OptimizelyExperiment {
 
-    @JsonProperty("id")
     private String id;
-    @JsonProperty("key")
     private String key;
-    @JsonProperty("variationsMap")
     private Map<String, OptimizelyVariation> variationsMap;
 
     public OptimizelyExperiment(String id, String key, Map<String, OptimizelyVariation> variationsMap) {

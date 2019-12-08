@@ -15,22 +15,14 @@
  ***************************************************************************/
 package com.optimizely.ab.optimizelyconfig;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
  * Details of feature variable in {@link OptimizelyConfig}
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class OptimizelyVariable {
 
-    @JsonProperty("id")
     private String id;
-    @JsonProperty("key")
     private String key;
-    @JsonProperty("type")
     private String type;
-    @JsonProperty("value")
     private String value;
 
     public OptimizelyVariable(String id, String key, String type, String value) {

@@ -15,25 +15,19 @@
  ***************************************************************************/
 package com.optimizely.ab.optimizelyconfig;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Map;
 /**
  * Details of variation in {@link OptimizelyExperiment}
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class OptimizelyVariation {
 
-    @JsonProperty("id")
     private String id;
-    @JsonProperty("key")
     private String key;
-    @JsonProperty("featureEnabled")
     private Boolean featureEnabled;
-    @JsonProperty("variablesMap")
+
     private Map<String, OptimizelyVariable> variablesMap;
 
     public OptimizelyVariation(String id, 
@@ -60,20 +54,5 @@ public class OptimizelyVariation {
 
     public Map<String, OptimizelyVariable> getVariablesMap() {
         return variablesMap;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null || getClass() != obj.getClass()) return false;
-        if (obj == this) return true;
-        OptimizelyVariation optimizelyVariation = (OptimizelyVariation) obj;
-        return id.equals(optimizelyVariation.getId()) && variablesMap.equals(optimizelyVariation.getVariablesMap());
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = id.hashCode();
-        hash = 31 * hash + variablesMap.hashCode();
-        return hash;
     }
 }
