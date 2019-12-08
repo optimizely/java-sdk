@@ -457,22 +457,16 @@ public class Optimizely implements AutoCloseable {
     }
 
     /**
-     * Get {@link OptimizelyConfig} containing experiments and features
+     * Get {@link OptimizelyConfig} containing experiments and features map
      *
      * @return {@link OptimizelyConfig}
      */
-    public OptimizelyConfig getOptimizelyConfig() {
-        try {
-            ProjectConfig projectConfig = getProjectConfig();
-            if (projectConfig == null) {
-                logger.error("Optimizely instance is not valid, failing getOptimizelyConfig call.");
-                return null;
-            }
-            return new OptimizelyConfigService().getOptimizelyConfig(projectConfig);
-        } catch (Exception exception) {
-            logger.error("Unable to fetch config due to error:" + exception);
+    public OptimizelyConfig getOptimizelyConfig() {        
+        if (!isValid()) {
+            logger.error("Optimizely instance is not valid, failing getOptimizelyConfig call.");
+            return null;
         }
-        return null;
+        return new OptimizelyConfigService().getOptimizelyConfig(getProjectConfig());
     }
 
     /**
