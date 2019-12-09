@@ -15,8 +15,6 @@
  ***************************************************************************/
 package com.optimizely.ab.optimizelyconfig;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.config.*;
 import org.junit.Before;
@@ -27,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 
 public class OptimizelyConfigTest {
 
@@ -36,17 +35,15 @@ public class OptimizelyConfigTest {
 
     @Before
     public void initialize()throws Exception {
-        projectConfig = new DatafileProjectConfig.Builder().withDatafile(Resources.toString(
-            Resources.getResource("config/feature_variables.json"), Charsets.UTF_8)).build();
-        optimizely = Optimizely.builder().withDatafile(Resources.toString(
-            Resources.getResource("config/feature_variables.json"), Charsets.UTF_8)).build();
+        projectConfig = new DatafileProjectConfig.Builder().withDatafile(validConfigJsonV4()).build();
+        optimizely = Optimizely.builder().withDatafile(validConfigJsonV4()).build();
         optimizelyConfig = optimizely.getOptimizelyConfig();
     }
 
     @Test
     public void shouldReturnAllExperimentsExceptRollouts() throws Exception {
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfig.getExperimentsMap();
-        assertEquals(optimizelyExperimentMap.size(), 6);
+        assertEquals(optimizelyExperimentMap.size(), 13);
 
         List<Experiment> experiments = getAllExperimentsFromDatafile();
         experiments.forEach(experiment -> {
