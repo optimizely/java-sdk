@@ -1051,7 +1051,7 @@ public class Optimizely implements AutoCloseable {
         /**
          * The withEventHandler has has been moved to the EventProcessor which takes a EventHandler in it's builder
          * method.
-         * {@link BatchEventProcessor.Builder#withEventHandler(EventHandler)}  label}
+         * {@link com.optimizely.ab.event.BatchEventProcessor.Builder#withEventHandler(com.optimizely.ab.event.EventHandler)}  label}
          * Please use that builder method instead.
          */
         @Deprecated
@@ -1163,14 +1163,7 @@ public class Optimizely implements AutoCloseable {
                 eventProcessor = new ForwardingEventProcessor(eventHandler, notificationCenter);
             }
 
-            return new Optimizely(eventHandler,
-                eventProcessor,
-                errorHandler,
-                decisionService,
-                userProfileService,
-                projectConfigManager,
-                notificationCenter
-            );
+            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, notificationCenter);
         }
     }
 }

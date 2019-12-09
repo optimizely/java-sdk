@@ -101,7 +101,7 @@ public class OptimizelyConfigTest {
     @Test
     public void shouldReturnCorrectRevision() throws Exception {
         String revision = optimizelyConfig.getRevision();
-        assertEquals(revision, revision);
+        assertEquals(revision, projectConfig.getRevision());
     }
 
     private List<Experiment> getAllExperimentsFromDatafile() {
