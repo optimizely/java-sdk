@@ -457,19 +457,6 @@ public class Optimizely implements AutoCloseable {
     }
 
     /**
-     * Get {@link OptimizelyConfig} containing experiments and features map
-     *
-     * @return {@link OptimizelyConfig}
-     */
-    public OptimizelyConfig getOptimizelyConfig() {        
-        if (!isValid()) {
-            logger.error("Optimizely instance is not valid, failing getOptimizelyConfig call.");
-            return null;
-        }
-        return new OptimizelyConfigService().getOptimizelyConfig(getProjectConfig());
-    }
-
-    /**
      * Get the Double value of the specified variable in the feature.
      *
      * @param featureKey  The unique key of the feature.
@@ -908,6 +895,19 @@ public class Optimizely implements AutoCloseable {
     @Nullable
     public UserProfileService getUserProfileService() {
         return userProfileService;
+    }
+
+    /**
+     * Get {@link OptimizelyConfig} containing experiments and features map
+     *
+     * @return {@link OptimizelyConfig}
+     */
+    public OptimizelyConfig getOptimizelyConfig() {
+        if (!isValid()) {
+            logger.error("Optimizely instance is not valid, failing getOptimizelyConfig call.");
+            return null;
+        }
+        return new OptimizelyConfigService().getOptimizelyConfig(getProjectConfig());
     }
 
     //======== Helper methods ========//
