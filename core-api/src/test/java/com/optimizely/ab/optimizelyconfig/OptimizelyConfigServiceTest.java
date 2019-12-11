@@ -15,7 +15,6 @@
  ***************************************************************************/
 package com.optimizely.ab.optimizelyconfig;
 
-import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.config.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,17 +26,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 
-public class OptimizelyConfigTest {
+public class OptimizelyConfigServiceTest {
 
     private OptimizelyConfig optimizelyConfig;
-    private Optimizely optimizely;
     private ProjectConfig projectConfig;
 
     @Before
     public void initialize()throws Exception {
         projectConfig = new DatafileProjectConfig.Builder().withDatafile(validConfigJsonV4()).build();
-        optimizely = Optimizely.builder().withDatafile(validConfigJsonV4()).build();
-        optimizelyConfig = optimizely.getOptimizelyConfig();
+        optimizelyConfig = new OptimizelyConfigService(projectConfig).getOptimizelyConfig();
     }
 
     @Test
@@ -64,7 +61,7 @@ public class OptimizelyConfigTest {
             Map<String, OptimizelyVariable> variablesMap = optimizelyFeatureMap.get(featureFlag.getKey()).getVariablesMap();
             featureFlag.getVariables().forEach(variable -> {
                 OptimizelyVariable optimizelyVariable = variablesMap.get(variable.getKey());
-                assertNotNull(optimizelyFeature);
+                assertNotNull(optimizelyVariable);
             });
         });
     }
