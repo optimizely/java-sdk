@@ -919,11 +919,12 @@ public class Optimizely implements AutoCloseable {
      * @return {@link OptimizelyConfig}
      */
     public OptimizelyConfig getOptimizelyConfig() {
-        if (!isValid()) {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
             logger.error("Optimizely instance is not valid, failing getOptimizelyConfig call.");
             return null;
         }
-        return new OptimizelyConfigService().getOptimizelyConfig(getProjectConfig());
+        return new OptimizelyConfigService(projectConfig).getOptimizelyConfig();
     }
 
     //======== Helper methods ========//
