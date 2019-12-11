@@ -130,7 +130,7 @@ public class OptimizelyConfigService {
 
     private Map<String, OptimizelyVariable> getFeatureVariableUsageInstanceMap(List<FeatureVariableUsageInstance> featureVariableUsageInstances) {
         if(featureVariableUsageInstances == null) {
-            Collections.emptyMap();
+            return Collections.emptyMap();
         }
         return featureVariableUsageInstances.stream().collect(Collectors.toMap(FeatureVariableUsageInstance::getId, variable -> new OptimizelyVariable(
                 variable.getId(),
