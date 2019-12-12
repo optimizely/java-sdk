@@ -22,9 +22,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
+import static org.junit.Assert.*;
 
 public class OptimizelyConfigServiceTest {
 
@@ -45,7 +45,15 @@ public class OptimizelyConfigServiceTest {
         List<Experiment> experiments = getAllExperimentsFromDatafile();
         experiments.forEach(experiment -> {
             OptimizelyExperiment optimizelyExperiment = optimizelyExperimentMap.get(experiment.getKey());
-            assertNotNull(optimizelyExperiment);
+            assertEquals(optimizelyExperiment.getId(), experiment.getId());
+            assertEquals(optimizelyExperiment.getKey(), experiment.getKey());
+
+            Map<String, OptimizelyVariation> optimizelyVariationMap = optimizelyExperimentMap.get(experiment.getKey()).getVariationsMap();
+            experiment.getVariations().forEach(variation -> {
+            OptimizelyVariation optimizelyVariation = optimizelyVariationMap.get(variation.getKey());
+                assertEquals(optimizelyVariation.getId(), variation.getId());
+                assertEquals(optimizelyVariation.getKey(), variation.getKey());
+            });
         });
     }
 
@@ -56,12 +64,21 @@ public class OptimizelyConfigServiceTest {
 
         projectConfig.getFeatureFlags().forEach(featureFlag -> {
             OptimizelyFeature optimizelyFeature = optimizelyFeatureMap.get(featureFlag.getKey());
-            assertNotNull(optimizelyFeature);
+            assertEquals(optimizelyFeature.getId(), featureFlag.getId());
+            assertEquals(optimizelyFeature.getKey(), featureFlag.getKey());
 
-            Map<String, OptimizelyVariable> variablesMap = optimizelyFeatureMap.get(featureFlag.getKey()).getVariablesMap();
+            featureFlag.getExperimentIds().forEach(experimentId -> {
+               String experimentKey =  projectConfig.getExperimentIdMapping().get(experimentId).getKey();
+               assertNotNull(optimizelyFeatureMap.get(featureFlag.getKey()).getExperimentsMap().get(experimentKey));
+            });
+
+            Map<String, OptimizelyVariable> optimizelyVariableMap = optimizelyFeatureMap.get(featureFlag.getKey()).getVariablesMap();
             featureFlag.getVariables().forEach(variable -> {
-                OptimizelyVariable optimizelyVariable = variablesMap.get(variable.getKey());
-                assertNotNull(optimizelyVariable);
+                OptimizelyVariable optimizelyVariable = optimizelyVariableMap.get(variable.getKey());
+                assertEquals(optimizelyVariable.getId(), variable.getId());
+                assertEquals(optimizelyVariable.getKey(), variable.getKey());
+                assertEquals(optimizelyVariable.getType(), variable.getType().getVariableType().toLowerCase());
+                assertEquals(optimizelyVariable.getValue(), variable.getDefaultValue());
             });
         });
     }
