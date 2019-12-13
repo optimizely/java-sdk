@@ -16,12 +16,11 @@
  */
 package com.optimizely.ab;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.Test;
 
@@ -48,6 +47,16 @@ public class OptimizelyHttpClientTest {
             .build();
 
         assertTrue(optimizelyHttpClient.getHttpClient() instanceof CloseableHttpClient);
+    }
+
+    @Test(expected = HttpHostConnectException.class)
+    public void testProxySettings() throws IOException {
+        System.setProperty("https.proxyHost", "localhost");
+        OptimizelyHttpClient optimizelyHttpClient = OptimizelyHttpClient.builder().build();
+
+        // If this request succeeds then the proxy config was not picked up.
+        HttpGet get = new HttpGet("https://www.optimizely.com");
+        optimizelyHttpClient.execute(get);
     }
 
     @Test
