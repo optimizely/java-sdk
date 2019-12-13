@@ -30,15 +30,17 @@ public class OptimizelyConfigServiceTest {
 
     private OptimizelyConfig optimizelyConfig;
     private ProjectConfig projectConfig;
+    private OptimizelyConfigService optimizelyConfigService;
 
     @Before
     public void initialize()throws Exception {
         projectConfig = new DatafileProjectConfig.Builder().withDatafile(validConfigJsonV4()).build();
-        optimizelyConfig = new OptimizelyConfigService(projectConfig).getOptimizelyConfig();
+        optimizelyConfigService = new OptimizelyConfigService(projectConfig);
+        optimizelyConfig = optimizelyConfigService.getOptimizelyConfig();
     }
 
     @Test
-    public void shouldReturnAllExperimentsExceptRollouts() throws Exception {
+    public void testGetExperimentsMap() throws Exception {
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfig.getExperimentsMap();
         assertEquals(optimizelyExperimentMap.size(), 13);
 
@@ -58,11 +60,18 @@ public class OptimizelyConfigServiceTest {
     }
 
     @Test
-    public void shouldReturnAllFeatureFlag() throws Exception {
+    public void testGetFeaturesMap() throws Exception {
         Map<String, OptimizelyFeature> optimizelyFeatureMap = optimizelyConfig.getFeaturesMap();
         assertEquals(optimizelyFeatureMap.size(), 7);
 
         projectConfig.getFeatureFlags().forEach(featureFlag -> {
+            List<String> experimentIds = featureFlag.getExperimentIds();
+            experimentIds.forEach(experimentId -> {
+                String experimentKey =  projectConfig.getExperimentIdMapping().get(experimentId).getKey();
+                OptimizelyExperiment optimizelyExperiment = optimizelyFeatureMap.get(featureFlag.getKey()).getExperimentsMap().get(experimentKey);
+                assertNotNull(optimizelyExperiment);
+            });
+
             OptimizelyFeature optimizelyFeature = optimizelyFeatureMap.get(featureFlag.getKey());
             assertEquals(optimizelyFeature.getId(), featureFlag.getId());
             assertEquals(optimizelyFeature.getKey(), featureFlag.getKey());
@@ -84,7 +93,7 @@ public class OptimizelyConfigServiceTest {
     }
 
     @Test
-    public void shouldCorrectlyMergeAllFeatureVariables() throws Exception {
+    public void testMergeAllFeatureVariables() throws Exception {
         List<FeatureFlag> featureFlags = projectConfig.getFeatureFlags();
         Map<String, Experiment> datafileExperimentsMap = new HashMap<>();
         getAllExperimentsFromDatafile().forEach(experiment ->
@@ -113,9 +122,91 @@ public class OptimizelyConfigServiceTest {
     }
 
     @Test
-    public void shouldReturnCorrectRevision() throws Exception {
+    public void testRevision() throws Exception {
         String revision = optimizelyConfig.getRevision();
         assertEquals(revision, projectConfig.getRevision());
+    }
+
+    @Test
+    public void testGetFeatureVariablesMap() {
+        FeatureFlag featureFlag = projectConfig.getFeatureFlags().get(0);
+        Map<String, OptimizelyVariable> optimizelyVariableMap = optimizelyConfigService.getFeatureVariablesMap(featureFlag.getVariables());
+        featureFlag.getVariables().forEach(variable -> {
+            OptimizelyVariable optimizelyVariable = optimizelyVariableMap.get(variable.getKey());
+            assertEquals(optimizelyVariable.getValue(), variable.getDefaultValue());
+            assertEquals(optimizelyVariable.getId(), variable.getId());
+            assertEquals(optimizelyVariable.getType(), variable.getType().getVariableType().toLowerCase());
+        });
+    }
+
+    @Test
+    public void testGetExperimentsMapForFeature() {
+        List<String> experimentIds = projectConfig.getFeatureFlags().get(0).getExperimentIds();
+        Map<String, OptimizelyExperiment> optimizelyFeatureExperimentMap =
+            optimizelyConfigService.getExperimentsMapForFeature(experimentIds, optimizelyConfigService.getExperimentsMap());
+        optimizelyFeatureExperimentMap.forEach((experimentKey, experiment) ->
+            assertTrue(experimentIds.contains(experiment.getId()))
+        );
+    }
+
+    @Test
+    public void testGetFeatureVariableUsageInstanceMap() {
+        List<FeatureVariableUsageInstance> featureVariableUsageInstances =
+            projectConfig.getExperiments().get(0).getVariations().get(0).getFeatureVariableUsageInstances();
+        Map<String, OptimizelyVariable> optimizelyVariableMap = optimizelyConfigService.getFeatureVariableUsageInstanceMap(featureVariableUsageInstances);
+        featureVariableUsageInstances.forEach(featureVariableUsageInstance -> {
+            OptimizelyVariable optimizelyVariable = optimizelyVariableMap.get(featureVariableUsageInstance.getId());
+            assertEquals(optimizelyVariable.getValue(), featureVariableUsageInstance.getValue());
+        });
+    }
+
+    @Test
+    public void testGetVariationsMap() {
+        Experiment experiment = projectConfig.getExperiments().get(0);
+        List<Variation> variations = experiment.getVariations();
+        Map<String, OptimizelyVariation> optimizelyVariationMap =
+            optimizelyConfigService.getVariationsMap(variations, experiment.getId());
+        variations.forEach(variation -> {
+            OptimizelyVariation optimizelyVariation = optimizelyVariationMap.get(variation.getKey());
+            assertEquals(optimizelyVariation.getId(), variation.getId());
+            Map<String, OptimizelyVariable> optimizelyVariableMap = optimizelyConfigService.getMergedVariablesMap(variation, experiment.getId());
+            optimizelyVariableMap.forEach((variableKey, variable) -> {
+                OptimizelyVariable optimizelyVariable = optimizelyVariableMap.get(variableKey);
+                assertEquals(variable.getValue(), optimizelyVariable.getValue());
+                assertEquals(variable.getType(), optimizelyVariable.getType());
+                assertEquals(variable.getId(), optimizelyVariable.getId());
+            });
+        });
+    }
+
+    @Test
+    public void testGetExperimentFeatureKey() {
+        List<Experiment> experiments = projectConfig.getExperiments();
+        experiments.forEach(experiment -> {
+            String featureKey = optimizelyConfigService.getExperimentFeatureKey(experiment.getId());
+            List<String> featureKeys = projectConfig.getExperimentFeatureKeyMapping().get(experiment.getId());
+            if(featureKeys != null)
+                assertTrue(featureKeys.contains(featureKey));
+            else
+                assertNull(featureKey);
+        });
+    }
+
+    @Test
+    public void testGetFeatureKeyToVariableMap() {
+        Map<String, List<FeatureVariable>> featureKeyToVariableMap = optimizelyConfigService.generateFeatureKeyToVariablesMap();
+        projectConfig.getFeatureFlags().forEach(featureFlag -> {
+            List<FeatureVariable> featureVariables = featureKeyToVariableMap.get(featureFlag.getKey());
+            featureVariables.forEach(featureVariable -> {
+                featureFlag.getVariables().forEach(variable -> {
+                    if (variable.getKey().equals(featureVariable.getKey())) {
+                       assertEquals(variable.getDefaultValue(), featureVariable.getDefaultValue());
+                       assertEquals(variable.getType().getVariableType().toLowerCase(), featureVariable.getType().getVariableType().toLowerCase());
+                       assertEquals(variable.getId(), featureVariable.getId());
+                    }
+                });
+            });
+        });
     }
 
     private List<Experiment> getAllExperimentsFromDatafile() {
