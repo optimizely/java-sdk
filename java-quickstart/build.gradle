@@ -9,6 +9,8 @@ dependencies {
 }
 
 task runExample(type: JavaExec) {
+    systemProperties System.properties
+
     main "com.optimizely.Example"
     classpath sourceSets.test.runtimeClasspath
 }
