@@ -15,6 +15,7 @@
  ***************************************************************************/
 package com.optimizely.ab.optimizelyconfig;
 
+import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.*;
 
 import java.util.*;
@@ -54,6 +55,7 @@ public class OptimizelyConfigService {
      * Generates a Map which contains list of variables for each feature key.
      * This map is used for merging variation and feature variables.
      */
+    @VisibleForTesting
     Map<String, List<FeatureVariable>> generateFeatureKeyToVariablesMap() {
         List<FeatureFlag> featureFlags = projectConfig.getFeatureFlags();
         if (featureFlags == null) {
@@ -62,11 +64,13 @@ public class OptimizelyConfigService {
         return featureFlags.stream().collect(Collectors.toMap(FeatureFlag::getKey, featureFlag -> featureFlag.getVariables()));
     }
 
+    @VisibleForTesting
     String getExperimentFeatureKey(String experimentId) {
         List<String> featureKeys = projectConfig.getExperimentFeatureKeyMapping().get(experimentId);
         return featureKeys != null ? featureKeys.get(0) : null;
     }
 
+    @VisibleForTesting
     Map<String, OptimizelyExperiment> getExperimentsMap() {
         List<Experiment> experiments = projectConfig.getExperiments();
         if(experiments == null) {
@@ -79,6 +83,7 @@ public class OptimizelyConfigService {
         )));
     }
 
+    @VisibleForTesting
     Map<String, OptimizelyVariation> getVariationsMap(List<Variation> variations, String experimentId) {
         if(variations == null) {
             return Collections.emptyMap();
@@ -98,6 +103,7 @@ public class OptimizelyConfigService {
      * 2. If Variation has variables and feature is disabled, then `type` and `key` are merged and `defaultValue` of feature variable is merged as `value` of variation variable.
      * 3. If Variation does not contain a variable, then all `id`, `key`, `type` and defaultValue as `value` is used from feature varaible and added to variation.
      */
+    @VisibleForTesting
     Map<String, OptimizelyVariable> getMergedVariablesMap(Variation variation, String experimentId) {
         String featureKey = this.getExperimentFeatureKey(experimentId);
 
@@ -124,6 +130,7 @@ public class OptimizelyConfigService {
         return Collections.emptyMap();
     }
 
+    @VisibleForTesting
     Map<String, OptimizelyVariable> getFeatureVariableUsageInstanceMap(List<FeatureVariableUsageInstance> featureVariableUsageInstances) {
         if(featureVariableUsageInstances == null) {
             return Collections.emptyMap();
@@ -136,6 +143,7 @@ public class OptimizelyConfigService {
         )));
     }
 
+    @VisibleForTesting
     private Map<String, OptimizelyFeature> getFeaturesMap(Map<String, OptimizelyExperiment> allExperimentsMap) {
         List<FeatureFlag> featureFlags = projectConfig.getFeatureFlags();
         if(featureFlags == null) {
@@ -149,6 +157,7 @@ public class OptimizelyConfigService {
         )));
     }
 
+    @VisibleForTesting
     Map<String, OptimizelyExperiment> getExperimentsMapForFeature(List<String> experimentIds, Map<String, OptimizelyExperiment> allExperimentsMap) {
         if (experimentIds == null) {
             return Collections.emptyMap();
@@ -161,6 +170,7 @@ public class OptimizelyConfigService {
         return experimentKeys.stream().collect(Collectors.toMap(Function.identity(), key -> allExperimentsMap.get(key)));
     }
 
+    @VisibleForTesting
     Map<String, OptimizelyVariable> getFeatureVariablesMap(List<FeatureVariable> featureVariables) {
         if (featureVariables == null) {
             return Collections.emptyMap();
