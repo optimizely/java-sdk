@@ -1,5 +1,11 @@
 # Optimizely Java X SDK Changelog
 
+## 3.2.2
+December 16th, 2019
+
+### New Features:
+- Accept http client parameters via system properties. ([#349](https://github.com/optimizely/java-sdk/pull/349))
+
 ## 3.2.1
 August 19th, 2019
 
