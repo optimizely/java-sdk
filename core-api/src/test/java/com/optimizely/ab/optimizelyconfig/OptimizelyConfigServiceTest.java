@@ -54,10 +54,12 @@ public class OptimizelyConfigServiceTest {
                         assertEquals(optimizelyVariable.getKey(), featureVariable.getKey());
                         assertEquals(optimizelyVariable.getId(), featureVariable.getId());
                         assertEquals(optimizelyVariable.getType(), featureVariable.getType().getVariableType().toLowerCase());
-                        if(variation.getFeatureEnabled() && tempVariableIdMap.get(featureVariable.getId()) != null)
+                        if(variation.getFeatureEnabled() && tempVariableIdMap.get(featureVariable.getId()) != null) {
                             assertEquals(optimizelyVariable.getValue(), tempVariableIdMap.get(featureVariable.getId()).getValue());
-                        else
+                        }
+                        else {
                             assertEquals(optimizelyVariable.getValue(), featureVariable.getDefaultValue());
+                        }
                     });
                 }
             })
@@ -66,7 +68,7 @@ public class OptimizelyConfigServiceTest {
 
     @Test
     public void testGetExperimentsMap() {
-        Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfigService.getOptimizelyConfig().getExperimentsMap();
+        Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfigService.getExperimentsMap();
         assertEquals(optimizelyExperimentMap.size(), 13);
 
         List<Experiment> experiments = getAllExperimentsFromDatafile();
@@ -92,7 +94,8 @@ public class OptimizelyConfigServiceTest {
 
     @Test
     public void testGetFeaturesMap() {
-        Map<String, OptimizelyFeature> optimizelyFeatureMap = optimizelyConfigService.getOptimizelyConfig().getFeaturesMap();
+        Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfigService.getExperimentsMap();
+        Map<String, OptimizelyFeature> optimizelyFeatureMap = optimizelyConfigService.getFeaturesMap(optimizelyExperimentMap);
         assertEquals(optimizelyFeatureMap.size(), 7);
 
         projectConfig.getFeatureFlags().forEach(featureFlag -> {
@@ -188,8 +191,9 @@ public class OptimizelyConfigServiceTest {
         experiments.forEach(experiment -> {
             String featureKey = optimizelyConfigService.getExperimentFeatureKey(experiment.getId());
             List<String> featureKeys = projectConfig.getExperimentFeatureKeyMapping().get(experiment.getId());
-            if(featureKeys != null)
+            if(featureKeys != null) {
                 assertTrue(featureKeys.contains(featureKey));
+            }
         });
     }
 

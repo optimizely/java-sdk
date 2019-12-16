@@ -144,7 +144,7 @@ public class OptimizelyConfigService {
     }
 
     @VisibleForTesting
-    private Map<String, OptimizelyFeature> getFeaturesMap(Map<String, OptimizelyExperiment> allExperimentsMap) {
+    Map<String, OptimizelyFeature> getFeaturesMap(Map<String, OptimizelyExperiment> allExperimentsMap) {
         List<FeatureFlag> featureFlags = projectConfig.getFeatureFlags();
         if(featureFlags == null) {
             return Collections.emptyMap();
