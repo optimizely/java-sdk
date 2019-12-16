@@ -103,6 +103,7 @@ public class OptimizelyHttpClient implements Closeable {
                 .setDefaultRequestConfig(HttpClientUtils.DEFAULT_REQUEST_CONFIG)
                 .setConnectionManager(poolingHttpClientConnectionManager)
                 .disableCookieManagement()
+                .useSystemProperties()
                 .build();
 
             return new OptimizelyHttpClient(closableHttpClient);
