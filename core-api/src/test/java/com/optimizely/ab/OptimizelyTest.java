@@ -1580,10 +1580,10 @@ public class OptimizelyTest {
 
         int notificationId = optimizely.notificationCenter.<DecisionNotification>getNotificationManager(DecisionNotification.class)
             .addHandler(
-                getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString(),
-                    userId,
-                    testUserAttributes,
-                    testDecisionInfoMap));
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString(),
+                userId,
+                testUserAttributes,
+                testDecisionInfoMap));
 
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, null);
