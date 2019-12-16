@@ -21,7 +21,6 @@ import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.*;
-import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.error.RaiseExceptionErrorHandler;
 import com.optimizely.ab.event.BatchEventProcessor;
@@ -44,6 +43,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -248,13 +248,6 @@ public class OptimizelyTest {
         assertNotNull(actualVariation);
 
         eventHandler.expectImpression(activatedExperiment.getId(), actualVariation.getId(), testUserId, testUserAttributes);
-    }
-
-    @Test
-    public void testOptimizelyConfig() throws Exception {
-        Optimizely optimizely = optimizelyBuilder.build();
-        OptimizelyConfig optimizelyConfig = optimizely.getOptimizelyConfig();
-        assertNotNull(optimizelyConfig);
     }
 
     /**
@@ -1587,10 +1580,10 @@ public class OptimizelyTest {
 
         int notificationId = optimizely.notificationCenter.<DecisionNotification>getNotificationManager(DecisionNotification.class)
             .addHandler(
-            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString(),
-                userId,
-                testUserAttributes,
-                testDecisionInfoMap));
+                getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString(),
+                    userId,
+                    testUserAttributes,
+                    testDecisionInfoMap));
 
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, null);
