@@ -908,7 +908,7 @@ public class Optimizely implements AutoCloseable {
             logger.error("Optimizely instance is not valid, failing getOptimizelyConfig call.");
             return null;
         }
-        return new OptimizelyConfigService(projectConfig).getOptimizelyConfig();
+        return OptimizelyConfigService.getInstance(projectConfig).getOptimizelyConfig();
     }
 
     //======== Helper methods ========//
