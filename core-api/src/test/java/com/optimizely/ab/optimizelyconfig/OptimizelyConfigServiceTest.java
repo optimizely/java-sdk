@@ -18,16 +18,23 @@ package com.optimizely.ab.optimizelyconfig;
 import com.optimizely.ab.config.*;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
+@RunWith(MockitoJUnitRunner.class)
 public class OptimizelyConfigServiceTest {
 
     private ProjectConfig projectConfig;
+    @Mock
     private OptimizelyConfigService optimizelyConfigService;
 
     @Before
@@ -214,6 +221,14 @@ public class OptimizelyConfigServiceTest {
                 })
             );
         });
+    }
+
+    @Test
+    public void testCachingOfOptimizelyConfig() throws Exception {
+        OptimizelyConfigService mocked = mock(OptimizelyConfigService.class);
+        when(mocked.getExperimentsMap()).thenReturn(optimizelyConfigService.getExperimentsMap());
+        optimizelyConfigService = OptimizelyConfigService.getInstance(projectConfig);
+        verify(mocked, times(0)).getExperimentsMap();
     }
 
     private List<Experiment> getAllExperimentsFromDatafile() {
