@@ -49,11 +49,16 @@ public class OptimizelyConfigService {
      * @param projectConfig project config provided
      * @return singleton object of {@link OptimizelyConfigService}
      */
-    public static OptimizelyConfigService getInstance(ProjectConfig projectConfig) {
+    @VisibleForTesting
+    static OptimizelyConfigService getInstance(ProjectConfig projectConfig) {
         if (serviceInstance == null || !projectConfig.getRevision().equals(serviceInstance.getOptimizelyConfig().getRevision())) {
             serviceInstance = new OptimizelyConfigService(projectConfig);
         }
         return serviceInstance;
+    }
+
+    public static OptimizelyConfig getConfig(ProjectConfig projectConfig) {
+        return getInstance(projectConfig).getOptimizelyConfig();
     }
 
     /**
