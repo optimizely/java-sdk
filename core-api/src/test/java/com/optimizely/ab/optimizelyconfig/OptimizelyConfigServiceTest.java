@@ -44,37 +44,6 @@ public class OptimizelyConfigServiceTest {
     }
 
     @Test
-    public void testGetMergedVariablesMap() {
-        List<Experiment> experiments = projectConfig.getExperiments();
-        experiments.forEach(experiment ->
-            experiment.getVariations().forEach(variation -> {
-                // creating temporary variable map to get values while merging
-                Map<String, OptimizelyVariable> tempVariableIdMap =
-                    optimizelyConfigService.getFeatureVariableUsageInstanceMap(variation.getFeatureVariableUsageInstances());
-                String featureKey = optimizelyConfigService.getExperimentFeatureKey(experiment.getId());
-                if (featureKey != null) {
-                    // keeping all the feature variables for asserting
-                    List<FeatureVariable> featureVariables =
-                        optimizelyConfigService.generateFeatureKeyToVariablesMap().get(featureKey);
-                    Map<String, OptimizelyVariable> optimizelyVariableMap =
-                        optimizelyConfigService.getMergedVariablesMap(variation, experiment.getId());
-                    featureVariables.forEach(featureVariable -> {
-                        OptimizelyVariable optimizelyVariable = optimizelyVariableMap.get(featureVariable.getKey());
-                        assertEquals(optimizelyVariable.getKey(), featureVariable.getKey());
-                        assertEquals(optimizelyVariable.getId(), featureVariable.getId());
-                        assertEquals(optimizelyVariable.getType(), featureVariable.getType().getVariableType().toLowerCase());
-                        // getting the expected value to assert after merging
-                        String expectedValue = variation.getFeatureEnabled() && tempVariableIdMap.get(featureVariable.getId()) != null
-                            ? tempVariableIdMap.get(featureVariable.getId()).getValue()
-                            : featureVariable.getDefaultValue();
-                        assertEquals(optimizelyVariable.getValue(), expectedValue);
-                    });
-                }
-            })
-        );
-    }
-
-    @Test
     public void testGetExperimentsMap() {
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfigService.getExperimentsMap();
         assertEquals(optimizelyExperimentMap.size(), 13);
@@ -221,6 +190,35 @@ public class OptimizelyConfigServiceTest {
                 })
             );
         });
+    }
+
+    @Test
+    public void testGetMergedVariablesMap() {
+        List<Experiment> experiments = projectConfig.getExperiments();
+        experiments.forEach(experiment ->
+            experiment.getVariations().forEach(variation -> {
+                // creating temporary variable map to get values while merging
+                Map<String, OptimizelyVariable> tempVariableIdMap = optimizelyConfigService.getFeatureVariableUsageInstanceMap(variation.getFeatureVariableUsageInstances());
+                String featureKey = optimizelyConfigService.getExperimentFeatureKey(experiment.getId());
+                if (featureKey != null) {
+                    // keeping all the feature variables for asserting
+                    List<FeatureVariable> featureVariables = optimizelyConfigService.generateFeatureKeyToVariablesMap().get(featureKey);
+                    Map<String, OptimizelyVariable> optimizelyVariableMap = optimizelyConfigService.getMergedVariablesMap(variation, experiment.getId());
+                    featureVariables.forEach(featureVariable -> {
+                        OptimizelyVariable optimizelyVariable = optimizelyVariableMap.get(featureVariable.getKey());
+                        assertEquals(optimizelyVariable.getKey(), featureVariable.getKey());
+                        assertEquals(optimizelyVariable.getId(), featureVariable.getId());
+                        assertEquals(optimizelyVariable.getType(), featureVariable.getType().getVariableType().toLowerCase());
+                        // getting the expected value to assert after merging
+                        // if feature is enabled, then value should be taken from varition variable otherwise default value from feature variable is used.
+                        String expectedValue = variation.getFeatureEnabled() && tempVariableIdMap.get(featureVariable.getId()) != null
+                            ? tempVariableIdMap.get(featureVariable.getId()).getValue()
+                            : featureVariable.getDefaultValue();
+                        assertEquals(optimizelyVariable.getValue(), expectedValue);
+                    });
+                }
+            })
+        );
     }
 
     private List<Experiment> getAllExperimentsFromDatafile() {
