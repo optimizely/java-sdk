@@ -40,7 +40,7 @@ public class OptimizelyConfigServiceTest {
     @Before
     public void initialize() throws Exception {
         projectConfig = new DatafileProjectConfig.Builder().withDatafile(validConfigJsonV4()).build();
-        optimizelyConfigService = OptimizelyConfigService.getInstance(projectConfig);
+        optimizelyConfigService = new OptimizelyConfigService(projectConfig);
     }
 
     @Test
@@ -96,7 +96,7 @@ public class OptimizelyConfigServiceTest {
 
     @Test
     public void testRevision() {
-        String revision = optimizelyConfigService.getOptimizelyConfig().getRevision();
+        String revision = optimizelyConfigService.getConfig().getRevision();
         assertEquals(revision, projectConfig.getRevision());
     }
 
@@ -221,14 +221,6 @@ public class OptimizelyConfigServiceTest {
                 })
             );
         });
-    }
-
-    @Test
-    public void testCachingOfOptimizelyConfig() throws Exception {
-        OptimizelyConfigService mocked = mock(OptimizelyConfigService.class);
-        when(mocked.getExperimentsMap()).thenReturn(optimizelyConfigService.getExperimentsMap());
-        optimizelyConfigService = OptimizelyConfigService.getInstance(projectConfig);
-        verify(mocked, times(0)).getExperimentsMap();
     }
 
     private List<Experiment> getAllExperimentsFromDatafile() {

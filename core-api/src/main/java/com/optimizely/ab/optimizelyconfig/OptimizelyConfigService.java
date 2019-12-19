@@ -26,12 +26,11 @@ public class OptimizelyConfigService {
 
     private ProjectConfig projectConfig;
     private OptimizelyConfig optimizelyConfig;
-    private static OptimizelyConfigService serviceInstance;
 
     // Map containing variables list for every feature key used for merging variation and feature variables.
     private Map<String, List<FeatureVariable>> featureKeyToVariablesMap;
 
-    private OptimizelyConfigService(ProjectConfig projectConfig) {
+    public OptimizelyConfigService(ProjectConfig projectConfig) {
         this.projectConfig = projectConfig;
         this.featureKeyToVariablesMap = generateFeatureKeyToVariablesMap();
 
@@ -44,29 +43,11 @@ public class OptimizelyConfigService {
     }
 
     /**
-     * creates new instance if the revision is updated
-     *
-     * @param projectConfig project config provided
-     * @return singleton object of {@link OptimizelyConfigService}
-     */
-    @VisibleForTesting
-    static OptimizelyConfigService getInstance(ProjectConfig projectConfig) {
-        if (serviceInstance == null || !projectConfig.getRevision().equals(serviceInstance.getOptimizelyConfig().getRevision())) {
-            serviceInstance = new OptimizelyConfigService(projectConfig);
-        }
-        return serviceInstance;
-    }
-
-    public static OptimizelyConfig getConfig(ProjectConfig projectConfig) {
-        return getInstance(projectConfig).getOptimizelyConfig();
-    }
-
-    /**
-     * create maps for experiment and features to be returned as one object
+     * returns maps for experiment and features to be returned as one object
      *
      * @return {@link OptimizelyConfig} containing experiments and features
      */
-    public OptimizelyConfig getOptimizelyConfig() {
+    public OptimizelyConfig getConfig() {
         return optimizelyConfig;
     }
 
