@@ -29,6 +29,7 @@ import com.optimizely.ab.event.internal.*;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.notification.*;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
+import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +88,8 @@ public class Optimizely implements AutoCloseable {
 
     private final ProjectConfigManager projectConfigManager;
 
+    private OptimizelyConfigManager optimizelyConfigManager;
+
     // TODO should be private
     public final NotificationCenter notificationCenter;
 
@@ -107,6 +110,9 @@ public class Optimizely implements AutoCloseable {
         this.decisionService = decisionService;
         this.userProfileService = userProfileService;
         this.projectConfigManager = projectConfigManager;
+        if (projectConfigManager instanceof OptimizelyConfigManager) {
+            this.optimizelyConfigManager = (OptimizelyConfigManager)projectConfigManager;
+        }
         this.notificationCenter = notificationCenter;
     }
 
@@ -885,20 +891,6 @@ public class Optimizely implements AutoCloseable {
     }
 
     /**
-     * Get {@link OptimizelyConfig} containing experiments and features map
-     *
-     * @return {@link OptimizelyConfig}
-     */
-    public OptimizelyConfig getOptimizelyConfig() {
-        ProjectConfig projectConfig = getProjectConfig();
-        if (projectConfig == null) {
-            logger.error("Optimizely instance is not valid, failing getOptimizelyConfig call.");
-            return null;
-        }
-        return new OptimizelyConfigService(projectConfig).getConfig();
-    }
-
-    /**
      * @return the current {@link ProjectConfig} instance.
      */
     @Nullable
@@ -926,6 +918,23 @@ public class Optimizely implements AutoCloseable {
         }
 
         return true;
+    }
+
+    /**
+     * Get {@link OptimizelyConfig} containing experiments and features map
+     *
+     * @return {@link OptimizelyConfig}
+     */
+    public OptimizelyConfig getOptimizelyConfig() {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing getOptimizelyConfig call.");
+            return null;
+        }
+        if (optimizelyConfigManager != null) {
+           return optimizelyConfigManager.getOptimizelyConfig();
+        }
+        return new OptimizelyConfigService(projectConfig).getConfig();
     }
 
     /**
