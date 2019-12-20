@@ -17,15 +17,12 @@ package com.optimizely.ab.optimizelyconfig;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class OptimizelyConfigService {
 
-    private static final Logger logger = LoggerFactory.getLogger(OptimizelyConfigService.class);
     private ProjectConfig projectConfig;
     private OptimizelyConfig optimizelyConfig;
 
@@ -36,9 +33,7 @@ public class OptimizelyConfigService {
         this.projectConfig = projectConfig;
         this.featureKeyToVariablesMap = generateFeatureKeyToVariablesMap();
 
-        logger.info("Getting experiment map for project config");
         Map<String, OptimizelyExperiment> experimentsMap = getExperimentsMap();
-        logger.info("Creating the complete optimizely config");
         optimizelyConfig = new OptimizelyConfig(
             experimentsMap,
             getFeaturesMap(experimentsMap),
@@ -63,7 +58,6 @@ public class OptimizelyConfigService {
     Map<String, List<FeatureVariable>> generateFeatureKeyToVariablesMap() {
         List<FeatureFlag> featureFlags = projectConfig.getFeatureFlags();
         if (featureFlags == null) {
-            logger.warn("Returning empty map because there are no feature flags in project config");
             return Collections.emptyMap();
         }
         return featureFlags.stream().collect(Collectors.toMap(FeatureFlag::getKey, featureFlag -> featureFlag.getVariables()));
@@ -72,7 +66,6 @@ public class OptimizelyConfigService {
     @VisibleForTesting
     String getExperimentFeatureKey(String experimentId) {
         List<String> featureKeys = projectConfig.getExperimentFeatureKeyMapping().get(experimentId);
-        logger.info("Keys for feature experiment is null {}", featureKeys == null);
         return featureKeys != null ? featureKeys.get(0) : null;
     }
 
@@ -80,7 +73,6 @@ public class OptimizelyConfigService {
     Map<String, OptimizelyExperiment> getExperimentsMap() {
         List<Experiment> experiments = projectConfig.getExperiments();
         if(experiments == null) {
-            logger.warn("Returning empty map because there are no experiments in project config");
             return Collections.emptyMap();
         }
         return experiments.stream().collect(Collectors.toMap(Experiment::getKey, experiment -> new OptimizelyExperiment(
@@ -93,11 +85,9 @@ public class OptimizelyConfigService {
     @VisibleForTesting
     Map<String, OptimizelyVariation> getVariationsMap(List<Variation> variations, String experimentId) {
         if(variations == null) {
-            logger.warn("Returning empty map because there variations provided are null");
             return Collections.emptyMap();
         }
         Boolean isFeatureExperiment = this.getExperimentFeatureKey(experimentId) != null;
-        logger.debug("Experiment id {} is a feature experiment: {}", experimentId, isFeatureExperiment);
         return variations.stream().collect(Collectors.toMap(Variation::getKey, variation -> new OptimizelyVariation(
             variation.getId(),
             variation.getKey(),
@@ -116,7 +106,6 @@ public class OptimizelyConfigService {
     Map<String, OptimizelyVariable> getMergedVariablesMap(Variation variation, String experimentId) {
         String featureKey = this.getExperimentFeatureKey(experimentId);
         if (featureKey != null) {
-            logger.info("Merging the variables as feature key is available");
             // Generate temp map of all the available variable values from variation.
             Map<String, OptimizelyVariable> tempVariableIdMap = getFeatureVariableUsageInstanceMap(variation.getFeatureVariableUsageInstances());
 
@@ -124,7 +113,6 @@ public class OptimizelyConfigService {
             // Use value from variation variable if variable is available in variation and feature is enabled, otherwise use defaultValue from feature variable.
             List<FeatureVariable> featureVariables = featureKeyToVariablesMap.get(featureKey);
             if (featureVariables == null) {
-                logger.warn("Returning empty map as featureKeyToVariablesMap is null");
                 return Collections.emptyMap();
             }
 
@@ -143,7 +131,6 @@ public class OptimizelyConfigService {
     @VisibleForTesting
     Map<String, OptimizelyVariable> getFeatureVariableUsageInstanceMap(List<FeatureVariableUsageInstance> featureVariableUsageInstances) {
         if(featureVariableUsageInstances == null) {
-            logger.warn("Returning empty map because there FeatureVariableUsageInstance provided are null");
             return Collections.emptyMap();
         }
         return featureVariableUsageInstances.stream().collect(Collectors.toMap(FeatureVariableUsageInstance::getId, variable -> new OptimizelyVariable(
@@ -158,7 +145,6 @@ public class OptimizelyConfigService {
     Map<String, OptimizelyFeature> getFeaturesMap(Map<String, OptimizelyExperiment> allExperimentsMap) {
         List<FeatureFlag> featureFlags = projectConfig.getFeatureFlags();
         if(featureFlags == null) {
-            logger.warn("Returning empty map because there are no feature flags in project config");
             return Collections.emptyMap();
         }
         return featureFlags.stream().collect(Collectors.toMap(FeatureFlag::getKey, featureFlag -> new OptimizelyFeature(
@@ -172,7 +158,6 @@ public class OptimizelyConfigService {
     @VisibleForTesting
     Map<String, OptimizelyExperiment> getExperimentsMapForFeature(List<String> experimentIds, Map<String, OptimizelyExperiment> allExperimentsMap) {
         if (experimentIds == null) {
-            logger.warn("Returning empty map because the experiment id list is null");
             return Collections.emptyMap();
         }
 
@@ -186,7 +171,6 @@ public class OptimizelyConfigService {
     @VisibleForTesting
     Map<String, OptimizelyVariable> getFeatureVariablesMap(List<FeatureVariable> featureVariables) {
         if (featureVariables == null) {
-            logger.warn("Returning empty map because the feature variables list is null");
             return Collections.emptyMap();
         }
         return featureVariables.stream().collect(Collectors.toMap(FeatureVariable::getKey, featureVariable -> new OptimizelyVariable(
