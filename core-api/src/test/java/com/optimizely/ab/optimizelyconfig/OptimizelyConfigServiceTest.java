@@ -150,14 +150,15 @@ public class OptimizelyConfigServiceTest {
             OptimizelyVariation optimizelyVariation = optimizelyVariationMap.get(variation.getKey());
             assertEquals(optimizelyVariation.getId(), variation.getId());
             assertEquals(optimizelyVariation.getKey(), variation.getKey());
-            Map<String, OptimizelyVariable> optimizelyVariableMap =
-                optimizelyConfigService.getMergedVariablesMap(variation, experiment.getId());
-            optimizelyVariableMap.forEach((variableKey, variable) -> {
-                OptimizelyVariable optimizelyVariable = optimizelyVariableMap.get(variableKey);
-                assertEquals(variable.getValue(), optimizelyVariable.getValue());
-                assertEquals(variable.getType(), optimizelyVariable.getType());
-                assertEquals(variable.getId(), optimizelyVariable.getId());
-                assertEquals(variable.getKey(), optimizelyVariable.getKey());
+            List<FeatureVariableUsageInstance> featureVariableUsageInstances = variation.getFeatureVariableUsageInstances();
+            optimizelyVariation.getVariablesMap().forEach((variableKey, variable) -> {
+                if(featureVariableUsageInstances != null) {
+                    featureVariableUsageInstances.forEach(featureVariableUsageInstance -> {
+                        if (variable.getId().equals(featureVariableUsageInstance.getId())) {
+                            assertEquals(variable.getValue(), featureVariableUsageInstance.getValue());
+                        }
+                    });
+                }
             });
         });
     }
