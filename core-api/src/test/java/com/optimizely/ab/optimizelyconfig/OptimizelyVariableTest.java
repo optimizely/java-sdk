@@ -15,41 +15,23 @@
  ***************************************************************************/
 package com.optimizely.ab.optimizelyconfig;
 
-import com.optimizely.ab.config.IdKeyMapped;
+import org.junit.Test;
 
-/**
- * Details of feature variable in {@link OptimizelyConfig}
- */
-public class OptimizelyVariable implements IdKeyMapped {
+import static org.junit.Assert.assertEquals;
 
-    private String id;
-    private String key;
-    private String type;
-    private String value;
+public class OptimizelyVariableTest {
 
-    public OptimizelyVariable(String id,
-                              String key,
-                              String type,
-                              String value) {
-        this.id = id;
-        this.key = key;
-        this.type = type;
-        this.value = value;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public String getValue() {
-        return value;
+    @Test
+    public void testOptimizelyVariable() {
+        OptimizelyVariable optimizelyVariable = new OptimizelyVariable(
+            "7",
+            "test_variable_key",
+            "integer",
+            "10"
+            );
+        assertEquals("7", optimizelyVariable.getId());
+        assertEquals("test_variable_key", optimizelyVariable.getKey());
+        assertEquals("integer", optimizelyVariable.getType());
+        assertEquals("10", optimizelyVariable.getValue());
     }
 }

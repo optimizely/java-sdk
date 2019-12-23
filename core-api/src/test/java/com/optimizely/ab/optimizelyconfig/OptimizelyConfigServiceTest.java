@@ -28,7 +28,6 @@ import java.util.Map;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class OptimizelyConfigServiceTest {

@@ -26,12 +26,8 @@ public class OptimizelyConfigService {
     private ProjectConfig projectConfig;
     private OptimizelyConfig optimizelyConfig;
 
-    // Map containing variables list for every feature key used for merging variation and feature variables.
-    private Map<String, List<FeatureVariable>> featureKeyToVariablesMap;
-
     public OptimizelyConfigService(ProjectConfig projectConfig) {
         this.projectConfig = projectConfig;
-        this.featureKeyToVariablesMap = generateFeatureKeyToVariablesMap();
 
         Map<String, OptimizelyExperiment> experimentsMap = getExperimentsMap();
         optimizelyConfig = new OptimizelyConfig(
@@ -106,6 +102,9 @@ public class OptimizelyConfigService {
     Map<String, OptimizelyVariable> getMergedVariablesMap(Variation variation, String experimentId) {
         String featureKey = this.getExperimentFeatureKey(experimentId);
         if (featureKey != null) {
+            // Map containing variables list for every feature key used for merging variation and feature variables.
+            Map<String, List<FeatureVariable>> featureKeyToVariablesMap = generateFeatureKeyToVariablesMap();
+
             // Generate temp map of all the available variable values from variation.
             Map<String, OptimizelyVariable> tempVariableIdMap = getFeatureVariableUsageInstanceMap(variation.getFeatureVariableUsageInstances());
 
