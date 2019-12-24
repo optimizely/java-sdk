@@ -36,19 +36,7 @@ public class OptimizelyExperimentTest {
         Map<String, OptimizelyVariation> optimizelyVariationMap = generateVariationMap();
         assertEquals(optimizelyVariationMap.size(), optimizelyExperiment.getVariationsMap().size());
         // verifying the variations
-        optimizelyVariationMap.forEach((variationKey, variation) -> {
-            OptimizelyVariation optimizelyVariation = optimizelyExperiment.getVariationsMap().get(variationKey);
-            assertEquals(variation.getId(), optimizelyVariation.getId());
-            assertEquals(variation.getFeatureEnabled(), optimizelyVariation.getFeatureEnabled());
-            // now verifying the variables as well
-            variation.getVariablesMap().forEach((variableKey, variable) -> {
-                OptimizelyVariable optimizelyVariable = optimizelyVariation.getVariablesMap().get(variableKey);
-                assertEquals(variable.getId(), optimizelyVariable.getId());
-                assertEquals(variable.getType(), optimizelyVariable.getType());
-                assertEquals(variable.getValue(), optimizelyVariable.getValue());
-            });
-        });
-
+        assertEquals(optimizelyVariationMap, optimizelyExperiment.getVariationsMap());
     }
 
     static Map<String, OptimizelyVariation> generateVariationMap() {

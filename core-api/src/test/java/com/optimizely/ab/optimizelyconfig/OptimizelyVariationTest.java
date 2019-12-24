@@ -19,7 +19,6 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import static org.junit.Assert.assertEquals;
 
 public class OptimizelyVariationTest {
@@ -35,15 +34,10 @@ public class OptimizelyVariationTest {
         assertEquals("12", optimizelyVariation.getId());
         assertEquals("test_var_key", optimizelyVariation.getKey());
         assertEquals(false, optimizelyVariation.getFeatureEnabled());
-        Map<String, OptimizelyVariable> optimizelyVariableMap = generateVariablesMap();
-        assertEquals(optimizelyVariableMap.size(), optimizelyVariation.getVariablesMap().size());
-        optimizelyVariableMap.forEach((variableKey, variable) -> {
-            OptimizelyVariable optimizelyVariable = optimizelyVariation.getVariablesMap().get(variableKey);
-            assertEquals(variable.getId(), optimizelyVariable.getId());
-            assertEquals(variable.getKey(), optimizelyVariable.getKey());
-            assertEquals(variable.getType(), optimizelyVariable.getType());
-            assertEquals(variable.getValue(), optimizelyVariable.getValue());
-        });
+
+        Map<String, OptimizelyVariable> expectedoptimizelyVariableMap = generateVariablesMap();
+        assertEquals(expectedoptimizelyVariableMap.size(), optimizelyVariation.getVariablesMap().size());
+        assertEquals(expectedoptimizelyVariableMap, optimizelyVariation.getVariablesMap());
     }
 
     static Map<String, OptimizelyVariable> generateVariablesMap() {

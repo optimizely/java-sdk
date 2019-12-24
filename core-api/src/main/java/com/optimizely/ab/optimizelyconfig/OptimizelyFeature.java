@@ -55,4 +55,22 @@ public class OptimizelyFeature implements IdKeyMapped {
     public Map<String, OptimizelyVariable> getVariablesMap() {
         return variablesMap;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || getClass() != obj.getClass()) return false;
+        if (obj == this) return true;
+        OptimizelyFeature optimizelyFeature = (OptimizelyFeature) obj;
+        return id.equals(optimizelyFeature.getId()) &&
+            key.equals(optimizelyFeature.getKey()) &&
+            experimentsMap.equals(optimizelyFeature.getExperimentsMap()) &&
+            variablesMap.equals(optimizelyFeature.getVariablesMap());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id.hashCode();
+        result = 31 * result + experimentsMap.hashCode() + variablesMap.hashCode();
+        return result;
+    }
 }

@@ -56,4 +56,21 @@ public class OptimizelyVariation implements IdKeyMapped {
     public Map<String, OptimizelyVariable> getVariablesMap() {
         return variablesMap;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || getClass() != obj.getClass()) return false;
+        if (obj == this) return true;
+        OptimizelyVariation optimizelyVariation = (OptimizelyVariation) obj;
+        return id.equals(optimizelyVariation.getId()) &&
+            key.equals(optimizelyVariation.getKey()) &&
+            variablesMap.equals(optimizelyVariation.getVariablesMap());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = id.hashCode();
+        hash = 31 * hash + variablesMap.hashCode();
+        return hash;
+    }
 }

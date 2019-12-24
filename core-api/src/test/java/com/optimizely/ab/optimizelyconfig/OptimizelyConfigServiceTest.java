@@ -36,7 +36,7 @@ public class OptimizelyConfigServiceTest {
 
     @Before
     public void initialize() throws Exception {
-        projectConfig = generateConfig();
+        projectConfig = generateOptimizelyConfig();
         optimizelyConfigService = new OptimizelyConfigService(projectConfig);
     }
 
@@ -228,7 +228,7 @@ public class OptimizelyConfigServiceTest {
         return experiments;
     }
 
-    private ProjectConfig generateConfig() {
+    private ProjectConfig generateOptimizelyConfig() {
         return new DatafileProjectConfig(
             "2360254204",
             true,

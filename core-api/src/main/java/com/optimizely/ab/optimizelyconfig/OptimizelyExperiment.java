@@ -45,4 +45,21 @@ public class OptimizelyExperiment implements IdKeyMapped {
     public Map<String, OptimizelyVariation> getVariationsMap() {
         return variationsMap;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || getClass() != obj.getClass()) return false;
+        if (obj == this) return true;
+        OptimizelyExperiment optimizelyExperiment = (OptimizelyExperiment) obj;
+        return id.equals(optimizelyExperiment.getId()) &&
+            key.equals(optimizelyExperiment.getKey()) &&
+            variationsMap.equals(optimizelyExperiment.getVariationsMap());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = id.hashCode();
+        hash = 31 * hash + variationsMap.hashCode();
+        return hash;
+    }
 }
