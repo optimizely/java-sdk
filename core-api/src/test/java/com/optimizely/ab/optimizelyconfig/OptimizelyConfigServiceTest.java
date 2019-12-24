@@ -24,10 +24,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.*;
-
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
 @RunWith(MockitoJUnitRunner.class)
