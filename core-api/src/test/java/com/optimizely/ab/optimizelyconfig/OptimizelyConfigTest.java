@@ -33,71 +33,15 @@ public class OptimizelyConfigTest {
             "101"
         );
         assertEquals("101", optimizelyConfig.getRevision());
+        // verify the experiments map
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = generateExperimntMap();
         assertEquals(optimizelyExperimentMap.size(), optimizelyConfig.getExperimentsMap().size());
-        // verify the experiments map
-        optimizelyExperimentMap.forEach((experimentKey, experiment) -> {
-           OptimizelyExperiment optimizelyExperiment = optimizelyConfig.getExperimentsMap().get(experimentKey);
-           assertEquals(experiment.getId(), optimizelyExperiment.getId());
-           assertEquals(experiment.getKey(), optimizelyExperiment.getKey());
-           assertEquals(experiment.getVariationsMap().size(), optimizelyExperiment.getVariationsMap().size());
-           // verify the variations map
-           experiment.getVariationsMap().forEach((variationKey, variation) -> {
-               OptimizelyVariation optimizelyVariation = optimizelyExperiment.getVariationsMap().get(variationKey);
-               assertEquals(variation.getId(), optimizelyVariation.getId());
-               assertEquals(variation.getKey(), optimizelyVariation.getKey());
-               assertEquals(variation.getFeatureEnabled(), optimizelyVariation.getFeatureEnabled());
-               assertEquals(variation.getVariablesMap().size(), optimizelyVariation.getVariablesMap().size());
-               // verify the variables map
-               variation.getVariablesMap().forEach((variableKey, variable) -> {
-                   OptimizelyVariable optimizelyVariable = optimizelyVariation.getVariablesMap().get(variableKey);
-                   assertEquals(variable.getId(), optimizelyVariable.getId());
-                   assertEquals(variable.getKey(), optimizelyVariable.getKey());
-                   assertEquals(variable.getType(), optimizelyVariable.getType());
-                   assertEquals(variable.getValue(), optimizelyVariable.getValue());
-               });
-           });
-        });
+        assertEquals(optimizelyExperimentMap, optimizelyConfig.getExperimentsMap());
 
+        // verify the features map
         Map<String, OptimizelyFeature> optimizelyFeatureMap = generateFeatureMap();
-        // verifying feature map
         assertEquals(optimizelyFeatureMap.size(), optimizelyConfig.getFeaturesMap().size());
-        optimizelyFeatureMap.forEach((featureKey, feature) -> {
-            OptimizelyFeature optimizelyFeature = optimizelyConfig.getFeaturesMap().get(featureKey);
-            assertEquals(feature.getId(), optimizelyFeature.getId());
-            assertEquals(feature.getKey(), optimizelyFeature.getKey());
-            // verifying variables map
-            assertEquals(feature.getVariablesMap().size(), optimizelyFeature.getVariablesMap().size());
-            feature.getVariablesMap().forEach((variableKey, variable) -> {
-                OptimizelyVariable optimizelyVariable = optimizelyFeature.getVariablesMap().get(variableKey);
-                assertEquals(variable.getId(), optimizelyVariable.getId());
-                assertEquals(variable.getKey(), optimizelyVariable.getKey());
-                assertEquals(variable.getType(), optimizelyVariable.getType());
-                assertEquals(variable.getValue(), optimizelyVariable.getValue());
-            });
-            // verifying experiment map
-            assertEquals(feature.getExperimentsMap().size(), optimizelyFeature.getExperimentsMap().size());
-            feature.getExperimentsMap().forEach((experimentKey, experiment) -> {
-                OptimizelyExperiment optimizelyExperiment = optimizelyFeature.getExperimentsMap().get(experimentKey);
-                assertEquals(experiment.getId(), optimizelyExperiment.getId());
-                assertEquals(experiment.getKey(), optimizelyExperiment.getKey());
-                // verifying variation map
-                experiment.getVariationsMap().forEach((variationKey, variation) -> {
-                    OptimizelyVariation optimizelyVariation = optimizelyExperiment.getVariationsMap().get(variationKey);
-                    assertEquals(variation.getId(), optimizelyVariation.getId());
-                    assertEquals(variation.getKey(), optimizelyVariation.getKey());
-                    assertEquals(variation.getFeatureEnabled(), optimizelyVariation.getFeatureEnabled());
-                    // verifying variables map
-                    variation.getVariablesMap().forEach((variableKey, variable) -> {
-                        OptimizelyVariable optimizelyVariable = optimizelyVariation.getVariablesMap().get(variableKey);
-                        assertEquals(variable.getId(), optimizelyVariable.getId());
-                        assertEquals(variable.getKey(), optimizelyVariable.getKey());
-                        assertEquals(variable.getType(), optimizelyVariable.getType());
-                        assertEquals(variable.getType(), optimizelyVariable.getType());
-                    });
-                });
-            });
-        });
+        assertEquals(optimizelyFeatureMap, optimizelyConfig.getFeaturesMap());
     }
 
     private Map<String, OptimizelyExperiment> generateExperimntMap() {
