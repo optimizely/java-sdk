@@ -33,37 +33,26 @@ public class OptimizelyConfigServiceTest {
     private ProjectConfig projectConfig;
     @Mock
     private OptimizelyConfigService optimizelyConfigService;
+    private OptimizelyConfig exptectedConfig = getExpectedConfig();
 
     @Before
     public void initialize() throws Exception {
         projectConfig = generateOptimizelyConfig();
         optimizelyConfigService = new OptimizelyConfigService(projectConfig);
+
     }
 
     @Test
     public void testGetExperimentsMap() {
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfigService.getExperimentsMap();
         assertEquals(optimizelyExperimentMap.size(), 2);
-
-        List<Experiment> experiments = getAllExperimentsFromDatafile();
-        experiments.forEach(experiment -> {
-            OptimizelyExperiment optimizelyExperiment = optimizelyExperimentMap.get(experiment.getKey());
-            assertEquals(optimizelyExperiment.getId(), experiment.getId());
-            assertEquals(optimizelyExperiment.getKey(), experiment.getKey());
-
-            Map<String, OptimizelyVariation> optimizelyVariationMap = optimizelyExperimentMap.get(experiment.getKey()).getVariationsMap();
-            experiment.getVariations().forEach(variation -> {
-                OptimizelyVariation optimizelyVariation = optimizelyVariationMap.get(variation.getKey());
-                assertEquals(optimizelyVariation.getId(), variation.getId());
-                assertEquals(optimizelyVariation.getKey(), variation.getKey());
-            });
-        });
+        assertEquals(exptectedConfig.getExperimentsMap(), optimizelyExperimentMap);
     }
 
     @Test
     public void testRevision() {
         String revision = optimizelyConfigService.getConfig().getRevision();
-        assertEquals(revision, projectConfig.getRevision());
+        assertEquals(exptectedConfig.getRevision(), projectConfig.getRevision());
     }
 
     @Test
@@ -71,29 +60,7 @@ public class OptimizelyConfigServiceTest {
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfigService.getExperimentsMap();
         Map<String, OptimizelyFeature> optimizelyFeatureMap = optimizelyConfigService.getFeaturesMap(optimizelyExperimentMap);
         assertEquals(optimizelyFeatureMap.size(), 2);
-
-        projectConfig.getFeatureFlags().forEach(featureFlag -> {
-            List<String> experimentIds = featureFlag.getExperimentIds();
-            experimentIds.forEach(experimentId -> {
-                String experimentKey =  projectConfig.getExperimentIdMapping().get(experimentId).getKey();
-                OptimizelyExperiment optimizelyExperiment
-                    = optimizelyFeatureMap.get(featureFlag.getKey()).getExperimentsMap().get(experimentKey);
-                assertNotNull(optimizelyExperiment);
-            });
-
-            OptimizelyFeature optimizelyFeature = optimizelyFeatureMap.get(featureFlag.getKey());
-            assertEquals(optimizelyFeature.getId(), featureFlag.getId());
-            assertEquals(optimizelyFeature.getKey(), featureFlag.getKey());
-
-            Map<String, OptimizelyVariable> optimizelyVariableMap = optimizelyFeatureMap.get(featureFlag.getKey()).getVariablesMap();
-            featureFlag.getVariables().forEach(variable -> {
-                OptimizelyVariable optimizelyVariable = optimizelyVariableMap.get(variable.getKey());
-                assertEquals(optimizelyVariable.getId(), variable.getId());
-                assertEquals(optimizelyVariable.getKey(), variable.getKey());
-                assertEquals(optimizelyVariable.getType(), variable.getType().getVariableType().toLowerCase());
-                assertEquals(optimizelyVariable.getValue(), variable.getDefaultValue());
-            });
-        });
+        assertEquals(exptectedConfig.getFeaturesMap(), optimizelyFeatureMap);
     }
 
     @Test
@@ -102,12 +69,7 @@ public class OptimizelyConfigServiceTest {
         featureFlags.forEach(featureFlag -> {
             Map<String, OptimizelyVariable> optimizelyVariableMap =
                 optimizelyConfigService.getFeatureVariablesMap(featureFlag.getVariables());
-            featureFlag.getVariables().forEach(variable -> {
-                OptimizelyVariable optimizelyVariable = optimizelyVariableMap.get(variable.getKey());
-                assertEquals(optimizelyVariable.getValue(), variable.getDefaultValue());
-                assertEquals(optimizelyVariable.getId(), variable.getId());
-                assertEquals(optimizelyVariable.getType(), variable.getType().getVariableType().toLowerCase());
-            });
+            assertEquals(exptectedConfig.getFeaturesMap().get(featureFlag.getKey()).getVariablesMap(), optimizelyVariableMap);
         });
     }
 
@@ -217,15 +179,6 @@ public class OptimizelyConfigServiceTest {
                 }
             })
         );
-    }
-
-    private List<Experiment> getAllExperimentsFromDatafile() {
-        List<Experiment> experiments = new ArrayList<>();
-        projectConfig.getGroups().forEach(group ->
-            experiments.addAll(group.getExperiments())
-        );
-        experiments.addAll(projectConfig.getExperiments());
-        return experiments;
     }
 
     private ProjectConfig generateOptimizelyConfig() {
@@ -385,6 +338,213 @@ public class OptimizelyConfigServiceTest {
             ),
             Collections.<Group>emptyList(),
             Collections.<Rollout>emptyList()
+        );
+    }
+
+    OptimizelyConfig getExpectedConfig() {
+        Map<String, OptimizelyExperiment> optimizelyExperimentMap = new HashMap<>();
+        optimizelyExperimentMap.put(
+            "multivariate_experiment",
+            new OptimizelyExperiment(
+                "3262035800",
+                "multivariate_experiment",
+                new HashMap<String, OptimizelyVariation>() {{
+                        put(
+                            "Feorge",
+                            new OptimizelyVariation(
+                                "3631049532",
+                                "Feorge",
+                                true,
+                                new HashMap<String, OptimizelyVariable>() {{
+                                    put(
+                                        "first_letter",
+                                        new OptimizelyVariable(
+                                            "675244127",
+                                            "first_letter",
+                                            "string",
+                                            "F"
+                                        )
+                                    );
+                                    put(
+                                        "rest_of_name",
+                                        new OptimizelyVariable(
+                                            "4052219963",
+                                            "rest_of_name",
+                                            "string",
+                                            "eorge"
+                                        )
+                                    );
+                                }}
+                            )
+                        );
+                        put(
+                            "Fred",
+                            new OptimizelyVariation(
+                                "1880281238",
+                                "Fred",
+                                true,
+                                new HashMap<String, OptimizelyVariable>() {{
+                                    put(
+                                        "first_letter",
+                                        new OptimizelyVariable(
+                                            "675244127",
+                                            "first_letter",
+                                            "string",
+                                            "F"
+                                        )
+                                    );
+                                    put(
+                                        "rest_of_name",
+                                        new OptimizelyVariable(
+                                            "4052219963",
+                                            "rest_of_name",
+                                            "string",
+                                            "red"
+                                        )
+                                    );
+                                }}
+                            )
+                        );
+                }}
+            )
+        );
+        optimizelyExperimentMap.put(
+            "basic_experiment",
+            new OptimizelyExperiment(
+                "1323241596",
+                "basic_experiment",
+                new HashMap<String, OptimizelyVariation>() {{
+                    put(
+                        "A",
+                        new OptimizelyVariation(
+                            "1423767502",
+                            "A",
+                            null,
+                            Collections.emptyMap()
+                        )
+                    );
+                    put(
+                        "B",
+                        new OptimizelyVariation(
+                            "3433458314",
+                            "B",
+                            null,
+                            Collections.emptyMap()
+                        )
+                    );
+                }}
+            )
+        );
+
+        Map<String, OptimizelyFeature> optimizelyFeatureMap = new HashMap<>();
+        optimizelyFeatureMap.put(
+            "multi_variate_feature",
+            new OptimizelyFeature(
+                "3263342226",
+                "multi_variate_feature",
+                new HashMap<String, OptimizelyExperiment>() {{
+                    put(
+                        "multivariate_experiment",
+                        new OptimizelyExperiment(
+                            "3262035800",
+                            "multivariate_experiment",
+                            new HashMap<String, OptimizelyVariation>() {{
+                                put(
+                                    "Feorge",
+                                    new OptimizelyVariation(
+                                        "3631049532",
+                                        "Feorge",
+                                        true,
+                                        new HashMap<String, OptimizelyVariable>() {{
+                                            put(
+                                                "first_letter",
+                                                new OptimizelyVariable(
+                                                    "675244127",
+                                                    "first_letter",
+                                                    "string",
+                                                    "F"
+                                                )
+                                            );
+                                            put(
+                                                "rest_of_name",
+                                                new OptimizelyVariable(
+                                                    "4052219963",
+                                                    "rest_of_name",
+                                                    "string",
+                                                    "eorge"
+                                                )
+                                            );
+                                        }}
+                                    )
+                                );
+                                put(
+                                    "Fred",
+                                    new OptimizelyVariation(
+                                        "1880281238",
+                                        "Fred",
+                                        true,
+                                        new HashMap<String, OptimizelyVariable>() {{
+                                            put(
+                                                "first_letter",
+                                                new OptimizelyVariable(
+                                                    "675244127",
+                                                    "first_letter",
+                                                    "string",
+                                                    "F"
+                                                )
+                                            );
+                                            put(
+                                                "rest_of_name",
+                                                new OptimizelyVariable(
+                                                    "4052219963",
+                                                    "rest_of_name",
+                                                    "string",
+                                                    "red"
+                                                )
+                                            );
+                                        }}
+                                    )
+                                );
+                            }}
+                        )
+                    );
+                }},
+                new HashMap<String, OptimizelyVariable>() {{
+                    put(
+                        "first_letter",
+                        new OptimizelyVariable(
+                            "675244127",
+                            "first_letter",
+                            "string",
+                            "H"
+                        )
+                    );
+                    put(
+                        "rest_of_name",
+                        new OptimizelyVariable(
+                            "4052219963",
+                            "rest_of_name",
+                            "string",
+                            "arry"
+                        )
+                    );
+                }}
+            )
+        );
+        optimizelyFeatureMap.put(
+            "boolean_feature",
+            new OptimizelyFeature(
+                "4195505407",
+                "boolean_feature",
+                Collections.emptyMap(),
+                Collections.emptyMap()
+            )
+        );
+
+        return new OptimizelyConfig(
+            optimizelyExperimentMap,
+            optimizelyFeatureMap,
+            "1480511547"
         );
     }
 }
