@@ -16,17 +16,18 @@
 package com.optimizely.ab.optimizelyconfig;
 
 import com.optimizely.ab.config.*;
+import com.optimizely.ab.config.audience.Audience;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -38,14 +39,14 @@ public class OptimizelyConfigServiceTest {
 
     @Before
     public void initialize() throws Exception {
-        projectConfig = new DatafileProjectConfig.Builder().withDatafile(validConfigJsonV4()).build();
+        projectConfig = generateConfig();
         optimizelyConfigService = new OptimizelyConfigService(projectConfig);
     }
 
     @Test
     public void testGetExperimentsMap() {
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfigService.getExperimentsMap();
-        assertEquals(optimizelyExperimentMap.size(), 13);
+        assertEquals(optimizelyExperimentMap.size(), 2);
 
         List<Experiment> experiments = getAllExperimentsFromDatafile();
         experiments.forEach(experiment -> {
@@ -72,7 +73,7 @@ public class OptimizelyConfigServiceTest {
     public void testGetFeaturesMap() {
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfigService.getExperimentsMap();
         Map<String, OptimizelyFeature> optimizelyFeatureMap = optimizelyConfigService.getFeaturesMap(optimizelyExperimentMap);
-        assertEquals(optimizelyFeatureMap.size(), 7);
+        assertEquals(optimizelyFeatureMap.size(), 2);
 
         projectConfig.getFeatureFlags().forEach(featureFlag -> {
             List<String> experimentIds = featureFlag.getExperimentIds();
@@ -228,5 +229,165 @@ public class OptimizelyConfigServiceTest {
         );
         experiments.addAll(projectConfig.getExperiments());
         return experiments;
+    }
+
+    private ProjectConfig generateConfig() {
+        return new DatafileProjectConfig(
+            "2360254204",
+            true,
+            true,
+            "3918735994",
+            "1480511547",
+            "4",
+            asList(
+                new Attribute(
+                    "553339214",
+                    "house"
+                ),
+                new Attribute(
+                    "58339410",
+                    "nationality"
+                )
+            ),
+            Collections.<Audience>emptyList(),
+            Collections.<Audience>emptyList(),
+            asList(
+                new EventType(
+                  "3785620495",
+                    "basic_event",
+                    asList("1323241596", "2738374745", "3042640549", "3262035800", "3072915611")
+                ),
+                new EventType(
+                    "3195631717",
+                    "event_with_paused_experiment",
+                    asList("2667098701")
+                )
+            ),
+            asList(
+                new Experiment(
+                    "1323241596",
+                    "basic_experiment",
+                    "Running",
+                    "1630555626",
+                    Collections.<String>emptyList(),
+                    null,
+                    asList(
+                        new Variation(
+                            "1423767502",
+                            "A",
+                            Collections.<FeatureVariableUsageInstance>emptyList()
+                        ),
+                        new Variation(
+                            "3433458314",
+                            "B",
+                            Collections.<FeatureVariableUsageInstance>emptyList()
+                        )
+                    ),
+                    Collections.singletonMap("Harry Potter", "A"),
+                    asList(
+                        new TrafficAllocation(
+                            "1423767502",
+                            5000
+                        ),
+                        new TrafficAllocation(
+                            "3433458314",
+                            10000
+                        )
+                    )
+                ),
+                new Experiment(
+                    "3262035800",
+                    "multivariate_experiment",
+                    "Running",
+                    "3262035800",
+                    asList("3468206642"),
+                    null,
+                    asList(
+                        new Variation(
+                            "1880281238",
+                            "Fred",
+                            true,
+                            asList(
+                                new FeatureVariableUsageInstance(
+                                    "675244127",
+                                    "F"
+                                ),
+                                new FeatureVariableUsageInstance(
+                                    "4052219963",
+                                    "red"
+                                )
+                            )
+                        ),
+                        new Variation(
+                            "3631049532",
+                            "Feorge",
+                            true,
+                            asList(
+                                new FeatureVariableUsageInstance(
+                                    "675244127",
+                                    "F"
+                                ),
+                                new FeatureVariableUsageInstance(
+                                    "4052219963",
+                                    "eorge"
+                                )
+                            )
+                        )
+                    ),
+                    Collections.singletonMap("Fred", "Fred"),
+                    asList(
+                        new TrafficAllocation(
+                            "1880281238",
+                            2500
+                        ),
+                        new TrafficAllocation(
+                            "3631049532",
+                            5000
+                        ),
+                        new TrafficAllocation(
+                            "4204375027",
+                            7500
+                        ),
+                        new TrafficAllocation(
+                            "2099211198",
+                            10000
+                        )
+                    )
+                )
+            ),
+            asList(
+                new FeatureFlag(
+                    "4195505407",
+                    "boolean_feature",
+                    "",
+                    Collections.<String>emptyList(),
+                    Collections.<FeatureVariable>emptyList()
+                ),
+                new FeatureFlag(
+                    "3263342226",
+                    "multi_variate_feature",
+                    "813411034",
+                    asList("3262035800"),
+                    asList(
+                        new FeatureVariable(
+                            "675244127",
+                            "first_letter",
+                            "H",
+                            null,
+                            FeatureVariable.VariableType.STRING
+                        ),
+                        new FeatureVariable(
+                            "4052219963",
+                            "rest_of_name",
+                            "arry",
+                            null,
+                            FeatureVariable.VariableType.STRING
+                        )
+                    )
+                )
+            ),
+            Collections.<Group>emptyList(),
+            Collections.<Rollout>emptyList()
+        );
     }
 }
