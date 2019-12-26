@@ -20,7 +20,6 @@ import com.optimizely.ab.config.audience.Audience;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.*;
@@ -31,14 +30,14 @@ import static org.junit.Assert.*;
 public class OptimizelyConfigServiceTest {
 
     private ProjectConfig projectConfig;
-    @Mock
     private OptimizelyConfigService optimizelyConfigService;
-    private OptimizelyConfig exptectedConfig = getExpectedConfig();
+    private OptimizelyConfig exptectedConfig;
 
     @Before
-    public void initialize() throws Exception {
+    public void initialize() {
         projectConfig = generateOptimizelyConfig();
         optimizelyConfigService = new OptimizelyConfigService(projectConfig);
+        exptectedConfig = getExpectedConfig();
     }
 
     @Test
@@ -64,12 +63,13 @@ public class OptimizelyConfigServiceTest {
 
     @Test
     public void testGetFeatureVariablesMap() {
-        List<FeatureFlag> featureFlags = projectConfig.getFeatureFlags();
-        featureFlags.forEach(featureFlag -> {
-            Map<String, OptimizelyVariable> optimizelyVariableMap =
-                optimizelyConfigService.getFeatureVariablesMap(featureFlag.getVariables());
-            assertEquals(exptectedConfig.getFeaturesMap().get(featureFlag.getKey()).getVariablesMap(), optimizelyVariableMap);
-        });
+        FeatureFlag featureFlag = projectConfig.getFeatureFlags().get(1);
+        Map<String, OptimizelyVariable> optimizelyVariableMap =
+            optimizelyConfigService.getFeatureVariablesMap(featureFlag.getVariables());
+        Map<String, OptimizelyVariable> expectedVariablesMap =
+            exptectedConfig.getFeaturesMap().get("multi_variate_feature").getVariablesMap();
+        assertEquals(expectedVariablesMap.size(), optimizelyVariableMap.size());
+        assertEquals(expectedVariablesMap, optimizelyVariableMap);
     }
 
     @Test
