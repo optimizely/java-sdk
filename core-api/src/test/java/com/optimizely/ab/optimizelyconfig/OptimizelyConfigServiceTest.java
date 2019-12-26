@@ -39,7 +39,6 @@ public class OptimizelyConfigServiceTest {
     public void initialize() throws Exception {
         projectConfig = generateOptimizelyConfig();
         optimizelyConfigService = new OptimizelyConfigService(projectConfig);
-
     }
 
     @Test
@@ -52,7 +51,7 @@ public class OptimizelyConfigServiceTest {
     @Test
     public void testRevision() {
         String revision = optimizelyConfigService.getConfig().getRevision();
-        assertEquals(exptectedConfig.getRevision(), projectConfig.getRevision());
+        assertEquals(exptectedConfig.getRevision(), revision);
     }
 
     @Test
