@@ -59,10 +59,7 @@ public class OptimizelyVariable implements IdKeyMapped {
         if (obj == this) return true;
         OptimizelyVariable optimizelyVariable = (OptimizelyVariable) obj;
         return id.equals(optimizelyVariable.getId()) &&
-            value.equals(optimizelyVariable.getValue()) &&
-            key.equals(optimizelyVariable.getKey()) &&
-            type.equals(optimizelyVariable.getType()
-        );
+            value.equals(optimizelyVariable.getValue());
     }
 
     @Override

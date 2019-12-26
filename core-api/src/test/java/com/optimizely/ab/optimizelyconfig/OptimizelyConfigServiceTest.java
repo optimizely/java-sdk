@@ -74,110 +74,75 @@ public class OptimizelyConfigServiceTest {
 
     @Test
     public void testGetExperimentsMapForFeature() {
-        projectConfig.getFeatureFlags().forEach(featureFlag -> {
-            List<String> experimentIds = featureFlag.getExperimentIds();
-            Map<String, OptimizelyExperiment> optimizelyFeatureExperimentMap =
-                optimizelyConfigService.getExperimentsMapForFeature(experimentIds, optimizelyConfigService.getExperimentsMap());
-            assertEquals(optimizelyFeatureExperimentMap.size(), experimentIds.size());
-            optimizelyFeatureExperimentMap.forEach((experimentKey, experiment) ->
-                assertTrue(experimentIds.contains(experiment.getId()))
-            );
-        });
+        List<String> experimentIds = projectConfig.getFeatureFlags().get(1).getExperimentIds();
+        Map<String, OptimizelyExperiment> optimizelyFeatureExperimentMap =
+            optimizelyConfigService.getExperimentsMapForFeature(experimentIds, optimizelyConfigService.getExperimentsMap());
+        assertEquals(exptectedConfig.getFeaturesMap().get("multi_variate_feature").getExperimentsMap().size(), optimizelyFeatureExperimentMap.size());
     }
 
     @Test
     public void testGetFeatureVariableUsageInstanceMap() {
         List<FeatureVariableUsageInstance> featureVariableUsageInstances =
-            projectConfig.getExperiments().get(0).getVariations().get(0).getFeatureVariableUsageInstances();
+            projectConfig.getExperiments().get(1).getVariations().get(1).getFeatureVariableUsageInstances();
         Map<String, OptimizelyVariable> optimizelyVariableMap =
             optimizelyConfigService.getFeatureVariableUsageInstanceMap(featureVariableUsageInstances);
-        featureVariableUsageInstances.forEach(featureVariableUsageInstance -> {
-            OptimizelyVariable optimizelyVariable = optimizelyVariableMap.get(featureVariableUsageInstance.getId());
-            assertEquals(optimizelyVariable.getValue(), featureVariableUsageInstance.getValue());
-            assertEquals(optimizelyVariable.getId(), featureVariableUsageInstance.getId());
-        });
+        Map<String, OptimizelyVariable> expectedOptimizelyVariableMap = new HashMap<String, OptimizelyVariable>() {{
+            put(
+                "675244127",
+                new OptimizelyVariable(
+                    "675244127",
+                    null,
+                    null,
+                    "F"
+                )
+            );
+            put(
+                "4052219963",
+                new OptimizelyVariable(
+                    "4052219963",
+                    null,
+                    null,
+                    "eorge"
+                )
+            );
+        }};
+        assertEquals(expectedOptimizelyVariableMap.size(), optimizelyVariableMap.size());
+        assertEquals(expectedOptimizelyVariableMap, optimizelyVariableMap);
     }
 
     @Test
     public void testGetVariationsMap() {
-        Experiment experiment = projectConfig.getExperiments().get(0);
-        List<Variation> variations = experiment.getVariations();
         Map<String, OptimizelyVariation> optimizelyVariationMap =
-            optimizelyConfigService.getVariationsMap(variations, experiment.getId());
-        variations.forEach(variation -> {
-            OptimizelyVariation optimizelyVariation = optimizelyVariationMap.get(variation.getKey());
-            assertEquals(optimizelyVariation.getId(), variation.getId());
-            assertEquals(optimizelyVariation.getKey(), variation.getKey());
-            List<FeatureVariableUsageInstance> featureVariableUsageInstances = variation.getFeatureVariableUsageInstances();
-            optimizelyVariation.getVariablesMap().forEach((variableKey, variable) -> {
-                if(featureVariableUsageInstances != null) {
-                    featureVariableUsageInstances.forEach(featureVariableUsageInstance -> {
-                        if (variable.getId().equals(featureVariableUsageInstance.getId())) {
-                            assertEquals(variable.getValue(), featureVariableUsageInstance.getValue());
-                        }
-                    });
-                }
-            });
-        });
+            optimizelyConfigService.getVariationsMap(projectConfig.getExperiments().get(1).getVariations(), "3262035800");
+        assertEquals(exptectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap().size(), optimizelyVariationMap.size());
+        assertEquals(exptectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap(), optimizelyVariationMap);
     }
 
     @Test
     public void testGetExperimentFeatureKey() {
-        List<Experiment> experiments = projectConfig.getExperiments();
-        experiments.forEach(experiment -> {
-            String featureKey = optimizelyConfigService.getExperimentFeatureKey(experiment.getId());
-            List<String> featureKeys = projectConfig.getExperimentFeatureKeyMapping().get(experiment.getId());
-            if(featureKeys != null) {
-                assertTrue(featureKeys.contains(featureKey));
-            }
-        });
+        String featureKey = optimizelyConfigService.getExperimentFeatureKey("3262035800");
+        assertEquals("multi_variate_feature", featureKey);
     }
 
     @Test
     public void testGenerateFeatureKeyToVariablesMap() {
         Map<String, List<FeatureVariable>> featureKeyToVariableMap = optimizelyConfigService.generateFeatureKeyToVariablesMap();
-        projectConfig.getFeatureFlags().forEach(featureFlag -> {
-            List<FeatureVariable> featureVariables = featureKeyToVariableMap.get(featureFlag.getKey());
-            assertEquals(featureVariables.size(), featureFlag.getVariables().size());
-            featureVariables.forEach(featureVariable ->
-                featureFlag.getVariables().forEach(variable -> {
-                    if (variable.getKey().equals(featureVariable.getKey())) {
-                        assertEquals(variable.getDefaultValue(), featureVariable.getDefaultValue());
-                        assertEquals(variable.getType().getVariableType().toLowerCase(), featureVariable.getType().getVariableType().toLowerCase());
-                        assertEquals(variable.getId(), featureVariable.getId());
-                    }
-                })
-            );
-        });
+        FeatureVariable featureVariable = featureKeyToVariableMap.get("multi_variate_feature").get(0);
+        OptimizelyVariable expectedOptimizelyVariable = exptectedConfig.getFeaturesMap().get("multi_variate_feature").getVariablesMap().get("first_letter");
+        assertEquals(expectedOptimizelyVariable.getId(), featureVariable.getId());
+        assertEquals(expectedOptimizelyVariable.getValue(), featureVariable.getDefaultValue());
+        assertEquals(expectedOptimizelyVariable.getKey(), featureVariable.getKey());
+        assertEquals(expectedOptimizelyVariable.getType(), featureVariable.getType().getVariableType().toLowerCase());
     }
 
     @Test
     public void testGetMergedVariablesMap() {
-        List<Experiment> experiments = projectConfig.getExperiments();
-        experiments.forEach(experiment ->
-            experiment.getVariations().forEach(variation -> {
-                // creating temporary variable map to get values while merging
-                Map<String, OptimizelyVariable> tempVariableIdMap = optimizelyConfigService.getFeatureVariableUsageInstanceMap(variation.getFeatureVariableUsageInstances());
-                String featureKey = optimizelyConfigService.getExperimentFeatureKey(experiment.getId());
-                if (featureKey != null) {
-                    // keeping all the feature variables for asserting
-                    List<FeatureVariable> featureVariables = optimizelyConfigService.generateFeatureKeyToVariablesMap().get(featureKey);
-                    Map<String, OptimizelyVariable> optimizelyVariableMap = optimizelyConfigService.getMergedVariablesMap(variation, experiment.getId());
-                    featureVariables.forEach(featureVariable -> {
-                        OptimizelyVariable optimizelyVariable = optimizelyVariableMap.get(featureVariable.getKey());
-                        assertEquals(optimizelyVariable.getKey(), featureVariable.getKey());
-                        assertEquals(optimizelyVariable.getId(), featureVariable.getId());
-                        assertEquals(optimizelyVariable.getType(), featureVariable.getType().getVariableType().toLowerCase());
-                        // getting the expected value to assert after merging
-                        // if feature is enabled, then value should be taken from varition variable otherwise default value from feature variable is used.
-                        String expectedValue = variation.getFeatureEnabled() && tempVariableIdMap.get(featureVariable.getId()) != null
-                            ? tempVariableIdMap.get(featureVariable.getId()).getValue()
-                            : featureVariable.getDefaultValue();
-                        assertEquals(optimizelyVariable.getValue(), expectedValue);
-                    });
-                }
-            })
-        );
+        Variation variation = projectConfig.getExperiments().get(1).getVariations().get(1);
+        Map<String, OptimizelyVariable> optimizelyVariableMap = optimizelyConfigService.getMergedVariablesMap(variation, "3262035800");
+        Map<String, OptimizelyVariable> expectedOptimizelyVariableMap =
+            exptectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap().get("Feorge").getVariablesMap();
+        assertEquals(expectedOptimizelyVariableMap.size(), optimizelyVariableMap.size());
+        assertEquals(expectedOptimizelyVariableMap, optimizelyVariableMap);
     }
 
     private ProjectConfig generateOptimizelyConfig() {
@@ -322,14 +287,14 @@ public class OptimizelyConfigServiceTest {
                             "675244127",
                             "first_letter",
                             "H",
-                            null,
+                            FeatureVariable.VariableStatus.ACTIVE,
                             FeatureVariable.VariableType.STRING
                         ),
                         new FeatureVariable(
                             "4052219963",
                             "rest_of_name",
                             "arry",
-                            null,
+                            FeatureVariable.VariableStatus.ACTIVE,
                             FeatureVariable.VariableType.STRING
                         )
                     )
