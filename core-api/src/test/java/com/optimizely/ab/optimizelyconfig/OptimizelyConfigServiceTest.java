@@ -26,39 +26,38 @@ import java.util.*;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.*;
 
-@RunWith(MockitoJUnitRunner.class)
 public class OptimizelyConfigServiceTest {
 
     private ProjectConfig projectConfig;
     private OptimizelyConfigService optimizelyConfigService;
-    private OptimizelyConfig exptectedConfig;
+    private OptimizelyConfig expectedConfig;
 
     @Before
     public void initialize() {
         projectConfig = generateOptimizelyConfig();
         optimizelyConfigService = new OptimizelyConfigService(projectConfig);
-        exptectedConfig = getExpectedConfig();
+        expectedConfig = getExpectedConfig();
     }
 
     @Test
     public void testGetExperimentsMap() {
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfigService.getExperimentsMap();
         assertEquals(optimizelyExperimentMap.size(), 2);
-        assertEquals(exptectedConfig.getExperimentsMap(), optimizelyExperimentMap);
+        assertEquals(expectedConfig.getExperimentsMap(), optimizelyExperimentMap);
     }
 
     @Test
     public void testRevision() {
         String revision = optimizelyConfigService.getConfig().getRevision();
-        assertEquals(exptectedConfig.getRevision(), revision);
+        assertEquals(expectedConfig.getRevision(), revision);
     }
 
     @Test
     public void testGetFeaturesMap() {
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfigService.getExperimentsMap();
         Map<String, OptimizelyFeature> optimizelyFeatureMap = optimizelyConfigService.getFeaturesMap(optimizelyExperimentMap);
-        assertEquals(optimizelyFeatureMap.size(), 2);
-        assertEquals(exptectedConfig.getFeaturesMap(), optimizelyFeatureMap);
+        assertEquals(2, optimizelyFeatureMap.size());
+        assertEquals(expectedConfig.getFeaturesMap(), optimizelyFeatureMap);
     }
 
     @Test
@@ -67,7 +66,7 @@ public class OptimizelyConfigServiceTest {
         Map<String, OptimizelyVariable> optimizelyVariableMap =
             optimizelyConfigService.getFeatureVariablesMap(featureFlag.getVariables());
         Map<String, OptimizelyVariable> expectedVariablesMap =
-            exptectedConfig.getFeaturesMap().get("multi_variate_feature").getVariablesMap();
+            expectedConfig.getFeaturesMap().get("multi_variate_feature").getVariablesMap();
         assertEquals(expectedVariablesMap.size(), optimizelyVariableMap.size());
         assertEquals(expectedVariablesMap, optimizelyVariableMap);
     }
@@ -77,7 +76,7 @@ public class OptimizelyConfigServiceTest {
         List<String> experimentIds = projectConfig.getFeatureFlags().get(1).getExperimentIds();
         Map<String, OptimizelyExperiment> optimizelyFeatureExperimentMap =
             optimizelyConfigService.getExperimentsMapForFeature(experimentIds, optimizelyConfigService.getExperimentsMap());
-        assertEquals(exptectedConfig.getFeaturesMap().get("multi_variate_feature").getExperimentsMap().size(), optimizelyFeatureExperimentMap.size());
+        assertEquals(expectedConfig.getFeaturesMap().get("multi_variate_feature").getExperimentsMap().size(), optimizelyFeatureExperimentMap.size());
     }
 
     @Test
@@ -114,8 +113,8 @@ public class OptimizelyConfigServiceTest {
     public void testGetVariationsMap() {
         Map<String, OptimizelyVariation> optimizelyVariationMap =
             optimizelyConfigService.getVariationsMap(projectConfig.getExperiments().get(1).getVariations(), "3262035800");
-        assertEquals(exptectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap().size(), optimizelyVariationMap.size());
-        assertEquals(exptectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap(), optimizelyVariationMap);
+        assertEquals(expectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap().size(), optimizelyVariationMap.size());
+        assertEquals(expectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap(), optimizelyVariationMap);
     }
 
     @Test
@@ -128,7 +127,7 @@ public class OptimizelyConfigServiceTest {
     public void testGenerateFeatureKeyToVariablesMap() {
         Map<String, List<FeatureVariable>> featureKeyToVariableMap = optimizelyConfigService.generateFeatureKeyToVariablesMap();
         FeatureVariable featureVariable = featureKeyToVariableMap.get("multi_variate_feature").get(0);
-        OptimizelyVariable expectedOptimizelyVariable = exptectedConfig.getFeaturesMap().get("multi_variate_feature").getVariablesMap().get("first_letter");
+        OptimizelyVariable expectedOptimizelyVariable = expectedConfig.getFeaturesMap().get("multi_variate_feature").getVariablesMap().get("first_letter");
         assertEquals(expectedOptimizelyVariable.getId(), featureVariable.getId());
         assertEquals(expectedOptimizelyVariable.getValue(), featureVariable.getDefaultValue());
         assertEquals(expectedOptimizelyVariable.getKey(), featureVariable.getKey());
@@ -140,7 +139,7 @@ public class OptimizelyConfigServiceTest {
         Variation variation = projectConfig.getExperiments().get(1).getVariations().get(1);
         Map<String, OptimizelyVariable> optimizelyVariableMap = optimizelyConfigService.getMergedVariablesMap(variation, "3262035800");
         Map<String, OptimizelyVariable> expectedOptimizelyVariableMap =
-            exptectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap().get("Feorge").getVariablesMap();
+            expectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap().get("Feorge").getVariablesMap();
         assertEquals(expectedOptimizelyVariableMap.size(), optimizelyVariableMap.size());
         assertEquals(expectedOptimizelyVariableMap, optimizelyVariableMap);
     }

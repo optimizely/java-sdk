@@ -28,13 +28,13 @@ public class OptimizelyConfigTest {
     @Test
     public void testOptimizelyConfig() {
         OptimizelyConfig optimizelyConfig = new OptimizelyConfig(
-            generateExperimntMap(),
+            generateExperimentMap(),
             generateFeatureMap(),
             "101"
         );
         assertEquals("101", optimizelyConfig.getRevision());
         // verify the experiments map
-        Map<String, OptimizelyExperiment> optimizelyExperimentMap = generateExperimntMap();
+        Map<String, OptimizelyExperiment> optimizelyExperimentMap = generateExperimentMap();
         assertEquals(optimizelyExperimentMap.size(), optimizelyConfig.getExperimentsMap().size());
         assertEquals(optimizelyExperimentMap, optimizelyConfig.getExperimentsMap());
 
@@ -44,7 +44,7 @@ public class OptimizelyConfigTest {
         assertEquals(optimizelyFeatureMap, optimizelyConfig.getFeaturesMap());
     }
 
-    private Map<String, OptimizelyExperiment> generateExperimntMap() {
+    private Map<String, OptimizelyExperiment> generateExperimentMap() {
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = new HashMap<>();
         optimizelyExperimentMap.put("test_exp_1", new OptimizelyExperiment(
             "33",
@@ -64,7 +64,7 @@ public class OptimizelyConfigTest {
         optimizelyFeatureMap.put("test_feature_1", new OptimizelyFeature(
            "42",
            "test_feature_1",
-            generateExperimntMap(),
+            generateExperimentMap(),
             generateVariablesMap()
         ));
         return  optimizelyFeatureMap;
