@@ -35,7 +35,7 @@ after_failure:
 
 # Integration tests need to run first to reset the PR build status to pending
 stages:
-  - name: 'Lint markdown files'
+  - 'Lint markdown files'
   - 'Integration tests'
   - 'Benchmarking tests'
   - 'Test'
