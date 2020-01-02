@@ -88,7 +88,7 @@ public class Optimizely implements AutoCloseable {
 
     private final ProjectConfigManager projectConfigManager;
 
-    private OptimizelyConfigManager optimizelyConfigManager;
+    private final OptimizelyConfigManager optimizelyConfigManager;
 
     // TODO should be private
     public final NotificationCenter notificationCenter;
@@ -110,9 +110,7 @@ public class Optimizely implements AutoCloseable {
         this.decisionService = decisionService;
         this.userProfileService = userProfileService;
         this.projectConfigManager = projectConfigManager;
-        if (projectConfigManager instanceof OptimizelyConfigManager) {
-            this.optimizelyConfigManager = (OptimizelyConfigManager)projectConfigManager;
-        }
+        this.optimizelyConfigManager = projectConfigManager instanceof OptimizelyConfigManager ? (OptimizelyConfigManager)projectConfigManager : null;
         this.notificationCenter = notificationCenter;
     }
 

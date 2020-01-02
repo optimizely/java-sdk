@@ -103,7 +103,7 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         logger.info("New datafile set with revision: {}. Old revision: {}", projectConfig.getRevision(), previousRevision);
 
         currentProjectConfig.set(projectConfig);
-        currentOptimizelyConfig.set(new OptimizelyConfigService(currentProjectConfig.get()).getConfig());
+        currentOptimizelyConfig.set(new OptimizelyConfigService(projectConfig).getConfig());
         countDownLatch.countDown();
         notificationCenter.send(SIGNAL);
     }
