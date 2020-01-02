@@ -5,8 +5,6 @@ jdk:
   - oraclejdk8
   - oraclejdk9
 install: true
-addons:
-  srcclr: true
 env:
   - optimizely_default_parser=GSON_CONFIG_PARSER
   - optimizely_default_parser=JACKSON_CONFIG_PARSER
@@ -37,14 +35,27 @@ after_failure:
 
 # Integration tests need to run first to reset the PR build status to pending
 stages:
+  - 'Lint markdown files'
   - 'Integration tests'
   - 'Benchmarking tests'
   - 'Test'
 
 jobs:
   include:
+    - stage: 'Lint markdown files'
+      language: ruby
+      rvm: 2.4.1
+      os: linux
+      install: gem install awesome_bot
+      script:
+        - find . -type f -name '*.md' -exec awesome_bot {} \;
+      notifications:
+        email: false
+ 
     - &integrationtest
       stage: 'Integration tests'
+      addons:
+        srcclr: true
       merge_mode: replace
       env: SDK=java SDK_BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
       cache: false
