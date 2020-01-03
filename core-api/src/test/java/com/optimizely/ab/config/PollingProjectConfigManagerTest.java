@@ -31,7 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV4;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class PollingProjectConfigManagerTest {
 
