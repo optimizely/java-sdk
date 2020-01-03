@@ -110,6 +110,8 @@ public class Optimizely implements AutoCloseable {
         this.decisionService = decisionService;
         this.userProfileService = userProfileService;
         this.projectConfigManager = projectConfigManager;
+        // PollingProjectConfigManager now also implements OptimizelyConfigManager interface to support OptimizelyConfig API.
+        // This check is needed in case a consumer provides their own ProjectConfigManager which does nt implement OptimizelyConfigManager interface
         this.optimizelyConfigManager = projectConfigManager instanceof OptimizelyConfigManager ? (OptimizelyConfigManager)projectConfigManager : null;
         this.notificationCenter = notificationCenter;
     }
@@ -930,8 +932,9 @@ public class Optimizely implements AutoCloseable {
             return null;
         }
         if (optimizelyConfigManager != null) {
-           return optimizelyConfigManager.getOptimizelyConfig();
+            return optimizelyConfigManager.getOptimizelyConfig();
         }
+        // Generate and return a new OptimizelyConfig object as a fallback when consumer implements their own ProjectConfigManager without implementing OptimizelyConfigManager.
         return new OptimizelyConfigService(projectConfig).getConfig();
     }
 
