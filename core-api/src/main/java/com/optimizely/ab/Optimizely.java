@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2016-2019, Optimizely, Inc. and contributors                   *
+ * Copyright 2016-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -28,6 +28,8 @@ import com.optimizely.ab.event.*;
 import com.optimizely.ab.event.internal.*;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.notification.*;
+import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
+import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -880,6 +882,20 @@ public class Optimizely implements AutoCloseable {
         }
 
         return decisionService.getForcedVariation(experiment, userId);
+    }
+
+    /**
+     * Get {@link OptimizelyConfig} containing experiments and features map
+     *
+     * @return {@link OptimizelyConfig}
+     */
+    public OptimizelyConfig getOptimizelyConfig() {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing getOptimizelyConfig call.");
+            return null;
+        }
+        return new OptimizelyConfigService(projectConfig).getConfig();
     }
 
     /**
