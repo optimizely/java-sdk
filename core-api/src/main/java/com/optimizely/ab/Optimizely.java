@@ -934,7 +934,8 @@ public class Optimizely implements AutoCloseable {
         if (optimizelyConfigManager != null) {
             return optimizelyConfigManager.getOptimizelyConfig();
         }
-        logger.debug("Generate and return a new OptimizelyConfig object as a fallback when consumer implements their own ProjectConfigManager without implementing OptimizelyConfigManager.");
+        // Generate and return a new OptimizelyConfig object as a fallback when consumer implements their own ProjectConfigManager without implementing OptimizelyConfigManager.
+        logger.debug("optimizelyConfigManager is null, generating new OptimizelyConfigObject as a fallback");
         return new OptimizelyConfigService(projectConfig).getConfig();
     }
 
@@ -1168,7 +1169,7 @@ public class Optimizely implements AutoCloseable {
 
             // PollingProjectConfigManager now also implements OptimizelyConfigManager interface to support OptimizelyConfig API.
             // This check is needed in case a consumer provides their own ProjectConfigManager which does nt implement OptimizelyConfigManager interface
-            if(projectConfigManager instanceof OptimizelyConfigManager) {
+            if (projectConfigManager instanceof OptimizelyConfigManager) {
                 optimizelyConfigManager = (OptimizelyConfigManager) projectConfigManager;
             }
 
