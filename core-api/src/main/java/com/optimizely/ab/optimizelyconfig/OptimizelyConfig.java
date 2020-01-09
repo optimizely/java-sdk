@@ -45,4 +45,21 @@ public class OptimizelyConfig {
     public String getRevision() {
         return revision;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || getClass() != obj.getClass()) return false;
+        if (obj == this) return true;
+        OptimizelyConfig optimizelyConfig = (OptimizelyConfig) obj;
+        return revision.equals(optimizelyConfig.getRevision()) &&
+            experimentsMap.equals(optimizelyConfig.getExperimentsMap()) &&
+            featuresMap.equals(optimizelyConfig.getFeaturesMap());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = revision.hashCode();
+        hash = 31 * hash + experimentsMap.hashCode();
+        return hash;
+    }
 }

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely and contributors
+ *    Copyright 2019-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -148,6 +148,26 @@ public class PollingProjectConfigManagerTest {
 
         testProjectConfigManager.setConfig(newerProjectConfig);
         assertEquals(newerProjectConfig, testProjectConfigManager.getConfig());
+    }
+
+    @Test
+    public void testSetOptimizelyConfig(){
+        assertNull(testProjectConfigManager.getOptimizelyConfig());
+
+        testProjectConfigManager.setConfig(projectConfig);
+        assertEquals("1480511547", testProjectConfigManager.getOptimizelyConfig().getRevision());
+
+        // cached config because project config is null
+        testProjectConfigManager.setConfig(null);
+        assertEquals("1480511547", testProjectConfigManager.getOptimizelyConfig().getRevision());
+
+        // created config with new revision
+        ProjectConfig newerProjectConfig = mock(ProjectConfig.class);
+        when(newerProjectConfig.getRevision()).thenReturn("new");
+
+        // verify the new optimizely config
+        testProjectConfigManager.setConfig(newerProjectConfig);
+        assertEquals("new", testProjectConfigManager.getOptimizelyConfig().getRevision());
     }
 
     @Test

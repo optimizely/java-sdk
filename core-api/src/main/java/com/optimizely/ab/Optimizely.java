@@ -29,6 +29,7 @@ import com.optimizely.ab.event.internal.*;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.notification.*;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
+import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +88,9 @@ public class Optimizely implements AutoCloseable {
 
     private final ProjectConfigManager projectConfigManager;
 
+    @Nullable
+    private final OptimizelyConfigManager optimizelyConfigManager;
+
     // TODO should be private
     public final NotificationCenter notificationCenter;
 
@@ -99,6 +103,7 @@ public class Optimizely implements AutoCloseable {
                        @Nonnull DecisionService decisionService,
                        @Nullable UserProfileService userProfileService,
                        @Nonnull ProjectConfigManager projectConfigManager,
+                       @Nullable OptimizelyConfigManager optimizelyConfigManager,
                        @Nonnull NotificationCenter notificationCenter
     ) {
         this.eventHandler = eventHandler;
@@ -107,6 +112,7 @@ public class Optimizely implements AutoCloseable {
         this.decisionService = decisionService;
         this.userProfileService = userProfileService;
         this.projectConfigManager = projectConfigManager;
+        this.optimizelyConfigManager = optimizelyConfigManager;
         this.notificationCenter = notificationCenter;
     }
 
@@ -885,20 +891,6 @@ public class Optimizely implements AutoCloseable {
     }
 
     /**
-     * Get {@link OptimizelyConfig} containing experiments and features map
-     *
-     * @return {@link OptimizelyConfig}
-     */
-    public OptimizelyConfig getOptimizelyConfig() {
-        ProjectConfig projectConfig = getProjectConfig();
-        if (projectConfig == null) {
-            logger.error("Optimizely instance is not valid, failing getOptimizelyConfig call.");
-            return null;
-        }
-        return new OptimizelyConfigService(projectConfig).getConfig();
-    }
-
-    /**
      * @return the current {@link ProjectConfig} instance.
      */
     @Nullable
@@ -926,6 +918,25 @@ public class Optimizely implements AutoCloseable {
         }
 
         return true;
+    }
+
+    /**
+     * Get {@link OptimizelyConfig} containing experiments and features map
+     *
+     * @return {@link OptimizelyConfig}
+     */
+    public OptimizelyConfig getOptimizelyConfig() {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing getOptimizelyConfig call.");
+            return null;
+        }
+        if (optimizelyConfigManager != null) {
+            return optimizelyConfigManager.getOptimizelyConfig();
+        }
+        // Generate and return a new OptimizelyConfig object as a fallback when consumer implements their own ProjectConfigManager without implementing OptimizelyConfigManager.
+        logger.debug("optimizelyConfigManager is null, generating new OptimizelyConfigObject as a fallback");
+        return new OptimizelyConfigService(projectConfig).getConfig();
     }
 
     /**
@@ -1029,6 +1040,7 @@ public class Optimizely implements AutoCloseable {
         private EventProcessor eventProcessor;
         private ProjectConfig projectConfig;
         private ProjectConfigManager projectConfigManager;
+        private OptimizelyConfigManager optimizelyConfigManager;
         private UserProfileService userProfileService;
         private NotificationCenter notificationCenter;
 
@@ -1155,6 +1167,12 @@ public class Optimizely implements AutoCloseable {
                 projectConfigManager = fallbackConfigManager;
             }
 
+            // PollingProjectConfigManager now also implements OptimizelyConfigManager interface to support OptimizelyConfig API.
+            // This check is needed in case a consumer provides their own ProjectConfigManager which does nt implement OptimizelyConfigManager interface
+            if (projectConfigManager instanceof OptimizelyConfigManager) {
+                optimizelyConfigManager = (OptimizelyConfigManager) projectConfigManager;
+            }
+
             if (notificationCenter == null) {
                 notificationCenter = new NotificationCenter();
             }
@@ -1164,7 +1182,7 @@ public class Optimizely implements AutoCloseable {
                 eventProcessor = new ForwardingEventProcessor(eventHandler, notificationCenter);
             }
 
-            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, notificationCenter);
+            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, optimizelyConfigManager, notificationCenter);
         }
     }
 }

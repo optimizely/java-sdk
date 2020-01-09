@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely and contributors
+ *    Copyright 2019-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,6 +18,9 @@ package com.optimizely.ab.config;
 
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.notification.UpdateConfigNotification;
+import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
+import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
+import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,12 +40,13 @@ import java.util.concurrent.atomic.AtomicReference;
  * is initially set. A default ProjectConfig can be provided to bootstrap the initial ProjectConfig
  * return value and prevent blocking.
  */
-public abstract class PollingProjectConfigManager implements ProjectConfigManager, AutoCloseable {
+public abstract class PollingProjectConfigManager implements ProjectConfigManager, AutoCloseable, OptimizelyConfigManager {
 
     private static final Logger logger = LoggerFactory.getLogger(PollingProjectConfigManager.class);
     private static final UpdateConfigNotification SIGNAL = new UpdateConfigNotification();
 
     private final AtomicReference<ProjectConfig> currentProjectConfig = new AtomicReference<>();
+    private final AtomicReference<OptimizelyConfig> currentOptimizelyConfig = new AtomicReference<>();
     private final ScheduledExecutorService scheduledExecutorService;
     private final long period;
     private final TimeUnit timeUnit;
@@ -99,6 +103,7 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         logger.info("New datafile set with revision: {}. Old revision: {}", projectConfig.getRevision(), previousRevision);
 
         currentProjectConfig.set(projectConfig);
+        currentOptimizelyConfig.set(new OptimizelyConfigService(projectConfig).getConfig());
         countDownLatch.countDown();
         notificationCenter.send(SIGNAL);
     }
@@ -130,6 +135,15 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
 
         ProjectConfig projectConfig = poll();
         return projectConfig == null ? currentProjectConfig.get() : projectConfig;
+    }
+
+    /**
+     * Returns the cached {@link OptimizelyConfig}
+     * @return {@link OptimizelyConfig}
+     */
+    @Override
+    public OptimizelyConfig getOptimizelyConfig() {
+        return currentOptimizelyConfig.get();
     }
 
     public synchronized void start() {
