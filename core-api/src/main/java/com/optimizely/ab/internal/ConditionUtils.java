@@ -35,7 +35,7 @@ import java.util.Map;
 
 public class ConditionUtils {
 
-    static Logger logger = LoggerFactory.getLogger("ConditionUtil");
+    static Logger logger = LoggerFactory.getLogger(ConditionUtils.class);
 
     static public <T> Condition parseConditions(Class<T> clazz, Object object) throws InvalidAudienceCondition {
 
