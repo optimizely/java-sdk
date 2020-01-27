@@ -40,7 +40,7 @@ public class AudienceIdCondition<T> implements Condition<T> {
     private Audience audience;
     final private String audienceId;
 
-    final private static Logger logger = LoggerFactory.getLogger("AudienceIdCondition");
+    final private static Logger logger = LoggerFactory.getLogger(AudienceIdCondition.class);
 
     /**
      * Constructor used in json parsing to store the audienceId parsed from Experiment.audienceConditions.
