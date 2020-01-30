@@ -1,14 +1,21 @@
 # Optimizely Java X SDK Changelog
 
+## [3.4.1]
+January 30th, 2020
+
+### Bug Fixes:
+- Remove usage of stream to support Android API 21 and 22. ([#357](https://github.com/optimizely/java-sdk/pull/357))
+
+
 ## [3.4.0]
 January 27th, 2020
 
 ### New Features
-- Added a new API to get a project configuration static data.
-  - Call `getOptimizelyConfig()` to get a snapshot copy of project configuration static data.
+- Added a new API to get project configuration static data.
+  - Call `getOptimizelyConfig()` to get a snapshot of project configuration static data.
   - It returns an `OptimizelyConfig` instance which includes a datafile revision number, all experiments, and feature flags mapped by their key values.
-  - Added caching for `getOptimizelyConfig` - `OptimizelyConfig` object will be cached and reused for the lifetime of the datafile
-  - For details, refer to a documention page: https://docs.developers.optimizely.com/full-stack/docs/optimizelyconfig-java
+  - Added caching for `getOptimizelyConfig` - `OptimizelyConfig` object will be cached and reused for the lifetime of the datafile.
+  - For details, refer to our documentation page: [https://docs.developers.optimizely.com/full-stack/docs/optimizelyconfig-java](https://docs.developers.optimizely.com/full-stack/docs/optimizelyconfig-java).
 
 ## 3.3.4
 December 16th, 2019
