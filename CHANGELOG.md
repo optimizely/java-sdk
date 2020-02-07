@@ -216,7 +216,7 @@ This is the release candidate for the 3.0 SDK, which includes a number of improv
 * refactor: Performance improvements for JacksonConfigParser ([#209](https://github.com/optimizely/java-sdk/pull/209))
 * refactor: typeAudience.combinations will not be string encoded like audience.combinations.  To handle this we created a new parsing type TypedAudience.
 * fix for exact match when dealing with integers and doubles.  Created a new Numeric match type.
-* make a copy of attributes passed in to avoid any concurrency problems. Addresses GitHub isue in Optimizely Andriod SDK.
+* make a copy of attributes passed in to avoid any concurrency problems. Addresses GitHub issue in Optimizely Andriod SDK.
 * allow single root node for audience.conditions, typedAudience.conditions, and Experiment.audienceCombinations.
  
 ## 3.0.0-RC
@@ -239,7 +239,7 @@ This is the release candidate for the 3.0 SDK, which includes a number of improv
 * refactor: Performance improvements for JacksonConfigParser ([#209](https://github.com/optimizely/java-sdk/pull/209))
 * refactor: typeAudience.combinations will not be string encoded like audience.combinations.  To handle this we created a new parsing type TypedAudience.
 * fix for exact match when dealing with integers and doubles.  Created a new Numeric match type.
-* make a copy of attributes passed in to avoid any concurrency problems. Addresses GitHub isue in Optimizely Andriod SDK.
+* make a copy of attributes passed in to avoid any concurrency problems. Addresses GitHub issue in Optimizely Andriod SDK.
 
 ## 3.0.0-alpha
 
@@ -386,7 +386,7 @@ January 30, 2018
 
 This release adds support for bucketing id (By passing in `$opt_bucketing_id` in the attribute map to override the user id as the bucketing variable. This is useful when wanting a set of users to share the same experience such as two players in a game).
 
-This release also depricates the old notification broadcaster in favor of a notification center that supports a wide range of notifications.  The notification listener is now registered for the specific notification type such as ACTIVATE and TRACK.  This is accomplished by allowing for a variable argument call to notify (a new var arg method added to the NotificationListener).  Specific abstract classes exist for the associated notification type (ActivateNotification and TrackNotification).  These abstract classes enforce the strong typing that exists in Java.  You may also add custom notification types and fire them through the notification center.  The notification center is implemented using this var arg approach in all Optimizely SDKs.
+This release also deprecates the old notification broadcaster in favor of a notification center that supports a wide range of notifications.  The notification listener is now registered for the specific notification type such as ACTIVATE and TRACK.  This is accomplished by allowing for a variable argument call to notify (a new var arg method added to the NotificationListener).  Specific abstract classes exist for the associated notification type (ActivateNotification and TrackNotification).  These abstract classes enforce the strong typing that exists in Java.  You may also add custom notification types and fire them through the notification center.  The notification center is implemented using this var arg approach in all Optimizely SDKs.
 
 ### New Features
 

@@ -41,7 +41,7 @@ interface is available for handling errors from the SDK without interfering with
 
 ### NoOpErrorHandler
 The [`NoOpErrorHandler`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/error/NoOpErrorHandler.java)
-is the default `ErrorHandler` implemetation that silently consumes all errors raised from the SDK.
+is the default `ErrorHandler` implementation that silently consumes all errors raised from the SDK.
 
 ### RaiseExceptionErrorHandler
 The [`RaiseExceptionErrorHandler`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/error/RaiseExceptionErrorHandler.java)
