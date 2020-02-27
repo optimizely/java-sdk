@@ -531,7 +531,7 @@ public class OptimizelyTest {
         Experiment unknownExperiment = createUnknownExperiment();
         Optimizely optimizely = optimizelyBuilder.withErrorHandler(new NoOpErrorHandler()).build();
 
-        logbackVerifier.expectMessage(Level.ERROR, "Experiment \"unknown_experiment\" is not in the datafile.");
+        logbackVerifier.expectMessage(Level.WARN, "Experiment \"unknown_experiment\" is not in the datafile.");
         logbackVerifier.expectMessage(Level.INFO,
             "Not activating user \"userId\" for experiment \"unknown_experiment\".");
 
@@ -986,7 +986,7 @@ public class OptimizelyTest {
 
         Optimizely optimizely = optimizelyBuilder.withErrorHandler(new NoOpErrorHandler()).build();
 
-        logbackVerifier.expectMessage(Level.ERROR, "Event \"unknown_event_type\" is not in the datafile.");
+        logbackVerifier.expectMessage(Level.WARN, "Event \"unknown_event_type\" is not in the datafile.");
         logbackVerifier.expectMessage(Level.INFO, "Not tracking event \"unknown_event_type\" for user \"userId\".");
         optimizely.track(unknownEventType.getKey(), testUserId);
     }
@@ -1333,7 +1333,7 @@ public class OptimizelyTest {
             .withErrorHandler(new NoOpErrorHandler())
             .build();
 
-        logbackVerifier.expectMessage(Level.ERROR, "Experiment \"unknown_experiment\" is not in the datafile.");
+        logbackVerifier.expectMessage(Level.WARN, "Experiment \"unknown_experiment\" is not in the datafile.");
 
         // since we use a NoOpErrorHandler, we should fail and return null
         Variation actualVariation = optimizely.getVariation(unknownExperiment.getKey(), testUserId);
