@@ -110,7 +110,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
             httpGet.setHeader(HttpHeaders.IF_MODIFIED_SINCE, datafileLastModified);
         }
 
-        logger.info("Fetching datafile from: {}", httpGet.getURI());
+        logger.debug("Fetching datafile from: {}", httpGet.getURI());
         try {
             HttpResponse response = httpClient.execute(httpGet);
             String datafile = getDatafileFromResponse(response);
