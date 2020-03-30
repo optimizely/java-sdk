@@ -221,7 +221,7 @@ public class DatafileProjectConfig implements ProjectConfig {
         // if the given experiment key isn't present in the config, log an exception to the error handler
         if (experiment == null) {
             String unknownExperimentError = String.format("Experiment \"%s\" is not in the datafile.", experimentKey);
-            logger.error(unknownExperimentError);
+            logger.warn(unknownExperimentError);
             errorHandler.handleError(new UnknownExperimentException(unknownExperimentError));
         }
 
@@ -247,7 +247,7 @@ public class DatafileProjectConfig implements ProjectConfig {
         // if the given event name isn't present in the config, log an exception to the error handler
         if (eventType == null) {
             String unknownEventTypeError = String.format("Event \"%s\" is not in the datafile.", eventName);
-            logger.error(unknownEventTypeError);
+            logger.warn(unknownEventTypeError);
             errorHandler.handleError(new UnknownEventTypeException(unknownEventTypeError));
         }
 
