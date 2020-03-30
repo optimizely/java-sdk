@@ -1,5 +1,12 @@
 # Optimizely Java X SDK Changelog
 
+## [3.4.2]
+March 30th, 2020
+
+### Bug Fixes:
+- Change log level to debug for "Fetching datafile from" in HttpProjectConfigManager. ([#362](https://github.com/optimizely/java-sdk/pull/362))
+- Change log level to warn when experiments are not in datafile. ([#361](https://github.com/optimizely/java-sdk/pull/361))
+
 ## [3.4.1]
 January 30th, 2020
 
