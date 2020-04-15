@@ -714,6 +714,8 @@ public class Optimizely implements AutoCloseable {
                             "\" as Integer. " + exception.toString());
                     }
                     break;
+                default:
+                    return variableValue;
             }
         }
 
