@@ -632,8 +632,7 @@
           "key": "double_variable",
           "type": "double",
           "defaultValue": "14.99"
-        }
-      ]
+        }      ]
     },
     {
       "id": "3281420120",
@@ -694,6 +693,12 @@
           "key": "rest_of_name",
           "type": "string",
           "defaultValue": "arry"
+        },
+        {
+          "id": "4111661234",
+          "key": "future_variable",
+          "type": "future_type",
+          "defaultValue": "future_value"
         }
       ]
     },

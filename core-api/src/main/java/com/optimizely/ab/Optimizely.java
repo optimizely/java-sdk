@@ -458,7 +458,7 @@ public class Optimizely implements AutoCloseable {
             variableKey,
             userId,
             attributes,
-            FeatureVariable.VariableType.BOOLEAN
+            FeatureVariable.BOOLEAN_TYPE
         );
     }
 
@@ -501,7 +501,7 @@ public class Optimizely implements AutoCloseable {
                 variableKey,
                 userId,
                 attributes,
-                FeatureVariable.VariableType.DOUBLE
+                FeatureVariable.DOUBLE_TYPE
             );
         } catch (Exception exception) {
             logger.error("NumberFormatException while trying to parse \"" + variableValue +
@@ -551,7 +551,7 @@ public class Optimizely implements AutoCloseable {
                 variableKey,
                 userId,
                 attributes,
-                FeatureVariable.VariableType.INTEGER
+                FeatureVariable.INTEGER_TYPE
             );
 
         } catch (Exception exception) {
@@ -598,7 +598,7 @@ public class Optimizely implements AutoCloseable {
             variableKey,
             userId,
             attributes,
-            FeatureVariable.VariableType.STRING);
+            FeatureVariable.STRING_TYPE);
     }
 
     @VisibleForTesting
@@ -606,7 +606,7 @@ public class Optimizely implements AutoCloseable {
                                           @Nonnull String variableKey,
                                           @Nonnull String userId,
                                           @Nonnull Map<String, ?> attributes,
-                                          @Nonnull FeatureVariable.VariableType variableType) {
+                                          @Nonnull String variableType) {
         if (featureKey == null) {
             logger.warn("The featureKey parameter must be nonnull.");
             return null;
@@ -691,10 +691,10 @@ public class Optimizely implements AutoCloseable {
 
     // Helper method which takes type and variable value and convert it to object to use in Listener DecisionInfo object variable value
     @VisibleForTesting
-    Object convertStringToType(String variableValue, FeatureVariable.VariableType type) {
+    Object convertStringToType(String variableValue, String type) {
         if (variableValue != null) {
             switch (type) {
-                case DOUBLE:
+                case FeatureVariable.DOUBLE_TYPE:
                     try {
                         return Double.parseDouble(variableValue);
                     } catch (NumberFormatException exception) {
@@ -702,11 +702,11 @@ public class Optimizely implements AutoCloseable {
                             "\" as Double. " + exception);
                     }
                     break;
-                case STRING:
+                case FeatureVariable.STRING_TYPE:
                     return variableValue;
-                case BOOLEAN:
+                case FeatureVariable.BOOLEAN_TYPE:
                     return Boolean.parseBoolean(variableValue);
-                case INTEGER:
+                case FeatureVariable.INTEGER_TYPE:
                     try {
                         return Integer.parseInt(variableValue);
                     } catch (NumberFormatException exception) {

@@ -131,7 +131,7 @@ public class OptimizelyConfigServiceTest {
         assertEquals(expectedOptimizelyVariable.getId(), featureVariable.getId());
         assertEquals(expectedOptimizelyVariable.getValue(), featureVariable.getDefaultValue());
         assertEquals(expectedOptimizelyVariable.getKey(), featureVariable.getKey());
-        assertEquals(expectedOptimizelyVariable.getType(), featureVariable.getType().getVariableType().toLowerCase());
+        assertEquals(expectedOptimizelyVariable.getType(), featureVariable.getType());
     }
 
     @Test
@@ -287,14 +287,14 @@ public class OptimizelyConfigServiceTest {
                             "first_letter",
                             "H",
                             FeatureVariable.VariableStatus.ACTIVE,
-                            FeatureVariable.VariableType.STRING
+                            FeatureVariable.STRING_TYPE
                         ),
                         new FeatureVariable(
                             "4052219963",
                             "rest_of_name",
                             "arry",
                             FeatureVariable.VariableStatus.ACTIVE,
-                            FeatureVariable.VariableType.STRING
+                            FeatureVariable.STRING_TYPE
                         )
                     )
                 )

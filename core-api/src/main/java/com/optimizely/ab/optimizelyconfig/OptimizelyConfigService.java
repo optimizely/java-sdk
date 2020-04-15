@@ -130,7 +130,7 @@ public class OptimizelyConfigService {
                 featureVariableKeyMap.put(featureVariable.getKey(), new OptimizelyVariable(
                     featureVariable.getId(),
                     featureVariable.getKey(),
-                    featureVariable.getType().getVariableType().toLowerCase(),
+                    featureVariable.getType(),
                     variation.getFeatureEnabled() && tempVariableIdMap.get(featureVariable.getId()) != null
                         ? tempVariableIdMap.get(featureVariable.getId()).getValue()
                         : featureVariable.getDefaultValue()
@@ -205,7 +205,7 @@ public class OptimizelyConfigService {
             featureVariableKeyMap.put(featureVariable.getKey(), new OptimizelyVariable(
                 featureVariable.getId(),
                 featureVariable.getKey(),
-                featureVariable.getType().getVariableType().toLowerCase(),
+                featureVariable.getType(),
                 featureVariable.getDefaultValue()
             ));
         }
