@@ -32,7 +32,7 @@ public class OptimizelyJSON {
     @Nullable
     private String payload;
     @Nullable
-    private Map<String, Object> map;
+    private Map<String,Object> map;
 
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyJSON.class);
 
@@ -59,7 +59,7 @@ public class OptimizelyJSON {
         return payload;
     }
 
-    public Map<String, Object> toMap() {
+    public Map<String,Object> toMap() {
         if (map == null) {
             if (payload == null) return null;
 
@@ -75,14 +75,14 @@ public class OptimizelyJSON {
     }
 
     public <T> T getValue(@Nullable String jsonKey, Class<T> clazz) {
-        Map<String, ?> subMap = toMap();
+        Map<String,Object> subMap = toMap();
+        T result = null;
 
         if (jsonKey == null || jsonKey.isEmpty()) {
             return getValueInternal(subMap, clazz);
         }
-        String[] keys = jsonKey.split("\\.");
 
-        T result = null;
+        String[] keys = jsonKey.split("\\.");
 
         for(int i=0; i<keys.length; i++) {
             if (subMap == null) break;
@@ -90,19 +90,15 @@ public class OptimizelyJSON {
             String key = keys[i];
             if (key.isEmpty()) break;
 
-            if (subMap.get(key) instanceof Map) {
-                subMap = (Map<String, ?>) subMap.get(key);
+            if (i == keys.length - 1) {
+                result = getValueInternal(subMap.get(key), clazz);
+                break;
+            }
 
-                if (i == keys.length - 1) {
-                    result = getValueInternal(subMap, clazz);
-                    break;
-                }
+            if (subMap.get(key) instanceof Map) {
+                subMap = (Map<String, Object>) subMap.get(key);
             } else {
-                if (i == keys.length - 1) {
-                    result = getValueInternal(subMap.get(key), clazz);
-                } else {
-                    logger.error("Value for JSON key ({}) not found.", jsonKey);
-                }
+                logger.error("Value for JSON key ({}) not found.", jsonKey);
                 break;
             }
         }
@@ -118,9 +114,8 @@ public class OptimizelyJSON {
 
         if (clazz.isInstance(object)) return (T)object;  // primitive (String, Boolean, Integer, Double)
 
-        Gson gson = new Gson();
-
         try {
+            Gson gson = new Gson();
             String payload = gson.toJson(object);
             return gson.fromJson(payload, clazz);
         } catch (Exception e) {
