@@ -1952,7 +1952,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, true);
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
-        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING.toString());
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.STRING_TYPE);
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
@@ -2002,7 +2002,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, false);
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
-        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING.toString());
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.STRING_TYPE);
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
@@ -2049,7 +2049,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, true);
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
-        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.STRING.toString());
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.STRING_TYPE);
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
@@ -2096,7 +2096,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, false);
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
-        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.BOOLEAN.toString());
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.BOOLEAN_TYPE);
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
@@ -2142,7 +2142,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, true);
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
-        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.INTEGER.toString());
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.INTEGER_TYPE);
         testDecisionInfoMap.put(VARIABLE_VALUE, expectedValue);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.ROLLOUT.toString());
         testDecisionInfoMap.put(SOURCE_INFO, Collections.EMPTY_MAP);
@@ -2191,7 +2191,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
         testDecisionInfoMap.put(FEATURE_ENABLED, true);
         testDecisionInfoMap.put(VARIABLE_KEY, validVariableKey);
-        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.VariableType.DOUBLE.toString());
+        testDecisionInfoMap.put(VARIABLE_TYPE, FeatureVariable.DOUBLE_TYPE);
         testDecisionInfoMap.put(VARIABLE_VALUE, 3.14);
         testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
@@ -2519,7 +2519,7 @@ public class OptimizelyTest {
             invalidVariableKey,
             genericUserId,
             Collections.<String, String>emptyMap(),
-            FeatureVariable.VariableType.STRING);
+            FeatureVariable.STRING_TYPE);
         assertNull(value);
 
         value = optimizely.getFeatureVariableString(invalidFeatureKey, invalidVariableKey, genericUserId, attributes);
@@ -2548,7 +2548,7 @@ public class OptimizelyTest {
             invalidVariableKey,
             genericUserId,
             Collections.<String, String>emptyMap(),
-            FeatureVariable.VariableType.STRING);
+            FeatureVariable.STRING_TYPE);
         assertNull(value);
 
         logbackVerifier.expectMessage(Level.INFO,
@@ -2572,15 +2572,15 @@ public class OptimizelyTest {
             validVariableKey,
             genericUserId,
             Collections.<String, String>emptyMap(),
-            FeatureVariable.VariableType.INTEGER
+            FeatureVariable.INTEGER_TYPE
         );
         assertNull(value);
 
         logbackVerifier.expectMessage(
             Level.INFO,
             "The feature variable \"" + validVariableKey +
-                "\" is actually of type \"" + FeatureVariable.VariableType.STRING.toString() +
-                "\" type. You tried to access it as type \"" + FeatureVariable.VariableType.INTEGER.toString() +
+                "\" is actually of type \"" + FeatureVariable.STRING_TYPE +
+                "\" type. You tried to access it as type \"" + FeatureVariable.INTEGER_TYPE +
                 "\". Please use the appropriate feature variable accessor."
         );
     }
@@ -2606,7 +2606,7 @@ public class OptimizelyTest {
             validVariableKey,
             genericUserId,
             attributes,
-            FeatureVariable.VariableType.BOOLEAN);
+            FeatureVariable.BOOLEAN_TYPE);
         assertEquals(defaultValue, value);
 
         logbackVerifier.expectMessage(
@@ -2648,7 +2648,7 @@ public class OptimizelyTest {
             validVariableKey,
             genericUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, "Ravenclaw"),
-            FeatureVariable.VariableType.DOUBLE
+            FeatureVariable.DOUBLE_TYPE
         );
         assertEquals(expectedValue, valueWithImproperAttributes);
 
@@ -2699,7 +2699,7 @@ public class OptimizelyTest {
             validVariableKey,
             genericUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE),
-            FeatureVariable.VariableType.STRING
+            FeatureVariable.STRING_TYPE
         );
 
         logbackVerifier.expectMessage(
@@ -2871,7 +2871,7 @@ public class OptimizelyTest {
             validVariableKey,
             genericUserId,
             Collections.<String, String>emptyMap(),
-            FeatureVariable.VariableType.INTEGER
+            FeatureVariable.INTEGER_TYPE
         );
 
         assertEquals(expectedValue, value);
@@ -3371,7 +3371,7 @@ public class OptimizelyTest {
      * Verify {@link Optimizely#getFeatureVariableString(String, String, String)}
      * calls through to {@link Optimizely#getFeatureVariableString(String, String, String, Map<String, String>)}
      * and returns null
-     * when {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}
+     * when {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}
      * returns null
      */
     @Test
@@ -3386,7 +3386,7 @@ public class OptimizelyTest {
             eq(variableKey),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap()),
-            eq(FeatureVariable.VariableType.STRING)
+            eq(FeatureVariable.STRING_TYPE)
         );
 
         assertNull(spyOptimizely.getFeatureVariableString(featureKey, variableKey, genericUserId));
@@ -3403,7 +3403,7 @@ public class OptimizelyTest {
      * Verify {@link Optimizely#getFeatureVariableString(String, String, String)}
      * calls through to {@link Optimizely#getFeatureVariableString(String, String, String, Map)}
      * and both return the value returned from
-     * {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}.
+     * {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}.
      */
     @Test
     public void getFeatureVariableStringReturnsWhatInternalReturns() throws Exception {
@@ -3420,7 +3420,7 @@ public class OptimizelyTest {
             eq(variableKey),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap()),
-            eq(FeatureVariable.VariableType.STRING)
+            eq(FeatureVariable.STRING_TYPE)
         );
 
         doReturn(valueWithAttributes).when(spyOptimizely).getFeatureVariableValueForType(
@@ -3428,7 +3428,7 @@ public class OptimizelyTest {
             eq(variableKey),
             eq(genericUserId),
             eq(attributes),
-            eq(FeatureVariable.VariableType.STRING)
+            eq(FeatureVariable.STRING_TYPE)
         );
 
         assertEquals(valueNoAttributes, spyOptimizely.getFeatureVariableString(
@@ -3552,7 +3552,7 @@ public class OptimizelyTest {
      * Verify {@link Optimizely#getFeatureVariableBoolean(String, String, String)}
      * calls through to {@link Optimizely#getFeatureVariableBoolean(String, String, String, Map<String, String>)}
      * and returns null
-     * when {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}
+     * when {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}
      * returns null
      */
     @Test
@@ -3567,7 +3567,7 @@ public class OptimizelyTest {
             eq(variableKey),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap()),
-            eq(FeatureVariable.VariableType.BOOLEAN)
+            eq(FeatureVariable.BOOLEAN_TYPE)
         );
 
         assertNull(spyOptimizely.getFeatureVariableBoolean(
@@ -3588,7 +3588,7 @@ public class OptimizelyTest {
      * Verify {@link Optimizely#getFeatureVariableBoolean(String, String, String)}
      * calls through to {@link Optimizely#getFeatureVariableBoolean(String, String, String, Map)}
      * and both return a Boolean representation of the value returned from
-     * {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}.
+     * {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}.
      */
     @Test
     public void getFeatureVariableBooleanReturnsWhatInternalReturns() throws Exception {
@@ -3605,7 +3605,7 @@ public class OptimizelyTest {
             eq(variableKey),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap()),
-            eq(FeatureVariable.VariableType.BOOLEAN)
+            eq(FeatureVariable.BOOLEAN_TYPE)
         );
 
         doReturn(valueWithAttributes).when(spyOptimizely).getFeatureVariableValueForType(
@@ -3613,7 +3613,7 @@ public class OptimizelyTest {
             eq(variableKey),
             eq(genericUserId),
             eq(attributes),
-            eq(FeatureVariable.VariableType.BOOLEAN)
+            eq(FeatureVariable.BOOLEAN_TYPE)
         );
 
         assertEquals(valueNoAttributes, spyOptimizely.getFeatureVariableBoolean(
@@ -3641,7 +3641,7 @@ public class OptimizelyTest {
      * Verify {@link Optimizely#getFeatureVariableDouble(String, String, String)}
      * calls through to {@link Optimizely#getFeatureVariableDouble(String, String, String, Map<String, String>)}
      * and returns null
-     * when {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}
+     * when {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}
      * returns null
      */
     @Test
@@ -3656,7 +3656,7 @@ public class OptimizelyTest {
             eq(variableKey),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap()),
-            eq(FeatureVariable.VariableType.DOUBLE)
+            eq(FeatureVariable.DOUBLE_TYPE)
         );
 
         assertNull(spyOptimizely.getFeatureVariableDouble(
@@ -3677,7 +3677,7 @@ public class OptimizelyTest {
      * Verify {@link Optimizely#getFeatureVariableDouble(String, String, String)}
      * calls through to {@link Optimizely#getFeatureVariableDouble(String, String, String, Map)}
      * and both return the parsed Double from the value returned from
-     * {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}.
+     * {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}.
      */
     @Test
     public void getFeatureVariableDoubleReturnsWhatInternalReturns() throws Exception {
@@ -3694,7 +3694,7 @@ public class OptimizelyTest {
             eq(variableKey),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap()),
-            eq(FeatureVariable.VariableType.DOUBLE)
+            eq(FeatureVariable.DOUBLE_TYPE)
         );
 
         doReturn(valueWithAttributes).when(spyOptimizely).getFeatureVariableValueForType(
@@ -3702,7 +3702,7 @@ public class OptimizelyTest {
             eq(variableKey),
             eq(genericUserId),
             eq(attributes),
-            eq(FeatureVariable.VariableType.DOUBLE)
+            eq(FeatureVariable.DOUBLE_TYPE)
         );
 
         assertEquals(valueNoAttributes, spyOptimizely.getFeatureVariableDouble(
@@ -3730,7 +3730,7 @@ public class OptimizelyTest {
      * Verify {@link Optimizely#getFeatureVariableInteger(String, String, String)}
      * calls through to {@link Optimizely#getFeatureVariableInteger(String, String, String, Map<String, String>)}
      * and returns null
-     * when {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}
+     * when {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}
      * returns null
      */
     @Test
@@ -3745,7 +3745,7 @@ public class OptimizelyTest {
             eq(variableKey),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap()),
-            eq(FeatureVariable.VariableType.INTEGER)
+            eq(FeatureVariable.INTEGER_TYPE)
         );
 
         assertNull(spyOptimizely.getFeatureVariableInteger(
@@ -3853,14 +3853,14 @@ public class OptimizelyTest {
             anyString(),
             anyString(),
             anyMapOf(String.class, String.class),
-            eq(FeatureVariable.VariableType.DOUBLE)
+            eq(FeatureVariable.DOUBLE_TYPE)
         );
 
         assertNull(spyOptimizely.getFeatureVariableDouble(featureKey, variableKey, genericUserId));
     }
 
     /**
-     * Verify that {@link Optimizely#convertStringToType(String, FeatureVariable.VariableType)}
+     * Verify that {@link Optimizely#convertStringToType(String, String)}
      * do not throw errors when they are unable to parse the value into an Double.
      *
      * @throws NumberFormatException
@@ -3870,7 +3870,7 @@ public class OptimizelyTest {
         String unParsableValue = "not_a_double";
 
         Optimizely optimizely = optimizelyBuilder.build();
-        assertNull(optimizely.convertStringToType(unParsableValue, FeatureVariable.VariableType.DOUBLE));
+        assertNull(optimizely.convertStringToType(unParsableValue, FeatureVariable.DOUBLE_TYPE));
 
         logbackVerifier.expectMessage(
             Level.ERROR,
@@ -3880,7 +3880,7 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify that {@link Optimizely#convertStringToType(String, FeatureVariable.VariableType)}
+     * Verify that {@link Optimizely#convertStringToType(String, String)}
      * do not throw errors when they are unable to parse the value into an Integer.
      *
      * @throws NumberFormatException
@@ -3890,7 +3890,7 @@ public class OptimizelyTest {
         String unParsableValue = "not_a_integer";
 
         Optimizely optimizely = optimizelyBuilder.build();
-        assertNull(optimizely.convertStringToType(unParsableValue, FeatureVariable.VariableType.INTEGER));
+        assertNull(optimizely.convertStringToType(unParsableValue, FeatureVariable.INTEGER_TYPE));
 
         logbackVerifier.expectMessage(
             Level.ERROR,
@@ -3990,7 +3990,7 @@ public class OptimizelyTest {
             eq(variableKey),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap()),
-            eq(FeatureVariable.VariableType.INTEGER)
+            eq(FeatureVariable.INTEGER_TYPE)
         );
 
         doReturn(valueWithAttributes).when(spyOptimizely).getFeatureVariableValueForType(
@@ -3998,7 +3998,7 @@ public class OptimizelyTest {
             eq(variableKey),
             eq(genericUserId),
             eq(attributes),
-            eq(FeatureVariable.VariableType.INTEGER)
+            eq(FeatureVariable.INTEGER_TYPE)
         );
 
         assertEquals(valueNoAttributes, spyOptimizely.getFeatureVariableInteger(
@@ -4040,7 +4040,7 @@ public class OptimizelyTest {
             anyString(),
             anyString(),
             anyMapOf(String.class, String.class),
-            eq(FeatureVariable.VariableType.INTEGER)
+            eq(FeatureVariable.INTEGER_TYPE)
         );
 
         assertNull(spyOptimizely.getFeatureVariableInteger(featureKey, variableKey, genericUserId));

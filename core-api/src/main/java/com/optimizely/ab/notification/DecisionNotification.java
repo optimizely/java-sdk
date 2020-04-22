@@ -244,7 +244,7 @@ public final class DecisionNotification {
         private Boolean featureEnabled;
         private FeatureDecision featureDecision;
         private String variableKey;
-        private FeatureVariable.VariableType variableType;
+        private String variableType;
         private Object variableValue;
         private String userId;
         private Map<String, ?> attributes;
@@ -283,7 +283,7 @@ public final class DecisionNotification {
             return this;
         }
 
-        public FeatureVariableDecisionNotificationBuilder withVariableType(FeatureVariable.VariableType variableType) {
+        public FeatureVariableDecisionNotificationBuilder withVariableType(String variableType) {
             this.variableType = variableType;
             return this;
         }
