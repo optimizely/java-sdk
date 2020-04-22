@@ -28,6 +28,9 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Map;
 
+/**
+ * OptimizelyJSON is an object for accessing values of JSON-type feature variables
+ */
 public class OptimizelyJSON {
     @Nullable
     private String payload;
@@ -44,6 +47,9 @@ public class OptimizelyJSON {
         this.map = map;
     }
 
+    /**
+     *  Returns the string representation of json data
+     */
     public String toString() {
         if (payload == null) {
             if (map == null) return null;
@@ -59,6 +65,9 @@ public class OptimizelyJSON {
         return payload;
     }
 
+    /**
+     *  Returns the Map<String,Object> representation of json data
+     */
     public Map<String,Object> toMap() {
         if (map == null) {
             if (payload == null) return null;
@@ -74,6 +83,21 @@ public class OptimizelyJSON {
         return map;
     }
 
+    /**
+     * Populates the schema passed by the user - it takes primitive types and complex struct type
+     * <p>
+     * Example:
+     * <pre>
+     *  JSON data is {"k1":true, "k2":{"k2":"v2"}}
+     *
+     *  Set jsonKey to "k1" to access the true boolean value or set it to to "k1.k2" to access {"k2":"v2"}.
+     *  Set it to null to access the entire JSON data.
+     * </pre>
+     *
+     * @param jsonKey The JSON key paths for the data to access
+     * @param clazz The user-defined class that the json data will be parsed to
+     * @return an instance of clazz type with the parsed data filled in (or null if parse fails)
+     */
     public <T> T getValue(@Nullable String jsonKey, Class<T> clazz) {
         Map<String,Object> subMap = toMap();
         T result = null;
