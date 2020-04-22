@@ -75,7 +75,7 @@ public class DecisionNotificationTest {
             .withFeatureKey(FEATURE_KEY)
             .withFeatureEnabled(Boolean.TRUE)
             .withVariableKey(FEATURE_VARIABLE_KEY)
-            .withVariableType(FeatureVariable.VariableType.STRING)
+            .withVariableType(FeatureVariable.STRING_TYPE)
             .withAttributes(USER_ATTRIBUTES)
             .build();
     }
@@ -121,7 +121,7 @@ public class DecisionNotificationTest {
         assertTrue((Boolean) actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.FEATURE_ENABLED));
         assertEquals(FEATURE_KEY, actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.FEATURE_KEY));
         assertEquals(FEATURE_VARIABLE_KEY, actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.VARIABLE_KEY));
-        assertEquals(FeatureVariable.VariableType.STRING.toString(), actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.VARIABLE_TYPE));
+        assertEquals(FeatureVariable.STRING_TYPE, actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.VARIABLE_TYPE));
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT.toString(), actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.SOURCE));
         assertEquals(rolloutSourceInfo.get(), actualFeatureVariableDecisionInfo.get(DecisionNotification.FeatureVariableDecisionNotificationBuilder.SOURCE_INFO));
     }
@@ -176,7 +176,7 @@ public class DecisionNotificationTest {
         DecisionNotification.newFeatureVariableDecisionNotificationBuilder()
             .withFeatureEnabled(Boolean.TRUE)
             .withVariableKey(FEATURE_VARIABLE_KEY)
-            .withVariableType(FeatureVariable.VariableType.STRING)
+            .withVariableType(FeatureVariable.STRING_TYPE)
             .build();
     }
 
@@ -185,7 +185,7 @@ public class DecisionNotificationTest {
         DecisionNotification.newFeatureVariableDecisionNotificationBuilder()
             .withFeatureKey(FEATURE_KEY)
             .withVariableKey(FEATURE_VARIABLE_KEY)
-            .withVariableType(FeatureVariable.VariableType.STRING)
+            .withVariableType(FeatureVariable.STRING_TYPE)
             .build();
     }
 
@@ -194,7 +194,7 @@ public class DecisionNotificationTest {
         DecisionNotification.newFeatureVariableDecisionNotificationBuilder()
             .withFeatureKey(FEATURE_KEY)
             .withFeatureEnabled(Boolean.TRUE)
-            .withVariableType(FeatureVariable.VariableType.STRING)
+            .withVariableType(FeatureVariable.STRING_TYPE)
             .build();
     }
 

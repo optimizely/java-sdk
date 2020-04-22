@@ -19,7 +19,6 @@ package com.optimizely.ab.config.parser;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.Experiment.ExperimentStatus;
 import com.optimizely.ab.config.FeatureVariable.VariableStatus;
-import com.optimizely.ab.config.FeatureVariable.VariableType;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
@@ -335,7 +334,7 @@ final class JsonSimpleConfigParser implements ConfigParser {
             String id = (String) featureVariableObject.get("id");
             String key = (String) featureVariableObject.get("key");
             String defaultValue = (String) featureVariableObject.get("defaultValue");
-            VariableType type = VariableType.fromString((String) featureVariableObject.get("type"));
+            String type = (String) featureVariableObject.get("type");
             VariableStatus status = VariableStatus.fromString((String) featureVariableObject.get("status"));
 
             featureVariables.add(new FeatureVariable(id, key, defaultValue, status, type));

@@ -61,52 +61,15 @@ public class FeatureVariable implements IdKeyMapped {
         }
     }
 
-    public enum VariableType {
-        @SerializedName("boolean")
-        BOOLEAN("boolean"),
-
-        @SerializedName("integer")
-        INTEGER("integer"),
-
-        @SerializedName("string")
-        STRING("string"),
-
-        @SerializedName("double")
-        DOUBLE("double");
-
-        private final String variableType;
-
-        VariableType(String variableType) {
-            this.variableType = variableType;
-        }
-
-        @JsonValue
-        public String getVariableType() {
-            return variableType;
-        }
-
-        public static VariableType fromString(String variableTypeString) {
-            if (variableTypeString != null) {
-                for (VariableType variableTypeEnum : VariableType.values()) {
-                    if (variableTypeString.equals(variableTypeEnum.getVariableType())) {
-                        return variableTypeEnum;
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        @Override
-        public String toString() {
-            return variableType;
-        }
-    }
+    public static final String STRING_TYPE = "string";
+    public static final String INTEGER_TYPE = "integer";
+    public static final String DOUBLE_TYPE = "double";
+    public static final String BOOLEAN_TYPE = "boolean";
 
     private final String id;
     private final String key;
     private final String defaultValue;
-    private final VariableType type;
+    private final String type;
     @Nullable
     private final VariableStatus status;
 
@@ -115,7 +78,7 @@ public class FeatureVariable implements IdKeyMapped {
                            @JsonProperty("key") String key,
                            @JsonProperty("defaultValue") String defaultValue,
                            @JsonProperty("status") VariableStatus status,
-                           @JsonProperty("type") VariableType type) {
+                           @JsonProperty("type") String type) {
         this.id = id;
         this.key = key;
         this.defaultValue = defaultValue;
@@ -140,7 +103,7 @@ public class FeatureVariable implements IdKeyMapped {
         return defaultValue;
     }
 
-    public VariableType getType() {
+    public String getType() {
         return type;
     }
 
@@ -165,7 +128,7 @@ public class FeatureVariable implements IdKeyMapped {
         if (!id.equals(variable.id)) return false;
         if (!key.equals(variable.key)) return false;
         if (!defaultValue.equals(variable.defaultValue)) return false;
-        if (type != variable.type) return false;
+        if (!type.equals(variable.type)) return false;
         return status == variable.status;
     }
 
