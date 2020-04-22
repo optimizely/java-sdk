@@ -695,7 +695,20 @@
           "defaultValue": "arry"
         },
         {
-          "id": "4111661234",
+          "id": "4111661000",
+          "key": "json_patched",
+          "type": "string",
+          "subType": "json",
+          "defaultValue": "{\"k1\":\"v1\",\"k1\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}"
+        },
+        {
+          "id": "4111661001",
+          "key": "json_native",
+          "type": "json",
+          "defaultValue": "{\"k1\":\"v1\",\"k1\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}"
+        },
+        {
+          "id": "4111661002",
           "key": "future_variable",
           "type": "future_type",
           "defaultValue": "future_value"
