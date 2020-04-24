@@ -106,7 +106,7 @@ public class OptimizelyJSON {
             return getValueInternal(subMap, clazz);
         }
 
-        String[] keys = jsonKey.split("\\.");
+        String[] keys = jsonKey.split("\\.", -1);   // -1 to keep trailing empty fields
 
         for(int i=0; i<keys.length; i++) {
             if (subMap == null) break;
