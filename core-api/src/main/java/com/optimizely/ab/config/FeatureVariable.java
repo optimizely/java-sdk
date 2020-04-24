@@ -65,6 +65,7 @@ public class FeatureVariable implements IdKeyMapped {
     public static final String INTEGER_TYPE = "integer";
     public static final String DOUBLE_TYPE = "double";
     public static final String BOOLEAN_TYPE = "boolean";
+    public static final String JSON_TYPE = "json";
 
     private final String id;
     private final String key;

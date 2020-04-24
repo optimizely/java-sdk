@@ -239,13 +239,16 @@ public final class DecisionNotification {
         public static final String VARIABLE_KEY = "variableKey";
         public static final String VARIABLE_TYPE = "variableType";
         public static final String VARIABLE_VALUE = "variableValue";
+        public static final String VARIABLE_VALUES = "variableValues";
 
+        private NotificationCenter.DecisionNotificationType notificationType;
         private String featureKey;
         private Boolean featureEnabled;
         private FeatureDecision featureDecision;
         private String variableKey;
         private String variableType;
         private Object variableValue;
+        private Object variableValues;
         private String userId;
         private Map<String, ?> attributes;
         private Map<String, Object> decisionInfo;
@@ -293,6 +296,11 @@ public final class DecisionNotification {
             return this;
         }
 
+        public FeatureVariableDecisionNotificationBuilder withVariableValues(Object variableValues) {
+            this.variableValues = variableValues;
+            return this;
+        }
+
         public DecisionNotification build() {
             if (featureKey == null) {
                 throw new OptimizelyRuntimeException("featureKey not set");
@@ -302,20 +310,29 @@ public final class DecisionNotification {
                 throw new OptimizelyRuntimeException("featureEnabled not set");
             }
 
-            if (variableKey == null) {
-                throw new OptimizelyRuntimeException("variableKey not set");
-            }
-
-            if (variableType == null) {
-                throw new OptimizelyRuntimeException("variableType not set");
-            }
+            notificationType = (variableValues != null) ? NotificationCenter.DecisionNotificationType.ALL_FEATURE_VARIABLES :
+                NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE;
 
             decisionInfo = new HashMap<>();
             decisionInfo.put(FEATURE_KEY, featureKey);
             decisionInfo.put(FEATURE_ENABLED, featureEnabled);
-            decisionInfo.put(VARIABLE_KEY, variableKey);
-            decisionInfo.put(VARIABLE_TYPE, variableType.toString());
-            decisionInfo.put(VARIABLE_VALUE, variableValue);
+
+            if (notificationType == NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE) {
+                if (variableKey == null) {
+                    throw new OptimizelyRuntimeException("variableKey not set");
+                }
+
+                if (variableType == null) {
+                    throw new OptimizelyRuntimeException("variableType not set");
+                }
+
+                decisionInfo.put(VARIABLE_KEY, variableKey);
+                decisionInfo.put(VARIABLE_TYPE, variableType.toString());
+                decisionInfo.put(VARIABLE_VALUE, variableValue);
+            } else if (notificationType == NotificationCenter.DecisionNotificationType.ALL_FEATURE_VARIABLES) {
+                decisionInfo.put(VARIABLE_VALUES, variableValues);
+            }
+
             SourceInfo sourceInfo = new RolloutSourceInfo();
 
             if (featureDecision != null && FeatureDecision.DecisionSource.FEATURE_TEST.equals(featureDecision.decisionSource)) {
@@ -327,7 +344,7 @@ public final class DecisionNotification {
             decisionInfo.put(SOURCE_INFO, sourceInfo.get());
 
             return new DecisionNotification(
-                NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE.toString(),
+                notificationType.toString(),
                 userId,
                 attributes,
                 decisionInfo);

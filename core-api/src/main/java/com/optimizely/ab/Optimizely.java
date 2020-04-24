@@ -31,6 +31,8 @@ import com.optimizely.ab.notification.*;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
+import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
+import com.sun.org.apache.xpath.internal.operations.Variable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -601,6 +603,46 @@ public class Optimizely implements AutoCloseable {
             FeatureVariable.STRING_TYPE);
     }
 
+    /**
+     * Get the JSON value of the specified variable in the feature.
+     *
+     * @param featureKey  The unique key of the feature.
+     * @param variableKey The unique key of the variable.
+     * @param userId      The ID of the user.
+     * @return An OptimizelyJSON instance for the JSON variable value.
+     * Null if the feature or variable could not be found.
+     */
+    @Nullable
+    public OptimizelyJSON getFeatureVariableJSON(@Nonnull String featureKey,
+                                                 @Nonnull String variableKey,
+                                                 @Nonnull String userId) {
+        return getFeatureVariableJSON(featureKey, variableKey, userId, Collections.<String, String>emptyMap());
+    }
+
+    /**
+     * Get the JSON value of the specified variable in the feature.
+     *
+     * @param featureKey  The unique key of the feature.
+     * @param variableKey The unique key of the variable.
+     * @param userId      The ID of the user.
+     * @param attributes  The user's attributes.
+     * @return An OptimizelyJSON instance for the JSON variable value.
+     * Null if the feature or variable could not be found.
+     */
+    @Nullable
+    public OptimizelyJSON getFeatureVariableJSON(@Nonnull String featureKey,
+                                         @Nonnull String variableKey,
+                                         @Nonnull String userId,
+                                         @Nonnull Map<String, ?> attributes) {
+
+        return getFeatureVariableValueForType(
+            featureKey,
+            variableKey,
+            userId,
+            attributes,
+            FeatureVariable.JSON_TYPE);
+    }
+
     @VisibleForTesting
     <T> T getFeatureVariableValueForType(@Nonnull String featureKey,
                                           @Nonnull String variableKey,
@@ -714,12 +756,111 @@ public class Optimizely implements AutoCloseable {
                             "\" as Integer. " + exception.toString());
                     }
                     break;
+                case FeatureVariable.JSON_TYPE:
+                    return new OptimizelyJSON(variableValue);
                 default:
                     return variableValue;
             }
         }
 
         return null;
+    }
+
+    /**
+     * Get the values of all variables in the feature.
+     *
+     * @param featureKey  The unique key of the feature.
+     * @param userId      The ID of the user.
+     * @return An OptimizelyJSON instance for all variable values.
+     * Null if the feature could not be found.
+     */
+    @Nullable
+    public OptimizelyJSON getAllFeatureVariables(@Nonnull String featureKey,
+                                                 @Nonnull String userId) {
+        return getAllFeatureVariables(featureKey, userId, Collections.<String, String>emptyMap());
+    }
+
+    /**
+     * Get the values of all variables in the feature.
+     *
+     * @param featureKey  The unique key of the feature.
+     * @param userId      The ID of the user.
+     * @param attributes  The user's attributes.
+     * @return An OptimizelyJSON instance for all variable values.
+     * Null if the feature could not be found.
+     */
+    @Nullable
+    public OptimizelyJSON getAllFeatureVariables(@Nonnull String featureKey,
+                                                 @Nonnull String userId,
+                                                 @Nonnull Map<String, ?> attributes) {
+
+        if (featureKey == null) {
+            logger.warn("The featureKey parameter must be nonnull.");
+            return null;
+        } else if (userId == null) {
+            logger.warn("The userId parameter must be nonnull.");
+            return null;
+        }
+
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing getAllFeatureVariableValues call. type");
+            return null;
+        }
+
+        FeatureFlag featureFlag = projectConfig.getFeatureKeyMapping().get(featureKey);
+        if (featureFlag == null) {
+            logger.info("No feature flag was found for key \"{}\".", featureKey);
+            return null;
+        }
+
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes, projectConfig);
+        Boolean featureEnabled = false;
+        Variation variation = featureDecision.variation;
+
+        if (variation != null) {
+            if (!variation.getFeatureEnabled()) {
+                logger.info("Feature \"{}\" for variation \"{}\" was not enabled. " +
+                    "The default value is being returned.", featureKey, featureDecision.variation.getKey());
+            }
+
+            featureEnabled = variation.getFeatureEnabled();
+        } else {
+            logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
+                    "The default values are being returned.", userId, featureKey);
+        }
+
+        Map<String, Object> valuesMap = new HashMap<String, Object>();
+        for (FeatureVariable variable : featureFlag.getVariables()) {
+            String value = variable.getDefaultValue();
+            if (featureEnabled && variation != null) {
+                FeatureVariableUsageInstance instance = variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
+                if (instance != null) {
+                    value = instance.getValue();
+                }
+            }
+
+            Object convertedValue = convertStringToType(value, variable.getType());
+            if (convertedValue instanceof OptimizelyJSON) {
+                convertedValue = ((OptimizelyJSON) convertedValue).toMap();
+            }
+
+            valuesMap.put(variable.getKey(), value);
+        }
+
+        DecisionNotification decisionNotification = DecisionNotification.newFeatureVariableDecisionNotificationBuilder()
+            .withUserId(userId)
+            .withAttributes(copiedAttributes)
+            .withFeatureKey(featureKey)
+            .withFeatureEnabled(featureEnabled)
+            .withVariableValues(valuesMap)
+            .withFeatureDecision(featureDecision)
+            .build();
+
+        notificationCenter.send(decisionNotification);
+
+        return new OptimizelyJSON(valuesMap);
     }
 
     /**
