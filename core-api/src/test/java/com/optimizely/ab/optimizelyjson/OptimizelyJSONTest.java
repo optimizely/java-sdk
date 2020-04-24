@@ -37,12 +37,12 @@ public class OptimizelyJSONTest {
 
         Map<String,Object> m3 = new HashMap<String,Object>();
         m3.put("kkk1", true);
-        m3.put("kkk2", 3.0);
+        m3.put("kkk2", 3.5);
         m3.put("kkk3", "vvv3");
         m3.put("kkk4", new ArrayList(Arrays.asList(5.7, true, "vvv4")));
 
         Map<String,Object> m2 = new HashMap<String,Object>();
-        m2.put("kk1", 1);
+        m2.put("kk1", Integer.valueOf(1));
         m2.put("kk2", m3);
 
         Map<String,Object> m1 = new HashMap<String, Object>();
