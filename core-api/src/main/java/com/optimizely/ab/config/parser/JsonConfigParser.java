@@ -28,17 +28,12 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * {@code org.json}-based config parser implementation.
  */
-final class JsonConfigParser implements ConfigParser {
+final public class JsonConfigParser implements ConfigParser {
 
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
@@ -385,4 +380,58 @@ final class JsonConfigParser implements ConfigParser {
 
         return rollouts;
     }
+
+    @Override
+    public String toJson(Object src) {
+        JSONObject json = new JSONObject(src);
+        return json.toString();
+    }
+
+    @Override
+    public <T> T fromJson(String json, Class<T> clazz) throws UnsupportedOperationException {
+        if (Map.class.isAssignableFrom(clazz)) {
+            JSONObject obj = new JSONObject(json);
+            return (T)jsonObjectToMap(obj);
+        }
+
+        // JsonSimple does not support parsing to user objects
+
+        throw new UnsupportedOperationException("A proper JSON parser is not available. Use Gson or Jackson parser for this operation.");
+    }
+
+    private Map<String, Object> jsonObjectToMap(JSONObject obj) {
+        Map<String, Object> map = new HashMap<>();
+
+        Iterator<String> keys = obj.keys();
+        while(keys.hasNext()) {
+            String key = keys.next();
+            Object value = obj.get(key);
+
+            if (value instanceof JSONArray) {
+                value = jsonArrayToList((JSONArray)value);
+            } else if (value instanceof JSONObject) {
+                value = jsonObjectToMap((JSONObject)value);
+            }
+
+            map.put(key, value);
+        }
+
+        return map;
+    }
+
+    private List<Object> jsonArrayToList(JSONArray array) {
+        List<Object> list = new ArrayList<>();
+        for(Object value : array) {
+            if (value instanceof JSONArray) {
+                value = jsonArrayToList((JSONArray)value);
+            } else if (value instanceof JSONObject) {
+                value = jsonObjectToMap((JSONObject)value);
+            }
+
+            list.add(value);
+        }
+
+        return list;
+    }
+
 }

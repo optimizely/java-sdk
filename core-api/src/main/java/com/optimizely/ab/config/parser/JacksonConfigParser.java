@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config.parser;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.optimizely.ab.config.DatafileProjectConfig;
@@ -25,11 +26,12 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.TypedAudience;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 
 /**
  * {@code Jackson}-based config parser implementation.
  */
-final class JacksonConfigParser implements ConfigParser {
+final public class JacksonConfigParser implements ConfigParser {
     private ObjectMapper objectMapper;
 
     public JacksonConfigParser() {
@@ -61,4 +63,23 @@ final class JacksonConfigParser implements ConfigParser {
             addDeserializer(Condition.class, new ConditionJacksonDeserializer(objectMapper));
         }
     }
+
+    @Override
+    public String toJson(Object src) throws ConfigParseException {
+        try {
+            return objectMapper.writeValueAsString(src);
+        } catch (JsonProcessingException e) {
+            throw new ConfigParseException("Serialization failed", e);
+        }
+    }
+
+    @Override
+    public <T> T fromJson(String json, Class<T> clazz) throws ConfigParseException {
+        try {
+            return objectMapper.readValue(json, clazz);
+        } catch (IOException e) {
+            throw new ConfigParseException("Unable to parse JSON string: " + json, e);
+        }
+    }
+
 }

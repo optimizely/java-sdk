@@ -16,16 +16,16 @@
  */
 package com.optimizely.ab.optimizelyjson;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
 import com.optimizely.ab.Optimizely;
+import com.optimizely.ab.config.parser.ConfigParseException;
+import com.optimizely.ab.config.parser.ConfigParser;
+import com.optimizely.ab.config.parser.DefaultConfigParser;
+import com.optimizely.ab.config.parser.UnsupportedOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -37,14 +37,26 @@ public class OptimizelyJSON {
     @Nullable
     private Map<String,Object> map;
 
+    private ConfigParser parser;
+
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyJSON.class);
 
     public OptimizelyJSON(@Nonnull String payload) {
+        this(payload, DefaultConfigParser.getInstance());
+    }
+
+    public OptimizelyJSON(@Nonnull String payload, ConfigParser parser) {
         this.payload = payload;
+        this.parser = parser;
     }
 
     public OptimizelyJSON(@Nonnull Map<String,Object> map) {
+        this(map, DefaultConfigParser.getInstance());
+    }
+
+    public OptimizelyJSON(@Nonnull Map<String,Object> map, ConfigParser parser) {
         this.map = map;
+        this.parser = parser;
     }
 
     /**
@@ -55,10 +67,9 @@ public class OptimizelyJSON {
             if (map == null) return null;
 
             try {
-                Gson gson = new Gson();
-                payload = gson.toJson(map);
-            } catch (JsonSyntaxException e) {
-                logger.error("Provided dictionary could not be converted to string.");
+                payload = parser.toJson(map);
+            } catch (ConfigParseException e) {
+                logger.error("Provided map could not be converted to a string.");
             }
         }
 
@@ -73,10 +84,9 @@ public class OptimizelyJSON {
             if (payload == null) return null;
 
             try {
-                Gson gson = new Gson();
-                map = gson.fromJson(payload, Map.class);
-            } catch (JsonSyntaxException e) {
-                logger.error("Provided string could not be converted to dictionary.");
+                map = parser.fromJson(payload, Map.class);
+            } catch (Exception e) {
+                logger.error("Provided string could not be converted to a dictionary.");
             }
         }
 
@@ -88,9 +98,9 @@ public class OptimizelyJSON {
      * <p>
      * Example:
      * <pre>
-     *  JSON data is {"k1":true, "k2":{"k2":"v2"}}
+     *  JSON data is {"k1":true, "k2":{"k22":"v22"}}
      *
-     *  Set jsonKey to "k1" to access the true boolean value or set it to to "k1.k2" to access {"k2":"v2"}.
+     *  Set jsonKey to "k2" to access {"k22":"v22"} or set it to to "k2.k22" to access "v22".
      *  Set it to null to access the entire JSON data.
      * </pre>
      *
@@ -139,11 +149,10 @@ public class OptimizelyJSON {
         if (clazz.isInstance(object)) return (T)object;  // primitive (String, Boolean, Integer, Double)
 
         try {
-            Gson gson = new Gson();
-            String payload = gson.toJson(object);
-            return gson.fromJson(payload, clazz);
+            String payload = parser.toJson(object);
+            return parser.fromJson(payload, clazz);
         } catch (Exception e) {
-            //
+            logger.error("Map to Java Object failed.", e.toString());
         }
 
         return null;

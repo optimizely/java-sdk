@@ -18,6 +18,7 @@ package com.optimizely.ab.config.parser;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.TypedAudience;
@@ -27,7 +28,7 @@ import javax.annotation.Nonnull;
 /**
  * {@link Gson}-based config parser implementation.
  */
-final class GsonConfigParser implements ConfigParser {
+final public class GsonConfigParser implements ConfigParser {
 
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
@@ -52,4 +53,17 @@ final class GsonConfigParser implements ConfigParser {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
         }
     }
+
+    public String toJson(Object src) {
+        return new Gson().toJson(src);
+    }
+
+    public <T> T fromJson(String json, Class<T> clazz) throws ConfigParseException {
+        try {
+            return new Gson().fromJson(json, clazz);
+        } catch (Exception e) {
+            throw new ConfigParseException("Unable to parse JSON string: " + json, e);
+        }
+    }
+
 }

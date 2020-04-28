@@ -26,6 +26,7 @@ import com.optimizely.ab.config.audience.UserAttribute;
 import com.optimizely.ab.internal.ConditionUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
@@ -41,7 +42,7 @@ import java.util.logging.Logger;
 /**
  * {@code json-simple}-based config parser implementation.
  */
-final class JsonSimpleConfigParser implements ConfigParser {
+final public class JsonSimpleConfigParser implements ConfigParser {
 
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
@@ -371,5 +372,16 @@ final class JsonSimpleConfigParser implements ConfigParser {
 
         return rollouts;
     }
+
+    @Override
+    public String toJson(Object src) {
+        return JSONValue.toJSONString(src);
+    }
+
+    @Override
+    public <T> T fromJson(String json, Class<T> clazz) throws UnsupportedOperationException {
+        throw new UnsupportedOperationException("A proper JSON parser is not available. Use Gson or Jackson parser for this operation.");
+    }
+
 }
 

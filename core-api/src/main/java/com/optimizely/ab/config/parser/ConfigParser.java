@@ -16,6 +16,10 @@
  */
 package com.optimizely.ab.config.parser;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.stream.JsonWriter;
 import com.optimizely.ab.config.ProjectConfig;
 
 import javax.annotation.Nonnull;
@@ -38,4 +42,10 @@ public interface ConfigParser {
      * @throws ConfigParseException when there's an issue parsing the provided project config
      */
     ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException;
+
+    /**
+     * OptimizelyJSON parsing
+     */
+    String toJson(Object src) throws ConfigParseException;
+    <T> T fromJson(String json, Class<T> clazz) throws ConfigParseException, UnsupportedOperationException;
 }
