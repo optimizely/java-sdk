@@ -1,5 +1,11 @@
 # Optimizely Java X SDK Changelog
 
+## [3.4.3]
+April 28th, 2020
+
+### Bug Fixes:
+- Change FeatureVariable type from enum to string for forward compatibility. ([#370](https://github.com/optimizely/java-sdk/pull/370))
+
 ## [3.4.2]
 March 30th, 2020
 
