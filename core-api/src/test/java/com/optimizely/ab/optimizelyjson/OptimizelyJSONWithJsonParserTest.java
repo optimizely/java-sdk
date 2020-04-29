@@ -18,8 +18,10 @@ package com.optimizely.ab.optimizelyjson;
 
 import com.optimizely.ab.config.parser.ConfigParser;
 import com.optimizely.ab.config.parser.JsonConfigParser;
+import com.optimizely.ab.config.parser.UnsupportedOperationException;
+import org.junit.Test;
 
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class OptimizelyJSONWithJsonParserTest extends OptimizelyJSONCoreTest {
     @Override
@@ -28,5 +30,17 @@ public class OptimizelyJSONWithJsonParserTest extends OptimizelyJSONCoreTest {
     }
 
     // Tests for Json only
+
+    @Test
+    public void testGetValueThrowsException() {
+        OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
+
+        try {
+            MD1 md1 = oj1.getValue(null, MD1.class);
+            fail("GetValue is not supported for or.json paraser");
+        } catch (UnsupportedOperationException e) {
+            assertEquals(e.getMessage(), "A proper JSON parser is not available. Use Gson or Jackson parser for this operation.");
+        }
+    }
 
 }

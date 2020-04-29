@@ -17,9 +17,7 @@
 package com.optimizely.ab.optimizelyjson;
 
 import com.optimizely.ab.Optimizely;
-import com.optimizely.ab.config.parser.ConfigParseException;
-import com.optimizely.ab.config.parser.ConfigParser;
-import com.optimizely.ab.config.parser.DefaultConfigParser;
+import com.optimizely.ab.config.parser.*;
 import com.optimizely.ab.config.parser.UnsupportedOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,7 +106,11 @@ public class OptimizelyJSON {
      * @param clazz The user-defined class that the json data will be parsed to
      * @return an instance of clazz type with the parsed data filled in (or null if parse fails)
      */
-    public <T> T getValue(@Nullable String jsonKey, Class<T> clazz) {
+    public <T> T getValue(@Nullable String jsonKey, Class<T> clazz) throws UnsupportedOperationException {
+        if (!(parser instanceof GsonConfigParser || parser instanceof JacksonConfigParser)) {
+            throw new UnsupportedOperationException("A proper JSON parser is not available. Use Gson or Jackson parser for this operation.");
+        }
+
         Map<String,Object> subMap = toMap();
         T result = null;
 

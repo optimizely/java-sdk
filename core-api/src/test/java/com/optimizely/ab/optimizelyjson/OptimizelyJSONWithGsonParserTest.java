@@ -18,6 +18,7 @@ package com.optimizely.ab.optimizelyjson;
 
 import com.optimizely.ab.config.parser.ConfigParser;
 import com.optimizely.ab.config.parser.GsonConfigParser;
+import com.optimizely.ab.config.parser.UnsupportedOperationException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNull;
@@ -31,7 +32,7 @@ public class OptimizelyJSONWithGsonParserTest extends OptimizelyJSONTest {
     // Tests for GSON only
 
     @Test
-    public void testGetValueWithNotMatchingType() {
+    public void testGetValueWithNotMatchingType() throws UnsupportedOperationException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         NotMatchingType md = oj1.getValue(null, NotMatchingType.class);

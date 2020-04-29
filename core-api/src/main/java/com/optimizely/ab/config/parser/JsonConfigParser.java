@@ -388,15 +388,14 @@ final public class JsonConfigParser implements ConfigParser {
     }
 
     @Override
-    public <T> T fromJson(String json, Class<T> clazz) throws UnsupportedOperationException {
+    public <T> T fromJson(String json, Class<T> clazz) {
         if (Map.class.isAssignableFrom(clazz)) {
             JSONObject obj = new JSONObject(json);
             return (T)JsonHelpers.jsonObjectToMap(obj);
         }
 
         // org.json parser does not support parsing to user objects
-
-        throw new UnsupportedOperationException("A proper JSON parser is not available. Use Gson or Jackson parser for this operation.");
+        return null;
     }
 
 }
