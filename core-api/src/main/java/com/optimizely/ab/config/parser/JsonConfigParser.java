@@ -383,7 +383,7 @@ final public class JsonConfigParser implements ConfigParser {
 
     @Override
     public String toJson(Object src) {
-        JSONObject json = new JSONObject(src);
+        JSONObject json = (JSONObject)JsonHelpers.convertToJsonObject(src);
         return json.toString();
     }
 
@@ -391,47 +391,12 @@ final public class JsonConfigParser implements ConfigParser {
     public <T> T fromJson(String json, Class<T> clazz) throws UnsupportedOperationException {
         if (Map.class.isAssignableFrom(clazz)) {
             JSONObject obj = new JSONObject(json);
-            return (T)jsonObjectToMap(obj);
+            return (T)JsonHelpers.jsonObjectToMap(obj);
         }
 
-        // JsonSimple does not support parsing to user objects
+        // org.json parser does not support parsing to user objects
 
         throw new UnsupportedOperationException("A proper JSON parser is not available. Use Gson or Jackson parser for this operation.");
-    }
-
-    private Map<String, Object> jsonObjectToMap(JSONObject obj) {
-        Map<String, Object> map = new HashMap<>();
-
-        Iterator<String> keys = obj.keys();
-        while(keys.hasNext()) {
-            String key = keys.next();
-            Object value = obj.get(key);
-
-            if (value instanceof JSONArray) {
-                value = jsonArrayToList((JSONArray)value);
-            } else if (value instanceof JSONObject) {
-                value = jsonObjectToMap((JSONObject)value);
-            }
-
-            map.put(key, value);
-        }
-
-        return map;
-    }
-
-    private List<Object> jsonArrayToList(JSONArray array) {
-        List<Object> list = new ArrayList<>();
-        for(Object value : array) {
-            if (value instanceof JSONArray) {
-                value = jsonArrayToList((JSONArray)value);
-            } else if (value instanceof JSONObject) {
-                value = jsonObjectToMap((JSONObject)value);
-            }
-
-            list.add(value);
-        }
-
-        return list;
     }
 
 }

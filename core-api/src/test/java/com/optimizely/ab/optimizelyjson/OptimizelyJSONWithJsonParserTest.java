@@ -18,9 +18,10 @@ package com.optimizely.ab.optimizelyjson;
 
 import com.optimizely.ab.config.parser.ConfigParser;
 import com.optimizely.ab.config.parser.JsonConfigParser;
-import com.optimizely.ab.config.parser.JsonSimpleConfigParser;
 
-public class OptimizelyJSONWithJsonParserTest extends OptimizelyJSONTest {
+import static org.junit.Assert.assertNull;
+
+public class OptimizelyJSONWithJsonParserTest extends OptimizelyJSONCoreTest {
     @Override
     protected ConfigParser getParser() {
         return new JsonConfigParser();

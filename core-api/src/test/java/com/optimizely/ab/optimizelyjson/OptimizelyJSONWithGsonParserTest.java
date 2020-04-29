@@ -18,7 +18,6 @@ package com.optimizely.ab.optimizelyjson;
 
 import com.optimizely.ab.config.parser.ConfigParser;
 import com.optimizely.ab.config.parser.GsonConfigParser;
-import com.optimizely.ab.config.parser.JsonSimpleConfigParser;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNull;
