@@ -37,7 +37,7 @@ public class OptimizelyJSONWithJsonSimpleParserTest extends OptimizelyJSONCoreTe
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         try {
-            MD1 md1 = oj1.getValue(null, MD1.class);
+            String str = oj1.getValue(null, String.class);
             fail("GetValue is not supported for or.json paraser");
         } catch (UnsupportedOperationException e) {
             assertEquals(e.getMessage(), "A proper JSON parser is not available. Use Gson or Jackson parser for this operation.");
