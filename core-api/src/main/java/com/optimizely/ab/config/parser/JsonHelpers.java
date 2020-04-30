@@ -25,10 +25,10 @@ final class JsonHelpers {
 
     static Object convertToJsonObject(Object obj) {
         if (obj instanceof Map) {
-            Map map = (Map)obj;
+            Map<Object, Object> map = (Map)obj;
             JSONObject jObj = new JSONObject();
-            for (Object key : map.keySet()) {
-                jObj.put(key.toString(), convertToJsonObject(map.get(key)));
+            for (Map.Entry entry : map.entrySet()) {
+                jObj.put(entry.getKey().toString(), convertToJsonObject(entry.getValue()));
             }
             return jObj;
         } else if (obj instanceof List) {

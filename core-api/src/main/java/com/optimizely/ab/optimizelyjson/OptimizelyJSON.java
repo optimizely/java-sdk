@@ -61,9 +61,7 @@ public class OptimizelyJSON {
      *  Returns the string representation of json data
      */
     public String toString() {
-        if (payload == null) {
-            if (map == null) return null;
-
+        if (payload == null && map != null) {
             try {
                 payload = parser.toJson(map);
             } catch (ConfigParseException e) {
@@ -71,16 +69,14 @@ public class OptimizelyJSON {
             }
         }
 
-        return payload;
+        return payload != null ? payload : "";
     }
 
     /**
-     *  Returns the Map<String,Object> representation of json data
+     *  Returns the {@code Map<String,Object>} representation of json data
      */
     public Map<String,Object> toMap() {
-        if (map == null) {
-            if (payload == null) return null;
-
+        if (map == null && payload != null) {
             try {
                 map = parser.fromJson(payload, Map.class);
             } catch (Exception e) {
