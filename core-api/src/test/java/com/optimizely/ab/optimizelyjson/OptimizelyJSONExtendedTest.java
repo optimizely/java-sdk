@@ -17,11 +17,14 @@
 package com.optimizely.ab.optimizelyjson;
 
 import com.optimizely.ab.config.parser.UnsupportedOperationException;
+import com.optimizely.ab.optimizelyjson.types.MD1;
+import com.optimizely.ab.optimizelyjson.types.MD2;
+import com.optimizely.ab.optimizelyjson.types.MD3;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class OptimizelyJSONTest extends OptimizelyJSONCoreTest {
+public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
 
     @Test
     public void testGetValueNullKeyPath() throws UnsupportedOperationException {

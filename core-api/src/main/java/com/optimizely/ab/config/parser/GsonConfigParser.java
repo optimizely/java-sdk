@@ -62,7 +62,7 @@ final public class GsonConfigParser implements ConfigParser {
         try {
             return new Gson().fromJson(json, clazz);
         } catch (Exception e) {
-            throw new ConfigParseException("Unable to parse JSON string: " + json, e);
+            throw new ConfigParseException("Unable to parse JSON string: " + e.toString());
         }
     }
 

@@ -69,7 +69,7 @@ final public class JacksonConfigParser implements ConfigParser {
         try {
             return objectMapper.writeValueAsString(src);
         } catch (JsonProcessingException e) {
-            throw new ConfigParseException("Serialization failed", e);
+            throw new ConfigParseException("Serialization failed: " + e.toString());
         }
     }
 
@@ -78,7 +78,7 @@ final public class JacksonConfigParser implements ConfigParser {
         try {
             return objectMapper.readValue(json, clazz);
         } catch (IOException e) {
-            throw new ConfigParseException("Unable to parse JSON string: " + json, e);
+            throw new ConfigParseException("Unable to parse JSON string: " + e.toString());
         }
     }
 

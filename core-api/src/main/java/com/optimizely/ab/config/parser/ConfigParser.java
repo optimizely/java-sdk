@@ -47,5 +47,5 @@ public interface ConfigParser {
      * OptimizelyJSON parsing
      */
     String toJson(Object src) throws ConfigParseException;
-    <T> T fromJson(String json, Class<T> clazz) throws ConfigParseException, UnsupportedOperationException;
+    <T> T fromJson(String json, Class<T> clazz) throws ConfigParseException;
 }

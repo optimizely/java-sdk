@@ -379,14 +379,14 @@ final public class JsonSimpleConfigParser implements ConfigParser {
     }
 
     @Override
-    public <T> T fromJson(String json, Class<T> clazz) {
+    public <T> T fromJson(String json, Class<T> clazz) throws ConfigParseException {
         if (Map.class.isAssignableFrom(clazz)) {
             org.json.JSONObject obj = new org.json.JSONObject(json);
             return (T)JsonHelpers.jsonObjectToMap(obj);
         }
 
         // org.json.simple does not support parsing to user objects
-        return null;
+        throw new ConfigParseException("Parsing fails with a unsupported type");
     }
 
 }

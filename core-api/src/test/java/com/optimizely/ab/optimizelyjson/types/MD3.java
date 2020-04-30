@@ -1,4 +1,4 @@
-package com.optimizely.ab.optimizelyjson;
+package com.optimizely.ab.optimizelyjson.types;
 
 public class MD3 {
     public boolean kkk1;

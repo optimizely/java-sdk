@@ -67,7 +67,7 @@ public class OptimizelyJSON {
             try {
                 payload = parser.toJson(map);
             } catch (ConfigParseException e) {
-                logger.error("Provided map could not be converted to a string.");
+                logger.error("Provided map could not be converted to a string ({})", e.toString());
             }
         }
 
@@ -84,7 +84,7 @@ public class OptimizelyJSON {
             try {
                 map = parser.fromJson(payload, Map.class);
             } catch (Exception e) {
-                logger.error("Provided string could not be converted to a dictionary.");
+                logger.error("Provided string could not be converted to a dictionary ({})", e.toString());
             }
         }
 
@@ -154,7 +154,7 @@ public class OptimizelyJSON {
             String payload = parser.toJson(object);
             return parser.fromJson(payload, clazz);
         } catch (Exception e) {
-            logger.error("Map to Java Object failed.", e.toString());
+            logger.error("Map to Java Object failed ({})", e.toString());
         }
 
         return null;
