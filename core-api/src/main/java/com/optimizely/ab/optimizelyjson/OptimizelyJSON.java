@@ -60,6 +60,7 @@ public class OptimizelyJSON {
     /**
      *  Returns the string representation of json data
      */
+    @Nonnull
     public String toString() {
         if (payload == null && map != null) {
             try {
@@ -75,6 +76,7 @@ public class OptimizelyJSON {
     /**
      *  Returns the {@code Map<String,Object>} representation of json data
      */
+    @Nullable
     public Map<String,Object> toMap() {
         if (map == null && payload != null) {
             try {
@@ -102,6 +104,7 @@ public class OptimizelyJSON {
      * @param clazz The user-defined class that the json data will be parsed to
      * @return an instance of clazz type with the parsed data filled in (or null if parse fails)
      */
+    @Nullable
     public <T> T getValue(@Nullable String jsonKey, Class<T> clazz) throws UnsupportedOperationException {
         if (!(parser instanceof GsonConfigParser || parser instanceof JacksonConfigParser)) {
             throw new UnsupportedOperationException("A proper JSON parser is not available. Use Gson or Jackson parser for this operation.");
