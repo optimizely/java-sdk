@@ -25,14 +25,16 @@ import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.*;
-import com.optimizely.ab.event.internal.*;
+import com.optimizely.ab.event.internal.ClientEngineInfo;
+import com.optimizely.ab.event.internal.EventFactory;
+import com.optimizely.ab.event.internal.UserEvent;
+import com.optimizely.ab.event.internal.UserEventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.notification.*;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
-import com.sun.org.apache.xpath.internal.operations.Variable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,11 +42,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.optimizely.ab.internal.SafetyUtils.tryClose;
 
@@ -846,7 +844,7 @@ public class Optimizely implements AutoCloseable {
                 convertedValue = ((OptimizelyJSON) convertedValue).toMap();
             }
 
-            valuesMap.put(variable.getKey(), value);
+            valuesMap.put(variable.getKey(), convertedValue);
         }
 
         DecisionNotification decisionNotification = DecisionNotification.newFeatureVariableDecisionNotificationBuilder()
