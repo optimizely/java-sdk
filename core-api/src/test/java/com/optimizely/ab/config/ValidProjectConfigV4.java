@@ -407,8 +407,8 @@ public class ValidProjectConfigV4 {
         null
     );
     private static final String VARIABLE_JSON_PATCHED_TYPE_ID = "4111661000";
-    private static final String VARIABLE_JSON_PATCHED_TYPE_KEY = "json_patched";
-    private static final String VARIABLE_JSON_PATCHED_TYPE_DEFAULT_VALUE = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
+    public static final String VARIABLE_JSON_PATCHED_TYPE_KEY = "json_patched";
+    public static final String VARIABLE_JSON_PATCHED_TYPE_DEFAULT_VALUE = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
     private static final FeatureVariable VARIABLE_JSON_PATCHED_TYPE_VARIABLE = new FeatureVariable(
         VARIABLE_JSON_PATCHED_TYPE_ID,
         VARIABLE_JSON_PATCHED_TYPE_KEY,
@@ -418,8 +418,8 @@ public class ValidProjectConfigV4 {
         FeatureVariable.JSON_TYPE
     );
     private static final String VARIABLE_JSON_NATIVE_TYPE_ID = "4111661001";
-    private static final String VARIABLE_JSON_NATIVE_TYPE_KEY = "json_native";
-    private static final String VARIABLE_JSON_NATIVE_TYPE_DEFAULT_VALUE = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
+    public static final String VARIABLE_JSON_NATIVE_TYPE_KEY = "json_native";
+    public static final String VARIABLE_JSON_NATIVE_TYPE_DEFAULT_VALUE = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
     private static final FeatureVariable VARIABLE_JSON_NATIVE_TYPE_VARIABLE = new FeatureVariable(
         VARIABLE_JSON_NATIVE_TYPE_ID,
         VARIABLE_JSON_NATIVE_TYPE_KEY,
@@ -429,8 +429,8 @@ public class ValidProjectConfigV4 {
         null
     );
     private static final String VARIABLE_FUTURE_TYPE_ID = "4111661002";
-    private static final String VARIABLE_FUTURE_TYPE_KEY = "future_variable";
-    private static final String VARIABLE_FUTURE_TYPE_DEFAULT_VALUE = "future_value";
+    public static final String VARIABLE_FUTURE_TYPE_KEY = "future_variable";
+    public static final String VARIABLE_FUTURE_TYPE_DEFAULT_VALUE = "future_value";
     private static final FeatureVariable VARIABLE_FUTURE_TYPE_VARIABLE = new FeatureVariable(
         VARIABLE_FUTURE_TYPE_ID,
         VARIABLE_FUTURE_TYPE_KEY,

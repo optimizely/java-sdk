@@ -28,9 +28,10 @@ import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.EventProcessor;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.UserEventFactory;
-import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.internal.ControlAttribute;
+import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.notification.*;
+import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,14 +44,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import java.io.Closeable;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
@@ -63,10 +58,7 @@ import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -4147,7 +4139,7 @@ public class OptimizelyTest {
 
         final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
         String validVariableKey = VARIABLE_JSON_PATCHED_TYPE_KEY;
-        String expectedString = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
+        String expectedString = "{\"k1\":\"s1\",\"k2\":103.5,\"k3\":false,\"k4\":{\"kk1\":\"ss1\",\"kk2\":true}}";
 
         Optimizely optimizely = optimizelyBuilder.build();
 
@@ -4159,14 +4151,14 @@ public class OptimizelyTest {
 
         assertEquals(json.toString(), expectedString);
 
-        assertEquals(json.toMap().get("k1"), "v1");
-        assertEquals(json.toMap().get("k2"), 3.5);
-        assertEquals(json.toMap().get("k3"), true);
-        assertEquals(json.toMap().get("k4").get("kk1"), "vv11");
-        assertEquals(json.toMap().get("k4").get("kk2"), false);
+        assertEquals(json.toMap().get("k1"), "s1");
+        assertEquals(json.toMap().get("k2"), 103.5);
+        assertEquals(json.toMap().get("k3"), false);
+        assertEquals(((Map)json.toMap().get("k4")).get("kk1"), "ss1");
+        assertEquals(((Map)json.toMap().get("k4")).get("kk2"), true);
 
-        assertEquals(json.getValue("k1", String.class), "v1");
-        assertEquals(json.getValue("k1.k4", Boolean.class), "v1");
+        assertEquals(json.getValue("k1", String.class), "s1");
+        assertEquals(json.getValue("k4.kk2", Boolean.class), true);
     }
 
     /**
@@ -4176,7 +4168,7 @@ public class OptimizelyTest {
      */
     @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     @Test
-    public void getFeatureVariableJSONUserInExperimentFeatureOff() {
+    public void getFeatureVariableJSONUserInExperimentFeatureOff() throws Exception {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
         final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
@@ -4197,11 +4189,11 @@ public class OptimizelyTest {
         assertEquals(json.toMap().get("k1"), "v1");
         assertEquals(json.toMap().get("k2"), 3.5);
         assertEquals(json.toMap().get("k3"), true);
-        assertEquals(json.toMap().get("k4").get("kk1"), "vv11");
-        assertEquals(json.toMap().get("k4").get("kk2"), false);
+        assertEquals(((Map)json.toMap().get("k4")).get("kk1"), "vv1");
+        assertEquals(((Map)json.toMap().get("k4")).get("kk2"), false);
 
         assertEquals(json.getValue("k1", String.class), "v1");
-        assertEquals(json.getValue("k1.k4", Boolean.class), "v1");
+        assertEquals(json.getValue("k4.kk2", Boolean.class), false);
     }
 
     /**
@@ -4227,11 +4219,12 @@ public class OptimizelyTest {
 
         assertEquals(json.toMap().get("first_letter"), "F");
         assertEquals(json.toMap().get("rest_of_name"), "red");
-        assertEquals(json.toMap().get("json_patched").get("k1"), "v1");
-        assertEquals(json.toMap().get("json_patched").get("k2"), 3.5);
-        assertEquals(json.toMap().get("json_patched").get("k3"), true);
-        assertEquals(json.toMap().get("json_patched").get("k4").get("kk1"), "vv11");
-        assertEquals(json.toMap().get("json_patched").get("k4").get("kk2"), false);
+        Map subMap = (Map)json.toMap().get("json_patched");
+        assertEquals(subMap.get("k1"), "v1");
+        assertEquals(subMap.get("k2"), 3.5);
+        assertEquals(subMap.get("k3"), true);
+        assertEquals(((Map)subMap.get("k4")).get("kk1"), "vv11");
+        assertEquals(((Map)subMap.get("k4")).get("kk2"), false);
 
         assertEquals(json.getValue("first_letter", String.class), "F");
         assertEquals(json.getValue("json_patched.k1", String.class), "v1");
@@ -4245,7 +4238,7 @@ public class OptimizelyTest {
      */
     @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     @Test
-    public void getAllFeatureVariablesUserInExperimentFeatureOff() {
+    public void getAllFeatureVariablesUserInExperimentFeatureOff() throws Exception {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
         final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
@@ -4263,15 +4256,16 @@ public class OptimizelyTest {
 
         assertEquals(json.toMap().get("first_letter"), "H");
         assertEquals(json.toMap().get("rest_of_name"), "arry");
-        assertEquals(json.toMap().get("json_patched").get("k1"), "v1");
-        assertEquals(json.toMap().get("json_patched").get("k2"), 3.5);
-        assertEquals(json.toMap().get("json_patched").get("k3"), true);
-        assertEquals(json.toMap().get("json_patched").get("k4").get("kk1"), "vv11");
-        assertEquals(json.toMap().get("json_patched").get("k4").get("kk2"), false);
+        Map subMap = (Map)json.toMap().get("json_patched");
+        assertEquals(subMap.get("k1"), "v1");
+        assertEquals(subMap.get("k2"), 3.5);
+        assertEquals(subMap.get("k3"), true);
+        assertEquals(((Map)subMap.get("k4")).get("kk1"), "vv11");
+        assertEquals(((Map)subMap.get("k4")).get("kk2"), false);
 
         assertEquals(json.getValue("first_letter", String.class), "H");
         assertEquals(json.getValue("json_patched.k1", String.class), "v1");
-        assertEquals(json.getValue("json_patched.k1.k4", Boolean.class), "v1");
+        assertEquals(json.getValue("json_patched.k4.kk2", Boolean.class), false);
     }
 
     /**
