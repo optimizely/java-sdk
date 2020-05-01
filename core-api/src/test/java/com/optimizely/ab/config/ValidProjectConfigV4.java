@@ -247,7 +247,8 @@ public class ValidProjectConfigV4 {
         VARIABLE_DOUBLE_VARIABLE_KEY,
         VARIABLE_DOUBLE_DEFAULT_VALUE,
         null,
-        FeatureVariable.DOUBLE_TYPE
+        FeatureVariable.DOUBLE_TYPE,
+        null
     );
     private static final String FEATURE_SINGLE_VARIABLE_INTEGER_ID = "3281420120";
     public static final String FEATURE_SINGLE_VARIABLE_INTEGER_KEY = "integer_single_variable_feature";
@@ -259,7 +260,8 @@ public class ValidProjectConfigV4 {
         VARIABLE_INTEGER_VARIABLE_KEY,
         VARIABLE_INTEGER_DEFAULT_VALUE,
         null,
-        FeatureVariable.INTEGER_TYPE
+        FeatureVariable.INTEGER_TYPE,
+        null
     );
     private static final String FEATURE_SINGLE_VARIABLE_BOOLEAN_ID = "2591051011";
     public static final String FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY = "boolean_single_variable_feature";
@@ -271,7 +273,8 @@ public class ValidProjectConfigV4 {
         VARIABLE_BOOLEAN_VARIABLE_KEY,
         VARIABLE_BOOLEAN_VARIABLE_DEFAULT_VALUE,
         null,
-        FeatureVariable.BOOLEAN_TYPE
+        FeatureVariable.BOOLEAN_TYPE,
+        null
     );
     private static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_BOOLEAN = new FeatureFlag(
         FEATURE_SINGLE_VARIABLE_BOOLEAN_ID,
@@ -292,7 +295,8 @@ public class ValidProjectConfigV4 {
         VARIABLE_STRING_VARIABLE_KEY,
         VARIABLE_STRING_VARIABLE_DEFAULT_VALUE,
         null,
-        FeatureVariable.STRING_TYPE
+        FeatureVariable.STRING_TYPE,
+        null
     );
     private static final String ROLLOUT_1_ID = "1058508303";
     private static final String ROLLOUT_1_EVERYONE_ELSE_EXPERIMENT_ID = "1785077004";
@@ -388,7 +392,8 @@ public class ValidProjectConfigV4 {
         VARIABLE_FIRST_LETTER_KEY,
         VARIABLE_FIRST_LETTER_DEFAULT_VALUE,
         null,
-        FeatureVariable.STRING_TYPE
+        FeatureVariable.STRING_TYPE,
+        null
     );
     private static final String VARIABLE_REST_OF_NAME_ID = "4052219963";
     private static final String VARIABLE_REST_OF_NAME_KEY = "rest_of_name";
@@ -398,9 +403,32 @@ public class ValidProjectConfigV4 {
         VARIABLE_REST_OF_NAME_KEY,
         VARIABLE_REST_OF_NAME_DEFAULT_VALUE,
         null,
-        FeatureVariable.STRING_TYPE
+        FeatureVariable.STRING_TYPE,
+        null
     );
-    private static final String VARIABLE_FUTURE_TYPE_ID = "4111661234";
+    private static final String VARIABLE_JSON_PATCHED_TYPE_ID = "4111661000";
+    private static final String VARIABLE_JSON_PATCHED_TYPE_KEY = "json_patched";
+    private static final String VARIABLE_JSON_PATCHED_TYPE_DEFAULT_VALUE = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
+    private static final FeatureVariable VARIABLE_JSON_PATCHED_TYPE_VARIABLE = new FeatureVariable(
+        VARIABLE_JSON_PATCHED_TYPE_ID,
+        VARIABLE_JSON_PATCHED_TYPE_KEY,
+        VARIABLE_JSON_PATCHED_TYPE_DEFAULT_VALUE,
+        null,
+        FeatureVariable.STRING_TYPE,
+        FeatureVariable.JSON_TYPE
+    );
+    private static final String VARIABLE_JSON_NATIVE_TYPE_ID = "4111661001";
+    private static final String VARIABLE_JSON_NATIVE_TYPE_KEY = "json_native";
+    private static final String VARIABLE_JSON_NATIVE_TYPE_DEFAULT_VALUE = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
+    private static final FeatureVariable VARIABLE_JSON_NATIVE_TYPE_VARIABLE = new FeatureVariable(
+        VARIABLE_JSON_NATIVE_TYPE_ID,
+        VARIABLE_JSON_NATIVE_TYPE_KEY,
+        VARIABLE_JSON_NATIVE_TYPE_DEFAULT_VALUE,
+        null,
+        FeatureVariable.JSON_TYPE,
+        null
+    );
+    private static final String VARIABLE_FUTURE_TYPE_ID = "4111661002";
     private static final String VARIABLE_FUTURE_TYPE_KEY = "future_variable";
     private static final String VARIABLE_FUTURE_TYPE_DEFAULT_VALUE = "future_value";
     private static final FeatureVariable VARIABLE_FUTURE_TYPE_VARIABLE = new FeatureVariable(
@@ -408,7 +436,8 @@ public class ValidProjectConfigV4 {
         VARIABLE_FUTURE_TYPE_KEY,
         VARIABLE_FUTURE_TYPE_DEFAULT_VALUE,
         null,
-        "future_type"
+        "future_type",
+        null
     );
     private static final String FEATURE_MUTEX_GROUP_FEATURE_ID = "3263342226";
     public static final String FEATURE_MUTEX_GROUP_FEATURE_KEY = "mutex_group_feature";
@@ -420,7 +449,8 @@ public class ValidProjectConfigV4 {
         VARIABLE_CORRELATING_VARIATION_NAME_KEY,
         VARIABLE_CORRELATING_VARIATION_NAME_DEFAULT_VALUE,
         null,
-        FeatureVariable.STRING_TYPE
+        FeatureVariable.STRING_TYPE,
+        null
     );
 
     // group IDs
@@ -733,6 +763,10 @@ public class ValidProjectConfigV4 {
             new FeatureVariableUsageInstance(
                 VARIABLE_REST_OF_NAME_ID,
                 "red"
+            ),
+            new FeatureVariableUsageInstance(
+                VARIABLE_JSON_PATCHED_TYPE_ID,
+                "{\"k1\":\"s1\",\"k2\":103.5,\"k3\":false,\"k4\":{\"kk1\":\"ss1\",\"kk2\":true}}"
             )
         )
     );
@@ -750,6 +784,10 @@ public class ValidProjectConfigV4 {
             new FeatureVariableUsageInstance(
                 VARIABLE_REST_OF_NAME_ID,
                 "eorge"
+            ),
+            new FeatureVariableUsageInstance(
+                VARIABLE_JSON_PATCHED_TYPE_ID,
+                "{\"k1\":\"s2\",\"k2\":203.5,\"k3\":true,\"k4\":{\"kk1\":\"ss2\",\"kk2\":true}}"
             )
         )
     );
@@ -768,6 +806,10 @@ public class ValidProjectConfigV4 {
             new FeatureVariableUsageInstance(
                 VARIABLE_REST_OF_NAME_ID,
                 "red"
+            ),
+            new FeatureVariableUsageInstance(
+                VARIABLE_JSON_PATCHED_TYPE_ID,
+                "{\"k1\":\"s3\",\"k2\":303.5,\"k3\":true,\"k4\":{\"kk1\":\"ss3\",\"kk2\":false}}"
             )
         )
     );
@@ -785,6 +827,10 @@ public class ValidProjectConfigV4 {
             new FeatureVariableUsageInstance(
                 VARIABLE_REST_OF_NAME_ID,
                 "eorge"
+            ),
+            new FeatureVariableUsageInstance(
+                VARIABLE_JSON_PATCHED_TYPE_ID,
+                "{\"k1\":\"s4\",\"k2\":403.5,\"k3\":false,\"k4\":{\"kk1\":\"ss4\",\"kk2\":true}}"
             )
         )
     );
@@ -1262,6 +1308,8 @@ public class ValidProjectConfigV4 {
         DatafileProjectConfigTestUtils.createListOfObjects(
             VARIABLE_FIRST_LETTER_VARIABLE,
             VARIABLE_REST_OF_NAME_VARIABLE,
+            VARIABLE_JSON_PATCHED_TYPE_VARIABLE,
+            VARIABLE_JSON_NATIVE_TYPE_VARIABLE,
             VARIABLE_FUTURE_TYPE_VARIABLE
         )
     );

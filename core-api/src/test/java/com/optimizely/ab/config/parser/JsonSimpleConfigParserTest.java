@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config.parser;
 
+import com.optimizely.ab.config.FeatureFlag;
+import com.optimizely.ab.config.FeatureVariable;
 import com.optimizely.ab.config.ProjectConfig;
 
 import com.optimizely.ab.config.audience.AudienceIdCondition;
@@ -30,6 +32,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.List;
+
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.nullFeatureEnabledConfigJsonV4;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV2;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV4;
@@ -38,6 +42,7 @@ import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfi
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV3;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV4;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.verifyProjectConfig;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -86,6 +91,45 @@ public class JsonSimpleConfigParserTest {
 
         assertNotNull(actual.getFeatureFlags());
 
+    }
+
+    @Test
+    public void parseFeatureVariablesWithJsonPatched() throws Exception {
+        JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
+        ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV4());
+
+        // "string" type + "json" subType
+
+        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_feature");
+        FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("json_patched");
+
+        assertEquals(variable.getType(), "json");
+    }
+
+    @Test
+    public void parseFeatureVariablesWithJsonNative() throws Exception {
+        JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
+        ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV4());
+
+        // native "json" type
+
+        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_feature");
+        FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("json_native");
+
+        assertEquals(variable.getType(), "json");
+    }
+
+    @Test
+    public void parseFeatureVariablesWithFutureType() throws Exception {
+        JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
+        ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV4());
+
+        // unknown type
+
+        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_feature");
+        FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("future_variable");
+
+        assertEquals(variable.getType(), "future_type");
     }
 
     @Test

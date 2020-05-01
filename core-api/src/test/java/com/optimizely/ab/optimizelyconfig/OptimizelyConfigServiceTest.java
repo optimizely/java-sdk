@@ -287,14 +287,16 @@ public class OptimizelyConfigServiceTest {
                             "first_letter",
                             "H",
                             FeatureVariable.VariableStatus.ACTIVE,
-                            FeatureVariable.STRING_TYPE
+                            FeatureVariable.STRING_TYPE,
+                            null
                         ),
                         new FeatureVariable(
                             "4052219963",
                             "rest_of_name",
                             "arry",
                             FeatureVariable.VariableStatus.ACTIVE,
-                            FeatureVariable.STRING_TYPE
+                            FeatureVariable.STRING_TYPE,
+                            null
                         )
                     )
                 )
