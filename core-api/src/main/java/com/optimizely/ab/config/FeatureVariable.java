@@ -65,11 +65,14 @@ public class FeatureVariable implements IdKeyMapped {
     public static final String INTEGER_TYPE = "integer";
     public static final String DOUBLE_TYPE = "double";
     public static final String BOOLEAN_TYPE = "boolean";
+    public static final String JSON_TYPE = "json";
 
     private final String id;
     private final String key;
     private final String defaultValue;
     private final String type;
+    @Nullable
+    private final String subType;        // this is for backward-compatibility (json type)
     @Nullable
     private final VariableStatus status;
 
@@ -78,12 +81,14 @@ public class FeatureVariable implements IdKeyMapped {
                            @JsonProperty("key") String key,
                            @JsonProperty("defaultValue") String defaultValue,
                            @JsonProperty("status") VariableStatus status,
-                           @JsonProperty("type") String type) {
+                           @JsonProperty("type") String type,
+                           @JsonProperty("subType") String subType) {
         this.id = id;
         this.key = key;
         this.defaultValue = defaultValue;
         this.status = status;
         this.type = type;
+        this.subType = subType;
     }
 
     @Nullable
@@ -104,6 +109,7 @@ public class FeatureVariable implements IdKeyMapped {
     }
 
     public String getType() {
+        if (type.equals(STRING_TYPE) && subType != null && subType.equals(JSON_TYPE)) return JSON_TYPE;
         return type;
     }
 
@@ -114,6 +120,7 @@ public class FeatureVariable implements IdKeyMapped {
             ", key='" + key + '\'' +
             ", defaultValue='" + defaultValue + '\'' +
             ", type=" + type +
+            ", subType=" + subType +
             ", status=" + status +
             '}';
     }
@@ -138,7 +145,8 @@ public class FeatureVariable implements IdKeyMapped {
         result = 31 * result + key.hashCode();
         result = 31 * result + defaultValue.hashCode();
         result = 31 * result + type.hashCode();
-        result = 31 * result + status.hashCode();
+        result = 31 * result + (subType != null ? subType.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
         return result;
     }
 }

@@ -345,12 +345,16 @@ final class JsonConfigParser implements ConfigParser {
             String key = FeatureVariableObject.getString("key");
             String defaultValue = FeatureVariableObject.getString("defaultValue");
             String type = FeatureVariableObject.getString("type");
+            String subType = null;
+            if (FeatureVariableObject.has("subType")) {
+                subType = FeatureVariableObject.getString("subType");
+            }
             FeatureVariable.VariableStatus status = null;
             if (FeatureVariableObject.has("status")) {
                 status = FeatureVariable.VariableStatus.fromString(FeatureVariableObject.getString("status"));
             }
 
-            featureVariables.add(new FeatureVariable(id, key, defaultValue, status, type));
+            featureVariables.add(new FeatureVariable(id, key, defaultValue, status, type, subType));
         }
 
         return featureVariables;
