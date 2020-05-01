@@ -41,8 +41,13 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
 
         // verify previous getValue does not destroy the data
 
-        Boolean value = oj1.getValue("k3.kk2.kkk1", Boolean.class);
-        assertEquals(value, true);
+        MD1 newMd1 = oj1.getValue(null, MD1.class);
+        assertEquals(newMd1.k1, "v1");
+        assertEquals(newMd1.k2, true);
+        assertEquals(newMd1.k3.kk1, 1.2, 0.01);
+        assertEquals(newMd1.k3.kk2.kkk1, true);
+        assertEquals((Double)newMd1.k3.kk2.kkk4[0], 5.7, 0.01);
+        assertEquals(newMd1.k3.kk2.kkk4[2], "vvv4");
     }
 
     @Test
