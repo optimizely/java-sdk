@@ -71,6 +71,7 @@ public class FeatureVariable implements IdKeyMapped {
     private final String key;
     private final String defaultValue;
     private final String type;
+    @Nullable
     private final String subType;        // this is for backward-compatibility (json type)
     @Nullable
     private final VariableStatus status;
@@ -144,8 +145,8 @@ public class FeatureVariable implements IdKeyMapped {
         result = 31 * result + key.hashCode();
         result = 31 * result + defaultValue.hashCode();
         result = 31 * result + type.hashCode();
-        result = 31 * result + subType.hashCode();
-        result = 31 * result + status.hashCode();
+        result = 31 * result + (subType != null ? subType.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
         return result;
     }
 }
