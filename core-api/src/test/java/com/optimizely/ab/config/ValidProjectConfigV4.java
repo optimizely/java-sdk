@@ -408,24 +408,24 @@ public class ValidProjectConfigV4 {
     );
     private static final String VARIABLE_JSON_PATCHED_TYPE_ID = "4111661000";
     private static final String VARIABLE_JSON_PATCHED_TYPE_KEY = "json_patched";
-    private static final String VARIABLE_JSON_PATCHED_TYPE_DEFAULT_VALUE = "{\"k1\":\"v1\",\"k1\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
+    private static final String VARIABLE_JSON_PATCHED_TYPE_DEFAULT_VALUE = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
     private static final FeatureVariable VARIABLE_JSON_PATCHED_TYPE_VARIABLE = new FeatureVariable(
         VARIABLE_JSON_PATCHED_TYPE_ID,
         VARIABLE_JSON_PATCHED_TYPE_KEY,
         VARIABLE_JSON_PATCHED_TYPE_DEFAULT_VALUE,
         null,
-        "string",
-        "json"
+        FeatureVariable.STRING_TYPE,
+        FeatureVariable.JSON_TYPE
     );
     private static final String VARIABLE_JSON_NATIVE_TYPE_ID = "4111661001";
     private static final String VARIABLE_JSON_NATIVE_TYPE_KEY = "json_native";
-    private static final String VARIABLE_JSON_NATIVE_TYPE_DEFAULT_VALUE = "{\"k1\":\"v1\",\"k1\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
+    private static final String VARIABLE_JSON_NATIVE_TYPE_DEFAULT_VALUE = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
     private static final FeatureVariable VARIABLE_JSON_NATIVE_TYPE_VARIABLE = new FeatureVariable(
         VARIABLE_JSON_NATIVE_TYPE_ID,
         VARIABLE_JSON_NATIVE_TYPE_KEY,
         VARIABLE_JSON_NATIVE_TYPE_DEFAULT_VALUE,
         null,
-        "json",
+        FeatureVariable.JSON_TYPE,
         null
     );
     private static final String VARIABLE_FUTURE_TYPE_ID = "4111661002";
