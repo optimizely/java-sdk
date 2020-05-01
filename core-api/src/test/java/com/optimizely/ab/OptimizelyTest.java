@@ -2243,7 +2243,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
 
         int notificationId = optimizely.addDecisionNotificationHandler(
-            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLES.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.ALL_FEATURE_VARIABLES.toString(),
                 testUserId,
                 testUserAttributes,
                 testDecisionInfoMap));
@@ -2289,7 +2289,7 @@ public class OptimizelyTest {
         testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
 
         int notificationId = optimizely.addDecisionNotificationHandler(
-            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLES.toString(),
+            getDecisionListener(NotificationCenter.DecisionNotificationType.ALL_FEATURE_VARIABLES.toString(),
                 userID,
                 testUserAttributes,
                 testDecisionInfoMap));
