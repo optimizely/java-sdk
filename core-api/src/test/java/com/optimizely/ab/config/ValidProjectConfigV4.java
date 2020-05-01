@@ -763,6 +763,10 @@ public class ValidProjectConfigV4 {
             new FeatureVariableUsageInstance(
                 VARIABLE_REST_OF_NAME_ID,
                 "red"
+            ),
+            new FeatureVariableUsageInstance(
+                VARIABLE_JSON_PATCHED_TYPE_ID,
+                "{\"k1\":\"s1\",\"k2\":103.5,\"k3\":false,\"k4\":{\"kk1\":\"ss1\",\"kk2\":true}}"
             )
         )
     );
@@ -780,6 +784,10 @@ public class ValidProjectConfigV4 {
             new FeatureVariableUsageInstance(
                 VARIABLE_REST_OF_NAME_ID,
                 "eorge"
+            ),
+            new FeatureVariableUsageInstance(
+                VARIABLE_JSON_PATCHED_TYPE_ID,
+                "{\"k1\":\"s2\",\"k2\":203.5,\"k3\":true,\"k4\":{\"kk1\":\"ss2\",\"kk2\":true}}"
             )
         )
     );
@@ -798,6 +806,10 @@ public class ValidProjectConfigV4 {
             new FeatureVariableUsageInstance(
                 VARIABLE_REST_OF_NAME_ID,
                 "red"
+            ),
+            new FeatureVariableUsageInstance(
+                VARIABLE_JSON_PATCHED_TYPE_ID,
+                "{\"k1\":\"s3\",\"k2\":303.5,\"k3\":true,\"k4\":{\"kk1\":\"ss3\",\"kk2\":false}}"
             )
         )
     );
@@ -815,6 +827,10 @@ public class ValidProjectConfigV4 {
             new FeatureVariableUsageInstance(
                 VARIABLE_REST_OF_NAME_ID,
                 "eorge"
+            ),
+            new FeatureVariableUsageInstance(
+                VARIABLE_JSON_PATCHED_TYPE_ID,
+                "{\"k1\":\"s4\",\"k2\":403.5,\"k3\":false,\"k4\":{\"kk1\":\"ss4\",\"kk2\":true}}"
             )
         )
     );
