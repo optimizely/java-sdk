@@ -2216,6 +2216,96 @@ public class OptimizelyTest {
     }
 
     /**
+     * Verify that the {@link Optimizely#getAllFeatureVariables(String, String, Map)}
+     * notification listener of getAllFeatureVariables is called when feature is in experiment and feature is true
+     */
+    @Test
+    public void getAllFeatureVariablesWithListenerUserInExperimentFeatureOn() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        isListenerCalled = false;
+        final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+        String expectedString = "{\"first_letter\":\"F\",\"rest_of_name\":\"red\",\"json_patched\":{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}}";
+
+        Optimizely optimizely = optimizelyBuilder.build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+        testUserAttributes.put(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        final Map<String, String> testSourceInfo = new HashMap<>();
+        testSourceInfo.put(EXPERIMENT_KEY, "multivariate_experiment");
+        testSourceInfo.put(VARIATION_KEY, "Fred");
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
+        testDecisionInfoMap.put(FEATURE_ENABLED, true);
+        testDecisionInfoMap.put(VARIABLE_VALUES, expectedString);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
+        testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
+
+        int notificationId = optimizely.addDecisionNotificationHandler(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLES.toString(),
+                testUserId,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertEquals(optimizely.getAllFeatureVariables(
+            validFeatureKey,
+            testUserId,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)).toString(),
+            expectedString);
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getAllFeatureVariables(String, String, Map)}
+     * notification listener of getAllFeatureVariables is called when feature is in experiment and feature enabled is false
+     * than default value will get returned and passing null attribute will send empty map instead of null
+     */
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
+    @Test
+    public void getAllFeatureVariablesWithListenerUserInExperimentFeatureOff() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        isListenerCalled = false;
+        final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+        String expectedString = "{\"first_letter\":\"H\",\"rest_of_name\":\"arry\",\"json_patched\":{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}}";
+        String userID = "Gred";
+
+        Optimizely optimizely = optimizelyBuilder.build();
+
+        final Map<String, String> testUserAttributes = new HashMap<>();
+
+        final Map<String, String> testSourceInfo = new HashMap<>();
+        testSourceInfo.put(EXPERIMENT_KEY, "multivariate_experiment");
+        testSourceInfo.put(VARIATION_KEY, "Gred");
+
+        final Map<String, Object> testDecisionInfoMap = new HashMap<>();
+        testDecisionInfoMap.put(FEATURE_KEY, validFeatureKey);
+        testDecisionInfoMap.put(FEATURE_ENABLED, false);
+        testDecisionInfoMap.put(VARIABLE_VALUES, expectedString);
+        testDecisionInfoMap.put(SOURCE, FeatureDecision.DecisionSource.FEATURE_TEST.toString());
+        testDecisionInfoMap.put(SOURCE_INFO, testSourceInfo);
+
+        int notificationId = optimizely.addDecisionNotificationHandler(
+            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_VARIABLES.toString(),
+                userID,
+                testUserAttributes,
+                testDecisionInfoMap));
+
+        assertEquals(optimizely.getAllFeatureVariables(
+            validFeatureKey,
+            userID,
+            null).toString(),
+            expectedString);
+
+        // Verify that listener being called
+        assertTrue(isListenerCalled);
+        assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+    }
+    
+    /**
      * Verify that the {@link Optimizely#activate(String, String, Map<String, String>)} call
      * correctly builds an endpoint url and request params
      * and passes them through {@link EventHandler#dispatchEvent(LogEvent)}.
@@ -4044,6 +4134,144 @@ public class OptimizelyTest {
         );
 
         assertNull(spyOptimizely.getFeatureVariableInteger(featureKey, variableKey, genericUserId));
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableJSON(String, String, String, Map)}
+     * is called when feature is in experiment and feature enabled is true
+     * returns variable value
+     */
+    @Test
+    public void getFeatureVariableJSONUserInExperimentFeatureOn() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+        String validVariableKey = VARIABLE_JSON_PATCHED_TYPE_KEY;
+        String expectedString = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
+
+        Optimizely optimizely = optimizelyBuilder.build();
+
+        OptimizelyJSON json = optimizely.getFeatureVariableJSON(
+            validFeatureKey,
+            validVariableKey,
+            testUserId,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE));
+
+        assertEquals(json.toString(), expectedString);
+
+        assertEquals(json.toMap().get("k1"), "v1");
+        assertEquals(json.toMap().get("k2"), 3.5);
+        assertEquals(json.toMap().get("k3"), true);
+        assertEquals(json.toMap().get("k4").get("kk1"), "vv11");
+        assertEquals(json.toMap().get("k4").get("kk2"), false);
+
+        assertEquals(json.getValue("k1", String.class), "v1");
+        assertEquals(json.getValue("k1.k4", Boolean.class), "v1");
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableJSON(String, String, String, Map)}
+     * is called when feature is in experiment and feature enabled is false
+     * than default value will gets returned
+     */
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
+    @Test
+    public void getFeatureVariableJSONUserInExperimentFeatureOff() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+        String validVariableKey = VARIABLE_JSON_PATCHED_TYPE_KEY;
+        String expectedString = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
+        String userID = "Gred";
+
+        Optimizely optimizely = optimizelyBuilder.build();
+
+        OptimizelyJSON json = optimizely.getFeatureVariableJSON(
+            validFeatureKey,
+            validVariableKey,
+            userID,
+            null);
+
+        assertEquals(json.toString(), expectedString);
+
+        assertEquals(json.toMap().get("k1"), "v1");
+        assertEquals(json.toMap().get("k2"), 3.5);
+        assertEquals(json.toMap().get("k3"), true);
+        assertEquals(json.toMap().get("k4").get("kk1"), "vv11");
+        assertEquals(json.toMap().get("k4").get("kk2"), false);
+
+        assertEquals(json.getValue("k1", String.class), "v1");
+        assertEquals(json.getValue("k1.k4", Boolean.class), "v1");
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableJSON(String, String, String, Map)}
+     * is called when feature is in experiment and feature enabled is true
+     * returns variable value
+     */
+    @Test
+    public void getAllFeatureVariablesUserInExperimentFeatureOn() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+        String expectedString = "{\"first_letter\":\"F\",\"rest_of_name\":\"red\",\"json_patched\":{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}}";
+
+        Optimizely optimizely = optimizelyBuilder.build();
+
+        OptimizelyJSON json = optimizely.getAllFeatureVariables(
+            validFeatureKey,
+            testUserId,
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE));
+
+        assertEquals(json.toString(), expectedString);
+
+        assertEquals(json.toMap().get("first_letter"), "F");
+        assertEquals(json.toMap().get("rest_of_name"), "red");
+        assertEquals(json.toMap().get("json_patched").get("k1"), "v1");
+        assertEquals(json.toMap().get("json_patched").get("k2"), 3.5);
+        assertEquals(json.toMap().get("json_patched").get("k3"), true);
+        assertEquals(json.toMap().get("json_patched").get("k4").get("kk1"), "vv11");
+        assertEquals(json.toMap().get("json_patched").get("k4").get("kk2"), false);
+
+        assertEquals(json.getValue("first_letter", String.class), "F");
+        assertEquals(json.getValue("json_patched.k1", String.class), "v1");
+        assertEquals(json.getValue("json_patched.k1.k4", Boolean.class), "v1");
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableJSON(String, String, String, Map)}
+     * is called when feature is in experiment and feature enabled is false
+     * than default value will gets returned
+     */
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
+    @Test
+    public void getAllFeatureVariablesUserInExperimentFeatureOff() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
+        String expectedString = "{\"first_letter\":\"H\",\"rest_of_name\":\"arry\",\"json_patched\":{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}}";
+        String userID = "Gred";
+
+        Optimizely optimizely = optimizelyBuilder.build();
+
+        OptimizelyJSON json = optimizely.getAllFeatureVariables(
+            validFeatureKey,
+            userID,
+            null);
+
+        assertEquals(json.toString(), expectedString);
+
+        assertEquals(json.toMap().get("first_letter"), "H");
+        assertEquals(json.toMap().get("rest_of_name"), "arry");
+        assertEquals(json.toMap().get("json_patched").get("k1"), "v1");
+        assertEquals(json.toMap().get("json_patched").get("k2"), 3.5);
+        assertEquals(json.toMap().get("json_patched").get("k3"), true);
+        assertEquals(json.toMap().get("json_patched").get("k4").get("kk1"), "vv11");
+        assertEquals(json.toMap().get("json_patched").get("k4").get("kk2"), false);
+
+        assertEquals(json.getValue("first_letter", String.class), "H");
+        assertEquals(json.getValue("json_patched.k1", String.class), "v1");
+        assertEquals(json.getValue("json_patched.k1.k4", Boolean.class), "v1");
     }
 
     /**

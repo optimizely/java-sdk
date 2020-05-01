@@ -19,7 +19,6 @@ package com.optimizely.ab.notification;
 
 import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.bucketing.FeatureDecision;
-import com.optimizely.ab.config.FeatureVariable;
 import com.optimizely.ab.config.Variation;
 
 import javax.annotation.Nonnull;
@@ -310,14 +309,17 @@ public final class DecisionNotification {
                 throw new OptimizelyRuntimeException("featureEnabled not set");
             }
 
-            notificationType = (variableValues != null) ? NotificationCenter.DecisionNotificationType.ALL_FEATURE_VARIABLES :
-                NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE;
 
             decisionInfo = new HashMap<>();
             decisionInfo.put(FEATURE_KEY, featureKey);
             decisionInfo.put(FEATURE_ENABLED, featureEnabled);
 
-            if (notificationType == NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE) {
+            if (variableValues != null) {
+                notificationType = NotificationCenter.DecisionNotificationType.ALL_FEATURE_VARIABLES;
+                decisionInfo.put(VARIABLE_VALUES, variableValues);
+            } else {
+                notificationType = NotificationCenter.DecisionNotificationType.FEATURE_VARIABLE;
+
                 if (variableKey == null) {
                     throw new OptimizelyRuntimeException("variableKey not set");
                 }
@@ -329,8 +331,6 @@ public final class DecisionNotification {
                 decisionInfo.put(VARIABLE_KEY, variableKey);
                 decisionInfo.put(VARIABLE_TYPE, variableType.toString());
                 decisionInfo.put(VARIABLE_VALUE, variableValue);
-            } else if (notificationType == NotificationCenter.DecisionNotificationType.ALL_FEATURE_VARIABLES) {
-                decisionInfo.put(VARIABLE_VALUES, variableValues);
             }
 
             SourceInfo sourceInfo = new RolloutSourceInfo();
