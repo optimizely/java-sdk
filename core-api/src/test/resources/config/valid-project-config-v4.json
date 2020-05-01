@@ -699,13 +699,13 @@
           "key": "json_patched",
           "type": "string",
           "subType": "json",
-          "defaultValue": "{\"k1\":\"v1\",\"k1\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}"
+          "defaultValue": "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}"
         },
         {
           "id": "4111661001",
           "key": "json_native",
           "type": "json",
-          "defaultValue": "{\"k1\":\"v1\",\"k1\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}"
+          "defaultValue": "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}"
         },
         {
           "id": "4111661002",

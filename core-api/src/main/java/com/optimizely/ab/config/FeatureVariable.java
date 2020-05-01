@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.gson.annotations.SerializedName;
 
 import javax.annotation.Nullable;
-import javax.print.DocFlavor;
 
 /**
  * Represents a feature variable definition at the project level
@@ -109,7 +108,7 @@ public class FeatureVariable implements IdKeyMapped {
     }
 
     public String getType() {
-        if (type.equals(STRING_TYPE) && subType.equals(JSON_TYPE)) return JSON_TYPE;
+        if (type.equals(STRING_TYPE) && subType != null && subType.equals(JSON_TYPE)) return JSON_TYPE;
         return type;
     }
 
