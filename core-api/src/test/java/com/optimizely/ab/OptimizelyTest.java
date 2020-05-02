@@ -17,6 +17,8 @@ package com.optimizely.ab;
 
 import ch.qos.logback.classic.Level;
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
@@ -2240,11 +2242,11 @@ public class OptimizelyTest {
                 testUserAttributes,
                 testDecisionInfoMap));
 
-        assertEquals(optimizely.getAllFeatureVariables(
+        String jsonString = optimizely.getAllFeatureVariables(
             validFeatureKey,
             testUserId,
-            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)).toString(),
-            expectedString);
+            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)).toString();
+        assertTrue(compareJsonStrings(jsonString, expectedString));
 
         // Verify that listener being called
         assertTrue(isListenerCalled);
@@ -2286,11 +2288,11 @@ public class OptimizelyTest {
                 testUserAttributes,
                 testDecisionInfoMap));
 
-        assertEquals(optimizely.getAllFeatureVariables(
+        String jsonString = optimizely.getAllFeatureVariables(
             validFeatureKey,
             userID,
-            null).toString(),
-            expectedString);
+            null).toString();
+        assertTrue(compareJsonStrings(jsonString, expectedString));
 
         // Verify that listener being called
         assertTrue(isListenerCalled);
@@ -4149,7 +4151,7 @@ public class OptimizelyTest {
             testUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE));
 
-        assertEquals(json.toString(), expectedString);
+        assertTrue(compareJsonStrings(json.toString(), expectedString));
 
         assertEquals(json.toMap().get("k1"), "s1");
         assertEquals(json.toMap().get("k2"), 103.5);
@@ -4184,7 +4186,7 @@ public class OptimizelyTest {
             userID,
             null);
 
-        assertEquals(json.toString(), expectedString);
+        assertTrue(compareJsonStrings(json.toString(), expectedString));
 
         assertEquals(json.toMap().get("k1"), "v1");
         assertEquals(json.toMap().get("k2"), 3.5);
@@ -4206,7 +4208,7 @@ public class OptimizelyTest {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
 
         final String validFeatureKey = FEATURE_MULTI_VARIATE_FEATURE_KEY;
-        String expectedString = "{\"first_letter\":\"F\",\"rest_of_name\":\"red\",\"json_patched\":{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}}";
+        String expectedString = "{\"first_letter\":\"F\",\"rest_of_name\":\"red\",\"json_patched\":{\"k1\":\"s1\",\"k2\":103.5,\"k3\":false,\"k4\":{\"kk1\":\"ss1\",\"kk2\":true}}}";
 
         Optimizely optimizely = optimizelyBuilder.build();
 
@@ -4215,20 +4217,20 @@ public class OptimizelyTest {
             testUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE));
 
-        assertEquals(json.toString(), expectedString);
+        assertTrue(compareJsonStrings(json.toString(), expectedString));
 
         assertEquals(json.toMap().get("first_letter"), "F");
         assertEquals(json.toMap().get("rest_of_name"), "red");
         Map subMap = (Map)json.toMap().get("json_patched");
-        assertEquals(subMap.get("k1"), "v1");
-        assertEquals(subMap.get("k2"), 3.5);
-        assertEquals(subMap.get("k3"), true);
-        assertEquals(((Map)subMap.get("k4")).get("kk1"), "vv11");
-        assertEquals(((Map)subMap.get("k4")).get("kk2"), false);
+        assertEquals(subMap.get("k1"), "s1");
+        assertEquals(subMap.get("k2"), 103.5);
+        assertEquals(subMap.get("k3"), false);
+        assertEquals(((Map)subMap.get("k4")).get("kk1"), "ss1");
+        assertEquals(((Map)subMap.get("k4")).get("kk2"), true);
 
         assertEquals(json.getValue("first_letter", String.class), "F");
-        assertEquals(json.getValue("json_patched.k1", String.class), "v1");
-        assertEquals(json.getValue("json_patched.k1.k4", Boolean.class), "v1");
+        assertEquals(json.getValue("json_patched.k1", String.class), "s1");
+        assertEquals(json.getValue("json_patched.k4.kk2", Boolean.class), true);
     }
 
     /**
@@ -4252,7 +4254,7 @@ public class OptimizelyTest {
             userID,
             null);
 
-        assertEquals(json.toString(), expectedString);
+        assertTrue(compareJsonStrings(json.toString(), expectedString));
 
         assertEquals(json.toMap().get("first_letter"), "H");
         assertEquals(json.toMap().get("rest_of_name"), "arry");
@@ -4260,7 +4262,7 @@ public class OptimizelyTest {
         assertEquals(subMap.get("k1"), "v1");
         assertEquals(subMap.get("k2"), 3.5);
         assertEquals(subMap.get("k3"), true);
-        assertEquals(((Map)subMap.get("k4")).get("kk1"), "vv11");
+        assertEquals(((Map)subMap.get("k4")).get("kk1"), "vv1");
         assertEquals(((Map)subMap.get("k4")).get("kk2"), false);
 
         assertEquals(json.getValue("first_letter", String.class), "H");
@@ -4381,6 +4383,14 @@ public class OptimizelyTest {
             "223"
         );
         return new EventType("8765", "unknown_event_type", experimentIds);
+    }
+
+    private boolean compareJsonStrings(String str1, String str2) {
+        JsonParser parser = new JsonParser();
+
+        JsonElement j1 = parser.parse(str1);
+        JsonElement j2 = parser.parse(str2);
+        return j1.equals(j2);
     }
 
     /* Invalid Experiment */

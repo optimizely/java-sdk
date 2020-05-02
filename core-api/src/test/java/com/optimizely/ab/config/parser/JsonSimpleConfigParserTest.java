@@ -19,7 +19,6 @@ package com.optimizely.ab.config.parser;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.FeatureVariable;
 import com.optimizely.ab.config.ProjectConfig;
-
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.UserAttribute;
@@ -32,16 +31,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.List;
-
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.nullFeatureEnabledConfigJsonV4;
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV2;
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV4;
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV2;
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV3;
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV3;
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV4;
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.verifyProjectConfig;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -113,7 +103,7 @@ public class JsonSimpleConfigParserTest {
 
         // native "json" type
 
-        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_feature");
+        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_future_feature");
         FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("json_native");
 
         assertEquals(variable.getType(), "json");
@@ -126,7 +116,7 @@ public class JsonSimpleConfigParserTest {
 
         // unknown type
 
-        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_feature");
+        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_future_feature");
         FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("future_variable");
 
         assertEquals(variable.getType(), "future_type");

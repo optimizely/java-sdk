@@ -716,7 +716,15 @@
           "type": "string",
           "subType": "json",
           "defaultValue": "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}"
-        },
+        }
+      ]
+    },
+    {
+      "id": "3263342227",
+      "key": "multi_variate_future_feature",
+      "rolloutId": "813411034",
+      "experimentIds": ["3262035800"],
+      "variables": [
         {
           "id": "4111661001",
           "key": "json_native",
