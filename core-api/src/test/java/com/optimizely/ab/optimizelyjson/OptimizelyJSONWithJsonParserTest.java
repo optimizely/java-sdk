@@ -18,7 +18,7 @@ package com.optimizely.ab.optimizelyjson;
 
 import com.optimizely.ab.config.parser.ConfigParser;
 import com.optimizely.ab.config.parser.JsonConfigParser;
-import com.optimizely.ab.config.parser.UnsupportedOperationException;
+import com.optimizely.ab.config.parser.JsonParseException;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -41,7 +41,7 @@ public class OptimizelyJSONWithJsonParserTest extends OptimizelyJSONCoreTest {
         try {
             String str = oj1.getValue(null, String.class);
             fail("GetValue is not supported for or.json paraser: " + str);
-        } catch (UnsupportedOperationException e) {
+        } catch (JsonParseException e) {
             assertEquals(e.getMessage(), "A proper JSON parser is not available. Use Gson or Jackson parser for this operation.");
         }
     }
@@ -49,7 +49,7 @@ public class OptimizelyJSONWithJsonParserTest extends OptimizelyJSONCoreTest {
     // Tests for integer/double processing
 
     @Test
-    public void testIntegerProcessing() throws UnsupportedOperationException {
+    public void testIntegerProcessing() throws JsonParseException {
 
         // org.json parser toMap() keeps ".0" in double
 
@@ -69,7 +69,7 @@ public class OptimizelyJSONWithJsonParserTest extends OptimizelyJSONCoreTest {
     }
 
     @Test
-    public void testIntegerProcessing2() throws UnsupportedOperationException {
+    public void testIntegerProcessing2() throws JsonParseException {
 
         // org.json parser toString() drops ".0" from double
 

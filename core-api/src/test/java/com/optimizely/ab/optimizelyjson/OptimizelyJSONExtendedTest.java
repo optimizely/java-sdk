@@ -16,7 +16,7 @@
  */
 package com.optimizely.ab.optimizelyjson;
 
-import com.optimizely.ab.config.parser.UnsupportedOperationException;
+import com.optimizely.ab.config.parser.JsonParseException;
 import com.optimizely.ab.optimizelyjson.types.MD1;
 import com.optimizely.ab.optimizelyjson.types.MD2;
 import com.optimizely.ab.optimizelyjson.types.MD3;
@@ -27,7 +27,7 @@ import static org.junit.Assert.*;
 public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
 
     @Test
-    public void testGetValueNullKeyPath() throws UnsupportedOperationException {
+    public void testGetValueNullKeyPath() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         MD1 md1 = oj1.getValue(null, MD1.class);
@@ -51,7 +51,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     }
 
     @Test
-    public void testGetValueEmptyKeyPath() throws UnsupportedOperationException {
+    public void testGetValueEmptyKeyPath() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         MD1 md1 = oj1.getValue("", MD1.class);
@@ -64,7 +64,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     }
 
     @Test
-    public void testGetValueWithKeyPathToMapWithLevel1() throws UnsupportedOperationException {
+    public void testGetValueWithKeyPathToMapWithLevel1() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         MD2 md2 = oj1.getValue("k3", MD2.class);
@@ -74,7 +74,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     }
 
     @Test
-    public void testGetValueWithKeyPathToMapWithLevel2() throws UnsupportedOperationException {
+    public void testGetValueWithKeyPathToMapWithLevel2() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         MD3 md3 = oj1.getValue("k3.kk2", MD3.class);
@@ -83,7 +83,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     }
 
     @Test
-    public void testGetValueWithKeyPathToBoolean() throws UnsupportedOperationException {
+    public void testGetValueWithKeyPathToBoolean() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         Boolean value = oj1.getValue("k3.kk2.kkk1", Boolean.class);
@@ -92,7 +92,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     }
 
     @Test
-    public void testGetValueWithKeyPathToDouble() throws UnsupportedOperationException {
+    public void testGetValueWithKeyPathToDouble() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         Double value = oj1.getValue("k3.kk2.kkk2", Double.class);
@@ -101,7 +101,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     }
 
     @Test
-    public void testGetValueWithKeyPathToString() throws UnsupportedOperationException {
+    public void testGetValueWithKeyPathToString() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         String value = oj1.getValue("k3.kk2.kkk3", String.class);
@@ -110,7 +110,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     }
 
     @Test
-    public void testGetValueWithInvalidKeyPath() throws UnsupportedOperationException {
+    public void testGetValueWithInvalidKeyPath() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         String value = oj1.getValue("k3..kkk3", String.class);
@@ -118,7 +118,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     }
 
     @Test
-    public void testGetValueWithInvalidKeyPath2() throws UnsupportedOperationException {
+    public void testGetValueWithInvalidKeyPath2() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         String value = oj1.getValue("k1.", String.class);
@@ -126,7 +126,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     }
 
     @Test
-    public void testGetValueWithInvalidKeyPath3() throws UnsupportedOperationException {
+    public void testGetValueWithInvalidKeyPath3() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         String value = oj1.getValue("x9", String.class);
@@ -134,7 +134,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     }
 
     @Test
-    public void testGetValueWithInvalidKeyPath4() throws UnsupportedOperationException {
+    public void testGetValueWithInvalidKeyPath4() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         String value = oj1.getValue("k3.x9", String.class);
@@ -142,7 +142,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     }
 
     @Test
-    public void testGetValueWithWrongType() throws UnsupportedOperationException {
+    public void testGetValueWithWrongType() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         Integer value = oj1.getValue("k3.kk2.kkk3", Integer.class);

@@ -18,7 +18,7 @@ package com.optimizely.ab.optimizelyjson;
 
 import com.optimizely.ab.config.parser.ConfigParser;
 import com.optimizely.ab.config.parser.GsonConfigParser;
-import com.optimizely.ab.config.parser.UnsupportedOperationException;
+import com.optimizely.ab.config.parser.JsonParseException;
 import com.optimizely.ab.optimizelyjson.types.MDN1;
 import com.optimizely.ab.optimizelyjson.types.NotMatchingType;
 import org.junit.Test;
@@ -38,7 +38,7 @@ public class OptimizelyJSONWithGsonParserTest extends OptimizelyJSONExtendedTest
     // Tests for GSON only
 
     @Test
-    public void testGetValueWithNotMatchingType() throws UnsupportedOperationException {
+    public void testGetValueWithNotMatchingType() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         NotMatchingType md = oj1.getValue(null, NotMatchingType.class);
@@ -48,7 +48,7 @@ public class OptimizelyJSONWithGsonParserTest extends OptimizelyJSONExtendedTest
     // Tests for integer/double processing
 
     @Test
-    public void testIntegerProcessing() throws UnsupportedOperationException {
+    public void testIntegerProcessing() throws JsonParseException {
 
         // GSON parser toMap() adds ".0" to all integers
 
@@ -68,7 +68,7 @@ public class OptimizelyJSONWithGsonParserTest extends OptimizelyJSONExtendedTest
     }
 
     @Test
-    public void testIntegerProcessing2() throws UnsupportedOperationException {
+    public void testIntegerProcessing2() throws JsonParseException {
 
         // GSON parser toString() keeps ".0" in double
 
@@ -88,7 +88,7 @@ public class OptimizelyJSONWithGsonParserTest extends OptimizelyJSONExtendedTest
     }
 
     @Test
-    public void testIntegerProcessing3() throws UnsupportedOperationException {
+    public void testIntegerProcessing3() throws JsonParseException {
         String json = "{\"k1\":1,\"k2\":2.5,\"k3\":{\"kk1\":3,\"kk2\":4.0}}";
 
         OptimizelyJSON oj1 = new OptimizelyJSON(json, getParser());

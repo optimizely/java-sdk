@@ -17,8 +17,8 @@
 package com.optimizely.ab.optimizelyjson;
 
 import com.optimizely.ab.config.parser.ConfigParser;
+import com.optimizely.ab.config.parser.JsonParseException;
 import com.optimizely.ab.config.parser.JsonSimpleConfigParser;
-import com.optimizely.ab.config.parser.UnsupportedOperationException;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -42,7 +42,7 @@ public class OptimizelyJSONWithJsonSimpleParserTest extends OptimizelyJSONCoreTe
         try {
             String str = oj1.getValue(null, String.class);
             fail("GetValue is not supported for or.json paraser: " + str);
-        } catch (UnsupportedOperationException e) {
+        } catch (JsonParseException e) {
             assertEquals(e.getMessage(), "A proper JSON parser is not available. Use Gson or Jackson parser for this operation.");
         }
     }
@@ -50,18 +50,19 @@ public class OptimizelyJSONWithJsonSimpleParserTest extends OptimizelyJSONCoreTe
     // Tests for integer/double processing
 
     @Test
-    public void testIntegerProcessing() throws UnsupportedOperationException {
+    public void testIntegerProcessing() throws JsonParseException {
 
         // org.json.simple parser toMap() keeps ".0" in double
+        // org.json.simple parser toMap() return Long type for integer value
 
         String json = "{\"k1\":1,\"k2\":2.5,\"k3\":{\"kk1\":3,\"kk2\":4.0}}";
 
         Map<String,Object> m2 = new HashMap<String,Object>();
-        m2.put("kk1", 3);
+        m2.put("kk1", Long.valueOf(3));
         m2.put("kk2", 4.0);
 
         Map<String,Object> m1 = new HashMap<String,Object>();
-        m1.put("k1", 1);
+        m1.put("k1", Long.valueOf(1));
         m1.put("k2", 2.5);
         m1.put("k3", m2);
 
@@ -70,7 +71,7 @@ public class OptimizelyJSONWithJsonSimpleParserTest extends OptimizelyJSONCoreTe
     }
 
     @Test
-    public void testIntegerProcessing2() throws UnsupportedOperationException {
+    public void testIntegerProcessing2() throws JsonParseException {
 
         // org.json.simple parser toString() keeps ".0" in double
 

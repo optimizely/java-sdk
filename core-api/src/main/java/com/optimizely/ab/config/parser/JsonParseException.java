@@ -16,12 +16,12 @@
  */
 package com.optimizely.ab.config.parser;
 
-public final class UnsupportedOperationException extends Exception {
-    public UnsupportedOperationException(String message) {
+public final class JsonParseException extends Exception {
+    public JsonParseException(String message) {
         super(message);
     }
 
-    public UnsupportedOperationException(String message, Throwable cause) {
+    public JsonParseException(String message, Throwable cause) {
         super(message, cause);
     }
 }

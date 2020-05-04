@@ -27,15 +27,12 @@ import com.optimizely.ab.internal.ConditionUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+import org.json.simple.parser.ContainerFactory;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -381,8 +378,21 @@ final public class JsonSimpleConfigParser implements ConfigParser {
     @Override
     public <T> T fromJson(String json, Class<T> clazz) throws ConfigParseException {
         if (Map.class.isAssignableFrom(clazz)) {
-            org.json.JSONObject obj = new org.json.JSONObject(json);
-            return (T)JsonHelpers.jsonObjectToMap(obj);
+            try {
+                return (T)new JSONParser().parse(json, new ContainerFactory() {
+                    @Override
+                    public Map createObjectContainer() {
+                        return new HashMap();
+                    }
+
+                    @Override
+                    public List creatArrayContainer() {
+                        return new ArrayList();
+                    }
+                });
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
         }
 
         // org.json.simple does not support parsing to user objects

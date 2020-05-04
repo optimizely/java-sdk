@@ -18,7 +18,7 @@ package com.optimizely.ab.optimizelyjson;
 
 import com.optimizely.ab.config.parser.ConfigParser;
 import com.optimizely.ab.config.parser.JacksonConfigParser;
-import com.optimizely.ab.config.parser.UnsupportedOperationException;
+import com.optimizely.ab.config.parser.JsonParseException;
 import com.optimizely.ab.optimizelyjson.types.MDN1;
 import com.optimizely.ab.optimizelyjson.types.NotMatchingType;
 import org.junit.Test;
@@ -38,7 +38,7 @@ public class OptimizelyJSONWithJacksonParserTest extends OptimizelyJSONExtendedT
     // Tests for Jackson only
 
     @Test
-    public void testGetValueWithNotMatchingType() throws UnsupportedOperationException {
+    public void testGetValueWithNotMatchingType() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
         // Jackson returns null object when variables not matching (while GSON returns an object with null variables
@@ -49,7 +49,7 @@ public class OptimizelyJSONWithJacksonParserTest extends OptimizelyJSONExtendedT
     // Tests for integer/double processing
 
     @Test
-    public void testIntegerProcessing() throws UnsupportedOperationException {
+    public void testIntegerProcessing() throws JsonParseException {
 
         // Jackson parser toMap() keeps ".0" in double
 
@@ -69,7 +69,7 @@ public class OptimizelyJSONWithJacksonParserTest extends OptimizelyJSONExtendedT
     }
 
     @Test
-    public void testIntegerProcessing2() throws UnsupportedOperationException {
+    public void testIntegerProcessing2() throws JsonParseException {
 
         // Jackson parser toString() keeps ".0" in double
 
@@ -89,7 +89,7 @@ public class OptimizelyJSONWithJacksonParserTest extends OptimizelyJSONExtendedT
     }
 
     @Test
-    public void testIntegerProcessing3() throws UnsupportedOperationException {
+    public void testIntegerProcessing3() throws JsonParseException {
         String json = "{\"k1\":1,\"k2\":2.5,\"k3\":{\"kk1\":3,\"kk2\":4.0}}";
 
         OptimizelyJSON oj1 = new OptimizelyJSON(json, getParser());
