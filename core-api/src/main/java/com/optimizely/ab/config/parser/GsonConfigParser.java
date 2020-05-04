@@ -65,11 +65,11 @@ final public class GsonConfigParser implements ConfigParser {
         return gson.toJson(src);
     }
 
-    public <T> T fromJson(String json, Class<T> clazz) throws ConfigParseException {
+    public <T> T fromJson(String json, Class<T> clazz) throws JsonParseException {
         try {
             return gson.fromJson(json, clazz);
         } catch (Exception e) {
-            throw new ConfigParseException("Unable to parse JSON string: " + e.toString());
+            throw new JsonParseException("Unable to parse JSON string: " + e.toString());
         }
     }
 

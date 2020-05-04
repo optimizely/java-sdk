@@ -30,6 +30,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.nullFeatureEnabledConfigJsonV4;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV2;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV4;
@@ -38,7 +42,7 @@ import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfi
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV3;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV4;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.verifyProjectConfig;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * Tests for {@link JsonSimpleConfigParser}.
@@ -210,4 +214,48 @@ public class JsonSimpleConfigParserTest {
         JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
         parser.parseProjectConfig(null);
     }
+
+    @Test
+    public void testToJson() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("k1", "v1");
+        map.put("k2", 3.5);
+        map.put("k3", true);
+
+        String expectedString = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true}";
+
+        JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
+        String json = parser.toJson(map);
+        assertEquals(json, expectedString);
+    }
+
+    @Test
+    public void testFromJson() {
+        String json = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true}";
+
+        Map<String, Object> expectedMap = new HashMap<>();
+        expectedMap.put("k1", "v1");
+        expectedMap.put("k2", 3.5);
+        expectedMap.put("k3", true);
+
+        JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
+
+        Map map = null;
+        try {
+            map = parser.fromJson(json, Map.class);
+            assertEquals(map, expectedMap);
+        } catch (JsonParseException e) {
+            fail("Parse to map failed: " + e.getMessage());
+        }
+
+        // not-supported parse type
+
+        try {
+            List value = parser.fromJson(json, List.class);
+            fail("Unsupported parse target type");
+        } catch (JsonParseException e) {
+            assertEquals(e.getMessage(), "Parsing fails with a unsupported type");
+        }
+    }
+
 }

@@ -63,7 +63,7 @@ public class OptimizelyJSON {
         if (payload == null && map != null) {
             try {
                 payload = parser.toJson(map);
-            } catch (ConfigParseException e) {
+            } catch (JsonParseException e) {
                 logger.error("Provided map could not be converted to a string ({})", e.toString());
             }
         }

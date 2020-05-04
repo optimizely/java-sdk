@@ -388,14 +388,14 @@ final public class JsonConfigParser implements ConfigParser {
     }
 
     @Override
-    public <T> T fromJson(String json, Class<T> clazz) throws ConfigParseException {
+    public <T> T fromJson(String json, Class<T> clazz) throws JsonParseException {
         if (Map.class.isAssignableFrom(clazz)) {
             JSONObject obj = new JSONObject(json);
             return (T)JsonHelpers.jsonObjectToMap(obj);
         }
 
         // org.json parser does not support parsing to user objects
-        throw new ConfigParseException("Parsing fails with a unsupported type");
+        throw new JsonParseException("Parsing fails with a unsupported type");
     }
 
 }

@@ -376,7 +376,7 @@ final public class JsonSimpleConfigParser implements ConfigParser {
     }
 
     @Override
-    public <T> T fromJson(String json, Class<T> clazz) throws ConfigParseException {
+    public <T> T fromJson(String json, Class<T> clazz) throws JsonParseException {
         if (Map.class.isAssignableFrom(clazz)) {
             try {
                 return (T)new JSONParser().parse(json, new ContainerFactory() {
@@ -391,12 +391,12 @@ final public class JsonSimpleConfigParser implements ConfigParser {
                     }
                 });
             } catch (ParseException e) {
-                e.printStackTrace();
+                throw new JsonParseException("Unable to parse JSON string: " + e.toString());
             }
         }
 
         // org.json.simple does not support parsing to user objects
-        throw new ConfigParseException("Parsing fails with a unsupported type");
+        throw new JsonParseException("Parsing fails with a unsupported type");
     }
 
 }

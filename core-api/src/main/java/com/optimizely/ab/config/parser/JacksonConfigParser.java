@@ -65,20 +65,20 @@ final public class JacksonConfigParser implements ConfigParser {
     }
 
     @Override
-    public String toJson(Object src) throws ConfigParseException {
+    public String toJson(Object src) throws JsonParseException {
         try {
             return objectMapper.writeValueAsString(src);
         } catch (JsonProcessingException e) {
-            throw new ConfigParseException("Serialization failed: " + e.toString());
+            throw new JsonParseException("Serialization failed: " + e.toString());
         }
     }
 
     @Override
-    public <T> T fromJson(String json, Class<T> clazz) throws ConfigParseException {
+    public <T> T fromJson(String json, Class<T> clazz) throws JsonParseException {
         try {
             return objectMapper.readValue(json, clazz);
         } catch (IOException e) {
-            throw new ConfigParseException("Unable to parse JSON string: " + e.toString());
+            throw new JsonParseException("Unable to parse JSON string: " + e.toString());
         }
     }
 
