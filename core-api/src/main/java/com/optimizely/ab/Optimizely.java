@@ -711,6 +711,10 @@ public class Optimizely implements AutoCloseable {
         }
 
         Object convertedValue = convertStringToType(variableValue, variableType);
+        Object notificationValue = convertedValue;
+        if (convertedValue instanceof OptimizelyJSON) {
+            notificationValue = ((OptimizelyJSON) convertedValue).toMap();
+        }
 
         DecisionNotification decisionNotification = DecisionNotification.newFeatureVariableDecisionNotificationBuilder()
             .withUserId(userId)
@@ -719,7 +723,7 @@ public class Optimizely implements AutoCloseable {
             .withFeatureEnabled(featureEnabled)
             .withVariableKey(variableKey)
             .withVariableType(variableType)
-            .withVariableValue(convertedValue)
+            .withVariableValue(notificationValue)
             .withFeatureDecision(featureDecision)
             .build();
 
