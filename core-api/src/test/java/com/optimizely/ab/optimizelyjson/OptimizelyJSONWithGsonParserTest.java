@@ -19,8 +19,6 @@ package com.optimizely.ab.optimizelyjson;
 import com.optimizely.ab.config.parser.ConfigParser;
 import com.optimizely.ab.config.parser.GsonConfigParser;
 import com.optimizely.ab.config.parser.JsonParseException;
-import com.optimizely.ab.optimizelyjson.types.MDN1;
-import com.optimizely.ab.optimizelyjson.types.NotMatchingType;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -41,7 +39,7 @@ public class OptimizelyJSONWithGsonParserTest extends OptimizelyJSONExtendedTest
     public void testGetValueWithNotMatchingType() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
-        NotMatchingType md = oj1.getValue(null, NotMatchingType.class);
+        TestTypes.NotMatchingType md = oj1.getValue(null, TestTypes.NotMatchingType.class);
         assertNull(md.x99);
     }
 
@@ -92,7 +90,7 @@ public class OptimizelyJSONWithGsonParserTest extends OptimizelyJSONExtendedTest
         String json = "{\"k1\":1,\"k2\":2.5,\"k3\":{\"kk1\":3,\"kk2\":4.0}}";
 
         OptimizelyJSON oj1 = new OptimizelyJSON(json, getParser());
-        MDN1 obj = oj1.getValue(null, MDN1.class);
+        TestTypes.MDN1 obj = oj1.getValue(null, TestTypes.MDN1.class);
 
         assertEquals(obj.k1, 1);
         assertEquals(obj.k2, 2.5, 0.01);

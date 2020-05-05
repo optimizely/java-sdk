@@ -17,9 +17,6 @@
 package com.optimizely.ab.optimizelyjson;
 
 import com.optimizely.ab.config.parser.JsonParseException;
-import com.optimizely.ab.optimizelyjson.types.MD1;
-import com.optimizely.ab.optimizelyjson.types.MD2;
-import com.optimizely.ab.optimizelyjson.types.MD3;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -30,7 +27,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     public void testGetValueNullKeyPath() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
-        MD1 md1 = oj1.getValue(null, MD1.class);
+        TestTypes.MD1 md1 = oj1.getValue(null, TestTypes.MD1.class);
         assertNotNull(md1);
         assertEquals(md1.k1, "v1");
         assertEquals(md1.k2, true);
@@ -41,7 +38,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
 
         // verify previous getValue does not destroy the data
 
-        MD1 newMd1 = oj1.getValue(null, MD1.class);
+        TestTypes.MD1 newMd1 = oj1.getValue(null, TestTypes.MD1.class);
         assertEquals(newMd1.k1, "v1");
         assertEquals(newMd1.k2, true);
         assertEquals(newMd1.k3.kk1, 1.2, 0.01);
@@ -54,7 +51,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     public void testGetValueEmptyKeyPath() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
-        MD1 md1 = oj1.getValue("", MD1.class);
+        TestTypes.MD1 md1 = oj1.getValue("", TestTypes.MD1.class);
         assertEquals(md1.k1, "v1");
         assertEquals(md1.k2, true);
         assertEquals(md1.k3.kk1, 1.2, 0.01);
@@ -67,7 +64,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     public void testGetValueWithKeyPathToMapWithLevel1() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
-        MD2 md2 = oj1.getValue("k3", MD2.class);
+        TestTypes.MD2 md2 = oj1.getValue("k3", TestTypes.MD2.class);
         assertNotNull(md2);
         assertEquals(md2.kk1, 1.2, 0.01);
         assertEquals(md2.kk2.kkk1, true);
@@ -77,7 +74,7 @@ public class OptimizelyJSONExtendedTest extends OptimizelyJSONCoreTest {
     public void testGetValueWithKeyPathToMapWithLevel2() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
 
-        MD3 md3 = oj1.getValue("k3.kk2", MD3.class);
+        TestTypes.MD3 md3 = oj1.getValue("k3.kk2", TestTypes.MD3.class);
         assertNotNull(md3);
         assertEquals(md3.kkk1, true);
     }
