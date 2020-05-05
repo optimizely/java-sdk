@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, 2019, Optimizely and contributors
+ *    Copyright 2016-2017, 2019-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,7 +27,23 @@ import javax.annotation.Nonnull;
 /**
  * {@link Gson}-based config parser implementation.
  */
-final class GsonConfigParser implements ConfigParser {
+final public class GsonConfigParser implements ConfigParser {
+    private Gson gson;
+
+    public GsonConfigParser() {
+        this(new GsonBuilder()
+            .registerTypeAdapter(Audience.class, new AudienceGsonDeserializer())
+            .registerTypeAdapter(TypedAudience.class, new AudienceGsonDeserializer())
+            .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())
+            .registerTypeAdapter(FeatureFlag.class, new FeatureFlagGsonDeserializer())
+            .registerTypeAdapter(Group.class, new GroupGsonDeserializer())
+            .registerTypeAdapter(DatafileProjectConfig.class, new DatafileGsonDeserializer())
+            .create());
+    }
+
+    GsonConfigParser(Gson gson) {
+        this.gson = gson;
+    }
 
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
@@ -37,14 +53,6 @@ final class GsonConfigParser implements ConfigParser {
         if (json.length() == 0) {
             throw new ConfigParseException("Unable to parse empty json.");
         }
-        Gson gson = new GsonBuilder()
-            .registerTypeAdapter(Audience.class, new AudienceGsonDeserializer())
-            .registerTypeAdapter(TypedAudience.class, new AudienceGsonDeserializer())
-            .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())
-            .registerTypeAdapter(FeatureFlag.class, new FeatureFlagGsonDeserializer())
-            .registerTypeAdapter(Group.class, new GroupGsonDeserializer())
-            .registerTypeAdapter(DatafileProjectConfig.class, new DatafileGsonDeserializer())
-            .create();
 
         try {
             return gson.fromJson(json, DatafileProjectConfig.class);
@@ -52,4 +60,17 @@ final class GsonConfigParser implements ConfigParser {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
         }
     }
+
+    public String toJson(Object src) {
+        return gson.toJson(src);
+    }
+
+    public <T> T fromJson(String json, Class<T> clazz) throws JsonParseException {
+        try {
+            return gson.fromJson(json, clazz);
+        } catch (Exception e) {
+            throw new JsonParseException("Unable to parse JSON string: " + e.toString());
+        }
+    }
+
 }

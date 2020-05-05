@@ -38,4 +38,10 @@ public interface ConfigParser {
      * @throws ConfigParseException when there's an issue parsing the provided project config
      */
     ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException;
+
+    /**
+     * OptimizelyJSON parsing
+     */
+    String toJson(Object src) throws JsonParseException;
+    <T> T fromJson(String json, Class<T> clazz) throws JsonParseException;
 }

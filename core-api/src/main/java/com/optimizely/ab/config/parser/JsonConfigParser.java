@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2019, Optimizely and contributors
+ *    Copyright 2016-2019, 2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,17 +28,12 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * {@code org.json}-based config parser implementation.
  */
-final class JsonConfigParser implements ConfigParser {
+final public class JsonConfigParser implements ConfigParser {
 
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
@@ -389,4 +384,22 @@ final class JsonConfigParser implements ConfigParser {
 
         return rollouts;
     }
+
+    @Override
+    public String toJson(Object src) {
+        JSONObject json = (JSONObject)JsonHelpers.convertToJsonObject(src);
+        return json.toString();
+    }
+
+    @Override
+    public <T> T fromJson(String json, Class<T> clazz) throws JsonParseException {
+        if (Map.class.isAssignableFrom(clazz)) {
+            JSONObject obj = new JSONObject(json);
+            return (T)JsonHelpers.jsonObjectToMap(obj);
+        }
+
+        // org.json parser does not support parsing to user objects
+        throw new JsonParseException("Parsing fails with a unsupported type");
+    }
+
 }

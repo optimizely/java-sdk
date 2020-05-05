@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2018, 2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config.parser;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.optimizely.ab.config.DatafileProjectConfig;
@@ -25,11 +26,12 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.TypedAudience;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 
 /**
  * {@code Jackson}-based config parser implementation.
  */
-final class JacksonConfigParser implements ConfigParser {
+final public class JacksonConfigParser implements ConfigParser {
     private ObjectMapper objectMapper;
 
     public JacksonConfigParser() {
@@ -61,4 +63,23 @@ final class JacksonConfigParser implements ConfigParser {
             addDeserializer(Condition.class, new ConditionJacksonDeserializer(objectMapper));
         }
     }
+
+    @Override
+    public String toJson(Object src) throws JsonParseException {
+        try {
+            return objectMapper.writeValueAsString(src);
+        } catch (JsonProcessingException e) {
+            throw new JsonParseException("Serialization failed: " + e.toString());
+        }
+    }
+
+    @Override
+    public <T> T fromJson(String json, Class<T> clazz) throws JsonParseException {
+        try {
+            return objectMapper.readValue(json, clazz);
+        } catch (IOException e) {
+            throw new JsonParseException("Unable to parse JSON string: " + e.toString());
+        }
+    }
+
 }
