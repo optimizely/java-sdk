@@ -21,6 +21,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.optimizely.ab.config.FeatureFlag;
+import com.optimizely.ab.config.FeatureVariable;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
@@ -92,6 +94,45 @@ public class GsonConfigParserTest {
 
         assertNotNull(actual.getFeatureFlags());
 
+    }
+
+    @Test
+    public void parseFeatureVariablesWithJsonPatched() throws Exception {
+        JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
+        ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV4());
+
+        // "string" type + "json" subType
+
+        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_feature");
+        FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("json_patched");
+
+        assertEquals(variable.getType(), "json");
+    }
+
+    @Test
+    public void parseFeatureVariablesWithJsonNative() throws Exception {
+        JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
+        ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV4());
+
+        // native "json" type
+
+        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_feature");
+        FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("json_native");
+
+        assertEquals(variable.getType(), "json");
+    }
+
+    @Test
+    public void parseFeatureVariablesWithFutureType() throws Exception {
+        JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
+        ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV4());
+
+        // unknown type
+
+        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_feature");
+        FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("future_variable");
+
+        assertEquals(variable.getType(), "future_type");
     }
 
     @Test

@@ -333,9 +333,10 @@ final public class JsonSimpleConfigParser implements ConfigParser {
             String key = (String) featureVariableObject.get("key");
             String defaultValue = (String) featureVariableObject.get("defaultValue");
             String type = (String) featureVariableObject.get("type");
+            String subType = (String) featureVariableObject.get("subType");
             VariableStatus status = VariableStatus.fromString((String) featureVariableObject.get("status"));
 
-            featureVariables.add(new FeatureVariable(id, key, defaultValue, status, type));
+            featureVariables.add(new FeatureVariable(id, key, defaultValue, status, type, subType));
         }
 
         return featureVariables;
