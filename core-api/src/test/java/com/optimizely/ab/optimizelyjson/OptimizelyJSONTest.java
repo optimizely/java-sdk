@@ -147,16 +147,6 @@ public class OptimizelyJSONTest {
         assertEquals(md1.k3.kk2.kkk1, true);
         assertEquals((Double)md1.k3.kk2.kkk4[0], 5.7, 0.01);
         assertEquals(md1.k3.kk2.kkk4[2], "vvv4");
-
-        // verify previous getValue does not destroy the data
-
-        TestTypes.MD1 newMd1 = oj1.getValue(null, TestTypes.MD1.class);
-        assertEquals(newMd1.k1, "v1");
-        assertEquals(newMd1.k2, true);
-        assertEquals(newMd1.k3.kk1, 1.2, 0.01);
-        assertEquals(newMd1.k3.kk2.kkk1, true);
-        assertEquals((Double)newMd1.k3.kk2.kkk4[0], 5.7, 0.01);
-        assertEquals(newMd1.k3.kk2.kkk4[2], "vvv4");
     }
 
     @Test
@@ -228,6 +218,31 @@ public class OptimizelyJSONTest {
         String value = oj1.getValue("k3.kk2.kkk3", String.class);
         assertNotNull(value);
         assertEquals(value, "vvv3");
+    }
+
+    @Test
+    public void testGetValueNotDestroying() throws JsonParseException {
+        assumeTrue("GetValue API is supported for Gson and Jackson parsers only", canSupportGetValue);
+
+        OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, parser);
+
+        TestTypes.MD3 md3 = oj1.getValue("k3.kk2", TestTypes.MD3.class);
+        assertNotNull(md3);
+        assertEquals(md3.kkk1, true);
+        assertEquals(md3.kkk2, 3.5, 0.01);
+        assertEquals(md3.kkk3, "vvv3");
+        assertEquals((Double) md3.kkk4[0], 5.7, 0.01);
+        assertEquals(md3.kkk4[2], "vvv4");
+
+        // verify previous getValue does not destroy the data
+
+        TestTypes.MD3 newMd3 = oj1.getValue("k3.kk2", TestTypes.MD3.class);
+        assertNotNull(newMd3);
+        assertEquals(newMd3.kkk1, true);
+        assertEquals(newMd3.kkk2, 3.5, 0.01);
+        assertEquals(newMd3.kkk3, "vvv3");
+        assertEquals((Double) newMd3.kkk4[0], 5.7, 0.01);
+        assertEquals(newMd3.kkk4[2], "vvv4");
     }
 
     @Test
