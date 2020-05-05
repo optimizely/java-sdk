@@ -306,7 +306,7 @@ public class JacksonConfigParserTest {
         String invalidJson = "'k1':'v1','k2':3.5";
         try {
             map = parser.fromJson(invalidJson, Map.class);
-            fail("Expected parse failure");
+            fail("Expected failure for parsing: " + map.toString());
         } catch (JsonParseException e) {
             assertTrue(true);
         }

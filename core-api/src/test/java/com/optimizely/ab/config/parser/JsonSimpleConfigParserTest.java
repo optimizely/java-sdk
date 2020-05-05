@@ -252,7 +252,7 @@ public class JsonSimpleConfigParserTest {
 
         try {
             List value = parser.fromJson(json, List.class);
-            fail("Unsupported parse target type");
+            fail("Unsupported parse target type: " + value.toString());
         } catch (JsonParseException e) {
             assertEquals(e.getMessage(), "Parsing fails with a unsupported type");
         }
