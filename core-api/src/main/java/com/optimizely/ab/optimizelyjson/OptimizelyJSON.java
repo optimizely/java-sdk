@@ -16,9 +16,7 @@
  */
 package com.optimizely.ab.optimizelyjson;
 
-import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.config.parser.*;
-import com.optimizely.ab.config.parser.UnsupportedOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +63,7 @@ public class OptimizelyJSON {
         if (payload == null && map != null) {
             try {
                 payload = parser.toJson(map);
-            } catch (ConfigParseException e) {
+            } catch (JsonParseException e) {
                 logger.error("Provided map could not be converted to a string ({})", e.toString());
             }
         }
@@ -105,9 +103,9 @@ public class OptimizelyJSON {
      * @return an instance of clazz type with the parsed data filled in (or null if parse fails)
      */
     @Nullable
-    public <T> T getValue(@Nullable String jsonKey, Class<T> clazz) throws UnsupportedOperationException {
+    public <T> T getValue(@Nullable String jsonKey, Class<T> clazz) throws JsonParseException {
         if (!(parser instanceof GsonConfigParser || parser instanceof JacksonConfigParser)) {
-            throw new UnsupportedOperationException("A proper JSON parser is not available. Use Gson or Jackson parser for this operation.");
+            throw new JsonParseException("A proper JSON parser is not available. Use Gson or Jackson parser for this operation.");
         }
 
         Map<String,Object> subMap = toMap();

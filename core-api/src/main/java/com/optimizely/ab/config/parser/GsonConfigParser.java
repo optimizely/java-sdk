@@ -29,6 +29,22 @@ import javax.annotation.Nonnull;
  * {@link Gson}-based config parser implementation.
  */
 final public class GsonConfigParser implements ConfigParser {
+    private Gson gson;
+
+    public GsonConfigParser() {
+        this(new GsonBuilder()
+            .registerTypeAdapter(Audience.class, new AudienceGsonDeserializer())
+            .registerTypeAdapter(TypedAudience.class, new AudienceGsonDeserializer())
+            .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())
+            .registerTypeAdapter(FeatureFlag.class, new FeatureFlagGsonDeserializer())
+            .registerTypeAdapter(Group.class, new GroupGsonDeserializer())
+            .registerTypeAdapter(DatafileProjectConfig.class, new DatafileGsonDeserializer())
+            .create());
+    }
+
+    GsonConfigParser(Gson gson) {
+        this.gson = gson;
+    }
 
     @Override
     public ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException {
@@ -38,14 +54,6 @@ final public class GsonConfigParser implements ConfigParser {
         if (json.length() == 0) {
             throw new ConfigParseException("Unable to parse empty json.");
         }
-        Gson gson = new GsonBuilder()
-            .registerTypeAdapter(Audience.class, new AudienceGsonDeserializer())
-            .registerTypeAdapter(TypedAudience.class, new AudienceGsonDeserializer())
-            .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())
-            .registerTypeAdapter(FeatureFlag.class, new FeatureFlagGsonDeserializer())
-            .registerTypeAdapter(Group.class, new GroupGsonDeserializer())
-            .registerTypeAdapter(DatafileProjectConfig.class, new DatafileGsonDeserializer())
-            .create();
 
         try {
             return gson.fromJson(json, DatafileProjectConfig.class);
@@ -55,14 +63,14 @@ final public class GsonConfigParser implements ConfigParser {
     }
 
     public String toJson(Object src) {
-        return new Gson().toJson(src);
+        return gson.toJson(src);
     }
 
-    public <T> T fromJson(String json, Class<T> clazz) throws ConfigParseException {
+    public <T> T fromJson(String json, Class<T> clazz) throws JsonParseException {
         try {
-            return new Gson().fromJson(json, clazz);
+            return gson.fromJson(json, clazz);
         } catch (Exception e) {
-            throw new ConfigParseException("Unable to parse JSON string: " + e.toString());
+            throw new JsonParseException("Unable to parse JSON string: " + e.toString());
         }
     }
 

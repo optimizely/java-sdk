@@ -14,9 +14,14 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.optimizelyjson.types;
+package com.optimizely.ab.config.parser;
 
-public class MD2 {
-    public double kk1;
-    public MD3 kk2;
+public final class JsonParseException extends Exception {
+    public JsonParseException(String message) {
+        super(message);
+    }
+
+    public JsonParseException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

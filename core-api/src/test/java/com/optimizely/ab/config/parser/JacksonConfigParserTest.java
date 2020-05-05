@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, 2019, Optimizely and contributors
+ *    Copyright 2016-2017, 2019-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -30,6 +30,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.nullFeatureEnabledConfigJsonV4;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV2;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV3;
@@ -38,8 +41,7 @@ import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProje
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV3;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV4;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.verifyProjectConfig;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * Tests for {@link JacksonConfigParser}.
@@ -300,4 +302,55 @@ public class JacksonConfigParserTest {
         JacksonConfigParser parser = new JacksonConfigParser();
         parser.parseProjectConfig(null);
     }
+
+    @Test
+    public void testToJson() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("k1", "v1");
+        map.put("k2", 3.5);
+        map.put("k3", true);
+
+        String expectedString = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true}";
+
+        JacksonConfigParser parser = new JacksonConfigParser();
+        String json = null;
+        try {
+            json = parser.toJson(map);
+            assertEquals(json, expectedString);
+        } catch (JsonParseException e) {
+            fail("Parse to serialize to a JSON string: " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void testFromJson() {
+        String json = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true}";
+
+        Map<String, Object> expectedMap = new HashMap<>();
+        expectedMap.put("k1", "v1");
+        expectedMap.put("k2", 3.5);
+        expectedMap.put("k3", true);
+
+        JacksonConfigParser parser = new JacksonConfigParser();
+
+        Map map = null;
+        try {
+            map = parser.fromJson(json, Map.class);
+            assertEquals(map, expectedMap);
+        } catch (JsonParseException e) {
+            fail("Parse to map failed: " + e.getMessage());
+        }
+
+        // invalid JSON string
+
+        String invalidJson = "'k1':'v1','k2':3.5";
+        try {
+            map = parser.fromJson(invalidJson, Map.class);
+            fail("Expected failure for parsing: " + map.toString());
+        } catch (JsonParseException e) {
+            assertTrue(true);
+        }
+
+    }
+
 }

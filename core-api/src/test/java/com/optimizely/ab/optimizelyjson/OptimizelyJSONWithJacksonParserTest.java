@@ -18,9 +18,7 @@ package com.optimizely.ab.optimizelyjson;
 
 import com.optimizely.ab.config.parser.ConfigParser;
 import com.optimizely.ab.config.parser.JacksonConfigParser;
-import com.optimizely.ab.config.parser.UnsupportedOperationException;
-import com.optimizely.ab.optimizelyjson.types.MDN1;
-import com.optimizely.ab.optimizelyjson.types.NotMatchingType;
+import com.optimizely.ab.config.parser.JsonParseException;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -29,27 +27,28 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-public class OptimizelyJSONWithJacksonParserTest extends OptimizelyJSONExtendedTest {
-    @Override
+/**
+ * Tests for Jackson parser only
+ */
+public class OptimizelyJSONWithJacksonParserTest {
     protected ConfigParser getParser() {
         return new JacksonConfigParser();
     }
 
-    // Tests for Jackson only
-
     @Test
-    public void testGetValueWithNotMatchingType() throws UnsupportedOperationException {
-        OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
+    public void testGetValueWithNotMatchingType() throws JsonParseException {
+        OptimizelyJSON oj1 = new OptimizelyJSON("{\"k1\": 3.5}", getParser());
 
         // Jackson returns null object when variables not matching (while GSON returns an object with null variables
-        NotMatchingType md = oj1.getValue(null, NotMatchingType.class);
+
+        TestTypes.NotMatchingType md = oj1.getValue(null, TestTypes.NotMatchingType.class);
         assertNull(md);
     }
 
     // Tests for integer/double processing
 
     @Test
-    public void testIntegerProcessing() throws UnsupportedOperationException {
+    public void testIntegerProcessing() throws JsonParseException {
 
         // Jackson parser toMap() keeps ".0" in double
 
@@ -69,7 +68,7 @@ public class OptimizelyJSONWithJacksonParserTest extends OptimizelyJSONExtendedT
     }
 
     @Test
-    public void testIntegerProcessing2() throws UnsupportedOperationException {
+    public void testIntegerProcessing2() throws JsonParseException {
 
         // Jackson parser toString() keeps ".0" in double
 
@@ -85,15 +84,15 @@ public class OptimizelyJSONWithJacksonParserTest extends OptimizelyJSONExtendedT
         m1.put("k3", m2);
 
         OptimizelyJSON oj1 = new OptimizelyJSON(m1, getParser());
-        assertEquals(compact(oj1.toString()), compact(json));
+        assertEquals(oj1.toString(), json);
     }
 
     @Test
-    public void testIntegerProcessing3() throws UnsupportedOperationException {
+    public void testIntegerProcessing3() throws JsonParseException {
         String json = "{\"k1\":1,\"k2\":2.5,\"k3\":{\"kk1\":3,\"kk2\":4.0}}";
 
         OptimizelyJSON oj1 = new OptimizelyJSON(json, getParser());
-        MDN1 obj = oj1.getValue(null, MDN1.class);
+        TestTypes.MDN1 obj = oj1.getValue(null, TestTypes.MDN1.class);
 
         assertEquals(obj.k1, 1);
     }
