@@ -27,13 +27,14 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-public class OptimizelyJSONWithJsonSimpleParserTest extends OptimizelyJSONCoreTest {
+/**
+ * Tests for org.json.simple parser only
+ */
+public class OptimizelyJSONWithJsonSimpleParserTest extends OptimizelyJSONTest {
     @Override
     protected ConfigParser getParser() {
         return new JsonSimpleConfigParser();
     }
-
-    // Tests for JsonSimple only
 
     @Test
     public void testGetValueThrowsException() {

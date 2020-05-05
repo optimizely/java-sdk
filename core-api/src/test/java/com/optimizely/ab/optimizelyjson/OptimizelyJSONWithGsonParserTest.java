@@ -27,17 +27,20 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-public class OptimizelyJSONWithGsonParserTest extends OptimizelyJSONExtendedTest {
+/**
+ * Tests for GSON parser only
+ */
+public class OptimizelyJSONWithGsonParserTest extends OptimizelyJSONTest {
     @Override
     protected ConfigParser getParser() {
         return new GsonConfigParser();
     }
 
-    // Tests for GSON only
-
     @Test
     public void testGetValueWithNotMatchingType() throws JsonParseException {
         OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
+
+        // GSON returns non-null object but variable is null (while Jackson returns null object)
 
         TestTypes.NotMatchingType md = oj1.getValue(null, TestTypes.NotMatchingType.class);
         assertNull(md.x99);

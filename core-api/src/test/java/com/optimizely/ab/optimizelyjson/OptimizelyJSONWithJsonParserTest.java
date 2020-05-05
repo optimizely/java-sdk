@@ -26,13 +26,14 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-public class OptimizelyJSONWithJsonParserTest extends OptimizelyJSONCoreTest {
+/**
+ * Tests for org.json parser only
+ */
+public class OptimizelyJSONWithJsonParserTest extends OptimizelyJSONTest {
     @Override
     protected ConfigParser getParser() {
         return new JsonConfigParser();
     }
-
-    // Tests for Json only
 
     @Test
     public void testGetValueThrowsException() {
