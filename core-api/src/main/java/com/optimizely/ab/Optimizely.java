@@ -836,7 +836,7 @@ public class Optimizely implements AutoCloseable {
         Map<String, Object> valuesMap = new HashMap<String, Object>();
         for (FeatureVariable variable : featureFlag.getVariables()) {
             String value = variable.getDefaultValue();
-            if (featureEnabled && variation != null) {
+            if (featureEnabled) {
                 FeatureVariableUsageInstance instance = variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
                 if (instance != null) {
                     value = instance.getValue();
