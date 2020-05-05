@@ -29,15 +29,14 @@ import static org.junit.Assert.*;
 /**
  * Tests for org.json parser only
  */
-public class OptimizelyJSONWithJsonParserTest extends OptimizelyJSONTest {
-    @Override
+public class OptimizelyJSONWithJsonParserTest {
     protected ConfigParser getParser() {
         return new JsonConfigParser();
     }
 
     @Test
     public void testGetValueThrowsException() {
-        OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
+        OptimizelyJSON oj1 = new OptimizelyJSON("{\"k1\": 3.5}", getParser());
 
         try {
             String str = oj1.getValue(null, String.class);
@@ -86,7 +85,7 @@ public class OptimizelyJSONWithJsonParserTest extends OptimizelyJSONTest {
         m1.put("k3", m2);
 
         OptimizelyJSON oj1 = new OptimizelyJSON(m1, getParser());
-        assertEquals(compact(oj1.toString()), compact(json));
+        assertEquals(oj1.toString(), json);
     }
 
 }

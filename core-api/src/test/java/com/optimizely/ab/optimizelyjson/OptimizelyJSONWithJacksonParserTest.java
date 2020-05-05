@@ -30,15 +30,14 @@ import static org.junit.Assert.assertNull;
 /**
  * Tests for Jackson parser only
  */
-public class OptimizelyJSONWithJacksonParserTest extends OptimizelyJSONTest {
-    @Override
+public class OptimizelyJSONWithJacksonParserTest {
     protected ConfigParser getParser() {
         return new JacksonConfigParser();
     }
 
     @Test
     public void testGetValueWithNotMatchingType() throws JsonParseException {
-        OptimizelyJSON oj1 = new OptimizelyJSON(orgJson, getParser());
+        OptimizelyJSON oj1 = new OptimizelyJSON("{\"k1\": 3.5}", getParser());
 
         // Jackson returns null object when variables not matching (while GSON returns an object with null variables
 
@@ -85,7 +84,7 @@ public class OptimizelyJSONWithJacksonParserTest extends OptimizelyJSONTest {
         m1.put("k3", m2);
 
         OptimizelyJSON oj1 = new OptimizelyJSON(m1, getParser());
-        assertEquals(compact(oj1.toString()), compact(json));
+        assertEquals(oj1.toString(), json);
     }
 
     @Test
