@@ -47,7 +47,7 @@ public class OptimizelyJSONTest {
             "   \"k1\": \"v1\",                         " +
             "   \"k2\": true,                           " +
             "   \"k3\": {                               " +
-            "       \"kk1\": 1.2,                         " +
+            "       \"kk1\": 1.2,                       " +
             "       \"kk2\": {                          " +
             "           \"kkk1\": true,                 " +
             "           \"kkk2\": 3.5,                  " +
