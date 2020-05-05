@@ -4301,7 +4301,7 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify that the {@link Optimizely#getFeatureVariableJSON(String, String, String, Map)}
+     * Verify that the {@link Optimizely#getAllFeatureVariables(String,String, Map)}
      * is called when feature is in experiment and feature enabled is true
      * returns variable value
      */
@@ -4336,7 +4336,7 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify that the {@link Optimizely#getFeatureVariableJSON(String, String, String, Map)}
+     * Verify that the {@link Optimizely#getAllFeatureVariables(String, String, Map)}
      * is called when feature is in experiment and feature enabled is false
      * than default value will gets returned
      */
@@ -4370,6 +4370,29 @@ public class OptimizelyTest {
         assertEquals(json.getValue("first_letter", String.class), "H");
         assertEquals(json.getValue("json_patched.k1", String.class), "v1");
         assertEquals(json.getValue("json_patched.k4.kk2", Boolean.class), false);
+    }
+
+    /**
+     * Verify {@link Optimizely#getAllFeatureVariables(String,String, Map)} with invalid parameters
+     */
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
+    @Test
+    public void getAllFeatureVariablesWithInvalidParameters() throws Exception {
+        Optimizely optimizely = optimizelyBuilder.build();
+
+        OptimizelyJSON value;
+        value = optimizely.getAllFeatureVariables(null, testUserId);
+        assertNull(value);
+
+        value = optimizely.getAllFeatureVariables(FEATURE_MULTI_VARIATE_FEATURE_KEY, null);
+        assertNull(value);
+
+        value = optimizely.getAllFeatureVariables("invalid-feature-flag", testUserId);
+        assertNull(value);
+
+        Optimizely optimizelyInvalid = Optimizely.builder(invalidProjectConfigV5(), mockEventHandler).build();
+        value = optimizelyInvalid.getAllFeatureVariables(FEATURE_MULTI_VARIATE_FEATURE_KEY, testUserId);
+        assertNull(value);
     }
 
     /**
