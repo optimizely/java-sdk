@@ -113,7 +113,7 @@ public class JsonConfigParserTest {
 
         // native "json" type
 
-        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_feature");
+        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_future_feature");
         FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("json_native");
 
         assertEquals(variable.getType(), "json");
@@ -126,7 +126,7 @@ public class JsonConfigParserTest {
 
         // unknown type
 
-        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_feature");
+        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_future_feature");
         FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("future_variable");
 
         assertEquals(variable.getType(), "future_type");

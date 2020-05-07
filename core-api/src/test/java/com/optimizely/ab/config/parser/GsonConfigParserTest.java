@@ -46,6 +46,8 @@ import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProje
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV3;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV4;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.verifyProjectConfig;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.*;
 
 /**
@@ -116,7 +118,7 @@ public class GsonConfigParserTest {
 
         // native "json" type
 
-        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_feature");
+        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_future_feature");
         FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("json_native");
 
         assertEquals(variable.getType(), "json");
@@ -129,7 +131,7 @@ public class GsonConfigParserTest {
 
         // unknown type
 
-        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_feature");
+        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_future_feature");
         FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("future_variable");
 
         assertEquals(variable.getType(), "future_type");

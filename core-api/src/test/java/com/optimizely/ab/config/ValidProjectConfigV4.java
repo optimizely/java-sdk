@@ -407,8 +407,8 @@ public class ValidProjectConfigV4 {
         null
     );
     private static final String VARIABLE_JSON_PATCHED_TYPE_ID = "4111661000";
-    private static final String VARIABLE_JSON_PATCHED_TYPE_KEY = "json_patched";
-    private static final String VARIABLE_JSON_PATCHED_TYPE_DEFAULT_VALUE = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
+    public static final String VARIABLE_JSON_PATCHED_TYPE_KEY = "json_patched";
+    public static final String VARIABLE_JSON_PATCHED_TYPE_DEFAULT_VALUE = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
     private static final FeatureVariable VARIABLE_JSON_PATCHED_TYPE_VARIABLE = new FeatureVariable(
         VARIABLE_JSON_PATCHED_TYPE_ID,
         VARIABLE_JSON_PATCHED_TYPE_KEY,
@@ -417,9 +417,12 @@ public class ValidProjectConfigV4 {
         FeatureVariable.STRING_TYPE,
         FeatureVariable.JSON_TYPE
     );
+
+    private static final String FEATURE_MULTI_VARIATE_FUTURE_FEATURE_ID = "3263342227";
+    public static final String FEATURE_MULTI_VARIATE_FUTURE_FEATURE_KEY = "multi_variate_future_feature";
     private static final String VARIABLE_JSON_NATIVE_TYPE_ID = "4111661001";
-    private static final String VARIABLE_JSON_NATIVE_TYPE_KEY = "json_native";
-    private static final String VARIABLE_JSON_NATIVE_TYPE_DEFAULT_VALUE = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
+    public static final String VARIABLE_JSON_NATIVE_TYPE_KEY = "json_native";
+    public static final String VARIABLE_JSON_NATIVE_TYPE_DEFAULT_VALUE = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":{\"kk1\":\"vv1\",\"kk2\":false}}";
     private static final FeatureVariable VARIABLE_JSON_NATIVE_TYPE_VARIABLE = new FeatureVariable(
         VARIABLE_JSON_NATIVE_TYPE_ID,
         VARIABLE_JSON_NATIVE_TYPE_KEY,
@@ -429,8 +432,8 @@ public class ValidProjectConfigV4 {
         null
     );
     private static final String VARIABLE_FUTURE_TYPE_ID = "4111661002";
-    private static final String VARIABLE_FUTURE_TYPE_KEY = "future_variable";
-    private static final String VARIABLE_FUTURE_TYPE_DEFAULT_VALUE = "future_value";
+    public static final String VARIABLE_FUTURE_TYPE_KEY = "future_variable";
+    public static final String VARIABLE_FUTURE_TYPE_DEFAULT_VALUE = "future_value";
     private static final FeatureVariable VARIABLE_FUTURE_TYPE_VARIABLE = new FeatureVariable(
         VARIABLE_FUTURE_TYPE_ID,
         VARIABLE_FUTURE_TYPE_KEY,
@@ -439,6 +442,7 @@ public class ValidProjectConfigV4 {
         "future_type",
         null
     );
+
     private static final String FEATURE_MUTEX_GROUP_FEATURE_ID = "3263342226";
     public static final String FEATURE_MUTEX_GROUP_FEATURE_KEY = "mutex_group_feature";
     private static final String VARIABLE_CORRELATING_VARIATION_NAME_ID = "2059187672";
@@ -1308,7 +1312,15 @@ public class ValidProjectConfigV4 {
         DatafileProjectConfigTestUtils.createListOfObjects(
             VARIABLE_FIRST_LETTER_VARIABLE,
             VARIABLE_REST_OF_NAME_VARIABLE,
-            VARIABLE_JSON_PATCHED_TYPE_VARIABLE,
+            VARIABLE_JSON_PATCHED_TYPE_VARIABLE
+        )
+    );
+    public static final FeatureFlag FEATURE_FLAG_MULTI_VARIATE_FUTURE_FEATURE = new FeatureFlag(
+        FEATURE_MULTI_VARIATE_FUTURE_FEATURE_ID,
+        FEATURE_MULTI_VARIATE_FUTURE_FEATURE_KEY,
+        ROLLOUT_2_ID,
+        Collections.singletonList(EXPERIMENT_MULTIVARIATE_EXPERIMENT_ID),
+        DatafileProjectConfigTestUtils.createListOfObjects(
             VARIABLE_JSON_NATIVE_TYPE_VARIABLE,
             VARIABLE_FUTURE_TYPE_VARIABLE
         )
@@ -1401,6 +1413,7 @@ public class ValidProjectConfigV4 {
         featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_BOOLEAN);
         featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_STRING);
         featureFlags.add(FEATURE_FLAG_MULTI_VARIATE_FEATURE);
+        featureFlags.add(FEATURE_FLAG_MULTI_VARIATE_FUTURE_FEATURE);
         featureFlags.add(FEATURE_FLAG_MUTEX_GROUP_FEATURE);
 
         List<Group> groups = new ArrayList<Group>();

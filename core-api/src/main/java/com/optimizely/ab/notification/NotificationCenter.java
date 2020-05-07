@@ -54,7 +54,8 @@ public class NotificationCenter {
         AB_TEST("ab-test"),
         FEATURE("feature"),
         FEATURE_TEST("feature-test"),
-        FEATURE_VARIABLE("feature-variable");
+        FEATURE_VARIABLE("feature-variable"),
+        ALL_FEATURE_VARIABLES("all-feature-variables");
 
         private final String key;
 

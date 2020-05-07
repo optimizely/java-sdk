@@ -19,7 +19,6 @@ package com.optimizely.ab.config.parser;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.FeatureVariable;
 import com.optimizely.ab.config.ProjectConfig;
-
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.UserAttribute;
@@ -114,8 +113,7 @@ public class JsonSimpleConfigParserTest {
 
         // native "json" type
 
-        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_feature");
-        FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("json_native");
+        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_future_feature");        FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("json_native");
 
         assertEquals(variable.getType(), "json");
     }
@@ -127,7 +125,7 @@ public class JsonSimpleConfigParserTest {
 
         // unknown type
 
-        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_feature");
+        FeatureFlag featureFlag = actual.getFeatureKeyMapping().get("multi_variate_future_feature");
         FeatureVariable variable = featureFlag.getVariableKeyToFeatureVariableMap().get("future_variable");
 
         assertEquals(variable.getType(), "future_type");
