@@ -18,7 +18,6 @@ package com.optimizely.ab.config.parser;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.TypedAudience;

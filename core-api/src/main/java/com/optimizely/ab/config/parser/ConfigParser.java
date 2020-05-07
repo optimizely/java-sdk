@@ -16,10 +16,6 @@
  */
 package com.optimizely.ab.config.parser;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonSyntaxException;
-import com.google.gson.stream.JsonWriter;
 import com.optimizely.ab.config.ProjectConfig;
 
 import javax.annotation.Nonnull;
