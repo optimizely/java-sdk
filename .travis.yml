@@ -37,7 +37,6 @@ after_failure:
 stages:
   - 'Lint markdown files'
   - 'Integration tests'
-  - 'Benchmarking tests'
   - 'Test'
 
 jobs:
@@ -63,8 +62,7 @@ jobs:
         - mdspell -a -n -r --en-us '**/*.md'
       after_success: skip
  
-    - &integrationtest
-      stage: 'Integration tests'
+    - stage: 'Integration tests'
       addons:
         srcclr: true
       merge_mode: replace
@@ -78,6 +76,3 @@ jobs:
       script:
         - $HOME/travisci-tools/trigger-script-with-status-update.sh
       after_success: travis_terminate 0
-    - <<: *integrationtest
-      stage: 'Benchmarking tests'
-      env: SDK=java FULLSTACK_TEST_REPO=Benchmarking SDK_BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
