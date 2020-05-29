@@ -76,7 +76,7 @@ public class AudienceIdCondition<T> implements Condition<T> {
         }
         logger.debug("Starting to evaluate audience {} with conditions: \"{}\"", audience.getName(), audience.getConditions());
         Boolean result = audience.getConditions().evaluate(config, attributes);
-        logger.info("Audience {} evaluated to {}", audience.getName(), result);
+        logger.debug("Audience {} evaluated to {}", audience.getName(), result);
         return result;
     }
 
