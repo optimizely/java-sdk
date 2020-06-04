@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2018-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ public class AudienceIdCondition<T> implements Condition<T> {
         }
         logger.debug("Starting to evaluate audience {} with conditions: \"{}\"", audience.getName(), audience.getConditions());
         Boolean result = audience.getConditions().evaluate(config, attributes);
-        logger.info("Audience {} evaluated to {}", audience.getName(), result);
+        logger.debug("Audience {} evaluated to {}", audience.getName(), result);
         return result;
     }
 
