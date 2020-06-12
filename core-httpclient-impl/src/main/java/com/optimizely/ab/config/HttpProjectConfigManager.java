@@ -113,15 +113,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
     @Override
     protected ProjectConfig poll() {
-        HttpGet httpGet = new HttpGet(uri);
-
-        if (authDatafileToken != null) {
-            httpGet.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + authDatafileToken);
-        }
-
-        if (datafileLastModified != null) {
-            httpGet.setHeader(HttpHeaders.IF_MODIFIED_SINCE, datafileLastModified);
-        }
+        HttpGet httpGet = createHttpRequest();
 
         logger.debug("Fetching datafile from: {}", httpGet.getURI());
         try {
@@ -136,6 +128,20 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         }
 
         return null;
+    }
+
+    HttpGet createHttpRequest() {
+        HttpGet httpGet = new HttpGet(uri);
+
+        if (authDatafileToken != null) {
+            httpGet.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + authDatafileToken);
+        }
+
+        if (datafileLastModified != null) {
+            httpGet.setHeader(HttpHeaders.IF_MODIFIED_SINCE, datafileLastModified);
+        }
+
+        return httpGet;
     }
 
     public static Builder builder() {

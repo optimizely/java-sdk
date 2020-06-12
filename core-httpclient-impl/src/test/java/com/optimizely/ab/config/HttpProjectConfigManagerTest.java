@@ -43,9 +43,7 @@ import static com.optimizely.ab.config.HttpProjectConfigManager.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HttpProjectConfigManagerTest {
@@ -123,6 +121,58 @@ public class HttpProjectConfigManagerTest {
 
         URI actual = projectConfigManager.getUri();
         assertEquals(new URI(expected), actual);
+    }
+
+    @Test
+    public void testHttpGetBySdkKeyForAuthDatafile() throws Exception {
+        projectConfigManager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("sdk-key")
+            .withAuthDatafileToken("auth-token")
+            .build();
+
+        URI actual = projectConfigManager.getUri();
+        assertEquals(new URI("https://www.optimizely-cdn.com/datafiles/auth/sdk-key.json"), actual);
+    }
+    
+    @Test
+    public void testHttpGetByCustomUrlForAuthDatafile() throws Exception {
+        String expected = "https://custom.optimizely.com/custom-location.json";
+
+        projectConfigManager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withUrl(expected)
+            .withSdkKey("sdk-key")
+            .withAuthDatafileToken("auth-token")
+            .build();
+
+        URI actual = projectConfigManager.getUri();
+        assertEquals(new URI(expected), actual);
+    }
+
+    @Test
+    public void testCreateHttpRequest() throws Exception {
+        projectConfigManager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("sdk-key")
+            .build();
+
+        HttpGet request = projectConfigManager.createHttpRequest();
+        assertEquals(request.getURI().toString(), "https://cdn.optimizely.com/datafiles/sdk-key.json");
+        assertEquals(request.getHeaders("Authorization").length, 0);
+    }
+
+    @Test
+    public void testCreateHttpRequestForAuthDatafile() throws Exception {
+        projectConfigManager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("sdk-key")
+            .withAuthDatafileToken("auth-token")
+            .build();
+
+        HttpGet request = projectConfigManager.createHttpRequest();
+        assertEquals(request.getURI().toString(), "https://www.optimizely-cdn.com/datafiles/auth/sdk-key.json");
+        assertEquals(request.getHeaders("Authorization")[0].getValue(), "Bearer auth-token");
     }
 
     @Test
