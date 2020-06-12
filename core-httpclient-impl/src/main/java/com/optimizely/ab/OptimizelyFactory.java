@@ -190,6 +190,25 @@ public final class OptimizelyFactory {
     }
 
     /**
+     * Returns a new Optimizely instance with authenticated datafile support.
+     *
+     * @param sdkKey   SDK key used to build the ProjectConfigManager.
+     * @param authDatafileToken  Token for authenticated datafile access.
+     * @param fallback Fallback datafile string used by the ProjectConfigManager to be immediately available.
+     */
+    public static Optimizely newDefaultInstance(String sdkKey, String authDatafileToken, String fallback) {
+        NotificationCenter notificationCenter = new NotificationCenter();
+
+        HttpProjectConfigManager.Builder builder = HttpProjectConfigManager.builder()
+            .withDatafile(fallback)
+            .withNotificationCenter(notificationCenter)
+            .withSdkKey(sdkKey)
+            .withAuthDatafileToken(authDatafileToken);
+
+        return newDefaultInstance(builder.build(), notificationCenter);
+    }
+
+    /**
      * Returns a new Optimizely instance based on preset configuration.
      * EventHandler - {@link AsyncEventHandler}
      *
