@@ -128,13 +128,13 @@ public class HttpProjectConfigManagerTest {
         projectConfigManager = builder()
             .withOptimizelyHttpClient(mockHttpClient)
             .withSdkKey("sdk-key")
-            .withAuthDatafileToken("auth-token")
+            .withDatafileAuthToken("auth-token")
             .build();
 
         URI actual = projectConfigManager.getUri();
-        assertEquals(new URI("https://www.optimizely-cdn.com/datafiles/auth/sdk-key.json"), actual);
+        assertEquals(new URI("https://config.optimizely.com/datafiles/auth/sdk-key.json"), actual);
     }
-    
+
     @Test
     public void testHttpGetByCustomUrlForAuthDatafile() throws Exception {
         String expected = "https://custom.optimizely.com/custom-location.json";
@@ -143,7 +143,7 @@ public class HttpProjectConfigManagerTest {
             .withOptimizelyHttpClient(mockHttpClient)
             .withUrl(expected)
             .withSdkKey("sdk-key")
-            .withAuthDatafileToken("auth-token")
+            .withDatafileAuthToken("auth-token")
             .build();
 
         URI actual = projectConfigManager.getUri();
@@ -167,11 +167,11 @@ public class HttpProjectConfigManagerTest {
         projectConfigManager = builder()
             .withOptimizelyHttpClient(mockHttpClient)
             .withSdkKey("sdk-key")
-            .withAuthDatafileToken("auth-token")
+            .withDatafileAuthToken("auth-token")
             .build();
 
         HttpGet request = projectConfigManager.createHttpRequest();
-        assertEquals(request.getURI().toString(), "https://www.optimizely-cdn.com/datafiles/auth/sdk-key.json");
+        assertEquals(request.getURI().toString(), "https://config.optimizely.com/datafiles/auth/sdk-key.json");
         assertEquals(request.getHeaders("Authorization")[0].getValue(), "Bearer auth-token");
     }
 
