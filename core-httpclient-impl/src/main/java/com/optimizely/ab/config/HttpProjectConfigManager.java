@@ -153,7 +153,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         private String url;
         private String authDatafileToken = null;
         private String format = "https://cdn.optimizely.com/datafiles/%s.json";
-        private String authFormat = "https://www.optimizely-cdn.com/datafiles/auth/%s.json";
+        private String authFormat = "https://config.optimizely.com/datafiles/auth/%s.json";
         private OptimizelyHttpClient httpClient;
         private NotificationCenter notificationCenter;
 
