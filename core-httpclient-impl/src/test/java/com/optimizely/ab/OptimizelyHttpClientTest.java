@@ -73,7 +73,7 @@ public class OptimizelyHttpClientTest {
     @Test
     public void testExecute() throws IOException {
         HttpUriRequest httpUriRequest = RequestBuilder.get().build();
-        ResponseHandler<Boolean> responseHandler = response -> null;
+        ResponseHandler<Boolean> responseHandler = response -> false;
 
         CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
         when(mockHttpClient.execute(httpUriRequest, responseHandler)).thenReturn(true);
