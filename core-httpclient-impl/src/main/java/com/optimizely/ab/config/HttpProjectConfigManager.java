@@ -18,6 +18,7 @@ package com.optimizely.ab.config;
 
 import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.OptimizelyHttpClient;
+import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
@@ -130,6 +131,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         return null;
     }
 
+    @VisibleForTesting
     HttpGet createHttpRequest() {
         HttpGet httpGet = new HttpGet(uri);
 
