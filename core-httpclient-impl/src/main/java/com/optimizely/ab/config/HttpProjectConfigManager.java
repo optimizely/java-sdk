@@ -45,6 +45,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     public static final String CONFIG_BLOCKING_DURATION = "http.project.config.manager.blocking.duration";
     public static final String CONFIG_BLOCKING_UNIT     = "http.project.config.manager.blocking.unit";
     public static final String CONFIG_SDK_KEY           = "http.project.config.manager.sdk.key";
+    public static final String CONFIG_DATAFILE_AUTH_TOKEN = "http.project.config.manager.datafile.auth.token";
 
     public static final long DEFAULT_POLLING_DURATION  = 5;
     public static final TimeUnit DEFAULT_POLLING_UNIT  = TimeUnit.MINUTES;

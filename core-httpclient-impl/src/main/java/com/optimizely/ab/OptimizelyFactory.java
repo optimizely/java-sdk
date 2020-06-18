@@ -179,6 +179,18 @@ public final class OptimizelyFactory {
      * @param fallback Fallback datafile string used by the ProjectConfigManager to be immediately available.
      */
     public static Optimizely newDefaultInstance(String sdkKey, String fallback) {
+        String datafileAuthToken = PropertyUtils.get(HttpProjectConfigManager.CONFIG_DATAFILE_AUTH_TOKEN);
+        return newDefaultInstance(sdkKey, fallback, datafileAuthToken);
+    }
+
+    /**
+     * Returns a new Optimizely instance with authenticated datafile support.
+     *
+     * @param sdkKey   SDK key used to build the ProjectConfigManager.
+     * @param fallback Fallback datafile string used by the ProjectConfigManager to be immediately available.
+     * @param datafileAuthToken  Token for authenticated datafile access.
+     */
+    public static Optimizely newDefaultInstance(String sdkKey, String fallback, String datafileAuthToken) {
         NotificationCenter notificationCenter = new NotificationCenter();
 
         HttpProjectConfigManager.Builder builder = HttpProjectConfigManager.builder()
@@ -186,24 +198,9 @@ public final class OptimizelyFactory {
             .withNotificationCenter(notificationCenter)
             .withSdkKey(sdkKey);
 
-        return newDefaultInstance(builder.build(), notificationCenter);
-    }
-
-    /**
-     * Returns a new Optimizely instance with authenticated datafile support.
-     *
-     * @param sdkKey   SDK key used to build the ProjectConfigManager.
-     * @param datafileAuthToken  Token for authenticated datafile access.
-     * @param fallback Fallback datafile string used by the ProjectConfigManager to be immediately available.
-     */
-    public static Optimizely newDefaultInstance(String sdkKey, String datafileAuthToken, String fallback) {
-        NotificationCenter notificationCenter = new NotificationCenter();
-
-        HttpProjectConfigManager.Builder builder = HttpProjectConfigManager.builder()
-            .withDatafile(fallback)
-            .withNotificationCenter(notificationCenter)
-            .withSdkKey(sdkKey)
-            .withDatafileAuthToken(datafileAuthToken);
+        if (datafileAuthToken != null) {
+            builder.withDatafileAuthToken(datafileAuthToken);
+        }
 
         return newDefaultInstance(builder.build(), notificationCenter);
     }
