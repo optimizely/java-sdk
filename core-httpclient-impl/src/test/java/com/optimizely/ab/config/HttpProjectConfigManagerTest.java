@@ -128,7 +128,7 @@ public class HttpProjectConfigManagerTest {
         projectConfigManager = builder()
             .withOptimizelyHttpClient(mockHttpClient)
             .withSdkKey("sdk-key")
-            .withDatafileAuthToken("auth-token")
+            .withDatafileAccessToken("auth-token")
             .build();
 
         URI actual = projectConfigManager.getUri();
@@ -143,7 +143,7 @@ public class HttpProjectConfigManagerTest {
             .withOptimizelyHttpClient(mockHttpClient)
             .withUrl(expected)
             .withSdkKey("sdk-key")
-            .withDatafileAuthToken("auth-token")
+            .withDatafileAccessToken("auth-token")
             .build();
 
         URI actual = projectConfigManager.getUri();
@@ -167,7 +167,7 @@ public class HttpProjectConfigManagerTest {
         projectConfigManager = builder()
             .withOptimizelyHttpClient(mockHttpClient)
             .withSdkKey("sdk-key")
-            .withDatafileAuthToken("auth-token")
+            .withDatafileAccessToken("auth-token")
             .build();
 
         HttpGet request = projectConfigManager.createHttpRequest();

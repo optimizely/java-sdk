@@ -56,21 +56,21 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
     private final OptimizelyHttpClient httpClient;
     private final URI uri;
-    private final String datafileAuthToken;
+    private final String datafileAccessToken;
     private String datafileLastModified;
 
     private HttpProjectConfigManager(long period,
                                      TimeUnit timeUnit,
                                      OptimizelyHttpClient httpClient,
                                      String url,
-                                     String datafileAuthToken,
+                                     String datafileAccessToken,
                                      long blockingTimeoutPeriod,
                                      TimeUnit blockingTimeoutUnit,
                                      NotificationCenter notificationCenter) {
         super(period, timeUnit, blockingTimeoutPeriod, blockingTimeoutUnit, notificationCenter);
         this.httpClient = httpClient;
         this.uri = URI.create(url);
-        this.datafileAuthToken = datafileAuthToken;
+        this.datafileAccessToken = datafileAccessToken;
     }
 
     public URI getUri() {
@@ -136,8 +136,8 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     HttpGet createHttpRequest() {
         HttpGet httpGet = new HttpGet(uri);
 
-        if (datafileAuthToken != null) {
-            httpGet.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + datafileAuthToken);
+        if (datafileAccessToken != null) {
+            httpGet.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + datafileAccessToken);
         }
 
         if (datafileLastModified != null) {
@@ -154,7 +154,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     public static class Builder {
         private String datafile;
         private String url;
-        private String datafileAuthToken = null;
+        private String datafileAccessToken = null;
         private String format = "https://cdn.optimizely.com/datafiles/%s.json";
         private String authFormat = "https://config.optimizely.com/datafiles/auth/%s.json";
         private OptimizelyHttpClient httpClient;
@@ -177,8 +177,8 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
             return this;
         }
 
-        public Builder withDatafileAuthToken(String token) {
-            this.datafileAuthToken = token;
+        public Builder withDatafileAccessToken(String token) {
+            this.datafileAccessToken = token;
             return this;
         }
 
@@ -290,7 +290,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                     throw new NullPointerException("sdkKey cannot be null");
                 }
 
-                if (datafileAuthToken == null) {
+                if (datafileAccessToken == null) {
                     url = String.format(format, sdkKey);
                 } else {
                     url = String.format(authFormat, sdkKey);
@@ -306,7 +306,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                 timeUnit,
                 httpClient,
                 url,
-                datafileAuthToken,
+                datafileAccessToken,
                 blockingTimeoutPeriod,
                 blockingTimeoutUnit,
                 notificationCenter);
