@@ -18,6 +18,7 @@ package com.optimizely.ab.config;
 
 import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.OptimizelyHttpClient;
+import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
@@ -44,6 +45,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     public static final String CONFIG_BLOCKING_DURATION = "http.project.config.manager.blocking.duration";
     public static final String CONFIG_BLOCKING_UNIT     = "http.project.config.manager.blocking.unit";
     public static final String CONFIG_SDK_KEY           = "http.project.config.manager.sdk.key";
+    public static final String CONFIG_DATAFILE_AUTH_TOKEN = "http.project.config.manager.datafile.auth.token";
 
     public static final long DEFAULT_POLLING_DURATION  = 5;
     public static final TimeUnit DEFAULT_POLLING_UNIT  = TimeUnit.MINUTES;
@@ -54,12 +56,21 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
     private final OptimizelyHttpClient httpClient;
     private final URI uri;
+    private final String datafileAccessToken;
     private String datafileLastModified;
 
-    private HttpProjectConfigManager(long period, TimeUnit timeUnit, OptimizelyHttpClient httpClient, String url, long blockingTimeoutPeriod, TimeUnit blockingTimeoutUnit, NotificationCenter notificationCenter) {
+    private HttpProjectConfigManager(long period,
+                                     TimeUnit timeUnit,
+                                     OptimizelyHttpClient httpClient,
+                                     String url,
+                                     String datafileAccessToken,
+                                     long blockingTimeoutPeriod,
+                                     TimeUnit blockingTimeoutUnit,
+                                     NotificationCenter notificationCenter) {
         super(period, timeUnit, blockingTimeoutPeriod, blockingTimeoutUnit, notificationCenter);
         this.httpClient = httpClient;
         this.uri = URI.create(url);
+        this.datafileAccessToken = datafileAccessToken;
     }
 
     public URI getUri() {
@@ -104,11 +115,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
     @Override
     protected ProjectConfig poll() {
-        HttpGet httpGet = new HttpGet(uri);
-
-        if (datafileLastModified != null) {
-            httpGet.setHeader(HttpHeaders.IF_MODIFIED_SINCE, datafileLastModified);
-        }
+        HttpGet httpGet = createHttpRequest();
 
         logger.debug("Fetching datafile from: {}", httpGet.getURI());
         try {
@@ -125,6 +132,21 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         return null;
     }
 
+    @VisibleForTesting
+    HttpGet createHttpRequest() {
+        HttpGet httpGet = new HttpGet(uri);
+
+        if (datafileAccessToken != null) {
+            httpGet.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + datafileAccessToken);
+        }
+
+        if (datafileLastModified != null) {
+            httpGet.setHeader(HttpHeaders.IF_MODIFIED_SINCE, datafileLastModified);
+        }
+
+        return httpGet;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -132,7 +154,9 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     public static class Builder {
         private String datafile;
         private String url;
+        private String datafileAccessToken = null;
         private String format = "https://cdn.optimizely.com/datafiles/%s.json";
+        private String authFormat = "https://config.optimizely.com/datafiles/auth/%s.json";
         private OptimizelyHttpClient httpClient;
         private NotificationCenter notificationCenter;
 
@@ -150,6 +174,11 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
         public Builder withSdkKey(String sdkKey) {
             this.sdkKey = sdkKey;
+            return this;
+        }
+
+        public Builder withDatafileAccessToken(String token) {
+            this.datafileAccessToken = token;
             return this;
         }
 
@@ -261,14 +290,26 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                     throw new NullPointerException("sdkKey cannot be null");
                 }
 
-                url = String.format(format, sdkKey);
+                if (datafileAccessToken == null) {
+                    url = String.format(format, sdkKey);
+                } else {
+                    url = String.format(authFormat, sdkKey);
+                }
             }
 
             if (notificationCenter == null) {
                 notificationCenter = new NotificationCenter();
             }
 
-            HttpProjectConfigManager httpProjectManager = new HttpProjectConfigManager(period, timeUnit, httpClient, url, blockingTimeoutPeriod, blockingTimeoutUnit, notificationCenter);
+            HttpProjectConfigManager httpProjectManager = new HttpProjectConfigManager(
+                period,
+                timeUnit,
+                httpClient,
+                url,
+                datafileAccessToken,
+                blockingTimeoutPeriod,
+                blockingTimeoutUnit,
+                notificationCenter);
 
             if (datafile != null) {
                 try {

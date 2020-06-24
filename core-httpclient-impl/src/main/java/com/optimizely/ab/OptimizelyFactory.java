@@ -179,12 +179,28 @@ public final class OptimizelyFactory {
      * @param fallback Fallback datafile string used by the ProjectConfigManager to be immediately available.
      */
     public static Optimizely newDefaultInstance(String sdkKey, String fallback) {
+        String datafileAccessToken = PropertyUtils.get(HttpProjectConfigManager.CONFIG_DATAFILE_AUTH_TOKEN);
+        return newDefaultInstance(sdkKey, fallback, datafileAccessToken);
+    }
+
+    /**
+     * Returns a new Optimizely instance with authenticated datafile support.
+     *
+     * @param sdkKey   SDK key used to build the ProjectConfigManager.
+     * @param fallback Fallback datafile string used by the ProjectConfigManager to be immediately available.
+     * @param datafileAccessToken  Token for authenticated datafile access.
+     */
+    public static Optimizely newDefaultInstance(String sdkKey, String fallback, String datafileAccessToken) {
         NotificationCenter notificationCenter = new NotificationCenter();
 
         HttpProjectConfigManager.Builder builder = HttpProjectConfigManager.builder()
             .withDatafile(fallback)
             .withNotificationCenter(notificationCenter)
             .withSdkKey(sdkKey);
+
+        if (datafileAccessToken != null) {
+            builder.withDatafileAccessToken(datafileAccessToken);
+        }
 
         return newDefaultInstance(builder.build(), notificationCenter);
     }
