@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017, 2019, Optimizely and contributors
+ *    Copyright 2017, 2019-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -42,6 +42,8 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_WITH_MISSIN
 import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY;
 import static com.optimizely.ab.internal.ExperimentUtils.isExperimentActive;
 import static com.optimizely.ab.internal.ExperimentUtils.isUserInExperiment;
+import static com.optimizely.ab.internal.LoggingConstants.AudienceFor.EXPERIMENT;
+import static com.optimizely.ab.internal.LoggingConstants.AudienceFor.RULE;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -121,63 +123,63 @@ public class ExperimentUtilsTest {
 
     /**
      * If the {@link Experiment} does not have any {@link Audience}s,
-     * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map)} should return true;
+     * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map, String, String)} should return true;
      */
     @Test
     public void isUserInExperimentReturnsTrueIfExperimentHasNoAudiences() {
         Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
-        assertTrue(isUserInExperiment(noAudienceProjectConfig, experiment, Collections.<String, String>emptyMap()));
+        assertTrue(isUserInExperiment(noAudienceProjectConfig, experiment, Collections.<String, String>emptyMap(), RULE, "Everyone Else"));
     }
 
     /**
      * If the {@link Experiment} contains at least one {@link Audience}, but attributes is empty,
-     * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map)} should return false.
+     * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map, String, String)} should return false.
      */
     @Test
     public void isUserInExperimentEvaluatesEvenIfExperimentHasAudiencesButUserHasNoAttributes() {
         Experiment experiment = projectConfig.getExperiments().get(0);
-        Boolean result = isUserInExperiment(projectConfig, experiment, Collections.<String, String>emptyMap());
+        Boolean result = isUserInExperiment(projectConfig, experiment, Collections.<String, String>emptyMap(), EXPERIMENT, experiment.getKey());
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
             "Evaluating audiences for experiment \"etag1\": \"[100]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Starting to evaluate audience not_firefox_users with conditions: \"[and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]\"");
+            "Starting to evaluate audience 100 with conditions: \"[and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Audience not_firefox_users evaluated to true");
+            "Audience 100 evaluated to true");
         logbackVerifier.expectMessage(Level.INFO,
-            "Audiences for experiment etag1 collectively evaluated to true");
+            "Audiences for rule 1 collectively evaluated to true");
     }
 
     /**
      * If the {@link Experiment} contains at least one {@link Audience}, but attributes is empty,
-     * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map)} should return false.
+     * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map, String, String)} should return false.
      */
     @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     @Test
     public void isUserInExperimentEvaluatesEvenIfExperimentHasAudiencesButUserSendNullAttributes() throws Exception {
         Experiment experiment = projectConfig.getExperiments().get(0);
-        Boolean result = isUserInExperiment(projectConfig, experiment, null);
+        Boolean result = isUserInExperiment(projectConfig, experiment, null, EXPERIMENT, experiment.getKey());
 
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
             "Evaluating audiences for experiment \"etag1\": \"[100]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Starting to evaluate audience not_firefox_users with conditions: \"[and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]\"");
+            "Starting to evaluate audience 100 with conditions: \"[and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Audience not_firefox_users evaluated to true");
+            "Audience 100 evaluated to true");
         logbackVerifier.expectMessage(Level.INFO,
             "Audiences for experiment etag1 collectively evaluated to true");
     }
 
     /**
      * If the {@link Experiment} contains {@link TypedAudience}, and attributes is valid and true,
-     * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map)} should return true.
+     * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map, String, String)} should return true.
      */
     @Test
     public void isUserInExperimentEvaluatesExperimentHasTypedAudiences() {
         Experiment experiment = v4ProjectConfig.getExperiments().get(1);
         Map<String, Boolean> attribute = Collections.singletonMap("booleanKey", true);
-        Boolean result = isUserInExperiment(v4ProjectConfig, experiment, attribute);
+        Boolean result = isUserInExperiment(v4ProjectConfig, experiment, attribute, EXPERIMENT, experiment.getKey());
 
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
@@ -192,42 +194,42 @@ public class ExperimentUtilsTest {
 
     /**
      * If the attributes satisfies at least one {@link Condition} in an {@link Audience} of the {@link Experiment},
-     * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map)} should return true.
+     * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map, String, String)} should return true.
      */
     @Test
     public void isUserInExperimentReturnsTrueIfUserSatisfiesAnAudience() {
         Experiment experiment = projectConfig.getExperiments().get(0);
         Map<String, String> attributes = Collections.singletonMap("browser_type", "chrome");
-        Boolean result = isUserInExperiment(projectConfig, experiment, attributes);
+        Boolean result = isUserInExperiment(projectConfig, experiment, attributes, EXPERIMENT, experiment.getKey());
 
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
             "Evaluating audiences for experiment \"etag1\": \"[100]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Starting to evaluate audience not_firefox_users with conditions: \"[and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]\"");
+            "Starting to evaluate audience 100 with conditions: \"[and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Audience not_firefox_users evaluated to true");
+            "Audience 100 evaluated to true");
         logbackVerifier.expectMessage(Level.INFO,
             "Audiences for experiment etag1 collectively evaluated to true");
     }
 
     /**
      * If the attributes satisfies no {@link Condition} of any {@link Audience} of the {@link Experiment},
-     * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map)} should return false.
+     * then {@link ExperimentUtils#isUserInExperiment(ProjectConfig, Experiment, Map, String, String)} should return false.
      */
     @Test
     public void isUserInExperimentReturnsTrueIfUserDoesNotSatisfyAnyAudiences() {
         Experiment experiment = projectConfig.getExperiments().get(0);
         Map<String, String> attributes = Collections.singletonMap("browser_type", "firefox");
-        Boolean result = isUserInExperiment(projectConfig, experiment, attributes);
+        Boolean result = isUserInExperiment(projectConfig, experiment, attributes, EXPERIMENT, experiment.getKey());
 
         assertFalse(result);
         logbackVerifier.expectMessage(Level.DEBUG,
             "Evaluating audiences for experiment \"etag1\": \"[100]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Starting to evaluate audience not_firefox_users with conditions: \"[and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]\"");
+            "Starting to evaluate audience 100 with conditions: \"[and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Audience not_firefox_users evaluated to false");
+            "Audience 100 evaluated to false");
         logbackVerifier.expectMessage(Level.INFO,
             "Audiences for experiment etag1 collectively evaluated to false");
 
@@ -244,8 +246,8 @@ public class ExperimentUtilsTest {
             AUDIENCE_WITH_MISSING_VALUE_VALUE);
         Map<String, String> nonMatchingMap = Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, "American");
 
-        assertTrue(isUserInExperiment(v4ProjectConfig, experiment, satisfiesFirstCondition));
-        assertFalse(isUserInExperiment(v4ProjectConfig, experiment, nonMatchingMap));
+        assertTrue(isUserInExperiment(v4ProjectConfig, experiment, satisfiesFirstCondition, EXPERIMENT, experiment.getKey()));
+        assertFalse(isUserInExperiment(v4ProjectConfig, experiment, nonMatchingMap, EXPERIMENT, experiment.getKey()));
     }
 
     /**
@@ -256,7 +258,7 @@ public class ExperimentUtilsTest {
         Experiment experiment = v4ProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY);
         Map<String, String> attributesWithNull = Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, null);
 
-        assertFalse(isUserInExperiment(v4ProjectConfig, experiment, attributesWithNull));
+        assertFalse(isUserInExperiment(v4ProjectConfig, experiment, attributesWithNull, EXPERIMENT, experiment.getKey()));
 
         logbackVerifier.expectMessage(Level.DEBUG,
             "Starting to evaluate audience audience_with_missing_value with conditions: \"[and, [or, [or, {name='nationality', type='custom_attribute', match='null', value='English'}, {name='nationality', type='custom_attribute', match='null', value=null}]]]\"");
@@ -277,7 +279,7 @@ public class ExperimentUtilsTest {
         Map<String, String> attributesEmpty = Collections.emptyMap();
 
         // It should explicitly be set to null otherwise we will return false on empty maps
-        assertFalse(isUserInExperiment(v4ProjectConfig, experiment, attributesEmpty));
+        assertFalse(isUserInExperiment(v4ProjectConfig, experiment, attributesEmpty, EXPERIMENT, experiment.getKey()));
 
         logbackVerifier.expectMessage(Level.DEBUG,
             "Starting to evaluate audience audience_with_missing_value with conditions: \"[and, [or, [or, {name='nationality', type='custom_attribute', match='null', value='English'}, {name='nationality', type='custom_attribute', match='null', value=null}]]]\"");

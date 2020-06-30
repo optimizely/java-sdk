@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019-2020, Optimizely and contributors
+ *    Copyright 2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,13 +14,11 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+package com.optimizely.ab.internal;
 
-package com.optimizely.ab.config.audience.match;
-
-public class UnknownMatchTypeException extends Exception {
-    private static String message = "uses an unknown match type. You may need to upgrade to a newer release of the Optimizely SDK.";
-
-    public UnknownMatchTypeException() {
-        super(message);
+public class LoggingConstants {
+    public static class AudienceFor {
+        public static final String EXPERIMENT = "experiment";
+        public static final String RULE = "rule";
     }
 }

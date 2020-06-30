@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2019, Optimizely and contributors
+ *    Copyright 2016-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ public class UserAttribute<T> implements Condition<T> {
         Object userAttributeValue = attributes.get(name);
 
         if (!"custom_attribute".equals(type)) {
-            logger.warn("Audience condition \"{}\" has an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK", this);
+            logger.warn("Audience condition \"{}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.", this);
             return null; // unknown type
         }
         // check user attribute value is equal
@@ -103,7 +103,7 @@ public class UserAttribute<T> implements Condition<T> {
                             userAttributeValue.getClass().getCanonicalName(),
                             name);
                     } else {
-                        logger.warn(
+                        logger.debug(
                             "Audience condition \"{}\" evaluated to UNKNOWN because a null value was passed for user attribute \"{}\"",
                             this,
                             name);
