@@ -126,6 +126,7 @@ public class DecisionServiceTest {
         assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap(), validProjectConfig));
 
         logbackVerifier.expectMessage(Level.INFO, "User \"" + whitelistedUserId + "\" is forced in variation \"vtag1\".");
+        logbackVerifier.expectMessage(Level.INFO, "Audiences for experiment \"etag1\" collectively evaluated to true.");
 
         // no attributes provided for a experiment that has an audience
         assertThat(decisionService.getVariation(experiment, whitelistedUserId, Collections.<String, String>emptyMap(), validProjectConfig), is(expectedVariation));
@@ -625,6 +626,14 @@ public class DecisionServiceTest {
             Collections.<String, String>emptyMap(),
             v4ProjectConfig
         );
+        logbackVerifier.expectMessage(Level.DEBUG, "Evaluating audiences for rule \"1\": \"[3468206642]\"");
+        logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"1\" collectively evaluated to null");
+        logbackVerifier.expectMessage(Level.DEBUG, "Evaluating audiences for rule \"2\": \"[3988293898]\"");
+        logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"2\" collectively evaluated to null");
+        logbackVerifier.expectMessage(Level.DEBUG, "Evaluating audiences for rule \"3\": \"[4194404272]\"");
+        logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"3\" collectively evaluated to null");
+        logbackVerifier.expectMessage(Level.DEBUG, "User \"genericUserId\" meets conditions for targeting rule \"Everyone Else\".");
+
         assertEquals(expectedVariation, featureDecision.variation);
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
 
@@ -663,6 +672,9 @@ public class DecisionServiceTest {
         );
         assertEquals(expectedVariation, featureDecision.variation);
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
+
+        logbackVerifier.expectMessage(Level.DEBUG, "There is no Audience associated with experiment 828245624");
+        logbackVerifier.expectMessage(Level.DEBUG, "User \"genericUserId\" meets conditions for targeting rule \"Everyone Else\".");
 
         // verify user is only bucketed once for everyone else rule
         verify(mockBucketer, times(2)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
@@ -743,7 +755,11 @@ public class DecisionServiceTest {
         );
         assertEquals(englishCitizenVariation, featureDecision.variation);
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
-
+        logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"2\" collectively evaluated to null");
+        logbackVerifier.expectMessage(Level.DEBUG, "Evaluating audiences for rule \"3\": \"[4194404272]\"");
+        logbackVerifier.expectMessage(Level.DEBUG, "Starting to evaluate audience 4194404272 with conditions: \"[and, [or, [or, {name='nationality', type='custom_attribute', match='exact', value='English'}]]]\"");
+        logbackVerifier.expectMessage(Level.DEBUG, "Audience 4194404272 evaluated to true");
+        logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"3\" collectively evaluated to true");
         // verify user is only bucketed once for everyone else rule
         verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
     }

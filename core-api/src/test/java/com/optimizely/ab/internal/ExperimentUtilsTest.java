@@ -147,7 +147,7 @@ public class ExperimentUtilsTest {
         logbackVerifier.expectMessage(Level.DEBUG,
             "Audience 100 evaluated to true");
         logbackVerifier.expectMessage(Level.INFO,
-            "Audiences for rule 1 collectively evaluated to true");
+            "Audiences for experiment \"etag1\" collectively evaluated to true");
     }
 
     /**
@@ -168,7 +168,7 @@ public class ExperimentUtilsTest {
         logbackVerifier.expectMessage(Level.DEBUG,
             "Audience 100 evaluated to true");
         logbackVerifier.expectMessage(Level.INFO,
-            "Audiences for experiment etag1 collectively evaluated to true");
+            "Audiences for experiment \"etag1\" collectively evaluated to true");
     }
 
     /**
@@ -185,11 +185,11 @@ public class ExperimentUtilsTest {
         logbackVerifier.expectMessage(Level.DEBUG,
             "Evaluating audiences for experiment \"typed_audience_experiment\": \"[or, 3468206643, 3468206644, 3468206646, 3468206645]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Starting to evaluate audience BOOL with conditions: \"[and, [or, [or, {name='booleanKey', type='custom_attribute', match='exact', value=true}]]]\"");
+            "Starting to evaluate audience 3468206643 with conditions: \"[and, [or, [or, {name='booleanKey', type='custom_attribute', match='exact', value=true}]]]\"");
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Audience BOOL evaluated to true");
+            "Audience 3468206643 evaluated to true");
         logbackVerifier.expectMessage(Level.INFO,
-            "Audiences for experiment typed_audience_experiment collectively evaluated to true");
+            "Audiences for experiment \"typed_audience_experiment\" collectively evaluated to true");
     }
 
     /**
@@ -210,7 +210,7 @@ public class ExperimentUtilsTest {
         logbackVerifier.expectMessage(Level.DEBUG,
             "Audience 100 evaluated to true");
         logbackVerifier.expectMessage(Level.INFO,
-            "Audiences for experiment etag1 collectively evaluated to true");
+            "Audiences for experiment \"etag1\" collectively evaluated to true");
     }
 
     /**
@@ -231,7 +231,7 @@ public class ExperimentUtilsTest {
         logbackVerifier.expectMessage(Level.DEBUG,
             "Audience 100 evaluated to false");
         logbackVerifier.expectMessage(Level.INFO,
-            "Audiences for experiment etag1 collectively evaluated to false");
+            "Audiences for experiment \"etag1\" collectively evaluated to false");
 
     }
 
@@ -261,13 +261,13 @@ public class ExperimentUtilsTest {
         assertFalse(isUserInExperiment(v4ProjectConfig, experiment, attributesWithNull, EXPERIMENT, experiment.getKey()));
 
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Starting to evaluate audience audience_with_missing_value with conditions: \"[and, [or, [or, {name='nationality', type='custom_attribute', match='null', value='English'}, {name='nationality', type='custom_attribute', match='null', value=null}]]]\"");
+            "Starting to evaluate audience 2196265320 with conditions: \"[and, [or, [or, {name='nationality', type='custom_attribute', match='null', value='English'}, {name='nationality', type='custom_attribute', match='null', value=null}]]]\"");
         logbackVerifier.expectMessage(Level.WARN,
-            "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unexpected value type. You may need to upgrade to a newer release of the Optimizely SDK");
+            "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unsupported condition value. You may need to upgrade to a newer release of the Optimizely SDK.");
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Audience audience_with_missing_value evaluated to null");
+            "Audience 2196265320 evaluated to null");
         logbackVerifier.expectMessage(Level.INFO,
-            "Audiences for experiment experiment_with_malformed_audience collectively evaluated to null");
+            "Audiences for experiment \"experiment_with_malformed_audience\" collectively evaluated to null");
     }
 
     /**
@@ -282,13 +282,13 @@ public class ExperimentUtilsTest {
         assertFalse(isUserInExperiment(v4ProjectConfig, experiment, attributesEmpty, EXPERIMENT, experiment.getKey()));
 
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Starting to evaluate audience audience_with_missing_value with conditions: \"[and, [or, [or, {name='nationality', type='custom_attribute', match='null', value='English'}, {name='nationality', type='custom_attribute', match='null', value=null}]]]\"");
+            "Starting to evaluate audience 2196265320 with conditions: \"[and, [or, [or, {name='nationality', type='custom_attribute', match='null', value='English'}, {name='nationality', type='custom_attribute', match='null', value=null}]]]\"");
         logbackVerifier.expectMessage(Level.WARN,
-            "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unexpected value type. You may need to upgrade to a newer release of the Optimizely SDK");
+            "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unsupported condition value. You may need to upgrade to a newer release of the Optimizely SDK.");
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Audience audience_with_missing_value evaluated to null");
+            "Audience 2196265320 evaluated to null");
         logbackVerifier.expectMessage(Level.INFO,
-            "Audiences for experiment experiment_with_malformed_audience collectively evaluated to null");
+            "Audiences for experiment \"experiment_with_malformed_audience\" collectively evaluated to null");
     }
 
     /**
