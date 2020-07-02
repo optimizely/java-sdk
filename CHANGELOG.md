@@ -1,5 +1,14 @@
 # Optimizely Java X SDK Changelog
 
+## [3.5.0-beta]
+July 2nd, 2020
+
+### New Features
+- Add support for JSON feature variables ([#372](https://github.com/optimizely/java-sdk/pull/372, [#371](https://github.com/optimizely/java-sdk/pull/371), [#375](https://github.com/optimizely/java-sdk/pull/375))
+- Add support for authenticated datafile access ([#378](https://github.com/optimizely/java-sdk/pull/378))
+- Adjust log level on audience evaluation logs ([#377](https://github.com/optimizely/java-sdk/pull/377))
+- Removed triggers for Benchmarking tests ([#376](https://github.com/optimizely/java-sdk/pull/376))
+
 ## [3.4.3]
 April 28th, 2020
 
