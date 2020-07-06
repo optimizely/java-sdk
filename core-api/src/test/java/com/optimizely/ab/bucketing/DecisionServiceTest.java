@@ -126,7 +126,6 @@ public class DecisionServiceTest {
         assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap(), validProjectConfig));
 
         logbackVerifier.expectMessage(Level.INFO, "User \"" + whitelistedUserId + "\" is forced in variation \"vtag1\".");
-        logbackVerifier.expectMessage(Level.INFO, "Audiences for experiment \"etag1\" collectively evaluated to true.");
 
         // no attributes provided for a experiment that has an audience
         assertThat(decisionService.getVariation(experiment, whitelistedUserId, Collections.<String, String>emptyMap(), validProjectConfig), is(expectedVariation));
