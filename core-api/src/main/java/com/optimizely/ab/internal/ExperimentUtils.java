@@ -99,7 +99,7 @@ public final class ExperimentUtils {
 
         OrCondition implicitOr = new OrCondition(conditions);
 
-        logger.debug("Evaluating audiences for {} \"{}\": \"{}\"", audienceFor, loggingKey, conditions);
+        logger.debug("Evaluating audiences for {} \"{}\": {}.", audienceFor, loggingKey, conditions);
 
         Boolean result = implicitOr.evaluate(projectConfig, attributes);
 
@@ -117,7 +117,7 @@ public final class ExperimentUtils {
 
         Condition conditions = experiment.getAudienceConditions();
         if (conditions == null) return null;
-        logger.debug("Evaluating audiences for {} \"{}\": \"{}\"", audienceFor, loggingKey, conditions);
+        logger.debug("Evaluating audiences for {} \"{}\": {}.", audienceFor, loggingKey, conditions);
         try {
             Boolean result = conditions.evaluate(projectConfig, attributes);
             logger.info("Audiences for {} \"{}\" collectively evaluated to {}", audienceFor, loggingKey, result);

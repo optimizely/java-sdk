@@ -141,7 +141,7 @@ public class ExperimentUtilsTest {
         Boolean result = doesUserMeetAudienceConditions(projectConfig, experiment, Collections.<String, String>emptyMap(), EXPERIMENT, experiment.getKey());
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Evaluating audiences for experiment \"etag1\": \"[100]\"");
+            "Evaluating audiences for experiment \"etag1\": [100].");
         logbackVerifier.expectMessage(Level.DEBUG,
             "Starting to evaluate audience \"100\" with conditions: [and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]");
         logbackVerifier.expectMessage(Level.DEBUG,
@@ -162,7 +162,7 @@ public class ExperimentUtilsTest {
 
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Evaluating audiences for experiment \"etag1\": \"[100]\"");
+            "Evaluating audiences for experiment \"etag1\": [100].");
         logbackVerifier.expectMessage(Level.DEBUG,
             "Starting to evaluate audience \"100\" with conditions: [and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]");
         logbackVerifier.expectMessage(Level.DEBUG,
@@ -183,7 +183,7 @@ public class ExperimentUtilsTest {
 
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Evaluating audiences for experiment \"typed_audience_experiment\": \"[or, 3468206643, 3468206644, 3468206646, 3468206645]\"");
+            "Evaluating audiences for experiment \"typed_audience_experiment\": [or, 3468206643, 3468206644, 3468206646, 3468206645].");
         logbackVerifier.expectMessage(Level.DEBUG,
             "Starting to evaluate audience \"3468206643\" with conditions: [and, [or, [or, {name='booleanKey', type='custom_attribute', match='exact', value=true}]]]");
         logbackVerifier.expectMessage(Level.DEBUG,
@@ -204,7 +204,7 @@ public class ExperimentUtilsTest {
 
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Evaluating audiences for experiment \"etag1\": \"[100]\"");
+            "Evaluating audiences for experiment \"etag1\": [100].");
         logbackVerifier.expectMessage(Level.DEBUG,
             "Starting to evaluate audience \"100\" with conditions: [and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]");
         logbackVerifier.expectMessage(Level.DEBUG,
@@ -225,7 +225,7 @@ public class ExperimentUtilsTest {
 
         assertFalse(result);
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Evaluating audiences for experiment \"etag1\": \"[100]\"");
+            "Evaluating audiences for experiment \"etag1\": [100].");
         logbackVerifier.expectMessage(Level.DEBUG,
             "Starting to evaluate audience \"100\" with conditions: [and, [or, [not, [or, {name='browser_type', type='custom_attribute', match='null', value='firefox'}]]]]");
         logbackVerifier.expectMessage(Level.DEBUG,
