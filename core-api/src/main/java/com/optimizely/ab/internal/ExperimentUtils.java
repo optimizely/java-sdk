@@ -103,7 +103,7 @@ public final class ExperimentUtils {
 
         Boolean result = implicitOr.evaluate(projectConfig, attributes);
 
-        logger.info("Audiences for {} \"{}\" collectively evaluated to {}", audienceFor, loggingKey, result);
+        logger.info("Audiences for {} \"{}\" collectively evaluated to {}.", audienceFor, loggingKey, result);
 
         return result;
     }
@@ -120,7 +120,7 @@ public final class ExperimentUtils {
         logger.debug("Evaluating audiences for {} \"{}\": {}.", audienceFor, loggingKey, conditions);
         try {
             Boolean result = conditions.evaluate(projectConfig, attributes);
-            logger.info("Audiences for {} \"{}\" collectively evaluated to {}", audienceFor, loggingKey, result);
+            logger.info("Audiences for {} \"{}\" collectively evaluated to {}.", audienceFor, loggingKey, result);
             return result;
         } catch (Exception e) {
             logger.error("Condition invalid", e);
