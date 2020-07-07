@@ -63,11 +63,11 @@ public final class ExperimentUtils {
      * @param loggingKey    In case of audienceFor experiment it will be experiment key or else it will be rule number.
      * @return whether the user meets the criteria for the experiment
      */
-    public static boolean isUserInExperiment(@Nonnull ProjectConfig projectConfig,
-                                             @Nonnull Experiment experiment,
-                                             @Nonnull Map<String, ?> attributes,
-                                             @Nonnull String audienceFor,
-                                             @Nonnull String loggingKey) {
+    public static boolean doesUserMeetAudienceConditions(@Nonnull ProjectConfig projectConfig,
+                                                         @Nonnull Experiment experiment,
+                                                         @Nonnull Map<String, ?> attributes,
+                                                         @Nonnull String audienceFor,
+                                                         @Nonnull String loggingKey) {
         if (experiment.getAudienceConditions() != null) {
             Boolean resolveReturn = evaluateAudienceConditions(projectConfig, experiment, attributes, audienceFor, loggingKey);
             return resolveReturn == null ? false : resolveReturn;

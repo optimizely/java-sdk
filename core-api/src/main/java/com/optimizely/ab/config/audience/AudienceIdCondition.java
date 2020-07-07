@@ -74,7 +74,7 @@ public class AudienceIdCondition<T> implements Condition<T> {
             logger.error("Audience {} could not be found.", audienceId);
             return null;
         }
-        logger.debug("Starting to evaluate audience {} with conditions: \"{}\"", audience.getId(), audience.getConditions());
+        logger.debug("Starting to evaluate audience \"{}\" with conditions: {}", audience.getId(), audience.getConditions());
         Boolean result = audience.getConditions().evaluate(config, attributes);
         logger.debug("Audience {} evaluated to {}", audience.getId(), result);
         return result;

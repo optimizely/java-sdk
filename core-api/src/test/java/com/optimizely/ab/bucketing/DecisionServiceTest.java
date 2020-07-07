@@ -756,7 +756,7 @@ public class DecisionServiceTest {
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
         logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"2\" collectively evaluated to null");
         logbackVerifier.expectMessage(Level.DEBUG, "Evaluating audiences for rule \"3\": \"[4194404272]\"");
-        logbackVerifier.expectMessage(Level.DEBUG, "Starting to evaluate audience 4194404272 with conditions: \"[and, [or, [or, {name='nationality', type='custom_attribute', match='exact', value='English'}]]]\"");
+        logbackVerifier.expectMessage(Level.DEBUG, "Starting to evaluate audience \"4194404272\" with conditions: [and, [or, [or, {name='nationality', type='custom_attribute', match='exact', value='English'}]]]");
         logbackVerifier.expectMessage(Level.DEBUG, "Audience 4194404272 evaluated to true");
         logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"3\" collectively evaluated to true");
         // verify user is only bucketed once for everyone else rule

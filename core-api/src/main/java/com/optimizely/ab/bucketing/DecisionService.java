@@ -17,7 +17,6 @@ package com.optimizely.ab.bucketing;
 
 import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.config.*;
-import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ExperimentUtils;
 import com.optimizely.ab.internal.ControlAttribute;
@@ -136,7 +135,7 @@ public class DecisionService {
             userProfile = new UserProfile(userId, new HashMap<String, Decision>());
         }
 
-        if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes, EXPERIMENT, experiment.getKey())) {
+        if (ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, experiment, filteredAttributes, EXPERIMENT, experiment.getKey())) {
             String bucketingId = getBucketingId(userId, filteredAttributes);
             variation = bucketer.bucket(experiment, bucketingId, projectConfig);
 
@@ -224,7 +223,7 @@ public class DecisionService {
         Variation variation;
         for (int i = 0; i < rolloutRulesLength - 1; i++) {
             Experiment rolloutRule = rollout.getExperiments().get(i);
-            if (ExperimentUtils.isUserInExperiment(projectConfig, rolloutRule, filteredAttributes, RULE, Integer.toString(i + 1))) {
+            if (ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, rolloutRule, filteredAttributes, RULE, Integer.toString(i + 1))) {
                 variation = bucketer.bucket(rolloutRule, bucketingId, projectConfig);
                 if (variation == null) {
                     break;
@@ -238,7 +237,7 @@ public class DecisionService {
 
         // get last rule which is the fall back rule
         Experiment finalRule = rollout.getExperiments().get(rolloutRulesLength - 1);
-        if (ExperimentUtils.isUserInExperiment(projectConfig, finalRule, filteredAttributes, RULE, "Everyone Else")) {
+        if (ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, finalRule, filteredAttributes, RULE, "Everyone Else")) {
             variation = bucketer.bucket(finalRule, bucketingId, projectConfig);
             if (variation != null) {
                 logger.debug("User \"{}\" meets conditions for targeting rule \"Everyone Else\".", userId);
