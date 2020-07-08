@@ -697,9 +697,9 @@ public class Optimizely implements AutoCloseable {
                     variableValue = variable.getDefaultValue();
                 }
             } else {
-                logger.info("Feature \"{}\" for variation \"{}\" was not enabled. " +
-                        "The default value is being returned.",
-                    featureKey, featureDecision.variation.getKey(), variableValue, variableKey
+                logger.info("Feature \"{}\" is not enabled for user \"{}\". " +
+                        "Returning the default variable value \"{}\".",
+                    featureKey, userId, variableValue
                 );
             }
             featureEnabled = featureDecision.variation.getFeatureEnabled();
@@ -823,8 +823,9 @@ public class Optimizely implements AutoCloseable {
 
         if (variation != null) {
             if (!variation.getFeatureEnabled()) {
-                logger.info("Feature \"{}\" for variation \"{}\" was not enabled. " +
-                    "The default value is being returned.", featureKey, featureDecision.variation.getKey());
+                logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
+            } else {
+                logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
             }
 
             featureEnabled = variation.getFeatureEnabled();

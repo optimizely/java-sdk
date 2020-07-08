@@ -2890,8 +2890,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(
             Level.INFO,
-            "Feature \"" + validFeatureKey + "\" for variation \"Gred\" was not enabled. " +
-                "The default value is being returned."
+            "Feature \"multi_variate_feature\" is not enabled for user \"genericUserId\". Returning the default variable value \"H\"."
         );
 
         assertEquals(expectedValue, value);
