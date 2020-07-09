@@ -171,6 +171,24 @@ public class OptimizelyFactoryTest {
     }
 
     @Test
+    public void setDatafileAccessToken() {
+        String expected = "datafile-access-token";
+        OptimizelyFactory.setDatafileAccessToken(expected);
+
+        assertEquals(expected, PropertyUtils.get(HttpProjectConfigManager.CONFIG_DATAFILE_AUTH_TOKEN));
+    }
+
+    @Test
+    public void setInvalidDatafileAccessToken() {
+        String expected = "datafile-access-token";
+        OptimizelyFactory.setDatafileAccessToken(expected);
+        assertEquals(expected, PropertyUtils.get(HttpProjectConfigManager.CONFIG_DATAFILE_AUTH_TOKEN));
+
+        OptimizelyFactory.setDatafileAccessToken(null);
+        assertEquals(expected, PropertyUtils.get(HttpProjectConfigManager.CONFIG_DATAFILE_AUTH_TOKEN));
+    }
+
+    @Test
     public void newDefaultInstanceInvalid() {
         optimizely = OptimizelyFactory.newDefaultInstance();
         assertFalse(optimizely.isValid());

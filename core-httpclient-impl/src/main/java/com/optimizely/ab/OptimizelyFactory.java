@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely
+ *    Copyright 2019-2020, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit;
  *  <li>{@link OptimizelyFactory#setBlockingTimeout}</li>
  *  <li>{@link OptimizelyFactory#setPollingInterval}</li>
  *  <li>{@link OptimizelyFactory#setSdkKey}</li>
+ *  <li>{@link OptimizelyFactory#setDatafileAccessToken}</li>
  * </ul>
  *
  */
@@ -142,6 +143,19 @@ public final class OptimizelyFactory {
         }
 
         PropertyUtils.set(HttpProjectConfigManager.CONFIG_SDK_KEY, sdkKey);
+    }
+
+    /**
+     * Convenience method for setting the Datafile Access Token on System properties.
+     * {@link HttpProjectConfigManager.Builder#withDatafileAccessToken(String)}
+     */
+    public static void setDatafileAccessToken(String datafileAccessToken) {
+        if (datafileAccessToken == null) {
+            logger.warn("Datafile Access Token cannot be null. Reverting to default configuration.");
+            return;
+        }
+
+        PropertyUtils.set(HttpProjectConfigManager.CONFIG_DATAFILE_AUTH_TOKEN, datafileAccessToken);
     }
 
     /**
