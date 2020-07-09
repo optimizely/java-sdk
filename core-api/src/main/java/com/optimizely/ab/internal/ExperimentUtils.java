@@ -69,6 +69,7 @@ public final class ExperimentUtils {
                                                          @Nonnull String audienceFor,
                                                          @Nonnull String loggingKey) {
         if (experiment.getAudienceConditions() != null) {
+            logger.debug("Evaluating audiences for {} \"{}\": {}.", audienceFor, loggingKey, experiment.getAudienceConditions());
             Boolean resolveReturn = evaluateAudienceConditions(projectConfig, experiment, attributes, audienceFor, loggingKey);
             return resolveReturn == null ? false : resolveReturn;
         } else {
@@ -117,7 +118,7 @@ public final class ExperimentUtils {
 
         Condition conditions = experiment.getAudienceConditions();
         if (conditions == null) return null;
-        logger.debug("Evaluating audiences for {} \"{}\": {}.", audienceFor, loggingKey, conditions);
+
         try {
             Boolean result = conditions.evaluate(projectConfig, attributes);
             logger.info("Audiences for {} \"{}\" collectively evaluated to {}.", audienceFor, loggingKey, result);

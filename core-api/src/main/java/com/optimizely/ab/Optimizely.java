@@ -693,8 +693,10 @@ public class Optimizely implements AutoCloseable {
                     featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
                 if (featureVariableUsageInstance != null) {
                     variableValue = featureVariableUsageInstance.getValue();
+                    logger.info("Got variable value \"{}\" for variable \"{}\" of feature flag \"{}\".", variableValue, variableKey, featureKey);
                 } else {
                     variableValue = variable.getDefaultValue();
+                    logger.info("Variable \"{}\" is not used in variation \"{}\", returning default value \"{}\".", variableKey, featureDecision.variation.getKey(), variableValue);
                 }
             } else {
                 logger.info("Feature \"{}\" is not enabled for user \"{}\". " +
@@ -822,13 +824,12 @@ public class Optimizely implements AutoCloseable {
         Variation variation = featureDecision.variation;
 
         if (variation != null) {
-            if (!variation.getFeatureEnabled()) {
-                logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
-            } else {
-                logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
-            }
-
             featureEnabled = variation.getFeatureEnabled();
+            if (featureEnabled) {
+                logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
+            } else {
+                logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
+            }
         } else {
             logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
                     "The default values are being returned.", userId, featureKey);

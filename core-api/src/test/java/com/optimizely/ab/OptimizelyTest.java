@@ -2917,6 +2917,11 @@ public class OptimizelyTest {
             testUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             expectedValue);
+
+        logbackVerifier.expectMessage(
+            Level.INFO,
+            "Got variable value \"F\" for variable \"first_letter\" of feature flag \"multi_variate_feature\"."
+        );
     }
 
     /**
@@ -3060,6 +3065,11 @@ public class OptimizelyTest {
         );
 
         assertEquals(expectedValue, value);
+
+        logbackVerifier.expectMessage(
+            Level.INFO,
+            "Variable \"integer_variable\" is not used in variation \"589640735\", returning default value \"7\"."
+        );
     }
 
     /**
