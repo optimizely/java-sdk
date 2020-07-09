@@ -171,6 +171,7 @@ The following builder methods can be used to custom configure the `HttpProjectCo
 |`withPollingInterval(Long, TimeUnit)`|5 minutes|Fixed delay between fetches for the datafile.|
 |`withBlockingTimeout(Long, TimeUnit)`|10 seconds|Maximum time to wait for initial bootstrapping.|
 |`withSdkKey(String)`|null|Optimizely project SDK key. Required unless source URL is overridden.|
+|`withDatafileAccessToken(String)`|null|Token for authenticated datafile access.|
 
 ### Advanced configuration
 The following properties can be set to override the default configuration.
@@ -182,6 +183,7 @@ The following properties can be set to override the default configuration.
 |**http.project.config.manager.blocking.duration**|10|Maximum time to wait for initial bootstrapping|
 |**http.project.config.manager.blocking.unit**|SECONDS|Time unit corresponding to blocking duration|
 |**http.project.config.manager.sdk.key**|null|Optimizely project SDK key|
+|**http.project.config.manager.datafile.auth.token**|null|Token for authenticated datafile access|
 
 ## Update Config Notifications
 A notification signal will be triggered whenever a _new_ datafile is fetched. To subscribe to these notifications you can
