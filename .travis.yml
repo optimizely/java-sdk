@@ -38,6 +38,7 @@ stages:
   - 'Lint markdown files'
   - 'Integration tests'
   - 'Test'
+  - 'Source Clear'
 
 jobs:
   include:
@@ -51,8 +52,6 @@ jobs:
         email: false
 
     - stage: 'Integration tests'
-      addons:
-        srcclr: true
       merge_mode: replace
       env: SDK=java SDK_BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
       cache: false
@@ -64,3 +63,13 @@ jobs:
       script:
         - $HOME/travisci-tools/trigger-script-with-status-update.sh
       after_success: travis_terminate 0
+
+    - stage: 'Source Clear'
+      if: type = cron
+      addons:
+        srcclr: true
+      before_install: skip
+      install: skip
+      before_script: skip
+      script: skip
+      after_success: skip
