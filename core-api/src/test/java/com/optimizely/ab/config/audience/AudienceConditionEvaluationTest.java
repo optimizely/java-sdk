@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2019, Optimizely and contributors
+ *    Copyright 2016-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -469,6 +469,129 @@ public class AudienceConditionEvaluationTest {
         assertNull(testInstanceNull.evaluate(null, testTypedUserAttributes));
     }
 
+
+    /**
+     * Verify that UserAttribute.evaluate for GE match type returns true for known visitor
+     * attributes where the value's type is a number, and the UserAttribute's value is greater or equal than
+     * the condition's value.
+     */
+    @Test
+    public void geMatchConditionEvaluatesTrue() {
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "ge", 2);
+        UserAttribute testInstanceFloat = new UserAttribute("num_size", "custom_attribute", "ge", (float) 2);
+        UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "ge", 2.55);
+
+        assertTrue(testInstanceInteger.evaluate(null, testTypedUserAttributes));
+        assertTrue(testInstanceFloat.evaluate(null, Collections.singletonMap("num_size", (float) 2)));
+        assertTrue(testInstanceDouble.evaluate(null, testTypedUserAttributes));
+
+        Map<String, Object> badAttributes = new HashMap<>();
+        badAttributes.put("num_size", "bobs burgers");
+        assertNull(testInstanceInteger.evaluate(null, badAttributes));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for GE match type returns null if the UserAttribute's
+     * value type is invalid number.
+     */
+    @Test
+    public void geMatchConditionEvaluatesNullWithInvalidUserAttr() {
+        BigInteger bigInteger = new BigInteger("33221312312312312");
+        Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
+        Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
+        Double infiniteNANDouble = Double.NaN;
+        Double largeDouble = Math.pow(2, 53) + 2;
+        float invalidFloatValue = (float) (Math.pow(2, 53) + 2000000000);
+
+        UserAttribute testInstanceInteger = new UserAttribute(
+            "num_size",
+            "custom_attribute",
+            "ge",
+            5);
+        UserAttribute testInstanceFloat = new UserAttribute(
+            "num_size",
+            "custom_attribute",
+            "ge",
+            (float) 5);
+        UserAttribute testInstanceDouble = new UserAttribute(
+            "num_counts",
+            "custom_attribute",
+            "ge",
+            5.2);
+
+        assertNull(testInstanceInteger.evaluate(
+            null,
+            Collections.singletonMap("num_size", bigInteger)));
+        assertNull(testInstanceFloat.evaluate(
+            null,
+            Collections.singletonMap("num_size", invalidFloatValue)));
+        assertNull(testInstanceDouble.evaluate(
+            null,
+            Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble)));
+        assertNull(testInstanceDouble.evaluate(
+            null,
+            Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble)));
+        assertNull(testInstanceDouble.evaluate(
+            null, Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", infiniteNANDouble))));
+        assertNull(testInstanceDouble.evaluate(
+            null, Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", largeDouble))));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for GE match type returns null if the UserAttribute's
+     * value type is invalid number.
+     */
+    @Test
+    public void geMatchConditionEvaluatesNullWithInvalidAttr() {
+        BigInteger bigInteger = new BigInteger("33221312312312312");
+        Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
+        Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
+        Double infiniteNANDouble = Double.NaN;
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "ge", bigInteger);
+        UserAttribute testInstancePositiveInfinite = new UserAttribute("num_counts", "custom_attribute", "ge", infinitePositiveInfiniteDouble);
+        UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts", "custom_attribute", "ge", infiniteNegativeInfiniteDouble);
+        UserAttribute testInstanceNANDouble = new UserAttribute("num_counts", "custom_attribute", "ge", infiniteNANDouble);
+
+        assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstancePositiveInfinite.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceNegativeInfiniteDouble.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceNANDouble.evaluate(null, testTypedUserAttributes));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for GE match type returns false for known visitor
+     * attributes where the value's type is a number, and the UserAttribute's value is not greater or equal
+     * than the condition's value.
+     */
+    @Test
+    public void geMatchConditionEvaluatesFalse()  {
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "ge", 5);
+        UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "ge", 5.55);
+
+        assertFalse(testInstanceInteger.evaluate(null, testTypedUserAttributes));
+        assertFalse(testInstanceDouble.evaluate(null, testTypedUserAttributes));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for GE match type returns null if the UserAttribute's
+     * value type is not a number.
+     */
+    @Test
+    public void geMatchConditionEvaluatesNull()  {
+        UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "ge", 3.5);
+        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "ge", 3.5);
+        UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "ge", 3.5);
+        UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "ge", 3.5);
+
+        assertNull(testInstanceString.evaluate(null, testUserAttributes));
+        assertNull(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceObject.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceNull.evaluate(null, testTypedUserAttributes));
+    }
+
+
     /**
      * Verify that UserAttribute.evaluate for GT match type returns true for known visitor
      * attributes where the value's type is a number, and the UserAttribute's value is less than
@@ -584,6 +707,122 @@ public class AudienceConditionEvaluationTest {
         assertNull(testInstanceNANDouble.evaluate(null, testTypedUserAttributes));
     }
 
+
+    /**
+     * Verify that UserAttribute.evaluate for LE match type returns true for known visitor
+     * attributes where the value's type is a number, and the UserAttribute's value is less or equal than
+     * the condition's value.
+     */
+    @Test
+    public void leMatchConditionEvaluatesTrue()  {
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "le", 5);
+        UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "le", 5.55);
+
+        assertTrue(testInstanceInteger.evaluate(null, testTypedUserAttributes));
+        assertTrue(testInstanceDouble.evaluate(null, Collections.singletonMap("num_counts", 5.55)));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for LE match type returns true for known visitor
+     * attributes where the value's type is a number, and the UserAttribute's value is not less or equal
+     * than the condition's value.
+     */
+    @Test
+    public void leMatchConditionEvaluatesFalse()  {
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "le", 2);
+        UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "le", 2.55);
+
+        assertFalse(testInstanceInteger.evaluate(null, testTypedUserAttributes));
+        assertFalse(testInstanceDouble.evaluate(null, testTypedUserAttributes));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for LE match type returns null if the UserAttribute's
+     * value type is not a number.
+     */
+    @Test
+    public void leMatchConditionEvaluatesNull()  {
+        UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "le", 3.5);
+        UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "le", 3.5);
+        UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "le", 3.5);
+        UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "le", 3.5);
+
+        assertNull(testInstanceString.evaluate(null, testUserAttributes));
+        assertNull(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceObject.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceNull.evaluate(null, testTypedUserAttributes));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for LE match type returns null if the UserAttribute's
+     * value type is not a valid number.
+     */
+    @Test
+    public void leMatchConditionEvaluatesNullWithInvalidUserAttr() {
+        BigInteger bigInteger = new BigInteger("33221312312312312");
+        Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
+        Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
+        Double infiniteNANDouble = Double.NaN;
+        Double largeDouble = Math.pow(2,53) + 2;
+        float invalidFloatValue = (float) (Math.pow(2, 53) + 2000000000);
+
+        UserAttribute testInstanceInteger = new UserAttribute(
+            "num_size",
+            "custom_attribute",
+            "le",
+            5);
+        UserAttribute testInstanceFloat = new UserAttribute(
+            "num_size",
+            "custom_attribute",
+            "le",
+            (float) 5);
+        UserAttribute testInstanceDouble = new UserAttribute(
+            "num_counts",
+            "custom_attribute",
+            "le",
+            5.2);
+
+        assertNull(testInstanceInteger.evaluate(
+            null,
+            Collections.singletonMap("num_size", bigInteger)));
+        assertNull(testInstanceFloat.evaluate(
+            null,
+            Collections.singletonMap("num_size", invalidFloatValue)));
+        assertNull(testInstanceDouble.evaluate(
+            null,
+            Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble)));
+        assertNull(testInstanceDouble.evaluate(
+            null,
+            Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble)));
+        assertNull(testInstanceDouble.evaluate(
+            null, Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", infiniteNANDouble))));
+        assertNull(testInstanceDouble.evaluate(
+            null, Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", largeDouble))));
+    }
+
+    /**
+     * Verify that UserAttribute.evaluate for LE match type returns null if the condition
+     * value type is not a valid number.
+     */
+    @Test
+    public void leMatchConditionEvaluatesNullWithInvalidAttributes() {
+        BigInteger bigInteger = new BigInteger("33221312312312312");
+        Double infinitePositiveInfiniteDouble = Double.POSITIVE_INFINITY;
+        Double infiniteNegativeInfiniteDouble = Double.NEGATIVE_INFINITY;
+        Double infiniteNANDouble = Double.NaN;
+        UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "le", bigInteger);
+        UserAttribute testInstancePositiveInfinite = new UserAttribute("num_counts", "custom_attribute", "le", infinitePositiveInfiniteDouble);
+        UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts", "custom_attribute", "le", infiniteNegativeInfiniteDouble);
+        UserAttribute testInstanceNANDouble = new UserAttribute("num_counts", "custom_attribute", "le", infiniteNANDouble);
+
+        assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstancePositiveInfinite.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceNegativeInfiniteDouble.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceNANDouble.evaluate(null, testTypedUserAttributes));
+    }
+
     /**
      * Verify that UserAttribute.evaluate for SUBSTRING match type returns true if the
      * UserAttribute's value is a substring of the condition's value.
@@ -631,6 +870,242 @@ public class AudienceConditionEvaluationTest {
         assertNull(testInstanceDouble.evaluate(null, testTypedUserAttributes));
         assertNull(testInstanceObject.evaluate(null, testTypedUserAttributes));
         assertNull(testInstanceNull.evaluate(null, testTypedUserAttributes));
+    }
+
+    //======== Semantic version evaluation tests ========//
+
+    // Test SemanticVersionEqualsMatch returns null if given invalid value type
+    @Test
+    public void testSemanticVersionEqualsMatchInvalidInput()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", 2.0);
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.0.0");
+        assertNull(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test SemanticVersionEqualsMatch returns null if given invalid UserCondition Variable type
+    @Test
+    public void testSemanticVersionEqualsMatchInvalidUserConditionVariable()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.0");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", 2.0);
+        assertNull(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test SemanticVersionGTMatch returns null if given invalid value type
+    @Test
+    public void testSemanticVersionGTMatchInvalidInput()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", false);
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.0.0");
+        assertNull(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test SemanticVersionGEMatch returns null if given invalid value type
+    @Test
+    public void testSemanticVersionGEMatchInvalidInput()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", 2);
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_ge", "2.0.0");
+        assertNull(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test SemanticVersionLTMatch returns null if given invalid value type
+    @Test
+    public void testSemanticVersionLTMatchInvalidInput()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", 2);
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_lt", "2.0.0");
+        assertNull(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test SemanticVersionLEMatch returns null if given invalid value type
+    @Test
+    public void testSemanticVersionLEMatchInvalidInput()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", 2);
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.0.0");
+        assertNull(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test if same when target is only major.minor
+    @Test
+    public void testIsSemanticSame()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.0");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.0.0");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test if same when target is only major.minor.patch but user condition checks only major.minor
+    @Test
+    public void testIsSemanticSameWhenUserConditionOnlyComparesMajorAndMinorVersion()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.0.1");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.0");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test if not same
+    @Test
+    public void testIsSemanticNotSameReturnsFalse()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.1.1");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.1.2");
+        assertFalse(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test when target is full semantic version major.minor.patch
+    @Test
+    public void testIsSemanticSameFull()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "3.0.1");
+            UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "3.0.1");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare less when target is only major.minor
+    @Test
+    public void testIsSemanticLess()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.2");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_lt", "2.1.6");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test if greater when target is only major.minor but user condition checks major.minor.patch
+    @Test
+    public void testIsSemanticLessFalse()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.1");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_lt", "2.1.1");
+        assertFalse(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare less when target is full major.minor.patch
+    @Test
+    public void testIsSemanticFullLess()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.1.9");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_lt", "2.1.6");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare greater when target is only major.minor
+    @Test
+    public void testIsSemanticMore()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.2");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.3.6");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare greater when target is major.minor.patch-beta
+    @Test
+    public void testIsSemanticMoreWhenBeta()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.3.5-beta");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.3.6-beta");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare greater when target is major.minor.patch
+    @Test
+    public void testIsSemanticFullMore()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.1.6");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.1.9");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare greater when target is major.minor.patch is smaller then it returns false
+    @Test
+    public void testSemanticVersionGTFullMoreReturnsFalse()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.1.10");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.1.9");
+        assertFalse(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare equal when target is major.minor.patch-beta
+    @Test
+    public void testIsSemanticFullEqual()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.1.9-beta");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.1.9-beta");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare equal when target is major.minor.patch
+    @Test
+    public void testIsSemanticLessWhenBeta()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.1.9");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_lt", "2.1.9-beta");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare equal when target is major.minor.patch-beta
+    @Test
+    public void testIsSemanticEqualsBeta()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.1.9-beta");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.1.9");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare equal when target is major.minor.patch
+    @Test
+    public void testIsSemanticLessEqualsWhenEqualsReturnsTrue()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.1.9");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.1.9");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare less when target is major.minor.patch
+    @Test
+    public void testIsSemanticLessEqualsWhenLessReturnsTrue()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.233.91");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.132.9");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare less when target is major.minor.patch
+    @Test
+    public void testIsSemanticLessEqualsWhenGreaterReturnsFalse()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.132.009");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.233.91");
+        assertFalse(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare equal when target is major.minor.patch
+    @Test
+    public void testIsSemanticGreaterEqualsWhenEqualsReturnsTrue()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.1.9");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_ge", "2.1.9");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare less when target is major.minor.patch
+    @Test
+    public void testIsSemanticGreaterEqualsWhenLessReturnsTrue()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.132.9");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_ge", "2.233.91");
+        assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test compare less when target is major.minor.patch
+    @Test
+    public void testIsSemanticGreaterEqualsWhenLessReturnsFalse()  {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "2.233.91");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_ge", "2.132.009");
+        assertFalse(testInstanceString.evaluate(null, testAttributes));
     }
 
     /**
