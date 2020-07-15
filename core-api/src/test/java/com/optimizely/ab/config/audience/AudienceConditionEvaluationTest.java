@@ -946,7 +946,7 @@ public class AudienceConditionEvaluationTest {
         assertTrue(testInstanceString.evaluate(null, testAttributes));
     }
 
-    // Test if same when target is only major.minor.patch but user condition checks only major.minor
+    // Test if same when target is only major but user condition checks only major.minor,patch
     @Test
     public void testIsSemanticSameSingleDigit()  {
         Map testAttributes = new HashMap<String, String>();
@@ -973,7 +973,7 @@ public class AudienceConditionEvaluationTest {
         assertTrue(testInstanceString.evaluate(null, testAttributes));
     }
 
-    // Test compare less when target is only major.minor
+    // Test compare less when user condition checks only major.minor
     @Test
     public void testIsSemanticLess()  {
         Map testAttributes = new HashMap<String, String>();
@@ -982,7 +982,7 @@ public class AudienceConditionEvaluationTest {
         assertTrue(testInstanceString.evaluate(null, testAttributes));
     }
 
-    // Test if greater when target is only major.minor but user condition checks major.minor.patch
+    // When user condition checks major.minor but target is major.minor.patch then its equals
     @Test
     public void testIsSemanticLessFalse()  {
         Map testAttributes = new HashMap<String, String>();
@@ -1000,7 +1000,7 @@ public class AudienceConditionEvaluationTest {
         assertTrue(testInstanceString.evaluate(null, testAttributes));
     }
 
-    // Test compare greater when target is only major.minor
+    // Test compare greater when user condition checks only major.minor
     @Test
     public void testIsSemanticMore()  {
         Map testAttributes = new HashMap<String, String>();
@@ -1009,7 +1009,7 @@ public class AudienceConditionEvaluationTest {
         assertTrue(testInstanceString.evaluate(null, testAttributes));
     }
 
-    // Test compare greater when target is major.minor.patch-beta
+    // Test compare greater when both are major.minor.patch-beta but target is greater than user condition
     @Test
     public void testIsSemanticMoreWhenBeta()  {
         Map testAttributes = new HashMap<String, String>();
@@ -1036,7 +1036,7 @@ public class AudienceConditionEvaluationTest {
         assertFalse(testInstanceString.evaluate(null, testAttributes));
     }
 
-    // Test compare equal when target is major.minor.patch-beta
+    // Test compare equal when both are exactly same - major.minor.patch-beta
     @Test
     public void testIsSemanticFullEqual()  {
         Map testAttributes = new HashMap<String, String>();
@@ -1045,7 +1045,7 @@ public class AudienceConditionEvaluationTest {
         assertTrue(testInstanceString.evaluate(null, testAttributes));
     }
 
-    // Test compare equal when target is major.minor.patch, beta version is smaller
+    // Test compare equal when both major.minor.patch is same, but due to beta user condition is smaller
     @Test
     public void testIsSemanticLessWhenBeta()  {
         Map testAttributes = new HashMap<String, String>();
@@ -1054,7 +1054,7 @@ public class AudienceConditionEvaluationTest {
         assertTrue(testInstanceString.evaluate(null, testAttributes));
     }
 
-    // Test compare equal when target is major.minor.patch-beta
+    // Test compare equal when target is major.minor.patch-beta and user condition only compares major.minor.patch
     @Test
     public void testIsSemanticEqualsBeta()  {
         Map testAttributes = new HashMap<String, String>();
