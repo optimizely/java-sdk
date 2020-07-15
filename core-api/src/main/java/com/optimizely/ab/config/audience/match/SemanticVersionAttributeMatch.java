@@ -23,15 +23,16 @@ abstract class SemanticVersionAttributeMatch implements Match {
             return 0;
         }
 
-        // Expect a version string of the form x.y.z-beta 
+        // Expect a version string of the form x.y.z-(string)
         String[] actualVersionParts = actualVersion.split("[-\\.]");
         String[] targetVersionParts = targetVersion.split("[-\\.]");
 
-        int i = 0;
-        while (i < actualVersionParts.length) {
+        // Check only till the precision point of actualVersionParts
+        for (int i = 0; i < actualVersionParts.length; i++) {
             if (i < targetVersionParts.length) {
                 Double actual = parseNumeric(actualVersionParts[i]);
                 Double target = parseNumeric(targetVersionParts[i]);
+                // Check if the both actual and target are number then compare else if compare the string and if it's not equal than return -1
                 if (actual != null && target != null) {
                     if (actual < target) {
                         return -1;
@@ -42,6 +43,8 @@ abstract class SemanticVersionAttributeMatch implements Match {
                     return -1;
                 }
             } else {
+                // If actualVersionParts is greater than targetVersionParts and is not zero than return 1 else if actual is string then return -1
+                // So if actualVersionParts[i] is beta/alpha then this means targetVersion is greater than actualVersion
                 Double actual = parseNumeric(actualVersionParts[i]);
                 if (actual != null && actual != 0) {
                     return 1;
@@ -49,7 +52,6 @@ abstract class SemanticVersionAttributeMatch implements Match {
                     return -1;
                 }
             }
-            i++;
         }
 
         return 0;
