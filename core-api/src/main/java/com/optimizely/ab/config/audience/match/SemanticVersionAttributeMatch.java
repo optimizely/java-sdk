@@ -19,8 +19,11 @@ package com.optimizely.ab.config.audience.match;
 abstract class SemanticVersionAttributeMatch implements Match {
     public int compareVersion(String actualVersion, String targetVersion) {
         if (actualVersion.equals(targetVersion)) {
+            // Any version.
             return 0;
         }
+
+        // Expect a version string of the form x.y.z-beta 
         String[] actualVersionParts = actualVersion.split("[-\\.]");
         String[] targetVersionParts = targetVersion.split("[-\\.]");
 

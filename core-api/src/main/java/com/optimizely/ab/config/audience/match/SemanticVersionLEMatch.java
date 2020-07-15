@@ -29,7 +29,7 @@ class SemanticVersionLEMatch extends SemanticVersionAttributeMatch {
     public Boolean eval(Object attributeValue) {
         try {
             if (attributeValue instanceof String) {
-                return compareVersion(value, (String) attributeValue) <= 0;
+                return compareVersion(value, (String) attributeValue) >= 0;
             }
         } catch (Exception e) {
             return null;
