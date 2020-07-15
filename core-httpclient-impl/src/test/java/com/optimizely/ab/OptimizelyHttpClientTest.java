@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely
+ *    Copyright 2019-2020, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ public class OptimizelyHttpClientTest {
     @Test
     public void testExecute() throws IOException {
         HttpUriRequest httpUriRequest = RequestBuilder.get().build();
-        ResponseHandler<Boolean> responseHandler = response -> null;
+        ResponseHandler<Boolean> responseHandler = response -> false;
 
         CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
         when(mockHttpClient.execute(httpUriRequest, responseHandler)).thenReturn(true);

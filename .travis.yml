@@ -39,6 +39,7 @@ stages:
   - 'Integration tests'
   - 'Production tests'
   - 'Test'
+  - 'Source Clear'
 
 jobs:
   include:
@@ -51,22 +52,8 @@ jobs:
       notifications:
         email: false
 
-    - stage: 'Lint markdown files'
-      os: linux
-      language: generic
-      before_install: skip
-      install:
-        - npm i -g markdown-spellcheck
-      before_script:
-        - wget --quiet https://raw.githubusercontent.com/optimizely/mdspell-config/master/.spelling
-      script:
-        - mdspell -a -n -r --en-us '**/*.md'
-      after_success: skip
-    
     - &integrationtest
       stage: 'Integration tests'
-      addons:
-        srcclr: true
       merge_mode: replace
       env: SDK=java SDK_BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
       cache: false
@@ -85,3 +72,13 @@ jobs:
         SDK=java
         SDK_BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
         FULLSTACK_TEST_REPO=ProdTesting
+        
+    - stage: 'Source Clear'
+      if: type = cron
+      addons:
+        srcclr: true
+      before_install: skip
+      install: skip
+      before_script: skip
+      script: skip
+      after_success: skip

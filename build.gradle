@@ -17,6 +17,7 @@ plugins {
     id 'me.champeau.gradle.jmh' version '0.4.5'
     id 'nebula.optional-base' version '3.2.0'
     id 'com.github.hierynomus.license' version '0.15.0'
+    id 'com.github.spotbugs' version "4.3.0"
 }
 
 allprojects {
@@ -44,7 +45,7 @@ allprojects {
 
 subprojects {
     apply plugin: 'com.jfrog.bintray'
-    apply plugin: 'findbugs'
+    apply plugin: 'com.github.spotbugs'
     apply plugin: 'jacoco'
     apply plugin: 'java'
     apply plugin: 'maven-publish'
@@ -52,11 +53,15 @@ subprojects {
     apply plugin: 'nebula.optional-base'
     apply plugin: 'com.github.hierynomus.license'
 
+
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
     repositories {
         jcenter()
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
     }
 
     task sourcesJar(type: Jar, dependsOn: classes) {
@@ -74,15 +79,15 @@ subprojects {
         archives javadocJar
     }
 
-    tasks.withType(FindBugs) {
+    spotbugsMain {
         reports {
             xml.enabled = false
             html.enabled = true
         }
     }
 
-    findbugs {
-        findbugsJmh.enabled = false
+    spotbugs {
+        spotbugsJmh.enabled = false
     }
 
     test {
@@ -207,9 +212,9 @@ task jacocoRootReport(type: JacocoReport, group: 'Coverage reports') {
     description = 'Generates an aggregate report from all subprojects'
     dependsOn publishedProjects.test, jacocoMerge
 
-    additionalSourceDirs = files(publishedProjects.sourceSets.main.allSource.srcDirs)
-    sourceDirectories = files(publishedProjects.sourceSets.main.allSource.srcDirs)
-    classDirectories = files(publishedProjects.sourceSets.main.output)
+    getAdditionalSourceDirs().setFrom(files(publishedProjects.sourceSets.main.allSource.srcDirs))
+    getSourceDirectories().setFrom(files(publishedProjects.sourceSets.main.allSource.srcDirs))
+    getAdditionalClassDirs().setFrom(files(publishedProjects.sourceSets.main.output))
     executionData jacocoMerge.destinationFile
 
     reports {
