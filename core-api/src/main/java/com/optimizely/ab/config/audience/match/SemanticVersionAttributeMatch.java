@@ -17,43 +17,49 @@
 package com.optimizely.ab.config.audience.match;
 
 abstract class SemanticVersionAttributeMatch implements Match {
-    public int compareVersion(String actualVersion, String targetVersion) {
-        if (actualVersion.equals(targetVersion)) {
+
+    /**
+     * Compare an actual version against a targetedVersion; return -1 if the actual version is "semantically less"
+     * than the targetedVersion, 1 if it is "semantically greater", and 0 if they are "semantically identical".
+     *
+     * "Semantically" means the following: given both version numbers expressed in x.y.z... format, to the level of
+     * precision of the targetedVersion, compare the corresponding version parts (e.g. major to major, minor to minor).
+     *
+     * @param version expressed as a string x.y.z...
+     * @param targetedVersion expressed as a string x.y.z...
+     * @return -1 if version < targetedVersion, 1 if version > targetedVersion, 0 if they are approx. equal
+     */
+    public int compareVersion(String version, String targetedVersion) {
+        if (targetedVersion == null || targetedVersion.isEmpty()) {
             // Any version.
             return 0;
         }
 
-        // Expect a version string of the form x.y.z-(string)
-        String[] actualVersionParts = actualVersion.split("[-\\.]");
-        String[] targetVersionParts = targetVersion.split("[-\\.]");
+        // Expect a version string of the form x.y.z
+        String[] versionParts = version.split("\\.");
+        String[] targetVersionParts = targetedVersion.split("\\.");
 
-        // Check only till the precision point of actualVersionParts
-        for (int i = 0; i < actualVersionParts.length; i++) {
-            if (i < targetVersionParts.length) {
-                Double actual = parseNumeric(actualVersionParts[i]);
-                Double target = parseNumeric(targetVersionParts[i]);
-                // Check if the both actual and target are number then compare else if compare the string and if it's not equal than return -1
-                if (actual != null && target != null) {
-                    if (actual < target) {
-                        return -1;
-                    } else if (actual > target) {
-                        return 1;
-                    }
-                } else if (!actualVersionParts[i].equals(targetVersionParts[i])) {
+        // Check only till the precision point of targetVersionParts
+        for (int targetIndex = 0; targetIndex < targetVersionParts.length; targetIndex++) {
+            if ((versionParts.length - 1) < targetIndex) {
+                return -1;
+            }
+            Double part  = parseNumeric(versionParts[targetIndex]);
+            Double target = parseNumeric(targetVersionParts[targetIndex]);
+
+            if (part == null) {
+                //Compare strings
+                if (!versionParts[targetIndex].equals(targetVersionParts[targetIndex])) {
                     return -1;
                 }
-            } else {
-                // If actualVersionParts is greater than targetVersionParts and is not zero than return 1 else if actual is string then return -1
-                // So if actualVersionParts[i] is beta/alpha then this means targetVersion is greater than actualVersion
-                Double actual = parseNumeric(actualVersionParts[i]);
-                if (actual != null && actual != 0) {
-                    return 1;
-                } else if (actual == null) {
+            } else if (target != null) {
+                if (part < target) {
                     return -1;
+                } else if (part > target) {
+                    return 1;
                 }
             }
         }
-
         return 0;
     }
 

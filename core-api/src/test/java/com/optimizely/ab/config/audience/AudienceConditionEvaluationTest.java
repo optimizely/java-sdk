@@ -876,7 +876,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test SemanticVersionEqualsMatch returns null if given invalid value type
     @Test
-    public void testSemanticVersionEqualsMatchInvalidInput()  {
+    public void testSemanticVersionEqualsMatchInvalidInput() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", 2.0);
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.0.0");
@@ -885,7 +885,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test SemanticVersionEqualsMatch returns null if given invalid UserCondition Variable type
     @Test
-    public void testSemanticVersionEqualsMatchInvalidUserConditionVariable()  {
+    public void testSemanticVersionEqualsMatchInvalidUserConditionVariable() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.0");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", 2.0);
@@ -894,7 +894,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test SemanticVersionGTMatch returns null if given invalid value type
     @Test
-    public void testSemanticVersionGTMatchInvalidInput()  {
+    public void testSemanticVersionGTMatchInvalidInput() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", false);
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.0.0");
@@ -903,7 +903,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test SemanticVersionGEMatch returns null if given invalid value type
     @Test
-    public void testSemanticVersionGEMatchInvalidInput()  {
+    public void testSemanticVersionGEMatchInvalidInput() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", 2);
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_ge", "2.0.0");
@@ -912,7 +912,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test SemanticVersionLTMatch returns null if given invalid value type
     @Test
-    public void testSemanticVersionLTMatchInvalidInput()  {
+    public void testSemanticVersionLTMatchInvalidInput() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", 2);
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_lt", "2.0.0");
@@ -921,7 +921,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test SemanticVersionLEMatch returns null if given invalid value type
     @Test
-    public void testSemanticVersionLEMatchInvalidInput()  {
+    public void testSemanticVersionLEMatchInvalidInput() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", 2);
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.0.0");
@@ -930,25 +930,34 @@ public class AudienceConditionEvaluationTest {
 
     // Test if same when target is only major.minor
     @Test
-    public void testIsSemanticSame()  {
+    public void testIsSemanticSame() {
         Map testAttributes = new HashMap<String, String>();
-        testAttributes.put("version", "2.0");
-        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.0.0");
+        testAttributes.put("version", "1.2");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "1.2.0");
         assertTrue(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    // Test if not same when targetVersion is only major.minor.patch and version is major.minor
+    @Test
+    public void testIsSemanticNotSameTestAttributeValueMajorMinorPatch() {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "1.2.0");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "1.2");
+        assertFalse(testInstanceString.evaluate(null, testAttributes));
     }
 
     // Test if same when target is only major.minor.patch but user condition checks only major.minor
     @Test
-    public void testIsSemanticSameWhenUserConditionOnlyComparesMajorAndMinorVersion()  {
+    public void testIsSemanticSameWhenUserConditionOnlyComparesMajorAndMinorVersion() {
         Map testAttributes = new HashMap<String, String>();
-        testAttributes.put("version", "3.1.2-beta");
-        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "3.1.0");
+        testAttributes.put("version", "3.1.0");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "3.1.1-beta");
         assertTrue(testInstanceString.evaluate(null, testAttributes));
     }
 
     // Test if same when target is only major but user condition checks only major.minor,patch
     @Test
-    public void testIsSemanticSameSingleDigit()  {
+    public void testIsSemanticSameSingleDigit() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "3");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "3.0.0");
@@ -957,7 +966,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test if not same
     @Test
-    public void testIsSemanticNotSameReturnsFalse()  {
+    public void testIsSemanticNotSameReturnsFalse() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.2");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.1.1");
@@ -966,16 +975,16 @@ public class AudienceConditionEvaluationTest {
 
     // Test when target is full semantic version major.minor.patch
     @Test
-    public void testIsSemanticSameFull()  {
+    public void testIsSemanticSameFull() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "3.0.1");
-            UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "3.0.1");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "3.0.1");
         assertTrue(testInstanceString.evaluate(null, testAttributes));
     }
 
     // Test compare less when user condition checks only major.minor
     @Test
-    public void testIsSemanticLess()  {
+    public void testIsSemanticLess() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.6");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_lt", "2.2");
@@ -984,16 +993,16 @@ public class AudienceConditionEvaluationTest {
 
     // When user condition checks major.minor but target is major.minor.patch then its equals
     @Test
-    public void testIsSemanticLessFalse()  {
+    public void testIsSemanticLessFalse() {
         Map testAttributes = new HashMap<String, String>();
-        testAttributes.put("version", "2.1.1");
+        testAttributes.put("version", "2.1.0");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_lt", "2.1");
         assertFalse(testInstanceString.evaluate(null, testAttributes));
     }
 
     // Test compare less when target is full major.minor.patch
     @Test
-    public void testIsSemanticFullLess()  {
+    public void testIsSemanticFullLess() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.6");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_lt", "2.1.9");
@@ -1002,7 +1011,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test compare greater when user condition checks only major.minor
     @Test
-    public void testIsSemanticMore()  {
+    public void testIsSemanticMore() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.3.6");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.2");
@@ -1011,7 +1020,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test compare greater when both are major.minor.patch-beta but target is greater than user condition
     @Test
-    public void testIsSemanticMoreWhenBeta()  {
+    public void testIsSemanticMoreWhenBeta() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.3.6-beta");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.3.5-beta");
@@ -1020,16 +1029,16 @@ public class AudienceConditionEvaluationTest {
 
     // Test compare greater when target is major.minor.patch
     @Test
-    public void testIsSemanticFullMore()  {
+    public void testIsSemanticFullMore() {
         Map testAttributes = new HashMap<String, String>();
-        testAttributes.put("version", "2.1.9");
+        testAttributes.put("version", "2.1.7");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.1.6");
         assertTrue(testInstanceString.evaluate(null, testAttributes));
     }
 
     // Test compare greater when target is major.minor.patch is smaller then it returns false
     @Test
-    public void testSemanticVersionGTFullMoreReturnsFalse()  {
+    public void testSemanticVersionGTFullMoreReturnsFalse() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.9");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.1.10");
@@ -1038,7 +1047,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test compare equal when both are exactly same - major.minor.patch-beta
     @Test
-    public void testIsSemanticFullEqual()  {
+    public void testIsSemanticFullEqual() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.9-beta");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.1.9-beta");
@@ -1047,7 +1056,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test compare equal when both major.minor.patch is same, but due to beta user condition is smaller
     @Test
-    public void testIsSemanticLessWhenBeta()  {
+    public void testIsSemanticLessWhenBeta() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.9");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.1.9-beta");
@@ -1056,7 +1065,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test compare equal when target is major.minor.patch-beta and user condition only compares major.minor.patch
     @Test
-    public void testIsSemanticEqualsBeta()  {
+    public void testIsSemanticEqualsBeta() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.9-beta");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.1.9");
@@ -1065,7 +1074,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test compare equal when target is major.minor.patch
     @Test
-    public void testIsSemanticLessEqualsWhenEqualsReturnsTrue()  {
+    public void testIsSemanticLessEqualsWhenEqualsReturnsTrue() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.9");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.1.9");
@@ -1074,7 +1083,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test compare less when target is major.minor.patch
     @Test
-    public void testIsSemanticLessEqualsWhenLessReturnsTrue()  {
+    public void testIsSemanticLessEqualsWhenLessReturnsTrue() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.132.9");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.233.91");
@@ -1083,7 +1092,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test compare less when target is major.minor.patch
     @Test
-    public void testIsSemanticLessEqualsWhenGreaterReturnsFalse()  {
+    public void testIsSemanticLessEqualsWhenGreaterReturnsFalse() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.233.91");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.132.009");
@@ -1092,7 +1101,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test compare equal when target is major.minor.patch
     @Test
-    public void testIsSemanticGreaterEqualsWhenEqualsReturnsTrue()  {
+    public void testIsSemanticGreaterEqualsWhenEqualsReturnsTrue() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.9");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_ge", "2.1.9");
@@ -1101,7 +1110,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test compare less when target is major.minor.patch
     @Test
-    public void testIsSemanticGreaterEqualsWhenLessReturnsTrue()  {
+    public void testIsSemanticGreaterEqualsWhenLessReturnsTrue() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.233.91");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_ge", "2.132.9");
@@ -1110,7 +1119,7 @@ public class AudienceConditionEvaluationTest {
 
     // Test compare less when target is major.minor.patch
     @Test
-    public void testIsSemanticGreaterEqualsWhenLessReturnsFalse()  {
+    public void testIsSemanticGreaterEqualsWhenLessReturnsFalse() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.132.009");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_ge", "2.233.91");
