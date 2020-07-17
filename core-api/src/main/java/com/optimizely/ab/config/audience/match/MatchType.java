@@ -50,19 +50,14 @@ public class MatchType {
                     return new MatchType(matchType, new SubstringMatch((String) conditionValue));
                 }
                 break;
-            case "gt":
-                if (isValidNumber(conditionValue)) {
-                    return new MatchType(matchType, new GTMatch((Number) conditionValue));
-                }
-                break;
             case "ge":
                 if (isValidNumber(conditionValue)) {
                     return new MatchType(matchType, new GEMatch((Number) conditionValue));
                 }
                 break;
-            case "lt":
+            case "gt":
                 if (isValidNumber(conditionValue)) {
-                    return new MatchType(matchType, new LTMatch((Number) conditionValue));
+                    return new MatchType(matchType, new GTMatch((Number) conditionValue));
                 }
                 break;
             case "le":
@@ -70,24 +65,19 @@ public class MatchType {
                     return new MatchType(matchType, new LEMatch((Number) conditionValue));
                 }
                 break;
+            case "lt":
+                if (isValidNumber(conditionValue)) {
+                    return new MatchType(matchType, new LTMatch((Number) conditionValue));
+                }
+                break;
+            case "legacy_custom_attribute":
+                if (conditionValue instanceof String) {
+                    return new MatchType(matchType, new DefaultMatchForLegacyAttributes<String>((String) conditionValue));
+                }
+                break;
             case "semver_eq":
                 if (conditionValue instanceof String) {
                     return new MatchType(matchType, new SemanticVersionEqualsMatch((String) conditionValue));
-                }
-                break;
-            case "semver_lt":
-                if (conditionValue instanceof String) {
-                    return new MatchType(matchType, new SemanticVersionLTMatch((String) conditionValue));
-                }
-                break;
-            case "semver_le":
-                if (conditionValue instanceof String) {
-                    return new MatchType(matchType, new SemanticVersionLEMatch((String) conditionValue));
-                }
-                break;
-            case "semver_gt":
-                if (conditionValue instanceof String) {
-                    return new MatchType(matchType, new SemanticVersionGTMatch((String) conditionValue));
                 }
                 break;
             case "semver_ge":
@@ -95,9 +85,19 @@ public class MatchType {
                     return new MatchType(matchType, new SemanticVersionGEMatch((String) conditionValue));
                 }
                 break;
-            case "legacy_custom_attribute":
+            case "semver_gt":
                 if (conditionValue instanceof String) {
-                    return new MatchType(matchType, new DefaultMatchForLegacyAttributes<String>((String) conditionValue));
+                    return new MatchType(matchType, new SemanticVersionGTMatch((String) conditionValue));
+                }
+                break;
+            case "semver_le":
+                if (conditionValue instanceof String) {
+                    return new MatchType(matchType, new SemanticVersionLEMatch((String) conditionValue));
+                }
+                break;
+            case "semver_lt":
+                if (conditionValue instanceof String) {
+                    return new MatchType(matchType, new SemanticVersionLTMatch((String) conditionValue));
                 }
                 break;
             default:

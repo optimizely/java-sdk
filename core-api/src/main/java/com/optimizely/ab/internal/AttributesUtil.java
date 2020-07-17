@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely and contributors
+ *    Copyright 2019-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -37,4 +37,17 @@ public class AttributesUtil {
         return false;
     }
 
+    /**
+     * Parse and validate that String is parse able to integer.
+     *
+     * @param str String value of integer.
+     * @return Integer value if is valid and null if not.
+     */
+    public static Integer parseNumeric(String str) {
+        try {
+            return Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
 }

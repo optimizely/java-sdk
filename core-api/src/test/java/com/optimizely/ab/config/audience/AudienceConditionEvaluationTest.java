@@ -1063,12 +1063,12 @@ public class AudienceConditionEvaluationTest {
         assertTrue(testInstanceString.evaluate(null, testAttributes));
     }
 
-    // Test compare equal when target is major.minor.patch-beta and user condition only compares major.minor.patch
+    // Test compare greater when target is major.minor.patch-beta and user condition only compares major.minor.patch
     @Test
-    public void testIsSemanticEqualsBeta() {
+    public void testIsSemanticGreaterBeta() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.9-beta");
-        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.1.9");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.1.9");
         assertTrue(testInstanceString.evaluate(null, testAttributes));
     }
 
