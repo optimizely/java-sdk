@@ -3068,7 +3068,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(
             Level.INFO,
-            "Variable \"integer_variable\" is not used in variation \"589640735\", returning default value \"7\"."
+            "Variable \"integer_variable\" value is not defined. Returning default value \"7\"."
         );
     }
 

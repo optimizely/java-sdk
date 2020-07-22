@@ -42,8 +42,8 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_WITH_MISSIN
 import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY;
 import static com.optimizely.ab.internal.ExperimentUtils.isExperimentActive;
 import static com.optimizely.ab.internal.ExperimentUtils.doesUserMeetAudienceConditions;
-import static com.optimizely.ab.internal.LoggingConstants.AudienceFor.EXPERIMENT;
-import static com.optimizely.ab.internal.LoggingConstants.AudienceFor.RULE;
+import static com.optimizely.ab.internal.LoggingConstants.LoggingEntityType.EXPERIMENT;
+import static com.optimizely.ab.internal.LoggingConstants.LoggingEntityType.RULE;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 

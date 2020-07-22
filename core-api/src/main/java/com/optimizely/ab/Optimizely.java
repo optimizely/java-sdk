@@ -696,7 +696,7 @@ public class Optimizely implements AutoCloseable {
                     logger.info("Got variable value \"{}\" for variable \"{}\" of feature flag \"{}\".", variableValue, variableKey, featureKey);
                 } else {
                     variableValue = variable.getDefaultValue();
-                    logger.info("Variable \"{}\" is not used in variation \"{}\", returning default value \"{}\".", variableKey, featureDecision.variation.getKey(), variableValue);
+                    logger.info("Variable \"{}\" value is not defined. Returning default value \"{}\".", variableKey, variableValue);
                 }
             } else {
                 logger.info("Feature \"{}\" is not enabled for user \"{}\". " +

@@ -17,7 +17,7 @@
 package com.optimizely.ab.internal;
 
 public class LoggingConstants {
-    public static class AudienceFor {
+    public static class LoggingEntityType {
         public static final String EXPERIMENT = "experiment";
         public static final String RULE = "rule";
     }

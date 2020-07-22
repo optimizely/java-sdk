@@ -672,7 +672,6 @@ public class DecisionServiceTest {
         assertEquals(expectedVariation, featureDecision.variation);
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
 
-        logbackVerifier.expectMessage(Level.DEBUG, "There is no Audience associated with experiment 828245624");
         logbackVerifier.expectMessage(Level.DEBUG, "User \"genericUserId\" meets conditions for targeting rule \"Everyone Else\".");
 
         // verify user is only bucketed once for everyone else rule

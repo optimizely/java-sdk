@@ -31,8 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import static com.optimizely.ab.internal.LoggingConstants.AudienceFor.EXPERIMENT;
-import static com.optimizely.ab.internal.LoggingConstants.AudienceFor.RULE;
+import static com.optimizely.ab.internal.LoggingConstants.LoggingEntityType.EXPERIMENT;
+import static com.optimizely.ab.internal.LoggingConstants.LoggingEntityType.RULE;
 
 /**
  * Optimizely's decision service that determines which variation of an experiment the user will be allocated to.

@@ -56,24 +56,24 @@ public final class ExperimentUtils {
     /**
      * Determines whether a user satisfies audience conditions for the experiment.
      *
-     * @param projectConfig the current projectConfig
-     * @param experiment    the experiment we are evaluating audiences for
-     * @param attributes    the attributes of the user
-     * @param audienceFor   It can be either experiment or rule.
-     * @param loggingKey    In case of audienceFor experiment it will be experiment key or else it will be rule number.
+     * @param projectConfig     the current projectConfig
+     * @param experiment        the experiment we are evaluating audiences for
+     * @param attributes        the attributes of the user
+     * @param loggingEntityType It can be either experiment or rule.
+     * @param loggingKey        In case of loggingEntityType is experiment it will be experiment key or else it will be rule number.
      * @return whether the user meets the criteria for the experiment
      */
     public static boolean doesUserMeetAudienceConditions(@Nonnull ProjectConfig projectConfig,
                                                          @Nonnull Experiment experiment,
                                                          @Nonnull Map<String, ?> attributes,
-                                                         @Nonnull String audienceFor,
+                                                         @Nonnull String loggingEntityType,
                                                          @Nonnull String loggingKey) {
         if (experiment.getAudienceConditions() != null) {
-            logger.debug("Evaluating audiences for {} \"{}\": {}.", audienceFor, loggingKey, experiment.getAudienceConditions());
-            Boolean resolveReturn = evaluateAudienceConditions(projectConfig, experiment, attributes, audienceFor, loggingKey);
+            logger.debug("Evaluating audiences for {} \"{}\": {}.", loggingEntityType, loggingKey, experiment.getAudienceConditions());
+            Boolean resolveReturn = evaluateAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey);
             return resolveReturn == null ? false : resolveReturn;
         } else {
-            Boolean resolveReturn = evaluateAudience(projectConfig, experiment, attributes, audienceFor, loggingKey);
+            Boolean resolveReturn = evaluateAudience(projectConfig, experiment, attributes, loggingEntityType, loggingKey);
             return Boolean.TRUE.equals(resolveReturn);
         }
     }
@@ -82,13 +82,12 @@ public final class ExperimentUtils {
     public static Boolean evaluateAudience(@Nonnull ProjectConfig projectConfig,
                                            @Nonnull Experiment experiment,
                                            @Nonnull Map<String, ?> attributes,
-                                           @Nonnull String audienceFor,
+                                           @Nonnull String loggingEntityType,
                                            @Nonnull String loggingKey) {
         List<String> experimentAudienceIds = experiment.getAudienceIds();
 
         // if there are no audiences, ALL users should be part of the experiment
         if (experimentAudienceIds.isEmpty()) {
-            logger.debug("There is no Audience associated with experiment {}", experiment.getKey());
             return true;
         }
 
@@ -100,11 +99,11 @@ public final class ExperimentUtils {
 
         OrCondition implicitOr = new OrCondition(conditions);
 
-        logger.debug("Evaluating audiences for {} \"{}\": {}.", audienceFor, loggingKey, conditions);
+        logger.debug("Evaluating audiences for {} \"{}\": {}.", loggingEntityType, loggingKey, conditions);
 
         Boolean result = implicitOr.evaluate(projectConfig, attributes);
 
-        logger.info("Audiences for {} \"{}\" collectively evaluated to {}.", audienceFor, loggingKey, result);
+        logger.info("Audiences for {} \"{}\" collectively evaluated to {}.", loggingEntityType, loggingKey, result);
 
         return result;
     }
@@ -113,7 +112,7 @@ public final class ExperimentUtils {
     public static Boolean evaluateAudienceConditions(@Nonnull ProjectConfig projectConfig,
                                                      @Nonnull Experiment experiment,
                                                      @Nonnull Map<String, ?> attributes,
-                                                     @Nonnull String audienceFor,
+                                                     @Nonnull String loggingEntityType,
                                                      @Nonnull String loggingKey) {
 
         Condition conditions = experiment.getAudienceConditions();
@@ -121,7 +120,7 @@ public final class ExperimentUtils {
 
         try {
             Boolean result = conditions.evaluate(projectConfig, attributes);
-            logger.info("Audiences for {} \"{}\" collectively evaluated to {}.", audienceFor, loggingKey, result);
+            logger.info("Audiences for {} \"{}\" collectively evaluated to {}.", loggingEntityType, loggingKey, result);
             return result;
         } catch (Exception e) {
             logger.error("Condition invalid", e);
