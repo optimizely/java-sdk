@@ -45,7 +45,7 @@ public class AttributesUtil {
      */
     public static Integer parseNumeric(String str) {
         try {
-            return Integer.parseInt(str);
+            return Integer.parseInt(str, 10);
         } catch (NumberFormatException e) {
             return null;
         }

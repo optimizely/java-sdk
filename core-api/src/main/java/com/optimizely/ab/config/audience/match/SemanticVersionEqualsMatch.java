@@ -18,7 +18,7 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
-class SemanticVersionEqualsMatch extends SemanticVersionAttributeMatch {
+class SemanticVersionEqualsMatch implements Match {
     String value;
 
     protected SemanticVersionEqualsMatch(String value) {
@@ -28,8 +28,10 @@ class SemanticVersionEqualsMatch extends SemanticVersionAttributeMatch {
     @Nullable
     public Boolean eval(Object attributeValue) {
         try {
-            if (attributeValue instanceof String) {
-                return compareVersion(value, (String) attributeValue) == 0;
+            if (this.value != null && attributeValue instanceof String) {
+                SemanticVersion conditionalVersion = new SemanticVersion(value);
+                SemanticVersion userSemanticVersion = new SemanticVersion((String) attributeValue);
+                return userSemanticVersion.compareTo(conditionalVersion) == 0;
             }
         } catch (Exception e) {
             return null;
