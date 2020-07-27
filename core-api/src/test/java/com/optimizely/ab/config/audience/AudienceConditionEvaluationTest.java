@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2019, Optimizely and contributors
+ *    Copyright 2016-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -136,7 +136,7 @@ public class AudienceConditionEvaluationTest {
     public void unexpectedAttributeTypeNull() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
         assertNull(testInstance.evaluate(null, Collections.singletonMap("browser_type", null)));
-        logbackVerifier.expectMessage(Level.WARN,
+        logbackVerifier.expectMessage(Level.DEBUG,
             "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because a null value was passed for user attribute \"browser_type\"");
     }
 
@@ -171,7 +171,7 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstance = new UserAttribute("browser_type", "blah", "exists", "firefox");
         assertNull(testInstance.evaluate(null, testUserAttributes));
         logbackVerifier.expectMessage(Level.WARN,
-            "Audience condition \"{name='browser_type', type='blah', match='exists', value='firefox'}\" has an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK");
+            "Audience condition \"{name='browser_type', type='blah', match='exists', value='firefox'}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.");
     }
 
     /**

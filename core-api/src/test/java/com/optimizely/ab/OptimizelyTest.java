@@ -2890,8 +2890,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(
             Level.INFO,
-            "Feature \"" + validFeatureKey + "\" for variation \"Gred\" was not enabled. " +
-                "The default value is being returned."
+            "Feature \"multi_variate_feature\" is not enabled for user \"genericUserId\". Returning the default variable value \"H\"."
         );
 
         assertEquals(expectedValue, value);
@@ -2918,6 +2917,11 @@ public class OptimizelyTest {
             testUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             expectedValue);
+
+        logbackVerifier.expectMessage(
+            Level.INFO,
+            "Got variable value \"F\" for variable \"first_letter\" of feature flag \"multi_variate_feature\"."
+        );
     }
 
     /**
@@ -3061,6 +3065,11 @@ public class OptimizelyTest {
         );
 
         assertEquals(expectedValue, value);
+
+        logbackVerifier.expectMessage(
+            Level.INFO,
+            "Value is not defined for variable \"integer_variable\". Returning default value \"7\"."
+        );
     }
 
     /**

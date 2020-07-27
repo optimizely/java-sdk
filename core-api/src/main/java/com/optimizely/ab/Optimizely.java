@@ -693,13 +693,15 @@ public class Optimizely implements AutoCloseable {
                     featureDecision.variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
                 if (featureVariableUsageInstance != null) {
                     variableValue = featureVariableUsageInstance.getValue();
+                    logger.info("Got variable value \"{}\" for variable \"{}\" of feature flag \"{}\".", variableValue, variableKey, featureKey);
                 } else {
                     variableValue = variable.getDefaultValue();
+                    logger.info("Value is not defined for variable \"{}\". Returning default value \"{}\".", variableKey, variableValue);
                 }
             } else {
-                logger.info("Feature \"{}\" for variation \"{}\" was not enabled. " +
-                        "The default value is being returned.",
-                    featureKey, featureDecision.variation.getKey(), variableValue, variableKey
+                logger.info("Feature \"{}\" is not enabled for user \"{}\". " +
+                        "Returning the default variable value \"{}\".",
+                    featureKey, userId, variableValue
                 );
             }
             featureEnabled = featureDecision.variation.getFeatureEnabled();
@@ -822,12 +824,12 @@ public class Optimizely implements AutoCloseable {
         Variation variation = featureDecision.variation;
 
         if (variation != null) {
-            if (!variation.getFeatureEnabled()) {
-                logger.info("Feature \"{}\" for variation \"{}\" was not enabled. " +
-                    "The default value is being returned.", featureKey, featureDecision.variation.getKey());
-            }
-
             featureEnabled = variation.getFeatureEnabled();
+            if (featureEnabled) {
+                logger.info("Feature \"{}\" is enabled for user \"{}\".", featureKey, userId);
+            } else {
+                logger.info("Feature \"{}\" is not enabled for user \"{}\".", featureKey, userId);
+            }
         } else {
             logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
                     "The default values are being returned.", userId, featureKey);
