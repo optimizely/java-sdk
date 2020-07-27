@@ -3068,7 +3068,7 @@ public class OptimizelyTest {
 
         logbackVerifier.expectMessage(
             Level.INFO,
-            "Variable \"integer_variable\" value is not defined. Returning default value \"7\"."
+            "Value is not defined for variable \"integer_variable\". Returning default value \"7\"."
         );
     }
 
