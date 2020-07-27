@@ -109,6 +109,11 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
     }
 
     @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
     public boolean equals(Object other) {
         if (this == other) {
             return true;
@@ -117,7 +122,9 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
             return false;
         }
         SemanticVersion ov = (SemanticVersion) other;
-        if (ov.major != major || ov.minor != minor || ov.patch != patch) {
+        if (!ov.major.equals(major) ||
+            !ov.minor.equals(minor) ||
+            !ov.patch.equals(patch)) {
             return false;
         }
         if (ov.preRelease.length != preRelease.length) {
