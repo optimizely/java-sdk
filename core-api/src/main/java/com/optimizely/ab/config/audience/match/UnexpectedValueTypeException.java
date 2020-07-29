@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely and contributors
+ *    Copyright 2019-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 package com.optimizely.ab.config.audience.match;
 
 public class UnexpectedValueTypeException extends Exception {
-    private static String message = "has an unexpected value type. You may need to upgrade to a newer release of the Optimizely SDK";
+    private static String message = "has an unsupported condition value. You may need to upgrade to a newer release of the Optimizely SDK.";
 
     public UnexpectedValueTypeException() {
         super(message);

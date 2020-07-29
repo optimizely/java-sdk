@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2017-2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2017-2020, Optimizely, Inc. and contributors                        *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -17,7 +17,6 @@ package com.optimizely.ab.bucketing;
 
 import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.config.*;
-import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ExperimentUtils;
 import com.optimizely.ab.internal.ControlAttribute;
@@ -31,6 +30,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import static com.optimizely.ab.internal.LoggingConstants.LoggingEntityType.EXPERIMENT;
+import static com.optimizely.ab.internal.LoggingConstants.LoggingEntityType.RULE;
 
 /**
  * Optimizely's decision service that determines which variation of an experiment the user will be allocated to.
@@ -133,7 +135,7 @@ public class DecisionService {
             userProfile = new UserProfile(userId, new HashMap<String, Decision>());
         }
 
-        if (ExperimentUtils.isUserInExperiment(projectConfig, experiment, filteredAttributes)) {
+        if (ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, experiment, filteredAttributes, EXPERIMENT, experiment.getKey())) {
             String bucketingId = getBucketingId(userId, filteredAttributes);
             variation = bucketer.bucket(experiment, bucketingId, projectConfig);
 
@@ -221,8 +223,7 @@ public class DecisionService {
         Variation variation;
         for (int i = 0; i < rolloutRulesLength - 1; i++) {
             Experiment rolloutRule = rollout.getExperiments().get(i);
-            Audience audience = projectConfig.getAudienceIdMapping().get(rolloutRule.getAudienceIds().get(0));
-            if (ExperimentUtils.isUserInExperiment(projectConfig, rolloutRule, filteredAttributes)) {
+            if (ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, rolloutRule, filteredAttributes, RULE, Integer.toString(i + 1))) {
                 variation = bucketer.bucket(rolloutRule, bucketingId, projectConfig);
                 if (variation == null) {
                     break;
@@ -230,16 +231,16 @@ public class DecisionService {
                 return new FeatureDecision(rolloutRule, variation,
                     FeatureDecision.DecisionSource.ROLLOUT);
             } else {
-                logger.debug("User \"{}\" did not meet the conditions to be in rollout rule for audience \"{}\".",
-                    userId, audience.getName());
+                logger.debug("User \"{}\" does not meet conditions for targeting rule \"{}\".", userId, i + 1);
             }
         }
 
         // get last rule which is the fall back rule
         Experiment finalRule = rollout.getExperiments().get(rolloutRulesLength - 1);
-        if (ExperimentUtils.isUserInExperiment(projectConfig, finalRule, filteredAttributes)) {
+        if (ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, finalRule, filteredAttributes, RULE, "Everyone Else")) {
             variation = bucketer.bucket(finalRule, bucketingId, projectConfig);
             if (variation != null) {
+                logger.debug("User \"{}\" meets conditions for targeting rule \"Everyone Else\".", userId);
                 return new FeatureDecision(finalRule, variation,
                     FeatureDecision.DecisionSource.ROLLOUT);
             }
@@ -392,7 +393,6 @@ public class DecisionService {
     public boolean setForcedVariation(@Nonnull Experiment experiment,
                                       @Nonnull String userId,
                                       @Nullable String variationKey) {
-
 
 
         Variation variation = null;
