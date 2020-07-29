@@ -35,11 +35,11 @@ after_failure:
 
 # Integration tests need to run first to reset the PR build status to pending
 stages:
+  - 'Source Clear'
   - 'Lint markdown files'
   - 'Integration tests'
   - 'Full stack production tests'
   - 'Test'
-  - 'Source Clear'
 
 jobs:
   include:
