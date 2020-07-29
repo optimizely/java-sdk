@@ -18,6 +18,7 @@ package com.optimizely.ab.config.audience.match;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import static com.optimizely.ab.internal.AttributesUtil.parseNumeric;
 
@@ -79,12 +80,12 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
     public String toString() {
         StringBuilder ret = new StringBuilder();
         ret.append(major);
-        ret.append('.');
         if (minor != null) {
-            ret.append(minor);
             ret.append('.');
+            ret.append(minor);
         }
         if (patch != null) {
+            ret.append('.');
             ret.append(patch);
         }
         if (preRelease.length > 0) {
@@ -122,9 +123,9 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
             return false;
         }
         SemanticVersion ov = (SemanticVersion) other;
-        if (!ov.major.equals(major) ||
-            !ov.minor.equals(minor) ||
-            !ov.patch.equals(patch)) {
+        if (!Objects.equals(major, ov.major) ||
+            !Objects.equals(minor, ov.minor) ||
+            !Objects.equals(patch, ov.patch)) {
             return false;
         }
         if (ov.preRelease.length != preRelease.length) {
@@ -166,7 +167,7 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
                                     }
                                     if (preRelease.length > 0 && targetVersion.preRelease.length > 0) {
                                         int len = Math.min(preRelease.length, targetVersion.preRelease.length);
-                                        int count = 0;
+                                        int count;
                                         for (count = 0; count < len; count++) {
                                             result = comparePreReleaseTag(count, targetVersion);
                                             if (result != 0) {
@@ -209,10 +210,11 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
 
     // Parser implementation below
 
-    private Integer[] vParts;
-    private ArrayList<String> preParts, metaParts;
+    private final Integer[] vParts;
+    private final ArrayList<String> preParts;
+    private final ArrayList<String> metaParts;
     private int errPos;
-    private char[] input;
+    private final char[] input;
 
     private boolean stateMajor() {
         int pos = 0;
@@ -226,7 +228,7 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
             return false;
         }
 
-        vParts[0] = Integer.parseInt(new String(input, 0, pos), 10);
+        vParts[0] = parseNumeric(new String(input, 0, pos));
 
         if (input.length > pos && input[pos] == '.') {
             return stateMinor(pos + 1);
@@ -250,7 +252,7 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
             errPos = index;
             return false;
         }
-        vParts[1] = Integer.parseInt(new String(input, index, pos - index), 10);
+        vParts[1] = parseNumeric(new String(input, index, pos - index));
 
         if (input.length > pos && input[pos] == '.') {
             return statePatch(pos + 1);
@@ -274,7 +276,7 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
             return false;
         }
 
-        vParts[2] = Integer.parseInt(new String(input, index, pos - index), 10);
+        vParts[2] = parseNumeric(new String(input, index, pos - index));
 
         if (pos >= input.length) { // We have a clean version string
             return true;
