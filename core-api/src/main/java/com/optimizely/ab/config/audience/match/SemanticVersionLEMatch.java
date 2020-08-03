@@ -28,9 +28,9 @@ class SemanticVersionLEMatch implements Match {
     @Nullable
     public Boolean eval(Object attributeValue) {
         try {
-            if (this.value != null && attributeValue instanceof String) {
+            if (this.value != null && attributeValue != null) {
                 SemanticVersion conditionalVersion = new SemanticVersion(value);
-                SemanticVersion userSemanticVersion = new SemanticVersion((String) attributeValue);
+                SemanticVersion userSemanticVersion = new SemanticVersion(attributeValue.toString());
                 return userSemanticVersion.compareTo(conditionalVersion) <= 0;
             }
         } catch (Exception e) {
