@@ -29,12 +29,12 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
- * OptimizelyClients is a utility class to instantiate an {@link Optimizely} client with a minimal
+ * OptimizelyFactory is a utility class to instantiate an {@link Optimizely} client with a minimal
  * number of configuration options. Basic default parameters can be configured via system properties
  * or through the use of an optimizely.properties file. System properties takes precedence over
  * the properties file and are managed via the {@link PropertyUtils} class.
  *
- * OptimizelyClients also provides setter methods to override the system properties at runtime.
+ * OptimizelyFactory also provides setter methods to override the system properties at runtime.
  * <ul>
  *  <li>{@link OptimizelyFactory#setMaxEventBatchSize}</li>
  *  <li>{@link OptimizelyFactory#setMaxEventBatchInterval}</li>
