@@ -876,11 +876,11 @@ public class AudienceConditionEvaluationTest {
 
     // Test SemanticVersionEqualsMatch returns null if given invalid value type
     @Test
-    public void testSemanticVersionEqualsMatchNumberInput() {
+    public void testSemanticVersionEqualsMatchInvalidInput() {
         Map testAttributes = new HashMap<String, String>();
-        testAttributes.put("version", 2.1);
-        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.1");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        testAttributes.put("version", 2.0);
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.0.0");
+        assertNull(testInstanceString.evaluate(null, testAttributes));
     }
 
     // Test SemanticVersionEqualsMatch returns null if given invalid UserCondition Variable type
@@ -903,37 +903,28 @@ public class AudienceConditionEvaluationTest {
 
     // Test SemanticVersionGEMatch returns null if given invalid value type
     @Test
-    public void testSemanticVersionGEMatchNumberInput() {
+    public void testSemanticVersionGEMatchInvalidInput() {
         Map testAttributes = new HashMap<String, String>();
-        testAttributes.put("version", 3);
-        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_ge", "2");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        testAttributes.put("version", 2);
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_ge", "2.0.0");
+        assertNull(testInstanceString.evaluate(null, testAttributes));
     }
 
     // Test SemanticVersionLTMatch returns null if given invalid value type
     @Test
-    public void testSemanticVersionLTMatchNumberInput() {
+    public void testSemanticVersionLTMatchInvalidInput() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", 2);
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_lt", "2.0.0");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
-    }
-
-    // Test SemanticVersionLEMatch returns null if given invalid value type
-    @Test
-    public void testSemanticVersionLEMatchNumberInput() {
-        Map testAttributes = new HashMap<String, String>();
-        testAttributes.put("version", 2.1);
-        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.1.0");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertNull(testInstanceString.evaluate(null, testAttributes));
     }
 
     // Test SemanticVersionLEMatch returns null if given invalid value type
     @Test
     public void testSemanticVersionLEMatchInvalidInput() {
         Map testAttributes = new HashMap<String, String>();
-        testAttributes.put("version", true);
-        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.1.0");
+        testAttributes.put("version", 2);
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.0.0");
         assertNull(testInstanceString.evaluate(null, testAttributes));
     }
 
