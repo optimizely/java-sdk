@@ -883,6 +883,30 @@ public class AudienceConditionEvaluationTest {
         assertNull(testInstanceString.evaluate(null, testAttributes));
     }
 
+    @Test
+    public void semanticVersionInvalidMajorShouldBeNumberOnly() {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "a.1.2");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.0.0");
+        assertNull(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    @Test
+    public void semanticVersionInvalidMinorShouldBeNumberOnly() {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "1.b.2");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.0.0");
+        assertNull(testInstanceString.evaluate(null, testAttributes));
+    }
+
+    @Test
+    public void semanticVersionInvalidPatchShouldBeNumberOnly() {
+        Map testAttributes = new HashMap<String, String>();
+        testAttributes.put("version", "1.2.c");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.0.0");
+        assertNull(testInstanceString.evaluate(null, testAttributes));
+    }
+
     // Test SemanticVersionEqualsMatch returns null if given invalid UserCondition Variable type
     @Test
     public void testSemanticVersionEqualsMatchInvalidUserConditionVariable() {
@@ -978,7 +1002,7 @@ public class AudienceConditionEvaluationTest {
     public void testIsSemanticEqualWhenMajorMinorPatchPreReleaseVersionNum() {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "3.1.1-beta.x.1");
-        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "3.1.1-beta.x.1+1.1");
+        UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "3.1.1-beta.x.1");
         assertTrue(testInstanceString.evaluate(null, testAttributes));
     }
 

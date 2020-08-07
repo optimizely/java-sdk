@@ -50,4 +50,14 @@ public class AttributesUtil {
             return null;
         }
     }
+
+    /**
+     * Checks if string is null or empty.
+     *
+     * @param str String value.
+     * @return true if is null or empty else false.
+     */
+    public static boolean stringIsNullOrEmpty(String str) {
+        return str == null || str.isEmpty();
+    }
 }
