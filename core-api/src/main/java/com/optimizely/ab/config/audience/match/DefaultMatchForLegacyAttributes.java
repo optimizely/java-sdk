@@ -28,7 +28,10 @@ class DefaultMatchForLegacyAttributes implements Match {
     }
 
     @Nullable
-    public Boolean eval(Object conditionValue, Object attributeValue) {
+    public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
+        if (!(conditionValue instanceof String)) {
+            throw new UnexpectedValueTypeException();
+        }
         if (attributeValue == null) {
             return false;
         }

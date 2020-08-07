@@ -30,9 +30,9 @@ class SubstringMatch implements Match {
      * @return true/false if the user attribute string value contains the condition string value
      */
     @Nullable
-    public Boolean eval(Object conditionValue, Object attributeValue) {
+    public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
         if (!(conditionValue instanceof String)) {
-            return null;
+            throw new UnexpectedValueTypeException();
         }
 
         if (!(attributeValue instanceof String)) {

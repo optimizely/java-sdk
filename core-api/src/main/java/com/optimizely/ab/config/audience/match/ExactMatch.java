@@ -26,7 +26,7 @@ class ExactMatch implements Match {
     }
 
     @Nullable
-    public Boolean eval(Object conditionValue, Object attributeValue) {
+    public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
         if (isValidNumber(attributeValue)) {
             if (isValidNumber(conditionValue)) {
                 return evalNumber((Number) conditionValue, (Number) attributeValue);
@@ -39,7 +39,7 @@ class ExactMatch implements Match {
         }
 
         if (!(conditionValue instanceof String || conditionValue instanceof Boolean)) {
-            return null;
+            throw new UnexpectedValueTypeException();
         }
 
         if (attributeValue.getClass() != conditionValue.getClass()) {

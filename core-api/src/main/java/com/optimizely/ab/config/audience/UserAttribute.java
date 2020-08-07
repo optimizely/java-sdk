@@ -108,7 +108,7 @@ public class UserAttribute<T> implements Condition<T> {
                 }
             }
             return result;
-        } catch (UnknownMatchTypeException e) {
+        } catch (UnknownMatchTypeException | UnexpectedValueTypeException e) {
             logger.warn("Audience condition \"{}\" " + e.getMessage(),
                 this);
         } catch (NullPointerException e) {
