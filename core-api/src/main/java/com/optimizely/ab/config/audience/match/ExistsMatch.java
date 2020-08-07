@@ -16,20 +16,15 @@
  */
 package com.optimizely.ab.config.audience.match;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import javax.annotation.Nullable;
 
 class ExistsMatch implements Match {
-    @SuppressFBWarnings("URF_UNREAD_FIELD")
-    Object value;
 
-    protected ExistsMatch(Object value) {
-        this.value = value;
+    protected ExistsMatch() {
     }
 
     @Nullable
-    public Boolean eval(Object attributeValue) {
+    public Boolean eval(Object conditionValue, Object attributeValue) {
         return attributeValue != null;
     }
 }

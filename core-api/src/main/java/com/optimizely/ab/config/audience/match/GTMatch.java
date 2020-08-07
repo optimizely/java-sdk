@@ -20,18 +20,16 @@ import javax.annotation.Nullable;
 
 import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
 
-class GTMatch extends AttributeMatch<Number> {
-    Number value;
+class GTMatch implements Match {
 
-    protected GTMatch(Number value) {
-        this.value = value;
+    protected GTMatch() {
     }
 
     @Nullable
-    public Boolean eval(Object attributeValue) {
+    public Boolean eval(Object conditionValue, Object attributeValue) {
         try {
-            if(isValidNumber(attributeValue)) {
-                return castToValueType(attributeValue, value).doubleValue() > value.doubleValue();
+            if(isValidNumber(attributeValue) && isValidNumber(conditionValue) ) {
+                return ((Number) attributeValue).doubleValue() > ((Number) conditionValue).doubleValue();
             }
         } catch (Exception e) {
             return null;

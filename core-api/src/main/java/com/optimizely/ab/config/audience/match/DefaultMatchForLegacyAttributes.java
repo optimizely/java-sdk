@@ -21,17 +21,17 @@ import javax.annotation.Nullable;
 /**
  * This is a temporary class.  It mimics the current behaviour for
  * legacy custom attributes.  This will be dropped for ExactMatch and the unit tests need to be fixed.
- * @param <T>
  */
-class DefaultMatchForLegacyAttributes<T> extends AttributeMatch<T> {
-    T value;
+class DefaultMatchForLegacyAttributes implements Match {
 
-    protected DefaultMatchForLegacyAttributes(T value) {
-        this.value = value;
+    protected DefaultMatchForLegacyAttributes() {
     }
 
     @Nullable
-    public Boolean eval(Object attributeValue) {
-        return value.equals(castToValueType(attributeValue, value));
+    public Boolean eval(Object conditionValue, Object attributeValue) {
+        if (attributeValue == null) {
+            return false;
+        }
+        return conditionValue.toString().equals(attributeValue.toString());
     }
 }

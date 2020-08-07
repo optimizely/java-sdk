@@ -20,5 +20,5 @@ import javax.annotation.Nullable;
 
 public interface Match {
     @Nullable
-    Boolean eval(Object attributeValue);
+    Boolean eval(Object conditionValue, Object attributeValue);
 }

@@ -18,18 +18,46 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
-class ExactMatch<T> extends AttributeMatch<T> {
-    T value;
+import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
 
-    protected ExactMatch(T value) {
-        this.value = value;
+class ExactMatch implements Match {
+
+    protected ExactMatch() {
     }
 
     @Nullable
-    public Boolean eval(Object attributeValue) {
-        T converted = castToValueType(attributeValue, value);
-        if (value != null && converted == null) return null;
+    public Boolean eval(Object conditionValue, Object attributeValue) {
+        if (isValidNumber(attributeValue)) {
+            if (isValidNumber(conditionValue)) {
+                return evalNumber((Number) conditionValue, (Number) attributeValue);
+            }
+            return null;
+        }
 
-        return value == null ? attributeValue == null : value.equals(converted);
+        if (conditionValue == null) {
+            return attributeValue == null;
+        }
+
+        if (!(conditionValue instanceof String || conditionValue instanceof Boolean)) {
+            return null;
+        }
+
+        if (attributeValue.getClass() != conditionValue.getClass()) {
+            return null;
+        }
+
+        return conditionValue.equals(attributeValue);
+    }
+
+    @Nullable
+    public Boolean evalNumber(Number conditionValue, Number attributeValue) {
+        try {
+            if(isValidNumber(attributeValue)) {
+                return conditionValue.doubleValue() == attributeValue.doubleValue();
+            }
+        } catch (Exception e) {
+        }
+
+        return null;
     }
 }

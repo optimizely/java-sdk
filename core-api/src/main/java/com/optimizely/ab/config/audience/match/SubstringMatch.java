@@ -18,11 +18,9 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
-class SubstringMatch extends AttributeMatch<String> {
-    String value;
+class SubstringMatch implements Match {
 
-    protected SubstringMatch(String value) {
-        this.value = value;
+    protected SubstringMatch() {
     }
 
     /**
@@ -32,9 +30,17 @@ class SubstringMatch extends AttributeMatch<String> {
      * @return true/false if the user attribute string value contains the condition string value
      */
     @Nullable
-    public Boolean eval(Object attributeValue) {
+    public Boolean eval(Object conditionValue, Object attributeValue) {
+        if (!(conditionValue instanceof String)) {
+            return null;
+        }
+
+        if (!(attributeValue instanceof String)) {
+            return null;
+        }
+
         try {
-            return castToValueType(attributeValue, value).contains(value);
+            return attributeValue.toString().contains(conditionValue.toString());
         } catch (Exception e) {
             return null;
         }
