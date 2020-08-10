@@ -31,7 +31,7 @@ class SemanticVersionLEMatch implements Match {
             if (this.value != null && attributeValue instanceof String) {
                 SemanticVersion conditionalVersion = new SemanticVersion(value);
                 SemanticVersion userSemanticVersion = new SemanticVersion((String) attributeValue);
-                return userSemanticVersion.compareTo(conditionalVersion) <= 0;
+                return userSemanticVersion.compare(conditionalVersion) <= 0;
             }
         } catch (Exception e) {
             return null;

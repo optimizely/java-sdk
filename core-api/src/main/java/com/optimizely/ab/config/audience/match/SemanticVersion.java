@@ -31,7 +31,7 @@ public final class SemanticVersion {
         this.version = version;
     }
 
-    public int compareTo(SemanticVersion targetedVersion) throws Exception {
+    public int compare(SemanticVersion targetedVersion) throws Exception {
 
         if (targetedVersion == null || stringIsNullOrEmpty(targetedVersion.version)) {
             return 0;
