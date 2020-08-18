@@ -40,13 +40,13 @@ public final class SemanticVersion {
             return 0;
         }
 
-        String[] targetedVersionParts = splitSemanticVersion(targetedVersion.version);
-        String[] userVersionParts = splitSemanticVersion(version);
+        String[] targetedVersionParts = targetedVersion.splitSemanticVersion();
+        String[] userVersionParts = splitSemanticVersion();
 
         for (int index = 0; index < targetedVersionParts.length; index++) {
 
             if (userVersionParts.length <= index) {
-                return isPreRelease(targetedVersion.version) ? 1 : -1;
+                return targetedVersion.isPreRelease() ? 1 : -1;
             }
             Integer targetVersionPartInt = parseNumeric(targetedVersionParts[index]);
             Integer userVersionPartInt = parseNumeric(userVersionParts[index]);
@@ -66,23 +66,23 @@ public final class SemanticVersion {
             }
         }
 
-        if (!isPreRelease(targetedVersion.version) &&
-            isPreRelease(version)) {
+        if (!targetedVersion.isPreRelease() &&
+            isPreRelease()) {
             return -1;
         }
 
         return 0;
     }
 
-    private boolean isPreRelease(String semanticVersion) {
-        return semanticVersion.contains(PRE_RELEASE_SEPERATOR);
+    public boolean isPreRelease() {
+        return version.contains(PRE_RELEASE_SEPERATOR);
     }
 
-    private boolean isBuild(String semanticVersion) {
-        return semanticVersion.contains(BUILD_SEPERATOR);
+    public boolean isBuild() {
+        return version.contains(BUILD_SEPERATOR);
     }
 
-    public String[] splitSemanticVersion(String version) throws Exception {
+    public String[] splitSemanticVersion() throws Exception {
         List<String> versionParts = new ArrayList<>();
         // pre-release or build.
         String versionSuffix = "";
@@ -94,8 +94,8 @@ public final class SemanticVersion {
             throw new Exception("Semantic version contains white spaces. Invalid Semantic Version.");
         }
 
-        if (isBuild(version) || isPreRelease(version)) {
-            String[] partialVersionParts = version.split(isPreRelease(version) ?
+        if (isBuild() || isPreRelease()) {
+            String[] partialVersionParts = version.split(isPreRelease() ?
                 PRE_RELEASE_SEPERATOR : BUILD_SEPERATOR);
 
             if (partialVersionParts.length <= 1) {
