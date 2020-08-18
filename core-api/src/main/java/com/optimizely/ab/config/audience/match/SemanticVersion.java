@@ -25,6 +25,9 @@ import static com.optimizely.ab.internal.AttributesUtil.stringIsNullOrEmpty;
 
 public final class SemanticVersion {
 
+    private static final String BUILD_SEPERATOR = "+";
+    private static final String PRE_RELEASE_SEPERATOR = "-";
+
     private final String version;
 
     public SemanticVersion(String version) {
@@ -37,13 +40,13 @@ public final class SemanticVersion {
             return 0;
         }
 
-        String[] targetedVersionParts = SemanticVersionExtension.splitSemanticVersion(targetedVersion.version);
-        String[] userVersionParts = SemanticVersionExtension.splitSemanticVersion(version);
+        String[] targetedVersionParts = splitSemanticVersion(targetedVersion.version);
+        String[] userVersionParts = splitSemanticVersion(version);
 
         for (int index = 0; index < targetedVersionParts.length; index++) {
 
             if (userVersionParts.length <= index) {
-                return SemanticVersionExtension.isPreRelease(targetedVersion.version) ? 1 : -1;
+                return isPreRelease(targetedVersion.version) ? 1 : -1;
             }
             Integer targetVersionPartInt = parseNumeric(targetedVersionParts[index]);
             Integer userVersionPartInt = parseNumeric(userVersionParts[index]);
@@ -63,73 +66,68 @@ public final class SemanticVersion {
             }
         }
 
-        if (!SemanticVersionExtension.isPreRelease(targetedVersion.version) &&
-            SemanticVersionExtension.isPreRelease(version)) {
+        if (!isPreRelease(targetedVersion.version) &&
+            isPreRelease(version)) {
             return -1;
         }
 
         return 0;
     }
 
-    public static class SemanticVersionExtension {
-        public static final String BUILD_SEPERATOR = "+";
-        public static final String PRE_RELEASE_SEPERATOR = "-";
+    private boolean isPreRelease(String semanticVersion) {
+        return semanticVersion.contains(PRE_RELEASE_SEPERATOR);
+    }
 
-        public static boolean isPreRelease(String semanticVersion) {
-            return semanticVersion.contains(PRE_RELEASE_SEPERATOR);
+    private boolean isBuild(String semanticVersion) {
+        return semanticVersion.contains(BUILD_SEPERATOR);
+    }
+
+    public String[] splitSemanticVersion(String version) throws Exception {
+        List<String> versionParts = new ArrayList<>();
+        // pre-release or build.
+        String versionSuffix = "";
+        // for example: beta.2.1
+        String[] preVersionParts;
+
+        // Contains white spaces
+        if (version.contains(" ")) {   // log and throw error
+            throw new Exception("Semantic version contains white spaces. Invalid Semantic Version.");
         }
 
-        public static boolean isBuild(String semanticVersion) {
-            return semanticVersion.contains(BUILD_SEPERATOR);
-        }
+        if (isBuild(version) || isPreRelease(version)) {
+            String[] partialVersionParts = version.split(isPreRelease(version) ?
+                PRE_RELEASE_SEPERATOR : BUILD_SEPERATOR);
 
-        public static String[] splitSemanticVersion(String version) throws Exception {
-            List<String> versionParts = new ArrayList<>();
-            // pre-release or build.
-            String versionSuffix = "";
-            // for example: beta.2.1
-            String[] preVersionParts;
-
-            // Contains white spaces
-            if (version.contains(" ")) {   // log and throw error
-                throw new Exception("Semantic version contains white spaces. Invalid Semantic Version.");
-            }
-
-            if (isBuild(version) || isPreRelease(version)) {
-                String[] partialVersionParts = version.split(isPreRelease(version) ?
-                    PRE_RELEASE_SEPERATOR : BUILD_SEPERATOR);
-
-                if (partialVersionParts.length <= 1) {
-                    // throw error
-                    throw new Exception("Invalid Semantic Version.");
-                }
-                // major.minor.patch
-                String versionPrefix = partialVersionParts[0];
-
-                versionSuffix = partialVersionParts[1];
-
-                preVersionParts = versionPrefix.split("\\.");
-            } else {
-                preVersionParts = version.split("\\.");
-            }
-
-            if (preVersionParts.length > 3) {
-                // Throw error as pre version should only contain major.minor.patch version
+            if (partialVersionParts.length <= 1) {
+                // throw error
                 throw new Exception("Invalid Semantic Version.");
             }
+            // major.minor.patch
+            String versionPrefix = partialVersionParts[0];
 
-            for (String preVersionPart : preVersionParts) {
-                if (parseNumeric(preVersionPart) == null) {
-                    throw new Exception("Invalid Semantic Version.");
-                }
-            }
+            versionSuffix = partialVersionParts[1];
 
-            Collections.addAll(versionParts, preVersionParts);
-            if (!stringIsNullOrEmpty(versionSuffix)) {
-                versionParts.add(versionSuffix);
-            }
-
-            return versionParts.toArray(new String[0]);
+            preVersionParts = versionPrefix.split("\\.");
+        } else {
+            preVersionParts = version.split("\\.");
         }
+
+        if (preVersionParts.length > 3) {
+            // Throw error as pre version should only contain major.minor.patch version
+            throw new Exception("Invalid Semantic Version.");
+        }
+
+        for (String preVersionPart : preVersionParts) {
+            if (parseNumeric(preVersionPart) == null) {
+                throw new Exception("Invalid Semantic Version.");
+            }
+        }
+
+        Collections.addAll(versionParts, preVersionParts);
+        if (!stringIsNullOrEmpty(versionSuffix)) {
+            versionParts.add(versionSuffix);
+        }
+
+        return versionParts.toArray(new String[0]);
     }
 }

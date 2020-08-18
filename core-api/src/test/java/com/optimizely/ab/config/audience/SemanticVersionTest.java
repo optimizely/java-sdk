@@ -30,25 +30,29 @@ public class SemanticVersionTest {
     @Test
     public void semanticVersionInvalidMajorShouldBeNumberOnly() throws Exception {
         thrown.expect(Exception.class);
-        SemanticVersion.SemanticVersionExtension.splitSemanticVersion("a.2.1");
+        SemanticVersion semanticVersion = new SemanticVersion("a.2.1");
+        semanticVersion.splitSemanticVersion("a.2.1");
     }
 
     @Test
     public void semanticVersionInvalidMinorShouldBeNumberOnly() throws Exception {
         thrown.expect(Exception.class);
-        SemanticVersion.SemanticVersionExtension.splitSemanticVersion("1.b.1");
+        SemanticVersion semanticVersion = new SemanticVersion("1.b.1");
+        semanticVersion.splitSemanticVersion("1.b.1");
     }
 
     @Test
     public void semanticVersionInvalidPatchShouldBeNumberOnly() throws Exception {
         thrown.expect(Exception.class);
-        SemanticVersion.SemanticVersionExtension.splitSemanticVersion("1.2.c");
+        SemanticVersion semanticVersion = new SemanticVersion("1.2.c");
+        semanticVersion.splitSemanticVersion("1.2.c");
     }
 
     @Test
     public void semanticVersionInvalidShouldBeOfSizeLessThan3() throws Exception {
         thrown.expect(Exception.class);
-        SemanticVersion.SemanticVersionExtension.splitSemanticVersion("1.2.2.3");
+        SemanticVersion semanticVersion = new SemanticVersion("1.2.2.3");
+        semanticVersion.splitSemanticVersion("1.2.2.3");
     }
 
     @Test
