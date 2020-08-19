@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2018-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -50,9 +50,19 @@ public class MatchType {
                     return new MatchType(matchType, new SubstringMatch((String) conditionValue));
                 }
                 break;
+            case "ge":
+                if (isValidNumber(conditionValue)) {
+                    return new MatchType(matchType, new GEMatch((Number) conditionValue));
+                }
+                break;
             case "gt":
                 if (isValidNumber(conditionValue)) {
                     return new MatchType(matchType, new GTMatch((Number) conditionValue));
+                }
+                break;
+            case "le":
+                if (isValidNumber(conditionValue)) {
+                    return new MatchType(matchType, new LEMatch((Number) conditionValue));
                 }
                 break;
             case "lt":
@@ -63,6 +73,31 @@ public class MatchType {
             case "legacy_custom_attribute":
                 if (conditionValue instanceof String) {
                     return new MatchType(matchType, new DefaultMatchForLegacyAttributes<String>((String) conditionValue));
+                }
+                break;
+            case "semver_eq":
+                if (conditionValue instanceof String) {
+                    return new MatchType(matchType, new SemanticVersionEqualsMatch((String) conditionValue));
+                }
+                break;
+            case "semver_ge":
+                if (conditionValue instanceof String) {
+                    return new MatchType(matchType, new SemanticVersionGEMatch((String) conditionValue));
+                }
+                break;
+            case "semver_gt":
+                if (conditionValue instanceof String) {
+                    return new MatchType(matchType, new SemanticVersionGTMatch((String) conditionValue));
+                }
+                break;
+            case "semver_le":
+                if (conditionValue instanceof String) {
+                    return new MatchType(matchType, new SemanticVersionLEMatch((String) conditionValue));
+                }
+                break;
+            case "semver_lt":
+                if (conditionValue instanceof String) {
+                    return new MatchType(matchType, new SemanticVersionLTMatch((String) conditionValue));
                 }
                 break;
             default:
