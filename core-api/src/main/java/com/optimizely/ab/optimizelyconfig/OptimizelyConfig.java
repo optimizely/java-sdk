@@ -15,6 +15,8 @@
  ***************************************************************************/
 package com.optimizely.ab.optimizelyconfig;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.*;
 
 /**
@@ -25,6 +27,8 @@ public class OptimizelyConfig {
     private Map<String, OptimizelyExperiment> experimentsMap;
     private Map<String, OptimizelyFeature> featuresMap;
     private String revision;
+
+    @JsonIgnore
     private String datafile;
 
     public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap, 
@@ -55,6 +59,7 @@ public class OptimizelyConfig {
         return revision;
     }
 
+    @JsonIgnore
     public String getDatafile() {
         return datafile;
     }
