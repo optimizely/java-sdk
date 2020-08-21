@@ -88,6 +88,8 @@ public class DatafileProjectConfig implements ProjectConfig {
     // other mappings
     private final Map<String, Experiment> variationIdToExperimentMapping;
 
+    private String datafile;
+
     // v2 constructor
     public DatafileProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
                                  List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
@@ -302,6 +304,11 @@ public class DatafileProjectConfig implements ProjectConfig {
     }
 
     @Override
+    public String toDatafile() {
+        return datafile;
+    }
+
+    @Override
     public String getProjectId() {
         return projectId;
     }
@@ -436,6 +443,7 @@ public class DatafileProjectConfig implements ProjectConfig {
     public String toString() {
         return "ProjectConfig{" +
             "accountId='" + accountId + '\'' +
+            ", datafile='" + datafile + '\'' +
             ", projectId='" + projectId + '\'' +
             ", revision='" + revision + '\'' +
             ", version='" + version + '\'' +
@@ -480,7 +488,8 @@ public class DatafileProjectConfig implements ProjectConfig {
                 throw new ConfigParseException("Unable to parse empty datafile.");
             }
 
-            ProjectConfig projectConfig = DefaultConfigParser.getInstance().parseProjectConfig(datafile);
+            DatafileProjectConfig projectConfig = (DatafileProjectConfig) DefaultConfigParser.getInstance().parseProjectConfig(datafile);
+            projectConfig.datafile = datafile;
 
             if (!supportedVersions.contains(projectConfig.getVersion())) {
                 throw new ConfigParseException("This version of the Java SDK does not support the given datafile version: " + projectConfig.getVersion());

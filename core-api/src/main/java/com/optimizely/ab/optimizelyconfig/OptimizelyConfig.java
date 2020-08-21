@@ -25,13 +25,22 @@ public class OptimizelyConfig {
     private Map<String, OptimizelyExperiment> experimentsMap;
     private Map<String, OptimizelyFeature> featuresMap;
     private String revision;
+    private String datafile;
 
     public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap, 
                             Map<String, OptimizelyFeature> featuresMap,
                             String revision) {
+        this(experimentsMap, featuresMap, revision, null);
+    }
+
+    public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap,
+                            Map<String, OptimizelyFeature> featuresMap,
+                            String revision,
+                            String datafile) {
         this.experimentsMap = experimentsMap;
         this.featuresMap = featuresMap;
-        this.revision = revision;                          
+        this.revision = revision;
+        this.datafile = datafile;
     }
 
     public Map<String, OptimizelyExperiment> getExperimentsMap() {
@@ -46,6 +55,10 @@ public class OptimizelyConfig {
         return revision;
     }
 
+    public String getDatafile() {
+        return datafile;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null || getClass() != obj.getClass()) return false;
@@ -53,7 +66,8 @@ public class OptimizelyConfig {
         OptimizelyConfig optimizelyConfig = (OptimizelyConfig) obj;
         return revision.equals(optimizelyConfig.getRevision()) &&
             experimentsMap.equals(optimizelyConfig.getExperimentsMap()) &&
-            featuresMap.equals(optimizelyConfig.getFeaturesMap());
+            featuresMap.equals(optimizelyConfig.getFeaturesMap()) &&
+            Objects.equals(datafile, optimizelyConfig.getDatafile());
     }
 
     @Override

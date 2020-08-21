@@ -4572,4 +4572,11 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.build();
         assertNull(optimizely.getForcedVariation("", "testUser1"));
     }
+
+    @Test
+    public void getOptimizelyConfigValidDatafile() {
+        Optimizely optimizely = optimizelyBuilder.build();
+        assertEquals(optimizely.getOptimizelyConfig().getDatafile(), validDatafile);
+    }
+
 }
