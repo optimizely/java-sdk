@@ -443,7 +443,6 @@ public class DatafileProjectConfig implements ProjectConfig {
     public String toString() {
         return "ProjectConfig{" +
             "accountId='" + accountId + '\'' +
-            ", datafile='" + datafile + '\'' +
             ", projectId='" + projectId + '\'' +
             ", revision='" + revision + '\'' +
             ", version='" + version + '\'' +
