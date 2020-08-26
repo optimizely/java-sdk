@@ -43,7 +43,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * Optimizely provides custom JSON parsers to extract objects from the JSON payload
  * to populate the members of this class. {@link DefaultConfigParser} for details.
  */
-@Immutable
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DatafileProjectConfig implements ProjectConfig {
 
@@ -487,8 +486,10 @@ public class DatafileProjectConfig implements ProjectConfig {
                 throw new ConfigParseException("Unable to parse empty datafile.");
             }
 
-            DatafileProjectConfig projectConfig = (DatafileProjectConfig) DefaultConfigParser.getInstance().parseProjectConfig(datafile);
-            projectConfig.datafile = datafile;
+            ProjectConfig projectConfig = DefaultConfigParser.getInstance().parseProjectConfig(datafile);
+            if (projectConfig instanceof DatafileProjectConfig) {
+                ((DatafileProjectConfig) projectConfig).datafile = datafile;
+            }
 
             if (!supportedVersions.contains(projectConfig.getVersion())) {
                 throw new ConfigParseException("This version of the Java SDK does not support the given datafile version: " + projectConfig.getVersion());

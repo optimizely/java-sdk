@@ -27,8 +27,6 @@ public class OptimizelyConfig {
     private Map<String, OptimizelyExperiment> experimentsMap;
     private Map<String, OptimizelyFeature> featuresMap;
     private String revision;
-
-    @JsonIgnore
     private String datafile;
 
     public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap, 
@@ -71,8 +69,7 @@ public class OptimizelyConfig {
         OptimizelyConfig optimizelyConfig = (OptimizelyConfig) obj;
         return revision.equals(optimizelyConfig.getRevision()) &&
             experimentsMap.equals(optimizelyConfig.getExperimentsMap()) &&
-            featuresMap.equals(optimizelyConfig.getFeaturesMap()) &&
-            Objects.equals(datafile, optimizelyConfig.getDatafile());
+            featuresMap.equals(optimizelyConfig.getFeaturesMap());
     }
 
     @Override
