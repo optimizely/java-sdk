@@ -15,7 +15,6 @@
  ***************************************************************************/
 package com.optimizely.ab.optimizelyconfig;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.*;
 
@@ -57,7 +56,6 @@ public class OptimizelyConfig {
         return revision;
     }
 
-    @JsonIgnore
     public String getDatafile() {
         return datafile;
     }
