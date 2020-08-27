@@ -55,6 +55,8 @@ public class DatafileProjectConfigBuilderTest {
         ProjectConfig projectConfig = new DatafileProjectConfig.Builder()
             .withDatafile(validConfigJsonV4())
             .build();
+
+        assertEquals(projectConfig.toDatafile(), validConfigJsonV4());
         assertNotNull(projectConfig);
         assertEquals("4", projectConfig.getVersion());
     }

@@ -31,7 +31,8 @@ public class OptimizelyConfigService {
         optimizelyConfig = new OptimizelyConfig(
             experimentsMap,
             getFeaturesMap(experimentsMap),
-            projectConfig.getRevision()
+            projectConfig.getRevision(),
+            projectConfig.toDatafile()
         );
     }
 

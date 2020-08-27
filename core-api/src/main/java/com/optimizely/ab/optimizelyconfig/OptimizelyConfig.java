@@ -15,6 +15,7 @@
  ***************************************************************************/
 package com.optimizely.ab.optimizelyconfig;
 
+
 import java.util.*;
 
 /**
@@ -25,13 +26,22 @@ public class OptimizelyConfig {
     private Map<String, OptimizelyExperiment> experimentsMap;
     private Map<String, OptimizelyFeature> featuresMap;
     private String revision;
+    private String datafile;
 
     public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap, 
                             Map<String, OptimizelyFeature> featuresMap,
                             String revision) {
+        this(experimentsMap, featuresMap, revision, null);
+    }
+
+    public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap,
+                            Map<String, OptimizelyFeature> featuresMap,
+                            String revision,
+                            String datafile) {
         this.experimentsMap = experimentsMap;
         this.featuresMap = featuresMap;
-        this.revision = revision;                          
+        this.revision = revision;
+        this.datafile = datafile;
     }
 
     public Map<String, OptimizelyExperiment> getExperimentsMap() {
@@ -44,6 +54,10 @@ public class OptimizelyConfig {
 
     public String getRevision() {
         return revision;
+    }
+
+    public String getDatafile() {
+        return datafile;
     }
 
     @Override
