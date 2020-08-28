@@ -27,6 +27,84 @@ public class SemanticVersionTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
+
+    @Test
+    public void semanticVersionInvalidOnlyDash() throws Exception {
+        thrown.expect(Exception.class);
+        SemanticVersion semanticVersion = new SemanticVersion("-");
+        semanticVersion.splitSemanticVersion();
+    }
+
+    @Test
+    public void semanticVersionInvalidOnlyDot() throws Exception {
+        thrown.expect(Exception.class);
+        SemanticVersion semanticVersion = new SemanticVersion(".");
+        semanticVersion.splitSemanticVersion();
+    }
+
+    @Test
+    public void semanticVersionInvalidDoubleDot() throws Exception {
+        thrown.expect(Exception.class);
+        SemanticVersion semanticVersion = new SemanticVersion("..");
+        semanticVersion.splitSemanticVersion();
+    }
+
+    @Test
+    public void semanticVersionInvalidPlus() throws Exception {
+        thrown.expect(Exception.class);
+        SemanticVersion semanticVersion = new SemanticVersion("+");
+        semanticVersion.splitSemanticVersion();
+    }
+
+    @Test
+    public void semanticVersionInvalidPlusTest() throws Exception {
+        thrown.expect(Exception.class);
+        SemanticVersion semanticVersion = new SemanticVersion("+test");
+        semanticVersion.splitSemanticVersion();
+    }
+
+    @Test
+    public void semanticVersionInvalidOnlySpace() throws Exception {
+        thrown.expect(Exception.class);
+        SemanticVersion semanticVersion = new SemanticVersion(" ");
+        semanticVersion.splitSemanticVersion();
+    }
+
+    @Test
+    public void semanticVersionInvalidSpaces() throws Exception {
+        thrown.expect(Exception.class);
+        SemanticVersion semanticVersion = new SemanticVersion("2 .3. 0");
+        semanticVersion.splitSemanticVersion();
+    }
+
+    @Test
+    public void semanticVersionInvalidDotButNoMinorVersion() throws Exception {
+        thrown.expect(Exception.class);
+        SemanticVersion semanticVersion = new SemanticVersion("2.");
+        semanticVersion.splitSemanticVersion();
+    }
+
+    @Test
+    public void semanticVersionInvalidDotButNoMajorVersion() throws Exception {
+        thrown.expect(Exception.class);
+        SemanticVersion semanticVersion = new SemanticVersion(".2.1");
+        semanticVersion.splitSemanticVersion();
+    }
+
+    @Test
+    public void semanticVersionInvalidComma() throws Exception {
+        thrown.expect(Exception.class);
+        SemanticVersion semanticVersion = new SemanticVersion(",");
+        semanticVersion.splitSemanticVersion();
+    }
+
+    @Test
+    public void semanticVersionInvalidMissingMajorMinorPatch() throws Exception {
+        thrown.expect(Exception.class);
+        SemanticVersion semanticVersion = new SemanticVersion("+build-prerelease");
+        semanticVersion.splitSemanticVersion();
+    }
+
     @Test
     public void semanticVersionInvalidMajorShouldBeNumberOnly() throws Exception {
         thrown.expect(Exception.class);

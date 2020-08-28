@@ -82,8 +82,20 @@ public final class SemanticVersion {
         return version.contains(BUILD_SEPERATOR);
     }
 
+    private int dotCount(String prefixVersion) {
+        char[] vCharArray = prefixVersion.toCharArray();
+        int count = 0;
+        for (char c : vCharArray) {
+            if (c == '.') {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public String[] splitSemanticVersion() throws Exception {
         List<String> versionParts = new ArrayList<>();
+        String versionPrefix = "";
         // pre-release or build.
         String versionSuffix = "";
         // for example: beta.2.1
@@ -103,16 +115,19 @@ public final class SemanticVersion {
                 throw new Exception("Invalid Semantic Version.");
             }
             // major.minor.patch
-            String versionPrefix = partialVersionParts[0];
+            versionPrefix = partialVersionParts[0];
 
             versionSuffix = partialVersionParts[1];
 
-            preVersionParts = versionPrefix.split("\\.");
         } else {
-            preVersionParts = version.split("\\.");
+            versionPrefix = version;
         }
 
-        if (preVersionParts.length > 3) {
+        preVersionParts = versionPrefix.split("\\.");
+
+        if (preVersionParts.length > 3 ||
+            preVersionParts.length == 0 ||
+            dotCount(versionPrefix) >= preVersionParts.length) {
             // Throw error as pre version should only contain major.minor.patch version
             throw new Exception("Invalid Semantic Version.");
         }
