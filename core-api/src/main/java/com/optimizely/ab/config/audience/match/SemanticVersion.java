@@ -25,7 +25,7 @@ import static com.optimizely.ab.internal.AttributesUtil.stringIsNullOrEmpty;
 
 public final class SemanticVersion {
 
-    private static final String BUILD_SEPERATOR = "+";
+    private static final String BUILD_SEPERATOR = "\\+";
     private static final String PRE_RELEASE_SEPERATOR = "-";
 
     private final String version;
@@ -54,8 +54,10 @@ public final class SemanticVersion {
             if (userVersionPartInt == null) {
                 // Compare strings
                 int result = userVersionParts[index].compareTo(targetedVersionParts[index]);
-                if (result != 0) {
-                    return result;
+                if (result < 0) {
+                    return targetedVersion.isPreRelease() && !isPreRelease() ? 1 : -1;
+                } else if (result > 0) {
+                    return !targetedVersion.isPreRelease() && isPreRelease() ? -1 : 1;
                 }
             } else if (targetVersionPartInt != null) {
                 if (!userVersionPartInt.equals(targetVersionPartInt)) {
@@ -75,11 +77,25 @@ public final class SemanticVersion {
     }
 
     public boolean isPreRelease() {
-        return version.contains(PRE_RELEASE_SEPERATOR);
+        int buildIndex = version.indexOf("+");
+        int preReleaseIndex = version.indexOf("-");
+        if (buildIndex < 0) {
+            return preReleaseIndex > 0;
+        } else if(preReleaseIndex < 0) {
+            return false;
+        }
+        return  preReleaseIndex < buildIndex;
     }
 
     public boolean isBuild() {
-        return version.contains(BUILD_SEPERATOR);
+        int buildIndex = version.indexOf("+");
+        int preReleaseIndex = version.indexOf("-");
+        if (preReleaseIndex < 0) {
+            return buildIndex > 0;
+        } else if(buildIndex < 0) {
+            return false;
+        }
+        return buildIndex < preReleaseIndex;
     }
 
     private int dotCount(String prefixVersion) {
@@ -93,6 +109,17 @@ public final class SemanticVersion {
         return count;
     }
 
+    private boolean isbuildCountMultiple() {
+        char[] vCharArray = version.toCharArray();
+        int count = 0;
+        for (char c : vCharArray) {
+            if (c == '+') {
+                count++;
+            }
+        }
+        return count > 1;
+    }
+
     public String[] splitSemanticVersion() throws Exception {
         List<String> versionParts = new ArrayList<>();
         String versionPrefix = "";
@@ -102,13 +129,13 @@ public final class SemanticVersion {
         String[] preVersionParts;
 
         // Contains white spaces
-        if (version.contains(" ")) {   // log and throw error
-            throw new Exception("Semantic version contains white spaces. Invalid Semantic Version.");
+        if (version.contains(" ") || isbuildCountMultiple()) {   // log and throw error
+            throw new Exception("Invalid Semantic Version.");
         }
 
         if (isBuild() || isPreRelease()) {
             String[] partialVersionParts = version.split(isPreRelease() ?
-                PRE_RELEASE_SEPERATOR : BUILD_SEPERATOR);
+                PRE_RELEASE_SEPERATOR : BUILD_SEPERATOR, 2);
 
             if (partialVersionParts.length <= 1) {
                 // throw error

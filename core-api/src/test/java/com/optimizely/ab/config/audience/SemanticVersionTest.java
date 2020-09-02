@@ -50,6 +50,13 @@ public class SemanticVersionTest {
     }
 
     @Test
+    public void semanticVersionInvalidMultipleBuild() throws Exception {
+        thrown.expect(Exception.class);
+        SemanticVersion semanticVersion = new SemanticVersion("3.1.2-2+2.3+1");
+        semanticVersion.splitSemanticVersion();
+    }
+
+    @Test
     public void semanticVersionInvalidPlus() throws Exception {
         thrown.expect(Exception.class);
         SemanticVersion semanticVersion = new SemanticVersion("+");
@@ -176,9 +183,52 @@ public class SemanticVersionTest {
     }
 
     @Test
+    public void semanticVersionCompareTargetBetaComplex() throws Exception {
+        SemanticVersion targetSV = new SemanticVersion("2.1.3-beta+1");
+        SemanticVersion actualSV = new SemanticVersion("2.1.3-beta+1.2.3");
+        assertTrue(actualSV.compare(targetSV) > 0);
+    }
+
+    @Test
+    public void semanticVersionCompareTargetBuildIgnores() throws Exception {
+        SemanticVersion targetSV = new SemanticVersion("2.1.3");
+        SemanticVersion actualSV = new SemanticVersion("2.1.3+build");
+        assertTrue(actualSV.compare(targetSV) == 0);
+    }
+
+    @Test
+    public void semanticVersionCompareTargetBuildComplex() throws Exception {
+        SemanticVersion targetSV = new SemanticVersion("2.1.3-beta+1.2.3");
+        SemanticVersion actualSV = new SemanticVersion("2.1.3-beta+1");
+        assertTrue(actualSV.compare(targetSV) < 0);
+    }
+
+    @Test
+    public void semanticVersionCompareMultipleDash() throws Exception {
+        SemanticVersion targetSV = new SemanticVersion("2.1.3-beta-1.2.3");
+        SemanticVersion actualSV = new SemanticVersion("2.1.3-beta-1");
+        assertTrue(actualSV.compare(targetSV) < 0);
+    }
+
+    @Test
     public void semanticVersionCompareToAlphaBetaAsciiComparision() throws Exception {
         SemanticVersion targetSV = new SemanticVersion("3.7.1-alpha");
         SemanticVersion actualSV = new SemanticVersion("3.7.1-beta");
+        assertTrue(actualSV.compare(targetSV) > 0);
+    }
+
+    @Test
+    public void semanticVersionComparePrereleaseSmallerThanBuild() throws Exception {
+        SemanticVersion targetSV = new SemanticVersion("3.7.1-prerelease");
+        SemanticVersion actualSV = new SemanticVersion("3.7.1+build");
+        assertTrue(actualSV.compare(targetSV) > 0);
+    }
+
+
+    @Test
+    public void semanticVersionCompareAgainstPreReleaseToPreRelease() throws Exception {
+        SemanticVersion targetSV = new SemanticVersion("3.7.1-prerelease+build");
+        SemanticVersion actualSV = new SemanticVersion("3.7.1-prerelease-prerelease+rc");
         assertTrue(actualSV.compare(targetSV) > 0);
     }
 
