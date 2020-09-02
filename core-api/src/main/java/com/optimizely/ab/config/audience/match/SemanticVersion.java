@@ -17,8 +17,10 @@
 package com.optimizely.ab.config.audience.match;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.optimizely.ab.internal.AttributesUtil.parseNumeric;
 import static com.optimizely.ab.internal.AttributesUtil.stringIsNullOrEmpty;
@@ -144,7 +146,7 @@ public final class SemanticVersion {
             // major.minor.patch
             versionPrefix = partialVersionParts[0];
 
-            versionSuffix = partialVersionParts[1];
+            versionSuffix = Arrays.stream(partialVersionParts).skip(1).collect(Collectors.joining());
 
         } else {
             versionPrefix = version;
