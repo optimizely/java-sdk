@@ -109,7 +109,7 @@ public final class SemanticVersion {
         return count;
     }
 
-    private boolean isbuildCountMultiple() {
+    private boolean isValidBuildMetadata() {
         char[] vCharArray = version.toCharArray();
         int count = 0;
         for (char c : vCharArray) {
@@ -129,7 +129,7 @@ public final class SemanticVersion {
         String[] preVersionParts;
 
         // Contains white spaces
-        if (version.contains(" ") || isbuildCountMultiple()) {   // log and throw error
+        if (version.contains(" ") || isValidBuildMetadata()) {   // log and throw error
             throw new Exception("Invalid Semantic Version.");
         }
 
