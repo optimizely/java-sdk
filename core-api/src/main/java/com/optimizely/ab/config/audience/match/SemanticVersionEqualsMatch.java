@@ -19,23 +19,12 @@ package com.optimizely.ab.config.audience.match;
 import javax.annotation.Nullable;
 
 class SemanticVersionEqualsMatch implements Match {
-    String value;
-
-    protected SemanticVersionEqualsMatch(String value) {
-        this.value = value;
-    }
-
     @Nullable
-    public Boolean eval(Object attributeValue) {
+    public Boolean eval(Object conditionValue, Object attributeValue) {
         try {
-            if (this.value != null && attributeValue instanceof String) {
-                SemanticVersion conditionalVersion = new SemanticVersion(value);
-                SemanticVersion userSemanticVersion = new SemanticVersion((String) attributeValue);
-                return userSemanticVersion.compare(conditionalVersion) == 0;
-            }
+            return SemanticVersion.compare(attributeValue, conditionValue) == 0;
         } catch (Exception e) {
             return null;
         }
-        return null;
     }
 }

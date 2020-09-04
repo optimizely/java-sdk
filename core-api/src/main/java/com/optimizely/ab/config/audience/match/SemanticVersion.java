@@ -34,6 +34,16 @@ public final class SemanticVersion {
         this.version = version;
     }
 
+    public static int compare(Object o1, Object o2) throws Exception {
+        if (o1 instanceof String && o2 instanceof String) {
+            SemanticVersion v1 = new SemanticVersion((String) o1);
+            SemanticVersion v2 = new SemanticVersion((String) o2);
+            return v1.compare(v2);
+        }
+
+        throw new UnexpectedValueTypeException();
+    }
+
     public int compare(SemanticVersion targetedVersion) throws Exception {
 
         if (targetedVersion == null || stringIsNullOrEmpty(targetedVersion.version)) {
