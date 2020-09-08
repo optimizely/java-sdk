@@ -20,11 +20,7 @@ import javax.annotation.Nullable;
 
 class SemanticVersionEqualsMatch implements Match {
     @Nullable
-    public Boolean eval(Object conditionValue, Object attributeValue) {
-        try {
-            return SemanticVersion.compare(attributeValue, conditionValue) == 0;
-        } catch (Exception e) {
-            return null;
-        }
+    public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
+        return SemanticVersion.compare(attributeValue, conditionValue) == 0;
     }
 }

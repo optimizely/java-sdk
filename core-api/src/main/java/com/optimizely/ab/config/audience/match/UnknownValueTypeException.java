@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,17 +14,13 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
 package com.optimizely.ab.config.audience.match;
 
-import javax.annotation.Nullable;
+public class UnknownValueTypeException extends Exception {
+    private static String message = "has an unsupported attribute value.";
 
-class LTMatch implements Match {
-
-    protected LTMatch() {
-    }
-
-    @Nullable
-    public Boolean eval(Object conditionValue, Object attributeValue) throws UnknownValueTypeException {
-        return NumberComparator.compare(attributeValue, conditionValue) < 0;
+    public UnknownValueTypeException() {
+        super(message);
     }
 }

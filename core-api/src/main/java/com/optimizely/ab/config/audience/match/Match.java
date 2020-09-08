@@ -20,5 +20,5 @@ import javax.annotation.Nullable;
 
 public interface Match {
     @Nullable
-    Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException;
+    Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException, UnknownValueTypeException;
 }

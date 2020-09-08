@@ -86,31 +86,32 @@ public class UserAttribute<T> implements Condition<T> {
         try {
             Match matcher = MatchRegistry.getMatch(match);
             Boolean result = matcher.eval(value, userAttributeValue);
-
             if (result == null) {
-                if (!attributes.containsKey(name)) {
-                    //Missing attribute value
-                    logger.debug("Audience condition \"{}\" evaluated to UNKNOWN because no value was passed for user attribute \"{}\"", this, name);
+                throw new UnknownValueTypeException();
+            }
+
+            return result;
+        } catch(UnknownValueTypeException e) {
+            if (!attributes.containsKey(name)) {
+                //Missing attribute value
+                logger.debug("Audience condition \"{}\" evaluated to UNKNOWN because no value was passed for user attribute \"{}\"", this, name);
+            } else {
+                //if attribute value is not valid
+                if (userAttributeValue != null) {
+                    logger.warn(
+                        "Audience condition \"{}\" evaluated to UNKNOWN because a value of type \"{}\" was passed for user attribute \"{}\"",
+                        this,
+                        userAttributeValue.getClass().getCanonicalName(),
+                        name);
                 } else {
-                    //if attribute value is not valid
-                    if (userAttributeValue != null) {
-                        logger.warn(
-                            "Audience condition \"{}\" evaluated to UNKNOWN because a value of type \"{}\" was passed for user attribute \"{}\"",
-                            this,
-                            userAttributeValue.getClass().getCanonicalName(),
-                            name);
-                    } else {
-                        logger.debug(
-                            "Audience condition \"{}\" evaluated to UNKNOWN because a null value was passed for user attribute \"{}\"",
-                            this,
-                            name);
-                    }
+                    logger.debug(
+                        "Audience condition \"{}\" evaluated to UNKNOWN because a null value was passed for user attribute \"{}\"",
+                        this,
+                        name);
                 }
             }
-            return result;
         } catch (UnknownMatchTypeException | UnexpectedValueTypeException e) {
-            logger.warn("Audience condition \"{}\" " + e.getMessage(),
-                this);
+            logger.warn("Audience condition \"{}\" " + e.getMessage(), this);
         } catch (NullPointerException e) {
             logger.error("attribute or value null for match {}", match != null ? match : "legacy condition", e);
         }

@@ -29,7 +29,7 @@ class ExactMatch implements Match {
     public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
         if (isValidNumber(attributeValue)) {
             if (isValidNumber(conditionValue)) {
-                return evalNumber((Number) conditionValue, (Number) attributeValue);
+                return NumberComparator.compareUnsafe(attributeValue, conditionValue) == 0;
             }
             return null;
         }
@@ -47,17 +47,5 @@ class ExactMatch implements Match {
         }
 
         return conditionValue.equals(attributeValue);
-    }
-
-    @Nullable
-    public Boolean evalNumber(Number conditionValue, Number attributeValue) {
-        try {
-            if(isValidNumber(attributeValue)) {
-                return conditionValue.doubleValue() == attributeValue.doubleValue();
-            }
-        } catch (Exception e) {
-        }
-
-        return null;
     }
 }

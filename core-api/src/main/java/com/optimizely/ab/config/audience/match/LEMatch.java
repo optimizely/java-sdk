@@ -18,21 +18,14 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
-import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
-
 class LEMatch implements Match {
 
-    @Nullable
-    public Boolean eval(Object conditionValue, Object attributeValue) {
-        try {
-            if(isValidNumber(attributeValue) && isValidNumber(conditionValue) ) {
-                return ((Number) attributeValue).doubleValue() <= ((Number) conditionValue).doubleValue();
-            }
-        } catch (Exception e) {
-            return null;
-        }
-        return null;
+    protected LEMatch() {
+    }
 
+    @Nullable
+    public Boolean eval(Object conditionValue, Object attributeValue) throws UnknownValueTypeException {
+        return NumberComparator.compare(attributeValue, conditionValue) <= 0;
     }
 }
 
