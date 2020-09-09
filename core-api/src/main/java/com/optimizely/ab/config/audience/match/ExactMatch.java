@@ -38,7 +38,7 @@ class ExactMatch implements Match {
             throw new UnexpectedValueTypeException();
         }
 
-        if (attributeValue.getClass() != conditionValue.getClass()) {
+        if (attributeValue == null || attributeValue.getClass() != conditionValue.getClass()) {
             return null;
         }
 
