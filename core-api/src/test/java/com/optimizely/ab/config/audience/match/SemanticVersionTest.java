@@ -14,10 +14,8 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.config.audience;
+package com.optimizely.ab.config.audience.match;
 
-import com.optimizely.ab.config.audience.match.SemanticVersion;
-import com.optimizely.ab.config.audience.match.UnexpectedValueTypeException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
