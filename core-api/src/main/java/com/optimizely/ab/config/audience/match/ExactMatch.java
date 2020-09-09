@@ -34,10 +34,6 @@ class ExactMatch implements Match {
             return null;
         }
 
-        if (conditionValue == null) {
-            return attributeValue == null;
-        }
-
         if (!(conditionValue instanceof String || conditionValue instanceof Boolean)) {
             throw new UnexpectedValueTypeException();
         }
