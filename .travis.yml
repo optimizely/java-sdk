@@ -74,7 +74,6 @@ jobs:
         FULLSTACK_TEST_REPO=ProdTesting
         
     - stage: 'Source Clear'
-      if: type = cron
       addons:
         srcclr: true
       before_install: skip
