@@ -17,7 +17,7 @@ plugins {
     id 'me.champeau.gradle.jmh' version '0.4.5'
     id 'nebula.optional-base' version '3.2.0'
     id 'com.github.hierynomus.license' version '0.15.0'
-    id 'com.github.spotbugs' version "4.3.0"
+    id 'com.github.spotbugs' version "4.5.0"
 }
 
 allprojects {
@@ -110,6 +110,8 @@ subprojects {
     }
 
     dependencies {
+        compile group: 'commons-codec', name: 'commons-codec', version: commonCodecVersion
+
         testCompile group: 'junit', name: 'junit', version: junitVersion
         testCompile group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
         testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: hamcrestVersion
