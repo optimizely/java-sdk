@@ -26,18 +26,19 @@ public class MatchRegistryTest {
 
     @Test
     public void testDefaultMatchers() throws UnknownMatchTypeException {
-        assertThat(MatchRegistry.getMatch(EXISTS), instanceOf(ExistsMatch.class));
         assertThat(MatchRegistry.getMatch(EXACT), instanceOf(ExactMatch.class));
+        assertThat(MatchRegistry.getMatch(EXISTS), instanceOf(ExistsMatch.class));
         assertThat(MatchRegistry.getMatch(GREATER_THAN), instanceOf(GTMatch.class));
         assertThat(MatchRegistry.getMatch(LESS_THAN), instanceOf(LTMatch.class));
-        assertThat(MatchRegistry.getMatch(LESS_THAN_EQ), instanceOf(LEMatch.class));
         assertThat(MatchRegistry.getMatch(GREATER_THAN_EQ), instanceOf(GEMatch.class));
-        assertThat(MatchRegistry.getMatch(SUBSTRING), instanceOf(SubstringMatch.class));
+        assertThat(MatchRegistry.getMatch(LESS_THAN_EQ), instanceOf(LEMatch.class));
+        assertThat(MatchRegistry.getMatch(LEGACY), instanceOf(DefaultMatchForLegacyAttributes.class));
         assertThat(MatchRegistry.getMatch(SEMVER_EQ), instanceOf(SemanticVersionEqualsMatch.class));
         assertThat(MatchRegistry.getMatch(SEMVER_GE), instanceOf(SemanticVersionGEMatch.class));
         assertThat(MatchRegistry.getMatch(SEMVER_GT), instanceOf(SemanticVersionGTMatch.class));
         assertThat(MatchRegistry.getMatch(SEMVER_LE), instanceOf(SemanticVersionLEMatch.class));
         assertThat(MatchRegistry.getMatch(SEMVER_LT), instanceOf(SemanticVersionLTMatch.class));
+        assertThat(MatchRegistry.getMatch(SUBSTRING), instanceOf(SubstringMatch.class));
     }
 
     @Test(expected = UnknownMatchTypeException.class)
