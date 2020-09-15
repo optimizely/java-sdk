@@ -20,10 +20,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.audience.match.Match;
-import com.optimizely.ab.config.audience.match.MatchType;
-import com.optimizely.ab.config.audience.match.UnexpectedValueTypeException;
-import com.optimizely.ab.config.audience.match.UnknownMatchTypeException;
+import com.optimizely.ab.config.audience.match.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,35 +84,36 @@ public class UserAttribute<T> implements Condition<T> {
         }
         // check user attribute value is equal
         try {
-            Match matchType = MatchType.getMatchType(match, value).getMatcher();
-            Boolean result = matchType.eval(userAttributeValue);
-
+            Match matcher = MatchRegistry.getMatch(match);
+            Boolean result = matcher.eval(value, userAttributeValue);
             if (result == null) {
-                if (!attributes.containsKey(name)) {
-                    //Missing attribute value
-                    logger.debug("Audience condition \"{}\" evaluated to UNKNOWN because no value was passed for user attribute \"{}\"", this, name);
+                throw new UnknownValueTypeException();
+            }
+
+            return result;
+        } catch(UnknownValueTypeException e) {
+            if (!attributes.containsKey(name)) {
+                //Missing attribute value
+                logger.debug("Audience condition \"{}\" evaluated to UNKNOWN because no value was passed for user attribute \"{}\"", this, name);
+            } else {
+                //if attribute value is not valid
+                if (userAttributeValue != null) {
+                    logger.warn(
+                        "Audience condition \"{}\" evaluated to UNKNOWN because a value of type \"{}\" was passed for user attribute \"{}\"",
+                        this,
+                        userAttributeValue.getClass().getCanonicalName(),
+                        name);
                 } else {
-                    //if attribute value is not valid
-                    if (userAttributeValue != null) {
-                        logger.warn(
-                            "Audience condition \"{}\" evaluated to UNKNOWN because a value of type \"{}\" was passed for user attribute \"{}\"",
-                            this,
-                            userAttributeValue.getClass().getCanonicalName(),
-                            name);
-                    } else {
-                        logger.debug(
-                            "Audience condition \"{}\" evaluated to UNKNOWN because a null value was passed for user attribute \"{}\"",
-                            this,
-                            name);
-                    }
+                    logger.debug(
+                        "Audience condition \"{}\" evaluated to UNKNOWN because a null value was passed for user attribute \"{}\"",
+                        this,
+                        name);
                 }
             }
-            return result;
-        } catch (UnknownMatchTypeException | UnexpectedValueTypeException ex) {
-            logger.warn("Audience condition \"{}\" " + ex.getMessage(),
-                this);
-        } catch (NullPointerException np) {
-            logger.error("attribute or value null for match {}", match != null ? match : "legacy condition", np);
+        } catch (UnknownMatchTypeException | UnexpectedValueTypeException e) {
+            logger.warn("Audience condition \"{}\" " + e.getMessage(), this);
+        } catch (NullPointerException e) {
+            logger.error("attribute or value null for match {}", match != null ? match : "legacy condition", e);
         }
         return null;
     }

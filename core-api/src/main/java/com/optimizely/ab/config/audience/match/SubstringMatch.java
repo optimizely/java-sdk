@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2018-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,23 +18,23 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
-class SubstringMatch extends AttributeMatch<String> {
-    String value;
-
-    protected SubstringMatch(String value) {
-        this.value = value;
-    }
-
-    /**
-     * This matches the same substring matching logic in the Web client.
-     *
-     * @param attributeValue
-     * @return true/false if the user attribute string value contains the condition string value
-     */
+/**
+ * SubstringMatch checks if the attribute value contains the condition value.
+ * This assumes both the condition and attribute values are provided as Strings.
+ */
+class SubstringMatch implements Match {
     @Nullable
-    public Boolean eval(Object attributeValue) {
+    public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
+        if (!(conditionValue instanceof String)) {
+            throw new UnexpectedValueTypeException();
+        }
+
+        if (!(attributeValue instanceof String)) {
+            return null;
+        }
+
         try {
-            return castToValueType(attributeValue, value).contains(value);
+            return attributeValue.toString().contains(conditionValue.toString());
         } catch (Exception e) {
             return null;
         }

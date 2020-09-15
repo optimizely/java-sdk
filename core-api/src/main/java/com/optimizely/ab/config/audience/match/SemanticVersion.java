@@ -16,6 +16,9 @@
  */
 package com.optimizely.ab.config.audience.match;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,8 +26,12 @@ import java.util.List;
 import static com.optimizely.ab.internal.AttributesUtil.parseNumeric;
 import static com.optimizely.ab.internal.AttributesUtil.stringIsNullOrEmpty;
 
+/**
+ * SemanticVersion implements the specification for the purpose of comparing two Versions.
+ */
 public final class SemanticVersion {
 
+    private static final Logger logger = LoggerFactory.getLogger(SemanticVersion.class);
     private static final String BUILD_SEPERATOR = "\\+";
     private static final String PRE_RELEASE_SEPERATOR = "-";
 
@@ -32,6 +39,24 @@ public final class SemanticVersion {
 
     public SemanticVersion(String version) {
         this.version = version;
+    }
+
+    /**
+     * compare takes object inputs and coerces them into SemanticVersion objects before performing the comparison.
+     * If the input values cannot be coerced then an {@link UnexpectedValueTypeException} is thrown.
+     */
+    public static int compare(Object o1, Object o2) throws UnexpectedValueTypeException {
+        if (o1 instanceof String && o2 instanceof String) {
+            SemanticVersion v1 = new SemanticVersion((String) o1);
+            SemanticVersion v2 = new SemanticVersion((String) o2);
+            try {
+                return v1.compare(v2);
+            } catch (Exception e) {
+                logger.warn("Error comparing semantic versions", e);
+            }
+        }
+
+        throw new UnexpectedValueTypeException();
     }
 
     public int compare(SemanticVersion targetedVersion) throws Exception {

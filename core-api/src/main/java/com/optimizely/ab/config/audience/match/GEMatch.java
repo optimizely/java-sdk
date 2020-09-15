@@ -18,24 +18,12 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
-import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
-
-class GEMatch extends AttributeMatch<Number> {
-    Number value;
-
-    protected GEMatch(Number value) {
-        this.value = value;
-    }
-
+/**
+ * GEMatch performs a "greater than or equal to" number comparison via {@link NumberComparator}.
+ */
+class GEMatch implements Match {
     @Nullable
-    public Boolean eval(Object attributeValue) {
-        try {
-            if(isValidNumber(attributeValue)) {
-                return castToValueType(attributeValue, value).doubleValue() >= value.doubleValue();
-            }
-        } catch (Exception e) {
-            return null;
-        }
-        return null;
+    public Boolean eval(Object conditionValue, Object attributeValue) throws UnknownValueTypeException {
+        return NumberComparator.compare(attributeValue, conditionValue) >= 0;
     }
 }

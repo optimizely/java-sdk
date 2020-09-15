@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2018-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -21,17 +21,16 @@ import javax.annotation.Nullable;
 /**
  * This is a temporary class.  It mimics the current behaviour for
  * legacy custom attributes.  This will be dropped for ExactMatch and the unit tests need to be fixed.
- * @param <T>
  */
-class DefaultMatchForLegacyAttributes<T> extends AttributeMatch<T> {
-    T value;
-
-    protected DefaultMatchForLegacyAttributes(T value) {
-        this.value = value;
-    }
-
+class DefaultMatchForLegacyAttributes implements Match {
     @Nullable
-    public Boolean eval(Object attributeValue) {
-        return value.equals(castToValueType(attributeValue, value));
+    public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
+        if (!(conditionValue instanceof String)) {
+            throw new UnexpectedValueTypeException();
+        }
+        if (attributeValue == null) {
+            return false;
+        }
+        return conditionValue.toString().equals(attributeValue.toString());
     }
 }

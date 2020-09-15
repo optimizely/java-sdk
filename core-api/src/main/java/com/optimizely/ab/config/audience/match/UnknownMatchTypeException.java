@@ -17,6 +17,9 @@
 
 package com.optimizely.ab.config.audience.match;
 
+/**
+ * UnknownMatchTypeException is thrown when the specified match type cannot be mapped via the MatchRegistry.
+ */
 public class UnknownMatchTypeException extends Exception {
     private static String message = "uses an unknown match type. You may need to upgrade to a newer release of the Optimizely SDK.";
 

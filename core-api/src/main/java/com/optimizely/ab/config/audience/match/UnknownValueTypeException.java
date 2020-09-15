@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,20 +14,17 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
 package com.optimizely.ab.config.audience.match;
 
-abstract class AttributeMatch<T> implements Match {
-    T castToValueType(Object o, Object value) {
-        try {
-            if (!o.getClass().isInstance(value) && !(o instanceof Number && value instanceof Number)) {
-                return null;
-            }
+/**
+ * UnknownValueTypeException is thrown when the passed in value for a user attribute does
+ * not map to a known allowable type.
+ */
+public class UnknownValueTypeException extends Exception {
+    private static String message = "has an unsupported attribute value.";
 
-            T rv = (T) o;
-
-            return rv;
-        } catch (Exception e) {
-            return null;
-        }
+    public UnknownValueTypeException() {
+        super(message);
     }
 }

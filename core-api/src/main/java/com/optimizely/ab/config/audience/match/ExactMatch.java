@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2018-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,18 +18,31 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
-class ExactMatch<T> extends AttributeMatch<T> {
-    T value;
+import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
 
-    protected ExactMatch(T value) {
-        this.value = value;
-    }
-
+/**
+ * ExactMatch supports matching Numbers, Strings and Booleans. Numbers are first converted to doubles
+ * before the comparison is evaluated. See {@link NumberComparator} Strings and Booleans are evaulated
+ * via the Object equals method.
+ */
+class ExactMatch implements Match {
     @Nullable
-    public Boolean eval(Object attributeValue) {
-        T converted = castToValueType(attributeValue, value);
-        if (value != null && converted == null) return null;
+    public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
+        if (isValidNumber(attributeValue)) {
+            if (isValidNumber(conditionValue)) {
+                return NumberComparator.compareUnsafe(attributeValue, conditionValue) == 0;
+            }
+            return null;
+        }
 
-        return value == null ? attributeValue == null : value.equals(converted);
+        if (!(conditionValue instanceof String || conditionValue instanceof Boolean)) {
+            throw new UnexpectedValueTypeException();
+        }
+
+        if (attributeValue == null || attributeValue.getClass() != conditionValue.getClass()) {
+            return null;
+        }
+
+        return conditionValue.equals(attributeValue);
     }
 }

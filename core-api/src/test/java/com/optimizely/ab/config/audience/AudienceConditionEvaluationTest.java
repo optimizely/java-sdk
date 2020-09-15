@@ -55,11 +55,11 @@ public class AudienceConditionEvaluationTest {
 
     @Before
     public void initialize() {
-        testUserAttributes = new HashMap<String, String>();
+        testUserAttributes = new HashMap<>();
         testUserAttributes.put("browser_type", "chrome");
         testUserAttributes.put("device_type", "Android");
 
-        testTypedUserAttributes = new HashMap<String, Object>();
+        testTypedUserAttributes = new HashMap<>();
         testTypedUserAttributes.put("is_firefox", true);
         testTypedUserAttributes.put("num_counts", 3.55);
         testTypedUserAttributes.put("num_size", 3);

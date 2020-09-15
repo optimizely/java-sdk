@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2018-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,25 +18,12 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
-import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
-
-class LTMatch extends AttributeMatch<Number> {
-    Number value;
-
-    protected LTMatch(Number value) {
-        this.value = value;
-    }
-
+/**
+ * GTMatch performs a "less than" number comparison via {@link NumberComparator}.
+ */
+class LTMatch implements Match {
     @Nullable
-    public Boolean eval(Object attributeValue) {
-        try {
-            if(isValidNumber(attributeValue)) {
-                return castToValueType(attributeValue, value).doubleValue() < value.doubleValue();
-            }
-        } catch (Exception e) {
-            return null;
-        }
-        return null;
+    public Boolean eval(Object conditionValue, Object attributeValue) throws UnknownValueTypeException {
+        return NumberComparator.compare(attributeValue, conditionValue) < 0;
     }
 }
-

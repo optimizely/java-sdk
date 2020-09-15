@@ -17,6 +17,10 @@
 
 package com.optimizely.ab.config.audience.match;
 
+/**
+ * UnexpectedValueTypeException is thrown when the condition value found in the datafile is
+ * not one of an expected type for this version of the SDK.
+ */
 public class UnexpectedValueTypeException extends Exception {
     private static String message = "has an unsupported condition value. You may need to upgrade to a newer release of the Optimizely SDK.";
 

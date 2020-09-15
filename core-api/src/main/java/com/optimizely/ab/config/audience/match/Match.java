@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2018-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,5 +20,5 @@ import javax.annotation.Nullable;
 
 public interface Match {
     @Nullable
-    Boolean eval(Object attributeValue);
+    Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException, UnknownValueTypeException;
 }

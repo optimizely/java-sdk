@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2018-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,20 +16,14 @@
  */
 package com.optimizely.ab.config.audience.match;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import javax.annotation.Nullable;
 
+/**
+ * ExistsMatch checks that the attribute value is NOT null.
+ */
 class ExistsMatch implements Match {
-    @SuppressFBWarnings("URF_UNREAD_FIELD")
-    Object value;
-
-    protected ExistsMatch(Object value) {
-        this.value = value;
-    }
-
     @Nullable
-    public Boolean eval(Object attributeValue) {
+    public Boolean eval(Object conditionValue, Object attributeValue) {
         return attributeValue != null;
     }
 }
