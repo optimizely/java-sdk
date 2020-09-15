@@ -18,17 +18,11 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
+/**
+ * SubstringMatch checks if the attribute value contains the condition value.
+ * This assumes both the condition and attribute values are provided as Strings.
+ */
 class SubstringMatch implements Match {
-
-    protected SubstringMatch() {
-    }
-
-    /**
-     * This matches the same substring matching logic in the Web client.
-     *
-     * @param attributeValue
-     * @return true/false if the user attribute string value contains the condition string value
-     */
     @Nullable
     public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
         if (!(conditionValue instanceof String)) {

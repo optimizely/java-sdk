@@ -18,11 +18,10 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
+/**
+ * SemanticVersionLTMatch performs a "less than" comparison via {@link SemanticVersion#compare(Object, Object)}.
+ */
 class SemanticVersionLTMatch implements Match {
-
-    protected SemanticVersionLTMatch() {
-    }
-
     @Nullable
     public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
         return SemanticVersion.compare(attributeValue, conditionValue) < 0;

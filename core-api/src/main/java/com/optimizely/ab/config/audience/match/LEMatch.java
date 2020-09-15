@@ -18,11 +18,10 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
+/**
+ * GEMatch performs a "less than or equal to" number comparison via {@link NumberComparator}.
+ */
 class LEMatch implements Match {
-
-    protected LEMatch() {
-    }
-
     @Nullable
     public Boolean eval(Object conditionValue, Object attributeValue) throws UnknownValueTypeException {
         return NumberComparator.compare(attributeValue, conditionValue) <= 0;

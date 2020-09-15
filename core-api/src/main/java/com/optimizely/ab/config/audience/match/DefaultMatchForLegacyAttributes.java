@@ -23,10 +23,6 @@ import javax.annotation.Nullable;
  * legacy custom attributes.  This will be dropped for ExactMatch and the unit tests need to be fixed.
  */
 class DefaultMatchForLegacyAttributes implements Match {
-
-    protected DefaultMatchForLegacyAttributes() {
-    }
-
     @Nullable
     public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
         if (!(conditionValue instanceof String)) {

@@ -18,11 +18,10 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
+/**
+ * GTMatch performs a "less than" number comparison via {@link NumberComparator}.
+ */
 class LTMatch implements Match {
-
-    protected LTMatch() {
-    }
-
     @Nullable
     public Boolean eval(Object conditionValue, Object attributeValue) throws UnknownValueTypeException {
         return NumberComparator.compare(attributeValue, conditionValue) < 0;

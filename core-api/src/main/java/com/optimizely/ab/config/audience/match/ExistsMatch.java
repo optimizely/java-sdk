@@ -18,11 +18,10 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
+/**
+ * ExistsMatch checks that the attribute value is NOT null.
+ */
 class ExistsMatch implements Match {
-
-    protected ExistsMatch() {
-    }
-
     @Nullable
     public Boolean eval(Object conditionValue, Object attributeValue) {
         return attributeValue != null;

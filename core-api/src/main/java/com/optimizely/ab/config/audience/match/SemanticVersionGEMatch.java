@@ -18,11 +18,11 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
+/**
+ * SemanticVersionGEMatch performs a "greater than or equal to" comparison
+ * via {@link SemanticVersion#compare(Object, Object)}.
+ */
 class SemanticVersionGEMatch implements Match {
-
-    protected SemanticVersionGEMatch() {
-    }
-
     @Nullable
     public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
         return SemanticVersion.compare(attributeValue, conditionValue) >= 0;

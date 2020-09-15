@@ -18,11 +18,10 @@ package com.optimizely.ab.config.audience.match;
 
 import javax.annotation.Nullable;
 
+/**
+ * SemanticVersionEqualsMatch performs a equality comparison via {@link SemanticVersion#compare(Object, Object)}.
+ */
 class SemanticVersionEqualsMatch implements Match {
-
-    protected SemanticVersionEqualsMatch() {
-    }
-
     @Nullable
     public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
         return SemanticVersion.compare(attributeValue, conditionValue) == 0;

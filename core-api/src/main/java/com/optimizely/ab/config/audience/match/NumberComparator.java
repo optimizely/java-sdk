@@ -18,6 +18,10 @@ package com.optimizely.ab.config.audience.match;
 
 import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
 
+/**
+ * NumberComparator performs a numeric comparison. The input values are assumed to be numbers else
+ * compare will throw an {@link UnknownValueTypeException}.
+ */
 public class NumberComparator {
     public static int compare(Object o1, Object o2) throws UnknownValueTypeException {
         if (!isValidNumber(o1)) {
@@ -31,7 +35,11 @@ public class NumberComparator {
         return compareUnsafe(o1, o2);
     }
 
-    public static int compareUnsafe(Object o1, Object o2) {
+    /**
+     * compareUnsafe is provided to avoid checking the input values are numbers. It's assumed that the inputs
+     * are known to be Numbers.
+     */
+    static int compareUnsafe(Object o1, Object o2) {
         return Double.compare(((Number) o1).doubleValue(), ((Number) o2).doubleValue());
     }
 }

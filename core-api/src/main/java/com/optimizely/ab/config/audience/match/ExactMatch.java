@@ -20,11 +20,12 @@ import javax.annotation.Nullable;
 
 import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
 
+/**
+ * ExactMatch supports matching Numbers, Strings and Booleans. Numbers are first converted to doubles
+ * before the comparison is evaluated. See {@link NumberComparator} Strings and Booleans are evaulated
+ * via the Object equals method.
+ */
 class ExactMatch implements Match {
-
-    protected ExactMatch() {
-    }
-
     @Nullable
     public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
         if (isValidNumber(attributeValue)) {
