@@ -17,6 +17,10 @@
 
 package com.optimizely.ab.config.audience.match;
 
+/**
+ * UnknownValueTypeException is thrown when the passed in value for a user attribute does
+ * not map to a known allowable type.
+ */
 public class UnknownValueTypeException extends Exception {
     private static String message = "has an unsupported attribute value.";
 
