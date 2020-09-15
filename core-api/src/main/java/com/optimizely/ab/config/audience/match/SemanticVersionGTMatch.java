@@ -19,6 +19,10 @@ package com.optimizely.ab.config.audience.match;
 import javax.annotation.Nullable;
 
 class SemanticVersionGTMatch implements Match {
+
+    protected SemanticVersionGTMatch() {
+    }
+
     @Nullable
     public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
         return SemanticVersion.compare(attributeValue, conditionValue) > 0;
