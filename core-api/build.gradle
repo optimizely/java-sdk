@@ -1,7 +1,5 @@
 dependencies {
-    compile (group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion) {
-        exclude group: 'log4j:log4j'
-    }
+    compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
 
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: jacksonVersion
 
