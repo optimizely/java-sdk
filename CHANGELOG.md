@@ -1,5 +1,17 @@
 # Optimizely Java X SDK Changelog
 
+## [3.6.0-beta]
+September 21st, 2020
+
+### New Features
+- Add support for version audience condition which follows the semantic version (http://semver.org)[#386](https://github.com/optimizely/java-sdk/pull/386)
+
+- Add support for datafile accessor [#392](https://github.com/optimizely/java-sdk/pull/392)
+
+- Update libraries [#397](https://github.com/optimizely/java-sdk/pull/397)
+
+- Audience logging refactor (move from info to debug) [#380](https://github.com/optimizely/java-sdk/pull/380)
+
 ## [3.5.0]
 July 7th, 2020
 
