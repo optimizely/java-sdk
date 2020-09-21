@@ -1141,6 +1141,10 @@ public class Optimizely implements AutoCloseable {
         return notificationCenter.addNotificationHandler(clazz, handler);
     }
 
+    public UserContext CreateUserContext(String userId) {
+        return new UserContext(userId, this);
+    }
+
     //======== Builder ========//
 
     /**

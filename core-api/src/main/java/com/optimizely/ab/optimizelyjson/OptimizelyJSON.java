@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -74,7 +75,6 @@ public class OptimizelyJSON {
     /**
      *  Returns the {@code Map<String,Object>} representation of json data
      */
-    @Nullable
     public Map<String,Object> toMap() {
         if (map == null && payload != null) {
             try {
@@ -84,7 +84,7 @@ public class OptimizelyJSON {
             }
         }
 
-        return map;
+        return map == null ? Collections.emptyMap() : map;
     }
 
     /**

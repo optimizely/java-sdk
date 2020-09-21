@@ -17,9 +17,7 @@ package com.optimizely;
 
 import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.OptimizelyFactory;
-import com.optimizely.ab.config.Variation;
-
-import java.util.Collections;
+import com.optimizely.ab.UserContext;
 import java.util.Map;
 
 import java.util.Random;
@@ -27,25 +25,19 @@ import java.util.concurrent.TimeUnit;
 
 public class Example {
 
-    private final Optimizely optimizely;
+    private static void processVisitor(UserContext userContext) {
+        Map<String, Object> optimizelyJSON = userContext.decide("background_experiment").toMap();
 
-    private Example(Optimizely optimizely) {
-        this.optimizely = optimizely;
-    }
-
-    private void processVisitor(String userId, Map<String, String> attributes) {
-        Variation variation = optimizely.activate("background_experiment", userId, attributes);
-
-        if (variation != null) {
-            optimizely.track("sample_conversion", userId, attributes);
-            System.out.println(String.format("Found variation %s", variation.getKey()));
+        if (optimizelyJSON.get("variation") != null) {
+            userContext.track("sample_conversion");
+            System.out.printf("Found variation %s%n", optimizelyJSON.get("variation"));
         }
         else {
             System.out.println("didn't get a variation");
         }
 
-        if (optimizely.isFeatureEnabled("eet_feature", userId, attributes)) {
-            optimizely.track("eet_conversion", userId, attributes);
+        if (userContext.decide("eet_feature") != null) {
+            userContext.track("eet_conversion");
             System.out.println("feature enabled");
         }
     }
@@ -53,12 +45,12 @@ public class Example {
     public static void main(String[] args) throws InterruptedException {
         Optimizely optimizely = OptimizelyFactory.newDefaultInstance("BX9Y3bTa4YErpHZEMpAwHm");
 
-        Example example = new Example(optimizely);
         Random random = new Random();
 
         for (int i = 0; i < 10; i++) {
             String userId = String.valueOf(random.nextInt());
-            example.processVisitor(userId, Collections.emptyMap());
+            UserContext userContext = optimizely.CreateUserContext(userId);
+            processVisitor(userContext);
             TimeUnit.MILLISECONDS.sleep(500);
         }
     }
