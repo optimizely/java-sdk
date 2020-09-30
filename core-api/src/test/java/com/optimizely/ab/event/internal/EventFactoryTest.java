@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2019, Optimizely and contributors
+ *    Copyright 2016-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.payload.Decision;
+import com.optimizely.ab.event.internal.payload.DecisionMetadata;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.ReservedEventKey;
@@ -98,14 +99,16 @@ public class EventFactoryTest {
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
         Attribute attribute = validProjectConfig.getAttributes().get(0);
         String userId = "userId";
+        String flagType = "experiment";
         Map<String, String> attributeMap = new HashMap<String, String>();
         attributeMap.put(attribute.getKey(), "value");
         attributeMap.put(ControlAttribute.USER_AGENT_ATTRIBUTE.toString(), "Chrome");
-
+        DecisionMetadata metadata = new DecisionMetadata(flagType, activatedExperiment.getKey(), "variationKey");
         Decision expectedDecision = new Decision.Builder()
             .setCampaignId(activatedExperiment.getLayerId())
             .setExperimentId(activatedExperiment.getId())
             .setVariationId(bucketedVariation.getId())
+            .setMetadata(metadata)
             .setIsCampaignHoldback(false)
             .build();
 
@@ -169,10 +172,17 @@ public class EventFactoryTest {
         String userId = "userId";
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
 
+        DecisionMetadata decisionMetadata = new DecisionMetadata.Builder()
+            .setFlagKey(activatedExperiment.getKey())
+            .setFlagType("experiment")
+            .setVariationKey(bucketedVariation.getKey())
+            .build();
+
         Decision expectedDecision = new Decision.Builder()
             .setCampaignId(activatedExperiment.getLayerId())
             .setExperimentId(activatedExperiment.getId())
             .setVariationId(bucketedVariation.getId())
+            .setMetadata(decisionMetadata)
             .setIsCampaignHoldback(false)
             .build();
 
@@ -1050,7 +1060,9 @@ public class EventFactoryTest {
             activatedExperiment,
             variation,
             userId,
-            attributes);
+            attributes,
+            activatedExperiment.getKey(),
+            "experiment");
 
         return EventFactory.createLogEvent(userEvent);
         

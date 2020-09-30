@@ -216,7 +216,7 @@ public class Optimizely implements AutoCloseable {
             return null;
         }
 
-        sendImpression(projectConfig, experiment, userId, copiedAttributes, variation);
+        sendImpression(projectConfig, experiment, userId, copiedAttributes, variation, experiment.getKey(), "experiment");
 
         return variation;
     }
@@ -225,22 +225,26 @@ public class Optimizely implements AutoCloseable {
                                 @Nonnull Experiment experiment,
                                 @Nonnull String userId,
                                 @Nonnull Map<String, ?> filteredAttributes,
-                                @Nonnull Variation variation) {
-        if (!experiment.isRunning()) {
-            logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
-            return;
-        }
+                                @Nonnull Variation variation,
+                                @Nonnull String flagKey,
+                                @Nonnull String flagType) {
 
         UserEvent userEvent = UserEventFactory.createImpressionEvent(
             projectConfig,
             experiment,
             variation,
             userId,
-            filteredAttributes);
+            filteredAttributes,
+            flagKey,
+            flagType);
 
+        if (userEvent == null) {
+            return;
+        }
         eventProcessor.process(userEvent);
-        logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
-
+        if (experiment != null) {
+            logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
+        }
         // Kept For backwards compatibility.
         // This notification is deprecated and the new DecisionNotifications
         // are sent via their respective method calls.
@@ -386,16 +390,22 @@ public class Optimizely implements AutoCloseable {
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes, projectConfig);
         Boolean featureEnabled = false;
         SourceInfo sourceInfo = new RolloutSourceInfo();
+        if (featureDecision.decisionSource != null) {
+            decisionSource = featureDecision.decisionSource;
+        }
+        sendImpression(
+            projectConfig,
+            featureDecision.experiment,
+            userId,
+            copiedAttributes,
+            featureDecision.variation,
+            featureKey,
+            decisionSource.toString());
 
         if (featureDecision.variation != null) {
+            // This information is only necessary for feature tests.
+            // For rollouts experiments and variations are an implementation detail only.
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
-                sendImpression(
-                    projectConfig,
-                    featureDecision.experiment,
-                    userId,
-                    copiedAttributes,
-                    featureDecision.variation);
-                decisionSource = featureDecision.decisionSource;
                 sourceInfo = new FeatureTestSourceInfo(featureDecision.experiment.getKey(), featureDecision.variation.getKey());
             } else {
                 logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",

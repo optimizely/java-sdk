@@ -491,6 +491,7 @@ public class OptimizelyTest {
         assertTrue(optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, null));
         assertNull(optimizely.getForcedVariation(activatedExperiment.getKey(), testUserId));
         assertFalse(optimizely.isFeatureEnabled(FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(), testUserId));
+        eventHandler.expectImpression(null, null, testUserId);
     }
 
     /**
@@ -899,11 +900,11 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify that {@link Optimizely#activate(String, String)} doesn't dispatch an event for an experiment with a
-     * "Launched" status.
+     * Verify that {@link Optimizely#activate(String, String)} dispatches an event for an experiment with a
+     * "Launched" status when SendFlagDecisions is true.
      */
     @Test
-    public void activateLaunchedExperimentDoesNotDispatchEvent() throws Exception {
+    public void activateLaunchedExperimentDispatchesEvent() throws Exception {
         Experiment launchedExperiment = datafileVersion == 4 ?
             noAudienceProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_LAUNCHED_EXPERIMENT_KEY) :
             noAudienceProjectConfig.getExperiments().get(2);
@@ -914,11 +915,10 @@ public class OptimizelyTest {
         // Force variation to launched experiment.
         optimizely.setForcedVariation(launchedExperiment.getKey(), testUserId, expectedVariation.getKey());
 
-        logbackVerifier.expectMessage(Level.INFO,
-            "Experiment has \"Launched\" status so not dispatching event during activation.");
         Variation variation = optimizely.activate(launchedExperiment.getKey(), testUserId);
         assertNotNull(variation);
         assertThat(variation.getKey(), is(expectedVariation.getKey()));
+        eventHandler.expectImpression(launchedExperiment.getId(), expectedVariation.getId(), testUserId);
     }
 
     /**
@@ -1684,7 +1684,13 @@ public class OptimizelyTest {
         List<String> featureFlags = optimizely.getEnabledFeatures(testUserId, Collections.emptyMap());
         assertEquals(2, featureFlags.size());
 
-        // Why is there only a single impression when there are 2 enabled features?
+        eventHandler.expectImpression(null, null, testUserId);
+        eventHandler.expectImpression(null, null, testUserId);
+        eventHandler.expectImpression("3794675122", "589640735", testUserId);
+        eventHandler.expectImpression(null, null, testUserId);
+        eventHandler.expectImpression(null, null, testUserId);
+        eventHandler.expectImpression(null, null, testUserId);
+        eventHandler.expectImpression(null, null, testUserId);
         eventHandler.expectImpression("1786133852", "1619235542", testUserId);
 
         // Verify that listener being called
@@ -1720,6 +1726,16 @@ public class OptimizelyTest {
 
         // Verify that listener not being called
         assertFalse(isListenerCalled);
+
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
 
@@ -1838,6 +1854,7 @@ public class OptimizelyTest {
     /**
      * Verify that the {@link Optimizely#isFeatureEnabled(String, String, Map<String, String>)}
      * notification listener of isFeatureEnabled is called when feature is not in experiment and not in rollout
+     * and it dispatch event
      * returns false
      */
     @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
@@ -1871,6 +1888,7 @@ public class OptimizelyTest {
             "Feature \"" + validFeatureKey +
                 "\" is enabled for user \"" + genericUserId + "\"? false"
         );
+        eventHandler.expectImpression(null, null, genericUserId);
 
         // Verify that listener being called
         assertTrue(isListenerCalled);
@@ -1918,6 +1936,9 @@ public class OptimizelyTest {
         // Verify that listener being called
         assertTrue(isListenerCalled);
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
+
+        eventHandler.expectImpression("3794675122", "589640735", genericUserId, Collections.singletonMap("house", "Gryffindor"));
+
     }
 
     //======GetFeatureVariable Notification TESTS======//
@@ -3169,6 +3190,7 @@ public class OptimizelyTest {
             "Feature \"" + validFeatureKey +
                 "\" is enabled for user \"" + genericUserId + "\"? false"
         );
+        eventHandler.expectImpression(null, null, genericUserId);
 
         verify(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
@@ -3215,6 +3237,7 @@ public class OptimizelyTest {
             "Feature \"" + validFeatureKey +
                 "\" is enabled for user \"" + genericUserId + "\"? true"
         );
+        eventHandler.expectImpression("3421010877", "variationId", genericUserId);
 
         verify(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
@@ -3288,6 +3311,7 @@ public class OptimizelyTest {
         );
 
         assertTrue(optimizely.isFeatureEnabled(validFeatureKey, genericUserId));
+        eventHandler.expectImpression("3421010877", "variationId", genericUserId);
 
     }
 
@@ -3317,6 +3341,7 @@ public class OptimizelyTest {
         );
 
         assertFalse(spyOptimizely.isFeatureEnabled(FEATURE_MULTI_VARIATE_FEATURE_KEY, genericUserId));
+        eventHandler.expectImpression("3421010877", "variationId", genericUserId);
 
     }
 
@@ -3415,6 +3440,13 @@ public class OptimizelyTest {
         List<String> featureFlags = optimizely.getEnabledFeatures(genericUserId, Collections.emptyMap());
         assertFalse(featureFlags.isEmpty());
 
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression("3794675122", "589640735", genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression("1785077004", "1566407342", genericUserId);
+        eventHandler.expectImpression("828245624", "3137445031", genericUserId);
+        eventHandler.expectImpression("828245624", "3137445031", genericUserId);
         eventHandler.expectImpression("1786133852", "1619235542", genericUserId);
     }
 
@@ -3432,6 +3464,13 @@ public class OptimizelyTest {
         List<String> featureFlags = optimizely.getEnabledFeatures("", Collections.emptyMap());
         assertFalse(featureFlags.isEmpty());
 
+        eventHandler.expectImpression(null, null, "");
+        eventHandler.expectImpression(null, null, "");
+        eventHandler.expectImpression("3794675122", "589640735", "");
+        eventHandler.expectImpression(null, null, "");
+        eventHandler.expectImpression("1785077004", "1566407342", "");
+        eventHandler.expectImpression("828245624", "3137445031", "");
+        eventHandler.expectImpression("828245624", "3137445031", "");
         eventHandler.expectImpression("4138322202", "1394671166", "");
     }
 
@@ -3480,6 +3519,15 @@ public class OptimizelyTest {
         List<String> featureFlags = optimizely.getEnabledFeatures(genericUserId,
             Collections.<String, String>emptyMap());
         assertTrue(featureFlags.isEmpty());
+
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
+        eventHandler.expectImpression(null, null, genericUserId);
     }
 
     /**

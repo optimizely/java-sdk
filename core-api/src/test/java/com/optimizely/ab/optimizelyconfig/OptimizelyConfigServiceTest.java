@@ -149,6 +149,7 @@ public class OptimizelyConfigServiceTest {
             "2360254204",
             true,
             true,
+            true,
             "3918735994",
             "1480511547",
             "4",
