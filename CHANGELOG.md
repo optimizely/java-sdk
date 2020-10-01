@@ -1,5 +1,24 @@
 # Optimizely Java X SDK Changelog
 
+## [3.6.0]
+September 30th, 2020
+
+### New Features
+- Add support for version audience condition which follows the semantic version (http://semver.org)[#386](https://github.com/optimizely/java-sdk/pull/386).
+
+- Add support for datafile accessor [#392](https://github.com/optimizely/java-sdk/pull/392).
+
+- Audience logging refactor (move from info to debug) [#380](https://github.com/optimizely/java-sdk/pull/380).
+
+- Added SetDatafileAccessToken method in OptimizelyFactory [#384](https://github.com/optimizely/java-sdk/pull/384).
+
+- Add MatchRegistry for custom match implementations. [#390] (https://github.com/optimizely/java-sdk/pull/390).
+
+### Fixes:
+- logging issue in quick-start application [#402] (https://github.com/optimizely/java-sdk/pull/402).
+
+- Update libraries to latest to avoid vulnerability issues [#397](https://github.com/optimizely/java-sdk/pull/397).
+
 ## [3.5.0]
 July 7th, 2020
 
