@@ -39,7 +39,7 @@ public class UserEventFactory {
                                                         @Nonnull String flagKey,
                                                         @Nonnull String flagType) {
 
-        if ((FeatureDecision.DecisionSource.ROLLOUT.equals(flagType)  || variation == null) && !projectConfig.getSendFlagDecisions())
+        if ((FeatureDecision.DecisionSource.ROLLOUT.toString().equals(flagType)  || variation == null) && !projectConfig.getSendFlagDecisions())
         {
             return null;
         }
