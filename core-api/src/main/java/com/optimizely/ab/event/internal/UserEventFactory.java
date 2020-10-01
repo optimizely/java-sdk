@@ -25,6 +25,7 @@ import com.optimizely.ab.internal.EventTagUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,8 +33,8 @@ public class UserEventFactory {
     private static final Logger logger = LoggerFactory.getLogger(UserEventFactory.class);
 
     public static ImpressionEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
-                                                        @Nonnull Experiment activatedExperiment,
-                                                        @Nonnull Variation variation,
+                                                        @Nullable Experiment activatedExperiment,
+                                                        @Nullable Variation variation,
                                                         @Nonnull String userId,
                                                         @Nonnull Map<String, ?> attributes,
                                                         @Nonnull String flagKey,

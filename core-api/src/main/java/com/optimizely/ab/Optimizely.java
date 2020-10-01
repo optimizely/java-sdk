@@ -221,6 +221,17 @@ public class Optimizely implements AutoCloseable {
         return variation;
     }
 
+    /**
+     * Creates and sends impression event.
+     *
+     * @param projectConfig      the current projectConfig
+     * @param experiment         the experiment user bucketed into and dispatch an impression event
+     * @param userId             the ID of the user
+     * @param filteredAttributes the attributes of the user
+     * @param variation          the variation that was returned from activate.
+     * @param flagKey            It can either be experiment key in case if flagType is experiment or it's feature key in case flagType is feature-test or rollout
+     * @param flagType           It can either be experiment in case impression event is sent from activate or it's feature-test or rollout
+     */
     private void sendImpression(@Nonnull ProjectConfig projectConfig,
                                 @Nonnull Experiment experiment,
                                 @Nonnull String userId,
