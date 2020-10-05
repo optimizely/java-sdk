@@ -35,6 +35,7 @@ import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.notification.*;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
+import com.optimizely.ab.optimizelyusercontext.OptimizelyUserContext;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Before;
 import org.junit.Rule;
@@ -4577,6 +4578,49 @@ public class OptimizelyTest {
     public void getOptimizelyConfigValidDatafile() {
         Optimizely optimizely = optimizelyBuilder.build();
         assertEquals(optimizely.getOptimizelyConfig().getDatafile(), validDatafile);
+    }
+
+    // OptimizelyUserContext
+
+    @Test
+    public void createUserContext_withAttributes() {
+        String userId = "testUser1";
+        Map<String, Object> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        Optimizely optimizely = optimizelyBuilder.build();
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
+
+        assertEquals(user.getOptimizely(), optimizely);
+        assertEquals(user.getUserId(), userId);
+        assertEquals(user.getAttributes(), attributes);
+    }
+
+    @Test
+    public void createUserContext_noAttributes() {
+        String userId = "testUser1";
+
+        Optimizely optimizely = optimizelyBuilder.build();
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+
+        assertEquals(user.getOptimizely(), optimizely);
+        assertEquals(user.getUserId(), userId);
+        assertTrue(user.getAttributes().isEmpty());
+    }
+
+    @Test
+    public void createUserContext_multiple() {
+        String userId1 = "testUser1";
+        String userId2 = "testUser1";
+        Map<String, Object> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        Optimizely optimizely = optimizelyBuilder.build();
+        OptimizelyUserContext user1 = optimizely.createUserContext(userId1, attributes);
+        OptimizelyUserContext user2 = optimizely.createUserContext(userId2);
+
+        assertEquals(user1.getUserId(), userId1);
+        assertEquals(user1.getAttributes(), attributes);
+        assertEquals(user2.getUserId(), userId2);
+        assertTrue(user2.getAttributes().isEmpty());
     }
 
 }

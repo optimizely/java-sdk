@@ -35,6 +35,8 @@ import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
+import com.optimizely.ab.optimizelyusercontext.OptimizelyDecideOption;
+import com.optimizely.ab.optimizelyusercontext.OptimizelyUserContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,6 +87,8 @@ public class Optimizely implements AutoCloseable {
     final EventProcessor eventProcessor;
     @VisibleForTesting
     final ErrorHandler errorHandler;
+    @VisibleForTesting
+    final OptimizelyDecideOption[] defaultDecideOptions;
 
     private final ProjectConfigManager projectConfigManager;
 
@@ -104,7 +108,8 @@ public class Optimizely implements AutoCloseable {
                        @Nullable UserProfileService userProfileService,
                        @Nonnull ProjectConfigManager projectConfigManager,
                        @Nullable OptimizelyConfigManager optimizelyConfigManager,
-                       @Nonnull NotificationCenter notificationCenter
+                       @Nonnull NotificationCenter notificationCenter,
+                       @Nonnull OptimizelyDecideOption[] defaultDecideOptions
     ) {
         this.eventHandler = eventHandler;
         this.eventProcessor = eventProcessor;
@@ -114,6 +119,7 @@ public class Optimizely implements AutoCloseable {
         this.projectConfigManager = projectConfigManager;
         this.optimizelyConfigManager = optimizelyConfigManager;
         this.notificationCenter = notificationCenter;
+        this.defaultDecideOptions = defaultDecideOptions;
     }
 
     /**
@@ -1087,6 +1093,29 @@ public class Optimizely implements AutoCloseable {
     }
 
     /**
+     * Set a context of the user for which decision APIs will be called.
+     *
+     * - This API can be called after SDK initialization is completed (otherwise the __sdkNotReady__ error will be returned).
+     * - Only one user outstanding. The user-context can be changed any time by calling the same method with a different user-context value.
+     * - The SDK will copy the parameter value to create an internal user-context data atomically, so any further change in its caller copy after the API call is not reflected into the SDK state.
+     * - Once this API is called, the following other API calls can be called without a user-context parameter to use the same user-context.
+     * - Each Decide API call can contain an optional user-context parameter when the call targets a different user-context. This optional user-context parameter value will be used once only, instead of replacing the saved user-context. This call-based context control can be used to support multiple users at the same time.
+     * - If a user-context has not been set yet and decide APIs are called without a user-context parameter, SDK will return an error decision (__userNotSet__).
+     *
+     * @param userId The user ID to be used for bucketing.
+     * @param attributes: A map of attribute names to current user attribute values.
+     * @return An OptimizelyUserContext associated with this OptimizelyClient.
+      */
+    public OptimizelyUserContext createUserContext(@Nonnull String userId,
+                                                   @Nonnull Map<String, ?> attributes) {
+        return new OptimizelyUserContext(this, userId, attributes);
+    }
+
+    public OptimizelyUserContext createUserContext(@Nonnull String userId) {
+        return new OptimizelyUserContext(this, userId);
+    }
+
+    /**
      * Helper method which makes separate copy of attributesMap variable and returns it
      *
      * @param attributes map to copy
@@ -1190,6 +1219,7 @@ public class Optimizely implements AutoCloseable {
         private OptimizelyConfigManager optimizelyConfigManager;
         private UserProfileService userProfileService;
         private NotificationCenter notificationCenter;
+        private OptimizelyDecideOption[] defaultDecideOptions;
 
         // For backwards compatibility
         private AtomicProjectConfigManager fallbackConfigManager = new AtomicProjectConfigManager();
@@ -1277,6 +1307,11 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
+        protected Builder withDefaultDecideOptions(OptimizelyDecideOption[] options) {
+            this.defaultDecideOptions = options;
+            return this;
+        }
+
         public Optimizely build() {
 
             if (errorHandler == null) {
@@ -1329,7 +1364,11 @@ public class Optimizely implements AutoCloseable {
                 eventProcessor = new ForwardingEventProcessor(eventHandler, notificationCenter);
             }
 
-            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, optimizelyConfigManager, notificationCenter);
+            if (defaultDecideOptions == null) {
+                defaultDecideOptions = new OptimizelyDecideOption[0];
+            }
+
+            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, optimizelyConfigManager, notificationCenter, defaultDecideOptions);
         }
     }
 }
