@@ -23,6 +23,8 @@ import com.optimizely.ab.config.Group;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.TrafficAllocation;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.optimizelyusercontext.DecisionReasons;
+import com.optimizely.ab.optimizelyusercontext.OptimizelyDecideOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +73,9 @@ public class Bucketer {
 
     private Experiment bucketToExperiment(@Nonnull Group group,
                                           @Nonnull String bucketingId,
-                                          @Nonnull ProjectConfig projectConfig) {
+                                          @Nonnull ProjectConfig projectConfig,
+                                          @Nullable List<OptimizelyDecideOption> options,
+                                          @Nullable DecisionReasons reasons) {
         // "salt" the bucket id using the group id
         String bucketKey = bucketingId + group.getId();
 
@@ -91,7 +95,9 @@ public class Bucketer {
     }
 
     private Variation bucketToVariation(@Nonnull Experiment experiment,
-                                        @Nonnull String bucketingId) {
+                                        @Nonnull String bucketingId,
+                                        @Nullable List<OptimizelyDecideOption> options,
+                                        @Nullable DecisionReasons reasons) {
         // "salt" the bucket id using the experiment id
         String experimentId = experiment.getId();
         String experimentKey = experiment.getKey();
@@ -107,14 +113,14 @@ public class Bucketer {
         if (bucketedVariationId != null) {
             Variation bucketedVariation = experiment.getVariationIdToVariationMap().get(bucketedVariationId);
             String variationKey = bucketedVariation.getKey();
-            logger.info("User with bucketingId \"{}\" is in variation \"{}\" of experiment \"{}\".", bucketingId, variationKey,
+            DecisionService.logInfo(logger, reasons, "User with bucketingId \"%s\" is in variation \"%s\" of experiment \"%s\".", bucketingId, variationKey,
                 experimentKey);
 
             return bucketedVariation;
         }
 
         // user was not bucketed to a variation
-        logger.info("User with bucketingId \"{}\" is not in any variation of experiment \"{}\".", bucketingId, experimentKey);
+        DecisionService.logInfo(logger, reasons, "User with bucketingId \"%s\" is not in any variation of experiment \"%s\".", bucketingId, experimentKey);
         return null;
     }
 
@@ -123,12 +129,17 @@ public class Bucketer {
      *
      * @param experiment  The Experiment in which the user is to be bucketed.
      * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
+     * @param projectConfig      The current projectConfig
+     * @param options            An array of decision options
+     * @param reasons            Decision log messages
      * @return Variation the user is bucketed into or null.
      */
     @Nullable
     public Variation bucket(@Nonnull Experiment experiment,
                             @Nonnull String bucketingId,
-                            @Nonnull ProjectConfig projectConfig) {
+                            @Nonnull ProjectConfig projectConfig,
+                            @Nullable List<OptimizelyDecideOption> options,
+                            @Nullable DecisionReasons reasons) {
         // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group
@@ -136,9 +147,9 @@ public class Bucketer {
             Group experimentGroup = projectConfig.getGroupIdMapping().get(groupId);
             // bucket to an experiment only if group entities are to be mutually exclusive
             if (experimentGroup.getPolicy().equals(Group.RANDOM_POLICY)) {
-                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId, projectConfig);
+                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId, projectConfig, options, reasons);
                 if (bucketedExperiment == null) {
-                    logger.info("User with bucketingId \"{}\" is not in any experiment of group {}.", bucketingId, experimentGroup.getId());
+                    DecisionService.logInfo(logger, reasons, "User with bucketingId \"%s\" is not in any experiment of group %s.", bucketingId, experimentGroup.getId());
                     return null;
                 } else {
 
@@ -146,19 +157,33 @@ public class Bucketer {
                 // if the experiment a user is bucketed in within a group isn't the same as the experiment provided,
                 // don't perform further bucketing within the experiment
                 if (!bucketedExperiment.getId().equals(experiment.getId())) {
-                    logger.info("User with bucketingId \"{}\" is not in experiment \"{}\" of group {}.", bucketingId, experiment.getKey(),
+                    DecisionService.logInfo(logger, reasons, "User with bucketingId \"%s\" is not in experiment \"%s\" of group %s.", bucketingId, experiment.getKey(),
                         experimentGroup.getId());
                     return null;
                 }
 
-                logger.info("User with bucketingId \"{}\" is in experiment \"{}\" of group {}.", bucketingId, experiment.getKey(),
+                DecisionService.logInfo(logger, reasons, "User with bucketingId \"%s\" is in experiment \"%s\" of group %s.", bucketingId, experiment.getKey(),
                     experimentGroup.getId());
             }
         }
 
-        return bucketToVariation(experiment, bucketingId);
+        return bucketToVariation(experiment, bucketingId, options, reasons);
     }
 
+    /**
+     * Assign a {@link Variation} of an {@link Experiment} to a user based on hashed value from murmurhash3.
+     *
+     * @param experiment  The Experiment in which the user is to be bucketed.
+     * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
+     * @param projectConfig      The current projectConfig
+     * @return Variation the user is bucketed into or null.
+     */
+    @Nullable
+    public Variation bucket(@Nonnull Experiment experiment,
+                            @Nonnull String bucketingId,
+                            @Nonnull ProjectConfig projectConfig) {
+        return bucket(experiment, bucketingId, projectConfig, null, null);
+    }
 
     //======== Helper methods ========//
 

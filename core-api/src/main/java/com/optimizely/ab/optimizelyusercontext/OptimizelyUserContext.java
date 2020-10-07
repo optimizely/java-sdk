@@ -99,7 +99,9 @@ public class OptimizelyUserContext {
             flag,
             userId,
             copiedAttributes,
-            projectConfig);
+            projectConfig,
+            allOptions,
+            decisionReasons);
 
         FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
         SourceInfo sourceInfo = new RolloutSourceInfo();
