@@ -55,7 +55,8 @@ public class NotificationCenter {
         FEATURE("feature"),
         FEATURE_TEST("feature-test"),
         FEATURE_VARIABLE("feature-variable"),
-        ALL_FEATURE_VARIABLES("all-feature-variables");
+        ALL_FEATURE_VARIABLES("all-feature-variables"),
+        FLAG("flag");
 
         private final String key;
 

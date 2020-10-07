@@ -24,6 +24,7 @@ import com.optimizely.ab.config.Variation;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -350,4 +351,101 @@ public final class DecisionNotification {
                 decisionInfo);
         }
     }
+
+    public static FlagDecisionNotificationBuilder newFlagDecisionNotificationBuilder() {
+        return new FlagDecisionNotificationBuilder();
+    }
+
+    public static class FlagDecisionNotificationBuilder {
+        public final static String FLAG_KEY = "flagKey";
+        public final static String ENABLED = "enabled";
+        public final static String VARIABLES = "variables";
+        public final static String VARIATION_KEY = "variationKey";
+        public final static String RULE_KEY = "ruleKey";
+        public final static String REASONS = "reasons";
+        public final static String DECISION_EVENT_DISPATCHED = "decisionEventDispatched";
+
+        private String flagKey;
+        private Boolean enabled;
+        private Object variables;
+        private String userId;
+        private Map<String, ?> attributes;
+        private String variationKey;
+        private String ruleKey;
+        private List<String> reasons;
+        private Boolean decisionEventDispatched;
+
+        private Map<String, Object> decisionInfo;
+
+        public FlagDecisionNotificationBuilder withUserId(String userId) {
+            this.userId = userId;
+            return this;
+        }
+
+        public FlagDecisionNotificationBuilder withAttributes(Map<String, ?> attributes) {
+            this.attributes = attributes;
+            return this;
+        }
+
+        public FlagDecisionNotificationBuilder withFlagKey(String flagKey) {
+            this.flagKey = flagKey;
+            return this;
+        }
+
+        public FlagDecisionNotificationBuilder withEnabled(Boolean enabled) {
+            this.enabled = enabled;
+            return this;
+        }
+
+        public FlagDecisionNotificationBuilder withVariables(Object variables) {
+            this.enabled = enabled;
+            return this;
+        }
+
+        public FlagDecisionNotificationBuilder withVariationKey(String key) {
+            this.variationKey = key;
+            return this;
+        }
+
+        public FlagDecisionNotificationBuilder withRuleKey(String key) {
+            this.ruleKey = key;
+            return this;
+        }
+
+        public FlagDecisionNotificationBuilder withReasons(List<String> reasons) {
+            this.reasons = reasons;
+            return this;
+        }
+
+        public FlagDecisionNotificationBuilder withDecisionEventDispatched(Boolean dispatched) {
+            this.decisionEventDispatched = dispatched;
+            return this;
+        }
+
+        public DecisionNotification build() {
+            if (flagKey == null) {
+                throw new OptimizelyRuntimeException("flagKey not set");
+            }
+
+            if (enabled == null) {
+                throw new OptimizelyRuntimeException("enabled not set");
+            }
+
+            decisionInfo = new HashMap<>();
+            decisionInfo.put(FLAG_KEY, flagKey);
+            decisionInfo.put(ENABLED, enabled);
+            decisionInfo.put(VARIABLES, variables);
+            decisionInfo.put(VARIATION_KEY, variationKey);
+            decisionInfo.put(RULE_KEY, ruleKey);
+            decisionInfo.put(REASONS, reasons);
+            decisionInfo.put(DECISION_EVENT_DISPATCHED, decisionEventDispatched);
+
+            return new DecisionNotification(
+                NotificationCenter.DecisionNotificationType.FLAG.toString(),
+                userId,
+                attributes,
+                decisionInfo);
+        }
+    }
+
 }

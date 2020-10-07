@@ -4,6 +4,8 @@ import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.List;
 
 public class OptimizelyDecision {
     @Nullable
@@ -24,7 +26,7 @@ public class OptimizelyDecision {
     private final OptimizelyUserContext userContext;
 
     @Nonnull
-    private String[] reasons;
+    private List<String> reasons;
 
 
     public OptimizelyDecision(@Nullable String variationKey,
@@ -33,7 +35,7 @@ public class OptimizelyDecision {
                               @Nullable String ruleKey,
                               @Nonnull String flagKey,
                               @Nullable OptimizelyUserContext userContext,
-                              @Nonnull String[] reasons) {
+                              @Nonnull List<String> reasons) {
         this.variationKey = variationKey;
         this.enabled = enabled;
         this.variables = variables;
@@ -73,7 +75,7 @@ public class OptimizelyDecision {
     }
 
     @Nonnull
-    public String[] getReasons() {
+    public List<String> getReasons() {
         return reasons;
     }
 
@@ -86,7 +88,7 @@ public class OptimizelyDecision {
             null,
             key,
             user,
-            new String[]{error});
+            Arrays.asList(error));
     }
 
     public boolean hasFailed() {

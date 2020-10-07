@@ -78,8 +78,7 @@ public class Optimizely implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
 
-    @VisibleForTesting
-    final DecisionService decisionService;
+    public final DecisionService decisionService;
     @VisibleForTesting
     @Deprecated
     final EventHandler eventHandler;
@@ -87,8 +86,8 @@ public class Optimizely implements AutoCloseable {
     final EventProcessor eventProcessor;
     @VisibleForTesting
     final ErrorHandler errorHandler;
-    @VisibleForTesting
-    final OptimizelyDecideOption[] defaultDecideOptions;
+
+    public final OptimizelyDecideOption[] defaultDecideOptions;
 
     private final ProjectConfigManager projectConfigManager;
 
@@ -227,7 +226,7 @@ public class Optimizely implements AutoCloseable {
         return variation;
     }
 
-    private void sendImpression(@Nonnull ProjectConfig projectConfig,
+    public void sendImpression(@Nonnull ProjectConfig projectConfig,
                                 @Nonnull Experiment experiment,
                                 @Nonnull String userId,
                                 @Nonnull Map<String, ?> filteredAttributes,
@@ -742,8 +741,7 @@ public class Optimizely implements AutoCloseable {
     }
 
     // Helper method which takes type and variable value and convert it to object to use in Listener DecisionInfo object variable value
-    @VisibleForTesting
-    Object convertStringToType(String variableValue, String type) {
+    public Object convertStringToType(String variableValue, String type) {
         if (variableValue != null) {
             switch (type) {
                 case FeatureVariable.DOUBLE_TYPE:
