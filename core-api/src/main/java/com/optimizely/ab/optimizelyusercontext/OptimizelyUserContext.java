@@ -196,7 +196,26 @@ public class OptimizelyUserContext {
      */
     public Map<String, OptimizelyDecision> decideAll(@Nonnull String[] keys,
                                                      @Nonnull OptimizelyDecideOption[] options) {
-        return new HashMap<>();
+        Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
+
+        ProjectConfig projectConfig = optimizely.getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
+            return decisionMap;
+        }
+
+        if (keys.length == 0) return decisionMap;
+
+        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
+
+        for (String key : keys) {
+            OptimizelyDecision decision = decide(key, options);
+            if (!allOptions.contains(OptimizelyDecideOption.ENABLED_FLAGS_ONLY) || decision.getEnabled()) {
+                decisionMap.put(key, decision);
+            }
+        }
+
+        return decisionMap;
     }
 
     /**
@@ -216,7 +235,18 @@ public class OptimizelyUserContext {
      * @return All decision results mapped by flag keys.
      */
     public Map<String, OptimizelyDecision> decideAll(@Nonnull OptimizelyDecideOption[] options) {
-        String[] allFlagKeys = {};
+        Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
+
+        ProjectConfig projectConfig = optimizely.getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
+            return decisionMap;
+        }
+
+        List<FeatureFlag> allFlags = projectConfig.getFeatureFlags();
+        String[] allFlagKeys = new String[allFlags.size()];
+        for (int i = 0; i < allFlags.size(); i++) allFlagKeys[i] = allFlags.get(i).getKey();
+
         return decideAll(allFlagKeys, options);
     }
 
