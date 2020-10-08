@@ -38,7 +38,7 @@ public class OptimizelyDecision {
     @Nonnull
     private final String flagKey;
 
-    @Nullable
+    @Nonnull
     private final OptimizelyUserContext userContext;
 
     @Nonnull
