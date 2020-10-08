@@ -398,7 +398,7 @@ public final class DecisionNotification {
         }
 
         public FlagDecisionNotificationBuilder withVariables(Object variables) {
-            this.enabled = enabled;
+            this.variables = variables;
             return this;
         }
 

@@ -138,7 +138,7 @@ public final class ExperimentUtils {
 
         Boolean result = implicitOr.evaluate(projectConfig, attributes);
 
-        DecisionService.logInfo(logger, reasons, "Audiences for %s \"%s\" collectively evaluated to %b.", loggingEntityType, loggingKey, result);
+        DecisionService.logInfo(logger, reasons, "Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
 
         return result;
     }
@@ -166,7 +166,7 @@ public final class ExperimentUtils {
 
         try {
             Boolean result = conditions.evaluate(projectConfig, attributes);
-            DecisionService.logInfo(logger, reasons,"Audiences for %s \"%s\" collectively evaluated to %b.", loggingEntityType, loggingKey, result);
+            DecisionService.logInfo(logger, reasons,"Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
             return result;
         } catch (Exception e) {
             DecisionService.logError(logger, reasons,"Condition invalid: %s", e.getMessage());

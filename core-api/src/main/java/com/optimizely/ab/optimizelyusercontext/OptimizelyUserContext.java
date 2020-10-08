@@ -21,9 +21,6 @@ import com.optimizely.ab.UnknownEventTypeException;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.notification.DecisionNotification;
-import com.optimizely.ab.notification.FeatureTestSourceInfo;
-import com.optimizely.ab.notification.RolloutSourceInfo;
-import com.optimizely.ab.notification.SourceInfo;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +43,6 @@ public class OptimizelyUserContext {
     public final static String SDK_NOT_READY = "Optimizely SDK not configured properly yet";
     public final static String FLAG_KEY_INVALID = "Flag key \"%s\" is not in datafile.";
     public final static String VARIABLE_VALUE_INVALID = "Variable value for key \"%s\" is invalid or wrong type.";
-    public final static String OPTIMIZELY_JSON_ERROR = "Invalid variables for OptimizelyJSON.";
-
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
                                  @Nonnull String userId,
@@ -119,9 +114,6 @@ public class OptimizelyUserContext {
             allOptions,
             decisionReasons);
 
-        FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
-        SourceInfo sourceInfo = new RolloutSourceInfo();
-
         if (flagDecision.variation != null) {
             if (flagDecision.decisionSource.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
                 if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
@@ -133,9 +125,6 @@ public class OptimizelyUserContext {
                         flagDecision.variation);
                     sentEvent = true;
                 }
-
-                decisionSource = flagDecision.decisionSource;
-                sourceInfo = new FeatureTestSourceInfo(flagDecision.experiment.getKey(), flagDecision.variation.getKey());
             } else {
                 String message = String.format("The user \"%s\" is not included in an experiment for flag \"%s\".", userId, key);
                 logger.info(message);
@@ -156,9 +145,6 @@ public class OptimizelyUserContext {
         }
 
         OptimizelyJSON optimizelyJSON = new OptimizelyJSON(variableMap);
-        if (optimizelyJSON == null) {
-            decisionReasons.addError(OPTIMIZELY_JSON_ERROR);
-        }
 
         List<String> reasonsToReport = decisionReasons.toReport(allOptions);
         String variationKey = flagDecision.variation != null ? flagDecision.variation.getKey() : null;
@@ -205,7 +191,7 @@ public class OptimizelyUserContext {
      * <ul>
      * <li>If the SDK finds an error for a key, the response will include a decision for the key showing <b>reasons</b> for the error.
      * <li>The SDK will always return key-mapped decisions. When it can not process requests, it’ll return an empty map after logging the errors.
-     * <ul>
+     * </ul>
      * @param keys An array of flag keys for which decisions will be made.
      * @param options An array of options for decision-making.
      * @return All decision results mapped by flag keys.

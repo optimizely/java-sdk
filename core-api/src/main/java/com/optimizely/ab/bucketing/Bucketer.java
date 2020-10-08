@@ -18,11 +18,7 @@ package com.optimizely.ab.bucketing;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.bucketing.internal.MurmurHash3;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.Group;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.TrafficAllocation;
-import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.optimizelyusercontext.DecisionReasons;
 import com.optimizely.ab.optimizelyusercontext.OptimizelyDecideOption;
 import org.slf4j.Logger;
@@ -140,6 +136,36 @@ public class Bucketer {
                             @Nonnull ProjectConfig projectConfig,
                             @Nullable List<OptimizelyDecideOption> options,
                             @Nullable DecisionReasons reasons) {
+
+        // support existing custom Bucketers
+        if (isMethodOverriden("bucket", Experiment.class, String.class, ProjectConfig.class)) {
+            return bucket(experiment, bucketingId, projectConfig);
+        }
+
+        return bucketCore(experiment, bucketingId, projectConfig, options, reasons);
+    }
+
+    /**
+     * Assign a {@link Variation} of an {@link Experiment} to a user based on hashed value from murmurhash3.
+     *
+     * @param experiment  The Experiment in which the user is to be bucketed.
+     * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
+     * @param projectConfig      The current projectConfig
+     * @return Variation the user is bucketed into or null.
+     */
+    @Nullable
+    public Variation bucket(@Nonnull Experiment experiment,
+                            @Nonnull String bucketingId,
+                            @Nonnull ProjectConfig projectConfig) {
+        return bucketCore(experiment, bucketingId, projectConfig, null, null);
+    }
+
+    @Nullable
+    public Variation bucketCore(@Nonnull Experiment experiment,
+                                @Nonnull String bucketingId,
+                                @Nonnull ProjectConfig projectConfig,
+                                @Nullable List<OptimizelyDecideOption> options,
+                                @Nullable DecisionReasons reasons) {
         // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group
@@ -170,21 +196,6 @@ public class Bucketer {
         return bucketToVariation(experiment, bucketingId, options, reasons);
     }
 
-    /**
-     * Assign a {@link Variation} of an {@link Experiment} to a user based on hashed value from murmurhash3.
-     *
-     * @param experiment  The Experiment in which the user is to be bucketed.
-     * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
-     * @param projectConfig      The current projectConfig
-     * @return Variation the user is bucketed into or null.
-     */
-    @Nullable
-    public Variation bucket(@Nonnull Experiment experiment,
-                            @Nonnull String bucketingId,
-                            @Nonnull ProjectConfig projectConfig) {
-        return bucket(experiment, bucketingId, projectConfig, null, null);
-    }
-
     //======== Helper methods ========//
 
     /**
@@ -200,5 +211,12 @@ public class Bucketer {
         return (int) Math.floor(MAX_TRAFFIC_VALUE * ratio);
     }
 
+    Boolean isMethodOverriden(String methodName, Class<?>... params) {
+        try {
+            return getClass() != Bucketer.class && getClass().getDeclaredMethod(methodName, params) != null;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
+    }
 
 }

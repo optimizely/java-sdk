@@ -378,7 +378,7 @@ public class OptimizelyTest {
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Map<String, String> testUserAttributes = Collections.singletonMap("browser_type", "chromey");
 
-        when(mockBucketer.bucket(activatedExperiment, testBucketingId, validProjectConfig)).thenReturn(null);
+        when(mockBucketer.bucket(activatedExperiment, testBucketingId, validProjectConfig, null, null)).thenReturn(null);
 
         logbackVerifier.expectMessage(Level.INFO, "Not activating user \"userId\" for experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -937,7 +937,7 @@ public class OptimizelyTest {
         assertNull(expectedVariation);
 
         // make sure we didn't even attempt to bucket the user
-        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), anyObject(), anyObject());
     }
 
     //======== track tests ========//
@@ -1238,7 +1238,7 @@ public class OptimizelyTest {
         optimizely.track("event_with_launched_and_running_experiments", genericUserId);
 
         // make sure we didn't even attempt to bucket the user or fire any conversion events
-        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), anyObject(), anyObject());
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
     }
 
@@ -1255,7 +1255,7 @@ public class OptimizelyTest {
 
         Optimizely optimizely = optimizelyBuilder.withBucketing(mockBucketer).build();
 
-        when(mockBucketer.bucket(activatedExperiment, testUserId, validProjectConfig)).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(activatedExperiment, testUserId, validProjectConfig, null, null)).thenReturn(bucketedVariation);
 
         Map<String, String> testUserAttributes = new HashMap<>();
         testUserAttributes.put("browser_type", "chrome");
@@ -1265,7 +1265,7 @@ public class OptimizelyTest {
             testUserAttributes);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(activatedExperiment, testUserId, validProjectConfig);
+        verify(mockBucketer).bucket(activatedExperiment, testUserId, validProjectConfig, null, null);
         assertThat(actualVariation, is(bucketedVariation));
 
         // verify that we didn't attempt to dispatch an event
@@ -1286,13 +1286,13 @@ public class OptimizelyTest {
             .withConfig(noAudienceProjectConfig)
             .build();
 
-        when(mockBucketer.bucket(activatedExperiment, testUserId, noAudienceProjectConfig)).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(activatedExperiment, testUserId, noAudienceProjectConfig, null, null)).thenReturn(bucketedVariation);
 
         // activate the experiment
         Variation actualVariation = optimizely.getVariation(activatedExperiment.getKey(), testUserId);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(activatedExperiment, testUserId, noAudienceProjectConfig);
+        verify(mockBucketer).bucket(activatedExperiment, testUserId, noAudienceProjectConfig, null, null);
         assertThat(actualVariation, is(bucketedVariation));
 
         // verify that we didn't attempt to dispatch an event
@@ -1347,7 +1347,7 @@ public class OptimizelyTest {
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = experiment.getVariations().get(0);
 
-        when(mockBucketer.bucket(experiment, testUserId, validProjectConfig)).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(experiment, testUserId, validProjectConfig, null, null)).thenReturn(bucketedVariation);
 
         Optimizely optimizely = optimizelyBuilder.withBucketing(mockBucketer).build();
 
@@ -1356,7 +1356,7 @@ public class OptimizelyTest {
 
         Variation actualVariation = optimizely.getVariation(experiment.getKey(), testUserId, testUserAttributes);
 
-        verify(mockBucketer).bucket(experiment, testUserId, validProjectConfig);
+        verify(mockBucketer).bucket(experiment, testUserId, validProjectConfig, null, null);
         assertThat(actualVariation, is(bucketedVariation));
     }
 
@@ -1397,7 +1397,7 @@ public class OptimizelyTest {
         Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = experiment.getVariations().get(0);
 
-        when(mockBucketer.bucket(experiment, testUserId, noAudienceProjectConfig)).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(experiment, testUserId, noAudienceProjectConfig, null, null)).thenReturn(bucketedVariation);
 
         Optimizely optimizely = optimizelyBuilder
             .withConfig(noAudienceProjectConfig)
@@ -1406,7 +1406,7 @@ public class OptimizelyTest {
 
         Variation actualVariation = optimizely.getVariation(experiment.getKey(), testUserId);
 
-        verify(mockBucketer).bucket(experiment, testUserId, noAudienceProjectConfig);
+        verify(mockBucketer).bucket(experiment, testUserId, noAudienceProjectConfig, null, null);
         assertThat(actualVariation, is(bucketedVariation));
     }
 
@@ -1464,7 +1464,7 @@ public class OptimizelyTest {
             attributes.put("browser_type", "chrome");
         }
 
-        when(mockBucketer.bucket(experiment, "user", validProjectConfig)).thenReturn(variation);
+        when(mockBucketer.bucket(experiment,"user", validProjectConfig, null, null)).thenReturn(variation);
 
         Optimizely optimizely = optimizelyBuilder.withBucketing(mockBucketer).build();
 
@@ -1522,7 +1522,7 @@ public class OptimizelyTest {
         assertNull(variation);
 
         // make sure we didn't even attempt to bucket the user
-        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), anyObject(), anyObject());
     }
 
     //======== Notification listeners ========//

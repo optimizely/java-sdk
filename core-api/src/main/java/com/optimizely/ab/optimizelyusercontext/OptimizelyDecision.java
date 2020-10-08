@@ -50,7 +50,7 @@ public class OptimizelyDecision {
                               @Nullable OptimizelyJSON variables,
                               @Nullable String ruleKey,
                               @Nonnull String flagKey,
-                              @Nullable OptimizelyUserContext userContext,
+                              @Nonnull OptimizelyUserContext userContext,
                               @Nonnull List<String> reasons) {
         this.variationKey = variationKey;
         this.enabled = enabled;
