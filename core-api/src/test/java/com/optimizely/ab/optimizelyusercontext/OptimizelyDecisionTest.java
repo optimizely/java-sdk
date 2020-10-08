@@ -1,8 +1,27 @@
+/**
+ *
+ *    Copyright 2020, Optimizely and contributors
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package com.optimizely.ab.optimizelyusercontext;
 
 import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -16,7 +35,7 @@ public class OptimizelyDecisionTest {
         String ruleKey = null;
         String flagKey = "flag1";
         OptimizelyUserContext userContext = new OptimizelyUserContext(Optimizely.builder().build(), "tester");
-        String[] reasons = new String[0];
+        List<String> reasons = new ArrayList<>();
 
         OptimizelyDecision decision = new OptimizelyDecision(
             variationKey,
@@ -51,8 +70,8 @@ public class OptimizelyDecisionTest {
         assertEquals(decision.getRuleKey(), null);
         assertEquals(decision.getFlagKey(), flagKey);
         assertEquals(decision.getUserContext(), userContext);
-        assertEquals(decision.getReasons().length, 1);
-        assertEquals(decision.getReasons()[0], error);
+        assertEquals(decision.getReasons().size(), 1);
+        assertEquals(decision.getReasons().get(0), error);
     }
 
 }

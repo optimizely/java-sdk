@@ -1,3 +1,19 @@
+/**
+ *
+ *    Copyright 2020, Optimizely and contributors
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package com.optimizely.ab.optimizelyusercontext;
 
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
@@ -13,7 +29,7 @@ public class OptimizelyDecision {
 
     private final boolean enabled;
 
-    @Nonnull
+    @Nullable
     private final OptimizelyJSON variables;
 
     @Nullable
@@ -31,7 +47,7 @@ public class OptimizelyDecision {
 
     public OptimizelyDecision(@Nullable String variationKey,
                               boolean enabled,
-                              @Nonnull OptimizelyJSON variables,
+                              @Nullable OptimizelyJSON variables,
                               @Nullable String ruleKey,
                               @Nonnull String flagKey,
                               @Nullable OptimizelyUserContext userContext,
@@ -81,8 +97,9 @@ public class OptimizelyDecision {
 
     public static OptimizelyDecision createErrorDecision(@Nonnull String key,
                                                          @Nonnull OptimizelyUserContext user,
-                                                         String error) {
-        return new OptimizelyDecision(null,
+                                                         @Nonnull String error) {
+        return new OptimizelyDecision(
+            null,
             false,
             null,
             null,
