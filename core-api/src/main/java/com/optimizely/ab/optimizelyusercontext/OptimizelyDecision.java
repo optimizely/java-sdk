@@ -112,4 +112,22 @@ public class OptimizelyDecision {
         return variationKey == null;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || getClass() != obj.getClass()) return false;
+        if (obj == this) return true;
+        OptimizelyDecision d = (OptimizelyDecision) obj;
+        return equals(variationKey, d.getVariationKey()) &&
+            equals(enabled, d.getEnabled()) &&
+            equals(variables.toMap(), d.getVariables().toMap()) &&
+            equals(ruleKey, d.getRuleKey()) &&
+            equals(flagKey, d.getFlagKey()) &&
+            equals(userContext, d.getUserContext()) &&
+            equals(reasons, d.getReasons());
+    }
+
+    private static boolean equals(Object a, Object b) {
+        return a == b || (a != null && a.equals(b));
+    }
+
 }

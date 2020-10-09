@@ -101,9 +101,10 @@ public class OptimizelyUserContext {
         }
 
         List<OptimizelyDecideOption> allOptions = getAllOptions(options);
-        DecisionReasons decisionReasons = new DecisionReasons();
         Boolean sentEvent = false;
         Boolean flagEnabled = false;
+        DecisionReasons decisionReasons = new DecisionReasons();
+        Boolean includeReasons = allOptions.contains(OptimizelyDecideOption.INCLUDE_REASONS);
 
         Map<String, ?> copiedAttributes = copyAttributes();
         FeatureDecision flagDecision = optimizely.decisionService.getVariationForFeature(
@@ -112,7 +113,7 @@ public class OptimizelyUserContext {
             copiedAttributes,
             projectConfig,
             allOptions,
-            decisionReasons);
+            includeReasons ? decisionReasons : null);
 
         if (flagDecision.variation != null) {
             if (flagDecision.decisionSource.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
@@ -141,7 +142,7 @@ public class OptimizelyUserContext {
                 flag,
                 flagDecision.variation,
                 flagEnabled,
-                decisionReasons);
+                includeReasons ? decisionReasons : null);
         }
 
         OptimizelyJSON optimizelyJSON = new OptimizelyJSON(variableMap);
@@ -328,6 +329,16 @@ public class OptimizelyUserContext {
         }
 
         return valuesMap;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || getClass() != obj.getClass()) return false;
+        if (obj == this) return true;
+        OptimizelyUserContext userContext = (OptimizelyUserContext) obj;
+        return userId.equals(userContext.getUserId()) &&
+            attributes.equals(userContext.getAttributes()) &&
+            optimizely.equals(userContext.getOptimizely());
     }
 
 }
