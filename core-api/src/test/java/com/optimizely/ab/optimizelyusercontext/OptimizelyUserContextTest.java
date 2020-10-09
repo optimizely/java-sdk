@@ -293,7 +293,6 @@ public class OptimizelyUserContextTest {
         String flagKey = "feature_1";
 
         Optimizely optimizely = new Optimizely.Builder().build();
-
         OptimizelyUserContext user = optimizely.createUserContext(userId);
         OptimizelyDecision decision = user.decide(flagKey);
 
@@ -304,39 +303,91 @@ public class OptimizelyUserContextTest {
         assertEquals(decision.getUserContext(), user);
 
         assertEquals(decision.getReasons().size(), 1);
-        assertEquals(decision.getReasons().get(1), OptimizelyUserContext.SDK_NOT_READY);
+        assertEquals(decision.getReasons().get(0), OptimizelyUserContext.SDK_NOT_READY);
     }
 
     @Test
     public void decide_invalidFeatureKey() {
+        String flagKey = "invalid_key";
 
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey);
+
+        assertNull(decision.getVariationKey());
+        assertFalse(decision.getEnabled());
+        assertEquals(decision.getReasons().size(), 1);
+        assertEquals(decision.getReasons().get(0), OptimizelyUserContext.getFlagKeyInvalidMessage(flagKey));
     }
 
     @Test
     public void decideAll_sdkNotReady() {
+        String[] flagKeys = {"feature_1"};
 
+        Optimizely optimizely = new Optimizely.Builder().build();
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        Map<String, OptimizelyDecision> decisions = user.decideAll(flagKeys);
+
+        assertEquals(decisions.size(), 0);
     }
 
     @Test
     public void decideAll_errorDecisionIncluded() {
+        String flagKey1 = "feature_2";
+        String flagKey2 = "invalid_key";
 
+        String[] flagKeys = {flagKey1, flagKey2};
+        OptimizelyJSON variablesExpected1 = optimizely.getAllFeatureVariables(flagKey1, userId);
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        Map<String, OptimizelyDecision> decisions = user.decideAll(flagKeys);
+
+        assertEquals(decisions.size(), 2);
+
+        assertEquals(
+            decisions.get(flagKey1),
+            new OptimizelyDecision(
+                "variation_with_traffic",
+                true,
+                variablesExpected1,
+                null,
+                flagKey1,
+                user,
+                Collections.emptyList()));
+        assertEquals(
+            decisions.get(flagKey2),
+            OptimizelyDecision.createErrorDecision(
+                flagKey2,
+                user,
+                OptimizelyUserContext.getFlagKeyInvalidMessage(flagKey2)));
     }
 
     // reasons (errors)
 
     @Test
     public void decideReasons_sdkNotReady() {
+        String flagKey = "feature_1";
 
+        Optimizely optimizely = new Optimizely.Builder().build();
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey);
+
+        assertEquals(decision.getReasons().size(), 1);
+        assertEquals(decision.getReasons().get(0), OptimizelyUserContext.SDK_NOT_READY);
     }
 
     @Test
     public void decideReasons_featureKeyInvalid() {
+        String flagKey = "invalid_key";
 
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey);
+
+        assertEquals(decision.getReasons().size(), 1);
+        assertEquals(decision.getReasons().get(0), OptimizelyUserContext.getFlagKeyInvalidMessage(flagKey));
     }
 
     @Test
     public void decideReasons_variableValueInvalid() {
-
     }
 
     // reasons (logs with includeReasons)

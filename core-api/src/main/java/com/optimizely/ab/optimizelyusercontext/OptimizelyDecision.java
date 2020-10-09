@@ -119,7 +119,7 @@ public class OptimizelyDecision {
         OptimizelyDecision d = (OptimizelyDecision) obj;
         return equals(variationKey, d.getVariationKey()) &&
             equals(enabled, d.getEnabled()) &&
-            equals(variables.toMap(), d.getVariables().toMap()) &&
+            equals(variables, d.getVariables()) &&
             equals(ruleKey, d.getRuleKey()) &&
             equals(flagKey, d.getFlagKey()) &&
             equals(userContext, d.getUserContext()) &&
@@ -129,5 +129,18 @@ public class OptimizelyDecision {
     private static boolean equals(Object a, Object b) {
         return a == b || (a != null && a.equals(b));
     }
+
+    @Override
+    public int hashCode() {
+        int hash = variationKey != null ? variationKey.hashCode() : 0;
+        hash = 31 * hash + (enabled ? 1 : 0);
+        hash = 31 * hash + (variables != null ? variables.hashCode() : 0);
+        hash = 31 * hash + (ruleKey != null ? ruleKey.hashCode() : 0);
+        hash = 31 * hash + flagKey.hashCode();
+        hash = 31 * hash + userContext.hashCode();
+        hash = 31 * hash + reasons.hashCode();
+        return hash;
+    }
+
 
 }

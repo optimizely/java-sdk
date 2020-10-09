@@ -341,4 +341,11 @@ public class OptimizelyUserContext {
             optimizely.equals(userContext.getOptimizely());
     }
 
+    @Override
+    public int hashCode() {
+        int hash = userId.hashCode();
+        hash = 31 * hash + attributes.hashCode();
+        hash = 31 * hash + optimizely.hashCode();
+        return hash;
+    }
 }

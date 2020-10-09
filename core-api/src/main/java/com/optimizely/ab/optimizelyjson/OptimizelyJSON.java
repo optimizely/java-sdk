@@ -157,5 +157,20 @@ public class OptimizelyJSON {
         return null;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || getClass() != obj.getClass()) return false;
+        if (obj == this) return true;
+        if (toMap() == null) return false;
+
+        return toMap().equals(((OptimizelyJSON) obj).toMap());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = toMap() != null ? toMap().hashCode() : 0;
+        return hash;
+    }
+
 }
 
