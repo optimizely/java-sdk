@@ -49,9 +49,13 @@ public class DecisionMetadata {
         return ruleKey;
     }
 
-    public String getFlagKey() { return flagKey; }
+    public String getFlagKey() {
+        return flagKey;
+    }
 
-    public String getVariationKey() { return variationKey; }
+    public String getVariationKey() {
+        return variationKey;
+    }
 
     @Override
     public boolean equals(Object o) {
