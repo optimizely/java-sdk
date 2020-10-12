@@ -67,7 +67,7 @@ public class UserEventFactoryTest {
     public void setUp() {
         experiment = new Experiment(EXPERIMENT_ID, EXPERIMENT_KEY, LAYER_ID);
         variation = new Variation(VARIATION_ID, VARIATION_KEY);
-        decisionMetadata = new DecisionMetadata("experiment", EXPERIMENT_KEY, VARIATION_KEY);
+        decisionMetadata = new DecisionMetadata(EXPERIMENT_KEY, EXPERIMENT_KEY, "experiment", VARIATION_KEY);
     }
 
     @Test

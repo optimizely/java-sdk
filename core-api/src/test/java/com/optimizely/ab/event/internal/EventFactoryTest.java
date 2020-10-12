@@ -99,11 +99,11 @@ public class EventFactoryTest {
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
         Attribute attribute = validProjectConfig.getAttributes().get(0);
         String userId = "userId";
-        String flagType = "experiment";
+        String ruleType = "experiment";
         Map<String, String> attributeMap = new HashMap<String, String>();
         attributeMap.put(attribute.getKey(), "value");
         attributeMap.put(ControlAttribute.USER_AGENT_ATTRIBUTE.toString(), "Chrome");
-        DecisionMetadata metadata = new DecisionMetadata(flagType, activatedExperiment.getKey(), "variationKey");
+        DecisionMetadata metadata = new DecisionMetadata(activatedExperiment.getKey(), activatedExperiment.getKey(), ruleType, "variationKey");
         Decision expectedDecision = new Decision.Builder()
             .setCampaignId(activatedExperiment.getLayerId())
             .setExperimentId(activatedExperiment.getId())
@@ -174,7 +174,7 @@ public class EventFactoryTest {
 
         DecisionMetadata decisionMetadata = new DecisionMetadata.Builder()
             .setFlagKey(activatedExperiment.getKey())
-            .setFlagType("experiment")
+            .setRuleType("experiment")
             .setVariationKey(bucketedVariation.getKey())
             .build();
 

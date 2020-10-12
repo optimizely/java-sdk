@@ -20,10 +20,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.annotations.VisibleForTesting;
 
 public class DecisionMetadata {
-    @JsonProperty("flag_type")
-    String flagType;
+
     @JsonProperty("flag_key")
     String flagKey;
+    @JsonProperty("rule_key")
+    String ruleKey;
+    @JsonProperty("rule_type")
+    String ruleType;
     @JsonProperty("variation_key")
     String variationKey;
 
@@ -31,14 +34,19 @@ public class DecisionMetadata {
     public DecisionMetadata() {
     }
 
-    public DecisionMetadata(String flagType, String flagKey, String variationKey) {
-        this.flagType = flagType;
+    public DecisionMetadata(String flagKey, String ruleKey, String ruleType, String variationKey) {
         this.flagKey = flagKey;
+        this.ruleKey = ruleKey;
+        this.ruleType = ruleType;
         this.variationKey = variationKey;
     }
 
-    public String getFlagType() {
-        return flagType;
+    public String getRuleType() {
+        return ruleType;
+    }
+
+    public String getRuleKey() {
+        return ruleKey;
     }
 
     public String getFlagKey() { return flagKey; }
@@ -52,27 +60,35 @@ public class DecisionMetadata {
 
         DecisionMetadata that = (DecisionMetadata) o;
 
-        if (!flagType.equals(that.flagType)) return false;
+        if (!ruleType.equals(that.ruleType)) return false;
+        if (!ruleKey.equals(that.ruleKey)) return false;
         if (!flagKey.equals(that.flagKey)) return false;
         return variationKey.equals(that.variationKey);
     }
 
     @Override
     public int hashCode() {
-        int result = flagType.hashCode();
+        int result = ruleType.hashCode();
         result = 31 * result + flagKey.hashCode();
+        result = 31 * result + ruleKey.hashCode();
         result = 31 * result + variationKey.hashCode();
         return result;
     }
 
     public static class Builder {
 
-        private String flagType;
+        private String ruleType;
+        private String ruleKey;
         private String flagKey;
         private String variationKey;
 
-        public Builder setFlagType(String flagType) {
-            this.flagType = flagType;
+        public Builder setRuleType(String ruleType) {
+            this.ruleType = ruleType;
+            return this;
+        }
+
+        public Builder setRuleKey(String ruleKey) {
+            this.ruleKey = ruleKey;
             return this;
         }
 
@@ -87,7 +103,7 @@ public class DecisionMetadata {
         }
 
         public DecisionMetadata build() {
-            return new DecisionMetadata(flagType, flagKey, variationKey);
+            return new DecisionMetadata(flagKey, ruleKey, ruleType, variationKey);
         }
     }
 }

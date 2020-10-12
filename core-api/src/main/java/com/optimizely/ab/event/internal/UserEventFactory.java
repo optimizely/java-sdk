@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
-import java.util.UUID;
 
 public class UserEventFactory {
     private static final Logger logger = LoggerFactory.getLogger(UserEventFactory.class);
@@ -38,24 +37,24 @@ public class UserEventFactory {
                                                         @Nonnull String userId,
                                                         @Nonnull Map<String, ?> attributes,
                                                         @Nonnull String flagKey,
-                                                        @Nonnull String flagType) {
+                                                        @Nonnull String ruleType) {
 
-        if ((FeatureDecision.DecisionSource.ROLLOUT.toString().equals(flagType)  || variation == null) && !projectConfig.getSendFlagDecisions())
+        if ((FeatureDecision.DecisionSource.ROLLOUT.toString().equals(ruleType)  || variation == null) && !projectConfig.getSendFlagDecisions())
         {
             return null;
         }
 
-        String variationKey = null;
-        String variationID = null;
+        String variationKey = "";
+        String variationID = "";
+        String finalRuleType = "";
+        String layerID = null;
+        String experimentId = null;
+        String experimentKey = "";
+
         if (variation != null) {
             variationKey = variation.getKey();
             variationID = variation.getId();
-        }
-
-        String layerID = null;
-        String experimentId = null;
-        String experimentKey = null;
-        if (activatedExperiment != null) {
+            finalRuleType = ruleType;
             layerID = activatedExperiment.getLayerId();
             experimentId = activatedExperiment.getId();
             experimentKey = activatedExperiment.getKey();
@@ -69,7 +68,8 @@ public class UserEventFactory {
 
         DecisionMetadata metadata = new DecisionMetadata.Builder()
             .setFlagKey(flagKey)
-            .setFlagType(flagType)
+            .setRuleKey(experimentKey)
+            .setRuleType(finalRuleType)
             .setVariationKey(variationKey)
             .build();
 
