@@ -137,7 +137,7 @@ public class OptimizelyUserContextTest {
             "variation_with_traffic",
             true,
             variablesExpected,
-            null,
+            "exp_no_audience",
             flagKey,
             user,
             Collections.emptyList());
@@ -163,7 +163,7 @@ public class OptimizelyUserContextTest {
             new OptimizelyDecision("a",
                 true,
                 variablesExpected1,
-                null,
+                "exp_with_audience",
                 flagKey1,
                 user,
                 Collections.emptyList()));
@@ -172,7 +172,7 @@ public class OptimizelyUserContextTest {
             new OptimizelyDecision("variation_with_traffic",
                 true,
                 variablesExpected2,
-                null,
+                "exp_no_audience",
                 flagKey2,
                 user,
                 Collections.emptyList()));
@@ -199,7 +199,7 @@ public class OptimizelyUserContextTest {
                 "a",
                 true,
                 variablesExpected1,
-                null,
+                "exp_with_audience",
                 flagKey1,
                 user,
                 Collections.emptyList()));
@@ -209,7 +209,7 @@ public class OptimizelyUserContextTest {
                 "variation_with_traffic",
                 true,
                 variablesExpected2,
-                null,
+                "exp_no_audience",
                 flagKey2,
                 user,
                 Collections.emptyList()));
@@ -242,7 +242,7 @@ public class OptimizelyUserContextTest {
                 "a",
                 true,
                 variablesExpected1,
-                null,
+                "exp_with_audience",
                 flagKey1,
                 user,
                 Collections.emptyList()));
@@ -349,7 +349,7 @@ public class OptimizelyUserContextTest {
                 "variation_with_traffic",
                 true,
                 variablesExpected1,
-                null,
+                "exp_no_audience",
                 flagKey1,
                 user,
                 Collections.emptyList()));

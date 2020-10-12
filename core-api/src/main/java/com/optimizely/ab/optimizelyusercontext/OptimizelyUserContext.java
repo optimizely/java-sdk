@@ -149,8 +149,8 @@ public class OptimizelyUserContext {
 
         List<String> reasonsToReport = decisionReasons.toReport(allOptions);
         String variationKey = flagDecision.variation != null ? flagDecision.variation.getKey() : null;
-        // TODO: add ruleKey values when available later.
-        String ruleKey = null;
+        // TODO: add ruleKey values when available later. use a copy of experimentKey until then.
+        String ruleKey = flagDecision.experiment != null ? flagDecision.experiment.getKey() : null;
 
         DecisionNotification decisionNotification = DecisionNotification.newFlagDecisionNotificationBuilder()
             .withUserId(userId)
