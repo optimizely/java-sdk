@@ -87,7 +87,7 @@ public class Optimizely implements AutoCloseable {
     @VisibleForTesting
     final ErrorHandler errorHandler;
 
-    public final OptimizelyDecideOption[] defaultDecideOptions;
+    public final List<OptimizelyDecideOption> defaultDecideOptions;
 
     private final ProjectConfigManager projectConfigManager;
 
@@ -108,7 +108,7 @@ public class Optimizely implements AutoCloseable {
                        @Nonnull ProjectConfigManager projectConfigManager,
                        @Nullable OptimizelyConfigManager optimizelyConfigManager,
                        @Nonnull NotificationCenter notificationCenter,
-                       @Nonnull OptimizelyDecideOption[] defaultDecideOptions
+                       @Nonnull List<OptimizelyDecideOption> defaultDecideOptions
     ) {
         this.eventHandler = eventHandler;
         this.eventProcessor = eventProcessor;
@@ -1217,7 +1217,7 @@ public class Optimizely implements AutoCloseable {
         private OptimizelyConfigManager optimizelyConfigManager;
         private UserProfileService userProfileService;
         private NotificationCenter notificationCenter;
-        private OptimizelyDecideOption[] defaultDecideOptions;
+        private List<OptimizelyDecideOption> defaultDecideOptions;
 
         // For backwards compatibility
         private AtomicProjectConfigManager fallbackConfigManager = new AtomicProjectConfigManager();
@@ -1289,6 +1289,11 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
+        public Builder withDefaultDecideOptions(OptimizelyDecideOption[] options) {
+            this.defaultDecideOptions = new ArrayList<>(Arrays.asList(options));
+            return this;
+        }
+
         // Helper functions for making testing easier
         protected Builder withBucketing(Bucketer bucketer) {
             this.bucketer = bucketer;
@@ -1302,11 +1307,6 @@ public class Optimizely implements AutoCloseable {
 
         protected Builder withDecisionService(DecisionService decisionService) {
             this.decisionService = decisionService;
-            return this;
-        }
-
-        protected Builder withDefaultDecideOptions(OptimizelyDecideOption[] options) {
-            this.defaultDecideOptions = options;
             return this;
         }
 
@@ -1363,7 +1363,7 @@ public class Optimizely implements AutoCloseable {
             }
 
             if (defaultDecideOptions == null) {
-                defaultDecideOptions = new OptimizelyDecideOption[0];
+                defaultDecideOptions = new ArrayList<>();
             }
 
             return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, optimizelyConfigManager, notificationCenter, defaultDecideOptions);

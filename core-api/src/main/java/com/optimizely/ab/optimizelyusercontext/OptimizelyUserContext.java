@@ -40,8 +40,8 @@ public class OptimizelyUserContext {
 
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyUserContext.class);
 
-    public final static String SDK_NOT_READY = "Optimizely SDK not configured properly yet";
-    public final static String FLAG_KEY_INVALID = "Flag key \"%s\" is not in datafile.";
+    public final static String SDK_NOT_READY = "Optimizely SDK not configured properly yet.";
+    public final static String FLAG_KEY_INVALID = "No flag was found for key \"%s\".";
     public final static String VARIABLE_VALUE_INVALID = "Variable value for key \"%s\" is invalid or wrong type.";
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
@@ -291,9 +291,9 @@ public class OptimizelyUserContext {
     }
 
     private List<OptimizelyDecideOption> getAllOptions(OptimizelyDecideOption[] options) {
-        List<OptimizelyDecideOption> allOptions = new ArrayList(Arrays.asList(optimizely.defaultDecideOptions));
-        allOptions.addAll(Arrays.asList(options));
-        return allOptions;
+        List<OptimizelyDecideOption> copiedOptions = new ArrayList(optimizely.defaultDecideOptions);
+        copiedOptions.addAll(Arrays.asList(options));
+        return copiedOptions;
     }
 
     public static String getFlagKeyInvalidMessage(String flagKey) {
