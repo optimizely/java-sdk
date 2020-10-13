@@ -46,7 +46,6 @@ public class UserEventFactory {
 
         String variationKey = "";
         String variationID = "";
-        String finalRuleType = "";
         String layerID = null;
         String experimentId = null;
         String experimentKey = "";
@@ -54,7 +53,6 @@ public class UserEventFactory {
         if (variation != null) {
             variationKey = variation.getKey();
             variationID = variation.getId();
-            finalRuleType = ruleType;
             layerID = activatedExperiment.getLayerId();
             experimentId = activatedExperiment.getId();
             experimentKey = activatedExperiment.getKey();
@@ -69,7 +67,7 @@ public class UserEventFactory {
         DecisionMetadata metadata = new DecisionMetadata.Builder()
             .setFlagKey(flagKey)
             .setRuleKey(experimentKey)
-            .setRuleType(finalRuleType)
+            .setRuleType(ruleType)
             .setVariationKey(variationKey)
             .build();
 
