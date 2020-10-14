@@ -22,6 +22,7 @@ import com.optimizely.ab.UnknownEventTypeException;
 import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class OptimizelyUserContext {
@@ -66,22 +67,21 @@ public class OptimizelyUserContext {
         return decide(key, new OptimizelyDecideOption[0]);
     }
 
-    public Map<String, OptimizelyDecision> decideAll(@Nonnull String[] keys,
-                                                     @Nonnull OptimizelyDecideOption[] options) {
+    public Map<String, OptimizelyDecision> decideForKeys(@Nonnull List<String> keys,
+                                                         @Nonnull List<OptimizelyDecideOption> options) {
         return new HashMap<>();
     }
 
-    public Map<String, OptimizelyDecision> decideAll(@Nonnull String[] keys) {
-        return decideAll(keys, new OptimizelyDecideOption[0]);
+    public Map<String, OptimizelyDecision> decideForKeys(@Nonnull List<String> keys) {
+        return decideForKeys(keys, Collections.emptyList());
     }
 
-    public Map<String, OptimizelyDecision> decideAll(@Nonnull OptimizelyDecideOption[] options) {
-        String[] allFlagKeys = {};
-        return decideAll(allFlagKeys, options);
+    public Map<String, OptimizelyDecision> decideAll(@Nonnull List<OptimizelyDecideOption> options) {
+        return decideForKeys(Collections.emptyList(), options);
     }
 
     public Map<String, OptimizelyDecision> decideAll() {
-        return decideAll(new OptimizelyDecideOption[0]);
+        return decideAll(Collections.emptyList());
     }
 
     public void trackEvent(@Nonnull String eventName,

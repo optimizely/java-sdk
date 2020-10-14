@@ -30,6 +30,9 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -174,22 +177,22 @@ public class OptimizelyBuilderTest {
 
     @Test
     public void withDefaultDecideOptions() throws Exception {
-        OptimizelyDecideOption[] options = {
+        List<OptimizelyDecideOption> options = Arrays.asList(
             OptimizelyDecideOption.DISABLE_DECISION_EVENT,
             OptimizelyDecideOption.ENABLED_FLAGS_ONLY,
             OptimizelyDecideOption.EXCLUDE_VARIABLES
-        };
+        );
 
         Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV4(), mockEventHandler)
             .build();
-        assertEquals(optimizelyClient.defaultDecideOptions.length, 0);
+        assertEquals(optimizelyClient.defaultDecideOptions.size(), 0);
 
         optimizelyClient = Optimizely.builder(validConfigJsonV4(), mockEventHandler)
             .withDefaultDecideOptions(options)
             .build();
-        assertEquals(optimizelyClient.defaultDecideOptions[0], OptimizelyDecideOption.DISABLE_DECISION_EVENT);
-        assertEquals(optimizelyClient.defaultDecideOptions[1], OptimizelyDecideOption.ENABLED_FLAGS_ONLY);
-        assertEquals(optimizelyClient.defaultDecideOptions[2], OptimizelyDecideOption.EXCLUDE_VARIABLES);
+        assertEquals(optimizelyClient.defaultDecideOptions.get(0), OptimizelyDecideOption.DISABLE_DECISION_EVENT);
+        assertEquals(optimizelyClient.defaultDecideOptions.get(1), OptimizelyDecideOption.ENABLED_FLAGS_ONLY);
+        assertEquals(optimizelyClient.defaultDecideOptions.get(2), OptimizelyDecideOption.EXCLUDE_VARIABLES);
     }
 
 }

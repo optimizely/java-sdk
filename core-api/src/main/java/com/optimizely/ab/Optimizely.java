@@ -78,8 +78,7 @@ public class Optimizely implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
 
-    @VisibleForTesting
-    final DecisionService decisionService;
+    public final DecisionService decisionService;
     @VisibleForTesting
     @Deprecated
     final EventHandler eventHandler;
@@ -87,8 +86,8 @@ public class Optimizely implements AutoCloseable {
     final EventProcessor eventProcessor;
     @VisibleForTesting
     final ErrorHandler errorHandler;
-    @VisibleForTesting
-    final OptimizelyDecideOption[] defaultDecideOptions;
+
+    public final List<OptimizelyDecideOption> defaultDecideOptions;
 
     private final ProjectConfigManager projectConfigManager;
 
@@ -109,7 +108,7 @@ public class Optimizely implements AutoCloseable {
                        @Nonnull ProjectConfigManager projectConfigManager,
                        @Nullable OptimizelyConfigManager optimizelyConfigManager,
                        @Nonnull NotificationCenter notificationCenter,
-                       @Nonnull OptimizelyDecideOption[] defaultDecideOptions
+                       @Nonnull List<OptimizelyDecideOption> defaultDecideOptions
     ) {
         this.eventHandler = eventHandler;
         this.eventProcessor = eventProcessor;
@@ -227,7 +226,7 @@ public class Optimizely implements AutoCloseable {
         return variation;
     }
 
-    private void sendImpression(@Nonnull ProjectConfig projectConfig,
+    public void sendImpression(@Nonnull ProjectConfig projectConfig,
                                 @Nonnull Experiment experiment,
                                 @Nonnull String userId,
                                 @Nonnull Map<String, ?> filteredAttributes,
@@ -742,8 +741,7 @@ public class Optimizely implements AutoCloseable {
     }
 
     // Helper method which takes type and variable value and convert it to object to use in Listener DecisionInfo object variable value
-    @VisibleForTesting
-    Object convertStringToType(String variableValue, String type) {
+    public Object convertStringToType(String variableValue, String type) {
         if (variableValue != null) {
             switch (type) {
                 case FeatureVariable.DOUBLE_TYPE:
@@ -1093,14 +1091,9 @@ public class Optimizely implements AutoCloseable {
     }
 
     /**
-     * Set a context of the user for which decision APIs will be called.
+     * Create a context of the user for which decision APIs will be called.
      *
-     * - This API can be called after SDK initialization is completed (otherwise the __sdkNotReady__ error will be returned).
-     * - Only one user outstanding. The user-context can be changed any time by calling the same method with a different user-context value.
-     * - The SDK will copy the parameter value to create an internal user-context data atomically, so any further change in its caller copy after the API call is not reflected into the SDK state.
-     * - Once this API is called, the following other API calls can be called without a user-context parameter to use the same user-context.
-     * - Each Decide API call can contain an optional user-context parameter when the call targets a different user-context. This optional user-context parameter value will be used once only, instead of replacing the saved user-context. This call-based context control can be used to support multiple users at the same time.
-     * - If a user-context has not been set yet and decide APIs are called without a user-context parameter, SDK will return an error decision (__userNotSet__).
+     * A user context will be created successfully even when the SDK is not fully configured yet.
      *
      * @param userId The user ID to be used for bucketing.
      * @param attributes: A map of attribute names to current user attribute values.
@@ -1219,7 +1212,7 @@ public class Optimizely implements AutoCloseable {
         private OptimizelyConfigManager optimizelyConfigManager;
         private UserProfileService userProfileService;
         private NotificationCenter notificationCenter;
-        private OptimizelyDecideOption[] defaultDecideOptions;
+        private List<OptimizelyDecideOption> defaultDecideOptions;
 
         // For backwards compatibility
         private AtomicProjectConfigManager fallbackConfigManager = new AtomicProjectConfigManager();
@@ -1291,6 +1284,11 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
+        public Builder withDefaultDecideOptions(List<OptimizelyDecideOption> options) {
+            this.defaultDecideOptions = Collections.unmodifiableList(options);
+            return this;
+        }
+
         // Helper functions for making testing easier
         protected Builder withBucketing(Bucketer bucketer) {
             this.bucketer = bucketer;
@@ -1304,11 +1302,6 @@ public class Optimizely implements AutoCloseable {
 
         protected Builder withDecisionService(DecisionService decisionService) {
             this.decisionService = decisionService;
-            return this;
-        }
-
-        protected Builder withDefaultDecideOptions(OptimizelyDecideOption[] options) {
-            this.defaultDecideOptions = options;
             return this;
         }
 
@@ -1365,7 +1358,7 @@ public class Optimizely implements AutoCloseable {
             }
 
             if (defaultDecideOptions == null) {
-                defaultDecideOptions = new OptimizelyDecideOption[0];
+                defaultDecideOptions = Collections.emptyList();
             }
 
             return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, optimizelyConfigManager, notificationCenter, defaultDecideOptions);
