@@ -21,6 +21,8 @@ import com.google.common.io.Resources;
 import com.optimizely.ab.EventHandlerRule;
 import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.bucketing.UserProfileService;
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.event.ForwardingEventProcessor;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
@@ -29,10 +31,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_HOUSE_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_GRYFFINDOR_VALUE;
@@ -594,7 +593,9 @@ public class OptimizelyUserContextTest {
     // reasons (logs with includeReasons)
 
     @Test
-    public void decideReasons_conditionNoMatchingAudience() {}
+    public void decideReasons_conditionNoMatchingAudience() throws ConfigParseException {
+    }
+
     @Test
     public void decideReasons_conditionInvalidFormat() {}
     @Test
@@ -616,38 +617,159 @@ public class OptimizelyUserContextTest {
 
     @Test
     public void decideReasons_experimentNotRunning() {}
+    
     @Test
-    public void decideReasons_gotVariationFromUserProfile() {}
+    public void decideReasons_gotVariationFromUserProfile() throws Exception {
+        String flagKey = "feature_2";        // embedding experiment: "exp_no_audience"
+        String experimentId = "10420810910";    // "exp_no_audience"
+        String experimentKey = "exp_no_audience";
+        String variationId2 = "10418510624";
+        String variationKey2 = "variation_no_traffic";
+
+        UserProfileService ups = mock(UserProfileService.class);
+        when(ups.lookup(userId)).thenReturn(createUserProfileMap(experimentId, variationId2));
+
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withUserProfileService(ups)
+            .build();
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+
+        assertTrue(decision.getReasons().contains(
+            String.format(
+                "Returning previously activated variation \"%s\" of experiment \"%s\" for user \"%s\" from user profile.", variationKey2, experimentKey, userId)
+        ));
+    }
+
     @Test
-    public void decideReasons_forcedVariationFound() {}
+    public void decideReasons_forcedVariationFound() {
+
+    }
+
     @Test
-    public void decideReasons_forcedVariationFoundButInvalid() {}
+    public void decideReasons_forcedVariationFoundButInvalid() {
+
+    }
+
     @Test
-    public void decideReasons_userMeetsConditionsForTargetingRule() {}
+    public void decideReasons_userMeetsConditionsForTargetingRule() {
+        String flagKey = "feature_1";
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        user.setAttribute("country", "US");
+        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+
+        assertTrue(decision.getReasons().contains(
+            String.format(
+                "The user \"%s\" was bucketed into a rollout for feature flag \"%s\".", userId, flagKey)
+            ));
+    }
+
     @Test
-    public void decideReasons_userDoesntMeetConditionsForTargetingRule() {}
+    public void decideReasons_userDoesntMeetConditionsForTargetingRule() {
+        String flagKey = "feature_1";
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        user.setAttribute("country", "CA");
+        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+
+        assertTrue(decision.getReasons().contains(
+            String.format("User \"%s\" does not meet conditions for targeting rule \"%d\".", userId, 1)
+        ));
+    }
+
     @Test
-    public void decideReasons_userBucketedIntoTargetingRule() {}
+    public void decideReasons_userBucketedIntoTargetingRule() {
+        String flagKey = "feature_1";
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        user.setAttribute("country", "US");
+        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+
+        assertTrue(decision.getReasons().contains(
+            String.format("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".", userId, flagKey)
+        ));
+    }
+
     @Test
-    public void decideReasons_userBucketedIntoEveryoneTargetingRule() {}
+    public void decideReasons_userBucketedIntoEveryoneTargetingRule() {
+        String flagKey = "feature_1";
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        user.setAttribute("country", "KO");
+        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+
+        assertTrue(decision.getReasons().contains(
+            String.format("User \"%s\" meets conditions for targeting rule \"Everyone Else\".", userId)
+        ));
+    }
+
     @Test
-    public void decideReasons_userNotBucketedIntoTargetingRule() {}
+    public void decideReasons_userNotBucketedIntoTargetingRule() {
+        String flagKey = "feature_1";
+        String experimentKey = "3332020494";   // experimentKey of rollout[2]
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        user.setAttribute("browser", "safari");
+        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+
+        assertTrue(decision.getReasons().contains(
+            String.format("User with bucketingId \"%s\" is not in any variation of experiment \"%s\".", userId, experimentKey)
+        ));
+    }
+
     @Test
-    public void decideReasons_userBucketedIntoVariationInExperiment() {}
+    public void decideReasons_userBucketedIntoVariationInExperiment() {
+        String flagKey = "feature_2";
+        String experimentKey = "exp_no_audience";
+        String variationKey = "variation_with_traffic";
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+
+        assertTrue(decision.getReasons().contains(
+            String.format("User with bucketingId \"%s\" is in variation \"%s\" of experiment \"%s\".", userId, variationKey, experimentKey)
+        ));
+    }
+
     @Test
-    public void decideReasons_userNotBucketedIntoVariation() {}
+    public void decideReasons_userNotBucketedIntoVariation() {
+    }
+
     @Test
-    public void decideReasons_userBucketedIntoInvalidVariation() {}
+    public void decideReasons_userBucketedIntoInvalidVariation() {
+    }
+
     @Test
-    public void decideReasons_userBucketedIntoExperimentInGroup() {}
+    public void decideReasons_userBucketedIntoExperimentInGroup() {
+
+    }
     @Test
-    public void decideReasons_userNotBucketedIntoExperimentInGroup() {}
+    public void decideReasons_userNotBucketedIntoExperimentInGroup() {
+
+    }
     @Test
-    public void decideReasons_userNotBucketedIntoAnyExperimentInGroup() {}
+    public void decideReasons_userNotBucketedIntoAnyExperimentInGroup() {
+
+    }
     @Test
-    public void decideReasons_userBucketedIntoInvalidExperiment() {}
+    public void decideReasons_userBucketedIntoInvalidExperiment() {
+
+    }
     @Test
-    public void decideReasons_userNotInExperiment() {}
+    public void decideReasons_userNotInExperiment() {
+        String flagKey = "feature_1";
+        String experimentKey = "exp_with_audience";
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+
+        assertTrue(decision.getReasons().contains(
+            String.format("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experimentKey)
+        ));
+    }
 
     // utils
 
@@ -663,6 +785,14 @@ public class OptimizelyUserContextTest {
         userProfileMap.put(UserProfileService.experimentBucketMapKey, decisionsMap);
 
         return userProfileMap;
+    }
+
+    void setAudienceForFeatureTest(String featureKey, String audienceId) throws ConfigParseException {
+        String experimentId = optimizely.getProjectConfig().getFeatureKeyMapping().get(featureKey).getExperimentIds().get(0);
+        Experiment experimentReal = optimizely.getProjectConfig().getExperimentIdMapping().get(experimentId);
+
+        Experiment experiment = spy(experimentReal);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
     }
 
 }
