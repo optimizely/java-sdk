@@ -84,7 +84,7 @@ public class OptimizelyUserContext {
      * <li>If the SDK finds an error, it’ll return a decision with <b>null</b> for <b>variationKey</b>. The decision will include an error message in <b>reasons</b>.
      * </ul>
      * @param key A flag key for which a decision will be made.
-     * @param options An array of options for decision-making.
+     * @param options A list of options for decision-making.
      * @return A decision result.
      */
     public OptimizelyDecision decide(@Nonnull String key,
@@ -193,8 +193,8 @@ public class OptimizelyUserContext {
      * <li>If the SDK finds an error for a key, the response will include a decision for the key showing <b>reasons</b> for the error.
      * <li>The SDK will always return key-mapped decisions. When it can not process requests, it’ll return an empty map after logging the errors.
      * </ul>
-     * @param keys An array of flag keys for which decisions will be made.
-     * @param options An array of options for decision-making.
+     * @param keys A list of flag keys for which decisions will be made.
+     * @param options A list of options for decision-making.
      * @return All decision results mapped by flag keys.
      */
     public Map<String, OptimizelyDecision> decideForKeys(@Nonnull List<String> keys,
@@ -224,7 +224,7 @@ public class OptimizelyUserContext {
     /**
      * Returns a key-map of decision results for multiple flag keys and a user context.
      *
-     * @param keys An array of flag keys for which decisions will be made.
+     * @param keys A list of flag keys for which decisions will be made.
      * @return All decision results mapped by flag keys.
      */
     public Map<String, OptimizelyDecision> decideForKeys(@Nonnull List<String> keys) {
@@ -234,7 +234,7 @@ public class OptimizelyUserContext {
     /**
      * Returns a key-map of decision results ({@link OptimizelyDecision}) for all active flag keys.
      *
-     * @param options An array of options for decision-making.
+     * @param options A list of options for decision-making.
      * @return All decision results mapped by flag keys.
      */
     public Map<String, OptimizelyDecision> decideAll(@Nonnull List<OptimizelyDecideOption> options) {

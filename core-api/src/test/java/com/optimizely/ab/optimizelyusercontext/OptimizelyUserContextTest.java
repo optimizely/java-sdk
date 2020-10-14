@@ -139,11 +139,11 @@ public class OptimizelyUserContextTest {
     @Test
     public void decideAll_oneFlag() {
         String flagKey = "feature_2";
-        String[] flagKeys = {flagKey};
+        List<String> flagKeys = Arrays.asList(flagKey);
         OptimizelyJSON variablesExpected = optimizely.getAllFeatureVariables(flagKey, userId);
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        Map<String, OptimizelyDecision> decisions = user.decideAll(flagKeys);
+        Map<String, OptimizelyDecision> decisions = user.decideForKeys(flagKeys);
 
         assertTrue(decisions.size() == 1);
         OptimizelyDecision decision = decisions.get(flagKey);
@@ -164,12 +164,12 @@ public class OptimizelyUserContextTest {
         String flagKey1 = "feature_1";
         String flagKey2 = "feature_2";
 
-        String[] flagKeys = {flagKey1, flagKey2};
+        List<String> flagKeys = Arrays.asList(flagKey1, flagKey2);
         OptimizelyJSON variablesExpected1 = optimizely.getAllFeatureVariables(flagKey1, userId);
         OptimizelyJSON variablesExpected2 = optimizely.getAllFeatureVariables(flagKey2, userId);
 
         OptimizelyUserContext user = optimizely.createUserContext(userId, Collections.singletonMap("gender", "f"));
-        Map<String, OptimizelyDecision> decisions = user.decideAll(flagKeys);
+        Map<String, OptimizelyDecision> decisions = user.decideForKeys(flagKeys);
 
         assertTrue(decisions.size() == 2);
 
@@ -246,8 +246,7 @@ public class OptimizelyUserContextTest {
         OptimizelyJSON variablesExpected1 = optimizely.getAllFeatureVariables(flagKey1, userId);
 
         OptimizelyUserContext user = optimizely.createUserContext(userId, Collections.singletonMap("gender", "f"));
-        OptimizelyDecideOption[] decideOptions = {OptimizelyDecideOption.ENABLED_FLAGS_ONLY};
-        Map<String, OptimizelyDecision> decisions = user.decideAll(decideOptions);
+        Map<String, OptimizelyDecision> decisions = user.decideAll(Arrays.asList(OptimizelyDecideOption.ENABLED_FLAGS_ONLY));
 
         assertTrue(decisions.size() == 2);
 
@@ -342,7 +341,7 @@ public class OptimizelyUserContextTest {
         String flagKey = "feature_2";
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.DISABLE_DECISION_EVENT});
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.DISABLE_DECISION_EVENT));
 
         assertEquals(decision.getVariationKey(), "variation_with_traffic");
     }
@@ -385,7 +384,7 @@ public class OptimizelyUserContextTest {
 
         isListenerCalled = false;
         testDecisionInfoMap.put(DECISION_EVENT_DISPATCHED, false);
-        user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.DISABLE_DECISION_EVENT});
+        user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.DISABLE_DECISION_EVENT));
         assertTrue(isListenerCalled);
     }
 
@@ -413,7 +412,7 @@ public class OptimizelyUserContextTest {
         // should return variationId2 set by UPS
         assertEquals(decision.getVariationKey(), variationKey2);
 
-        decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE});
+        decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE));
         // should ignore variationId2 set by UPS and return variationId1
         assertEquals(decision.getVariationKey(), variationKey1);
         // also should not save either
@@ -428,7 +427,7 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = user.decide(flagKey);
         assertTrue(decision.getVariables().toMap().size() > 0);
 
-        decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.EXCLUDE_VARIABLES});
+        decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.EXCLUDE_VARIABLES));
         assertTrue(decision.getVariables().toMap().size() == 0);
     }
 
@@ -441,7 +440,7 @@ public class OptimizelyUserContextTest {
         assertEquals(decision.getReasons().size(), 1);
         assertEquals(decision.getReasons().get(0), OptimizelyUserContext.getFlagKeyInvalidMessage(flagKey));
 
-        decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+        decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
         assertEquals(decision.getReasons().size(), 1);
         assertEquals(decision.getReasons().get(0), OptimizelyUserContext.getFlagKeyInvalidMessage(flagKey));
 
@@ -449,7 +448,7 @@ public class OptimizelyUserContextTest {
         decision = user.decide(flagKey);
         assertEquals(decision.getReasons().size(), 0);
 
-        decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+        decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
         assertTrue(decision.getReasons().size() > 0);
     }
 
@@ -463,9 +462,9 @@ public class OptimizelyUserContextTest {
 
     @Test
     public void decideOptions_defaultDecideOptions() {
-        OptimizelyDecideOption[] options = {
+        List<OptimizelyDecideOption> options = Arrays.asList(
             OptimizelyDecideOption.EXCLUDE_VARIABLES
-        };
+        );
 
         optimizely = Optimizely.builder()
             .withDatafile(datafile)
@@ -479,7 +478,7 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = user.decide(flagKey);
         assertTrue(decision.getVariables().toMap().size() == 0);
 
-        decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS, OptimizelyDecideOption.EXCLUDE_VARIABLES});
+        decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS, OptimizelyDecideOption.EXCLUDE_VARIABLES));
         // other options should work as well
         assertTrue(decision.getReasons().size() > 0);
         // redundant setting ignored
@@ -521,11 +520,11 @@ public class OptimizelyUserContextTest {
 
     @Test
     public void decideAll_sdkNotReady() {
-        String[] flagKeys = {"feature_1"};
+        List<String> flagKeys = Arrays.asList("feature_1");
 
         Optimizely optimizely = new Optimizely.Builder().build();
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        Map<String, OptimizelyDecision> decisions = user.decideAll(flagKeys);
+        Map<String, OptimizelyDecision> decisions = user.decideForKeys(flagKeys);
 
         assertEquals(decisions.size(), 0);
     }
@@ -535,11 +534,11 @@ public class OptimizelyUserContextTest {
         String flagKey1 = "feature_2";
         String flagKey2 = "invalid_key";
 
-        String[] flagKeys = {flagKey1, flagKey2};
+        List<String> flagKeys = Arrays.asList(flagKey1, flagKey2);
         OptimizelyJSON variablesExpected1 = optimizely.getAllFeatureVariables(flagKey1, userId);
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        Map<String, OptimizelyDecision> decisions = user.decideAll(flagKeys);
+        Map<String, OptimizelyDecision> decisions = user.decideForKeys(flagKeys);
 
         assertEquals(decisions.size(), 2);
 
@@ -617,7 +616,7 @@ public class OptimizelyUserContextTest {
 
     @Test
     public void decideReasons_experimentNotRunning() {}
-    
+
     @Test
     public void decideReasons_gotVariationFromUserProfile() throws Exception {
         String flagKey = "feature_2";        // embedding experiment: "exp_no_audience"
@@ -635,7 +634,7 @@ public class OptimizelyUserContextTest {
             .build();
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
 
         assertTrue(decision.getReasons().contains(
             String.format(
@@ -659,7 +658,7 @@ public class OptimizelyUserContextTest {
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
         user.setAttribute("country", "US");
-        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
 
         assertTrue(decision.getReasons().contains(
             String.format(
@@ -673,7 +672,7 @@ public class OptimizelyUserContextTest {
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
         user.setAttribute("country", "CA");
-        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
 
         assertTrue(decision.getReasons().contains(
             String.format("User \"%s\" does not meet conditions for targeting rule \"%d\".", userId, 1)
@@ -686,7 +685,7 @@ public class OptimizelyUserContextTest {
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
         user.setAttribute("country", "US");
-        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
 
         assertTrue(decision.getReasons().contains(
             String.format("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".", userId, flagKey)
@@ -699,7 +698,7 @@ public class OptimizelyUserContextTest {
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
         user.setAttribute("country", "KO");
-        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
 
         assertTrue(decision.getReasons().contains(
             String.format("User \"%s\" meets conditions for targeting rule \"Everyone Else\".", userId)
@@ -713,7 +712,7 @@ public class OptimizelyUserContextTest {
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
         user.setAttribute("browser", "safari");
-        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
 
         assertTrue(decision.getReasons().contains(
             String.format("User with bucketingId \"%s\" is not in any variation of experiment \"%s\".", userId, experimentKey)
@@ -727,7 +726,7 @@ public class OptimizelyUserContextTest {
         String variationKey = "variation_with_traffic";
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
 
         assertTrue(decision.getReasons().contains(
             String.format("User with bucketingId \"%s\" is in variation \"%s\" of experiment \"%s\".", userId, variationKey, experimentKey)
@@ -764,7 +763,7 @@ public class OptimizelyUserContextTest {
         String experimentKey = "exp_with_audience";
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        OptimizelyDecision decision = user.decide(flagKey, new OptimizelyDecideOption[]{OptimizelyDecideOption.INCLUDE_REASONS});
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
 
         assertTrue(decision.getReasons().contains(
             String.format("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experimentKey)
