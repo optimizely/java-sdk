@@ -88,7 +88,7 @@ public class OptimizelyUserContext {
      * @return A decision result.
      */
     public OptimizelyDecision decide(@Nonnull String key,
-                                     @Nonnull OptimizelyDecideOption[] options) {
+                                     @Nonnull List<OptimizelyDecideOption> options) {
 
         ProjectConfig projectConfig = optimizely.getProjectConfig();
         if (projectConfig == null) {
@@ -184,7 +184,7 @@ public class OptimizelyUserContext {
      * @return A decision result.
      */
     public OptimizelyDecision decide(String key) {
-        return decide(key, new OptimizelyDecideOption[0]);
+        return decide(key, Collections.emptyList());
     }
 
     /**
@@ -197,8 +197,8 @@ public class OptimizelyUserContext {
      * @param options An array of options for decision-making.
      * @return All decision results mapped by flag keys.
      */
-    public Map<String, OptimizelyDecision> decideAll(@Nonnull String[] keys,
-                                                     @Nonnull OptimizelyDecideOption[] options) {
+    public Map<String, OptimizelyDecision> decideForKeys(@Nonnull List<String> keys,
+                                                         @Nonnull List<OptimizelyDecideOption> options) {
         Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
 
         ProjectConfig projectConfig = optimizely.getProjectConfig();
@@ -207,7 +207,7 @@ public class OptimizelyUserContext {
             return decisionMap;
         }
 
-        if (keys.length == 0) return decisionMap;
+        if (keys.isEmpty()) return decisionMap;
 
         List<OptimizelyDecideOption> allOptions = getAllOptions(options);
 
@@ -227,8 +227,8 @@ public class OptimizelyUserContext {
      * @param keys An array of flag keys for which decisions will be made.
      * @return All decision results mapped by flag keys.
      */
-    public Map<String, OptimizelyDecision> decideAll(@Nonnull String[] keys) {
-        return decideAll(keys, new OptimizelyDecideOption[0]);
+    public Map<String, OptimizelyDecision> decideForKeys(@Nonnull List<String> keys) {
+        return decideForKeys(keys, Collections.emptyList());
     }
 
     /**
@@ -237,7 +237,7 @@ public class OptimizelyUserContext {
      * @param options An array of options for decision-making.
      * @return All decision results mapped by flag keys.
      */
-    public Map<String, OptimizelyDecision> decideAll(@Nonnull OptimizelyDecideOption[] options) {
+    public Map<String, OptimizelyDecision> decideAll(@Nonnull List<OptimizelyDecideOption> options) {
         Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
 
         ProjectConfig projectConfig = optimizely.getProjectConfig();
@@ -247,10 +247,10 @@ public class OptimizelyUserContext {
         }
 
         List<FeatureFlag> allFlags = projectConfig.getFeatureFlags();
-        String[] allFlagKeys = new String[allFlags.size()];
-        for (int i = 0; i < allFlags.size(); i++) allFlagKeys[i] = allFlags.get(i).getKey();
+        List<String> allFlagKeys = new ArrayList<>();
+        for (int i = 0; i < allFlags.size(); i++) allFlagKeys.add(allFlags.get(i).getKey());
 
-        return decideAll(allFlagKeys, options);
+        return decideForKeys(allFlagKeys, options);
     }
 
     /**
@@ -259,7 +259,7 @@ public class OptimizelyUserContext {
      * @return A dictionary of all decision results, mapped by flag keys.
      */
     public Map<String, OptimizelyDecision> decideAll() {
-        return decideAll(new OptimizelyDecideOption[0]);
+        return decideAll(Collections.emptyList());
     }
 
     /**
@@ -290,9 +290,9 @@ public class OptimizelyUserContext {
         return new HashMap<>(attributes);
     }
 
-    private List<OptimizelyDecideOption> getAllOptions(OptimizelyDecideOption[] options) {
+    private List<OptimizelyDecideOption> getAllOptions(List<OptimizelyDecideOption> options) {
         List<OptimizelyDecideOption> copiedOptions = new ArrayList(optimizely.defaultDecideOptions);
-        copiedOptions.addAll(Arrays.asList(options));
+        copiedOptions.addAll(options);
         return copiedOptions;
     }
 
