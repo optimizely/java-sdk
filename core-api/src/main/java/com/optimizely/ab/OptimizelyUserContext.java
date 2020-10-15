@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class OptimizelyUserContext {
     @Nonnull
@@ -47,7 +48,7 @@ public class OptimizelyUserContext {
                                  @Nonnull Map<String, ?> attributes) {
         this.optimizely = optimizely;
         this.userId = userId;
-        this.attributes = new HashMap<>(attributes);
+        this.attributes = new ConcurrentHashMap<>(attributes);
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely, @Nonnull String userId) {
@@ -59,7 +60,7 @@ public class OptimizelyUserContext {
     }
 
     public Map<String, Object> getAttributes() {
-        return attributes;
+        return new HashMap<String, Object>(attributes);
     }
 
     public Optimizely getOptimizely() {
