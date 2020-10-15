@@ -19,10 +19,11 @@ package com.optimizely.ab;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.notification.DecisionNotification;
-import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
+import com.optimizely.ab.optimizelydecision.DecisionMessage;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
+import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,10 +41,6 @@ public class OptimizelyUserContext {
     private final Optimizely optimizely;
 
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyUserContext.class);
-
-    public final static String SDK_NOT_READY = "Optimizely SDK not configured properly yet.";
-    public final static String FLAG_KEY_INVALID = "No flag was found for key \"%s\".";
-    public final static String VARIABLE_VALUE_INVALID = "Variable value for key \"%s\" is invalid or wrong type.";
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
                                  @Nonnull String userId,
@@ -93,12 +90,12 @@ public class OptimizelyUserContext {
 
         ProjectConfig projectConfig = optimizely.getProjectConfig();
         if (projectConfig == null) {
-            return OptimizelyDecision.createErrorDecision(key, this, SDK_NOT_READY);
+            return OptimizelyDecision.createErrorDecision(key, this, DecisionMessage.SDK_NOT_READY.reason());
         }
 
         FeatureFlag flag = projectConfig.getFeatureKeyMapping().get(key);
         if (flag == null) {
-            return OptimizelyDecision.createErrorDecision(key, this, getFlagKeyInvalidMessage(key));
+            return OptimizelyDecision.createErrorDecision(key, this, DecisionMessage.FLAG_KEY_INVALID.reason(key));
         }
 
         Boolean sentEvent = false;
@@ -107,7 +104,7 @@ public class OptimizelyUserContext {
         Boolean includeReasons = allOptions.contains(OptimizelyDecideOption.INCLUDE_REASONS);
         DecisionReasons decisionReasons = new DecisionReasons(includeReasons);
 
-        Map<String, ?> copiedAttributes = copyAttributes();
+        Map<String, ?> copiedAttributes = new HashMap<>(attributes);
         FeatureDecision flagDecision = optimizely.decisionService.getVariationForFeature(
             flag,
             userId,
@@ -287,22 +284,10 @@ public class OptimizelyUserContext {
 
     // Utils
 
-    private Map<String, Object> copyAttributes() {
-        return new HashMap<>(attributes);
-    }
-
     private List<OptimizelyDecideOption> getAllOptions(List<OptimizelyDecideOption> options) {
         List<OptimizelyDecideOption> copiedOptions = new ArrayList(optimizely.defaultDecideOptions);
         copiedOptions.addAll(options);
         return copiedOptions;
-    }
-
-    public static String getFlagKeyInvalidMessage(String flagKey) {
-        return String.format(FLAG_KEY_INVALID, flagKey);
-    }
-
-    public static String getVariableValueInvalidMessage(String variableKey) {
-        return String.format(VARIABLE_VALUE_INVALID, variableKey);
     }
 
     private Map<String, Object> getDecisionVariableMap(@Nonnull FeatureFlag flag,
@@ -321,7 +306,7 @@ public class OptimizelyUserContext {
 
             Object convertedValue = optimizely.convertStringToType(value, variable.getType());
             if (convertedValue == null) {
-                decisionReasons.addError(getVariableValueInvalidMessage(variable.getKey()));
+                decisionReasons.addError(DecisionMessage.VARIABLE_VALUE_INVALID.reason(variable.getKey()));
             } else if (convertedValue instanceof OptimizelyJSON) {
                 convertedValue = ((OptimizelyJSON) convertedValue).toMap();
             }

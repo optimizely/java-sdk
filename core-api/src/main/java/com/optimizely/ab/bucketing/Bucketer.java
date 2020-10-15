@@ -139,36 +139,6 @@ public class Bucketer {
                             @Nonnull ProjectConfig projectConfig,
                             @Nonnull List<OptimizelyDecideOption> options,
                             @Nonnull DecisionReasons reasons) {
-
-        // support existing custom Bucketers
-        if (isMethodOverriden("bucket", Experiment.class, String.class, ProjectConfig.class)) {
-            return bucket(experiment, bucketingId, projectConfig);
-        }
-
-        return bucketCore(experiment, bucketingId, projectConfig, options, reasons);
-    }
-
-    /**
-     * Assign a {@link Variation} of an {@link Experiment} to a user based on hashed value from murmurhash3.
-     *
-     * @param experiment  The Experiment in which the user is to be bucketed.
-     * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
-     * @param projectConfig      The current projectConfig
-     * @return Variation the user is bucketed into or null.
-     */
-    @Nullable
-    public Variation bucket(@Nonnull Experiment experiment,
-                            @Nonnull String bucketingId,
-                            @Nonnull ProjectConfig projectConfig) {
-        return bucketCore(experiment, bucketingId, projectConfig, Collections.emptyList(), new DecisionReasons());
-    }
-
-    @Nullable
-    public Variation bucketCore(@Nonnull Experiment experiment,
-                                @Nonnull String bucketingId,
-                                @Nonnull ProjectConfig projectConfig,
-                                @Nonnull List<OptimizelyDecideOption> options,
-                                @Nonnull DecisionReasons reasons) {
         // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group
@@ -202,6 +172,13 @@ public class Bucketer {
         return bucketToVariation(experiment, bucketingId, options, reasons);
     }
 
+    @Nullable
+    public Variation bucket(@Nonnull Experiment experiment,
+                            @Nonnull String bucketingId,
+                            @Nonnull ProjectConfig projectConfig) {
+        return bucket(experiment, bucketingId, projectConfig, Collections.emptyList(), new DecisionReasons());
+    }
+
     //======== Helper methods ========//
 
     /**
@@ -215,14 +192,6 @@ public class Bucketer {
         // map the hashCode into the range [0, BucketAlgorithm.MAX_TRAFFIC_VALUE)
         double ratio = (double) (hashCode & 0xFFFFFFFFL) / Math.pow(2, 32);
         return (int) Math.floor(MAX_TRAFFIC_VALUE * ratio);
-    }
-
-    Boolean isMethodOverriden(String methodName, Class<?>... params) {
-        try {
-            return getClass() != Bucketer.class && getClass().getDeclaredMethod(methodName, params) != null;
-        } catch (NoSuchMethodException e) {
-            return false;
-        }
     }
 
 }

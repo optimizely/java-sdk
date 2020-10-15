@@ -26,6 +26,7 @@ import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.event.ForwardingEventProcessor;
 import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.optimizelydecision.DecisionMessage;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
@@ -441,11 +442,11 @@ public class OptimizelyUserContextTest {
         String flagKey = "invalid_key";
         OptimizelyDecision decision = user.decide(flagKey);
         assertEquals(decision.getReasons().size(), 1);
-        assertEquals(decision.getReasons().get(0), OptimizelyUserContext.getFlagKeyInvalidMessage(flagKey));
+        assertEquals(decision.getReasons().get(0), DecisionMessage.FLAG_KEY_INVALID.reason(flagKey));
 
         decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
         assertEquals(decision.getReasons().size(), 1);
-        assertEquals(decision.getReasons().get(0), OptimizelyUserContext.getFlagKeyInvalidMessage(flagKey));
+        assertEquals(decision.getReasons().get(0), DecisionMessage.FLAG_KEY_INVALID.reason(flagKey));
 
         flagKey = "feature_1";
         decision = user.decide(flagKey);
@@ -505,7 +506,7 @@ public class OptimizelyUserContextTest {
         assertEquals(decision.getUserContext(), user);
 
         assertEquals(decision.getReasons().size(), 1);
-        assertEquals(decision.getReasons().get(0), OptimizelyUserContext.SDK_NOT_READY);
+        assertEquals(decision.getReasons().get(0), DecisionMessage.SDK_NOT_READY.reason());
     }
 
     @Test
@@ -518,7 +519,7 @@ public class OptimizelyUserContextTest {
         assertNull(decision.getVariationKey());
         assertFalse(decision.getEnabled());
         assertEquals(decision.getReasons().size(), 1);
-        assertEquals(decision.getReasons().get(0), OptimizelyUserContext.getFlagKeyInvalidMessage(flagKey));
+        assertEquals(decision.getReasons().get(0), DecisionMessage.FLAG_KEY_INVALID.reason(flagKey));
     }
 
     @Test
@@ -560,7 +561,7 @@ public class OptimizelyUserContextTest {
             OptimizelyDecision.createErrorDecision(
                 flagKey2,
                 user,
-                OptimizelyUserContext.getFlagKeyInvalidMessage(flagKey2)));
+                DecisionMessage.FLAG_KEY_INVALID.reason(flagKey2)));
     }
 
     // reasons (errors)
@@ -574,7 +575,7 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = user.decide(flagKey);
 
         assertEquals(decision.getReasons().size(), 1);
-        assertEquals(decision.getReasons().get(0), OptimizelyUserContext.SDK_NOT_READY);
+        assertEquals(decision.getReasons().get(0), DecisionMessage.SDK_NOT_READY.reason());
     }
 
     @Test
@@ -585,7 +586,7 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = user.decide(flagKey);
 
         assertEquals(decision.getReasons().size(), 1);
-        assertEquals(decision.getReasons().get(0), OptimizelyUserContext.getFlagKeyInvalidMessage(flagKey));
+        assertEquals(decision.getReasons().get(0), DecisionMessage.FLAG_KEY_INVALID.reason(flagKey));
     }
 
     @Test

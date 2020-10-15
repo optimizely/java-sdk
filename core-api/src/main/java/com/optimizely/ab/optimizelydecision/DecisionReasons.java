@@ -21,14 +21,12 @@ import java.util.List;
 
 public class DecisionReasons {
 
-    boolean includeReasons;
-    List<String> errors;
-    List<String> logs;
+    private boolean includeReasons;
+    private final List<String> errors = new ArrayList<>();
+    private final List<String> logs = new ArrayList<>();
 
     public DecisionReasons(boolean includeReasons) {
         this.includeReasons = includeReasons;
-        this.errors = new ArrayList<String>();
-        this.logs = new ArrayList<String>();
     }
 
     public DecisionReasons() {

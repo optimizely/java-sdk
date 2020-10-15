@@ -95,30 +95,6 @@ public class DecisionService {
                                   @Nonnull ProjectConfig projectConfig,
                                   @Nonnull List<OptimizelyDecideOption> options,
                                   @Nonnull DecisionReasons reasons) {
-
-        // support existing custom DecisionServices
-        if (isMethodOverriden("getVariation", Experiment.class, String.class, Map.class, ProjectConfig.class)) {
-            return getVariation(experiment, userId, filteredAttributes, projectConfig);
-        }
-
-        return getVariationCore(experiment, userId, filteredAttributes, projectConfig, options, reasons);
-    }
-
-    @Nullable
-    public Variation getVariation(@Nonnull Experiment experiment,
-                                  @Nonnull String userId,
-                                  @Nonnull Map<String, ?> filteredAttributes,
-                                  @Nonnull ProjectConfig projectConfig) {
-        return getVariationCore(experiment, userId, filteredAttributes, projectConfig, Collections.emptyList(), new DecisionReasons());
-    }
-
-    @Nullable
-    public Variation getVariationCore(@Nonnull Experiment experiment,
-                                      @Nonnull String userId,
-                                      @Nonnull Map<String, ?> filteredAttributes,
-                                      @Nonnull ProjectConfig projectConfig,
-                                      @Nonnull List<OptimizelyDecideOption> options,
-                                      @Nonnull DecisionReasons reasons) {
         if (!ExperimentUtils.isExperimentActive(experiment, options, reasons)) {
             return null;
         }
@@ -188,6 +164,14 @@ public class DecisionService {
         return null;
     }
 
+    @Nullable
+    public Variation getVariation(@Nonnull Experiment experiment,
+                                  @Nonnull String userId,
+                                  @Nonnull Map<String, ?> filteredAttributes,
+                                  @Nonnull ProjectConfig projectConfig) {
+        return getVariation(experiment, userId, filteredAttributes, projectConfig, Collections.emptyList(), new DecisionReasons());
+    }
+
     /**
      * Get the variation the user is bucketed into for the FeatureFlag
      *
@@ -206,30 +190,6 @@ public class DecisionService {
                                                   @Nonnull ProjectConfig projectConfig,
                                                   @Nonnull List<OptimizelyDecideOption> options,
                                                   @Nonnull DecisionReasons reasons) {
-        // support existing custom DecisionServices
-        if (isMethodOverriden("getVariationForFeature", FeatureFlag.class, String.class, Map.class, ProjectConfig.class)) {
-            return getVariationForFeature(featureFlag, userId, filteredAttributes, projectConfig);
-        }
-
-        return getVariationForFeatureCore(featureFlag, userId, filteredAttributes, projectConfig, options, reasons);
-    }
-
-    @Nonnull
-    public FeatureDecision getVariationForFeature(@Nonnull FeatureFlag featureFlag,
-                                                  @Nonnull String userId,
-                                                  @Nonnull Map<String, ?> filteredAttributes,
-                                                  @Nonnull ProjectConfig projectConfig) {
-
-        return getVariationForFeatureCore(featureFlag, userId, filteredAttributes, projectConfig,Collections.emptyList(), new DecisionReasons());
-    }
-
-    @Nonnull
-    public FeatureDecision getVariationForFeatureCore(@Nonnull FeatureFlag featureFlag,
-                                                      @Nonnull String userId,
-                                                      @Nonnull Map<String, ?> filteredAttributes,
-                                                      @Nonnull ProjectConfig projectConfig,
-                                                      @Nonnull List<OptimizelyDecideOption> options,
-                                                      @Nonnull DecisionReasons reasons) {
         if (!featureFlag.getExperimentIds().isEmpty()) {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
@@ -254,6 +214,15 @@ public class DecisionService {
             logger.info(message);
         }
         return featureDecision;
+    }
+
+    @Nonnull
+    public FeatureDecision getVariationForFeature(@Nonnull FeatureFlag featureFlag,
+                                                  @Nonnull String userId,
+                                                  @Nonnull Map<String, ?> filteredAttributes,
+                                                  @Nonnull ProjectConfig projectConfig) {
+
+        return getVariationForFeature(featureFlag, userId, filteredAttributes, projectConfig,Collections.emptyList(), new DecisionReasons());
     }
 
     /**
@@ -598,27 +567,6 @@ public class DecisionService {
                                         @Nonnull String userId,
                                         @Nonnull List<OptimizelyDecideOption> options,
                                         @Nonnull DecisionReasons reasons) {
-
-        // support existing custom DecisionServices
-        if (isMethodOverriden("getForcedVariation", Experiment.class, String.class)) {
-            return getForcedVariation(experiment, userId);
-        }
-
-        return getForcedVariationCore(experiment, userId, options, reasons);
-    }
-
-    @Nullable
-    public Variation getForcedVariation(@Nonnull Experiment experiment,
-                                        @Nonnull String userId) {
-        return getForcedVariationCore(experiment, userId, Collections.emptyList(), new DecisionReasons());
-    }
-
-    @Nullable
-    public Variation getForcedVariationCore(@Nonnull Experiment experiment,
-                                            @Nonnull String userId,
-                                            @Nonnull List<OptimizelyDecideOption> options,
-                                            @Nonnull DecisionReasons reasons) {
-
         // if the user id is invalid, return false.
         if (!validateUserId(userId)) {
             return null;
@@ -642,6 +590,12 @@ public class DecisionService {
         return null;
     }
 
+    @Nullable
+    public Variation getForcedVariation(@Nonnull Experiment experiment,
+                                        @Nonnull String userId) {
+        return getForcedVariation(experiment, userId, Collections.emptyList(), new DecisionReasons());
+    }
+
     /**
      * Helper function to check that the provided userId is valid
      *
@@ -655,14 +609,6 @@ public class DecisionService {
         }
 
         return true;
-    }
-
-    Boolean isMethodOverriden(String methodName, Class<?>... params) {
-        try {
-            return getClass() != DecisionService.class && getClass().getDeclaredMethod(methodName, params) != null;
-        } catch (NoSuchMethodException e) {
-            return false;
-        }
     }
 
 }
