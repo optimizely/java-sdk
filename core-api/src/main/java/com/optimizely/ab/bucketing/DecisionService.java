@@ -20,13 +20,14 @@ import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.ExperimentUtils;
-import com.optimizely.ab.optimizelyusercontext.DecisionReasons;
-import com.optimizely.ab.optimizelyusercontext.OptimizelyDecideOption;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,8 +93,8 @@ public class DecisionService {
                                   @Nonnull String userId,
                                   @Nonnull Map<String, ?> filteredAttributes,
                                   @Nonnull ProjectConfig projectConfig,
-                                  @Nullable List<OptimizelyDecideOption> options,
-                                  @Nullable DecisionReasons reasons) {
+                                  @Nonnull List<OptimizelyDecideOption> options,
+                                  @Nonnull DecisionReasons reasons) {
 
         // support existing custom DecisionServices
         if (isMethodOverriden("getVariation", Experiment.class, String.class, Map.class, ProjectConfig.class)) {
@@ -108,7 +109,7 @@ public class DecisionService {
                                   @Nonnull String userId,
                                   @Nonnull Map<String, ?> filteredAttributes,
                                   @Nonnull ProjectConfig projectConfig) {
-        return getVariationCore(experiment, userId, filteredAttributes, projectConfig, null, null);
+        return getVariationCore(experiment, userId, filteredAttributes, projectConfig, Collections.emptyList(), new DecisionReasons());
     }
 
     @Nullable
@@ -116,8 +117,8 @@ public class DecisionService {
                                       @Nonnull String userId,
                                       @Nonnull Map<String, ?> filteredAttributes,
                                       @Nonnull ProjectConfig projectConfig,
-                                      @Nullable List<OptimizelyDecideOption> options,
-                                      @Nullable DecisionReasons reasons) {
+                                      @Nonnull List<OptimizelyDecideOption> options,
+                                      @Nonnull DecisionReasons reasons) {
         if (!ExperimentUtils.isExperimentActive(experiment, options, reasons)) {
             return null;
         }
@@ -141,14 +142,17 @@ public class DecisionService {
             try {
                 Map<String, Object> userProfileMap = userProfileService.lookup(userId);
                 if (userProfileMap == null) {
-                    logInfo(logger, reasons, "We were unable to get a user profile map from the UserProfileService.");
+                    String message = reasons.addInfoF("We were unable to get a user profile map from the UserProfileService.");
+                    logger.info(message);
                 } else if (UserProfileUtils.isValidUserProfileMap(userProfileMap)) {
                     userProfile = UserProfileUtils.convertMapToUserProfile(userProfileMap);
                 } else {
-                    logWarn(logger, reasons, "The UserProfileService returned an invalid map.");
+                    String message = reasons.addInfoF("The UserProfileService returned an invalid map.");
+                    logger.warn(message);
                 }
             } catch (Exception exception) {
-                logError(logger, reasons, exception.getMessage());
+                String message = reasons.addInfoF(exception.getMessage());
+                logger.error(message);
                 errorHandler.handleError(new OptimizelyRuntimeException(exception));
             }
         }
@@ -179,7 +183,8 @@ public class DecisionService {
             return variation;
         }
 
-        logInfo(logger, reasons, "User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experiment.getKey());
+        String message = reasons.addInfoF("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experiment.getKey());
+        logger.info(message);
         return null;
     }
 
@@ -199,8 +204,8 @@ public class DecisionService {
                                                   @Nonnull String userId,
                                                   @Nonnull Map<String, ?> filteredAttributes,
                                                   @Nonnull ProjectConfig projectConfig,
-                                                  @Nullable List<OptimizelyDecideOption> options,
-                                                  @Nullable DecisionReasons reasons) {
+                                                  @Nonnull List<OptimizelyDecideOption> options,
+                                                  @Nonnull DecisionReasons reasons) {
         // support existing custom DecisionServices
         if (isMethodOverriden("getVariationForFeature", FeatureFlag.class, String.class, Map.class, ProjectConfig.class)) {
             return getVariationForFeature(featureFlag, userId, filteredAttributes, projectConfig);
@@ -215,7 +220,7 @@ public class DecisionService {
                                                   @Nonnull Map<String, ?> filteredAttributes,
                                                   @Nonnull ProjectConfig projectConfig) {
 
-        return getVariationForFeatureCore(featureFlag, userId, filteredAttributes, projectConfig,null, null);
+        return getVariationForFeatureCore(featureFlag, userId, filteredAttributes, projectConfig,Collections.emptyList(), new DecisionReasons());
     }
 
     @Nonnull
@@ -223,8 +228,8 @@ public class DecisionService {
                                                       @Nonnull String userId,
                                                       @Nonnull Map<String, ?> filteredAttributes,
                                                       @Nonnull ProjectConfig projectConfig,
-                                                      @Nullable List<OptimizelyDecideOption> options,
-                                                      @Nullable DecisionReasons reasons) {
+                                                      @Nonnull List<OptimizelyDecideOption> options,
+                                                      @Nonnull DecisionReasons reasons) {
         if (!featureFlag.getExperimentIds().isEmpty()) {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
@@ -234,16 +239,19 @@ public class DecisionService {
                 }
             }
         } else {
-            logInfo(logger, reasons, "The feature flag \"%s\" is not used in any experiments.", featureFlag.getKey());
+            String message = reasons.addInfoF("The feature flag \"%s\" is not used in any experiments.", featureFlag.getKey());
+            logger.info(message);
         }
 
         FeatureDecision featureDecision = getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes, projectConfig, options, reasons);
         if (featureDecision.variation == null) {
-            logInfo(logger, reasons, "The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
+            String message = reasons.addInfoF("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
                 userId, featureFlag.getKey());
+            logger.info(message);
         } else {
-            logInfo(logger, reasons, "The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
+            String message = reasons.addInfoF("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
                 userId, featureFlag.getKey());
+            logger.info(message);
         }
         return featureDecision;
     }
@@ -266,17 +274,19 @@ public class DecisionService {
                                                     @Nonnull String userId,
                                                     @Nonnull Map<String, ?> filteredAttributes,
                                                     @Nonnull ProjectConfig projectConfig,
-                                                    @Nullable List<OptimizelyDecideOption> options,
-                                                    @Nullable DecisionReasons reasons) {
+                                                    @Nonnull List<OptimizelyDecideOption> options,
+                                                    @Nonnull DecisionReasons reasons) {
         // use rollout to get variation for feature
         if (featureFlag.getRolloutId().isEmpty()) {
-            logInfo(logger, reasons, "The feature flag \"%s\" is not used in a rollout.", featureFlag.getKey());
+            String message = reasons.addInfoF("The feature flag \"%s\" is not used in a rollout.", featureFlag.getKey());
+            logger.info(message);
             return new FeatureDecision(null, null, null);
         }
         Rollout rollout = projectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
         if (rollout == null) {
-            logError(logger, reasons, "The rollout with id \"%s\" was not found in the datafile for feature flag \"%s\".",
+            String message = reasons.addInfoF("The rollout with id \"%s\" was not found in the datafile for feature flag \"%s\".",
                 featureFlag.getRolloutId(), featureFlag.getKey());
+            logger.error(message);
             return new FeatureDecision(null, null, null);
         }
 
@@ -294,7 +304,8 @@ public class DecisionService {
                 return new FeatureDecision(rolloutRule, variation,
                     FeatureDecision.DecisionSource.ROLLOUT);
             } else {
-                logDebug(logger, reasons, "User \"%s\" does not meet conditions for targeting rule \"%d\".", userId, i + 1);
+                String message = reasons.addInfoF("User \"%s\" does not meet conditions for targeting rule \"%d\".", userId, i + 1);
+                logger.debug(message);
             }
         }
 
@@ -303,7 +314,8 @@ public class DecisionService {
         if (ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, finalRule, filteredAttributes, RULE, "Everyone Else", options, reasons)) {
             variation = bucketer.bucket(finalRule, bucketingId, projectConfig, options, reasons);
             if (variation != null) {
-                logDebug(logger, reasons, "User \"%s\" meets conditions for targeting rule \"Everyone Else\".", userId);
+                String message = reasons.addInfoF("User \"%s\" meets conditions for targeting rule \"Everyone Else\".", userId);
+                logger.debug(message);
                 return new FeatureDecision(finalRule, variation,
                     FeatureDecision.DecisionSource.ROLLOUT);
             }
@@ -316,7 +328,7 @@ public class DecisionService {
                                                     @Nonnull String userId,
                                                     @Nonnull Map<String, ?> filteredAttributes,
                                                     @Nonnull ProjectConfig projectConfig) {
-        return getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes, projectConfig, null, null);
+        return getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes, projectConfig, Collections.emptyList(), new DecisionReasons());
     }
 
     /**
@@ -332,18 +344,20 @@ public class DecisionService {
     @Nullable
     Variation getWhitelistedVariation(@Nonnull Experiment experiment,
                                       @Nonnull String userId,
-                                      @Nullable List<OptimizelyDecideOption> options,
-                                      @Nullable DecisionReasons reasons) {
+                                      @Nonnull List<OptimizelyDecideOption> options,
+                                      @Nonnull DecisionReasons reasons) {
         // if a user has a forced variation mapping, return the respective variation
         Map<String, String> userIdToVariationKeyMap = experiment.getUserIdToVariationKeyMap();
         if (userIdToVariationKeyMap.containsKey(userId)) {
             String forcedVariationKey = userIdToVariationKeyMap.get(userId);
             Variation forcedVariation = experiment.getVariationKeyToVariationMap().get(forcedVariationKey);
             if (forcedVariation != null) {
-                logInfo(logger, reasons, "User \"%s\" is forced in variation \"%s\".", userId, forcedVariationKey);
+                String message = reasons.addInfoF("User \"%s\" is forced in variation \"%s\".", userId, forcedVariationKey);
+                logger.info(message);
             } else {
-                logError(logger, reasons, "Variation \"%s\" is not in the datafile. Not activating user \"%s\".",
+                String message = reasons.addInfoF("Variation \"%s\" is not in the datafile. Not activating user \"%s\".",
                     forcedVariationKey, userId);
+                logger.error(message);
             }
             return forcedVariation;
         }
@@ -354,7 +368,7 @@ public class DecisionService {
     Variation getWhitelistedVariation(@Nonnull Experiment experiment,
                                       @Nonnull String userId) {
 
-        return getWhitelistedVariation(experiment, userId, null, null);
+        return getWhitelistedVariation(experiment, userId, Collections.emptyList(), new DecisionReasons());
     }
 
     /**
@@ -372,10 +386,10 @@ public class DecisionService {
     Variation getStoredVariation(@Nonnull Experiment experiment,
                                  @Nonnull UserProfile userProfile,
                                  @Nonnull ProjectConfig projectConfig,
-                                 @Nullable List<OptimizelyDecideOption> options,
-                                 @Nullable DecisionReasons reasons) {
+                                 @Nonnull List<OptimizelyDecideOption> options,
+                                 @Nonnull DecisionReasons reasons) {
 
-        if (options != null && options.contains(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE)) return null;
+        if (options.contains(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE)) return null;
 
         // ---------- Check User Profile for Sticky Bucketing ----------
         // If a user profile instance is present then check it for a saved variation
@@ -390,18 +404,21 @@ public class DecisionService {
                 .getVariationIdToVariationMap()
                 .get(variationId);
             if (savedVariation != null) {
-                logInfo(logger, reasons,"Returning previously activated variation \"%s\" of experiment \"%s\" for user \"%s\" from user profile.",
+                String message = reasons.addInfoF("Returning previously activated variation \"%s\" of experiment \"%s\" for user \"%s\" from user profile.",
                     savedVariation.getKey(), experimentKey, userProfile.userId);
+                logger.info(message);
                 // A variation is stored for this combined bucket id
                 return savedVariation;
             } else {
-                logInfo(logger, reasons,"User \"%s\" was previously bucketed into variation with ID \"%s\" for experiment \"%s\", but no matching variation was found for that user. We will re-bucket the user.",
+                String message = reasons.addInfoF("User \"%s\" was previously bucketed into variation with ID \"%s\" for experiment \"%s\", but no matching variation was found for that user. We will re-bucket the user.",
                     userProfile.userId, variationId, experimentKey);
+                logger.info(message);
                 return null;
             }
         } else {
-            logInfo(logger, reasons, "No previously activated variation of experiment \"%s\" for user \"%s\" found in user profile.",
+            String message = reasons.addInfoF("No previously activated variation of experiment \"%s\" for user \"%s\" found in user profile.",
                 experimentKey, userProfile.userId);
+            logger.info(message);
             return null;
         }
     }
@@ -410,7 +427,7 @@ public class DecisionService {
     Variation getStoredVariation(@Nonnull Experiment experiment,
                                  @Nonnull UserProfile userProfile,
                                  @Nonnull ProjectConfig projectConfig) {
-        return getStoredVariation(experiment, userProfile, projectConfig, null, null);
+        return getStoredVariation(experiment, userProfile, projectConfig, Collections.emptyList(), new DecisionReasons());
     }
 
     /**
@@ -425,10 +442,10 @@ public class DecisionService {
     void saveVariation(@Nonnull Experiment experiment,
                        @Nonnull Variation variation,
                        @Nonnull UserProfile userProfile,
-                       @Nullable List<OptimizelyDecideOption> options,
-                       @Nullable DecisionReasons reasons) {
+                       @Nonnull List<OptimizelyDecideOption> options,
+                       @Nonnull DecisionReasons reasons) {
 
-        if (options != null && options.contains(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE)) return;
+        if (options.contains(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE)) return;
 
         // only save if the user has implemented a user profile service
         if (userProfileService != null) {
@@ -458,7 +475,7 @@ public class DecisionService {
     void saveVariation(@Nonnull Experiment experiment,
                        @Nonnull Variation variation,
                        @Nonnull UserProfile userProfile) {
-        saveVariation(experiment, variation, userProfile, null, null);
+        saveVariation(experiment, variation, userProfile, Collections.emptyList(), new DecisionReasons());
     }
 
     /**
@@ -473,15 +490,16 @@ public class DecisionService {
      */
     String getBucketingId(@Nonnull String userId,
                           @Nonnull Map<String, ?> filteredAttributes,
-                          @Nullable List<OptimizelyDecideOption> options,
-                          @Nullable DecisionReasons reasons) {
+                          @Nonnull List<OptimizelyDecideOption> options,
+                          @Nonnull DecisionReasons reasons) {
         String bucketingId = userId;
         if (filteredAttributes != null && filteredAttributes.containsKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())) {
             if (String.class.isInstance(filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString()))) {
                 bucketingId = (String) filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString());
                 logger.debug("BucketingId is valid: \"{}\"", bucketingId);
             } else {
-                logWarn(logger, reasons, "BucketingID attribute is not a string. Defaulted to userId");
+                String message = reasons.addInfoF("BucketingID attribute is not a string. Defaulted to userId");
+                logger.warn(message);
             }
         }
         return bucketingId;
@@ -489,7 +507,7 @@ public class DecisionService {
 
     String getBucketingId(@Nonnull String userId,
                           @Nonnull Map<String, ?> filteredAttributes) {
-        return getBucketingId(userId, filteredAttributes, null, null);
+        return getBucketingId(userId, filteredAttributes, Collections.emptyList(), new DecisionReasons());
     }
 
     public ConcurrentHashMap<String, ConcurrentHashMap<String, String>> getForcedVariationMapping() {
@@ -578,8 +596,8 @@ public class DecisionService {
     @Nullable
     public Variation getForcedVariation(@Nonnull Experiment experiment,
                                         @Nonnull String userId,
-                                        @Nullable List<OptimizelyDecideOption> options,
-                                        @Nullable DecisionReasons reasons) {
+                                        @Nonnull List<OptimizelyDecideOption> options,
+                                        @Nonnull DecisionReasons reasons) {
 
         // support existing custom DecisionServices
         if (isMethodOverriden("getForcedVariation", Experiment.class, String.class)) {
@@ -592,14 +610,14 @@ public class DecisionService {
     @Nullable
     public Variation getForcedVariation(@Nonnull Experiment experiment,
                                         @Nonnull String userId) {
-        return getForcedVariationCore(experiment, userId, null, null);
+        return getForcedVariationCore(experiment, userId, Collections.emptyList(), new DecisionReasons());
     }
 
     @Nullable
     public Variation getForcedVariationCore(@Nonnull Experiment experiment,
                                             @Nonnull String userId,
-                                            @Nullable List<OptimizelyDecideOption> options,
-                                            @Nullable DecisionReasons reasons) {
+                                            @Nonnull List<OptimizelyDecideOption> options,
+                                            @Nonnull DecisionReasons reasons) {
 
         // if the user id is invalid, return false.
         if (!validateUserId(userId)) {
@@ -612,8 +630,9 @@ public class DecisionService {
             if (variationId != null) {
                 Variation variation = experiment.getVariationIdToVariationMap().get(variationId);
                 if (variation != null) {
-                    logDebug(logger, reasons, "Variation \"%s\" is mapped to experiment \"%s\" and user \"%s\" in the forced variation map",
+                    String message = reasons.addInfoF("Variation \"%s\" is mapped to experiment \"%s\" and user \"%s\" in the forced variation map",
                         variation.getKey(), experiment.getKey(), userId);
+                    logger.debug(message);
                     return variation;
                 }
             } else {
@@ -636,30 +655,6 @@ public class DecisionService {
         }
 
         return true;
-    }
-
-    public static void logError(Logger logger, DecisionReasons reasons, String format, Object... args) {
-        String message = String.format(format, args);
-        logger.error(message);
-        if (reasons != null) reasons.addInfo(message);
-    }
-
-    public static void logWarn(Logger logger, DecisionReasons reasons, String format, Object... args) {
-        String message = String.format(format, args);
-        logger.warn(message);
-        if (reasons != null) reasons.addInfo(message);
-    }
-
-    public static void logInfo(Logger logger, DecisionReasons reasons, String format, Object... args) {
-        String message = String.format(format, args);
-        logger.info(message);
-        if (reasons != null) reasons.addInfo(message);
-    }
-
-    public static void logDebug(Logger logger, DecisionReasons reasons, String format, Object... args) {
-        String message = String.format(format, args);
-        logger.debug(message);
-        if (reasons != null) reasons.addInfo(message);
     }
 
     Boolean isMethodOverriden(String methodName, Class<?>... params) {

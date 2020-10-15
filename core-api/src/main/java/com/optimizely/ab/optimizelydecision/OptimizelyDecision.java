@@ -14,8 +14,9 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.optimizelyusercontext;
+package com.optimizely.ab.optimizelydecision;
 
+import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 
 import javax.annotation.Nonnull;

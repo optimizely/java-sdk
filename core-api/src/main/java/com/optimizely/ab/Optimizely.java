@@ -35,8 +35,7 @@ import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
-import com.optimizely.ab.optimizelyusercontext.OptimizelyDecideOption;
-import com.optimizely.ab.optimizelyusercontext.OptimizelyUserContext;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +77,7 @@ public class Optimizely implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
 
-    public final DecisionService decisionService;
+    final DecisionService decisionService;
     @VisibleForTesting
     @Deprecated
     final EventHandler eventHandler;
@@ -226,11 +225,11 @@ public class Optimizely implements AutoCloseable {
         return variation;
     }
 
-    public void sendImpression(@Nonnull ProjectConfig projectConfig,
-                                @Nonnull Experiment experiment,
-                                @Nonnull String userId,
-                                @Nonnull Map<String, ?> filteredAttributes,
-                                @Nonnull Variation variation) {
+    void sendImpression(@Nonnull ProjectConfig projectConfig,
+                        @Nonnull Experiment experiment,
+                        @Nonnull String userId,
+                        @Nonnull Map<String, ?> filteredAttributes,
+                        @Nonnull Variation variation) {
         if (!experiment.isRunning()) {
             logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
             return;
@@ -741,7 +740,7 @@ public class Optimizely implements AutoCloseable {
     }
 
     // Helper method which takes type and variable value and convert it to object to use in Listener DecisionInfo object variable value
-    public Object convertStringToType(String variableValue, String type) {
+    Object convertStringToType(String variableValue, String type) {
         if (variableValue != null) {
             switch (type) {
                 case FeatureVariable.DOUBLE_TYPE:

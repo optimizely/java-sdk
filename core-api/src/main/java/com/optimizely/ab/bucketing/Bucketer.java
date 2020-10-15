@@ -19,14 +19,15 @@ package com.optimizely.ab.bucketing;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.bucketing.internal.MurmurHash3;
 import com.optimizely.ab.config.*;
-import com.optimizely.ab.optimizelyusercontext.DecisionReasons;
-import com.optimizely.ab.optimizelyusercontext.OptimizelyDecideOption;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -70,8 +71,8 @@ public class Bucketer {
     private Experiment bucketToExperiment(@Nonnull Group group,
                                           @Nonnull String bucketingId,
                                           @Nonnull ProjectConfig projectConfig,
-                                          @Nullable List<OptimizelyDecideOption> options,
-                                          @Nullable DecisionReasons reasons) {
+                                          @Nonnull List<OptimizelyDecideOption> options,
+                                          @Nonnull DecisionReasons reasons) {
         // "salt" the bucket id using the group id
         String bucketKey = bucketingId + group.getId();
 
@@ -92,8 +93,8 @@ public class Bucketer {
 
     private Variation bucketToVariation(@Nonnull Experiment experiment,
                                         @Nonnull String bucketingId,
-                                        @Nullable List<OptimizelyDecideOption> options,
-                                        @Nullable DecisionReasons reasons) {
+                                        @Nonnull List<OptimizelyDecideOption> options,
+                                        @Nonnull DecisionReasons reasons) {
         // "salt" the bucket id using the experiment id
         String experimentId = experiment.getId();
         String experimentKey = experiment.getKey();
@@ -109,14 +110,16 @@ public class Bucketer {
         if (bucketedVariationId != null) {
             Variation bucketedVariation = experiment.getVariationIdToVariationMap().get(bucketedVariationId);
             String variationKey = bucketedVariation.getKey();
-            DecisionService.logInfo(logger, reasons, "User with bucketingId \"%s\" is in variation \"%s\" of experiment \"%s\".", bucketingId, variationKey,
+            String message = reasons.addInfoF("User with bucketingId \"%s\" is in variation \"%s\" of experiment \"%s\".", bucketingId, variationKey,
                 experimentKey);
+            logger.info(message);
 
             return bucketedVariation;
         }
 
         // user was not bucketed to a variation
-        DecisionService.logInfo(logger, reasons, "User with bucketingId \"%s\" is not in any variation of experiment \"%s\".", bucketingId, experimentKey);
+        String message = reasons.addInfoF("User with bucketingId \"%s\" is not in any variation of experiment \"%s\".", bucketingId, experimentKey);
+        logger.info(message);
         return null;
     }
 
@@ -134,8 +137,8 @@ public class Bucketer {
     public Variation bucket(@Nonnull Experiment experiment,
                             @Nonnull String bucketingId,
                             @Nonnull ProjectConfig projectConfig,
-                            @Nullable List<OptimizelyDecideOption> options,
-                            @Nullable DecisionReasons reasons) {
+                            @Nonnull List<OptimizelyDecideOption> options,
+                            @Nonnull DecisionReasons reasons) {
 
         // support existing custom Bucketers
         if (isMethodOverriden("bucket", Experiment.class, String.class, ProjectConfig.class)) {
@@ -157,15 +160,15 @@ public class Bucketer {
     public Variation bucket(@Nonnull Experiment experiment,
                             @Nonnull String bucketingId,
                             @Nonnull ProjectConfig projectConfig) {
-        return bucketCore(experiment, bucketingId, projectConfig, null, null);
+        return bucketCore(experiment, bucketingId, projectConfig, Collections.emptyList(), new DecisionReasons());
     }
 
     @Nullable
     public Variation bucketCore(@Nonnull Experiment experiment,
                                 @Nonnull String bucketingId,
                                 @Nonnull ProjectConfig projectConfig,
-                                @Nullable List<OptimizelyDecideOption> options,
-                                @Nullable DecisionReasons reasons) {
+                                @Nonnull List<OptimizelyDecideOption> options,
+                                @Nonnull DecisionReasons reasons) {
         // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group
@@ -175,7 +178,8 @@ public class Bucketer {
             if (experimentGroup.getPolicy().equals(Group.RANDOM_POLICY)) {
                 Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId, projectConfig, options, reasons);
                 if (bucketedExperiment == null) {
-                    DecisionService.logInfo(logger, reasons, "User with bucketingId \"%s\" is not in any experiment of group %s.", bucketingId, experimentGroup.getId());
+                    String message = reasons.addInfoF("User with bucketingId \"%s\" is not in any experiment of group %s.", bucketingId, experimentGroup.getId());
+                    logger.info(message);
                     return null;
                 } else {
 
@@ -183,13 +187,15 @@ public class Bucketer {
                 // if the experiment a user is bucketed in within a group isn't the same as the experiment provided,
                 // don't perform further bucketing within the experiment
                 if (!bucketedExperiment.getId().equals(experiment.getId())) {
-                    DecisionService.logInfo(logger, reasons, "User with bucketingId \"%s\" is not in experiment \"%s\" of group %s.", bucketingId, experiment.getKey(),
+                    String message = reasons.addInfoF("User with bucketingId \"%s\" is not in experiment \"%s\" of group %s.", bucketingId, experiment.getKey(),
                         experimentGroup.getId());
+                    logger.info(message);
                     return null;
                 }
 
-                DecisionService.logInfo(logger, reasons, "User with bucketingId \"%s\" is in experiment \"%s\" of group %s.", bucketingId, experiment.getKey(),
+                String message = reasons.addInfoF("User with bucketingId \"%s\" is in experiment \"%s\" of group %s.", bucketingId, experiment.getKey(),
                     experimentGroup.getId());
+                logger.info(message);
             }
         }
 

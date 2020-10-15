@@ -16,20 +16,20 @@
  */
 package com.optimizely.ab.internal;
 
-import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.OrCondition;
-import com.optimizely.ab.optimizelyusercontext.DecisionReasons;
-import com.optimizely.ab.optimizelyusercontext.OptimizelyDecideOption;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -49,11 +49,12 @@ public final class ExperimentUtils {
      * @return whether the pre-conditions are satisfied
      */
     public static boolean isExperimentActive(@Nonnull Experiment experiment,
-                                             @Nullable List<OptimizelyDecideOption> options,
-                                             @Nullable DecisionReasons reasons) {
+                                             @Nonnull List<OptimizelyDecideOption> options,
+                                             @Nonnull DecisionReasons reasons) {
 
         if (!experiment.isActive()) {
-            DecisionService.logInfo(logger, reasons, "Experiment \"%s\" is not running.", experiment.getKey());
+            String message = reasons.addInfoF("Experiment \"%s\" is not running.", experiment.getKey());
+            logger.info(message);
             return false;
         }
 
@@ -61,7 +62,7 @@ public final class ExperimentUtils {
     }
 
     public static boolean isExperimentActive(@Nonnull Experiment experiment) {
-        return isExperimentActive(experiment, null, null);
+        return isExperimentActive(experiment, Collections.emptyList(), new DecisionReasons());
     }
 
     /**
@@ -81,8 +82,8 @@ public final class ExperimentUtils {
                                                          @Nonnull Map<String, ?> attributes,
                                                          @Nonnull String loggingEntityType,
                                                          @Nonnull String loggingKey,
-                                                         @Nullable List<OptimizelyDecideOption> options,
-                                                         @Nullable DecisionReasons reasons) {
+                                                         @Nonnull List<OptimizelyDecideOption> options,
+                                                         @Nonnull DecisionReasons reasons) {
         if (experiment.getAudienceConditions() != null) {
             logger.debug("Evaluating audiences for {} \"{}\": {}.", loggingEntityType, loggingKey, experiment.getAudienceConditions());
             Boolean resolveReturn = evaluateAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey);
@@ -108,7 +109,7 @@ public final class ExperimentUtils {
                                                          @Nonnull Map<String, ?> attributes,
                                                          @Nonnull String loggingEntityType,
                                                          @Nonnull String loggingKey) {
-        return doesUserMeetAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey, null, null);
+        return doesUserMeetAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey, Collections.emptyList(), new DecisionReasons());
     }
 
     @Nullable
@@ -117,8 +118,8 @@ public final class ExperimentUtils {
                                            @Nonnull Map<String, ?> attributes,
                                            @Nonnull String loggingEntityType,
                                            @Nonnull String loggingKey,
-                                           @Nullable List<OptimizelyDecideOption> options,
-                                           @Nullable DecisionReasons reasons) {
+                                           @Nonnull List<OptimizelyDecideOption> options,
+                                           @Nonnull DecisionReasons reasons) {
         List<String> experimentAudienceIds = experiment.getAudienceIds();
 
         // if there are no audiences, ALL users should be part of the experiment
@@ -138,7 +139,8 @@ public final class ExperimentUtils {
 
         Boolean result = implicitOr.evaluate(projectConfig, attributes);
 
-        DecisionService.logInfo(logger, reasons, "Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
+        String message = reasons.addInfoF("Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
+        logger.info(message);
 
         return result;
     }
@@ -149,7 +151,7 @@ public final class ExperimentUtils {
                                            @Nonnull Map<String, ?> attributes,
                                            @Nonnull String loggingEntityType,
                                            @Nonnull String loggingKey) {
-        return evaluateAudience(projectConfig, experiment, attributes, loggingEntityType, loggingKey, null, null);
+        return evaluateAudience(projectConfig, experiment, attributes, loggingEntityType, loggingKey, Collections.emptyList(), new DecisionReasons());
     }
 
     @Nullable
@@ -158,18 +160,20 @@ public final class ExperimentUtils {
                                                      @Nonnull Map<String, ?> attributes,
                                                      @Nonnull String loggingEntityType,
                                                      @Nonnull String loggingKey,
-                                                     @Nullable List<OptimizelyDecideOption> options,
-                                                     @Nullable DecisionReasons reasons) {
+                                                     @Nonnull List<OptimizelyDecideOption> options,
+                                                     @Nonnull DecisionReasons reasons) {
 
         Condition conditions = experiment.getAudienceConditions();
         if (conditions == null) return null;
 
         try {
             Boolean result = conditions.evaluate(projectConfig, attributes);
-            DecisionService.logInfo(logger, reasons,"Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
+            String message = reasons.addInfoF("Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
+            logger.info(message);
             return result;
         } catch (Exception e) {
-            DecisionService.logError(logger, reasons,"Condition invalid: %s", e.getMessage());
+            String message = reasons.addInfoF("Condition invalid: %s", e.getMessage());
+            logger.error(message);
             return null;
         }
     }
@@ -180,7 +184,7 @@ public final class ExperimentUtils {
                                                      @Nonnull Map<String, ?> attributes,
                                                      @Nonnull String loggingEntityType,
                                                      @Nonnull String loggingKey) {
-        return evaluateAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey, null, null);
+        return evaluateAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey, Collections.emptyList(), new DecisionReasons());
     }
 
 }

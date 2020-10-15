@@ -14,7 +14,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.optimizelyusercontext;
+package com.optimizely.ab.optimizelydecision;
 
 public enum OptimizelyDecideOption {
    DISABLE_DECISION_EVENT,

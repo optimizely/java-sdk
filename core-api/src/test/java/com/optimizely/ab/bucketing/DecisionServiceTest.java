@@ -95,7 +95,7 @@ public class DecisionServiceTest {
         // no attributes provided for a experiment that has an audience
         assertThat(decisionService.getVariation(experiment, whitelistedUserId, Collections.<String, String>emptyMap(), validProjectConfig), is(expectedVariation));
 
-        verify(decisionService).getWhitelistedVariation(experiment, whitelistedUserId, null, null);
+        verify(decisionService).getWhitelistedVariation(eq(experiment), eq(whitelistedUserId), anyObject(), anyObject());
         verify(decisionService, never()).getStoredVariation(eq(experiment), any(UserProfile.class), any(ProjectConfig.class), anyObject(), anyObject());
     }
 
@@ -901,7 +901,7 @@ public class DecisionServiceTest {
             Collections.singletonMap(experiment.getId(), decision));
 
         Bucketer mockBucketer = mock(Bucketer.class);
-        when(mockBucketer.bucket(experiment, userProfileId, noAudienceProjectConfig, null, null)).thenReturn(variation);
+        when(mockBucketer.bucket(eq(experiment), eq(userProfileId), eq(noAudienceProjectConfig), anyObject(), anyObject())).thenReturn(variation);
 
         DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, userProfileService);
 
@@ -963,7 +963,7 @@ public class DecisionServiceTest {
         UserProfileService userProfileService = mock(UserProfileService.class);
         DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService);
 
-        when(bucketer.bucket(experiment, userProfileId, noAudienceProjectConfig, null, null)).thenReturn(variation);
+        when(bucketer.bucket(eq(experiment), eq(userProfileId), eq(noAudienceProjectConfig), anyObject(), anyObject())).thenReturn(variation);
         when(userProfileService.lookup(userProfileId)).thenReturn(null);
 
         assertEquals(variation, decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap(), noAudienceProjectConfig));
@@ -977,7 +977,7 @@ public class DecisionServiceTest {
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation expectedVariation = experiment.getVariations().get(0);
 
-        when(bucketer.bucket(experiment, "bucketId", validProjectConfig, null, null)).thenReturn(expectedVariation);
+        when(bucketer.bucket(eq(experiment), eq("bucketId"), eq(validProjectConfig), anyObject(), anyObject())).thenReturn(expectedVariation);
 
         Map<String, String> attr = new HashMap<String, String>();
         attr.put(ControlAttribute.BUCKETING_ATTRIBUTE.toString(), "bucketId");
@@ -1001,8 +1001,8 @@ public class DecisionServiceTest {
         attributes.put(ControlAttribute.BUCKETING_ATTRIBUTE.toString(), bucketingId);
 
         Bucketer bucketer = mock(Bucketer.class);
-        when(bucketer.bucket(rolloutRuleExperiment, userId, v4ProjectConfig, null, null)).thenReturn(null);
-        when(bucketer.bucket(rolloutRuleExperiment, bucketingId, v4ProjectConfig, null, null)).thenReturn(rolloutVariation);
+        when(bucketer.bucket(eq(rolloutRuleExperiment), eq(userId), eq(v4ProjectConfig), anyObject(), anyObject())).thenReturn(null);
+        when(bucketer.bucket(eq(rolloutRuleExperiment), eq(bucketingId), eq(v4ProjectConfig), anyObject(), anyObject())).thenReturn(rolloutVariation);
 
         DecisionService decisionService = spy(new DecisionService(
             bucketer,

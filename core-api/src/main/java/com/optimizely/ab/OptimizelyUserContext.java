@@ -14,14 +14,15 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.optimizelyusercontext;
+package com.optimizely.ab;
 
-import com.optimizely.ab.Optimizely;
-import com.optimizely.ab.UnknownEventTypeException;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.notification.DecisionNotification;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,11 +101,11 @@ public class OptimizelyUserContext {
             return OptimizelyDecision.createErrorDecision(key, this, getFlagKeyInvalidMessage(key));
         }
 
-        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
         Boolean sentEvent = false;
         Boolean flagEnabled = false;
-        DecisionReasons decisionReasons = new DecisionReasons();
+        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
         Boolean includeReasons = allOptions.contains(OptimizelyDecideOption.INCLUDE_REASONS);
+        DecisionReasons decisionReasons = new DecisionReasons(includeReasons);
 
         Map<String, ?> copiedAttributes = copyAttributes();
         FeatureDecision flagDecision = optimizely.decisionService.getVariationForFeature(
@@ -113,7 +114,7 @@ public class OptimizelyUserContext {
             copiedAttributes,
             projectConfig,
             allOptions,
-            includeReasons ? decisionReasons : null);
+            decisionReasons);
 
         if (flagDecision.variation != null) {
             if (flagDecision.decisionSource.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
@@ -142,12 +143,12 @@ public class OptimizelyUserContext {
                 flag,
                 flagDecision.variation,
                 flagEnabled,
-                includeReasons ? decisionReasons : null);
+                decisionReasons);
         }
 
         OptimizelyJSON optimizelyJSON = new OptimizelyJSON(variableMap);
 
-        List<String> reasonsToReport = decisionReasons.toReport(allOptions);
+        List<String> reasonsToReport = decisionReasons.toReport();
         String variationKey = flagDecision.variation != null ? flagDecision.variation.getKey() : null;
         // TODO: add ruleKey values when available later. use a copy of experimentKey until then.
         String ruleKey = flagDecision.experiment != null ? flagDecision.experiment.getKey() : null;
@@ -304,10 +305,10 @@ public class OptimizelyUserContext {
         return String.format(VARIABLE_VALUE_INVALID, variableKey);
     }
 
-    private Map<String, Object> getDecisionVariableMap(FeatureFlag flag,
-                                                       Variation variation,
-                                                       Boolean featureEnabled,
-                                                       DecisionReasons decisionReasons) {
+    private Map<String, Object> getDecisionVariableMap(@Nonnull FeatureFlag flag,
+                                                       @Nonnull Variation variation,
+                                                       @Nonnull Boolean featureEnabled,
+                                                       @Nonnull DecisionReasons decisionReasons) {
         Map<String, Object> valuesMap = new HashMap<String, Object>();
         for (FeatureVariable variable : flag.getVariables()) {
             String value = variable.getDefaultValue();

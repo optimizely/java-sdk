@@ -14,19 +14,25 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.optimizelyusercontext;
+package com.optimizely.ab.optimizelydecision;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class DecisionReasons {
 
+    boolean includeReasons;
     List<String> errors;
     List<String> logs;
 
-    public DecisionReasons() {
+    public DecisionReasons(boolean includeReasons) {
+        this.includeReasons = includeReasons;
         this.errors = new ArrayList<String>();
         this.logs = new ArrayList<String>();
+    }
+
+    public DecisionReasons() {
+        this(false);
     }
 
     public void addError(String message) {
@@ -37,10 +43,15 @@ public class DecisionReasons {
         logs.add(message);
     }
 
+    public String addInfoF(String format, Object... args) {
+        String message = String.format(format, args);
+        if(includeReasons) addInfo(message);
+        return message;
+    }
 
-    public List<String> toReport(List<OptimizelyDecideOption> options) {
+    public List<String> toReport() {
         List<String> reasons = new ArrayList<>(errors);
-        if(options.contains(OptimizelyDecideOption.INCLUDE_REASONS)) {
+        if(includeReasons) {
             reasons.addAll(logs);
         }
         return reasons;

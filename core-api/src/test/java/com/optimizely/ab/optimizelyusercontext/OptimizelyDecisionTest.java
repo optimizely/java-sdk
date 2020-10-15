@@ -17,6 +17,8 @@
 package com.optimizely.ab.optimizelyusercontext;
 
 import com.optimizely.ab.Optimizely;
+import com.optimizely.ab.OptimizelyUserContext;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 import org.junit.Test;
 

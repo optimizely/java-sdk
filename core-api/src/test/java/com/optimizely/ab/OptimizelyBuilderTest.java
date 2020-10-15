@@ -21,7 +21,7 @@ import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.EventHandler;
-import com.optimizely.ab.optimizelyusercontext.OptimizelyDecideOption;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
 import org.junit.Test;
