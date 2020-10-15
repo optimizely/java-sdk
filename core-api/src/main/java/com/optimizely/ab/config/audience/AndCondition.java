@@ -17,10 +17,12 @@
 package com.optimizely.ab.config.audience;
 
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +42,10 @@ public class AndCondition<T> implements Condition<T> {
     }
 
     @Nullable
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    public Boolean evaluate(ProjectConfig config,
+                            Map<String, ?> attributes,
+                            List<OptimizelyDecideOption> options,
+                            DecisionReasons reasons) {
         if (conditions == null) return null;
         boolean foundNull = false;
         // According to the matrix where:
@@ -51,7 +56,7 @@ public class AndCondition<T> implements Condition<T> {
         // true and true is true
         // null and null is null
         for (Condition condition : conditions) {
-            Boolean conditionEval = condition.evaluate(config, attributes);
+            Boolean conditionEval = condition.evaluate(config, attributes, options, reasons);
             if (conditionEval == null) {
                 foundNull = true;
             } else if (!conditionEval) { // false with nulls or trues is false.
@@ -65,6 +70,11 @@ public class AndCondition<T> implements Condition<T> {
         }
 
         return true; // otherwise, return true
+    }
+
+    @Nullable
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+        return evaluate(config, attributes, Collections.emptyList(), new DecisionReasons());
     }
 
     @Override

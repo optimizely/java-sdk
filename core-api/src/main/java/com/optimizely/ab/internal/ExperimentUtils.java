@@ -86,10 +86,10 @@ public final class ExperimentUtils {
                                                          @Nonnull DecisionReasons reasons) {
         if (experiment.getAudienceConditions() != null) {
             logger.debug("Evaluating audiences for {} \"{}\": {}.", loggingEntityType, loggingKey, experiment.getAudienceConditions());
-            Boolean resolveReturn = evaluateAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey);
+            Boolean resolveReturn = evaluateAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey, options, reasons);
             return resolveReturn == null ? false : resolveReturn;
         } else {
-            Boolean resolveReturn = evaluateAudience(projectConfig, experiment, attributes, loggingEntityType, loggingKey);
+            Boolean resolveReturn = evaluateAudience(projectConfig, experiment, attributes, loggingEntityType, loggingKey, options, reasons);
             return Boolean.TRUE.equals(resolveReturn);
         }
     }
@@ -137,21 +137,12 @@ public final class ExperimentUtils {
 
         logger.debug("Evaluating audiences for {} \"{}\": {}.", loggingEntityType, loggingKey, conditions);
 
-        Boolean result = implicitOr.evaluate(projectConfig, attributes);
+        Boolean result = implicitOr.evaluate(projectConfig, attributes, options, reasons);
 
         String message = reasons.addInfoF("Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
         logger.info(message);
 
         return result;
-    }
-
-    @Nullable
-    public static Boolean evaluateAudience(@Nonnull ProjectConfig projectConfig,
-                                           @Nonnull Experiment experiment,
-                                           @Nonnull Map<String, ?> attributes,
-                                           @Nonnull String loggingEntityType,
-                                           @Nonnull String loggingKey) {
-        return evaluateAudience(projectConfig, experiment, attributes, loggingEntityType, loggingKey, Collections.emptyList(), new DecisionReasons());
     }
 
     @Nullable
@@ -167,7 +158,7 @@ public final class ExperimentUtils {
         if (conditions == null) return null;
 
         try {
-            Boolean result = conditions.evaluate(projectConfig, attributes);
+            Boolean result = conditions.evaluate(projectConfig, attributes, options, reasons);
             String message = reasons.addInfoF("Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
             logger.info(message);
             return result;
@@ -176,15 +167,6 @@ public final class ExperimentUtils {
             logger.error(message);
             return null;
         }
-    }
-
-    @Nullable
-    public static Boolean evaluateAudienceConditions(@Nonnull ProjectConfig projectConfig,
-                                                     @Nonnull Experiment experiment,
-                                                     @Nonnull Map<String, ?> attributes,
-                                                     @Nonnull String loggingEntityType,
-                                                     @Nonnull String loggingKey) {
-        return evaluateAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey, Collections.emptyList(), new DecisionReasons());
     }
 
 }

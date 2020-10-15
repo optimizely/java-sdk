@@ -18,27 +18,16 @@ package com.optimizely.ab.config.audience;
 
 import ch.qos.logback.classic.Level;
 import com.optimizely.ab.internal.LogbackVerifier;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for the evaluation of different audience condition types (And, Or, Not, and UserAttribute)
@@ -1183,11 +1172,11 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void notConditionEvaluateTrue()  {
         UserAttribute userAttribute = mock(UserAttribute.class);
-        when(userAttribute.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(userAttribute.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(false);
 
         NotCondition notCondition = new NotCondition(userAttribute);
         assertTrue(notCondition.evaluate(null, testUserAttributes));
-        verify(userAttribute, times(1)).evaluate(null, testUserAttributes);
+        verify(userAttribute, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
     }
 
     /**
@@ -1196,11 +1185,11 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void notConditionEvaluateFalse()  {
         UserAttribute userAttribute = mock(UserAttribute.class);
-        when(userAttribute.evaluate(null, testUserAttributes)).thenReturn(true);
+        when(userAttribute.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(true);
 
         NotCondition notCondition = new NotCondition(userAttribute);
         assertFalse(notCondition.evaluate(null, testUserAttributes));
-        verify(userAttribute, times(1)).evaluate(null, testUserAttributes);
+        verify(userAttribute, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
     }
 
     /**
@@ -1209,10 +1198,10 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void orConditionEvaluateTrue()  {
         UserAttribute userAttribute1 = mock(UserAttribute.class);
-        when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(true);
+        when(userAttribute1.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(true);
 
         UserAttribute userAttribute2 = mock(UserAttribute.class);
-        when(userAttribute2.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(userAttribute2.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(false);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(userAttribute1);
@@ -1220,9 +1209,9 @@ public class AudienceConditionEvaluationTest {
 
         OrCondition orCondition = new OrCondition(conditions);
         assertTrue(orCondition.evaluate(null, testUserAttributes));
-        verify(userAttribute1, times(1)).evaluate(null, testUserAttributes);
+        verify(userAttribute1, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
         // shouldn't be called due to short-circuiting in 'Or' evaluation
-        verify(userAttribute2, times(0)).evaluate(null, testUserAttributes);
+        verify(userAttribute2, times(0)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
     }
 
     /**
@@ -1231,10 +1220,10 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void orConditionEvaluateTrueWithNullAndTrue()  {
         UserAttribute userAttribute1 = mock(UserAttribute.class);
-        when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(null);
+        when(userAttribute1.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(null);
 
         UserAttribute userAttribute2 = mock(UserAttribute.class);
-        when(userAttribute2.evaluate(null, testUserAttributes)).thenReturn(true);
+        when(userAttribute2.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(true);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(userAttribute1);
@@ -1242,9 +1231,9 @@ public class AudienceConditionEvaluationTest {
 
         OrCondition orCondition = new OrCondition(conditions);
         assertTrue(orCondition.evaluate(null, testUserAttributes));
-        verify(userAttribute1, times(1)).evaluate(null, testUserAttributes);
+        verify(userAttribute1, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
         // shouldn't be called due to short-circuiting in 'Or' evaluation
-        verify(userAttribute2, times(1)).evaluate(null, testUserAttributes);
+        verify(userAttribute2, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
     }
 
     /**
@@ -1253,10 +1242,10 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void orConditionEvaluateNullWithNullAndFalse()  {
         UserAttribute userAttribute1 = mock(UserAttribute.class);
-        when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(null);
+        when(userAttribute1.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(null);
 
         UserAttribute userAttribute2 = mock(UserAttribute.class);
-        when(userAttribute2.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(userAttribute2.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(false);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(userAttribute1);
@@ -1264,9 +1253,9 @@ public class AudienceConditionEvaluationTest {
 
         OrCondition orCondition = new OrCondition(conditions);
         assertNull(orCondition.evaluate(null, testUserAttributes));
-        verify(userAttribute1, times(1)).evaluate(null, testUserAttributes);
+        verify(userAttribute1, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
         // shouldn't be called due to short-circuiting in 'Or' evaluation
-        verify(userAttribute2, times(1)).evaluate(null, testUserAttributes);
+        verify(userAttribute2, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
     }
 
     /**
@@ -1275,10 +1264,10 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void orConditionEvaluateFalseWithFalseAndFalse()  {
         UserAttribute userAttribute1 = mock(UserAttribute.class);
-        when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(userAttribute1.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(false);
 
         UserAttribute userAttribute2 = mock(UserAttribute.class);
-        when(userAttribute2.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(userAttribute2.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(false);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(userAttribute1);
@@ -1286,9 +1275,9 @@ public class AudienceConditionEvaluationTest {
 
         OrCondition orCondition = new OrCondition(conditions);
         assertFalse(orCondition.evaluate(null, testUserAttributes));
-        verify(userAttribute1, times(1)).evaluate(null, testUserAttributes);
+        verify(userAttribute1, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
         // shouldn't be called due to short-circuiting in 'Or' evaluation
-        verify(userAttribute2, times(1)).evaluate(null, testUserAttributes);
+        verify(userAttribute2, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
     }
 
     /**
@@ -1297,10 +1286,10 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void orConditionEvaluateFalse()  {
         UserAttribute userAttribute1 = mock(UserAttribute.class);
-        when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(userAttribute1.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(false);
 
         UserAttribute userAttribute2 = mock(UserAttribute.class);
-        when(userAttribute2.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(userAttribute2.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(false);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(userAttribute1);
@@ -1308,8 +1297,8 @@ public class AudienceConditionEvaluationTest {
 
         OrCondition orCondition = new OrCondition(conditions);
         assertFalse(orCondition.evaluate(null, testUserAttributes));
-        verify(userAttribute1, times(1)).evaluate(null, testUserAttributes);
-        verify(userAttribute2, times(1)).evaluate(null, testUserAttributes);
+        verify(userAttribute1, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
+        verify(userAttribute2, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
     }
 
     /**
@@ -1318,10 +1307,10 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void andConditionEvaluateTrue()  {
         OrCondition orCondition1 = mock(OrCondition.class);
-        when(orCondition1.evaluate(null, testUserAttributes)).thenReturn(true);
+        when(orCondition1.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(true);
 
         OrCondition orCondition2 = mock(OrCondition.class);
-        when(orCondition2.evaluate(null, testUserAttributes)).thenReturn(true);
+        when(orCondition2.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(true);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(orCondition1);
@@ -1329,8 +1318,8 @@ public class AudienceConditionEvaluationTest {
 
         AndCondition andCondition = new AndCondition(conditions);
         assertTrue(andCondition.evaluate(null, testUserAttributes));
-        verify(orCondition1, times(1)).evaluate(null, testUserAttributes);
-        verify(orCondition2, times(1)).evaluate(null, testUserAttributes);
+        verify(orCondition1, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
+        verify(orCondition2, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
     }
 
     /**
@@ -1339,10 +1328,10 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void andConditionEvaluateFalseWithNullAndFalse()  {
         OrCondition orCondition1 = mock(OrCondition.class);
-        when(orCondition1.evaluate(null, testUserAttributes)).thenReturn(null);
+        when(orCondition1.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(null);
 
         OrCondition orCondition2 = mock(OrCondition.class);
-        when(orCondition2.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(orCondition2.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(false);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(orCondition1);
@@ -1350,8 +1339,8 @@ public class AudienceConditionEvaluationTest {
 
         AndCondition andCondition = new AndCondition(conditions);
         assertFalse(andCondition.evaluate(null, testUserAttributes));
-        verify(orCondition1, times(1)).evaluate(null, testUserAttributes);
-        verify(orCondition2, times(1)).evaluate(null, testUserAttributes);
+        verify(orCondition1, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
+        verify(orCondition2, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
     }
 
     /**
@@ -1360,10 +1349,10 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void andConditionEvaluateNullWithNullAndTrue()  {
         OrCondition orCondition1 = mock(OrCondition.class);
-        when(orCondition1.evaluate(null, testUserAttributes)).thenReturn(null);
+        when(orCondition1.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(null);
 
         OrCondition orCondition2 = mock(OrCondition.class);
-        when(orCondition2.evaluate(null, testUserAttributes)).thenReturn(true);
+        when(orCondition2.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(true);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(orCondition1);
@@ -1371,8 +1360,8 @@ public class AudienceConditionEvaluationTest {
 
         AndCondition andCondition = new AndCondition(conditions);
         assertNull(andCondition.evaluate(null, testUserAttributes));
-        verify(orCondition1, times(1)).evaluate(null, testUserAttributes);
-        verify(orCondition2, times(1)).evaluate(null, testUserAttributes);
+        verify(orCondition1, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
+        verify(orCondition2, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
     }
 
     /**
@@ -1381,10 +1370,10 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void andConditionEvaluateFalse()  {
         OrCondition orCondition1 = mock(OrCondition.class);
-        when(orCondition1.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(orCondition1.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(false);
 
         OrCondition orCondition2 = mock(OrCondition.class);
-        when(orCondition2.evaluate(null, testUserAttributes)).thenReturn(true);
+        when(orCondition2.evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject())).thenReturn(true);
 
         // and[false, true]
         List<Condition> conditions = new ArrayList<Condition>();
@@ -1393,9 +1382,9 @@ public class AudienceConditionEvaluationTest {
 
         AndCondition andCondition = new AndCondition(conditions);
         assertFalse(andCondition.evaluate(null, testUserAttributes));
-        verify(orCondition1, times(1)).evaluate(null, testUserAttributes);
+        verify(orCondition1, times(1)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
         // shouldn't be called due to short-circuiting in 'And' evaluation
-        verify(orCondition2, times(0)).evaluate(null, testUserAttributes);
+        verify(orCondition2, times(0)).evaluate(eq(null), eq(testUserAttributes), anyObject(), anyObject());
 
         OrCondition orCondition3 = mock(OrCondition.class);
         when(orCondition3.evaluate(null, testUserAttributes)).thenReturn(null);

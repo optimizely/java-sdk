@@ -16,15 +16,27 @@
 package com.optimizely.ab.config.audience;
 
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class EmptyCondition<T> implements Condition<T> {
     @Nullable
     @Override
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    public Boolean evaluate(ProjectConfig config,
+                            Map<String, ?> attributes,
+                            List<OptimizelyDecideOption> options,
+                            DecisionReasons reasons) {
         return true;
+    }
+
+    @Nullable
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+        return evaluate(config, attributes, Collections.emptyList(), new DecisionReasons());
     }
 
 }

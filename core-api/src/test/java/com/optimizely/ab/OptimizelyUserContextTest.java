@@ -14,15 +14,15 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.optimizelyusercontext;
+package com.optimizely.ab;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
-import com.optimizely.ab.EventHandlerRule;
-import com.optimizely.ab.Optimizely;
-import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.bucketing.UserProfileService;
+import com.optimizely.ab.config.DatafileProjectConfig;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.Rollout;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.event.ForwardingEventProcessor;
 import com.optimizely.ab.notification.NotificationCenter;
@@ -30,6 +30,7 @@ import com.optimizely.ab.optimizelydecision.DecisionMessage;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
+import junit.framework.TestCase;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -105,6 +106,20 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
+    public void setAttribute_noAttribute() {
+        OptimizelyUserContext user = new OptimizelyUserContext(optimizely, userId);
+
+        user.setAttribute("k1", "v1");
+        user.setAttribute("k2", true);
+
+        assertEquals(user.getOptimizely(), optimizely);
+        assertEquals(user.getUserId(), userId);
+        Map<String, Object> newAttributes = user.getAttributes();
+        assertEquals(newAttributes.get("k1"), "v1");
+        assertEquals(newAttributes.get("k2"), true);
+    }
+
+    @Test
     public void setAttribute_override() {
         Map<String, Object> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
         OptimizelyUserContext user = new OptimizelyUserContext(optimizely, userId, attributes);
@@ -112,8 +127,6 @@ public class OptimizelyUserContextTest {
         user.setAttribute("k1", "v1");
         user.setAttribute(ATTRIBUTE_HOUSE_KEY, "v2");
 
-        assertEquals(user.getOptimizely(), optimizely);
-        assertEquals(user.getUserId(), userId);
         Map<String, Object> newAttributes = user.getAttributes();
         assertEquals(newAttributes.get("k1"), "v1");
         assertEquals(newAttributes.get(ATTRIBUTE_HOUSE_KEY), "v2");
@@ -442,7 +455,7 @@ public class OptimizelyUserContextTest {
         String flagKey = "invalid_key";
         OptimizelyDecision decision = user.decide(flagKey);
         assertEquals(decision.getReasons().size(), 1);
-        assertEquals(decision.getReasons().get(0), DecisionMessage.FLAG_KEY_INVALID.reason(flagKey));
+        TestCase.assertEquals(decision.getReasons().get(0), DecisionMessage.FLAG_KEY_INVALID.reason(flagKey));
 
         decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
         assertEquals(decision.getReasons().size(), 1);
@@ -597,6 +610,16 @@ public class OptimizelyUserContextTest {
 
     @Test
     public void decideReasons_conditionNoMatchingAudience() throws ConfigParseException {
+        String flagKey = "feature_1";
+        String audienceId = "invalid_id";
+        setAudienceForFeatureTest(flagKey, audienceId);
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Audience %s could not be found.", audienceId)
+        ));
     }
 
     @Test
@@ -641,8 +664,7 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
 
         assertTrue(decision.getReasons().contains(
-            String.format(
-                "Returning previously activated variation \"%s\" of experiment \"%s\" for user \"%s\" from user profile.", variationKey2, experimentKey, userId)
+            String.format("Returning previously activated variation \"%s\" of experiment \"%s\" for user \"%s\" from user profile.", variationKey2, experimentKey, userId)
         ));
     }
 
@@ -665,9 +687,8 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
 
         assertTrue(decision.getReasons().contains(
-            String.format(
-                "The user \"%s\" was bucketed into a rollout for feature flag \"%s\".", userId, flagKey)
-            ));
+            String.format("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".", userId, flagKey)
+        ));
     }
 
     @Test
@@ -790,12 +811,27 @@ public class OptimizelyUserContextTest {
         return userProfileMap;
     }
 
-    void setAudienceForFeatureTest(String featureKey, String audienceId) throws ConfigParseException {
-        String experimentId = optimizely.getProjectConfig().getFeatureKeyMapping().get(featureKey).getExperimentIds().get(0);
-        Experiment experimentReal = optimizely.getProjectConfig().getExperimentIdMapping().get(experimentId);
+    void setAudienceForFeatureTest(String flagKey, String audienceId) throws ConfigParseException {
+        ProjectConfig configReal = new DatafileProjectConfig.Builder().withDatafile(datafile).build();
+        ProjectConfig config = spy(configReal);
+        optimizely = Optimizely.builder().withConfig(config).build();
+
+        String experimentId = config.getFeatureKeyMapping().get(flagKey).getExperimentIds().get(0);
+        String rolloutId = config.getFeatureKeyMapping().get(flagKey).getRolloutId();
+        Map<String, Experiment> experimentIdMapping = new HashMap<>(config.getExperimentIdMapping());
+        Map<String, Rollout> rolloutIdMapping = new HashMap<>(config.getRolloutIdMapping());
+        Experiment experimentReal = experimentIdMapping.get(experimentId);
+        Rollout rolloutReal = rolloutIdMapping.get(rolloutId);
 
         Experiment experiment = spy(experimentReal);
+        Rollout rollout = spy(rolloutReal);
         when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+
+        experimentIdMapping.put(experimentId, experiment);
+        rolloutIdMapping.put(rolloutId, rollout);
+
+        when(config.getExperimentIdMapping()).thenReturn(experimentIdMapping);
+        when(config.getRolloutIdMapping()).thenReturn(rolloutIdMapping);
     }
 
 }

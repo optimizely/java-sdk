@@ -17,8 +17,11 @@
 package com.optimizely.ab.config.audience;
 
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,5 +30,12 @@ import java.util.Map;
 public interface Condition<T> {
 
     @Nullable
+    Boolean evaluate(ProjectConfig config,
+                     Map<String, ?> attributes,
+                     List<OptimizelyDecideOption> options,
+                     DecisionReasons reasons);
+
+    @Nullable
     Boolean evaluate(ProjectConfig config, Map<String, ?> attributes);
+
 }

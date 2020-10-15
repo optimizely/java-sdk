@@ -17,10 +17,13 @@
 package com.optimizely.ab.config.audience;
 
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -45,11 +48,14 @@ public class OrCondition<T> implements Condition<T> {
     // false or false is false
     // null or null is null
     @Nullable
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    public Boolean evaluate(ProjectConfig config,
+                            Map<String, ?> attributes,
+                            List<OptimizelyDecideOption> options,
+                            DecisionReasons reasons) {
         if (conditions == null) return null;
         boolean foundNull = false;
         for (Condition condition : conditions) {
-            Boolean conditionEval = condition.evaluate(config, attributes);
+            Boolean conditionEval = condition.evaluate(config, attributes, options, reasons);
             if (conditionEval == null) { // true with falses and nulls is still true
                 foundNull = true;
             } else if (conditionEval) {
@@ -63,6 +69,11 @@ public class OrCondition<T> implements Condition<T> {
         }
 
         return false;
+    }
+
+    @Nullable
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+        return evaluate(config, attributes, Collections.emptyList(), new DecisionReasons());
     }
 
     @Override
