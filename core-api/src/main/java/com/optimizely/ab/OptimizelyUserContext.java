@@ -102,8 +102,7 @@ public class OptimizelyUserContext {
         Boolean sentEvent = false;
         Boolean flagEnabled = false;
         List<OptimizelyDecideOption> allOptions = getAllOptions(options);
-        Boolean includeReasons = allOptions.contains(OptimizelyDecideOption.INCLUDE_REASONS);
-        DecisionReasons decisionReasons = new DecisionReasons(includeReasons);
+        DecisionReasons decisionReasons = new DecisionReasons(allOptions);
 
         Map<String, ?> copiedAttributes = new HashMap<>(attributes);
         FeatureDecision flagDecision = optimizely.decisionService.getVariationForFeature(

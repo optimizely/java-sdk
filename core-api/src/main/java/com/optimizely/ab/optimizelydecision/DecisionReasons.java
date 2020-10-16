@@ -16,21 +16,23 @@
  */
 package com.optimizely.ab.optimizelydecision;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class DecisionReasons {
 
-    private boolean includeReasons;
     private final List<String> errors = new ArrayList<>();
     private final List<String> logs = new ArrayList<>();
+    private boolean includeReasons;
 
-    public DecisionReasons(boolean includeReasons) {
-        this.includeReasons = includeReasons;
+    public DecisionReasons(@Nonnull List<OptimizelyDecideOption> options) {
+        this.includeReasons = options.contains(OptimizelyDecideOption.INCLUDE_REASONS);
     }
 
     public DecisionReasons() {
-        this(false);
+        this(Collections.emptyList());
     }
 
     public void addError(String message) {
