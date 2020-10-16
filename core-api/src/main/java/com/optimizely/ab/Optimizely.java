@@ -1456,7 +1456,7 @@ public class Optimizely implements AutoCloseable {
         }
 
         public Builder withDefaultDecideOptions(List<OptimizelyDecideOption> options) {
-            this.defaultDecideOptions = Collections.unmodifiableList(options);
+            this.defaultDecideOptions = options;
             return this;
         }
 
@@ -1530,6 +1530,8 @@ public class Optimizely implements AutoCloseable {
 
             if (defaultDecideOptions == null) {
                 defaultDecideOptions = Collections.emptyList();
+            } else {
+                defaultDecideOptions = Collections.unmodifiableList(defaultDecideOptions);
             }
 
             return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, optimizelyConfigManager, notificationCenter, defaultDecideOptions);
