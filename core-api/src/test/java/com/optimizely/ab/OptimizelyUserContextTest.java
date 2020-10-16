@@ -19,10 +19,7 @@ package com.optimizely.ab;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.optimizely.ab.bucketing.UserProfileService;
-import com.optimizely.ab.config.DatafileProjectConfig;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.Rollout;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.event.ForwardingEventProcessor;
 import com.optimizely.ab.notification.NotificationCenter;
@@ -44,18 +41,22 @@ import static com.optimizely.ab.notification.DecisionNotification.ExperimentDeci
 import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNotificationBuilder.*;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class OptimizelyUserContextTest {
     @Rule
     public EventHandlerRule eventHandler = new EventHandlerRule();
 
-    public Optimizely optimizely;
-    public String datafile;
-    public String userId = "tester";
+    String userId = "tester";
     boolean isListenerCalled = false;
+
+    Optimizely optimizely;
+    String datafile;
+    ProjectConfig config;
+    Map<String, Experiment> experimentIdMapping;
+    Map<String, FeatureFlag> featureKeyMapping;
+    Map<String, Group> groupIdMapping;
 
     @Before
     public void setUp() throws Exception {
@@ -604,6 +605,17 @@ public class OptimizelyUserContextTest {
 
     @Test
     public void decideReasons_variableValueInvalid() {
+        String flagKey = "feature_1";
+
+        FeatureFlag flag = getSpyFeatureFlag(flagKey);
+        List<FeatureVariable> variables = Arrays.asList(new FeatureVariable("any-id", "any-key", "invalid", null, "integer", null));
+        when(flag.getVariables()).thenReturn(variables);
+        addSpyFeatureFlag(flag);
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey);
+
+        assertEquals(decision.getReasons().get(0), DecisionMessage.VARIABLE_VALUE_INVALID.reason("any-key"));
     }
 
     // reasons (logs with includeReasons)
@@ -612,10 +624,11 @@ public class OptimizelyUserContextTest {
     public void decideReasons_conditionNoMatchingAudience() throws ConfigParseException {
         String flagKey = "feature_1";
         String audienceId = "invalid_id";
-        setAudienceForFeatureTest(flagKey, audienceId);
 
-        OptimizelyUserContext user = optimizely.createUserContext(userId);
-        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
 
         assertTrue(decision.getReasons().contains(
             String.format("Audience %s could not be found.", audienceId)
@@ -623,26 +636,108 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
-    public void decideReasons_conditionInvalidFormat() {}
-    @Test
-    public void decideReasons_evaluateAttributeInvalidCondition() {}
-    @Test
-    public void decideReasons_evaluateAttributeInvalidType() {}
-    @Test
-    public void decideReasons_evaluateAttributeValueOutOfRange() {}
-    @Test
-    public void decideReasons_userAttributeInvalidType() {}
-    @Test
-    public void decideReasons_userAttributeInvalidMatch() {}
-    @Test
-    public void decideReasons_userAttributeNilValue() {}
-    @Test
-    public void decideReasons_userAttributeInvalidName() {}
-    @Test
-    public void decideReasons_missingAttributeValue() {}
+    public void decideReasons_evaluateAttributeInvalidType() {
+        String flagKey = "feature_1";
+        String audienceId = "13389130056";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("country", 25));
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Audience condition \"{name='country', type='custom_attribute', match='exact', value='US'}\" evaluated to UNKNOWN because a value of type \"java.lang.Integer\" was passed for user attribute \"country\"")
+        ));
+    }
 
     @Test
-    public void decideReasons_experimentNotRunning() {}
+    public void decideReasons_evaluateAttributeValueOutOfRange() {
+        String flagKey = "feature_1";
+        String audienceId = "age_18";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", (float)Math.pow(2, 54)));
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Audience condition \"{name='age', type='custom_attribute', match='gt', value=18.0}\" evaluated to UNKNOWN because a value of type \"java.lang.Float\" was passed for user attribute \"age\"")
+        ));
+    }
+
+    @Test
+    public void decideReasons_userAttributeInvalidType() {
+        String flagKey = "feature_1";
+        String audienceId = "invalid_type";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Audience condition \"{name='age', type='invalid', match='gt', value=18.0}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.")
+        ));
+    }
+
+    @Test
+    public void decideReasons_userAttributeInvalidMatch() {
+        String flagKey = "feature_1";
+        String audienceId = "invalid_match";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Audience condition \"{name='age', type='custom_attribute', match='invalid', value=18.0}\" uses an unknown match type. You may need to upgrade to a newer release of the Optimizely SDK.")
+        ));
+    }
+
+    @Test
+    public void decideReasons_userAttributeNilValue() {
+        String flagKey = "feature_1";
+        String audienceId = "nil_value";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Audience condition \"{name='age', type='custom_attribute', match='gt', value=null}\" evaluated to UNKNOWN because a value of type \"java.lang.Integer\" was passed for user attribute \"age\"")
+        ));
+    }
+
+    @Test
+    public void decideReasons_missingAttributeValue() {
+        String flagKey = "feature_1";
+        String audienceId = "age_18";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Audience condition \"{name='age', type='custom_attribute', match='gt', value=18.0}\" evaluated to UNKNOWN because no value was passed for user attribute \"age\"")
+        ));
+    }
+
+    @Test
+    public void decideReasons_experimentNotRunning() {
+        String flagKey = "feature_1";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.isActive()).thenReturn(false);
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Experiment \"exp_with_audience\" is not running.")
+        ));
+    }
 
     @Test
     public void decideReasons_gotVariationFromUserProfile() throws Exception {
@@ -670,12 +765,32 @@ public class OptimizelyUserContextTest {
 
     @Test
     public void decideReasons_forcedVariationFound() {
+        String flagKey = "feature_1";
+        String variationKey = "b";
 
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getUserIdToVariationKeyMap()).thenReturn(Collections.singletonMap(userId, variationKey));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+            String.format("User \"%s\" is forced in variation \"%s\".", userId, variationKey)
+        ));
     }
 
     @Test
     public void decideReasons_forcedVariationFoundButInvalid() {
+        String flagKey = "feature_1";
+        String variationKey = "invalid-key";
 
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getUserIdToVariationKeyMap()).thenReturn(Collections.singletonMap(userId, variationKey));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Variation \"%s\" is not in the datafile. Not activating user \"%s\".", variationKey, userId)
+        ));
     }
 
     @Test
@@ -760,28 +875,68 @@ public class OptimizelyUserContextTest {
 
     @Test
     public void decideReasons_userNotBucketedIntoVariation() {
-    }
+        String flagKey = "feature_2";
 
-    @Test
-    public void decideReasons_userBucketedIntoInvalidVariation() {
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getTrafficAllocation()).thenReturn(Arrays.asList(new TrafficAllocation("any-id", 0)));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
+
+        assertTrue(decision.getReasons().contains(
+            String.format("User with bucketingId \"%s\" is not in any variation of experiment \"exp_no_audience\".", userId)
+        ));
     }
 
     @Test
     public void decideReasons_userBucketedIntoExperimentInGroup() {
+        String flagKey = "feature_3";
+        String experimentId = "10390965532";   // "group_exp_1"
 
+        FeatureFlag flag = getSpyFeatureFlag(flagKey);
+        when(flag.getExperimentIds()).thenReturn(Arrays.asList(experimentId));
+        addSpyFeatureFlag(flag);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+            String.format("User with bucketingId \"tester\" is in experiment \"group_exp_1\" of group 13142870430.")
+        ));
     }
+
     @Test
     public void decideReasons_userNotBucketedIntoExperimentInGroup() {
+        String flagKey = "feature_3";
+        String experimentId = "10420843432";   // "group_exp_2"
 
+        FeatureFlag flag = getSpyFeatureFlag(flagKey);
+        when(flag.getExperimentIds()).thenReturn(Arrays.asList(experimentId));
+        addSpyFeatureFlag(flag);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+            String.format("User with bucketingId \"tester\" is not in experiment \"group_exp_2\" of group 13142870430.")
+        ));
     }
+
     @Test
     public void decideReasons_userNotBucketedIntoAnyExperimentInGroup() {
+        String flagKey = "feature_3";
+        String experimentId = "10390965532";   // "group_exp_1"
+        String groupId = "13142870430";
 
-    }
-    @Test
-    public void decideReasons_userBucketedIntoInvalidExperiment() {
+        FeatureFlag flag = getSpyFeatureFlag(flagKey);
+        when(flag.getExperimentIds()).thenReturn(Arrays.asList(experimentId));
+        addSpyFeatureFlag(flag);
 
+        Group group = getSpyGroup(groupId);
+        when(group.getTrafficAllocation()).thenReturn(Collections.emptyList());
+        addSpyGroup(group);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+            String.format("User with bucketingId \"tester\" is not in any experiment of group 13142870430.")
+        ));
     }
+
     @Test
     public void decideReasons_userNotInExperiment() {
         String flagKey = "feature_1";
@@ -812,26 +967,65 @@ public class OptimizelyUserContextTest {
     }
 
     void setAudienceForFeatureTest(String flagKey, String audienceId) throws ConfigParseException {
-        ProjectConfig configReal = new DatafileProjectConfig.Builder().withDatafile(datafile).build();
-        ProjectConfig config = spy(configReal);
-        optimizely = Optimizely.builder().withConfig(config).build();
-
-        String experimentId = config.getFeatureKeyMapping().get(flagKey).getExperimentIds().get(0);
-        String rolloutId = config.getFeatureKeyMapping().get(flagKey).getRolloutId();
-        Map<String, Experiment> experimentIdMapping = new HashMap<>(config.getExperimentIdMapping());
-        Map<String, Rollout> rolloutIdMapping = new HashMap<>(config.getRolloutIdMapping());
-        Experiment experimentReal = experimentIdMapping.get(experimentId);
-        Rollout rolloutReal = rolloutIdMapping.get(rolloutId);
-
-        Experiment experiment = spy(experimentReal);
-        Rollout rollout = spy(rolloutReal);
+        Experiment experiment = getSpyExperiment(flagKey);
         when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+    }
 
-        experimentIdMapping.put(experimentId, experiment);
-        rolloutIdMapping.put(rolloutId, rollout);
+    Experiment getSpyExperiment(String flagKey) {
+        setMockConfig();
+        String experimentId = config.getFeatureKeyMapping().get(flagKey).getExperimentIds().get(0);
+        return spy(experimentIdMapping.get(experimentId));
+    }
 
+    FeatureFlag getSpyFeatureFlag(String flagKey) {
+        setMockConfig();
+        return spy(config.getFeatureKeyMapping().get(flagKey));
+    }
+
+    Group getSpyGroup(String groupId) {
+        setMockConfig();
+        return spy(groupIdMapping.get(groupId));
+    }
+
+    void addSpyExperiment(Experiment experiment) {
+        experimentIdMapping.put(experiment.getId(), experiment);
         when(config.getExperimentIdMapping()).thenReturn(experimentIdMapping);
-        when(config.getRolloutIdMapping()).thenReturn(rolloutIdMapping);
+    }
+
+    void addSpyFeatureFlag(FeatureFlag flag) {
+        featureKeyMapping.put(flag.getKey(), flag);
+        when(config.getFeatureKeyMapping()).thenReturn(featureKeyMapping);
+    }
+
+    void addSpyGroup(Group group) {
+        groupIdMapping.put(group.getId(), group);
+        when(config.getGroupIdMapping()).thenReturn(groupIdMapping);
+    }
+
+    void setMockConfig() {
+        if (config != null) return;
+
+        ProjectConfig configReal = null;
+        try {
+            configReal = new DatafileProjectConfig.Builder().withDatafile(datafile).build();
+            config = spy(configReal);
+            optimizely = Optimizely.builder().withConfig(config).build();
+            experimentIdMapping = new HashMap<>(config.getExperimentIdMapping());
+            groupIdMapping = new HashMap<>(config.getGroupIdMapping());
+            featureKeyMapping = new HashMap<>(config.getFeatureKeyMapping());
+        } catch (ConfigParseException e) {
+            fail("ProjectConfig build failed");
+        }
+    }
+
+    OptimizelyDecision callDecideWithIncludeReasons(String flagKey, Map<String, Object> attributes) {
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
+        return user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+    }
+
+    OptimizelyDecision callDecideWithIncludeReasons(String flagKey) {
+        return callDecideWithIncludeReasons(flagKey, Collections.emptyMap());
     }
 
 }
