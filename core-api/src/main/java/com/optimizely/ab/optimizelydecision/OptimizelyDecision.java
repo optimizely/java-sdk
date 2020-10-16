@@ -22,6 +22,7 @@ import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class OptimizelyDecision {
@@ -30,7 +31,7 @@ public class OptimizelyDecision {
 
     private final boolean enabled;
 
-    @Nullable
+    @Nonnull
     private final OptimizelyJSON variables;
 
     @Nullable
@@ -48,7 +49,7 @@ public class OptimizelyDecision {
 
     public OptimizelyDecision(@Nullable String variationKey,
                               boolean enabled,
-                              @Nullable OptimizelyJSON variables,
+                              @Nonnull OptimizelyJSON variables,
                               @Nullable String ruleKey,
                               @Nonnull String flagKey,
                               @Nonnull OptimizelyUserContext userContext,
@@ -102,7 +103,7 @@ public class OptimizelyDecision {
         return new OptimizelyDecision(
             null,
             false,
-            null,
+            new OptimizelyJSON(Collections.emptyMap()),
             null,
             key,
             user,
@@ -135,7 +136,7 @@ public class OptimizelyDecision {
     public int hashCode() {
         int hash = variationKey != null ? variationKey.hashCode() : 0;
         hash = 31 * hash + (enabled ? 1 : 0);
-        hash = 31 * hash + (variables != null ? variables.hashCode() : 0);
+        hash = 31 * hash + variables.hashCode();
         hash = 31 * hash + (ruleKey != null ? ruleKey.hashCode() : 0);
         hash = 31 * hash + flagKey.hashCode();
         hash = 31 * hash + userContext.hashCode();

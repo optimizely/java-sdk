@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class OptimizelyDecisionTest {
 
@@ -67,7 +68,7 @@ public class OptimizelyDecisionTest {
 
         assertEquals(decision.getVariationKey(), null);
         assertEquals(decision.getEnabled(), false);
-        assertEquals(decision.getVariables(), null);
+        assertTrue(decision.getVariables().isEmpty());
         assertEquals(decision.getRuleKey(), null);
         assertEquals(decision.getFlagKey(), flagKey);
         assertEquals(decision.getUserContext(), userContext);

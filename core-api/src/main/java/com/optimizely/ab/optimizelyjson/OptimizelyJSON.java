@@ -157,6 +157,10 @@ public class OptimizelyJSON {
         return null;
     }
 
+    public boolean isEmpty() {
+        return map == null || map.isEmpty();
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null || getClass() != obj.getClass()) return false;

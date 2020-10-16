@@ -515,7 +515,7 @@ public class OptimizelyUserContextTest {
 
         assertNull(decision.getVariationKey());
         assertFalse(decision.getEnabled());
-        assertNull(decision.getVariables());
+        assertTrue(decision.getVariables().isEmpty());
         assertEquals(decision.getFlagKey(), flagKey);
         assertEquals(decision.getUserContext(), user);
 
@@ -532,6 +532,7 @@ public class OptimizelyUserContextTest {
 
         assertNull(decision.getVariationKey());
         assertFalse(decision.getEnabled());
+        assertTrue(decision.getVariables().isEmpty());
         assertEquals(decision.getReasons().size(), 1);
         assertEquals(decision.getReasons().get(0), DecisionMessage.FLAG_KEY_INVALID.reason(flagKey));
     }
