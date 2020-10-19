@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
 import org.slf4j.Logger;
@@ -36,6 +37,7 @@ public class OptimizelyUserContext {
     private final Map<String, Object> attributes;
 
     @Nonnull
+    @JsonIgnore
     private final Optimizely optimizely;
 
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyUserContext.class);
