@@ -1120,7 +1120,9 @@ public class Optimizely implements AutoCloseable {
         if (projectConfig == null) {
             return OptimizelyDecision.createErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
         }
-
+        if (options == null) {
+            options = defaultDecideOptions;
+        }
         FeatureFlag flag = projectConfig.getFeatureKeyMapping().get(key);
         if (flag == null) {
             return OptimizelyDecision.createErrorDecision(key, user, DecisionMessage.FLAG_KEY_INVALID.reason(key));
