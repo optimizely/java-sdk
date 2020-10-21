@@ -47,7 +47,11 @@ public class OptimizelyUserContext {
                                  @Nonnull Map<String, ?> attributes) {
         this.optimizely = optimizely;
         this.userId = userId;
-        this.attributes = new ConcurrentHashMap<>(attributes);
+        if (attributes != null) {
+            this.attributes = new ConcurrentHashMap<>(attributes);
+        } else {
+            this.attributes = new HashMap<>();
+        }
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely, @Nonnull String userId) {

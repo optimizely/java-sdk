@@ -17,7 +17,6 @@
 package com.optimizely.ab.optimizelydecision;
 
 import com.optimizely.ab.OptimizelyUserContext;
-import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
