@@ -145,7 +145,7 @@ public class OptimizelyUserContextTest {
 
         assertEquals(decision.getVariationKey(), "variation_with_traffic");
         assertTrue(decision.getEnabled());
-        assertEquals(decision.getVariables().toMap(), variablesExpected.toMap());
+        assertEquals(decision.getVariables(), variablesExpected.toMap());
         assertEquals(decision.getRuleKey(), "exp_no_audience");
         assertEquals(decision.getFlagKey(), flagKey);
         assertEquals(decision.getUserContext(), user);
@@ -169,7 +169,7 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision expDecision = new OptimizelyDecision(
             "variation_with_traffic",
             true,
-            variablesExpected,
+            variablesExpected.toMap(),
             "exp_no_audience",
             flagKey,
             user,
@@ -195,7 +195,7 @@ public class OptimizelyUserContextTest {
             decisions.get(flagKey1),
             new OptimizelyDecision("a",
                 true,
-                variablesExpected1,
+                variablesExpected1.toMap(),
                 "exp_with_audience",
                 flagKey1,
                 user,
@@ -204,7 +204,7 @@ public class OptimizelyUserContextTest {
             decisions.get(flagKey2),
             new OptimizelyDecision("variation_with_traffic",
                 true,
-                variablesExpected2,
+                variablesExpected2.toMap(),
                 "exp_no_audience",
                 flagKey2,
                 user,
@@ -231,7 +231,7 @@ public class OptimizelyUserContextTest {
             new OptimizelyDecision(
                 "a",
                 true,
-                variablesExpected1,
+                variablesExpected1.toMap(),
                 "exp_with_audience",
                 flagKey1,
                 user,
@@ -241,7 +241,7 @@ public class OptimizelyUserContextTest {
             new OptimizelyDecision(
                 "variation_with_traffic",
                 true,
-                variablesExpected2,
+                variablesExpected2.toMap(),
                 "exp_no_audience",
                 flagKey2,
                 user,
@@ -251,7 +251,7 @@ public class OptimizelyUserContextTest {
             new OptimizelyDecision(
                 null,
                 false,
-                variablesExpected3,
+                variablesExpected3.toMap(),
                 null,
                 flagKey3,
                 user,
@@ -273,7 +273,7 @@ public class OptimizelyUserContextTest {
             new OptimizelyDecision(
                 "a",
                 true,
-                variablesExpected1,
+                variablesExpected1.toMap(),
                 "exp_with_audience",
                 flagKey1,
                 user,
@@ -443,10 +443,10 @@ public class OptimizelyUserContextTest {
         OptimizelyUserContext user = optimizely.createUserContext(userId);
 
         OptimizelyDecision decision = user.decide(flagKey);
-        assertTrue(decision.getVariables().toMap().size() > 0);
+        assertTrue(decision.getVariables().size() > 0);
 
         decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.EXCLUDE_VARIABLES));
-        assertTrue(decision.getVariables().toMap().size() == 0);
+        assertTrue(decision.getVariables().size() == 0);
     }
 
     @Test
@@ -494,13 +494,13 @@ public class OptimizelyUserContextTest {
 
         // should be excluded by DefaultDecideOption
         OptimizelyDecision decision = user.decide(flagKey);
-        assertTrue(decision.getVariables().toMap().size() == 0);
+        assertTrue(decision.getVariables().size() == 0);
 
         decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS, OptimizelyDecideOption.EXCLUDE_VARIABLES));
         // other options should work as well
         assertTrue(decision.getReasons().size() > 0);
         // redundant setting ignored
-        assertTrue(decision.getVariables().toMap().size() == 0);
+        assertTrue(decision.getVariables().size() == 0);
     }
 
     // errors
@@ -566,7 +566,7 @@ public class OptimizelyUserContextTest {
             new OptimizelyDecision(
                 "variation_with_traffic",
                 true,
-                variablesExpected1,
+                variablesExpected1.toMap(),
                 "exp_no_audience",
                 flagKey1,
                 user,

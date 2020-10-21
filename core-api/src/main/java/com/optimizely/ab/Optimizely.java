@@ -1172,8 +1172,6 @@ public class Optimizely implements AutoCloseable {
                 decisionReasons);
         }
 
-        OptimizelyJSON optimizelyJSON = new OptimizelyJSON(variableMap);
-
         List<String> reasonsToReport = decisionReasons.toReport();
         String variationKey = flagDecision.variation != null ? flagDecision.variation.getKey() : null;
         // TODO: add ruleKey values when available later. use a copy of experimentKey until then.
@@ -1197,7 +1195,7 @@ public class Optimizely implements AutoCloseable {
         return new OptimizelyDecision(
             variationKey,
             flagEnabled,
-            optimizelyJSON,
+            variableMap,
             ruleKey,
             key,
             user,
