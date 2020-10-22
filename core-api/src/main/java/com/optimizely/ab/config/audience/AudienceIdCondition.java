@@ -75,7 +75,7 @@ public class AudienceIdCondition<T> implements Condition<T> {
             audience = config.getAudienceIdMapping().get(audienceId);
         }
         if (audience == null) {
-            String message = reasons.addInfoF("Audience %s could not be found.", audienceId);
+            String message = reasons.addInfo("Audience %s could not be found.", audienceId);
             logger.error(message);
             return null;
         }

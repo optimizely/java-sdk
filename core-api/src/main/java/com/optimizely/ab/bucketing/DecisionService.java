@@ -118,16 +118,16 @@ public class DecisionService {
             try {
                 Map<String, Object> userProfileMap = userProfileService.lookup(userId);
                 if (userProfileMap == null) {
-                    String message = reasons.addInfoF("We were unable to get a user profile map from the UserProfileService.");
+                    String message = reasons.addInfo("We were unable to get a user profile map from the UserProfileService.");
                     logger.info(message);
                 } else if (UserProfileUtils.isValidUserProfileMap(userProfileMap)) {
                     userProfile = UserProfileUtils.convertMapToUserProfile(userProfileMap);
                 } else {
-                    String message = reasons.addInfoF("The UserProfileService returned an invalid map.");
+                    String message = reasons.addInfo("The UserProfileService returned an invalid map.");
                     logger.warn(message);
                 }
             } catch (Exception exception) {
-                String message = reasons.addInfoF(exception.getMessage());
+                String message = reasons.addInfo(exception.getMessage());
                 logger.error(message);
                 errorHandler.handleError(new OptimizelyRuntimeException(exception));
             }
@@ -159,7 +159,7 @@ public class DecisionService {
             return variation;
         }
 
-        String message = reasons.addInfoF("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experiment.getKey());
+        String message = reasons.addInfo("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experiment.getKey());
         logger.info(message);
         return null;
     }
@@ -199,17 +199,17 @@ public class DecisionService {
                 }
             }
         } else {
-            String message = reasons.addInfoF("The feature flag \"%s\" is not used in any experiments.", featureFlag.getKey());
+            String message = reasons.addInfo("The feature flag \"%s\" is not used in any experiments.", featureFlag.getKey());
             logger.info(message);
         }
 
         FeatureDecision featureDecision = getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes, projectConfig, options, reasons);
         if (featureDecision.variation == null) {
-            String message = reasons.addInfoF("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
+            String message = reasons.addInfo("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
                 userId, featureFlag.getKey());
             logger.info(message);
         } else {
-            String message = reasons.addInfoF("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
+            String message = reasons.addInfo("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
                 userId, featureFlag.getKey());
             logger.info(message);
         }
@@ -247,13 +247,13 @@ public class DecisionService {
                                                     @Nonnull DecisionReasons reasons) {
         // use rollout to get variation for feature
         if (featureFlag.getRolloutId().isEmpty()) {
-            String message = reasons.addInfoF("The feature flag \"%s\" is not used in a rollout.", featureFlag.getKey());
+            String message = reasons.addInfo("The feature flag \"%s\" is not used in a rollout.", featureFlag.getKey());
             logger.info(message);
             return new FeatureDecision(null, null, null);
         }
         Rollout rollout = projectConfig.getRolloutIdMapping().get(featureFlag.getRolloutId());
         if (rollout == null) {
-            String message = reasons.addInfoF("The rollout with id \"%s\" was not found in the datafile for feature flag \"%s\".",
+            String message = reasons.addInfo("The rollout with id \"%s\" was not found in the datafile for feature flag \"%s\".",
                 featureFlag.getRolloutId(), featureFlag.getKey());
             logger.error(message);
             return new FeatureDecision(null, null, null);
@@ -273,7 +273,7 @@ public class DecisionService {
                 return new FeatureDecision(rolloutRule, variation,
                     FeatureDecision.DecisionSource.ROLLOUT);
             } else {
-                String message = reasons.addInfoF("User \"%s\" does not meet conditions for targeting rule \"%d\".", userId, i + 1);
+                String message = reasons.addInfo("User \"%s\" does not meet conditions for targeting rule \"%d\".", userId, i + 1);
                 logger.debug(message);
             }
         }
@@ -283,7 +283,7 @@ public class DecisionService {
         if (ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, finalRule, filteredAttributes, RULE, "Everyone Else", options, reasons)) {
             variation = bucketer.bucket(finalRule, bucketingId, projectConfig, options, reasons);
             if (variation != null) {
-                String message = reasons.addInfoF("User \"%s\" meets conditions for targeting rule \"Everyone Else\".", userId);
+                String message = reasons.addInfo("User \"%s\" meets conditions for targeting rule \"Everyone Else\".", userId);
                 logger.debug(message);
                 return new FeatureDecision(finalRule, variation,
                     FeatureDecision.DecisionSource.ROLLOUT);
@@ -321,10 +321,10 @@ public class DecisionService {
             String forcedVariationKey = userIdToVariationKeyMap.get(userId);
             Variation forcedVariation = experiment.getVariationKeyToVariationMap().get(forcedVariationKey);
             if (forcedVariation != null) {
-                String message = reasons.addInfoF("User \"%s\" is forced in variation \"%s\".", userId, forcedVariationKey);
+                String message = reasons.addInfo("User \"%s\" is forced in variation \"%s\".", userId, forcedVariationKey);
                 logger.info(message);
             } else {
-                String message = reasons.addInfoF("Variation \"%s\" is not in the datafile. Not activating user \"%s\".",
+                String message = reasons.addInfo("Variation \"%s\" is not in the datafile. Not activating user \"%s\".",
                     forcedVariationKey, userId);
                 logger.error(message);
             }
@@ -373,19 +373,19 @@ public class DecisionService {
                 .getVariationIdToVariationMap()
                 .get(variationId);
             if (savedVariation != null) {
-                String message = reasons.addInfoF("Returning previously activated variation \"%s\" of experiment \"%s\" for user \"%s\" from user profile.",
+                String message = reasons.addInfo("Returning previously activated variation \"%s\" of experiment \"%s\" for user \"%s\" from user profile.",
                     savedVariation.getKey(), experimentKey, userProfile.userId);
                 logger.info(message);
                 // A variation is stored for this combined bucket id
                 return savedVariation;
             } else {
-                String message = reasons.addInfoF("User \"%s\" was previously bucketed into variation with ID \"%s\" for experiment \"%s\", but no matching variation was found for that user. We will re-bucket the user.",
+                String message = reasons.addInfo("User \"%s\" was previously bucketed into variation with ID \"%s\" for experiment \"%s\", but no matching variation was found for that user. We will re-bucket the user.",
                     userProfile.userId, variationId, experimentKey);
                 logger.info(message);
                 return null;
             }
         } else {
-            String message = reasons.addInfoF("No previously activated variation of experiment \"%s\" for user \"%s\" found in user profile.",
+            String message = reasons.addInfo("No previously activated variation of experiment \"%s\" for user \"%s\" found in user profile.",
                 experimentKey, userProfile.userId);
             logger.info(message);
             return null;
@@ -467,7 +467,7 @@ public class DecisionService {
                 bucketingId = (String) filteredAttributes.get(ControlAttribute.BUCKETING_ATTRIBUTE.toString());
                 logger.debug("BucketingId is valid: \"{}\"", bucketingId);
             } else {
-                String message = reasons.addInfoF("BucketingID attribute is not a string. Defaulted to userId");
+                String message = reasons.addInfo("BucketingID attribute is not a string. Defaulted to userId");
                 logger.warn(message);
             }
         }
@@ -578,7 +578,7 @@ public class DecisionService {
             if (variationId != null) {
                 Variation variation = experiment.getVariationIdToVariationMap().get(variationId);
                 if (variation != null) {
-                    String message = reasons.addInfoF("Variation \"%s\" is mapped to experiment \"%s\" and user \"%s\" in the forced variation map",
+                    String message = reasons.addInfo("Variation \"%s\" is mapped to experiment \"%s\" and user \"%s\" in the forced variation map",
                         variation.getKey(), experiment.getKey(), userId);
                     logger.debug(message);
                     return variation;

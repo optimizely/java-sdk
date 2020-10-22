@@ -53,7 +53,7 @@ public final class ExperimentUtils {
                                              @Nonnull DecisionReasons reasons) {
 
         if (!experiment.isActive()) {
-            String message = reasons.addInfoF("Experiment \"%s\" is not running.", experiment.getKey());
+            String message = reasons.addInfo("Experiment \"%s\" is not running.", experiment.getKey());
             logger.info(message);
             return false;
         }
@@ -139,7 +139,7 @@ public final class ExperimentUtils {
 
         Boolean result = implicitOr.evaluate(projectConfig, attributes, options, reasons);
 
-        String message = reasons.addInfoF("Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
+        String message = reasons.addInfo("Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
         logger.info(message);
 
         return result;
@@ -159,11 +159,11 @@ public final class ExperimentUtils {
 
         try {
             Boolean result = conditions.evaluate(projectConfig, attributes, options, reasons);
-            String message = reasons.addInfoF("Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
+            String message = reasons.addInfo("Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
             logger.info(message);
             return result;
         } catch (Exception e) {
-            String message = reasons.addInfoF("Condition invalid: %s", e.getMessage());
+            String message = reasons.addInfo("Condition invalid: %s", e.getMessage());
             logger.error(message);
             return null;
         }

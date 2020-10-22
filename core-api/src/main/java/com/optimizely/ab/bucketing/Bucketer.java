@@ -110,7 +110,7 @@ public class Bucketer {
         if (bucketedVariationId != null) {
             Variation bucketedVariation = experiment.getVariationIdToVariationMap().get(bucketedVariationId);
             String variationKey = bucketedVariation.getKey();
-            String message = reasons.addInfoF("User with bucketingId \"%s\" is in variation \"%s\" of experiment \"%s\".", bucketingId, variationKey,
+            String message = reasons.addInfo("User with bucketingId \"%s\" is in variation \"%s\" of experiment \"%s\".", bucketingId, variationKey,
                 experimentKey);
             logger.info(message);
 
@@ -118,7 +118,7 @@ public class Bucketer {
         }
 
         // user was not bucketed to a variation
-        String message = reasons.addInfoF("User with bucketingId \"%s\" is not in any variation of experiment \"%s\".", bucketingId, experimentKey);
+        String message = reasons.addInfo("User with bucketingId \"%s\" is not in any variation of experiment \"%s\".", bucketingId, experimentKey);
         logger.info(message);
         return null;
     }
@@ -148,7 +148,7 @@ public class Bucketer {
             if (experimentGroup.getPolicy().equals(Group.RANDOM_POLICY)) {
                 Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId, projectConfig, options, reasons);
                 if (bucketedExperiment == null) {
-                    String message = reasons.addInfoF("User with bucketingId \"%s\" is not in any experiment of group %s.", bucketingId, experimentGroup.getId());
+                    String message = reasons.addInfo("User with bucketingId \"%s\" is not in any experiment of group %s.", bucketingId, experimentGroup.getId());
                     logger.info(message);
                     return null;
                 } else {
@@ -157,13 +157,13 @@ public class Bucketer {
                 // if the experiment a user is bucketed in within a group isn't the same as the experiment provided,
                 // don't perform further bucketing within the experiment
                 if (!bucketedExperiment.getId().equals(experiment.getId())) {
-                    String message = reasons.addInfoF("User with bucketingId \"%s\" is not in experiment \"%s\" of group %s.", bucketingId, experiment.getKey(),
+                    String message = reasons.addInfo("User with bucketingId \"%s\" is not in experiment \"%s\" of group %s.", bucketingId, experiment.getKey(),
                         experimentGroup.getId());
                     logger.info(message);
                     return null;
                 }
 
-                String message = reasons.addInfoF("User with bucketingId \"%s\" is in experiment \"%s\" of group %s.", bucketingId, experiment.getKey(),
+                String message = reasons.addInfo("User with bucketingId \"%s\" is in experiment \"%s\" of group %s.", bucketingId, experiment.getKey(),
                     experimentGroup.getId());
                 logger.info(message);
             }
