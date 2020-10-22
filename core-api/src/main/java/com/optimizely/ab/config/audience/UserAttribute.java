@@ -126,11 +126,6 @@ public class UserAttribute<T> implements Condition<T> {
         return null;
     }
 
-    @Nullable
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
-        return evaluate(config, attributes, Collections.emptyList(), new DecisionReasons());
-    }
-
     @Override
     public String toString() {
         final String valueStr;

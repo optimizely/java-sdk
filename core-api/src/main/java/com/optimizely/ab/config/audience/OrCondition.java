@@ -23,7 +23,6 @@ import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -69,11 +68,6 @@ public class OrCondition<T> implements Condition<T> {
         }
 
         return false;
-    }
-
-    @Nullable
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
-        return evaluate(config, attributes, Collections.emptyList(), new DecisionReasons());
     }
 
     @Override

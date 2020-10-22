@@ -22,7 +22,6 @@ import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -70,11 +69,6 @@ public class AndCondition<T> implements Condition<T> {
         }
 
         return true; // otherwise, return true
-    }
-
-    @Nullable
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
-        return evaluate(config, attributes, Collections.emptyList(), new DecisionReasons());
     }
 
     @Override

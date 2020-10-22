@@ -35,7 +35,4 @@ public interface Condition<T> {
                      List<OptimizelyDecideOption> options,
                      DecisionReasons reasons);
 
-    @Nullable
-    Boolean evaluate(ProjectConfig config, Map<String, ?> attributes);
-
 }

@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -83,11 +82,6 @@ public class AudienceIdCondition<T> implements Condition<T> {
         Boolean result = audience.getConditions().evaluate(config, attributes, options, reasons);
         logger.debug("Audience \"{}\" evaluated to {}.", audience.getId(), result);
         return result;
-    }
-
-    @Nullable
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
-        return evaluate(config, attributes, Collections.emptyList(), new DecisionReasons());
     }
 
     @Override
