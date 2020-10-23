@@ -35,23 +35,22 @@ public class DecisionReasons {
         this(Collections.emptyList());
     }
 
-    public void addError(String message) {
+    public void addError(String format, Object... args) {
+        String message = String.format(format, args);
         errors.add(message);
     }
 
-    public void addInfo(String message) {
-        logs.add(message);
-    }
-
-    public String addInfoF(String format, Object... args) {
+    public String addInfo(String format, Object... args) {
         String message = String.format(format, args);
-        if(includeReasons) addInfo(message);
+        if (includeReasons) {
+            logs.add(message);
+        }
         return message;
     }
 
     public List<String> toReport() {
         List<String> reasons = new ArrayList<>(errors);
-        if(includeReasons) {
+        if (includeReasons) {
             reasons.addAll(logs);
         }
         return reasons;

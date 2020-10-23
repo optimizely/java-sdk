@@ -20,11 +20,9 @@ import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-import javax.annotation.Nonnull;
-
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -52,11 +50,6 @@ public class NotCondition<T> implements Condition<T> {
 
         Boolean conditionEval = condition == null ? null : condition.evaluate(config, attributes, options, reasons);
         return (conditionEval == null ? null : !conditionEval);
-    }
-
-    @Nullable
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
-        return evaluate(config, attributes, Collections.emptyList(), new DecisionReasons());
     }
 
     @Override

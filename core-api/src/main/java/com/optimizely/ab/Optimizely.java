@@ -1156,9 +1156,8 @@ public class Optimizely implements AutoCloseable {
                     sentEvent = true;
                 }
             } else {
-                String message = String.format("The user \"%s\" is not included in an experiment for flag \"%s\".", userId, key);
+                String message = decisionReasons.addInfo("The user \"%s\" is not included in an experiment for flag \"%s\".", userId, key);
                 logger.info(message);
-                decisionReasons.addInfo(message);
             }
             if (flagDecision.variation.getFeatureEnabled()) {
                 flagEnabled = true;
