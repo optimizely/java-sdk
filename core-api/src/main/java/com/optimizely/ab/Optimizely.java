@@ -248,7 +248,7 @@ public class Optimizely implements AutoCloseable {
      * @param userId             the ID of the user
      * @param filteredAttributes the attributes of the user
      * @param variation          the variation that was returned from activate.
-     * @param flagKey            It can either be experiment key in case if ruleType is experiment or it's feature key in case ruleType is feature-test or rollout
+     * @param flagKey            It can either be empty if ruleType is experiment or it's feature key in case ruleType is feature-test or rollout
      * @param ruleType           It can either be experiment in case impression event is sent from activate or it's feature-test or rollout
      */
     private void sendImpression(@Nonnull ProjectConfig projectConfig,
