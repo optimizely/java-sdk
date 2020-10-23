@@ -144,5 +144,18 @@ public class OptimizelyDecision {
         return hash;
     }
 
+    @Override
+    public String toString() {
+        return "OptimizelyDecision {" +
+            "variationKey='" + variationKey + '\'' +
+            ", enabled='" + enabled + '\'' +
+            ", variables='" + variables + '\'' +
+            ", ruleKey='" + ruleKey + '\'' +
+            ", flagKey='" + flagKey + '\'' +
+            ", userContext='" + userContext + '\'' +
+            ", enabled='" + enabled + '\'' +
+            ", reasons='" + reasons + '\'' +
+            '}';
+    }
 
 }

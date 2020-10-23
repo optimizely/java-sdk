@@ -183,4 +183,13 @@ public class OptimizelyUserContext {
         hash = 31 * hash + optimizely.hashCode();
         return hash;
     }
+
+    @Override
+    public String toString() {
+        return "OptimizelyUserContext {" +
+            "userId='" + userId + '\'' +
+            ", attributes='" + attributes + '\'' +
+            '}';
+    }
+
 }
