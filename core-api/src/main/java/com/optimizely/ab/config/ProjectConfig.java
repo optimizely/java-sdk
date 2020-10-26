@@ -55,6 +55,8 @@ public interface ProjectConfig {
 
     String getRevision();
 
+    boolean getSendFlagDecisions();
+
     boolean getAnonymizeIP();
 
     Boolean getBotFiltering();

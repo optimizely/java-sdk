@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely and contributors
+ *    Copyright 2019-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.event.internal;
 
+import com.optimizely.ab.event.internal.payload.DecisionMetadata;
+
 import java.util.StringJoiner;
 
 /**
@@ -28,19 +30,22 @@ public class ImpressionEvent extends BaseEvent implements UserEvent {
     private final String experimentKey;
     private final String variationKey;
     private final String variationId;
+    private final DecisionMetadata metadata;
 
     private ImpressionEvent(UserContext userContext,
                             String layerId,
                             String experimentId,
                             String experimentKey,
                             String variationKey,
-                            String variationId) {
+                            String variationId,
+                            DecisionMetadata metadata) {
         this.userContext = userContext;
         this.layerId = layerId;
         this.experimentId = experimentId;
         this.experimentKey = experimentKey;
         this.variationKey = variationKey;
         this.variationId = variationId;
+        this.metadata = metadata;
     }
 
     @Override
@@ -68,6 +73,8 @@ public class ImpressionEvent extends BaseEvent implements UserEvent {
         return variationId;
     }
 
+    public DecisionMetadata getMetadata() { return metadata; }
+
     public static class Builder {
 
         private UserContext userContext;
@@ -76,6 +83,7 @@ public class ImpressionEvent extends BaseEvent implements UserEvent {
         private String experimentKey;
         private String variationKey;
         private String variationId;
+        private DecisionMetadata metadata;
 
         public Builder withUserContext(UserContext userContext) {
             this.userContext = userContext;
@@ -107,8 +115,13 @@ public class ImpressionEvent extends BaseEvent implements UserEvent {
             return this;
         }
 
+        public Builder withMetadata(DecisionMetadata metadata) {
+            this.metadata = metadata;
+            return this;
+        }
+
         public ImpressionEvent build() {
-            return new ImpressionEvent(userContext, layerId, experimentId, experimentKey, variationKey, variationId);
+            return new ImpressionEvent(userContext, layerId, experimentId, experimentKey, variationKey, variationId, metadata);
         }
     }
 

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017-2019, Optimizely and contributors
+ *    Copyright 2017-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ public class ValidProjectConfigV4 {
     private static final String PROJECT_ID = "3918735994";
     private static final String REVISION = "1480511547";
     private static final String VERSION = "4";
+    private static final Boolean SEND_FLAG_DECISIONS = true;
 
     // attributes
     private static final String ATTRIBUTE_HOUSE_ID = "553339214";
@@ -1429,6 +1430,7 @@ public class ValidProjectConfigV4 {
         return new DatafileProjectConfig(
             ACCOUNT_ID,
             ANONYMIZE_IP,
+            SEND_FLAG_DECISIONS,
             BOT_FILTERING,
             PROJECT_ID,
             REVISION,

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2019, Optimizely and contributors
+ *    Copyright 2016-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -64,17 +64,22 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
         List<FeatureFlag> featureFlags = null;
         List<Rollout> rollouts = null;
         Boolean botFiltering = null;
+        boolean sendFlagDecisions = false;
         if (datafileVersion >= Integer.parseInt(DatafileProjectConfig.Version.V4.toString())) {
             featureFlags = JacksonHelpers.arrayNodeToList(node.get("featureFlags"), FeatureFlag.class, codec);
             rollouts = JacksonHelpers.arrayNodeToList(node.get("rollouts"), Rollout.class, codec);
             if (node.hasNonNull("botFiltering")) {
                 botFiltering = node.get("botFiltering").asBoolean();
             }
+            if (node.hasNonNull("sendFlagDecisions")) {
+                sendFlagDecisions = node.get("sendFlagDecisions").asBoolean();
+            }
         }
 
         return new DatafileProjectConfig(
             accountId,
             anonymizeIP,
+            sendFlagDecisions,
             botFiltering,
             projectId,
             revision,
