@@ -1234,11 +1234,11 @@ public class Optimizely implements AutoCloseable {
         notificationCenter.send(decisionNotification);
 
         logger.info("Feature \"{}\" is enabled for user \"{}\"? {}", key, userId, flagEnabled);
-
+        OptimizelyJSON optimizelyJSON = new OptimizelyJSON(variableMap);
         return new OptimizelyDecision(
             variationKey,
             flagEnabled,
-            variableMap,
+            optimizelyJSON,
             ruleKey,
             key,
             user,

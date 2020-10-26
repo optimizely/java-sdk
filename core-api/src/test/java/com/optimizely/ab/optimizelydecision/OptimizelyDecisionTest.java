@@ -42,7 +42,7 @@ public class OptimizelyDecisionTest {
         OptimizelyDecision decision = new OptimizelyDecision(
             variationKey,
             enabled,
-            variables.toMap(),
+            variables,
             ruleKey,
             flagKey,
             userContext,
@@ -51,7 +51,7 @@ public class OptimizelyDecisionTest {
 
         assertEquals(decision.getVariationKey(), variationKey);
         assertEquals(decision.getEnabled(), enabled);
-        assertEquals(decision.getVariables(), variables.toMap());
+        assertEquals(decision.getVariables(), variables);
         assertEquals(decision.getRuleKey(), ruleKey);
         assertEquals(decision.getFlagKey(), flagKey);
         assertEquals(decision.getUserContext(), userContext);

@@ -17,6 +17,7 @@
 package com.optimizely.ab.optimizelydecision;
 
 import com.optimizely.ab.OptimizelyUserContext;
+import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -32,7 +33,7 @@ public class OptimizelyDecision {
     private final boolean enabled;
 
     @Nonnull
-    private final Map variables;
+    private final OptimizelyJSON variables;
 
     @Nullable
     private final String ruleKey;
@@ -49,7 +50,7 @@ public class OptimizelyDecision {
 
     public OptimizelyDecision(@Nullable String variationKey,
                               boolean enabled,
-                              @Nonnull Map variables,
+                              @Nonnull OptimizelyJSON variables,
                               @Nullable String ruleKey,
                               @Nonnull String flagKey,
                               @Nonnull OptimizelyUserContext userContext,
@@ -73,7 +74,7 @@ public class OptimizelyDecision {
     }
 
     @Nonnull
-    public Map getVariables() {
+    public OptimizelyJSON getVariables() {
         return variables;
     }
 
@@ -103,7 +104,7 @@ public class OptimizelyDecision {
         return new OptimizelyDecision(
             null,
             false,
-            Collections.emptyMap(),
+            new OptimizelyJSON(Collections.emptyMap()),
             null,
             key,
             user,
