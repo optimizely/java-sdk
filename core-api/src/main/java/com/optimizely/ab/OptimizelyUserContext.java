@@ -48,7 +48,7 @@ public class OptimizelyUserContext {
         this.optimizely = optimizely;
         this.userId = userId;
         if (attributes != null) {
-            this.attributes = new ConcurrentHashMap<>(attributes);
+            this.attributes = new HashMap<>(attributes);
         } else {
             this.attributes = new HashMap<>();
         }
