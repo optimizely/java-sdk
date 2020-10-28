@@ -9,7 +9,7 @@ We welcome contributions and feedback! All contributors must sign our [Contribut
 3. Make sure to add tests!
 4. Run `./gradlew clean check` to automatically catch potential bugs.
 5. `git push` your changes to GitHub.
-6. Open a PR from your fork into the master branch of the original repoOpen a PR from your fork into the master branch of the original repo
+6. Open a PR from your fork into the master branch of the original repo.
 7. Make sure that all unit tests are passing and that there are no merge conflicts between your branch and `master`.
 8. Open a pull request from `YOUR_NAME/branch_name` to `master`.
 9. A repository maintainer will review your pull request and, if all goes well, squash and merge it!
