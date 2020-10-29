@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2019, Optimizely and contributors
+ *    Copyright 2016-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -83,9 +83,11 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
             anonymizeIP = jsonObject.get("anonymizeIP").getAsBoolean();
         }
 
+
         List<FeatureFlag> featureFlags = null;
         List<Rollout> rollouts = null;
         Boolean botFiltering = null;
+        boolean sendFlagDecisions = false;
         if (datafileVersion >= Integer.parseInt(DatafileProjectConfig.Version.V4.toString())) {
             Type featureFlagsType = new TypeToken<List<FeatureFlag>>() {
             }.getType();
@@ -95,11 +97,14 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
             rollouts = context.deserialize(jsonObject.get("rollouts").getAsJsonArray(), rolloutsType);
             if (jsonObject.has("botFiltering"))
                 botFiltering = jsonObject.get("botFiltering").getAsBoolean();
+            if (jsonObject.has("sendFlagDecisions"))
+                sendFlagDecisions = jsonObject.get("sendFlagDecisions").getAsBoolean();
         }
 
         return new DatafileProjectConfig(
             accountId,
             anonymizeIP,
+            sendFlagDecisions,
             botFiltering,
             projectId,
             revision,

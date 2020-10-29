@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2019-2020, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -431,14 +431,15 @@ public final class DecisionNotification {
                 throw new OptimizelyRuntimeException("enabled not set");
             }
 
-            decisionInfo = new HashMap<>();
-            decisionInfo.put(FLAG_KEY, flagKey);
-            decisionInfo.put(ENABLED, enabled);
-            decisionInfo.put(VARIABLES, variables);
-            decisionInfo.put(VARIATION_KEY, variationKey);
-            decisionInfo.put(RULE_KEY, ruleKey);
-            decisionInfo.put(REASONS, reasons);
-            decisionInfo.put(DECISION_EVENT_DISPATCHED, decisionEventDispatched);
+            decisionInfo = new HashMap<String, Object>() {{
+                put(FLAG_KEY, flagKey);
+                put(ENABLED, enabled);
+                put(VARIABLES, variables);
+                put(VARIATION_KEY, variationKey);
+                put(RULE_KEY, ruleKey);
+                put(REASONS, reasons);
+                put(DECISION_EVENT_DISPATCHED, decisionEventDispatched);
+            }};
 
             return new DecisionNotification(
                 NotificationCenter.DecisionNotificationType.FLAG.toString(),

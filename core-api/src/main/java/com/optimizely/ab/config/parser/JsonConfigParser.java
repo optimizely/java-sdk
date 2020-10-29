@@ -73,16 +73,20 @@ final public class JsonConfigParser implements ConfigParser {
             List<FeatureFlag> featureFlags = null;
             List<Rollout> rollouts = null;
             Boolean botFiltering = null;
+            boolean sendFlagDecisions = false;
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
                 featureFlags = parseFeatureFlags(rootObject.getJSONArray("featureFlags"));
                 rollouts = parseRollouts(rootObject.getJSONArray("rollouts"));
                 if (rootObject.has("botFiltering"))
                     botFiltering = rootObject.getBoolean("botFiltering");
+                if (rootObject.has("sendFlagDecisions"))
+                    sendFlagDecisions = rootObject.getBoolean("sendFlagDecisions");
             }
 
             return new DatafileProjectConfig(
                 accountId,
                 anonymizeIP,
+                sendFlagDecisions,
                 botFiltering,
                 projectId,
                 revision,

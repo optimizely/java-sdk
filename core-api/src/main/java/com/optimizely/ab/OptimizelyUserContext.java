@@ -94,7 +94,7 @@ public class OptimizelyUserContext {
      * @param key A flag key for which a decision will be made.
      * @return A decision result.
      */
-    public OptimizelyDecision decide(String key) {
+    public OptimizelyDecision decide(@Nonnull String key) {
         return optimizely.decide(this, key, Collections.emptyList());
     }
 

@@ -59,12 +59,12 @@ public class OptimizelyDecisionTest {
     }
 
     @Test
-    public void testCreateErrorDecision() {
+    public void testNewErrorDecision() {
         String flagKey = "flag1";
         OptimizelyUserContext userContext = new OptimizelyUserContext(Optimizely.builder().build(), "tester");
         String error = "SDK has an error";
 
-        OptimizelyDecision decision = OptimizelyDecision.createErrorDecision(flagKey, userContext, error);
+        OptimizelyDecision decision = OptimizelyDecision.newErrorDecision(flagKey, userContext, error);
 
         assertEquals(decision.getVariationKey(), null);
         assertEquals(decision.getEnabled(), false);

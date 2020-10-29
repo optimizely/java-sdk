@@ -590,7 +590,7 @@ public class OptimizelyUserContextTest {
                 Collections.emptyList()));
         assertEquals(
             decisions.get(flagKey2),
-            OptimizelyDecision.createErrorDecision(
+            OptimizelyDecision.newErrorDecision(
                 flagKey2,
                 user,
                 DecisionMessage.FLAG_KEY_INVALID.reason(flagKey2)));

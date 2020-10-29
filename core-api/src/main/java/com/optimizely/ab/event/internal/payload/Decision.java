@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2018-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,16 +28,19 @@ public class Decision {
     String variationId;
     @JsonProperty("is_campaign_holdback")
     boolean isCampaignHoldback;
+    @JsonProperty("metadata")
+    DecisionMetadata metadata;
 
     @VisibleForTesting
     public Decision() {
     }
 
-    public Decision(String campaignId, String experimentId, String variationId, boolean isCampaignHoldback) {
+    public Decision(String campaignId, String experimentId, String variationId, boolean isCampaignHoldback, DecisionMetadata metadata) {
         this.campaignId = campaignId;
         this.experimentId = experimentId;
         this.variationId = variationId;
         this.isCampaignHoldback = isCampaignHoldback;
+        this.metadata = metadata;
     }
 
     public String getCampaignId() {
@@ -55,6 +58,8 @@ public class Decision {
     public boolean getIsCampaignHoldback() {
         return isCampaignHoldback;
     }
+
+    public DecisionMetadata getMetadata() { return metadata; }
 
     @Override
     public boolean equals(Object o) {
@@ -74,6 +79,7 @@ public class Decision {
         int result = campaignId.hashCode();
         result = 31 * result + experimentId.hashCode();
         result = 31 * result + variationId.hashCode();
+        result = 31 * result + metadata.hashCode();
         result = 31 * result + (isCampaignHoldback ? 1 : 0);
         return result;
     }
@@ -84,6 +90,7 @@ public class Decision {
         private String experimentId;
         private String variationId;
         private boolean isCampaignHoldback;
+        private DecisionMetadata metadata;
 
         public Builder setCampaignId(String campaignId) {
             this.campaignId = campaignId;
@@ -92,6 +99,11 @@ public class Decision {
 
         public Builder setExperimentId(String experimentId) {
             this.experimentId = experimentId;
+            return this;
+        }
+
+        public Builder setMetadata(DecisionMetadata metadata) {
+            this.metadata = metadata;
             return this;
         }
 
@@ -106,7 +118,7 @@ public class Decision {
         }
 
         public Decision build() {
-            return new Decision(campaignId, experimentId, variationId, isCampaignHoldback);
+            return new Decision(campaignId, experimentId, variationId, isCampaignHoldback, metadata);
         }
     }
 }

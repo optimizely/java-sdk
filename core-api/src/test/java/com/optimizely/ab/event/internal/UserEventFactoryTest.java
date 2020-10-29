@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely and contributors
+ *    Copyright 2019-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.event.internal.payload.DecisionMetadata;
 import com.optimizely.ab.internal.ReservedEventKey;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,11 +61,28 @@ public class UserEventFactoryTest {
 
     private Experiment experiment;
     private Variation variation;
+    private DecisionMetadata decisionMetadata;
 
     @Before
     public void setUp() {
         experiment = new Experiment(EXPERIMENT_ID, EXPERIMENT_KEY, LAYER_ID);
         variation = new Variation(VARIATION_ID, VARIATION_KEY);
+        decisionMetadata = new DecisionMetadata("", EXPERIMENT_KEY, "experiment", VARIATION_KEY);
+    }
+
+    @Test
+    public void createImpressionEventNull() {
+
+        ImpressionEvent actual = UserEventFactory.createImpressionEvent(
+            projectConfig,
+            experiment,
+            null,
+            USER_ID,
+            ATTRIBUTES,
+            EXPERIMENT_KEY,
+            "rollout"
+        );
+        assertNull(actual);
     }
 
     @Test
@@ -74,7 +92,9 @@ public class UserEventFactoryTest {
             experiment,
             variation,
             USER_ID,
-            ATTRIBUTES
+            ATTRIBUTES,
+            "",
+            "experiment"
         );
 
         assertTrue(actual.getTimestamp() > 0);
@@ -90,6 +110,7 @@ public class UserEventFactoryTest {
         assertEquals(EXPERIMENT_KEY, actual.getExperimentKey());
         assertEquals(VARIATION_ID, actual.getVariationId());
         assertEquals(VARIATION_KEY, actual.getVariationKey());
+        assertEquals(decisionMetadata, actual.getMetadata());
     }
 
     @Test

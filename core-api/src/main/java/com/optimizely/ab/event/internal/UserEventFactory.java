@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2019, Optimizely and contributors
+ *    Copyright 2016-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,24 +16,47 @@
  */
 package com.optimizely.ab.event.internal;
 
+import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.event.internal.payload.DecisionMetadata;
 import com.optimizely.ab.internal.EventTagUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Map;
-import java.util.UUID;
 
 public class UserEventFactory {
     private static final Logger logger = LoggerFactory.getLogger(UserEventFactory.class);
 
     public static ImpressionEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
-                                                        @Nonnull Experiment activatedExperiment,
-                                                        @Nonnull Variation variation,
+                                                        @Nullable Experiment activatedExperiment,
+                                                        @Nullable Variation variation,
                                                         @Nonnull String userId,
-                                                        @Nonnull Map<String, ?> attributes) {
+                                                        @Nonnull Map<String, ?> attributes,
+                                                        @Nonnull String flagKey,
+                                                        @Nonnull String ruleType) {
+
+        if ((FeatureDecision.DecisionSource.ROLLOUT.toString().equals(ruleType)  || variation == null) && !projectConfig.getSendFlagDecisions())
+        {
+            return null;
+        }
+
+        String variationKey = "";
+        String variationID = "";
+        String layerID = null;
+        String experimentId = null;
+        String experimentKey = "";
+
+        if (variation != null) {
+            variationKey = variation.getKey();
+            variationID = variation.getId();
+            layerID = activatedExperiment.getLayerId();
+            experimentId = activatedExperiment.getId();
+            experimentKey = activatedExperiment.getKey();
+        }
 
         UserContext userContext = new UserContext.Builder()
             .withUserId(userId)
@@ -41,13 +64,21 @@ public class UserEventFactory {
             .withProjectConfig(projectConfig)
             .build();
 
+        DecisionMetadata metadata = new DecisionMetadata.Builder()
+            .setFlagKey(flagKey)
+            .setRuleKey(experimentKey)
+            .setRuleType(ruleType)
+            .setVariationKey(variationKey)
+            .build();
+
         return new ImpressionEvent.Builder()
             .withUserContext(userContext)
-            .withLayerId(activatedExperiment.getLayerId())
-            .withExperimentId(activatedExperiment.getId())
-            .withExperimentKey(activatedExperiment.getKey())
-            .withVariationId(variation.getId())
-            .withVariationKey(variation.getKey())
+            .withLayerId(layerID)
+            .withExperimentId(experimentId)
+            .withExperimentKey(experimentKey)
+            .withVariationId(variationID)
+            .withVariationKey(variationKey)
+            .withMetadata(metadata)
             .build();
     }
 

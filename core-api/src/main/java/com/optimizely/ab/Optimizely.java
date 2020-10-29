@@ -223,31 +223,65 @@ public class Optimizely implements AutoCloseable {
             return null;
         }
 
-        sendImpression(projectConfig, experiment, userId, copiedAttributes, variation);
+        sendImpression(projectConfig, experiment, userId, copiedAttributes, variation, "experiment");
 
         return variation;
     }
 
-    void sendImpression(@Nonnull ProjectConfig projectConfig,
-                        @Nonnull Experiment experiment,
-                        @Nonnull String userId,
-                        @Nonnull Map<String, ?> filteredAttributes,
-                        @Nonnull Variation variation) {
-        if (!experiment.isRunning()) {
-            logger.info("Experiment has \"Launched\" status so not dispatching event during activation.");
-            return;
-        }
+    /**
+     * Creates and sends impression event.
+     *
+     * @param projectConfig      the current projectConfig
+     * @param experiment         the experiment user bucketed into and dispatch an impression event
+     * @param userId             the ID of the user
+     * @param filteredAttributes the attributes of the user
+     * @param variation          the variation that was returned from activate.
+     * @param ruleType           It can either be experiment in case impression event is sent from activate or it's feature-test or rollout
+     */
+    private void sendImpression(@Nonnull ProjectConfig projectConfig,
+                                @Nonnull Experiment experiment,
+                                @Nonnull String userId,
+                                @Nonnull Map<String, ?> filteredAttributes,
+                                @Nonnull Variation variation,
+                                @Nonnull String ruleType) {
+        sendImpression(projectConfig, experiment, userId, filteredAttributes, variation, "", ruleType);
+    }
+
+    /**
+     * Creates and sends impression event.
+     *
+     * @param projectConfig      the current projectConfig
+     * @param experiment         the experiment user bucketed into and dispatch an impression event
+     * @param userId             the ID of the user
+     * @param filteredAttributes the attributes of the user
+     * @param variation          the variation that was returned from activate.
+     * @param flagKey            It can either be empty if ruleType is experiment or it's feature key in case ruleType is feature-test or rollout
+     * @param ruleType           It can either be experiment in case impression event is sent from activate or it's feature-test or rollout
+     */
+    private void sendImpression(@Nonnull ProjectConfig projectConfig,
+                                @Nonnull Experiment experiment,
+                                @Nonnull String userId,
+                                @Nonnull Map<String, ?> filteredAttributes,
+                                @Nonnull Variation variation,
+                                @Nonnull String flagKey,
+                                @Nonnull String ruleType) {
 
         UserEvent userEvent = UserEventFactory.createImpressionEvent(
             projectConfig,
             experiment,
             variation,
             userId,
-            filteredAttributes);
+            filteredAttributes,
+            flagKey,
+            ruleType);
 
+        if (userEvent == null) {
+            return;
+        }
         eventProcessor.process(userEvent);
-        logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
-
+        if (experiment != null) {
+            logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
+        }
         // Kept For backwards compatibility.
         // This notification is deprecated and the new DecisionNotifications
         // are sent via their respective method calls.
@@ -393,16 +427,22 @@ public class Optimizely implements AutoCloseable {
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes, projectConfig);
         Boolean featureEnabled = false;
         SourceInfo sourceInfo = new RolloutSourceInfo();
+        if (featureDecision.decisionSource != null) {
+            decisionSource = featureDecision.decisionSource;
+        }
+        sendImpression(
+            projectConfig,
+            featureDecision.experiment,
+            userId,
+            copiedAttributes,
+            featureDecision.variation,
+            featureKey,
+            decisionSource.toString());
 
         if (featureDecision.variation != null) {
+            // This information is only necessary for feature tests.
+            // For rollouts experiments and variations are an implementation detail only.
             if (featureDecision.decisionSource.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
-                sendImpression(
-                    projectConfig,
-                    featureDecision.experiment,
-                    userId,
-                    copiedAttributes,
-                    featureDecision.variation);
-                decisionSource = featureDecision.decisionSource;
                 sourceInfo = new FeatureTestSourceInfo(featureDecision.experiment.getKey(), featureDecision.variation.getKey());
             } else {
                 logger.info("The user \"{}\" is not included in an experiment for feature \"{}\".",
@@ -1123,18 +1163,17 @@ public class Optimizely implements AutoCloseable {
 
         ProjectConfig projectConfig = getProjectConfig();
         if (projectConfig == null) {
-            return OptimizelyDecision.createErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
+            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
         }
 
         FeatureFlag flag = projectConfig.getFeatureKeyMapping().get(key);
         if (flag == null) {
-            return OptimizelyDecision.createErrorDecision(key, user, DecisionMessage.FLAG_KEY_INVALID.reason(key));
+            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.FLAG_KEY_INVALID.reason(key));
         }
 
         String userId = user.getUserId();
         Map<String, Object> attributes = user.getAttributes();
-        Boolean sentEvent = false;
-        Boolean flagEnabled = false;
+        Boolean decisionEventDispatched = false;
         List<OptimizelyDecideOption> allOptions = getAllOptions(options);
         DecisionReasons decisionReasons = new DecisionReasons(allOptions);
 
@@ -1147,24 +1186,28 @@ public class Optimizely implements AutoCloseable {
             allOptions,
             decisionReasons);
 
+        Boolean flagEnabled = false;
         if (flagDecision.variation != null) {
-            if (flagDecision.decisionSource.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
-                if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
-                    sendImpression(
-                        projectConfig,
-                        flagDecision.experiment,
-                        userId,
-                        copiedAttributes,
-                        flagDecision.variation);
-                    sentEvent = true;
-                }
-            } else {
-                String message = decisionReasons.addInfo("The user \"%s\" is not included in an experiment for flag \"%s\".", userId, key);
-                logger.info(message);
-            }
             if (flagDecision.variation.getFeatureEnabled()) {
                 flagEnabled = true;
             }
+        }
+
+        FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
+        if (flagDecision.decisionSource != null) {
+            decisionSource = flagDecision.decisionSource;
+        }
+
+        if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
+            sendImpression(
+                projectConfig,
+                flagDecision.experiment,
+                userId,
+                copiedAttributes,
+                flagDecision.variation,
+                key,
+                decisionSource.toString());
+            decisionEventDispatched = true;
         }
 
         Map<String, Object> variableMap = new HashMap<>();
@@ -1192,7 +1235,7 @@ public class Optimizely implements AutoCloseable {
             .withVariationKey(variationKey)
             .withRuleKey(ruleKey)
             .withReasons(reasonsToReport)
-            .withDecisionEventDispatched(sentEvent)
+            .withDecisionEventDispatched(decisionEventDispatched)
             .build();
         notificationCenter.send(decisionNotification);
 

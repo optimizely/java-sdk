@@ -61,6 +61,7 @@ public class DatafileProjectConfig implements ProjectConfig {
     private final String revision;
     private final String version;
     private final boolean anonymizeIP;
+    private final boolean sendFlagDecisions;
     private final Boolean botFiltering;
     private final List<Attribute> attributes;
     private final List<Audience> audiences;
@@ -103,6 +104,7 @@ public class DatafileProjectConfig implements ProjectConfig {
         this(
             accountId,
             anonymizeIP,
+            false,
             null,
             projectId,
             revision,
@@ -121,6 +123,7 @@ public class DatafileProjectConfig implements ProjectConfig {
     // v4 constructor
     public DatafileProjectConfig(String accountId,
                                  boolean anonymizeIP,
+                                 boolean sendFlagDecisions,
                                  Boolean botFiltering,
                                  String projectId,
                                  String revision,
@@ -139,6 +142,7 @@ public class DatafileProjectConfig implements ProjectConfig {
         this.version = version;
         this.revision = revision;
         this.anonymizeIP = anonymizeIP;
+        this.sendFlagDecisions = sendFlagDecisions;
         this.botFiltering = botFiltering;
 
         this.attributes = Collections.unmodifiableList(attributes);
@@ -321,6 +325,9 @@ public class DatafileProjectConfig implements ProjectConfig {
     public String getRevision() {
         return revision;
     }
+
+    @Override
+    public boolean getSendFlagDecisions() { return sendFlagDecisions; }
 
     @Override
     public boolean getAnonymizeIP() {

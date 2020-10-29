@@ -97,9 +97,9 @@ public class OptimizelyDecision {
         return reasons;
     }
 
-    public static OptimizelyDecision createErrorDecision(@Nonnull String key,
-                                                         @Nonnull OptimizelyUserContext user,
-                                                         @Nonnull String error) {
+    public static OptimizelyDecision newErrorDecision(@Nonnull String key,
+                                                      @Nonnull OptimizelyUserContext user,
+                                                      @Nonnull String error) {
         return new OptimizelyDecision(
             null,
             false,
@@ -109,11 +109,7 @@ public class OptimizelyDecision {
             user,
             Arrays.asList(error));
     }
-
-    public boolean hasFailed() {
-        return variationKey == null;
-    }
-
+    
     @Override
     public boolean equals(Object obj) {
         if (obj == null || getClass() != obj.getClass()) return false;
