@@ -22,11 +22,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class OptimizelyUserContext {
     @Nonnull
@@ -42,14 +42,14 @@ public class OptimizelyUserContext {
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
                                  @Nonnull String userId,
-                                 @Nonnull Map<String, ?> attributes) {
+                                 @Nonnull Map<String, Object> attributes) {
         this.optimizely = optimizely;
         this.userId = userId;
-        this.attributes = new ConcurrentHashMap<>(attributes);
+        this.attributes = Collections.synchronizedMap(new HashMap<>(attributes));
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely, @Nonnull String userId) {
-        this(optimizely, userId, new HashMap<>());
+        this(optimizely, userId, Collections.EMPTY_MAP);
     }
 
     public String getUserId() {
@@ -70,7 +70,7 @@ public class OptimizelyUserContext {
      * @param key An attribute key
      * @param value An attribute value
      */
-    public void setAttribute(@Nonnull String key, @Nonnull Object value) {
+    public void setAttribute(@Nonnull String key, @Nullable Object value) {
         attributes.put(key, value);
     }
 

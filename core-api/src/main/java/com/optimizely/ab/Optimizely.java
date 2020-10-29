@@ -1104,7 +1104,12 @@ public class Optimizely implements AutoCloseable {
      * @return An OptimizelyUserContext associated with this OptimizelyClient.
       */
     public OptimizelyUserContext createUserContext(@Nonnull String userId,
-                                                   @Nonnull Map<String, ?> attributes) {
+                                                   @Nonnull Map<String, Object> attributes) {
+        if (userId == null) {
+            logger.warn("The userId parameter must be nonnull.");
+            return null;
+        }
+
         return new OptimizelyUserContext(this, userId, attributes);
     }
 
