@@ -28,7 +28,6 @@ public class NullCondition<T> implements Condition<T> {
     @Override
     public Boolean evaluate(ProjectConfig config,
                             Map<String, ?> attributes,
-                            List<OptimizelyDecideOption> options,
                             DecisionReasons reasons) {
         return null;
     }

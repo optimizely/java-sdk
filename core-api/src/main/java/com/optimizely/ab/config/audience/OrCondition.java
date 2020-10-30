@@ -18,7 +18,6 @@ package com.optimizely.ab.config.audience;
 
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
-import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -49,12 +48,11 @@ public class OrCondition<T> implements Condition<T> {
     @Nullable
     public Boolean evaluate(ProjectConfig config,
                             Map<String, ?> attributes,
-                            List<OptimizelyDecideOption> options,
                             DecisionReasons reasons) {
         if (conditions == null) return null;
         boolean foundNull = false;
         for (Condition condition : conditions) {
-            Boolean conditionEval = condition.evaluate(config, attributes, options, reasons);
+            Boolean conditionEval = condition.evaluate(config, attributes, reasons);
             if (conditionEval == null) { // true with falses and nulls is still true
                 foundNull = true;
             } else if (conditionEval) {

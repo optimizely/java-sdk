@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.match.*;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
-import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +29,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -76,7 +74,6 @@ public class UserAttribute<T> implements Condition<T> {
     @Nullable
     public Boolean evaluate(ProjectConfig config,
                             Map<String, ?> attributes,
-                            List<OptimizelyDecideOption> options,
                             DecisionReasons reasons) {
         if (attributes == null) {
             attributes = Collections.emptyMap();

@@ -20,14 +20,12 @@ import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.bucketing.internal.MurmurHash3;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
-import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -71,7 +69,6 @@ public class Bucketer {
     private Experiment bucketToExperiment(@Nonnull Group group,
                                           @Nonnull String bucketingId,
                                           @Nonnull ProjectConfig projectConfig,
-                                          @Nonnull List<OptimizelyDecideOption> options,
                                           @Nonnull DecisionReasons reasons) {
         // "salt" the bucket id using the group id
         String bucketKey = bucketingId + group.getId();
@@ -93,7 +90,6 @@ public class Bucketer {
 
     private Variation bucketToVariation(@Nonnull Experiment experiment,
                                         @Nonnull String bucketingId,
-                                        @Nonnull List<OptimizelyDecideOption> options,
                                         @Nonnull DecisionReasons reasons) {
         // "salt" the bucket id using the experiment id
         String experimentId = experiment.getId();
@@ -129,7 +125,6 @@ public class Bucketer {
      * @param experiment  The Experiment in which the user is to be bucketed.
      * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
      * @param projectConfig      The current projectConfig
-     * @param options            An array of decision options
      * @param reasons            Decision log messages
      * @return Variation the user is bucketed into or null.
      */
@@ -137,7 +132,6 @@ public class Bucketer {
     public Variation bucket(@Nonnull Experiment experiment,
                             @Nonnull String bucketingId,
                             @Nonnull ProjectConfig projectConfig,
-                            @Nonnull List<OptimizelyDecideOption> options,
                             @Nonnull DecisionReasons reasons) {
         // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
@@ -146,7 +140,7 @@ public class Bucketer {
             Group experimentGroup = projectConfig.getGroupIdMapping().get(groupId);
             // bucket to an experiment only if group entities are to be mutually exclusive
             if (experimentGroup.getPolicy().equals(Group.RANDOM_POLICY)) {
-                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId, projectConfig, options, reasons);
+                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId, projectConfig, reasons);
                 if (bucketedExperiment == null) {
                     String message = reasons.addInfo("User with bucketingId \"%s\" is not in any experiment of group %s.", bucketingId, experimentGroup.getId());
                     logger.info(message);
@@ -169,14 +163,14 @@ public class Bucketer {
             }
         }
 
-        return bucketToVariation(experiment, bucketingId, options, reasons);
+        return bucketToVariation(experiment, bucketingId, reasons);
     }
 
     @Nullable
     public Variation bucket(@Nonnull Experiment experiment,
                             @Nonnull String bucketingId,
                             @Nonnull ProjectConfig projectConfig) {
-        return bucket(experiment, bucketingId, projectConfig, Collections.emptyList(), new DecisionReasons());
+        return bucket(experiment, bucketingId, projectConfig, new DecisionReasons());
     }
 
     //======== Helper methods ========//

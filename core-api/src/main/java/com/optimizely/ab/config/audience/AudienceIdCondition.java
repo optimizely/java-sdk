@@ -20,12 +20,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
-import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -68,7 +66,6 @@ public class AudienceIdCondition<T> implements Condition<T> {
     @Override
     public Boolean evaluate(ProjectConfig config,
                             Map<String, ?> attributes,
-                            List<OptimizelyDecideOption> options,
                             DecisionReasons reasons) {
         if (config != null) {
             audience = config.getAudienceIdMapping().get(audienceId);
@@ -79,7 +76,7 @@ public class AudienceIdCondition<T> implements Condition<T> {
             return null;
         }
         logger.debug("Starting to evaluate audience \"{}\" with conditions: {}.", audience.getId(), audience.getConditions());
-        Boolean result = audience.getConditions().evaluate(config, attributes, options, reasons);
+        Boolean result = audience.getConditions().evaluate(config, attributes, reasons);
         logger.debug("Audience \"{}\" evaluated to {}.", audience.getId(), result);
         return result;
     }

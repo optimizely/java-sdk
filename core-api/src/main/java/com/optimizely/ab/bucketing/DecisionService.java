@@ -95,16 +95,16 @@ public class DecisionService {
                                   @Nonnull ProjectConfig projectConfig,
                                   @Nonnull List<OptimizelyDecideOption> options,
                                   @Nonnull DecisionReasons reasons) {
-        if (!ExperimentUtils.isExperimentActive(experiment, options, reasons)) {
+        if (!ExperimentUtils.isExperimentActive(experiment, reasons)) {
             return null;
         }
 
         // look for forced bucketing first.
-        Variation variation = getForcedVariation(experiment, userId, options, reasons);
+        Variation variation = getForcedVariation(experiment, userId, reasons);
 
         // check for whitelisting
         if (variation == null) {
-            variation = getWhitelistedVariation(experiment, userId, options, reasons);
+            variation = getWhitelistedVariation(experiment, userId, reasons);
         }
 
         if (variation != null) {
@@ -112,9 +112,10 @@ public class DecisionService {
         }
 
         // fetch the user profile map from the user profile service
+        boolean ignoreUPS = options.contains(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE);
         UserProfile userProfile = null;
 
-        if (userProfileService != null) {
+        if (userProfileService != null && !ignoreUPS) {
             try {
                 Map<String, Object> userProfileMap = userProfileService.lookup(userId);
                 if (userProfileMap == null) {
@@ -131,26 +132,26 @@ public class DecisionService {
                 logger.error(message);
                 errorHandler.handleError(new OptimizelyRuntimeException(exception));
             }
-        }
 
-        // check if user exists in user profile
-        if (userProfile != null) {
-            variation = getStoredVariation(experiment, userProfile, projectConfig, options, reasons);
-            // return the stored variation if it exists
-            if (variation != null) {
-                return variation;
+            // check if user exists in user profile
+            if (userProfile != null) {
+                variation = getStoredVariation(experiment, userProfile, projectConfig, reasons);
+                // return the stored variation if it exists
+                if (variation != null) {
+                    return variation;
+                }
+            } else { // if we could not find a user profile, make a new one
+                userProfile = new UserProfile(userId, new HashMap<String, Decision>());
             }
-        } else { // if we could not find a user profile, make a new one
-            userProfile = new UserProfile(userId, new HashMap<String, Decision>());
         }
 
-        if (ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, experiment, filteredAttributes, EXPERIMENT, experiment.getKey(), options, reasons)) {
-            String bucketingId = getBucketingId(userId, filteredAttributes, options, reasons);
-            variation = bucketer.bucket(experiment, bucketingId, projectConfig, options, reasons);
+        if (ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, experiment, filteredAttributes, EXPERIMENT, experiment.getKey(), reasons)) {
+            String bucketingId = getBucketingId(userId, filteredAttributes, reasons);
+            variation = bucketer.bucket(experiment, bucketingId, projectConfig, reasons);
 
             if (variation != null) {
-                if (userProfileService != null) {
-                    saveVariation(experiment, variation, userProfile, options, reasons);
+                if (userProfileService != null && !ignoreUPS) {
+                    saveVariation(experiment, variation, userProfile, reasons);
                 } else {
                     logger.debug("This decision will not be saved since the UserProfileService is null.");
                 }
@@ -203,7 +204,7 @@ public class DecisionService {
             logger.info(message);
         }
 
-        FeatureDecision featureDecision = getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes, projectConfig, options, reasons);
+        FeatureDecision featureDecision = getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes, projectConfig, reasons);
         if (featureDecision.variation == null) {
             String message = reasons.addInfo("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
                 userId, featureFlag.getKey());
@@ -234,7 +235,6 @@ public class DecisionService {
      * @param userId             User Identifier
      * @param filteredAttributes A map of filtered attributes.
      * @param projectConfig      The current projectConfig
-     * @param options            An array of decision options
      * @param reasons            Decision log messages
      * @return {@link FeatureDecision}
      */
@@ -243,7 +243,6 @@ public class DecisionService {
                                                     @Nonnull String userId,
                                                     @Nonnull Map<String, ?> filteredAttributes,
                                                     @Nonnull ProjectConfig projectConfig,
-                                                    @Nonnull List<OptimizelyDecideOption> options,
                                                     @Nonnull DecisionReasons reasons) {
         // use rollout to get variation for feature
         if (featureFlag.getRolloutId().isEmpty()) {
@@ -261,12 +260,12 @@ public class DecisionService {
 
         // for all rules before the everyone else rule
         int rolloutRulesLength = rollout.getExperiments().size();
-        String bucketingId = getBucketingId(userId, filteredAttributes, options, reasons);
+        String bucketingId = getBucketingId(userId, filteredAttributes, reasons);
         Variation variation;
         for (int i = 0; i < rolloutRulesLength - 1; i++) {
             Experiment rolloutRule = rollout.getExperiments().get(i);
-            if (ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, rolloutRule, filteredAttributes, RULE, Integer.toString(i + 1), options, reasons)) {
-                variation = bucketer.bucket(rolloutRule, bucketingId, projectConfig, options, reasons);
+            if (ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, rolloutRule, filteredAttributes, RULE, Integer.toString(i + 1), reasons)) {
+                variation = bucketer.bucket(rolloutRule, bucketingId, projectConfig, reasons);
                 if (variation == null) {
                     break;
                 }
@@ -280,8 +279,8 @@ public class DecisionService {
 
         // get last rule which is the fall back rule
         Experiment finalRule = rollout.getExperiments().get(rolloutRulesLength - 1);
-        if (ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, finalRule, filteredAttributes, RULE, "Everyone Else", options, reasons)) {
-            variation = bucketer.bucket(finalRule, bucketingId, projectConfig, options, reasons);
+        if (ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, finalRule, filteredAttributes, RULE, "Everyone Else", reasons)) {
+            variation = bucketer.bucket(finalRule, bucketingId, projectConfig, reasons);
             if (variation != null) {
                 String message = reasons.addInfo("User \"%s\" meets conditions for targeting rule \"Everyone Else\".", userId);
                 logger.debug(message);
@@ -297,7 +296,7 @@ public class DecisionService {
                                                     @Nonnull String userId,
                                                     @Nonnull Map<String, ?> filteredAttributes,
                                                     @Nonnull ProjectConfig projectConfig) {
-        return getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes, projectConfig, Collections.emptyList(), new DecisionReasons());
+        return getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes, projectConfig, new DecisionReasons());
     }
 
     /**
@@ -305,7 +304,6 @@ public class DecisionService {
      *
      * @param experiment {@link Experiment} in which user is to be bucketed.
      * @param userId     User Identifier
-     * @param options            An array of decision options
      * @param reasons            Decision log messages
      * @return null if the user is not whitelisted into any variation
      * {@link Variation} the user is bucketed into if the user has a specified whitelisted variation.
@@ -313,7 +311,6 @@ public class DecisionService {
     @Nullable
     Variation getWhitelistedVariation(@Nonnull Experiment experiment,
                                       @Nonnull String userId,
-                                      @Nonnull List<OptimizelyDecideOption> options,
                                       @Nonnull DecisionReasons reasons) {
         // if a user has a forced variation mapping, return the respective variation
         Map<String, String> userIdToVariationKeyMap = experiment.getUserIdToVariationKeyMap();
@@ -337,7 +334,7 @@ public class DecisionService {
     Variation getWhitelistedVariation(@Nonnull Experiment experiment,
                                       @Nonnull String userId) {
 
-        return getWhitelistedVariation(experiment, userId, Collections.emptyList(), new DecisionReasons());
+        return getWhitelistedVariation(experiment, userId, new DecisionReasons());
     }
 
     /**
@@ -346,7 +343,6 @@ public class DecisionService {
      * @param experiment  {@link Experiment} in which the user was bucketed.
      * @param userProfile {@link UserProfile} of the user.
      * @param projectConfig      The current projectConfig
-     * @param options            An array of decision options
      * @param reasons            Decision log messages
      * @return null if the {@link UserProfileService} implementation is null or the user was not previously bucketed.
      * else return the {@link Variation} the user was previously bucketed into.
@@ -355,10 +351,7 @@ public class DecisionService {
     Variation getStoredVariation(@Nonnull Experiment experiment,
                                  @Nonnull UserProfile userProfile,
                                  @Nonnull ProjectConfig projectConfig,
-                                 @Nonnull List<OptimizelyDecideOption> options,
                                  @Nonnull DecisionReasons reasons) {
-
-        if (options.contains(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE)) return null;
 
         // ---------- Check User Profile for Sticky Bucketing ----------
         // If a user profile instance is present then check it for a saved variation
@@ -396,7 +389,7 @@ public class DecisionService {
     Variation getStoredVariation(@Nonnull Experiment experiment,
                                  @Nonnull UserProfile userProfile,
                                  @Nonnull ProjectConfig projectConfig) {
-        return getStoredVariation(experiment, userProfile, projectConfig, Collections.emptyList(), new DecisionReasons());
+        return getStoredVariation(experiment, userProfile, projectConfig, new DecisionReasons());
     }
 
     /**
@@ -405,16 +398,12 @@ public class DecisionService {
      * @param experiment  The experiment the user was buck
      * @param variation   The Variation to save.
      * @param userProfile A {@link UserProfile} instance of the user information.
-     * @param options     An array of decision options
      * @param reasons     Decision log messages
      */
     void saveVariation(@Nonnull Experiment experiment,
                        @Nonnull Variation variation,
                        @Nonnull UserProfile userProfile,
-                       @Nonnull List<OptimizelyDecideOption> options,
                        @Nonnull DecisionReasons reasons) {
-
-        if (options.contains(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE)) return;
 
         // only save if the user has implemented a user profile service
         if (userProfileService != null) {
@@ -444,7 +433,7 @@ public class DecisionService {
     void saveVariation(@Nonnull Experiment experiment,
                        @Nonnull Variation variation,
                        @Nonnull UserProfile userProfile) {
-        saveVariation(experiment, variation, userProfile, Collections.emptyList(), new DecisionReasons());
+        saveVariation(experiment, variation, userProfile, new DecisionReasons());
     }
 
     /**
@@ -452,14 +441,12 @@ public class DecisionService {
      *
      * @param userId             The userId of the user.
      * @param filteredAttributes The user's attributes. This should be filtered to just attributes in the Datafile.
-     * @param options            An array of decision options
      * @param reasons            Decision log messages
      * @return bucketingId if it is a String type in attributes.
      * else return userId
      */
     String getBucketingId(@Nonnull String userId,
                           @Nonnull Map<String, ?> filteredAttributes,
-                          @Nonnull List<OptimizelyDecideOption> options,
                           @Nonnull DecisionReasons reasons) {
         String bucketingId = userId;
         if (filteredAttributes != null && filteredAttributes.containsKey(ControlAttribute.BUCKETING_ATTRIBUTE.toString())) {
@@ -476,7 +463,7 @@ public class DecisionService {
 
     String getBucketingId(@Nonnull String userId,
                           @Nonnull Map<String, ?> filteredAttributes) {
-        return getBucketingId(userId, filteredAttributes, Collections.emptyList(), new DecisionReasons());
+        return getBucketingId(userId, filteredAttributes, new DecisionReasons());
     }
 
     public ConcurrentHashMap<String, ConcurrentHashMap<String, String>> getForcedVariationMapping() {
@@ -557,7 +544,6 @@ public class DecisionService {
      *
      * @param experiment    The experiment forced.
      * @param userId        The user ID to be used for bucketing.
-     * @param options       An array of decision options
      * @param reasons       Decision log messages
      * @return The variation the user was bucketed into. This value can be null if the
      * forced variation fails.
@@ -565,7 +551,6 @@ public class DecisionService {
     @Nullable
     public Variation getForcedVariation(@Nonnull Experiment experiment,
                                         @Nonnull String userId,
-                                        @Nonnull List<OptimizelyDecideOption> options,
                                         @Nonnull DecisionReasons reasons) {
         // if the user id is invalid, return false.
         if (!validateUserId(userId)) {
@@ -593,7 +578,7 @@ public class DecisionService {
     @Nullable
     public Variation getForcedVariation(@Nonnull Experiment experiment,
                                         @Nonnull String userId) {
-        return getForcedVariation(experiment, userId, Collections.emptyList(), new DecisionReasons());
+        return getForcedVariation(experiment, userId, new DecisionReasons());
     }
 
     /**

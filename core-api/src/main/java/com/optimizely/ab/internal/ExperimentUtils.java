@@ -22,14 +22,12 @@ import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
-import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -44,12 +42,10 @@ public final class ExperimentUtils {
      * Helper method to validate all pre-conditions before bucketing a user.
      *
      * @param experiment the experiment we are validating pre-conditions for
-     * @param options           An array of decision options
      * @param reasons           Decision log messages
      * @return whether the pre-conditions are satisfied
      */
     public static boolean isExperimentActive(@Nonnull Experiment experiment,
-                                             @Nonnull List<OptimizelyDecideOption> options,
                                              @Nonnull DecisionReasons reasons) {
 
         if (!experiment.isActive()) {
@@ -62,7 +58,7 @@ public final class ExperimentUtils {
     }
 
     public static boolean isExperimentActive(@Nonnull Experiment experiment) {
-        return isExperimentActive(experiment, Collections.emptyList(), new DecisionReasons());
+        return isExperimentActive(experiment, new DecisionReasons());
     }
 
     /**
@@ -73,7 +69,6 @@ public final class ExperimentUtils {
      * @param attributes        the attributes of the user
      * @param loggingEntityType It can be either experiment or rule.
      * @param loggingKey        In case of loggingEntityType is experiment it will be experiment key or else it will be rule number.
-     * @param options           An array of decision options
      * @param reasons           Decision log messages
      * @return whether the user meets the criteria for the experiment
      */
@@ -82,14 +77,13 @@ public final class ExperimentUtils {
                                                          @Nonnull Map<String, ?> attributes,
                                                          @Nonnull String loggingEntityType,
                                                          @Nonnull String loggingKey,
-                                                         @Nonnull List<OptimizelyDecideOption> options,
                                                          @Nonnull DecisionReasons reasons) {
         if (experiment.getAudienceConditions() != null) {
             logger.debug("Evaluating audiences for {} \"{}\": {}.", loggingEntityType, loggingKey, experiment.getAudienceConditions());
-            Boolean resolveReturn = evaluateAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey, options, reasons);
+            Boolean resolveReturn = evaluateAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey, reasons);
             return resolveReturn == null ? false : resolveReturn;
         } else {
-            Boolean resolveReturn = evaluateAudience(projectConfig, experiment, attributes, loggingEntityType, loggingKey, options, reasons);
+            Boolean resolveReturn = evaluateAudience(projectConfig, experiment, attributes, loggingEntityType, loggingKey, reasons);
             return Boolean.TRUE.equals(resolveReturn);
         }
     }
@@ -109,7 +103,7 @@ public final class ExperimentUtils {
                                                          @Nonnull Map<String, ?> attributes,
                                                          @Nonnull String loggingEntityType,
                                                          @Nonnull String loggingKey) {
-        return doesUserMeetAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey, Collections.emptyList(), new DecisionReasons());
+        return doesUserMeetAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey, new DecisionReasons());
     }
 
     @Nullable
@@ -118,7 +112,6 @@ public final class ExperimentUtils {
                                            @Nonnull Map<String, ?> attributes,
                                            @Nonnull String loggingEntityType,
                                            @Nonnull String loggingKey,
-                                           @Nonnull List<OptimizelyDecideOption> options,
                                            @Nonnull DecisionReasons reasons) {
         List<String> experimentAudienceIds = experiment.getAudienceIds();
 
@@ -137,7 +130,7 @@ public final class ExperimentUtils {
 
         logger.debug("Evaluating audiences for {} \"{}\": {}.", loggingEntityType, loggingKey, conditions);
 
-        Boolean result = implicitOr.evaluate(projectConfig, attributes, options, reasons);
+        Boolean result = implicitOr.evaluate(projectConfig, attributes, reasons);
 
         String message = reasons.addInfo("Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
         logger.info(message);
@@ -151,14 +144,13 @@ public final class ExperimentUtils {
                                                      @Nonnull Map<String, ?> attributes,
                                                      @Nonnull String loggingEntityType,
                                                      @Nonnull String loggingKey,
-                                                     @Nonnull List<OptimizelyDecideOption> options,
                                                      @Nonnull DecisionReasons reasons) {
 
         Condition conditions = experiment.getAudienceConditions();
         if (conditions == null) return null;
 
         try {
-            Boolean result = conditions.evaluate(projectConfig, attributes, options, reasons);
+            Boolean result = conditions.evaluate(projectConfig, attributes, reasons);
             String message = reasons.addInfo("Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
             logger.info(message);
             return result;
