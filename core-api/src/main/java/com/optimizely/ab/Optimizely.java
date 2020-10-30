@@ -1189,11 +1189,27 @@ public class Optimizely implements AutoCloseable {
                 flagEnabled = true;
             }
         }
+        logger.info("Feature \"{}\" is enabled for user \"{}\"? {}", key, userId, flagEnabled);
+
+        Map<String, Object> variableMap = new HashMap<>();
+        if (!allOptions.contains(OptimizelyDecideOption.EXCLUDE_VARIABLES)) {
+            variableMap = getDecisionVariableMap(
+                flag,
+                flagDecision.variation,
+                flagEnabled,
+                decisionReasons);
+        }
+        OptimizelyJSON optimizelyJSON = new OptimizelyJSON(variableMap);
 
         FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
         if (flagDecision.decisionSource != null) {
             decisionSource = flagDecision.decisionSource;
         }
+
+        List<String> reasonsToReport = decisionReasons.toReport();
+        String variationKey = flagDecision.variation != null ? flagDecision.variation.getKey() : null;
+        // TODO: add ruleKey values when available later. use a copy of experimentKey until then.
+        String ruleKey = flagDecision.experiment != null ? flagDecision.experiment.getKey() : null;
 
         if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
             sendImpression(
@@ -1207,22 +1223,6 @@ public class Optimizely implements AutoCloseable {
             decisionEventDispatched = true;
         }
 
-        Map<String, Object> variableMap = new HashMap<>();
-        if (!allOptions.contains(OptimizelyDecideOption.EXCLUDE_VARIABLES)) {
-            variableMap = getDecisionVariableMap(
-                flag,
-                flagDecision.variation,
-                flagEnabled,
-                decisionReasons);
-        }
-
-        OptimizelyJSON optimizelyJSON = new OptimizelyJSON(variableMap);
-
-        List<String> reasonsToReport = decisionReasons.toReport();
-        String variationKey = flagDecision.variation != null ? flagDecision.variation.getKey() : null;
-        // TODO: add ruleKey values when available later. use a copy of experimentKey until then.
-        String ruleKey = flagDecision.experiment != null ? flagDecision.experiment.getKey() : null;
-
         DecisionNotification decisionNotification = DecisionNotification.newFlagDecisionNotificationBuilder()
             .withUserId(userId)
             .withAttributes(copiedAttributes)
@@ -1235,8 +1235,6 @@ public class Optimizely implements AutoCloseable {
             .withDecisionEventDispatched(decisionEventDispatched)
             .build();
         notificationCenter.send(decisionNotification);
-
-        logger.info("Feature \"{}\" is enabled for user \"{}\"? {}", key, userId, flagEnabled);
 
         return new OptimizelyDecision(
             variationKey,
