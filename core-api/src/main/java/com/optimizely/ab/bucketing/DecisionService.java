@@ -21,6 +21,7 @@ import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.ExperimentUtils;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,7 +171,7 @@ public class DecisionService {
                                   @Nonnull String userId,
                                   @Nonnull Map<String, ?> filteredAttributes,
                                   @Nonnull ProjectConfig projectConfig) {
-        return getVariation(experiment, userId, filteredAttributes, projectConfig, Collections.emptyList(), new DecisionReasons());
+        return getVariation(experiment, userId, filteredAttributes, projectConfig, Collections.emptyList(), DefaultDecisionReasons.newInstance());
     }
 
     /**
@@ -223,7 +224,7 @@ public class DecisionService {
                                                   @Nonnull Map<String, ?> filteredAttributes,
                                                   @Nonnull ProjectConfig projectConfig) {
 
-        return getVariationForFeature(featureFlag, userId, filteredAttributes, projectConfig,Collections.emptyList(), new DecisionReasons());
+        return getVariationForFeature(featureFlag, userId, filteredAttributes, projectConfig,Collections.emptyList(), DefaultDecisionReasons.newInstance());
     }
 
     /**
@@ -296,7 +297,7 @@ public class DecisionService {
                                                     @Nonnull String userId,
                                                     @Nonnull Map<String, ?> filteredAttributes,
                                                     @Nonnull ProjectConfig projectConfig) {
-        return getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes, projectConfig, new DecisionReasons());
+        return getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes, projectConfig, DefaultDecisionReasons.newInstance());
     }
 
     /**
@@ -334,7 +335,7 @@ public class DecisionService {
     Variation getWhitelistedVariation(@Nonnull Experiment experiment,
                                       @Nonnull String userId) {
 
-        return getWhitelistedVariation(experiment, userId, new DecisionReasons());
+        return getWhitelistedVariation(experiment, userId, DefaultDecisionReasons.newInstance());
     }
 
     /**
@@ -389,7 +390,7 @@ public class DecisionService {
     Variation getStoredVariation(@Nonnull Experiment experiment,
                                  @Nonnull UserProfile userProfile,
                                  @Nonnull ProjectConfig projectConfig) {
-        return getStoredVariation(experiment, userProfile, projectConfig, new DecisionReasons());
+        return getStoredVariation(experiment, userProfile, projectConfig, DefaultDecisionReasons.newInstance());
     }
 
     /**
@@ -433,7 +434,7 @@ public class DecisionService {
     void saveVariation(@Nonnull Experiment experiment,
                        @Nonnull Variation variation,
                        @Nonnull UserProfile userProfile) {
-        saveVariation(experiment, variation, userProfile, new DecisionReasons());
+        saveVariation(experiment, variation, userProfile, DefaultDecisionReasons.newInstance());
     }
 
     /**
@@ -463,7 +464,7 @@ public class DecisionService {
 
     String getBucketingId(@Nonnull String userId,
                           @Nonnull Map<String, ?> filteredAttributes) {
-        return getBucketingId(userId, filteredAttributes, new DecisionReasons());
+        return getBucketingId(userId, filteredAttributes, DefaultDecisionReasons.newInstance());
     }
 
     public ConcurrentHashMap<String, ConcurrentHashMap<String, String>> getForcedVariationMapping() {
@@ -578,7 +579,7 @@ public class DecisionService {
     @Nullable
     public Variation getForcedVariation(@Nonnull Experiment experiment,
                                         @Nonnull String userId) {
-        return getForcedVariation(experiment, userId, new DecisionReasons());
+        return getForcedVariation(experiment, userId, DefaultDecisionReasons.newInstance());
     }
 
     /**

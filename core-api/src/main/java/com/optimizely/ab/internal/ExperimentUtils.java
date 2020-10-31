@@ -22,6 +22,7 @@ import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +59,7 @@ public final class ExperimentUtils {
     }
 
     public static boolean isExperimentActive(@Nonnull Experiment experiment) {
-        return isExperimentActive(experiment, new DecisionReasons());
+        return isExperimentActive(experiment, DefaultDecisionReasons.newInstance());
     }
 
     /**
@@ -103,7 +104,7 @@ public final class ExperimentUtils {
                                                          @Nonnull Map<String, ?> attributes,
                                                          @Nonnull String loggingEntityType,
                                                          @Nonnull String loggingKey) {
-        return doesUserMeetAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey, new DecisionReasons());
+        return doesUserMeetAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey, DefaultDecisionReasons.newInstance());
     }
 
     @Nullable

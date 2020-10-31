@@ -19,6 +19,7 @@ package com.optimizely.ab.config.audience;
 import ch.qos.logback.classic.Level;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,7 +44,7 @@ public class AudienceConditionEvaluationTest {
     Map<String, String> testUserAttributes;
     Map<String, Object> testTypedUserAttributes;
 
-    DecisionReasons reasons = new DecisionReasons();
+    DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
     @Before
     public void initialize() {

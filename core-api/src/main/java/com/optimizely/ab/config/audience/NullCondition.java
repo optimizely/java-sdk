@@ -17,10 +17,8 @@ package com.optimizely.ab.config.audience;
 
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
-import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.Map;
 
 public class NullCondition<T> implements Condition<T> {

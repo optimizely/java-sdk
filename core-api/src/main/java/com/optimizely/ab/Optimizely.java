@@ -1172,7 +1172,7 @@ public class Optimizely implements AutoCloseable {
         Map<String, Object> attributes = user.getAttributes();
         Boolean decisionEventDispatched = false;
         List<OptimizelyDecideOption> allOptions = getAllOptions(options);
-        DecisionReasons decisionReasons = new DecisionReasons(allOptions);
+        DecisionReasons decisionReasons = DefaultDecisionReasons.newInstance(allOptions);
 
         Map<String, ?> copiedAttributes = new HashMap<>(attributes);
         FeatureDecision flagDecision = decisionService.getVariationForFeature(

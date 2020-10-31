@@ -16,44 +16,14 @@
  */
 package com.optimizely.ab.optimizelydecision;
 
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-public class DecisionReasons {
+public interface DecisionReasons {
 
-    private final List<String> errors = new ArrayList<>();
-    private final List<String> logs = new ArrayList<>();
-    private boolean includeReasons;
+    public void addError(String format, Object... args);
 
-    public DecisionReasons(@Nonnull List<OptimizelyDecideOption> options) {
-        this.includeReasons = options.contains(OptimizelyDecideOption.INCLUDE_REASONS);
-    }
+    public String addInfo(String format, Object... args);
 
-    public DecisionReasons() {
-        this(Collections.emptyList());
-    }
-
-    public void addError(String format, Object... args) {
-        String message = String.format(format, args);
-        errors.add(message);
-    }
-
-    public String addInfo(String format, Object... args) {
-        String message = String.format(format, args);
-        if (includeReasons) {
-            logs.add(message);
-        }
-        return message;
-    }
-
-    public List<String> toReport() {
-        List<String> reasons = new ArrayList<>(errors);
-        if (includeReasons) {
-            reasons.addAll(logs);
-        }
-        return reasons;
-    }
+    public List<String> toReport();
 
 }

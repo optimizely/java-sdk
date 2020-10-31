@@ -20,6 +20,7 @@ import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.bucketing.internal.MurmurHash3;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -170,7 +171,7 @@ public class Bucketer {
     public Variation bucket(@Nonnull Experiment experiment,
                             @Nonnull String bucketingId,
                             @Nonnull ProjectConfig projectConfig) {
-        return bucket(experiment, bucketingId, projectConfig, new DecisionReasons());
+        return bucket(experiment, bucketingId, projectConfig, DefaultDecisionReasons.newInstance());
     }
 
     //======== Helper methods ========//
