@@ -1290,7 +1290,9 @@ public class Optimizely implements AutoCloseable {
 
     private List<OptimizelyDecideOption> getAllOptions(List<OptimizelyDecideOption> options) {
         List<OptimizelyDecideOption> copiedOptions = new ArrayList(defaultDecideOptions);
-        copiedOptions.addAll(options);
+        if (options != null) {
+            copiedOptions.addAll(options);
+        }
         return copiedOptions;
     }
 
