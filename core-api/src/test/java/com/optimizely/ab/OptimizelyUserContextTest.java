@@ -133,6 +133,23 @@ public class OptimizelyUserContextTest {
         assertEquals(newAttributes.get(ATTRIBUTE_HOUSE_KEY), "v2");
     }
 
+    @Test
+    public void setAttribute_nullValue() {
+        Map<String, Object> attributes = Collections.singletonMap("k1", null);
+        OptimizelyUserContext user = new OptimizelyUserContext(optimizely, userId, attributes);
+
+        Map<String, Object> newAttributes = user.getAttributes();
+        assertEquals(newAttributes.get("k1"), null);
+
+        user.setAttribute("k1", true);
+        newAttributes = user.getAttributes();
+        assertEquals(newAttributes.get("k1"), true);
+
+        user.setAttribute("k1", null);
+        newAttributes = user.getAttributes();
+        assertEquals(newAttributes.get("k1"), null);
+    }
+
     // decide
 
     @Test
@@ -289,9 +306,9 @@ public class OptimizelyUserContextTest {
             .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
             .build();
 
-        Map<String, ?> attributes = Collections.singletonMap("gender", "f");
+        Map<String, Object> attributes = Collections.singletonMap("gender", "f");
         String eventKey = "event1";
-        Map<String, ?> eventTags = Collections.singletonMap("name", "carrot");
+        Map<String, Object> eventTags = Collections.singletonMap("name", "carrot");
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
         user.trackEvent(eventKey, eventTags);
 
@@ -305,7 +322,7 @@ public class OptimizelyUserContextTest {
             .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
             .build();
 
-        Map<String, ?> attributes = Collections.singletonMap("gender", "f");
+        Map<String, Object> attributes = Collections.singletonMap("gender", "f");
         String eventKey = "event1";
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
         user.trackEvent(eventKey);
@@ -573,7 +590,7 @@ public class OptimizelyUserContextTest {
                 Collections.emptyList()));
         assertEquals(
             decisions.get(flagKey2),
-            OptimizelyDecision.createErrorDecision(
+            OptimizelyDecision.newErrorDecision(
                 flagKey2,
                 user,
                 DecisionMessage.FLAG_KEY_INVALID.reason(flagKey2)));

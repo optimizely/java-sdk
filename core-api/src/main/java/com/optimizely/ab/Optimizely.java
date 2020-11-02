@@ -1144,7 +1144,12 @@ public class Optimizely implements AutoCloseable {
      * @return An OptimizelyUserContext associated with this OptimizelyClient.
       */
     public OptimizelyUserContext createUserContext(@Nonnull String userId,
-                                                   @Nonnull Map<String, ?> attributes) {
+                                                   @Nonnull Map<String, Object> attributes) {
+        if (userId == null) {
+            logger.warn("The userId parameter must be nonnull.");
+            return null;
+        }
+
         return new OptimizelyUserContext(this, userId, attributes);
     }
 
@@ -1158,20 +1163,19 @@ public class Optimizely implements AutoCloseable {
 
         ProjectConfig projectConfig = getProjectConfig();
         if (projectConfig == null) {
-            return OptimizelyDecision.createErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
+            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
         }
         if (options == null) {
             options = defaultDecideOptions;
         }
         FeatureFlag flag = projectConfig.getFeatureKeyMapping().get(key);
         if (flag == null) {
-            return OptimizelyDecision.createErrorDecision(key, user, DecisionMessage.FLAG_KEY_INVALID.reason(key));
+            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.FLAG_KEY_INVALID.reason(key));
         }
 
         String userId = user.getUserId();
         Map<String, Object> attributes = user.getAttributes();
-        Boolean sentEvent = false;
-        Boolean flagEnabled = false;
+        Boolean decisionEventDispatched = false;
         List<OptimizelyDecideOption> allOptions = getAllOptions(options);
         DecisionReasons decisionReasons = new DecisionReasons(allOptions);
 
@@ -1184,26 +1188,28 @@ public class Optimizely implements AutoCloseable {
             allOptions,
             decisionReasons);
 
+        Boolean flagEnabled = false;
         if (flagDecision.variation != null) {
-            if (flagDecision.decisionSource.equals(FeatureDecision.DecisionSource.FEATURE_TEST)) {
-                if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
-                    sendImpression(
-                        projectConfig,
-                        flagDecision.experiment,
-                        userId,
-                        copiedAttributes,
-                        flagDecision.variation,
-                        key,
-                        flagDecision.decisionSource.toString());
-                    sentEvent = true;
-                }
-            } else {
-                String message = decisionReasons.addInfo("The user \"%s\" is not included in an experiment for flag \"%s\".", userId, key);
-                logger.info(message);
-            }
             if (flagDecision.variation.getFeatureEnabled()) {
                 flagEnabled = true;
             }
+        }
+
+        FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
+        if (flagDecision.decisionSource != null) {
+            decisionSource = flagDecision.decisionSource;
+        }
+
+        if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
+            sendImpression(
+                projectConfig,
+                flagDecision.experiment,
+                userId,
+                copiedAttributes,
+                flagDecision.variation,
+                key,
+                decisionSource.toString());
+            decisionEventDispatched = true;
         }
 
         Map<String, Object> variableMap = new HashMap<>();
@@ -1229,7 +1235,7 @@ public class Optimizely implements AutoCloseable {
             .withVariationKey(variationKey)
             .withRuleKey(ruleKey)
             .withReasons(reasonsToReport)
-            .withDecisionEventDispatched(sentEvent)
+            .withDecisionEventDispatched(decisionEventDispatched)
             .build();
         notificationCenter.send(decisionNotification);
 
