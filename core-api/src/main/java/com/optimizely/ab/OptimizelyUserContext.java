@@ -99,7 +99,7 @@ public class OptimizelyUserContext {
      * @return A decision result.
      */
     public OptimizelyDecision decide(@Nonnull String key) {
-        return optimizely.decide(this, key, Collections.emptyList());
+        return decide(key, Collections.emptyList());
     }
 
     /**
@@ -124,7 +124,7 @@ public class OptimizelyUserContext {
      * @return All decision results mapped by flag keys.
      */
     public Map<String, OptimizelyDecision> decideForKeys(@Nonnull List<String> keys) {
-        return optimizely.decideForKeys(this, keys, Collections.emptyList());
+        return decideForKeys(keys, Collections.emptyList());
     }
 
     /**
@@ -143,7 +143,7 @@ public class OptimizelyUserContext {
      * @return A dictionary of all decision results, mapped by flag keys.
      */
     public Map<String, OptimizelyDecision> decideAll() {
-        return optimizely.decideAll(this, Collections.emptyList());
+        return decideAll(Collections.emptyList());
     }
 
     /**
