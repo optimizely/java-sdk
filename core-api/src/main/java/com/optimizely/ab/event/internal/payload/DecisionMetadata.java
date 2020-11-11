@@ -52,6 +52,10 @@ public class DecisionMetadata {
         return ruleKey;
     }
 
+    public boolean getEnabled() {
+        return enabled;
+    }
+
     public String getFlagKey() {
         return flagKey;
     }
