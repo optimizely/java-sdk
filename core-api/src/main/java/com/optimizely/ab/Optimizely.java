@@ -1222,7 +1222,8 @@ public class Optimizely implements AutoCloseable {
                 copiedAttributes,
                 flagDecision.variation,
                 key,
-                decisionSource.toString());
+                decisionSource.toString(),
+                flagEnabled);
             decisionEventDispatched = true;
         }
 
