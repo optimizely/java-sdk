@@ -37,7 +37,8 @@ public class UserEventFactory {
                                                         @Nonnull String userId,
                                                         @Nonnull Map<String, ?> attributes,
                                                         @Nonnull String flagKey,
-                                                        @Nonnull String ruleType) {
+                                                        @Nonnull String ruleType,
+                                                        @Nonnull boolean enabled) {
 
         if ((FeatureDecision.DecisionSource.ROLLOUT.toString().equals(ruleType)  || variation == null) && !projectConfig.getSendFlagDecisions())
         {
@@ -69,6 +70,7 @@ public class UserEventFactory {
             .setRuleKey(experimentKey)
             .setRuleType(ruleType)
             .setVariationKey(variationKey)
+            .setEnabled(enabled)
             .build();
 
         return new ImpressionEvent.Builder()

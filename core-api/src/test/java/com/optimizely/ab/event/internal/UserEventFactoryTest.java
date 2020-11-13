@@ -67,7 +67,7 @@ public class UserEventFactoryTest {
     public void setUp() {
         experiment = new Experiment(EXPERIMENT_ID, EXPERIMENT_KEY, LAYER_ID);
         variation = new Variation(VARIATION_ID, VARIATION_KEY);
-        decisionMetadata = new DecisionMetadata("", EXPERIMENT_KEY, "experiment", VARIATION_KEY);
+        decisionMetadata = new DecisionMetadata("", EXPERIMENT_KEY, "experiment", VARIATION_KEY, true);
     }
 
     @Test
@@ -80,7 +80,8 @@ public class UserEventFactoryTest {
             USER_ID,
             ATTRIBUTES,
             EXPERIMENT_KEY,
-            "rollout"
+            "rollout",
+            false
         );
         assertNull(actual);
     }
@@ -94,7 +95,8 @@ public class UserEventFactoryTest {
             USER_ID,
             ATTRIBUTES,
             "",
-            "experiment"
+            "experiment",
+            true
         );
 
         assertTrue(actual.getTimestamp() > 0);
