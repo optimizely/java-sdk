@@ -29,16 +29,19 @@ public class DecisionMetadata {
     String ruleType;
     @JsonProperty("variation_key")
     String variationKey;
+    @JsonProperty("enabled")
+    boolean enabled;
 
     @VisibleForTesting
     public DecisionMetadata() {
     }
 
-    public DecisionMetadata(String flagKey, String ruleKey, String ruleType, String variationKey) {
+    public DecisionMetadata(String flagKey, String ruleKey, String ruleType, String variationKey, boolean enabled) {
         this.flagKey = flagKey;
         this.ruleKey = ruleKey;
         this.ruleType = ruleType;
         this.variationKey = variationKey;
+        this.enabled = enabled;
     }
 
     public String getRuleType() {
@@ -47,6 +50,10 @@ public class DecisionMetadata {
 
     public String getRuleKey() {
         return ruleKey;
+    }
+
+    public boolean getEnabled() {
+        return enabled;
     }
 
     public String getFlagKey() {
@@ -67,6 +74,7 @@ public class DecisionMetadata {
         if (!ruleType.equals(that.ruleType)) return false;
         if (!ruleKey.equals(that.ruleKey)) return false;
         if (!flagKey.equals(that.flagKey)) return false;
+        if (enabled != that.enabled) return false;
         return variationKey.equals(that.variationKey);
     }
 
@@ -85,6 +93,12 @@ public class DecisionMetadata {
         private String ruleKey;
         private String flagKey;
         private String variationKey;
+        private boolean enabled;
+
+        public Builder setEnabled(boolean enabled) {
+            this.enabled = enabled;
+            return this;
+        }
 
         public Builder setRuleType(String ruleType) {
             this.ruleType = ruleType;
@@ -107,7 +121,7 @@ public class DecisionMetadata {
         }
 
         public DecisionMetadata build() {
-            return new DecisionMetadata(flagKey, ruleKey, ruleType, variationKey);
+            return new DecisionMetadata(flagKey, ruleKey, ruleType, variationKey, enabled);
         }
     }
 }
