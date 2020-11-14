@@ -447,16 +447,6 @@ public class Optimizely implements AutoCloseable {
             featureDecision.variation,
             featureKey,
             decisionSource.toString(),
-            featureEnabled);        
-
-        sendImpression(
-            projectConfig,
-            featureDecision.experiment,
-            userId,
-            copiedAttributes,
-            featureDecision.variation,
-            featureKey,
-            decisionSource.toString(),
             featureEnabled);
 
         DecisionNotification decisionNotification = DecisionNotification.newFeatureDecisionNotificationBuilder()
