@@ -252,10 +252,10 @@ public class Optimizely implements AutoCloseable {
      * @param ruleType           It can either be experiment in case impression event is sent from activate or it's feature-test or rollout
      */
     private void sendImpression(@Nonnull ProjectConfig projectConfig,
-                                Experiment experiment,
+                                @Nonnull Experiment experiment,
                                 @Nonnull String userId,
                                 @Nonnull Map<String, ?> filteredAttributes,
-                                Variation variation,
+                                @Nonnull Variation variation,
                                 @Nonnull String flagKey,
                                 @Nonnull String ruleType,
                                 @Nonnull boolean enabled) {
