@@ -1212,6 +1212,7 @@ public class Optimizely implements AutoCloseable {
         List<String> reasonsToReport = decisionReasons.toReport();
         String variationKey = flagDecision.variation != null ? flagDecision.variation.getKey() : null;
         // TODO: add ruleKey values when available later. use a copy of experimentKey until then.
+        //       add to event metadata as well (currently set to experimentKey)
         String ruleKey = flagDecision.experiment != null ? flagDecision.experiment.getKey() : null;
 
         if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {

@@ -155,7 +155,7 @@ public class OptimizelyUserContextTest {
     // decide
 
     @Test
-    public void decide() {
+    public void decide_featureTest() {
         optimizely = new Optimizely.Builder()
             .withDatafile(datafile)
             .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
@@ -183,6 +183,41 @@ public class OptimizelyUserContextTest {
             .setFlagKey(flagKey)
             .setRuleKey(experimentKey)
             .setRuleType(FeatureDecision.DecisionSource.FEATURE_TEST.toString())
+            .setVariationKey(variationKey)
+            .setEnabled(true)
+            .build();
+        eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap(), metadata);
+    }
+
+    @Test
+    public void decide_rollout() {
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .build();
+
+        String flagKey = "feature_1";
+        String experimentKey = "18322080788";
+        String variationKey = "18257766532";
+        String experimentId = "18322080788";
+        String variationId = "18257766532";
+        OptimizelyJSON variablesExpected = optimizely.getAllFeatureVariables(flagKey, userId);
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey);
+
+        assertEquals(decision.getVariationKey(), variationKey);
+        assertTrue(decision.getEnabled());
+        assertEquals(decision.getVariables().toMap(), variablesExpected.toMap());
+        assertEquals(decision.getRuleKey(), experimentKey);
+        assertEquals(decision.getFlagKey(), flagKey);
+        assertEquals(decision.getUserContext(), user);
+        assertTrue(decision.getReasons().isEmpty());
+
+        DecisionMetadata metadata = new DecisionMetadata.Builder()
+            .setFlagKey(flagKey)
+            .setRuleKey(experimentKey)
+            .setRuleType(FeatureDecision.DecisionSource.ROLLOUT.toString())
             .setVariationKey(variationKey)
             .setEnabled(true)
             .build();
