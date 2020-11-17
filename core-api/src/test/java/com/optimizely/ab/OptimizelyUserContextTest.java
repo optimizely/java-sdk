@@ -18,10 +18,12 @@ package com.optimizely.ab;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.event.ForwardingEventProcessor;
+import com.optimizely.ab.event.internal.payload.DecisionMetadata;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.optimizelydecision.DecisionMessage;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
@@ -363,11 +365,18 @@ public class OptimizelyUserContextTest {
 
         assertEquals(decision.getVariationKey(), "variation_with_traffic");
 
-        eventHandler.expectImpression(experimentId, variationId, userId);
+        DecisionMetadata metadata = new DecisionMetadata.Builder()
+            .setFlagKey(flagKey)
+            .setRuleKey(decision.getRuleKey())
+            .setRuleType(FeatureDecision.DecisionSource.FEATURE_TEST.toString())
+            .setVariationKey(decision.getVariationKey())
+            .setEnabled(decision.getEnabled())
+            .build();
+        eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap(), metadata);
     }
 
     @Test
-    public void decide_doNotSendEvent() {
+    public void decide_doNotSendEvent_withOption() {
         optimizely = new Optimizely.Builder()
             .withDatafile(datafile)
             .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))

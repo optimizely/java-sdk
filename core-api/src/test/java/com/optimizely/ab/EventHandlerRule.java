@@ -28,9 +28,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.optimizely.ab.config.ProjectConfig.RESERVED_ATTRIBUTE_PREFIX;
-import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
  * EventHandlerRule is a JUnit rule that implements an Optimizely {@link EventHandler}.
@@ -108,8 +106,13 @@ public class EventHandlerRule implements EventHandler, TestRule {
     }
 
     public void expectImpression(String experientId, String variationId, String userId, Map<String, ?> attributes) {
-        expect(experientId, variationId, IMPRESSION_EVENT_NAME, userId, attributes, null);
+        expectImpression(experientId, variationId, userId, attributes, null);
     }
+
+    public void expectImpression(String experientId, String variationId, String userId, Map<String, ?> attributes, DecisionMetadata metadata) {
+        expect(experientId, variationId, IMPRESSION_EVENT_NAME, userId, attributes, null, metadata);
+    }
+
 
     public void expectConversion(String eventName, String userId) {
         expectConversion(eventName, userId, Collections.emptyMap());
@@ -124,10 +127,16 @@ public class EventHandlerRule implements EventHandler, TestRule {
     }
 
     public void expect(String experientId, String variationId, String eventName, String userId,
-                  Map<String, ?> attributes, Map<String, ?> tags) {
-        CanonicalEvent expectedEvent = new CanonicalEvent(experientId, variationId, eventName, userId, attributes, tags);
+                  Map<String, ?> attributes, Map<String, ?> tags, DecisionMetadata metadata) {
+        CanonicalEvent expectedEvent = new CanonicalEvent(experientId, variationId, eventName, userId, attributes, tags, metadata);
         expectedEvents.add(expectedEvent);
     }
+
+    public void expect(String experientId, String variationId, String eventName, String userId,
+                       Map<String, ?> attributes, Map<String, ?> tags) {
+        expect(experientId, variationId, eventName, userId, attributes, tags, null);
+    }
+
 
     @Override
     public void dispatchEvent(LogEvent logEvent) {
@@ -161,7 +170,8 @@ public class EventHandlerRule implements EventHandler, TestRule {
                             visitor.getAttributes().stream()
                                 .filter(attribute -> !attribute.getKey().startsWith(RESERVED_ATTRIBUTE_PREFIX))
                                 .collect(Collectors.toMap(Attribute::getKey, Attribute::getValue)),
-                            event.getTags()
+                            event.getTags(),
+                            decision.getMetadata()
                         );
 
                         logger.info("Adding dispatched, event: {}", actual);
@@ -179,33 +189,45 @@ public class EventHandlerRule implements EventHandler, TestRule {
         private String visitorId;
         private Map<String, ?> attributes;
         private Map<String, ?> tags;
+        private DecisionMetadata metadata;
 
         public CanonicalEvent(String experimentId, String variationId, String eventName,
-                              String visitorId, Map<String, ?> attributes, Map<String, ?> tags) {
+                              String visitorId, Map<String, ?> attributes, Map<String, ?> tags,
+                              DecisionMetadata metadata) {
             this.experimentId = experimentId;
             this.variationId = variationId;
             this.eventName = eventName;
             this.visitorId = visitorId;
             this.attributes = attributes;
             this.tags = tags;
+            this.metadata = metadata;
+        }
+
+        public CanonicalEvent(String experimentId, String variationId, String eventName,
+                              String visitorId, Map<String, ?> attributes, Map<String, ?> tags) {
+            this(experimentId, variationId, eventName, visitorId, attributes, tags, null);
         }
 
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
+
             CanonicalEvent that = (CanonicalEvent) o;
+
+            boolean isMetaDataEqual = (metadata == null) || Objects.equals(metadata, that.metadata);
             return Objects.equals(experimentId, that.experimentId) &&
                 Objects.equals(variationId, that.variationId) &&
                 Objects.equals(eventName, that.eventName) &&
                 Objects.equals(visitorId, that.visitorId) &&
                 Objects.equals(attributes, that.attributes) &&
-                Objects.equals(tags, that.tags);
+                Objects.equals(tags, that.tags) &&
+                isMetaDataEqual;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(experimentId, variationId, eventName, visitorId, attributes, tags);
+            return Objects.hash(experimentId, variationId, eventName, visitorId, attributes, tags, metadata);
         }
 
         @Override
@@ -217,6 +239,7 @@ public class EventHandlerRule implements EventHandler, TestRule {
                 .add("visitorId='" + visitorId + "'")
                 .add("attributes=" + attributes)
                 .add("tags=" + tags)
+                .add("metadata=" + metadata)
                 .toString();
         }
     }
