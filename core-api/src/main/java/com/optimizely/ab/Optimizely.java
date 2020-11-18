@@ -252,10 +252,10 @@ public class Optimizely implements AutoCloseable {
      * @param ruleType           It can either be experiment in case impression event is sent from activate or it's feature-test or rollout
      */
     private void sendImpression(@Nonnull ProjectConfig projectConfig,
-                                @Nonnull Experiment experiment,
+                                @Nullable Experiment experiment,
                                 @Nonnull String userId,
                                 @Nonnull Map<String, ?> filteredAttributes,
-                                @Nonnull Variation variation,
+                                @Nullable Variation variation,
                                 @Nonnull String flagKey,
                                 @Nonnull String ruleType,
                                 @Nonnull boolean enabled) {
@@ -425,15 +425,6 @@ public class Optimizely implements AutoCloseable {
         if (featureDecision.decisionSource != null) {
             decisionSource = featureDecision.decisionSource;
         }
-        sendImpression(
-            projectConfig,
-            featureDecision.experiment,
-            userId,
-            copiedAttributes,
-            featureDecision.variation,
-            featureKey,
-            decisionSource.toString(),
-            featureEnabled);
 
         if (featureDecision.variation != null) {
             // This information is only necessary for feature tests.
@@ -448,6 +439,15 @@ public class Optimizely implements AutoCloseable {
                 featureEnabled = true;
             }
         }
+        sendImpression(
+            projectConfig,
+            featureDecision.experiment,
+            userId,
+            copiedAttributes,
+            featureDecision.variation,
+            featureKey,
+            decisionSource.toString(),
+            featureEnabled);
 
         DecisionNotification decisionNotification = DecisionNotification.newFeatureDecisionNotificationBuilder()
             .withUserId(userId)
