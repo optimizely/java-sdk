@@ -23,7 +23,7 @@ import java.util.List;
 public class DefaultDecisionReasons implements DecisionReasons {
 
     private final List<String> errors = new ArrayList<>();
-    private final List<String> logs = new ArrayList<>();
+    private final List<String> infos = new ArrayList<>();
 
     public static DecisionReasons newInstance(@Nullable List<OptimizelyDecideOption> options) {
         if (options != null && options.contains(OptimizelyDecideOption.INCLUDE_REASONS)) return new DefaultDecisionReasons();
@@ -41,13 +41,13 @@ public class DefaultDecisionReasons implements DecisionReasons {
 
     public String addInfo(String format, Object... args) {
         String message = String.format(format, args);
-        logs.add(message);
+        infos.add(message);
         return message;
     }
 
     public List<String> toReport() {
         List<String> reasons = new ArrayList<>(errors);
-        reasons.addAll(logs);
+        reasons.addAll(infos);
         return reasons;
     }
 
