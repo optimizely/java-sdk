@@ -1247,7 +1247,7 @@ public class Optimizely implements AutoCloseable {
 
         return new OptimizelyDecision(
             variationKey,
-            flagEnabled,
+            false,
             optimizelyJSON,
             ruleKey,
             key,
