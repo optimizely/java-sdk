@@ -16,6 +16,7 @@
 package com.optimizely.ab.config.audience;
 
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -23,7 +24,10 @@ import java.util.Map;
 public class NullCondition<T> implements Condition<T> {
     @Nullable
     @Override
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    public Boolean evaluate(ProjectConfig config,
+                            Map<String, ?> attributes,
+                            DecisionReasons reasons) {
         return null;
     }
+
 }

@@ -34,6 +34,11 @@ import com.optimizely.ab.notification.*;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
+import com.optimizely.ab.optimizelydecision.DecisionMessage;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +81,6 @@ public class Optimizely implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
 
-    @VisibleForTesting
     final DecisionService decisionService;
     @VisibleForTesting
     @Deprecated
@@ -85,6 +89,8 @@ public class Optimizely implements AutoCloseable {
     final EventProcessor eventProcessor;
     @VisibleForTesting
     final ErrorHandler errorHandler;
+
+    public final List<OptimizelyDecideOption> defaultDecideOptions;
 
     private final ProjectConfigManager projectConfigManager;
 
@@ -104,7 +110,8 @@ public class Optimizely implements AutoCloseable {
                        @Nullable UserProfileService userProfileService,
                        @Nonnull ProjectConfigManager projectConfigManager,
                        @Nullable OptimizelyConfigManager optimizelyConfigManager,
-                       @Nonnull NotificationCenter notificationCenter
+                       @Nonnull NotificationCenter notificationCenter,
+                       @Nonnull List<OptimizelyDecideOption> defaultDecideOptions
     ) {
         this.eventHandler = eventHandler;
         this.eventProcessor = eventProcessor;
@@ -114,6 +121,7 @@ public class Optimizely implements AutoCloseable {
         this.projectConfigManager = projectConfigManager;
         this.optimizelyConfigManager = optimizelyConfigManager;
         this.notificationCenter = notificationCenter;
+        this.defaultDecideOptions = defaultDecideOptions;
     }
 
     /**
@@ -779,7 +787,6 @@ public class Optimizely implements AutoCloseable {
     }
 
     // Helper method which takes type and variable value and convert it to object to use in Listener DecisionInfo object variable value
-    @VisibleForTesting
     Object convertStringToType(String variableValue, String type) {
         if (variableValue != null) {
             switch (type) {
@@ -1129,6 +1136,202 @@ public class Optimizely implements AutoCloseable {
         return new OptimizelyConfigService(projectConfig).getConfig();
     }
 
+    //============ decide ============//
+
+    /**
+     * Create a context of the user for which decision APIs will be called.
+     *
+     * A user context will be created successfully even when the SDK is not fully configured yet.
+     *
+     * @param userId The user ID to be used for bucketing.
+     * @param attributes: A map of attribute names to current user attribute values.
+     * @return An OptimizelyUserContext associated with this OptimizelyClient.
+      */
+    public OptimizelyUserContext createUserContext(@Nonnull String userId,
+                                                   @Nonnull Map<String, Object> attributes) {
+        if (userId == null) {
+            logger.warn("The userId parameter must be nonnull.");
+            return null;
+        }
+
+        return new OptimizelyUserContext(this, userId, attributes);
+    }
+
+    public OptimizelyUserContext createUserContext(@Nonnull String userId) {
+        return new OptimizelyUserContext(this, userId);
+    }
+
+    OptimizelyDecision decide(@Nonnull OptimizelyUserContext user,
+                              @Nonnull String key,
+                              @Nonnull List<OptimizelyDecideOption> options) {
+
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
+        }
+
+        FeatureFlag flag = projectConfig.getFeatureKeyMapping().get(key);
+        if (flag == null) {
+            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.FLAG_KEY_INVALID.reason(key));
+        }
+
+        String userId = user.getUserId();
+        Map<String, Object> attributes = user.getAttributes();
+        Boolean decisionEventDispatched = false;
+        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
+        DecisionReasons decisionReasons = DefaultDecisionReasons.newInstance(allOptions);
+
+        Map<String, ?> copiedAttributes = new HashMap<>(attributes);
+        FeatureDecision flagDecision = decisionService.getVariationForFeature(
+            flag,
+            userId,
+            copiedAttributes,
+            projectConfig,
+            allOptions,
+            decisionReasons);
+
+        Boolean flagEnabled = false;
+        if (flagDecision.variation != null) {
+            if (flagDecision.variation.getFeatureEnabled()) {
+                flagEnabled = true;
+            }
+        }
+        logger.info("Feature \"{}\" is enabled for user \"{}\"? {}", key, userId, flagEnabled);
+
+        Map<String, Object> variableMap = new HashMap<>();
+        if (!allOptions.contains(OptimizelyDecideOption.EXCLUDE_VARIABLES)) {
+            variableMap = getDecisionVariableMap(
+                flag,
+                flagDecision.variation,
+                flagEnabled,
+                decisionReasons);
+        }
+        OptimizelyJSON optimizelyJSON = new OptimizelyJSON(variableMap);
+
+        FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
+        if (flagDecision.decisionSource != null) {
+            decisionSource = flagDecision.decisionSource;
+        }
+
+        List<String> reasonsToReport = decisionReasons.toReport();
+        String variationKey = flagDecision.variation != null ? flagDecision.variation.getKey() : null;
+        // TODO: add ruleKey values when available later. use a copy of experimentKey until then.
+        //       add to event metadata as well (currently set to experimentKey)
+        String ruleKey = flagDecision.experiment != null ? flagDecision.experiment.getKey() : null;
+
+        if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
+            sendImpression(
+                projectConfig,
+                flagDecision.experiment,
+                userId,
+                copiedAttributes,
+                flagDecision.variation,
+                key,
+                decisionSource.toString(),
+                flagEnabled);
+            decisionEventDispatched = true;
+        }
+
+        DecisionNotification decisionNotification = DecisionNotification.newFlagDecisionNotificationBuilder()
+            .withUserId(userId)
+            .withAttributes(copiedAttributes)
+            .withFlagKey(key)
+            .withEnabled(flagEnabled)
+            .withVariables(variableMap)
+            .withVariationKey(variationKey)
+            .withRuleKey(ruleKey)
+            .withReasons(reasonsToReport)
+            .withDecisionEventDispatched(decisionEventDispatched)
+            .build();
+        notificationCenter.send(decisionNotification);
+
+        return new OptimizelyDecision(
+            variationKey,
+            flagEnabled,
+            optimizelyJSON,
+            ruleKey,
+            key,
+            user,
+            reasonsToReport);
+    }
+
+    Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
+                                                  @Nonnull List<String> keys,
+                                                  @Nonnull List<OptimizelyDecideOption> options) {
+        Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
+
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
+            return decisionMap;
+        }
+
+        if (keys.isEmpty()) return decisionMap;
+
+        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
+
+        for (String key : keys) {
+            OptimizelyDecision decision = decide(user, key, options);
+            if (!allOptions.contains(OptimizelyDecideOption.ENABLED_FLAGS_ONLY) || decision.getEnabled()) {
+                decisionMap.put(key, decision);
+            }
+        }
+
+        return decisionMap;
+    }
+
+    Map<String, OptimizelyDecision> decideAll(@Nonnull OptimizelyUserContext user,
+                                              @Nonnull List<OptimizelyDecideOption> options) {
+        Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
+
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
+            return decisionMap;
+        }
+
+        List<FeatureFlag> allFlags = projectConfig.getFeatureFlags();
+        List<String> allFlagKeys = new ArrayList<>();
+        for (int i = 0; i < allFlags.size(); i++) allFlagKeys.add(allFlags.get(i).getKey());
+
+        return decideForKeys(user, allFlagKeys, options);
+    }
+
+    private List<OptimizelyDecideOption> getAllOptions(List<OptimizelyDecideOption> options) {
+        List<OptimizelyDecideOption> copiedOptions = new ArrayList(defaultDecideOptions);
+        if (options != null) {
+            copiedOptions.addAll(options);
+        }
+        return copiedOptions;
+    }
+
+    private Map<String, Object> getDecisionVariableMap(@Nonnull FeatureFlag flag,
+                                                       @Nonnull Variation variation,
+                                                       @Nonnull Boolean featureEnabled,
+                                                       @Nonnull DecisionReasons decisionReasons) {
+        Map<String, Object> valuesMap = new HashMap<String, Object>();
+        for (FeatureVariable variable : flag.getVariables()) {
+            String value = variable.getDefaultValue();
+            if (featureEnabled) {
+                FeatureVariableUsageInstance instance = variation.getVariableIdToFeatureVariableUsageInstanceMap().get(variable.getId());
+                if (instance != null) {
+                    value = instance.getValue();
+                }
+            }
+
+            Object convertedValue = convertStringToType(value, variable.getType());
+            if (convertedValue == null) {
+                decisionReasons.addError(DecisionMessage.VARIABLE_VALUE_INVALID.reason(variable.getKey()));
+            } else if (convertedValue instanceof OptimizelyJSON) {
+                convertedValue = ((OptimizelyJSON) convertedValue).toMap();
+            }
+
+            valuesMap.put(variable.getKey(), convertedValue);
+        }
+
+        return valuesMap;
+    }
+
     /**
      * Helper method which makes separate copy of attributesMap variable and returns it
      *
@@ -1233,6 +1436,7 @@ public class Optimizely implements AutoCloseable {
         private OptimizelyConfigManager optimizelyConfigManager;
         private UserProfileService userProfileService;
         private NotificationCenter notificationCenter;
+        private List<OptimizelyDecideOption> defaultDecideOptions;
 
         // For backwards compatibility
         private AtomicProjectConfigManager fallbackConfigManager = new AtomicProjectConfigManager();
@@ -1304,6 +1508,11 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
+        public Builder withDefaultDecideOptions(List<OptimizelyDecideOption> defaultDecideOtions) {
+            this.defaultDecideOptions = defaultDecideOtions;
+            return this;
+        }
+
         // Helper functions for making testing easier
         protected Builder withBucketing(Bucketer bucketer) {
             this.bucketer = bucketer;
@@ -1372,7 +1581,13 @@ public class Optimizely implements AutoCloseable {
                 eventProcessor = new ForwardingEventProcessor(eventHandler, notificationCenter);
             }
 
-            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, optimizelyConfigManager, notificationCenter);
+            if (defaultDecideOptions != null) {
+                defaultDecideOptions = Collections.unmodifiableList(defaultDecideOptions);
+            } else {
+                defaultDecideOptions = Collections.emptyList();
+            }
+
+            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, optimizelyConfigManager, notificationCenter, defaultDecideOptions);
         }
     }
 }

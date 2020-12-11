@@ -377,7 +377,7 @@ public class OptimizelyTest {
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Map<String, String> testUserAttributes = Collections.singletonMap("browser_type", "chromey");
 
-        when(mockBucketer.bucket(activatedExperiment, testBucketingId, validProjectConfig)).thenReturn(null);
+        when(mockBucketer.bucket(eq(activatedExperiment), eq(testBucketingId), eq(validProjectConfig), anyObject())).thenReturn(null);
 
         logbackVerifier.expectMessage(Level.INFO, "Not activating user \"userId\" for experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -936,7 +936,7 @@ public class OptimizelyTest {
         assertNull(expectedVariation);
 
         // make sure we didn't even attempt to bucket the user
-        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), anyObject());
     }
 
     //======== track tests ========//
@@ -1237,7 +1237,7 @@ public class OptimizelyTest {
         optimizely.track("event_with_launched_and_running_experiments", genericUserId);
 
         // make sure we didn't even attempt to bucket the user or fire any conversion events
-        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), anyObject());
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
     }
 
@@ -1254,7 +1254,7 @@ public class OptimizelyTest {
 
         Optimizely optimizely = optimizelyBuilder.withBucketing(mockBucketer).build();
 
-        when(mockBucketer.bucket(activatedExperiment, testUserId, validProjectConfig)).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(eq(activatedExperiment), eq(testUserId), eq(validProjectConfig), anyObject())).thenReturn(bucketedVariation);
 
         Map<String, String> testUserAttributes = new HashMap<>();
         testUserAttributes.put("browser_type", "chrome");
@@ -1264,7 +1264,7 @@ public class OptimizelyTest {
             testUserAttributes);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(activatedExperiment, testUserId, validProjectConfig);
+        verify(mockBucketer).bucket(eq(activatedExperiment), eq(testUserId), eq(validProjectConfig), anyObject());
         assertThat(actualVariation, is(bucketedVariation));
 
         // verify that we didn't attempt to dispatch an event
@@ -1285,13 +1285,13 @@ public class OptimizelyTest {
             .withConfig(noAudienceProjectConfig)
             .build();
 
-        when(mockBucketer.bucket(activatedExperiment, testUserId, noAudienceProjectConfig)).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(eq(activatedExperiment), eq(testUserId), eq(noAudienceProjectConfig), anyObject())).thenReturn(bucketedVariation);
 
         // activate the experiment
         Variation actualVariation = optimizely.getVariation(activatedExperiment.getKey(), testUserId);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(activatedExperiment, testUserId, noAudienceProjectConfig);
+        verify(mockBucketer).bucket(eq(activatedExperiment), eq(testUserId), eq(noAudienceProjectConfig), anyObject());
         assertThat(actualVariation, is(bucketedVariation));
 
         // verify that we didn't attempt to dispatch an event
@@ -1346,7 +1346,7 @@ public class OptimizelyTest {
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = experiment.getVariations().get(0);
 
-        when(mockBucketer.bucket(experiment, testUserId, validProjectConfig)).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(eq(experiment), eq(testUserId), eq(validProjectConfig), anyObject())).thenReturn(bucketedVariation);
 
         Optimizely optimizely = optimizelyBuilder.withBucketing(mockBucketer).build();
 
@@ -1355,7 +1355,7 @@ public class OptimizelyTest {
 
         Variation actualVariation = optimizely.getVariation(experiment.getKey(), testUserId, testUserAttributes);
 
-        verify(mockBucketer).bucket(experiment, testUserId, validProjectConfig);
+        verify(mockBucketer).bucket(eq(experiment), eq(testUserId), eq(validProjectConfig), anyObject());
         assertThat(actualVariation, is(bucketedVariation));
     }
 
@@ -1396,7 +1396,7 @@ public class OptimizelyTest {
         Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = experiment.getVariations().get(0);
 
-        when(mockBucketer.bucket(experiment, testUserId, noAudienceProjectConfig)).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(eq(experiment), eq(testUserId), eq(noAudienceProjectConfig), anyObject())).thenReturn(bucketedVariation);
 
         Optimizely optimizely = optimizelyBuilder
             .withConfig(noAudienceProjectConfig)
@@ -1405,7 +1405,7 @@ public class OptimizelyTest {
 
         Variation actualVariation = optimizely.getVariation(experiment.getKey(), testUserId);
 
-        verify(mockBucketer).bucket(experiment, testUserId, noAudienceProjectConfig);
+        verify(mockBucketer).bucket(eq(experiment), eq(testUserId), eq(noAudienceProjectConfig), anyObject());
         assertThat(actualVariation, is(bucketedVariation));
     }
 
@@ -1463,7 +1463,7 @@ public class OptimizelyTest {
             attributes.put("browser_type", "chrome");
         }
 
-        when(mockBucketer.bucket(experiment, "user", validProjectConfig)).thenReturn(variation);
+        when(mockBucketer.bucket(eq(experiment), eq("user"), eq(validProjectConfig), anyObject())).thenReturn(variation);
 
         Optimizely optimizely = optimizelyBuilder.withBucketing(mockBucketer).build();
 
@@ -1521,7 +1521,7 @@ public class OptimizelyTest {
         assertNull(variation);
 
         // make sure we didn't even attempt to bucket the user
-        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), anyObject());
     }
 
     //======== Notification listeners ========//
@@ -4625,6 +4625,49 @@ public class OptimizelyTest {
     public void getOptimizelyConfigValidDatafile() {
         Optimizely optimizely = optimizelyBuilder.build();
         assertEquals(optimizely.getOptimizelyConfig().getDatafile(), validDatafile);
+    }
+
+    // OptimizelyUserContext
+
+    @Test
+    public void createUserContext_withAttributes() {
+        String userId = "testUser1";
+        Map<String, Object> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        Optimizely optimizely = optimizelyBuilder.build();
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
+
+        assertEquals(user.getOptimizely(), optimizely);
+        assertEquals(user.getUserId(), userId);
+        assertEquals(user.getAttributes(), attributes);
+    }
+
+    @Test
+    public void createUserContext_noAttributes() {
+        String userId = "testUser1";
+
+        Optimizely optimizely = optimizelyBuilder.build();
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+
+        assertEquals(user.getOptimizely(), optimizely);
+        assertEquals(user.getUserId(), userId);
+        assertTrue(user.getAttributes().isEmpty());
+    }
+
+    @Test
+    public void createUserContext_multiple() {
+        String userId1 = "testUser1";
+        String userId2 = "testUser1";
+        Map<String, Object> attributes = Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE);
+
+        Optimizely optimizely = optimizelyBuilder.build();
+        OptimizelyUserContext user1 = optimizely.createUserContext(userId1, attributes);
+        OptimizelyUserContext user2 = optimizely.createUserContext(userId2);
+
+        assertEquals(user1.getUserId(), userId1);
+        assertEquals(user1.getAttributes(), attributes);
+        assertEquals(user2.getUserId(), userId2);
+        assertTrue(user2.getAttributes().isEmpty());
     }
 
 }

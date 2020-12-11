@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017-2019, Optimizely and contributors
+ *    Copyright 2017-2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -55,7 +55,8 @@ public class NotificationCenter {
         FEATURE("feature"),
         FEATURE_TEST("feature-test"),
         FEATURE_VARIABLE("feature-variable"),
-        ALL_FEATURE_VARIABLES("all-feature-variables");
+        ALL_FEATURE_VARIABLES("all-feature-variables"),
+        FLAG("flag");
 
         private final String key;
 

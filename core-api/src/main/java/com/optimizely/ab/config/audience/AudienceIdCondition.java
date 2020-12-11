@@ -18,14 +18,12 @@
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.internal.InvalidAudienceCondition;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
 import java.util.Map;
 import java.util.Objects;
 
@@ -66,16 +64,19 @@ public class AudienceIdCondition<T> implements Condition<T> {
 
     @Nullable
     @Override
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    public Boolean evaluate(ProjectConfig config,
+                            Map<String, ?> attributes,
+                            DecisionReasons reasons) {
         if (config != null) {
             audience = config.getAudienceIdMapping().get(audienceId);
         }
         if (audience == null) {
-            logger.error("Audience {} could not be found.", audienceId);
+            String message = reasons.addInfo("Audience %s could not be found.", audienceId);
+            logger.error(message);
             return null;
         }
         logger.debug("Starting to evaluate audience \"{}\" with conditions: {}.", audience.getId(), audience.getConditions());
-        Boolean result = audience.getConditions().evaluate(config, attributes);
+        Boolean result = audience.getConditions().evaluate(config, attributes, reasons);
         logger.debug("Audience \"{}\" evaluated to {}.", audience.getId(), result);
         return result;
     }

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,22 +14,16 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.config.audience;
+package com.optimizely.ab.optimizelydecision;
 
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import java.util.List;
 
-import javax.annotation.Nullable;
-import java.util.Map;
+public interface DecisionReasons {
 
-/**
- * Interface implemented by all conditions condition objects to aid in condition evaluation.
- */
-public interface Condition<T> {
+    public void addError(String format, Object... args);
 
-    @Nullable
-    Boolean evaluate(ProjectConfig config,
-                     Map<String, ?> attributes,
-                     DecisionReasons reasons);
+    public String addInfo(String format, Object... args);
+
+    public List<String> toReport();
 
 }

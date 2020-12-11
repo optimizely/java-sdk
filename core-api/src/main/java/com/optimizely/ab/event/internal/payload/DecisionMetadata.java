@@ -19,6 +19,8 @@ package com.optimizely.ab.event.internal.payload;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.annotations.VisibleForTesting;
 
+import java.util.StringJoiner;
+
 public class DecisionMetadata {
 
     @JsonProperty("flag_key")
@@ -86,6 +88,18 @@ public class DecisionMetadata {
         result = 31 * result + variationKey.hashCode();
         return result;
     }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", DecisionMetadata.class.getSimpleName() + "[", "]")
+            .add("flagKey='" + flagKey + "'")
+            .add("ruleKey='" + ruleKey + "'")
+            .add("ruleType='" + ruleType + "'")
+            .add("variationKey='" + variationKey + "'")
+            .add("enabled=" + enabled)
+            .toString();
+    }
+
 
     public static class Builder {
 

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2020, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,22 +14,21 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.config.audience;
 
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.optimizelydecision.DecisionReasons;
+package com.optimizely.ab.optimizelydecision;
 
-import javax.annotation.Nullable;
-import java.util.Map;
+public enum DecisionMessage {
+    SDK_NOT_READY("Optimizely SDK not configured properly yet."),
+    FLAG_KEY_INVALID("No flag was found for key \"%s\"."),
+    VARIABLE_VALUE_INVALID("Variable value for key \"%s\" is invalid or wrong type.");
 
-/**
- * Interface implemented by all conditions condition objects to aid in condition evaluation.
- */
-public interface Condition<T> {
+    private String format;
 
-    @Nullable
-    Boolean evaluate(ProjectConfig config,
-                     Map<String, ?> attributes,
-                     DecisionReasons reasons);
+    DecisionMessage(String format) {
+        this.format = format;
+    }
 
+    public String reason(Object... args){
+        return String.format(format, args);
+    }
 }

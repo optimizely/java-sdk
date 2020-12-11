@@ -21,6 +21,7 @@ import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.EventHandler;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,11 +30,15 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link Optimizely#builder(String, EventHandler)}.
@@ -169,4 +174,25 @@ public class OptimizelyBuilderTest {
         // Project Config manager takes precedence.
         assertFalse(optimizelyClient.isValid());
     }
+
+    @Test
+    public void withDefaultDecideOptions() throws Exception {
+        List<OptimizelyDecideOption> options = Arrays.asList(
+            OptimizelyDecideOption.DISABLE_DECISION_EVENT,
+            OptimizelyDecideOption.ENABLED_FLAGS_ONLY,
+            OptimizelyDecideOption.EXCLUDE_VARIABLES
+        );
+
+        Optimizely optimizelyClient = Optimizely.builder(validConfigJsonV4(), mockEventHandler)
+            .build();
+        assertEquals(optimizelyClient.defaultDecideOptions.size(), 0);
+
+        optimizelyClient = Optimizely.builder(validConfigJsonV4(), mockEventHandler)
+            .withDefaultDecideOptions(options)
+            .build();
+        assertEquals(optimizelyClient.defaultDecideOptions.get(0), OptimizelyDecideOption.DISABLE_DECISION_EVENT);
+        assertEquals(optimizelyClient.defaultDecideOptions.get(1), OptimizelyDecideOption.ENABLED_FLAGS_ONLY);
+        assertEquals(optimizelyClient.defaultDecideOptions.get(2), OptimizelyDecideOption.EXCLUDE_VARIABLES);
+    }
+
 }
