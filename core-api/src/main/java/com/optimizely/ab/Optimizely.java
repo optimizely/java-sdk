@@ -1246,7 +1246,7 @@ public class Optimizely implements AutoCloseable {
         notificationCenter.send(decisionNotification);
 
         return new OptimizelyDecision(
-            variationKey,
+            null,
             false,
             optimizelyJSON,
             ruleKey,
