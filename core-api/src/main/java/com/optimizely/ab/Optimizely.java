@@ -1228,7 +1228,7 @@ public class Optimizely implements AutoCloseable {
                 flagDecision.variation,
                 key,
                 decisionSource.toString(),
-                false);
+                flagEnabled);
             decisionEventDispatched = true;
         }
 
@@ -1236,18 +1236,18 @@ public class Optimizely implements AutoCloseable {
             .withUserId(userId)
             .withAttributes(copiedAttributes)
             .withFlagKey(key)
-    //        .withEnabled(flagEnabled)
+            .withEnabled(flagEnabled)
             .withVariables(variableMap)
             .withVariationKey(variationKey)
             .withRuleKey(ruleKey)
-    //        .withReasons(reasonsToReport)
-    //        .withDecisionEventDispatched(decisionEventDispatched)
+            .withReasons(reasonsToReport)
+            .withDecisionEventDispatched(decisionEventDispatched)
             .build();
         notificationCenter.send(decisionNotification);
 
         return new OptimizelyDecision(
-            null,
-            false,
+            variationKey,
+            flagEnabled,
             optimizelyJSON,
             ruleKey,
             key,
