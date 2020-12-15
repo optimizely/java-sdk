@@ -12,6 +12,8 @@ December 14th, 2020
 	- decideForKeys
 	- trackEvent
 
+- For details, refer to our documentation page: [https://docs.developers.optimizely.com/full-stack/v4.0/docs/java-sdk](https://docs.developers.optimizely.com/full-stack/v4.0/docs/java-sdk).
+
 ## [3.7.0]
 November 20th, 2020
 
