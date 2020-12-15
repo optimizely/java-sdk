@@ -4,7 +4,8 @@
 December 14th, 2020
 
 ### New Features
-- Add a new set of APIs to support the decide feature with `OptimizelyUserContext`. This new class object is instantiated with `createUserContext` and exposes the following APIs ([#406](https://github.com/optimizely/java-sdk/pull/406)):
+
+- Introducing a new primary interface for retrieving feature flag status, configuration and associated experiment decisions for users. The new `OptimizelyUserContext` class is instantiated with `createUserContext` and exposes the following APIs ([#406](https://github.com/optimizely/java-sdk/pull/406)):
 
 	- setAttribute
 	- decide
