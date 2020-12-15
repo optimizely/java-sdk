@@ -1,5 +1,20 @@
 # Optimizely Java X SDK Changelog
 
+## [3.8.0-beta]
+December 14th, 2020
+
+### New Features
+
+- Introducing a new primary interface for retrieving feature flag status, configuration and associated experiment decisions for users. The new `OptimizelyUserContext` class is instantiated with `createUserContext` and exposes the following APIs ([#406](https://github.com/optimizely/java-sdk/pull/406)):
+
+	- setAttribute
+	- decide
+	- decideAll
+	- decideForKeys
+	- trackEvent
+
+- For details, refer to our documentation page: [https://docs.developers.optimizely.com/full-stack/v4.0/docs/java-sdk](https://docs.developers.optimizely.com/full-stack/v4.0/docs/java-sdk).
+
 ## [3.7.0]
 November 20th, 2020
 
