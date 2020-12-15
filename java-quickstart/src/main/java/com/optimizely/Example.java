@@ -42,8 +42,10 @@ public class Example {
 
         if (variationKey != null) {
             boolean enabled = decision.getEnabled();
-            OptimizelyJSON variables = decision.getVariables();
             System.out.println("[Example] feature enabled: " + enabled);
+
+            OptimizelyJSON variables = decision.getVariables();
+            System.out.println("[Example] feature variables: " + variables.toString());
 
             user.trackEvent("eet_conversion");
         }
