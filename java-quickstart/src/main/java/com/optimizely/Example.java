@@ -17,11 +17,12 @@ package com.optimizely;
 
 import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.OptimizelyFactory;
-import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.OptimizelyUserContext;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
+import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 
 import java.util.Collections;
 import java.util.Map;
-
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -33,20 +34,21 @@ public class Example {
         this.optimizely = optimizely;
     }
 
-    private void processVisitor(String userId, Map<String, String> attributes) {
-        Variation variation = optimizely.activate("background_experiment", userId, attributes);
+    private void processVisitor(String userId, Map<String, Object> attributes) {
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
 
-        if (variation != null) {
-            optimizely.track("sample_conversion", userId, attributes);
-            System.out.println(String.format("Found variation %s", variation.getKey()));
+        OptimizelyDecision decision = user.decide("eet_feature");
+        String variationKey = decision.getVariationKey();
+
+        if (variationKey != null) {
+            boolean enabled = decision.getEnabled();
+            OptimizelyJSON variables = decision.getVariables();
+            System.out.println("[Example] feature enabled: " + enabled);
+
+            user.trackEvent("eet_conversion");
         }
         else {
-            System.out.println("didn't get a variation");
-        }
-
-        if (optimizely.isFeatureEnabled("eet_feature", userId, attributes)) {
-            optimizely.track("eet_conversion", userId, attributes);
-            System.out.println("feature enabled");
+            System.out.println("[Example] decision failed: " + decision.getReasons().toString());
         }
     }
 
@@ -57,7 +59,7 @@ public class Example {
         Random random = new Random();
 
         for (int i = 0; i < 10; i++) {
-            String userId = String.valueOf(random.nextInt());
+            String userId = String.valueOf(random.nextInt(Integer.MAX_VALUE));
             example.processVisitor(userId, Collections.emptyMap());
             TimeUnit.MILLISECONDS.sleep(500);
         }
