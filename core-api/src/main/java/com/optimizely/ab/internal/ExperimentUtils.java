@@ -41,6 +41,16 @@ public final class ExperimentUtils {
     }
 
     /**
+     * Helper method to validate all pre-conditions before bucketing a user.
+     *
+     * @param experiment the experiment we are validating pre-conditions for
+     * @return whether the pre-conditions are satisfied
+     */
+    public static boolean isExperimentActive(@Nonnull Experiment experiment) {
+        return experiment.isActive();
+    }
+
+    /**
      * Determines whether a user satisfies audience conditions for the experiment.
      *
      * @param projectConfig     the current projectConfig

@@ -97,7 +97,7 @@ public class DecisionService {
                                                     @Nonnull List<OptimizelyDecideOption> options) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
-        if (!experiment.isActive()) {
+        if (!ExperimentUtils.isExperimentActive(experiment)) {
             String message = reasons.addInfo("Experiment \"%s\" is not running.", experiment.getKey());
             logger.info(message);
             return new DecisionResponse(null, reasons);
