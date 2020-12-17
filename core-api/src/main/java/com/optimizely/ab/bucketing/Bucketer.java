@@ -20,6 +20,7 @@ import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.bucketing.internal.MurmurHash3;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,8 +70,7 @@ public class Bucketer {
 
     private Experiment bucketToExperiment(@Nonnull Group group,
                                           @Nonnull String bucketingId,
-                                          @Nonnull ProjectConfig projectConfig,
-                                          @Nonnull DecisionReasons reasons) {
+                                          @Nonnull ProjectConfig projectConfig) {
         // "salt" the bucket id using the group id
         String bucketKey = bucketingId + group.getId();
 
@@ -89,9 +89,10 @@ public class Bucketer {
         return null;
     }
 
-    private Variation bucketToVariation(@Nonnull Experiment experiment,
-                                        @Nonnull String bucketingId,
-                                        @Nonnull DecisionReasons reasons) {
+    private DecisionResponse<Variation> bucketToVariation(@Nonnull Experiment experiment,
+                                                          @Nonnull String bucketingId) {
+        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+
         // "salt" the bucket id using the experiment id
         String experimentId = experiment.getId();
         String experimentKey = experiment.getKey();
@@ -111,13 +112,13 @@ public class Bucketer {
                 experimentKey);
             logger.info(message);
 
-            return bucketedVariation;
+            return new DecisionResponse(bucketedVariation, reasons);
         }
 
         // user was not bucketed to a variation
         String message = reasons.addInfo("User with bucketingId \"%s\" is not in any variation of experiment \"%s\".", bucketingId, experimentKey);
         logger.info(message);
-        return null;
+        return new DecisionResponse(null, reasons);
     }
 
     /**
@@ -126,14 +127,14 @@ public class Bucketer {
      * @param experiment  The Experiment in which the user is to be bucketed.
      * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
      * @param projectConfig      The current projectConfig
-     * @param reasons            Decision log messages
-     * @return Variation the user is bucketed into or null.
+     * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
      */
     @Nullable
-    public Variation bucket(@Nonnull Experiment experiment,
-                            @Nonnull String bucketingId,
-                            @Nonnull ProjectConfig projectConfig,
-                            @Nonnull DecisionReasons reasons) {
+    public DecisionResponse<Variation> bucket(@Nonnull Experiment experiment,
+                                              @Nonnull String bucketingId,
+                                              @Nonnull ProjectConfig projectConfig) {
+        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+
         // ---------- Bucket User ----------
         String groupId = experiment.getGroupId();
         // check whether the experiment belongs to a group
@@ -141,11 +142,11 @@ public class Bucketer {
             Group experimentGroup = projectConfig.getGroupIdMapping().get(groupId);
             // bucket to an experiment only if group entities are to be mutually exclusive
             if (experimentGroup.getPolicy().equals(Group.RANDOM_POLICY)) {
-                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId, projectConfig, reasons);
+                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId, projectConfig);
                 if (bucketedExperiment == null) {
                     String message = reasons.addInfo("User with bucketingId \"%s\" is not in any experiment of group %s.", bucketingId, experimentGroup.getId());
                     logger.info(message);
-                    return null;
+                    return new DecisionResponse(null, reasons);
                 } else {
 
                 }
@@ -155,7 +156,7 @@ public class Bucketer {
                     String message = reasons.addInfo("User with bucketingId \"%s\" is not in experiment \"%s\" of group %s.", bucketingId, experiment.getKey(),
                         experimentGroup.getId());
                     logger.info(message);
-                    return null;
+                    return new DecisionResponse(null, reasons);
                 }
 
                 String message = reasons.addInfo("User with bucketingId \"%s\" is in experiment \"%s\" of group %s.", bucketingId, experiment.getKey(),
@@ -164,14 +165,9 @@ public class Bucketer {
             }
         }
 
-        return bucketToVariation(experiment, bucketingId, reasons);
-    }
-
-    @Nullable
-    public Variation bucket(@Nonnull Experiment experiment,
-                            @Nonnull String bucketingId,
-                            @Nonnull ProjectConfig projectConfig) {
-        return bucket(experiment, bucketingId, projectConfig, DefaultDecisionReasons.newInstance());
+        DecisionResponse<Variation> decisionResponse = bucketToVariation(experiment, bucketingId);
+        reasons.merge(decisionResponse.getReasons());
+        return new DecisionResponse<>(decisionResponse.getResult(), reasons);
     }
 
     //======== Helper methods ========//

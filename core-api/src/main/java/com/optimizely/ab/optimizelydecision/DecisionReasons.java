@@ -16,14 +16,34 @@
  */
 package com.optimizely.ab.optimizelydecision;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public interface DecisionReasons {
+public class DecisionReasons {
 
-    public void addError(String format, Object... args);
+    private final List<String> errors = new ArrayList<>();
+    private final List<String> infos = new ArrayList<>();
 
-    public String addInfo(String format, Object... args);
+    public void addError(String format, Object... args) {
+        String message = String.format(format, args);
+        errors.add(message);
+    }
 
-    public List<String> toReport();
+    public String addInfo(String format, Object... args) {
+        String message = String.format(format, args);
+        infos.add(message);
+        return message;
+    }
+
+    public void merge(DecisionReasons target) {
+        errors.addAll(target.errors);
+        infos.addAll(target.infos);
+    }
+
+    public List<String> toReport() {
+        List<String> reasons = new ArrayList<>(errors);
+        reasons.addAll(infos);
+        return reasons;
+    }
 
 }
