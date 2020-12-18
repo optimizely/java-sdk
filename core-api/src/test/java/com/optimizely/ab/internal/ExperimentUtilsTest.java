@@ -67,7 +67,7 @@ public class ExperimentUtilsTest {
     }
 
     /**
-     * If the Experiment#status is {@link ExperimentStatus#RUNNING},
+     * If the {@link Experiment#status} is {@link ExperimentStatus#RUNNING},
      * then {@link ExperimentUtils#isExperimentActive(Experiment)} should return true.
      */
     @Test
@@ -78,7 +78,7 @@ public class ExperimentUtilsTest {
     }
 
     /**
-     * If the Experiment#status is {@link ExperimentStatus#LAUNCHED},
+     * If the {@link Experiment#status} is {@link ExperimentStatus#LAUNCHED},
      * then {@link ExperimentUtils#isExperimentActive(Experiment)} should return true.
      */
     @Test
@@ -89,7 +89,7 @@ public class ExperimentUtilsTest {
     }
 
     /**
-     * If the Experiment#status is {@link ExperimentStatus#PAUSED},
+     * If the {@link Experiment#status} is {@link ExperimentStatus#PAUSED},
      * then {@link ExperimentUtils#isExperimentActive(Experiment)} should return false.
      */
     @Test
@@ -100,7 +100,7 @@ public class ExperimentUtilsTest {
     }
 
     /**
-     * If the Experiment#status is {@link ExperimentStatus#ARCHIVED},
+     * If the {@link Experiment#status} is {@link ExperimentStatus#ARCHIVED},
      * then {@link ExperimentUtils#isExperimentActive(Experiment)} should return false.
      */
     @Test
@@ -111,7 +111,7 @@ public class ExperimentUtilsTest {
     }
 
     /**
-     * If the Experiment#status is {@link ExperimentStatus#NOT_STARTED},
+     * If the {@link Experiment#status} is {@link ExperimentStatus#NOT_STARTED},
      * then {@link ExperimentUtils#isExperimentActive(Experiment)} should return false.
      */
     @Test
@@ -294,7 +294,7 @@ public class ExperimentUtilsTest {
     /**
      * Helper method to create an {@link Experiment} object with the provided status.
      *
-     * @param status What the desired Experiment#status should be.
+     * @param status What the desired {@link Experiment#status} should be.
      * @return The newly created {@link Experiment}.
      */
     private Experiment makeMockExperimentWithStatus(ExperimentStatus status) {

@@ -155,9 +155,9 @@ public class DecisionService {
             }
         }
 
-        DecisionResponse<Boolean> decisionBoolean = ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, experiment, filteredAttributes, EXPERIMENT, experiment.getKey());
-        reasons.merge(decisionBoolean.getReasons());
-        if (decisionBoolean.getResult()) {
+        DecisionResponse<Boolean> decisionMeetAudience = ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, experiment, filteredAttributes, EXPERIMENT, experiment.getKey());
+        reasons.merge(decisionMeetAudience.getReasons());
+        if (decisionMeetAudience.getResult()) {
             String bucketingId = getBucketingId(userId, filteredAttributes);
 
             decisionVariation = bucketer.bucket(experiment, bucketingId, projectConfig);

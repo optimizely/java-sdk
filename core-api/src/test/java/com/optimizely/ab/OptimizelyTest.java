@@ -1714,7 +1714,7 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.withDecisionService(mockDecisionService).build();
 
         FeatureDecision featureDecision = new FeatureDecision(null, null, FeatureDecision.DecisionSource.ROLLOUT);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
             anyString(),
             anyMapOf(String.class, String.class),
@@ -1831,7 +1831,7 @@ public class OptimizelyTest {
         Variation variation = new Variation("2", "variation_toggled_off", false, null);
 
         FeatureDecision featureDecision = new FeatureDecision(activatedExperiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
             anyString(),
             anyMapOf(String.class, String.class),
@@ -2895,7 +2895,7 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.withDecisionService(mockDecisionService).build();
 
         FeatureDecision featureDecision = new FeatureDecision(multivariateExperiment, VARIATION_MULTIVARIATE_EXPERIMENT_GRED, FeatureDecision.DecisionSource.FEATURE_TEST);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
             genericUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE),
@@ -3177,7 +3177,7 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.withDecisionService(mockDecisionService).build();
 
         FeatureDecision featureDecision = new FeatureDecision(null, null, null);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
             anyString(),
             anyMapOf(String.class, String.class),
@@ -3219,7 +3219,7 @@ public class OptimizelyTest {
         Experiment experiment = validProjectConfig.getRolloutIdMapping().get(ROLLOUT_2_ID).getExperiments().get(0);
         Variation variation = new Variation("variationId", "variationKey", true, null);
         FeatureDecision featureDecision = new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.ROLLOUT);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap()),
@@ -3304,7 +3304,7 @@ public class OptimizelyTest {
         Experiment experiment = validProjectConfig.getRolloutIdMapping().get(ROLLOUT_2_ID).getExperiments().get(0);
         Variation variation = new Variation("variationId", "variationKey", true, null);
         FeatureDecision featureDecision = new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.ROLLOUT);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap()),
@@ -3334,7 +3334,7 @@ public class OptimizelyTest {
         Experiment experiment = validProjectConfig.getRolloutIdMapping().get(ROLLOUT_2_ID).getExperiments().get(0);
         Variation variation = new Variation("variationId", "variationKey", false, null);
         FeatureDecision featureDecision = new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.ROLLOUT);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap()),
@@ -3364,7 +3364,7 @@ public class OptimizelyTest {
         Variation variation = new Variation("2", "variation_toggled_off", false, null);
 
         FeatureDecision featureDecision = new FeatureDecision(activatedExperiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
             anyString(),
             anyMapOf(String.class, String.class),
@@ -3510,7 +3510,7 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.withDecisionService(mockDecisionService).build();
 
         FeatureDecision featureDecision = new FeatureDecision(null, null, FeatureDecision.DecisionSource.ROLLOUT);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
             anyString(),
             anyMapOf(String.class, String.class),
