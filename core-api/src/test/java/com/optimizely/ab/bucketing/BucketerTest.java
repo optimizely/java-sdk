@@ -167,25 +167,25 @@ public class BucketerTest {
 
         // verify bucketing to the first variation
         bucketValue.set(0);
-        assertThat(algorithm.bucket(experiment, "user1", projectConfig), is(variations.get(0)));
+        assertThat(algorithm.bucket(experiment, "user1", projectConfig).getResult(), is(variations.get(0)));
         bucketValue.set(500);
-        assertThat(algorithm.bucket(experiment, "user2", projectConfig), is(variations.get(0)));
+        assertThat(algorithm.bucket(experiment, "user2", projectConfig).getResult(), is(variations.get(0)));
         bucketValue.set(999);
-        assertThat(algorithm.bucket(experiment, "user3", projectConfig), is(variations.get(0)));
+        assertThat(algorithm.bucket(experiment, "user3", projectConfig).getResult(), is(variations.get(0)));
 
         // verify the second variation
         bucketValue.set(1000);
-        assertThat(algorithm.bucket(experiment, "user4", projectConfig), is(variations.get(1)));
+        assertThat(algorithm.bucket(experiment, "user4", projectConfig).getResult(), is(variations.get(1)));
         bucketValue.set(4000);
-        assertThat(algorithm.bucket(experiment, "user5", projectConfig), is(variations.get(1)));
+        assertThat(algorithm.bucket(experiment, "user5", projectConfig).getResult(), is(variations.get(1)));
         bucketValue.set(4999);
-        assertThat(algorithm.bucket(experiment, "user6", projectConfig), is(variations.get(1)));
+        assertThat(algorithm.bucket(experiment, "user6", projectConfig).getResult(), is(variations.get(1)));
 
         // ...and the rest
         bucketValue.set(5100);
-        assertThat(algorithm.bucket(experiment, "user7", projectConfig), is(variations.get(2)));
+        assertThat(algorithm.bucket(experiment, "user7", projectConfig).getResult(), is(variations.get(2)));
         bucketValue.set(6500);
-        assertThat(algorithm.bucket(experiment, "user8", projectConfig), is(variations.get(3)));
+        assertThat(algorithm.bucket(experiment, "user8", projectConfig).getResult(), is(variations.get(3)));
     }
 
     /**
@@ -217,14 +217,14 @@ public class BucketerTest {
 
         // verify bucketing to the first variation
         bucketValue.set(0);
-        assertThat(algorithm.bucket(experiment, bucketingId, projectConfig), is(variations.get(0)));
+        assertThat(algorithm.bucket(experiment, bucketingId, projectConfig).getResult(), is(variations.get(0)));
 
         logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 1000 to user with bucketingId \"" + bucketingId + "\" when bucketing to a variation.");
         logbackVerifier.expectMessage(Level.INFO, "User with bucketingId \"" + bucketingId + "\" is not in any variation of experiment \"exp_key\".");
 
         // verify bucketing to no variation (null)
         bucketValue.set(1000);
-        assertNull(algorithm.bucket(experiment, bucketingId, projectConfig));
+        assertNull(algorithm.bucket(experiment, bucketingId, projectConfig).getResult());
     }
 
 
@@ -249,7 +249,7 @@ public class BucketerTest {
         logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket 3000 to user with bucketingId \"blah\" when bucketing to a variation.");
         logbackVerifier.expectMessage(Level.INFO,
             "User with bucketingId \"blah\" is in variation \"e2_vtag1\" of experiment \"group_etag2\".");
-        assertThat(algorithm.bucket(groupExperiment, "blah", projectConfig), is(groupExperiment.getVariations().get(0)));
+        assertThat(algorithm.bucket(groupExperiment, "blah", projectConfig).getResult(), is(groupExperiment.getVariations().get(0)));
     }
 
     /**
@@ -271,7 +271,7 @@ public class BucketerTest {
             "Assigned bucket 3000 to user with bucketingId \"blah\" during experiment bucketing.");
         logbackVerifier.expectMessage(Level.INFO,
             "User with bucketingId \"blah\" is not in experiment \"group_etag1\" of group 42");
-        assertNull(algorithm.bucket(groupExperiment, "blah", projectConfig));
+        assertNull(algorithm.bucket(groupExperiment, "blah", projectConfig).getResult());
     }
 
     /**
@@ -291,7 +291,7 @@ public class BucketerTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "Assigned bucket " + bucketIntVal + " to user with bucketingId \"blah\" during experiment bucketing.");
         logbackVerifier.expectMessage(Level.INFO, "User with bucketingId \"blah\" is not in any experiment of group 42.");
-        assertNull(algorithm.bucket(groupExperiment, "blah", projectConfig));
+        assertNull(algorithm.bucket(groupExperiment, "blah", projectConfig).getResult());
     }
 
     /**
@@ -312,7 +312,7 @@ public class BucketerTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "User with bucketingId \"blah\" is in variation \"e1_vtag1\" of experiment \"overlapping_etag1\".");
-        assertThat(algorithm.bucket(groupExperiment, "blah", projectConfig), is(expectedVariation));
+        assertThat(algorithm.bucket(groupExperiment, "blah", projectConfig).getResult(), is(expectedVariation));
     }
 
     /**
@@ -332,7 +332,7 @@ public class BucketerTest {
         logbackVerifier.expectMessage(Level.INFO,
             "User with bucketingId \"blah\" is not in any variation of experiment \"overlapping_etag1\".");
 
-        assertNull(algorithm.bucket(groupExperiment, "blah", projectConfig));
+        assertNull(algorithm.bucket(groupExperiment, "blah", projectConfig).getResult());
     }
 
     @Test
@@ -351,7 +351,7 @@ public class BucketerTest {
         logbackVerifier.expectMessage(
             Level.INFO,
             "User with bucketingId \"" + bucketingId + "\" is in variation \"e1_vtag1\" of experiment \"overlapping_etag1\".");
-        assertThat(algorithm.bucket(groupExperiment, bucketingId, projectConfig), is(expectedVariation));
+        assertThat(algorithm.bucket(groupExperiment, bucketingId, projectConfig).getResult(), is(expectedVariation));
 
     }
 

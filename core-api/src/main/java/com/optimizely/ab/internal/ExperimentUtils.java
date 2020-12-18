@@ -79,7 +79,7 @@ public final class ExperimentUtils {
         reasons.merge(decisionResponse.getReasons());
 
         return new DecisionResponse(
-            resolveReturn == null ? false : resolveReturn,
+            resolveReturn != null && resolveReturn,    // make it Nonnull for if-evaluation
             reasons);
     }
 

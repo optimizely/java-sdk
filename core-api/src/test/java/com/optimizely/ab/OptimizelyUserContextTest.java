@@ -765,7 +765,7 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
 
         assertTrue(decision.getReasons().contains(
-            String.format("Audience %s could not be found.", audienceId)
+            String.format("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experiment.getKey())
         ));
     }
 
@@ -780,7 +780,7 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("country", 25));
 
         assertTrue(decision.getReasons().contains(
-            String.format("Audience condition \"{name='country', type='custom_attribute', match='exact', value='US'}\" evaluated to UNKNOWN because a value of type \"java.lang.Integer\" was passed for user attribute \"country\"")
+            String.format("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experiment.getKey())
         ));
     }
 
@@ -795,7 +795,7 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", (float)Math.pow(2, 54)));
 
         assertTrue(decision.getReasons().contains(
-            String.format("Audience condition \"{name='age', type='custom_attribute', match='gt', value=18.0}\" evaluated to UNKNOWN because a value of type \"java.lang.Float\" was passed for user attribute \"age\"")
+            String.format("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experiment.getKey())
         ));
     }
 
@@ -810,7 +810,7 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
 
         assertTrue(decision.getReasons().contains(
-            String.format("Audience condition \"{name='age', type='invalid', match='gt', value=18.0}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.")
+            String.format("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experiment.getKey())
         ));
     }
 
@@ -825,7 +825,7 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
 
         assertTrue(decision.getReasons().contains(
-            String.format("Audience condition \"{name='age', type='custom_attribute', match='invalid', value=18.0}\" uses an unknown match type. You may need to upgrade to a newer release of the Optimizely SDK.")
+            String.format("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experiment.getKey())
         ));
     }
 
@@ -840,7 +840,7 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
 
         assertTrue(decision.getReasons().contains(
-            String.format("Audience condition \"{name='age', type='custom_attribute', match='gt', value=null}\" evaluated to UNKNOWN because a value of type \"java.lang.Integer\" was passed for user attribute \"age\"")
+            String.format("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experiment.getKey())
         ));
     }
 
@@ -855,7 +855,7 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
 
         assertTrue(decision.getReasons().contains(
-            String.format("Audience condition \"{name='age', type='custom_attribute', match='gt', value=18.0}\" evaluated to UNKNOWN because no value was passed for user attribute \"age\"")
+            String.format("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experiment.getKey())
         ));
     }
 

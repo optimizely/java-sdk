@@ -21,8 +21,8 @@ import java.util.List;
 
 public class DecisionReasons {
 
-    private final List<String> errors = new ArrayList<>();
-    private final List<String> infos = new ArrayList<>();
+    protected final List<String> errors = new ArrayList<>();
+    protected final List<String> infos = new ArrayList<>();
 
     public void addError(String format, Object... args) {
         String message = String.format(format, args);

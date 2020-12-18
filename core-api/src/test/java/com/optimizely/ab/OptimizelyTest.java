@@ -378,7 +378,7 @@ public class OptimizelyTest {
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Map<String, String> testUserAttributes = Collections.singletonMap("browser_type", "chromey");
 
-        when(mockBucketer.bucket(eq(activatedExperiment), eq(testBucketingId), eq(validProjectConfig))).thenReturn(DecisionResponse.nullNoReasons());
+        when(mockBucketer.bucket(eq(activatedExperiment), eq(testUserId), eq(validProjectConfig))).thenReturn(DecisionResponse.nullNoReasons());
 
         logbackVerifier.expectMessage(Level.INFO, "Not activating user \"userId\" for experiment \"" +
             activatedExperiment.getKey() + "\".");

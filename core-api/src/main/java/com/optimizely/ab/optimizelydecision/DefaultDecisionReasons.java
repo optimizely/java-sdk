@@ -38,7 +38,7 @@ import java.util.List;
 public class DefaultDecisionReasons extends DecisionReasons {
 
     public static DecisionReasons newInstance(@Nullable List<OptimizelyDecideOption> options) {
-        if (options != null && options.contains(OptimizelyDecideOption.INCLUDE_REASONS)) return new DecisionReasons();
+        if (options == null || options.contains(OptimizelyDecideOption.INCLUDE_REASONS)) return new DecisionReasons();
         else return new DefaultDecisionReasons();
     }
 
@@ -50,6 +50,12 @@ public class DefaultDecisionReasons extends DecisionReasons {
     public String addInfo(String format, Object... args) {
         // skip tracking and pass-through reasons other than critical errors.
         return String.format(format, args);
+    }
+
+    @Override
+    public void merge(DecisionReasons target) {
+        // ignore infos
+        errors.addAll(target.errors);
     }
 
 }
