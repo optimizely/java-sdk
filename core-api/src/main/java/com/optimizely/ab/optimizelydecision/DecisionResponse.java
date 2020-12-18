@@ -12,6 +12,14 @@ public class DecisionResponse<T> {
         this.reasons = reasons;
     }
 
+    public static <E> DecisionResponse responseNoReasons(@Nullable E result) {
+        return new DecisionResponse(result, DefaultDecisionReasons.newInstance());
+    }
+
+    public static DecisionResponse nullNoReasons() {
+        return new DecisionResponse(null, DefaultDecisionReasons.newInstance());
+    }
+
     @Nullable
     public T getResult() {
         return result;

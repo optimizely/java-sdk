@@ -27,6 +27,7 @@ import com.optimizely.ab.event.internal.payload.DecisionMetadata;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.ReservedEventKey;
+import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -737,7 +738,7 @@ public class EventFactoryTest {
         // Bucket to the first variation for all experiments.
         for (Experiment experiment : validProjectConfig.getExperiments()) {
             when(mockBucketAlgorithm.bucket(experiment, userId, validProjectConfig))
-                .thenReturn(experiment.getVariations().get(0));
+                .thenReturn(DecisionResponse.responseNoReasons(experiment.getVariations().get(0)));
         }
 
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
@@ -822,7 +823,7 @@ public class EventFactoryTest {
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         for (Experiment experiment : validProjectConfig.getExperiments()) {
             when(mockBucketAlgorithm.bucket(experiment, userId, validProjectConfig))
-                .thenReturn(experiment.getVariations().get(0));
+                .thenReturn(DecisionResponse.responseNoReasons(experiment.getVariations().get(0)));
         }
 
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
@@ -857,7 +858,7 @@ public class EventFactoryTest {
         Bucketer mockBucketAlgorithm = mock(Bucketer.class);
         for (Experiment experiment : projectConfig.getExperiments()) {
             when(mockBucketAlgorithm.bucket(experiment, userId, validProjectConfig))
-                .thenReturn(experiment.getVariations().get(0));
+                .thenReturn(DecisionResponse.responseNoReasons(experiment.getVariations().get(0)));
         }
 
         Map<String, String> attributeMap = Collections.singletonMap(attribute.getKey(), "value");
