@@ -196,7 +196,7 @@ public class DecisionService {
      * @param filteredAttributes A map of filtered attributes.
      * @param projectConfig      The current projectConfig
      * @param options            An array of decision options
-     * @return A {@link DecisionResponse} including the {@link FeatureDecision} and the decision reasons
+     * @return A {@link DecisionResponse} including a {@link FeatureDecision} and the decision reasons
      */
     @Nonnull
     public DecisionResponse<FeatureDecision> getVariationForFeature(@Nonnull FeatureFlag featureFlag,
@@ -258,7 +258,7 @@ public class DecisionService {
      * @param userId             User Identifier
      * @param filteredAttributes A map of filtered attributes.
      * @param projectConfig      The current projectConfig
-     * @return A {@link DecisionResponse} including the {@link FeatureDecision} and the decision reasons
+     * @return A {@link DecisionResponse} including a {@link FeatureDecision} and the decision reasons
      */
     @Nonnull
     DecisionResponse<FeatureDecision> getVariationForFeatureInRollout(@Nonnull FeatureFlag featureFlag,
@@ -336,8 +336,8 @@ public class DecisionService {
      *
      * @param experiment {@link Experiment} in which user is to be bucketed.
      * @param userId     User Identifier
-     * @return null if the user is not whitelisted into any variation
-     * {@link Variation} the user is bucketed into if the user has a specified whitelisted variation.
+     * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null)
+     * and the decision reasons. The variation can be null if the user is not whitelisted into any variation.
      */
     @Nullable
     DecisionResponse<Variation> getWhitelistedVariation(@Nonnull Experiment experiment,
@@ -368,8 +368,8 @@ public class DecisionService {
      * @param experiment  {@link Experiment} in which the user was bucketed.
      * @param userProfile {@link UserProfile} of the user.
      * @param projectConfig      The current projectConfig
-     * @return null if the {@link UserProfileService} implementation is null or the user was not previously bucketed.
-     * else return the {@link Variation} the user was previously bucketed into.
+     * @return A {@link DecisionResponse} including the {@link Variation} that user was previously bucketed into (or null)
+     * and the decision reasons. The variation can be null if the {@link UserProfileService} implementation is null or the user was not previously bucketed.
      */
     @Nullable
     DecisionResponse<Variation> getStoredVariation(@Nonnull Experiment experiment,
@@ -546,8 +546,8 @@ public class DecisionService {
      *
      * @param experiment    The experiment forced.
      * @param userId        The user ID to be used for bucketing.
-     * @return The variation the user was bucketed into. This value can be null if the
-     * forced variation fails.
+     * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null)
+     * and the decision reasons. The variation can be null if the forced variation fails.
      */
     @Nullable
     public DecisionResponse<Variation> getForcedVariation(@Nonnull Experiment experiment,
