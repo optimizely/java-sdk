@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2020, Optimizely and contributors
+ *    Copyright 2020-2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -26,23 +26,44 @@ import java.util.Collections;
 import java.util.List;
 
 public class OptimizelyDecision {
+    /**
+     * The variation key of the decision. This value will be null when decision making fails.
+     */
     @Nullable
     private final String variationKey;
 
+    /**
+     * The boolean value indicating if the flag is enabled or not.
+     */
     private final boolean enabled;
 
+    /**
+     * The collection of variables associated with the decision.
+     */
     @Nonnull
     private final OptimizelyJSON variables;
 
+    /**
+     * The rule key of the decision.
+     */
     @Nullable
     private final String ruleKey;
 
+    /**
+     * The flag key for which the decision has been made for.
+     */
     @Nonnull
     private final String flagKey;
 
+    /**
+     * A copy of the user context for which the decision has been made for.
+     */
     @Nonnull
     private final OptimizelyUserContext userContext;
 
+    /**
+     * An array of error/info messages describing why the decision has been made.
+     */
     @Nonnull
     private List<String> reasons;
 
