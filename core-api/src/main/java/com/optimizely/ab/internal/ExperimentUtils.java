@@ -124,7 +124,7 @@ public final class ExperimentUtils {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         Condition conditions = experiment.getAudienceConditions();
-        if (conditions == null) return null;
+        if (conditions == null) return new DecisionResponse(null, reasons);
 
         Boolean result = null;
         try {
