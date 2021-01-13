@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2020, Optimizely and contributors
+ *    Copyright 2020-2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -61,11 +61,15 @@ public class OptimizelyUserContext {
     }
 
     public Map<String, Object> getAttributes() {
-        return new HashMap<String, Object>(attributes);
+        return attributes;
     }
 
     public Optimizely getOptimizely() {
         return optimizely;
+    }
+
+    public OptimizelyUserContext copy() {
+        return new OptimizelyUserContext(optimizely, userId, attributes);
     }
 
     /**
@@ -89,7 +93,7 @@ public class OptimizelyUserContext {
      */
     public OptimizelyDecision decide(@Nonnull String key,
                                      @Nonnull List<OptimizelyDecideOption> options) {
-        return optimizely.decide(this, key, options);
+        return optimizely.decide(copy(), key, options);
     }
 
     /**
@@ -114,7 +118,7 @@ public class OptimizelyUserContext {
      */
     public Map<String, OptimizelyDecision> decideForKeys(@Nonnull List<String> keys,
                                                          @Nonnull List<OptimizelyDecideOption> options) {
-        return optimizely.decideForKeys(this, keys, options);
+        return optimizely.decideForKeys(copy(), keys, options);
     }
 
     /**
@@ -134,7 +138,7 @@ public class OptimizelyUserContext {
      * @return All decision results mapped by flag keys.
      */
     public Map<String, OptimizelyDecision> decideAll(@Nonnull List<OptimizelyDecideOption> options) {
-        return optimizely.decideAll(this, options);
+        return optimizely.decideAll(copy(), options);
     }
 
     /**
