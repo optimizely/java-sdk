@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017-2020, Optimizely and contributors
+ *    Copyright 2017-2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +59,7 @@ public final class ExperimentUtils {
      * @param loggingKey        In case of loggingEntityType is experiment it will be experiment key or else it will be rule number.
      * @return whether the user meets the criteria for the experiment
      */
+    @Nonnull
     public static DecisionResponse<Boolean> doesUserMeetAudienceConditions(@Nonnull ProjectConfig projectConfig,
                                                                            @Nonnull Experiment experiment,
                                                                            @Nonnull Map<String, ?> attributes,
@@ -83,7 +83,7 @@ public final class ExperimentUtils {
             reasons);
     }
 
-    @Nullable
+    @Nonnull
     public static DecisionResponse<Boolean> evaluateAudience(@Nonnull ProjectConfig projectConfig,
                                                              @Nonnull Experiment experiment,
                                                              @Nonnull Map<String, ?> attributes,
@@ -115,7 +115,7 @@ public final class ExperimentUtils {
         return new DecisionResponse(result, reasons);
     }
 
-    @Nullable
+    @Nonnull
     public static DecisionResponse<Boolean> evaluateAudienceConditions(@Nonnull ProjectConfig projectConfig,
                                                                        @Nonnull Experiment experiment,
                                                                        @Nonnull Map<String, ?> attributes,

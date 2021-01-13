@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, 2019, Optimizely and contributors
+ *    Copyright 2016-2017, 2019-2021 Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.List;
 
@@ -89,6 +88,7 @@ public class Bucketer {
         return null;
     }
 
+    @Nonnull
     private DecisionResponse<Variation> bucketToVariation(@Nonnull Experiment experiment,
                                                           @Nonnull String bucketingId) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
@@ -129,7 +129,7 @@ public class Bucketer {
      * @param projectConfig      The current projectConfig
      * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
      */
-    @Nullable
+    @Nonnull
     public DecisionResponse<Variation> bucket(@Nonnull Experiment experiment,
                                               @Nonnull String bucketingId,
                                               @Nonnull ProjectConfig projectConfig) {

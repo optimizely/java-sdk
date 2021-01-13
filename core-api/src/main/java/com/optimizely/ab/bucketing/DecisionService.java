@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2017-2020, Optimizely, Inc. and contributors                        *
+ * Copyright 2017-2021, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -89,7 +89,7 @@ public class DecisionService {
      * @param options            An array of decision options
      * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
      */
-    @Nullable
+    @Nonnull
     public DecisionResponse<Variation> getVariation(@Nonnull Experiment experiment,
                                                     @Nonnull String userId,
                                                     @Nonnull Map<String, ?> filteredAttributes,
@@ -180,7 +180,7 @@ public class DecisionService {
         return new DecisionResponse(null, reasons);
     }
 
-    @Nullable
+    @Nonnull
     public DecisionResponse<Variation>  getVariation(@Nonnull Experiment experiment,
                                                      @Nonnull String userId,
                                                      @Nonnull Map<String, ?> filteredAttributes,
@@ -339,7 +339,7 @@ public class DecisionService {
      * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null)
      * and the decision reasons. The variation can be null if the user is not whitelisted into any variation.
      */
-    @Nullable
+    @Nonnull
     DecisionResponse<Variation> getWhitelistedVariation(@Nonnull Experiment experiment,
                                                         @Nonnull String userId) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
@@ -371,7 +371,7 @@ public class DecisionService {
      * @return A {@link DecisionResponse} including the {@link Variation} that user was previously bucketed into (or null)
      * and the decision reasons. The variation can be null if the {@link UserProfileService} implementation is null or the user was not previously bucketed.
      */
-    @Nullable
+    @Nonnull
     DecisionResponse<Variation> getStoredVariation(@Nonnull Experiment experiment,
                                                    @Nonnull UserProfile userProfile,
                                                    @Nonnull ProjectConfig projectConfig) {
@@ -549,7 +549,7 @@ public class DecisionService {
      * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null)
      * and the decision reasons. The variation can be null if the forced variation fails.
      */
-    @Nullable
+    @Nonnull
     public DecisionResponse<Variation> getForcedVariation(@Nonnull Experiment experiment,
                                                           @Nonnull String userId) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
