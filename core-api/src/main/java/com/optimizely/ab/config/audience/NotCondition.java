@@ -17,11 +17,11 @@
 package com.optimizely.ab.config.audience;
 
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.optimizelydecision.DecisionReasons;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import javax.annotation.Nonnull;
+
 import java.util.Map;
 
 /**
@@ -41,11 +41,9 @@ public class NotCondition<T> implements Condition<T> {
     }
 
     @Nullable
-    public Boolean evaluate(ProjectConfig config,
-                            Map<String, ?> attributes,
-                            DecisionReasons reasons) {
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
 
-        Boolean conditionEval = condition == null ? null : condition.evaluate(config, attributes, reasons);
+        Boolean conditionEval = condition == null ? null : condition.evaluate(config, attributes);
         return (conditionEval == null ? null : !conditionEval);
     }
 

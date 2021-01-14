@@ -34,6 +34,7 @@ import com.optimizely.ab.event.internal.UserEventFactory;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.notification.*;
+import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Before;
@@ -377,7 +378,7 @@ public class OptimizelyTest {
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Map<String, String> testUserAttributes = Collections.singletonMap("browser_type", "chromey");
 
-        when(mockBucketer.bucket(eq(activatedExperiment), eq(testBucketingId), eq(validProjectConfig), anyObject())).thenReturn(null);
+        when(mockBucketer.bucket(eq(activatedExperiment), eq(testUserId), eq(validProjectConfig))).thenReturn(DecisionResponse.nullNoReasons());
 
         logbackVerifier.expectMessage(Level.INFO, "Not activating user \"userId\" for experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -936,7 +937,7 @@ public class OptimizelyTest {
         assertNull(expectedVariation);
 
         // make sure we didn't even attempt to bucket the user
-        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), anyObject());
+        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
     }
 
     //======== track tests ========//
@@ -1237,7 +1238,7 @@ public class OptimizelyTest {
         optimizely.track("event_with_launched_and_running_experiments", genericUserId);
 
         // make sure we didn't even attempt to bucket the user or fire any conversion events
-        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), anyObject());
+        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
         verify(mockEventHandler, never()).dispatchEvent(any(LogEvent.class));
     }
 
@@ -1254,7 +1255,7 @@ public class OptimizelyTest {
 
         Optimizely optimizely = optimizelyBuilder.withBucketing(mockBucketer).build();
 
-        when(mockBucketer.bucket(eq(activatedExperiment), eq(testUserId), eq(validProjectConfig), anyObject())).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(eq(activatedExperiment), eq(testUserId), eq(validProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
 
         Map<String, String> testUserAttributes = new HashMap<>();
         testUserAttributes.put("browser_type", "chrome");
@@ -1264,7 +1265,7 @@ public class OptimizelyTest {
             testUserAttributes);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(eq(activatedExperiment), eq(testUserId), eq(validProjectConfig), anyObject());
+        verify(mockBucketer).bucket(eq(activatedExperiment), eq(testUserId), eq(validProjectConfig));
         assertThat(actualVariation, is(bucketedVariation));
 
         // verify that we didn't attempt to dispatch an event
@@ -1285,13 +1286,13 @@ public class OptimizelyTest {
             .withConfig(noAudienceProjectConfig)
             .build();
 
-        when(mockBucketer.bucket(eq(activatedExperiment), eq(testUserId), eq(noAudienceProjectConfig), anyObject())).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(eq(activatedExperiment), eq(testUserId), eq(noAudienceProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
 
         // activate the experiment
         Variation actualVariation = optimizely.getVariation(activatedExperiment.getKey(), testUserId);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(eq(activatedExperiment), eq(testUserId), eq(noAudienceProjectConfig), anyObject());
+        verify(mockBucketer).bucket(eq(activatedExperiment), eq(testUserId), eq(noAudienceProjectConfig));
         assertThat(actualVariation, is(bucketedVariation));
 
         // verify that we didn't attempt to dispatch an event
@@ -1346,7 +1347,7 @@ public class OptimizelyTest {
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = experiment.getVariations().get(0);
 
-        when(mockBucketer.bucket(eq(experiment), eq(testUserId), eq(validProjectConfig), anyObject())).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(eq(experiment), eq(testUserId), eq(validProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
 
         Optimizely optimizely = optimizelyBuilder.withBucketing(mockBucketer).build();
 
@@ -1355,7 +1356,7 @@ public class OptimizelyTest {
 
         Variation actualVariation = optimizely.getVariation(experiment.getKey(), testUserId, testUserAttributes);
 
-        verify(mockBucketer).bucket(eq(experiment), eq(testUserId), eq(validProjectConfig), anyObject());
+        verify(mockBucketer).bucket(eq(experiment), eq(testUserId), eq(validProjectConfig));
         assertThat(actualVariation, is(bucketedVariation));
     }
 
@@ -1396,7 +1397,7 @@ public class OptimizelyTest {
         Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = experiment.getVariations().get(0);
 
-        when(mockBucketer.bucket(eq(experiment), eq(testUserId), eq(noAudienceProjectConfig), anyObject())).thenReturn(bucketedVariation);
+        when(mockBucketer.bucket(eq(experiment), eq(testUserId), eq(noAudienceProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
 
         Optimizely optimizely = optimizelyBuilder
             .withConfig(noAudienceProjectConfig)
@@ -1405,7 +1406,7 @@ public class OptimizelyTest {
 
         Variation actualVariation = optimizely.getVariation(experiment.getKey(), testUserId);
 
-        verify(mockBucketer).bucket(eq(experiment), eq(testUserId), eq(noAudienceProjectConfig), anyObject());
+        verify(mockBucketer).bucket(eq(experiment), eq(testUserId), eq(noAudienceProjectConfig));
         assertThat(actualVariation, is(bucketedVariation));
     }
 
@@ -1463,7 +1464,7 @@ public class OptimizelyTest {
             attributes.put("browser_type", "chrome");
         }
 
-        when(mockBucketer.bucket(eq(experiment), eq("user"), eq(validProjectConfig), anyObject())).thenReturn(variation);
+        when(mockBucketer.bucket(eq(experiment), eq("user"), eq(validProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(variation));
 
         Optimizely optimizely = optimizelyBuilder.withBucketing(mockBucketer).build();
 
@@ -1521,7 +1522,7 @@ public class OptimizelyTest {
         assertNull(variation);
 
         // make sure we didn't even attempt to bucket the user
-        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), anyObject());
+        verify(mockBucketer, never()).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
     }
 
     //======== Notification listeners ========//
@@ -1713,7 +1714,7 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.withDecisionService(mockDecisionService).build();
 
         FeatureDecision featureDecision = new FeatureDecision(null, null, FeatureDecision.DecisionSource.ROLLOUT);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
             anyString(),
             anyMapOf(String.class, String.class),
@@ -1830,7 +1831,7 @@ public class OptimizelyTest {
         Variation variation = new Variation("2", "variation_toggled_off", false, null);
 
         FeatureDecision featureDecision = new FeatureDecision(activatedExperiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
             anyString(),
             anyMapOf(String.class, String.class),
@@ -2894,7 +2895,7 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.withDecisionService(mockDecisionService).build();
 
         FeatureDecision featureDecision = new FeatureDecision(multivariateExperiment, VARIATION_MULTIVARIATE_EXPERIMENT_GRED, FeatureDecision.DecisionSource.FEATURE_TEST);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
             genericUserId,
             Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE),
@@ -3176,7 +3177,7 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.withDecisionService(mockDecisionService).build();
 
         FeatureDecision featureDecision = new FeatureDecision(null, null, null);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
             anyString(),
             anyMapOf(String.class, String.class),
@@ -3218,7 +3219,7 @@ public class OptimizelyTest {
         Experiment experiment = validProjectConfig.getRolloutIdMapping().get(ROLLOUT_2_ID).getExperiments().get(0);
         Variation variation = new Variation("variationId", "variationKey", true, null);
         FeatureDecision featureDecision = new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.ROLLOUT);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap()),
@@ -3303,7 +3304,7 @@ public class OptimizelyTest {
         Experiment experiment = validProjectConfig.getRolloutIdMapping().get(ROLLOUT_2_ID).getExperiments().get(0);
         Variation variation = new Variation("variationId", "variationKey", true, null);
         FeatureDecision featureDecision = new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.ROLLOUT);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap()),
@@ -3333,7 +3334,7 @@ public class OptimizelyTest {
         Experiment experiment = validProjectConfig.getRolloutIdMapping().get(ROLLOUT_2_ID).getExperiments().get(0);
         Variation variation = new Variation("variationId", "variationKey", false, null);
         FeatureDecision featureDecision = new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.ROLLOUT);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
             eq(genericUserId),
             eq(Collections.<String, String>emptyMap()),
@@ -3363,7 +3364,7 @@ public class OptimizelyTest {
         Variation variation = new Variation("2", "variation_toggled_off", false, null);
 
         FeatureDecision featureDecision = new FeatureDecision(activatedExperiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
             anyString(),
             anyMapOf(String.class, String.class),
@@ -3509,7 +3510,7 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.withDecisionService(mockDecisionService).build();
 
         FeatureDecision featureDecision = new FeatureDecision(null, null, FeatureDecision.DecisionSource.ROLLOUT);
-        doReturn(featureDecision).when(mockDecisionService).getVariationForFeature(
+        doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
             anyString(),
             anyMapOf(String.class, String.class),

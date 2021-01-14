@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.match.*;
-import com.optimizely.ab.optimizelydecision.DecisionReasons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,9 +71,7 @@ public class UserAttribute<T> implements Condition<T> {
     }
 
     @Nullable
-    public Boolean evaluate(ProjectConfig config,
-                            Map<String, ?> attributes,
-                            DecisionReasons reasons) {
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
         if (attributes == null) {
             attributes = Collections.emptyMap();
         }
@@ -82,8 +79,7 @@ public class UserAttribute<T> implements Condition<T> {
         Object userAttributeValue = attributes.get(name);
 
         if (!"custom_attribute".equals(type)) {
-            String message = reasons.addInfo("Audience condition \"%s\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.", this);
-            logger.warn(message);
+            logger.warn("Audience condition \"{}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.", this);
             return null; // unknown type
         }
         // check user attribute value is equal
@@ -98,27 +94,26 @@ public class UserAttribute<T> implements Condition<T> {
         } catch(UnknownValueTypeException e) {
             if (!attributes.containsKey(name)) {
                 //Missing attribute value
-                String message = reasons.addInfo("Audience condition \"%s\" evaluated to UNKNOWN because no value was passed for user attribute \"%s\"", this, name);
-                logger.debug(message);
+                logger.debug("Audience condition \"{}\" evaluated to UNKNOWN because no value was passed for user attribute \"{}\"", this, name);
             } else {
                 //if attribute value is not valid
                 if (userAttributeValue != null) {
-                    String message = reasons.addInfo("Audience condition \"%s\" evaluated to UNKNOWN because a value of type \"%s\" was passed for user attribute \"%s\"",
+                    logger.warn(
+                        "Audience condition \"{}\" evaluated to UNKNOWN because a value of type \"{}\" was passed for user attribute \"{}\"",
                         this,
                         userAttributeValue.getClass().getCanonicalName(),
                         name);
-                    logger.warn(message);
                 } else {
-                    String message = reasons.addInfo("Audience condition \"%s\" evaluated to UNKNOWN because a null value was passed for user attribute \"%s\"", this, name);
-                    logger.debug(message);
+                    logger.debug(
+                        "Audience condition \"{}\" evaluated to UNKNOWN because a null value was passed for user attribute \"{}\"",
+                        this,
+                        name);
                 }
             }
         } catch (UnknownMatchTypeException | UnexpectedValueTypeException e) {
-            String message = reasons.addInfo("Audience condition \"%s\" " + e.getMessage(), this);
-            logger.warn(message);
+            logger.warn("Audience condition \"{}\" " + e.getMessage(), this);
         } catch (NullPointerException e) {
-            String message = reasons.addInfo("attribute or value null for match %s", match != null ? match : "legacy condition");
-            logger.error(message, e);
+            logger.error("attribute or value null for match {}", match != null ? match : "legacy condition", e);
         }
         return null;
     }

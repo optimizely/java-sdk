@@ -752,112 +752,7 @@ public class OptimizelyUserContextTest {
         assertEquals(decision.getReasons().get(0), DecisionMessage.VARIABLE_VALUE_INVALID.reason("any-key"));
     }
 
-    // reasons (logs with includeReasons)
-
-    @Test
-    public void decideReasons_conditionNoMatchingAudience() throws ConfigParseException {
-        String flagKey = "feature_1";
-        String audienceId = "invalid_id";
-
-        Experiment experiment = getSpyExperiment(flagKey);
-        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
-        addSpyExperiment(experiment);
-        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
-
-        assertTrue(decision.getReasons().contains(
-            String.format("Audience %s could not be found.", audienceId)
-        ));
-    }
-
-    @Test
-    public void decideReasons_evaluateAttributeInvalidType() {
-        String flagKey = "feature_1";
-        String audienceId = "13389130056";
-
-        Experiment experiment = getSpyExperiment(flagKey);
-        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
-        addSpyExperiment(experiment);
-        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("country", 25));
-
-        assertTrue(decision.getReasons().contains(
-            String.format("Audience condition \"{name='country', type='custom_attribute', match='exact', value='US'}\" evaluated to UNKNOWN because a value of type \"java.lang.Integer\" was passed for user attribute \"country\"")
-        ));
-    }
-
-    @Test
-    public void decideReasons_evaluateAttributeValueOutOfRange() {
-        String flagKey = "feature_1";
-        String audienceId = "age_18";
-
-        Experiment experiment = getSpyExperiment(flagKey);
-        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
-        addSpyExperiment(experiment);
-        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", (float)Math.pow(2, 54)));
-
-        assertTrue(decision.getReasons().contains(
-            String.format("Audience condition \"{name='age', type='custom_attribute', match='gt', value=18.0}\" evaluated to UNKNOWN because a value of type \"java.lang.Float\" was passed for user attribute \"age\"")
-        ));
-    }
-
-    @Test
-    public void decideReasons_userAttributeInvalidType() {
-        String flagKey = "feature_1";
-        String audienceId = "invalid_type";
-
-        Experiment experiment = getSpyExperiment(flagKey);
-        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
-        addSpyExperiment(experiment);
-        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
-
-        assertTrue(decision.getReasons().contains(
-            String.format("Audience condition \"{name='age', type='invalid', match='gt', value=18.0}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.")
-        ));
-    }
-
-    @Test
-    public void decideReasons_userAttributeInvalidMatch() {
-        String flagKey = "feature_1";
-        String audienceId = "invalid_match";
-
-        Experiment experiment = getSpyExperiment(flagKey);
-        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
-        addSpyExperiment(experiment);
-        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
-
-        assertTrue(decision.getReasons().contains(
-            String.format("Audience condition \"{name='age', type='custom_attribute', match='invalid', value=18.0}\" uses an unknown match type. You may need to upgrade to a newer release of the Optimizely SDK.")
-        ));
-    }
-
-    @Test
-    public void decideReasons_userAttributeNilValue() {
-        String flagKey = "feature_1";
-        String audienceId = "nil_value";
-
-        Experiment experiment = getSpyExperiment(flagKey);
-        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
-        addSpyExperiment(experiment);
-        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
-
-        assertTrue(decision.getReasons().contains(
-            String.format("Audience condition \"{name='age', type='custom_attribute', match='gt', value=null}\" evaluated to UNKNOWN because a value of type \"java.lang.Integer\" was passed for user attribute \"age\"")
-        ));
-    }
-
-    @Test
-    public void decideReasons_missingAttributeValue() {
-        String flagKey = "feature_1";
-        String audienceId = "age_18";
-
-        Experiment experiment = getSpyExperiment(flagKey);
-        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
-        addSpyExperiment(experiment);
-        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
-
-        assertTrue(decision.getReasons().contains(
-            String.format("Audience condition \"{name='age', type='custom_attribute', match='gt', value=18.0}\" evaluated to UNKNOWN because no value was passed for user attribute \"age\"")
-        ));
-    }
+    // reasons (infos with includeReasons)
 
     @Test
     public void decideReasons_experimentNotRunning() {
@@ -1081,6 +976,111 @@ public class OptimizelyUserContextTest {
 
         assertTrue(decision.getReasons().contains(
             String.format("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experimentKey)
+        ));
+    }
+
+    @Test
+    public void decideReasons_conditionNoMatchingAudience() throws ConfigParseException {
+        String flagKey = "feature_1";
+        String audienceId = "invalid_id";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Audiences for experiment \"%s\" collectively evaluated to null.", experiment.getKey())
+        ));
+    }
+
+    @Test
+    public void decideReasons_evaluateAttributeInvalidType() {
+        String flagKey = "feature_1";
+        String audienceId = "13389130056";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("country", 25));
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Audiences for experiment \"%s\" collectively evaluated to null.", experiment.getKey())
+        ));
+    }
+
+    @Test
+    public void decideReasons_evaluateAttributeValueOutOfRange() {
+        String flagKey = "feature_1";
+        String audienceId = "age_18";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", (float)Math.pow(2, 54)));
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Audiences for experiment \"%s\" collectively evaluated to null.", experiment.getKey())
+        ));
+    }
+
+    @Test
+    public void decideReasons_userAttributeInvalidType() {
+        String flagKey = "feature_1";
+        String audienceId = "invalid_type";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Audiences for experiment \"%s\" collectively evaluated to null.", experiment.getKey())
+        ));
+    }
+
+    @Test
+    public void decideReasons_userAttributeInvalidMatch() {
+        String flagKey = "feature_1";
+        String audienceId = "invalid_match";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Audiences for experiment \"%s\" collectively evaluated to null.", experiment.getKey())
+        ));
+    }
+
+    @Test
+    public void decideReasons_userAttributeNilValue() {
+        String flagKey = "feature_1";
+        String audienceId = "nil_value";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Audiences for experiment \"%s\" collectively evaluated to null.", experiment.getKey())
+        ));
+    }
+
+    @Test
+    public void decideReasons_missingAttributeValue() {
+        String flagKey = "feature_1";
+        String audienceId = "age_18";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Audiences for experiment \"%s\" collectively evaluated to null.", experiment.getKey())
         ));
     }
 
