@@ -1,5 +1,12 @@
 # Optimizely Java X SDK Changelog
 
+## [3.8.0-beta2]
+January 14th, 2021
+
+### Fixes:
+- Clone user-context before calling Optimizely decide ([#417](https://github.com/optimizely/java-sdk/pull/417))
+- Return reasons as a part of tuple in decision hierarchy ([#415](https://github.com/optimizely/java-sdk/pull/415))
+
 ## [3.8.0-beta]
 December 14th, 2020
 
