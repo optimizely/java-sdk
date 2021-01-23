@@ -36,6 +36,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
@@ -48,6 +49,17 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class HttpProjectConfigManagerTest {
 
+    class MyResponse extends BasicHttpResponse implements CloseableHttpResponse {
+
+        public MyResponse(ProtocolVersion protocolVersion, Integer status, String body) {
+            super(protocolVersion, status, body);
+        }
+
+        @Override
+        public void close() throws IOException {
+
+        }
+    }
     @Mock
     private OptimizelyHttpClient mockHttpClient;
 
@@ -246,7 +258,7 @@ public class HttpProjectConfigManagerTest {
     @Ignore
     public void testGetDatafileHttpResponse2XX() throws Exception {
         String modifiedStamp = "Wed, 24 Apr 2019 07:07:07 GMT";
-        HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 200, "TEST");
+        CloseableHttpResponse getResponse = new MyResponse(new ProtocolVersion("TEST", 0, 0), 200, "TEST");
         getResponse.setEntity(new StringEntity(datafileString));
         getResponse.setHeader(HttpHeaders.LAST_MODIFIED, modifiedStamp);
 
@@ -260,7 +272,7 @@ public class HttpProjectConfigManagerTest {
 
     @Test(expected = ClientProtocolException.class)
     public void testGetDatafileHttpResponse3XX() throws Exception {
-        HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 300, "TEST");
+        CloseableHttpResponse getResponse = new MyResponse(new ProtocolVersion("TEST", 0, 0), 300, "TEST");
         getResponse.setEntity(new StringEntity(datafileString));
 
         projectConfigManager.getDatafileFromResponse(getResponse);
@@ -268,7 +280,7 @@ public class HttpProjectConfigManagerTest {
 
     @Test
     public void testGetDatafileHttpResponse304() throws Exception {
-        HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 304, "TEST");
+        CloseableHttpResponse getResponse = new MyResponse(new ProtocolVersion("TEST", 0, 0), 304, "TEST");
         getResponse.setEntity(new StringEntity(datafileString));
 
         String datafile = projectConfigManager.getDatafileFromResponse(getResponse);
@@ -277,7 +289,7 @@ public class HttpProjectConfigManagerTest {
 
     @Test(expected = ClientProtocolException.class)
     public void testGetDatafileHttpResponse4XX() throws Exception {
-        HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 400, "TEST");
+        CloseableHttpResponse getResponse = new MyResponse(new ProtocolVersion("TEST", 0, 0), 400, "TEST");
         getResponse.setEntity(new StringEntity(datafileString));
 
         projectConfigManager.getDatafileFromResponse(getResponse);
@@ -285,7 +297,7 @@ public class HttpProjectConfigManagerTest {
 
     @Test(expected = ClientProtocolException.class)
     public void testGetDatafileHttpResponse5XX() throws Exception {
-        HttpResponse getResponse = new BasicHttpResponse(new ProtocolVersion("TEST", 0, 0), 500, "TEST");
+        CloseableHttpResponse getResponse = new MyResponse(new ProtocolVersion("TEST", 0, 0), 500, "TEST");
         getResponse.setEntity(new StringEntity(datafileString));
 
         projectConfigManager.getDatafileFromResponse(getResponse);

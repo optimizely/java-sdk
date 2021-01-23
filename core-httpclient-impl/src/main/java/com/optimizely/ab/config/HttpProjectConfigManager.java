@@ -24,6 +24,7 @@ import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
 import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -81,7 +82,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         return datafileLastModified;
     }
 
-    public String getDatafileFromResponse(HttpResponse response) throws NullPointerException, IOException {
+    public String getDatafileFromResponse(CloseableHttpResponse response) throws NullPointerException, IOException {
         StatusLine statusLine = response.getStatusLine();
 
         if (statusLine == null) {
@@ -116,10 +117,10 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     @Override
     protected ProjectConfig poll() {
         HttpGet httpGet = createHttpRequest();
-
+        CloseableHttpResponse response = null;
         logger.debug("Fetching datafile from: {}", httpGet.getURI());
         try {
-            HttpResponse response = httpClient.execute(httpGet);
+            response = httpClient.execute(httpGet);
             String datafile = getDatafileFromResponse(response);
             if (datafile == null) {
                 return null;
@@ -127,6 +128,15 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
             return parseProjectConfig(datafile);
         } catch (ConfigParseException | IOException e) {
             logger.error("Error fetching datafile", e);
+        }
+        finally {
+            if (response != null) {
+                try {
+                    response.close();
+                } catch (IOException e) {
+                    logger.warn(e.getLocalizedMessage());
+                }
+            }
         }
 
         return null;
