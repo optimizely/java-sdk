@@ -255,14 +255,14 @@ public class Optimizely implements AutoCloseable {
      * @param flagKey            It can either be empty if ruleType is experiment or it's feature key in case ruleType is feature-test or rollout
      * @param ruleType           It can either be experiment in case impression event is sent from activate or it's feature-test or rollout
      */
-    private void sendImpression(@Nonnull ProjectConfig projectConfig,
-                                @Nullable Experiment experiment,
-                                @Nonnull String userId,
-                                @Nonnull Map<String, ?> filteredAttributes,
-                                @Nullable Variation variation,
-                                @Nonnull String flagKey,
-                                @Nonnull String ruleType,
-                                @Nonnull boolean enabled) {
+    private boolean sendImpression(@Nonnull ProjectConfig projectConfig,
+                                   @Nullable Experiment experiment,
+                                   @Nonnull String userId,
+                                   @Nonnull Map<String, ?> filteredAttributes,
+                                   @Nullable Variation variation,
+                                   @Nonnull String flagKey,
+                                   @Nonnull String ruleType,
+                                   @Nonnull boolean enabled) {
 
         UserEvent userEvent = UserEventFactory.createImpressionEvent(
             projectConfig,
@@ -275,7 +275,7 @@ public class Optimizely implements AutoCloseable {
             enabled);
 
         if (userEvent == null) {
-            return;
+            return false;
         }
         eventProcessor.process(userEvent);
         if (experiment != null) {
@@ -290,6 +290,7 @@ public class Optimizely implements AutoCloseable {
                 experiment, userId, filteredAttributes, variation, impressionEvent);
             notificationCenter.send(activateNotification);
         }
+        return true;
     }
 
     //======== track calls ========//
@@ -1218,7 +1219,7 @@ public class Optimizely implements AutoCloseable {
         String ruleKey = flagDecision.experiment != null ? flagDecision.experiment.getKey() : null;
 
         if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
-            sendImpression(
+            decisionEventDispatched = sendImpression(
                 projectConfig,
                 flagDecision.experiment,
                 userId,
@@ -1227,7 +1228,6 @@ public class Optimizely implements AutoCloseable {
                 key,
                 decisionSource.toString(),
                 flagEnabled);
-            decisionEventDispatched = true;
         }
 
         DecisionNotification decisionNotification = DecisionNotification.newFlagDecisionNotificationBuilder()
