@@ -49,7 +49,7 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class HttpProjectConfigManagerTest {
 
-    class MyResponse extends BasicHttpResponse implements CloseableHttpResponse {
+    static class MyResponse extends BasicHttpResponse implements CloseableHttpResponse {
 
         public MyResponse(ProtocolVersion protocolVersion, Integer status, String body) {
             super(protocolVersion, status, body);
