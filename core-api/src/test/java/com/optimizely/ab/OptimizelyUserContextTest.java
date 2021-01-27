@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2020, Optimizely and contributors
+ *    Copyright 2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -495,6 +495,112 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.DISABLE_DECISION_EVENT));
 
         assertEquals(decision.getVariationKey(), "variation_with_traffic");
+
+        // impression event not expected here
+    }
+
+    @Test
+    public void decide_sendEvent_featureTest_withSendFlagDecisionsOn() {
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .build();
+
+        Map<String, Object> attributes = Collections.singletonMap("gender", "f");
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
+
+        optimizely.addDecisionNotificationHandler(
+            decisionNotification -> {
+                Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
+                isListenerCalled = true;
+            });
+
+        String flagKey = "feature_2";
+        String experimentId = "10420810910";
+        String variationId = "10418551353";
+        isListenerCalled = false;
+        user.decide(flagKey);
+        assertTrue(isListenerCalled);
+
+        eventHandler.expectImpression(experimentId, variationId, userId, attributes);
+    }
+
+    @Test
+    public void decide_sendEvent_rollout_withSendFlagDecisionsOn() {
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .build();
+
+        Map<String, Object> attributes = Collections.singletonMap("gender", "f");
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
+
+        optimizely.addDecisionNotificationHandler(
+            decisionNotification -> {
+                Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
+                isListenerCalled = true;
+            });
+
+        String flagKey = "feature_3";
+        String experimentId = null;
+        String variationId = null;
+        isListenerCalled = false;
+        user.decide(flagKey);
+        assertTrue(isListenerCalled);
+
+        eventHandler.expectImpression(null, "", userId, attributes);
+    }
+
+    @Test
+    public void decide_sendEvent_featureTest_withSendFlagDecisionsOff() {
+        String datafileWithSendFlagDecisionsOff = datafile.replace("\"sendFlagDecisions\": true", "\"sendFlagDecisions\": false");
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafileWithSendFlagDecisionsOff)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .build();
+
+        Map<String, Object> attributes = Collections.singletonMap("gender", "f");
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
+
+        optimizely.addDecisionNotificationHandler(
+            decisionNotification -> {
+                Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
+                isListenerCalled = true;
+            });
+
+        String flagKey = "feature_2";
+        String experimentId = "10420810910";
+        String variationId = "10418551353";
+        isListenerCalled = false;
+        user.decide(flagKey);
+        assertTrue(isListenerCalled);
+
+        eventHandler.expectImpression(experimentId, variationId, userId, attributes);
+    }
+
+    @Test
+    public void decide_sendEvent_rollout_withSendFlagDecisionsOff() {
+        String datafileWithSendFlagDecisionsOff = datafile.replace("\"sendFlagDecisions\": true", "\"sendFlagDecisions\": false");
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafileWithSendFlagDecisionsOff)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .build();
+
+        Map<String, Object> attributes = Collections.singletonMap("gender", "f");
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
+
+        optimizely.addDecisionNotificationHandler(
+            decisionNotification -> {
+                Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), false);
+                isListenerCalled = true;
+            });
+
+        String flagKey = "feature_3";
+        isListenerCalled = false;
+        user.decide(flagKey);
+        assertTrue(isListenerCalled);
+
+        // impression event not expected here
     }
 
     // notifications
