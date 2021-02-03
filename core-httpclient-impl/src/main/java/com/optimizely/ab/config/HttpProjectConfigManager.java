@@ -82,7 +82,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         return datafileLastModified;
     }
 
-    public String getDatafileFromResponse(CloseableHttpResponse response) throws NullPointerException, IOException {
+    public String getDatafileFromResponse(HttpResponse response) throws NullPointerException, IOException {
         StatusLine statusLine = response.getStatusLine();
 
         if (statusLine == null) {
