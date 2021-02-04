@@ -5,7 +5,7 @@ February 3rd, 2021
 
 ### New Features
 
-- Introducing a new primary interface for retrieving feature flag status, configuration and associated experiment decisions for users ([#406](https://github.com/optimizely/java-sdk/pull/406), [#415](https://github.com/optimizely/java-sdk/pull/415), [#417](https://github.com/optimizely/java-sdk/pull/417)). The new `OptimizelyUserContext` class is instantiated with `createUserContext` and exposes the following APIs:
+- Introducing a new primary interface for retrieving feature flag status, configuration and associated experiment decisions for users ([#406](https://github.com/optimizely/java-sdk/pull/406), [#415](https://github.com/optimizely/java-sdk/pull/415), [#417](https://github.com/optimizely/java-sdk/pull/417)). The new `OptimizelyUserContext` class is instantiated with `createUserContext` and exposes the following APIs to get `OptimizelyDecision`:
 
 	- setAttribute
 	- decide
