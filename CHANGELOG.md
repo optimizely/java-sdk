@@ -1,5 +1,24 @@
 # Optimizely Java X SDK Changelog
 
+## [3.8.0]
+February 3rd, 2021
+
+### New Features
+
+- Introducing a new primary interface for retrieving feature flag status, configuration and associated experiment decisions for users ([#406](https://github.com/optimizely/java-sdk/pull/406), [#415](https://github.com/optimizely/java-sdk/pull/415), [#417](https://github.com/optimizely/java-sdk/pull/417)). The new `OptimizelyUserContext` class is instantiated with `createUserContext` and exposes the following APIs to get `OptimizelyDecision`:
+
+	- setAttribute
+	- decide
+	- decideAll
+	- decideForKeys
+	- trackEvent
+
+- For details, refer to our documentation page: [https://docs.developers.optimizely.com/full-stack/v4.0/docs/java-sdk](https://docs.developers.optimizely.com/full-stack/v4.0/docs/java-sdk).
+
+### Fixes
+- Close the closable response from apache httpclient ([#419](https://github.com/optimizely/java-sdk/pull/419))
+
+
 ## [3.8.0-beta2]
 January 14th, 2021
 
