@@ -16,12 +16,15 @@
  */
 package com.optimizely.ab.event.internal.payload;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.annotations.VisibleForTesting;
 
 public class Decision {
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     @JsonProperty("campaign_id")
     String campaignId;
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     @JsonProperty("experiment_id")
     String experimentId;
     @JsonProperty("variation_id")
