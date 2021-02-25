@@ -283,6 +283,9 @@ public class DecisionService {
 
         // for all rules before the everyone else rule
         int rolloutRulesLength = rollout.getExperiments().size();
+        if (rolloutRulesLength == 0) {
+            return new DecisionResponse(new FeatureDecision(null, null, null), reasons);
+        }
         String bucketingId = getBucketingId(userId, filteredAttributes);
 
         Variation variation;
