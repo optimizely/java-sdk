@@ -8,7 +8,6 @@ plugins {
 }
 
 allprojects {
-    group = 'com.optimizely.ab'
     apply plugin: 'idea'
     apply plugin: 'jacoco'
 
@@ -21,16 +20,18 @@ allprojects {
     }
 }
 
-apply from: 'gradle/publish.gradle'
-
 allprojects {
+    group = 'com.optimizely.ab'
+
     def travis_defined_version = System.getenv('TRAVIS_TAG')
     if (travis_defined_version != null) {
         version = travis_defined_version
     }
 }
 
-subprojects {
+def publishedProjects = subprojects.findAll { it.name != 'java-quickstart' }
+
+configure(publishedProjects) {
     apply plugin: 'com.github.spotbugs'
     apply plugin: 'jacoco'
     apply plugin: 'java'
@@ -39,7 +40,6 @@ subprojects {
     apply plugin: 'me.champeau.gradle.jmh'
     apply plugin: 'nebula.optional-base'
     apply plugin: 'com.github.hierynomus.license'
-
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -59,11 +59,6 @@ subprojects {
     task javadocJar(type: Jar, dependsOn: javadoc) {
         archiveClassifier.set('javadoc')
         from javadoc.destinationDir
-    }
-
-    artifacts {
-        archives sourcesJar
-        archives javadocJar
     }
 
     spotbugsMain {
@@ -114,46 +109,38 @@ subprojects {
         testCompile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
     }
 
-    def artifactName = "core-api"
+    def docTitle = "Optimizely Java SDK"
     if (name.equals('core-httpclient-impl')) {
-        artifactName = 'httpclient'
+        docTitle = "Optimizely Java SDK: Httpclient"
     }
 
-    publishing {
-        publications {
-            mavenJava(MavenPublication) {
-                artifactId = artifactName
+    afterEvaluate {
+        publishing {
+            publications {
+                release(MavenPublication) {
+                    customizePom(pom, docTitle)
 
-                from components.java
-                artifact sourcesJar
-                artifact javadocJar
-                pom.withXml {
-                    asNode().children().last() + {
-                        resolveStrategy = Closure.DELEGATE_FIRST
-                        url 'https://github.com/optimizely/java-sdk'
-                        licenses {
-                            license {
-                                name 'The Apache Software License, Version 2.0'
-                                url 'http://www.apache.org/license/LICENSE-2.0.txt'
-                                distribution 'repo'
-                            }
-                        }
-                        developers {
-                            developer {
-                                id 'optimizely'
-                                name 'Optimizely'
-                                email 'developers@optimizely.com'
-                            }
-                        }
+                    from components.java
+                    artifact sourcesJar
+                    artifact javadocJar
+                }
+            }
+            repositories {
+                maven {
+                    url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                    credentials {
+                        username System.getenv('MAVEN_CENTRAL_USERNAME')
+                        password System.getenv('MAVEN_CENTRAL_PASSWORD')
                     }
                 }
             }
         }
-        repositories {
-            maven {
-                name = 'testRepo'
-                url = "file://${buildDir}/repo"
-            }
+
+        signing {
+            def signingKey = System.getenv('MAVEN_SIGNING_KEY')
+            def signingPassword = System.getenv('MAVEN_SIGNING_PASSPHRASE')
+            useInMemoryPgpKeys(signingKey, signingPassword)
+            sign publishing.publications.release
         }
     }
 
@@ -165,21 +152,19 @@ subprojects {
         ext.year = Calendar.getInstance().get(Calendar.YEAR)
     }
 
-    ////version = rootProject.version
-    version = "3.8.0-test-1"
-
     task ship() {
         dependsOn('publish')
     }
 
+    // concurrent publishing (maven-publish) causes an issue with maven-central repository
+    // - a single module splits into multiple staging repos, so validation fails.
+    // - adding this ordering requirement forces sequential publishing processes.
+    project(':core-api').javadocJar.mustRunAfter = [':core-httpclient-impl:ship']
 }
 
 task ship() {
     dependsOn(':core-api:ship', ':core-httpclient-impl:ship')
 }
-
-// Only report code coverage for projects that are distributed
-def publishedProjects = subprojects.findAll { it.path != ':simulator' }
 
 task jacocoMerge(type: JacocoMerge) {
     publishedProjects.each { subproject ->
@@ -216,4 +201,38 @@ tasks.coveralls {
 
     dependsOn jacocoRootReport
     onlyIf { System.env.'CI' && !JavaVersion.current().isJava9Compatible() }
+}
+
+// standard POM format required by MavenCentral
+
+def customizePom(pom, title) {
+    pom.withXml {
+        asNode().children().last() + {
+            // keep this - otherwise some properties are not made into pom properly
+            resolveStrategy = Closure.DELEGATE_FIRST
+
+            name title
+            url 'https://github.com/optimizely/java-sdk'
+            description 'The Java SDK for Optimizely Full Stack (feature flag management for product development teams)'
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    distribution 'repo'
+                }
+            }
+            developers {
+                developer {
+                    id 'optimizely'
+                    name 'Optimizely'
+                    email 'optimizely-fullstack@optimizely.com'
+                }
+            }
+            scm {
+                connection 'scm:git:git://github.com/optimizely/java-sdk.git'
+                developerConnection 'scm:git:ssh:github.com/optimizely/java-sdk.git'
+                url 'https://github.com/optimizely/java-sdk.git'
+            }
+        }
+    }
 }
