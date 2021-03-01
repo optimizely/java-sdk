@@ -52,6 +52,8 @@ public final class OptimizelyFactory {
     /**
      * Convenience method for setting the maximum number of events contained within a batch.
      * {@link AsyncEventHandler}
+     *
+     * @param batchSize The max number of events for batching
      */
     public static void setMaxEventBatchSize(int batchSize) {
         if (batchSize <= 0) {
@@ -65,6 +67,8 @@ public final class OptimizelyFactory {
     /**
      * Convenience method for setting the maximum time interval in milliseconds between event dispatches.
      * {@link AsyncEventHandler}
+     *
+     * @param batchInterval The max time interval for event batching
      */
     public static void setMaxEventBatchInterval(long batchInterval) {
         if (batchInterval <= 0) {
@@ -78,6 +82,9 @@ public final class OptimizelyFactory {
     /**
      * Convenience method for setting the required queueing parameters for event dispatching.
      * {@link AsyncEventHandler}
+     *
+     * @param queueCapacity  A depth of the event queue
+     * @param numberWorkers  The number of workers
      */
     public static void setEventQueueParams(int queueCapacity, int numberWorkers) {
         if (queueCapacity <= 0) {
@@ -97,6 +104,9 @@ public final class OptimizelyFactory {
     /**
      * Convenience method for setting the blocking timeout.
      * {@link HttpProjectConfigManager.Builder#withBlockingTimeout(Long, TimeUnit)}
+     *
+     * @param blockingDuration The blocking time duration
+     * @param blockingTimeout The blocking time unit
      */
     public static void setBlockingTimeout(long blockingDuration, TimeUnit blockingTimeout) {
         if (blockingTimeout == null) {
@@ -116,6 +126,9 @@ public final class OptimizelyFactory {
     /**
      * Convenience method for setting the polling interval on System properties.
      * {@link HttpProjectConfigManager.Builder#withPollingInterval(Long, TimeUnit)}
+     *
+     * @param pollingDuration The polling interval
+     * @param pollingTimeout The polling time unit
      */
     public static void setPollingInterval(long pollingDuration, TimeUnit pollingTimeout) {
         if (pollingTimeout == null) {
@@ -135,6 +148,8 @@ public final class OptimizelyFactory {
     /**
      * Convenience method for setting the sdk key on System properties.
      * {@link HttpProjectConfigManager.Builder#withSdkKey(String)}
+     *
+     * @param sdkKey The sdk key
      */
     public static void setSdkKey(String sdkKey) {
         if (sdkKey == null) {
@@ -148,6 +163,8 @@ public final class OptimizelyFactory {
     /**
      * Convenience method for setting the Datafile Access Token on System properties.
      * {@link HttpProjectConfigManager.Builder#withDatafileAccessToken(String)}
+     *
+     * @param datafileAccessToken The datafile access token
      */
     public static void setDatafileAccessToken(String datafileAccessToken) {
         if (datafileAccessToken == null) {
@@ -160,8 +177,8 @@ public final class OptimizelyFactory {
 
     /**
      * Returns a new Optimizely instance based on preset configuration.
-     * EventHandler - {@link AsyncEventHandler}
-     * ProjectConfigManager - {@link HttpProjectConfigManager}
+     *
+     * @return A new Optimizely instance
      */
     public static Optimizely newDefaultInstance() {
         String sdkKey = PropertyUtils.get(HttpProjectConfigManager.CONFIG_SDK_KEY);
@@ -174,6 +191,7 @@ public final class OptimizelyFactory {
      * ProjectConfigManager - {@link HttpProjectConfigManager}
      *
      * @param sdkKey SDK key used to build the ProjectConfigManager.
+     * @return A new Optimizely instance
      */
     public static Optimizely newDefaultInstance(String sdkKey) {
         if (sdkKey == null) {
@@ -191,6 +209,7 @@ public final class OptimizelyFactory {
      *
      * @param sdkKey   SDK key used to build the ProjectConfigManager.
      * @param fallback Fallback datafile string used by the ProjectConfigManager to be immediately available.
+     * @return A new Optimizely instance
      */
     public static Optimizely newDefaultInstance(String sdkKey, String fallback) {
         String datafileAccessToken = PropertyUtils.get(HttpProjectConfigManager.CONFIG_DATAFILE_AUTH_TOKEN);
@@ -203,6 +222,7 @@ public final class OptimizelyFactory {
      * @param sdkKey   SDK key used to build the ProjectConfigManager.
      * @param fallback Fallback datafile string used by the ProjectConfigManager to be immediately available.
      * @param datafileAccessToken  Token for authenticated datafile access.
+     * @return A new Optimizely instance
      */
     public static Optimizely newDefaultInstance(String sdkKey, String fallback, String datafileAccessToken) {
         NotificationCenter notificationCenter = new NotificationCenter();
@@ -224,6 +244,7 @@ public final class OptimizelyFactory {
      * EventHandler - {@link AsyncEventHandler}
      *
      * @param configManager The {@link ProjectConfigManager} supplied to Optimizely instance.
+     * @return A new Optimizely instance
      */
     public static Optimizely newDefaultInstance(ProjectConfigManager configManager) {
         return newDefaultInstance(configManager, null);
@@ -235,6 +256,7 @@ public final class OptimizelyFactory {
      *
      * @param configManager      The {@link ProjectConfigManager} supplied to Optimizely instance.
      * @param notificationCenter The {@link NotificationCenter} supplied to Optimizely instance.
+     * @return A new Optimizely instance
      */
     public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter) {
         EventHandler eventHandler = AsyncEventHandler.builder().build();
@@ -247,7 +269,8 @@ public final class OptimizelyFactory {
      * @param configManager      The {@link ProjectConfigManager} supplied to Optimizely instance.
      * @param notificationCenter The {@link ProjectConfigManager} supplied to Optimizely instance.
      * @param eventHandler       The {@link EventHandler} supplied to Optimizely instance.
-     */
+     * @return A new Optimizely instance
+     * */
     public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler) {
         if (notificationCenter == null) {
             notificationCenter = new NotificationCenter();

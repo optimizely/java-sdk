@@ -33,14 +33,18 @@ import javax.annotation.Nonnull;
 public interface ConfigParser {
 
     /**
-     * @param json the json to parse
-     * @return generates a {@code ProjectConfig} configuration from the provided json
+     * @param json The json to parse
+     * @return The {@code ProjectConfig} configuration from the provided json
      * @throws ConfigParseException when there's an issue parsing the provided project config
      */
     ProjectConfig parseProjectConfig(@Nonnull String json) throws ConfigParseException;
 
     /**
      * OptimizelyJSON parsing
+     *
+     * @param src The OptimizelyJSON
+     * @return The serialized String
+     * @throws JsonParseException when parsing JSON fails
      */
     String toJson(Object src) throws JsonParseException;
     <T> T fromJson(String json, Class<T> clazz) throws JsonParseException;

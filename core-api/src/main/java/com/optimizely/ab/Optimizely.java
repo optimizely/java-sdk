@@ -1354,6 +1354,9 @@ public class Optimizely implements AutoCloseable {
 
     /**
      * Convenience method for adding DecisionNotification Handlers
+     *
+     * @param handler DicisionNotification handler
+     * @return A handler Id (greater than 0 if succeeded)
      */
     public int addDecisionNotificationHandler(NotificationHandler<DecisionNotification> handler) {
         return addNotificationHandler(DecisionNotification.class, handler);
@@ -1361,6 +1364,9 @@ public class Optimizely implements AutoCloseable {
 
     /**
      * Convenience method for adding TrackNotification Handlers
+     *
+     * @param handler TrackNotification handler
+     * @return A handler Id (greater than 0 if succeeded)
      */
     public int addTrackNotificationHandler(NotificationHandler<TrackNotification> handler) {
         return addNotificationHandler(TrackNotification.class, handler);
@@ -1368,6 +1374,9 @@ public class Optimizely implements AutoCloseable {
 
     /**
      * Convenience method for adding UpdateConfigNotification Handlers
+     *
+     * @param handler UpdateConfigNotification handler
+     * @return A handler Id (greater than 0 if succeeded)
      */
     public int addUpdateConfigNotificationHandler(NotificationHandler<UpdateConfigNotification> handler) {
         return addNotificationHandler(UpdateConfigNotification.class, handler);
@@ -1375,6 +1384,9 @@ public class Optimizely implements AutoCloseable {
 
     /**
      * Convenience method for adding LogEvent Notification Handlers
+     *
+     * @param handler NotificationHandler handler
+     * @return A handler Id (greater than 0 if succeeded)
      */
     public int addLogEventNotificationHandler(NotificationHandler<LogEvent> handler) {
         return addNotificationHandler(LogEvent.class, handler);
@@ -1382,6 +1394,11 @@ public class Optimizely implements AutoCloseable {
 
     /**
      * Convenience method for adding NotificationHandlers
+     *
+     * @param clazz The class of NotificationHandler
+     * @param handler NotificationHandler handler
+     * @param <T> This is the type parameter
+     * @return A handler Id (greater than 0 if succeeded)
      */
     public <T> int addNotificationHandler(Class<T> clazz, NotificationHandler<T> handler) {
         return notificationCenter.addNotificationHandler(clazz, handler);
@@ -1403,6 +1420,10 @@ public class Optimizely implements AutoCloseable {
      *         .withEventHandler(eventHandler)
      *         .build();
      * </pre>
+     *
+     * @param datafile  A datafile
+     * @param eventHandler An EventHandler
+     * @return An Optimizely builder
      */
     @Deprecated
     public static Builder builder(@Nonnull String datafile,
@@ -1460,6 +1481,9 @@ public class Optimizely implements AutoCloseable {
          * method.
          * {@link com.optimizely.ab.event.BatchEventProcessor.Builder#withEventHandler(com.optimizely.ab.event.EventHandler)}  label}
          * Please use that builder method instead.
+         *
+         * @param eventHandler An EventHandler
+         * @return An Optimizely builder
          */
         @Deprecated
         public Builder withEventHandler(EventHandler eventHandler) {
@@ -1469,6 +1493,9 @@ public class Optimizely implements AutoCloseable {
 
         /**
          * You can instantiate a BatchEventProcessor or a ForwardingEventProcessor or supply your own.
+         *
+         * @param eventProcessor An EventProcessor
+         * @return An Optimizely builder
          */
         public Builder withEventProcessor(EventProcessor eventProcessor) {
             this.eventProcessor = eventProcessor;

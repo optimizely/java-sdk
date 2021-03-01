@@ -155,7 +155,7 @@ public class OptimizelyUserContext {
      *
      * @param eventName The event name.
      * @param eventTags A map of event tag names to event tag values.
-     * @throws UnknownEventTypeException
+     * @throws UnknownEventTypeException when event type is unknown
      */
     public void trackEvent(@Nonnull String eventName,
                            @Nonnull Map<String, ?> eventTags) throws UnknownEventTypeException {
@@ -166,7 +166,7 @@ public class OptimizelyUserContext {
      * Track an event.
      *
      * @param eventName The event name.
-     * @throws UnknownEventTypeException
+     * @throws UnknownEventTypeException when event type is unknown
      */
     public void trackEvent(@Nonnull String eventName) throws UnknownEventTypeException {
         trackEvent(eventName, Collections.emptyMap());

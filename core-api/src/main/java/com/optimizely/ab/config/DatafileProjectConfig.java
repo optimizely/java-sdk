@@ -278,7 +278,7 @@ public class DatafileProjectConfig implements ProjectConfig {
     /**
      * Checks is attributeKey is reserved or not and if it exist in attributeKeyMapping
      *
-     * @param attributeKey
+     * @param attributeKey The attribute key
      * @return AttributeId corresponding to AttributeKeyMapping, AttributeKey when it's a reserved attribute and
      * null when attributeKey is equal to BOT_FILTERING_ATTRIBUTE key.
      */
@@ -484,6 +484,7 @@ public class DatafileProjectConfig implements ProjectConfig {
 
         /**
          * @return a {@link DatafileProjectConfig} instance given a JSON string datafile
+         * @throws ConfigParseException when parsing datafile fails
          */
         public ProjectConfig build() throws ConfigParseException {
             if (datafile == null) {

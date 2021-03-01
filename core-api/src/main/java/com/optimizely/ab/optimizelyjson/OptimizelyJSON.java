@@ -73,6 +73,8 @@ public class OptimizelyJSON {
 
     /**
      *  Returns the {@code Map<String,Object>} representation of json data
+     *
+     * @return The {@code Map<String,Object>} representation of json data
      */
     @Nullable
     public Map<String,Object> toMap() {
@@ -100,7 +102,9 @@ public class OptimizelyJSON {
      *
      * @param jsonKey The JSON key paths for the data to access
      * @param clazz The user-defined class that the json data will be parsed to
+     * @param <T> This is the type parameter
      * @return an instance of clazz type with the parsed data filled in (or null if parse fails)
+     * @throws JsonParseException when a JSON parser is not available.
      */
     @Nullable
     public <T> T getValue(@Nullable String jsonKey, Class<T> clazz) throws JsonParseException {

@@ -73,6 +73,9 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
     /**
      * @deprecated Use the builder {@link Builder}
+     *
+     * @param queueCapacity     A depth of the event queue
+     * @param numWorkers        The number of workers
      */
     @Deprecated
     public AsyncEventHandler(int queueCapacity,
@@ -82,6 +85,12 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
     /**
      * @deprecated Use the builder {@link Builder}
+     *
+     * @param queueCapacity     A depth of the event queue
+     * @param numWorkers        The number of workers
+     * @param maxConnections    The max number of concurrent connections
+     * @param connectionsPerRoute  The max number of concurrent connections per route
+     * @param validateAfter     An inactivity period in milliseconds after which persistent connections must be re-validated prior to being leased to the consumer.
      */
     @Deprecated
     public AsyncEventHandler(int queueCapacity,

@@ -45,7 +45,7 @@ public class AudienceIdCondition<T> implements Condition<T> {
     /**
      * Constructor used in json parsing to store the audienceId parsed from Experiment.audienceConditions.
      *
-     * @param audienceId
+     * @param audienceId The audience id
      */
     @JsonCreator
     public AudienceIdCondition(String audienceId) {

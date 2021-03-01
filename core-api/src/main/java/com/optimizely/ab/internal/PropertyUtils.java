@@ -65,6 +65,7 @@ public final class PropertyUtils {
 
     /**
      * Clears a System property prepended with "optimizely.".
+     * @param key       The configuration key
      */
     public static void clear(String key) {
         System.clearProperty("optimizely." + key);
@@ -72,6 +73,9 @@ public final class PropertyUtils {
 
     /**
      * Sets a System property prepended with "optimizely.".
+     * 
+     * @param key       The configuration key
+     * @param value     The String value
      */
     public static void set(String key, String value) {
         System.setProperty("optimizely." + key, value);
@@ -84,6 +88,9 @@ public final class PropertyUtils {
      *   <li>Environment variables - Key is prepended with "optimizely.", uppercased and "." are replaced with "_".</li>
      *   <li>Optimizely Properties - Key is sourced as-is.</li>
      * </ul>
+     *
+     * @param key       The configuration key
+     * @return          The String value
      */
     public static String get(String key) {
         return get(key, null);
@@ -97,6 +104,10 @@ public final class PropertyUtils {
      *   <li>Environment variables - Key is prepended with "optimizely.", upper cased and "."s are replaced with "_"s.</li>
      *   <li>Optimizely Properties - Key is sourced as-is.</li>
      * </ul>
+     *
+     * @param key       The configuration key
+     * @param dafault   The default value
+     * @return          The String value
      */
     public static String get(String key, String dafault) {
         // Try to obtain from a Java System Property
@@ -131,6 +142,9 @@ public final class PropertyUtils {
      *   <li>Environment variables - Key is prepended with "optimizely.", upper cased and "."s are replaced with "_"s.</li>
      *   <li>Optimizely Properties - Key is sourced as-is.</li>
      * </ul>
+     *
+     * @param key       The configuration key
+     * @return          The integer value
      */
     public static Long getLong(String key) {
         return getLong(key, null);
@@ -144,6 +158,10 @@ public final class PropertyUtils {
      *   <li>Environment variables - Key is prepended with "optimizely.", upper cased and "."s are replaced with "_"s.</li>
      *   <li>Optimizely Properties - Key is sourced as-is.</li>
      * </ul>
+     *
+     * @param key       The configuration key
+     * @param dafault   The default value
+     * @return          The long value
      */
     public static Long getLong(String key, Long dafault) {
         String value = get(key);
@@ -168,7 +186,11 @@ public final class PropertyUtils {
      *   <li>Environment variables - Key is prepended with "optimizely.", upper cased and "."s are replaced with "_"s.</li>
      *   <li>Optimizely Properties - Key is sourced as-is.</li>
      * </ul>
+     *
+     * @param key       The configuration key
+     * @return          The integer value
      */
+
     public static Integer getInteger(String key) {
         return getInteger(key, null);
     }
@@ -181,7 +203,12 @@ public final class PropertyUtils {
      *   <li>Environment variables - Key is prepended with "optimizely.", upper cased and "."s are replaced with "_"s.</li>
      *   <li>Optimizely Properties - Key is sourced as-is.</li>
      * </ul>
+     *
+     * @param key       The configuration key
+     * @param dafault   The default value
+     * @return          The integer value
      */
+
     public static Integer getInteger(String key, Integer dafault) {
         String value = get(key);
         if (value == null) {
@@ -204,6 +231,11 @@ public final class PropertyUtils {
      *   <li>Environment variables - Key is prepended with "optimizely.", upper cased and "."s are replaced with "_"s.</li>
      *   <li>Optimizely Properties - Key is sourced as-is.</li>
      * </ul>
+     *
+     * @param key       The configuration key
+     * @param clazz     The value class
+     * @param <T> This is the type parameter
+     * @return          The value
      */
     public static <T> T getEnum(String key, Class<T> clazz) {
         return getEnum(key, clazz, null);
@@ -217,6 +249,12 @@ public final class PropertyUtils {
      *   <li>Environment variables - Key is prepended with "optimizely.", upper cased and "."s are replaced with "_"s.</li>
      *   <li>Optimizely Properties - Key is sourced as-is.</li>
      * </ul>
+     *
+     * @param key       The configuration key
+     * @param clazz     The value class
+     * @param dafault   The default value
+     * @param <T> This is the type parameter
+     * @return          The value
      */
     @SuppressWarnings("unchecked")
     public static <T> T getEnum(String key, Class<T> clazz,  T dafault) {

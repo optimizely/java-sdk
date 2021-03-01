@@ -78,6 +78,8 @@ public final class ActivateNotification {
      * This interface is deprecated since this is no longer a one-to-one mapping.
      * Please use a {@link NotificationHandler} explicitly for LogEvent messages.
      * {@link com.optimizely.ab.Optimizely#addLogEventNotificationHandler(NotificationHandler)}
+     *
+     * @return The event
      */
     @Deprecated
     public LogEvent getEvent() {

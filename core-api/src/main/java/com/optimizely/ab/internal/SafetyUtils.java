@@ -28,6 +28,8 @@ public class SafetyUtils {
 
     /**
      * Helper method which checks if Object is an instance of AutoCloseable and calls close() on it.
+     *
+     * @param obj The object
      */
     public static void tryClose(Object obj) {
         if (!(obj instanceof AutoCloseable)) {

@@ -72,8 +72,8 @@ public class MatchRegistry {
      * register registers a Match implementation with it's name.
      * NOTE: This does not check for existence so default implementations can
      * be overridden.
-     * @param name
-     * @param match
+     * @param name  The match name
+     * @param match The match implementation
      */
     public static void register(String name, Match match) {
         registry.put(name, match);

@@ -44,6 +44,11 @@ public final class SemanticVersion {
     /**
      * compare takes object inputs and coerces them into SemanticVersion objects before performing the comparison.
      * If the input values cannot be coerced then an {@link UnexpectedValueTypeException} is thrown.
+     *
+     * @param o1    The object to be compared
+     * @param o2    The object to be compared to
+     * @return The compare result
+     * @throws UnexpectedValueTypeException when an error is detected while comparing
      */
     public static int compare(Object o1, Object o2) throws UnexpectedValueTypeException {
         if (o1 instanceof String && o2 instanceof String) {
