@@ -137,10 +137,13 @@ configure(publishedProjects) {
         }
 
         signing {
+            // base64 for workaround travis escape chars issue
+            def signingKeyBase64 = System.getenv('MAVEN_SIGNING_KEY_BASE64')
             // skip signing for "local" version into MavenLocal for test-app
-            required { !version.equals("local") }
+            if (!signingKeyBase64?.trim()) return
+            byte[] decoded = signingKeyBase64.decodeBase64()
+            def signingKey = new String(decoded)
 
-            def signingKey = System.getenv('MAVEN_SIGNING_KEY')
             def signingPassword = System.getenv('MAVEN_SIGNING_PASSPHRASE')
             useInMemoryPgpKeys(signingKey, signingPassword)
             sign publishing.publications.release
