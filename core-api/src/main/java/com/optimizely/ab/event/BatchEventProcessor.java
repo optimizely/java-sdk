@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely and contributors
+ *    Copyright 2019,2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -246,6 +246,9 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
         /**
          * {@link EventHandler} implementation used to dispatch events to Optimizely.
+         *
+         * @param eventHandler The event handler
+         * @return The BatchEventProcessor builder
          */
         public Builder withEventHandler(EventHandler eventHandler) {
             this.eventHandler = eventHandler;
@@ -254,6 +257,9 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
         /**
          * EventQueue is the underlying BlockingQueue used to buffer events before being added to the batch payload.
+         *
+         * @param eventQueue The event queue
+         * @return The BatchEventProcessor builder
          */
         public Builder withEventQueue(BlockingQueue<Object> eventQueue) {
             this.eventQueue = eventQueue;
@@ -262,6 +268,9 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
         /**
          * BatchSize is the maximum number of events contained within a single event batch.
+         *
+         * @param batchSize The batch size
+         * @return The BatchEventProcessor builder
          */
         public Builder withBatchSize(Integer batchSize) {
             this.batchSize = batchSize;
@@ -271,6 +280,9 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         /**
          * FlushInterval is the maximum duration, in milliseconds, that an event will remain in flight before
          * being flushed to the event dispatcher.
+         *
+         * @param flushInterval The flush interval
+         * @return The BatchEventProcessor builder
          */
         public Builder withFlushInterval(Long flushInterval) {
             this.flushInterval = flushInterval;
@@ -279,6 +291,9 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
         /**
          * ExecutorService used to execute the {@link EventConsumer} thread.
+         *
+         * @param executor The ExecutorService
+         * @return The BatchEventProcessor builder
          */
         public Builder withExecutor(ExecutorService executor) {
             this.executor = executor;
@@ -287,6 +302,10 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
         /**
          * Timeout is the maximum time to wait for the EventProcessor to close.
+         *
+         * @param duration The max time to wait for the EventProcessor to close
+         * @param timeUnit The time unit
+         * @return The BatchEventProcessor builder
          */
         public Builder withTimeout(long duration, TimeUnit timeUnit) {
             this.timeoutMillis = timeUnit.toMillis(duration);
@@ -295,6 +314,9 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
         /**
          * NotificationCenter used to notify when event batches are flushed.
+         *
+         * @param notificationCenter The NotificationCenter
+         * @return The BatchEventProcessor builder
          */
         public Builder withNotificationCenter(NotificationCenter notificationCenter) {
             this.notificationCenter = notificationCenter;

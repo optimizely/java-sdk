@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2020, Optimizely and contributors
+ *    Copyright 2020-2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -72,8 +72,8 @@ public class MatchRegistry {
      * register registers a Match implementation with it's name.
      * NOTE: This does not check for existence so default implementations can
      * be overridden.
-     * @param name
-     * @param match
+     * @param name  The match name
+     * @param match The match implementation
      */
     public static void register(String name, Match match) {
         registry.put(name, match);

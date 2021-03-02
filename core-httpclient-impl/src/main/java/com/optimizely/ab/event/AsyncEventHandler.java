@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2019, Optimizely and contributors
+ *    Copyright 2016-2019,2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -73,6 +73,9 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
     /**
      * @deprecated Use the builder {@link Builder}
+     *
+     * @param queueCapacity     A depth of the event queue
+     * @param numWorkers        The number of workers
      */
     @Deprecated
     public AsyncEventHandler(int queueCapacity,
@@ -82,6 +85,12 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
     /**
      * @deprecated Use the builder {@link Builder}
+     *
+     * @param queueCapacity     A depth of the event queue
+     * @param numWorkers        The number of workers
+     * @param maxConnections    The max number of concurrent connections
+     * @param connectionsPerRoute  The max number of concurrent connections per route
+     * @param validateAfter     An inactivity period in milliseconds after which persistent connections must be re-validated prior to being leased to the consumer.
      */
     @Deprecated
     public AsyncEventHandler(int queueCapacity,

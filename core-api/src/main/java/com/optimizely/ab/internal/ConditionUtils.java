@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2018-2019,2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -122,7 +122,9 @@ public class ConditionUtils {
     /**
      * parse conditions using List and Map
      *
+     * @param clazz the class of parsed condition
      * @param rawObjectList list of conditions
+     * @param <T> This is the type parameter
      * @return audienceCondition
      */
     static public <T> Condition parseConditions(Class<T> clazz, List<Object> rawObjectList) throws InvalidAudienceCondition {
@@ -183,7 +185,9 @@ public class ConditionUtils {
     /**
      * Parse conditions from org.json.JsonArray
      *
+     * @param clazz the class of parsed condition
      * @param conditionJson jsonArray to parse
+     * @param <T> This is the type parameter
      * @return condition parsed from conditionJson.
      */
     static public <T> Condition parseConditions(Class<T> clazz, org.json.JSONArray conditionJson) throws InvalidAudienceCondition {
