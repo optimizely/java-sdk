@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2019, Optimizely and contributors
+ *    Copyright 2016-2019,2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -29,8 +29,8 @@ public final class EventTagUtils {
     /**
      * Grab the revenue value from the event tags. "revenue" is a reserved keyword.
      *
-     * @param eventTags
-     * @return Long
+     * @param eventTags The event tags
+     * @return Long     The revenue value
      */
     public static Long getRevenueValue(@Nonnull Map<String, ?> eventTags) {
         Long eventValue = null;
@@ -51,6 +51,9 @@ public final class EventTagUtils {
 
     /**
      * Fetch the numeric metric value from event tags. "value" is a reserved keyword.
+     *
+     * @param eventTags  The event tags
+     * @return  The numeric metric value
      */
     public static Double getNumericValue(@Nonnull Map<String, ?> eventTags) {
         Double eventValue = null;

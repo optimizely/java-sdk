@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2020, Optimizely and contributors
+ *    Copyright 2018-2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,12 +16,15 @@
  */
 package com.optimizely.ab.event.internal.payload;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.annotations.VisibleForTesting;
 
 public class Decision {
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     @JsonProperty("campaign_id")
     String campaignId;
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     @JsonProperty("experiment_id")
     String experimentId;
     @JsonProperty("variation_id")
