@@ -1,5 +1,11 @@
 # Optimizely Java X SDK Changelog
 
+## [3.8.1]
+March 2nd, 2021
+
+- Switch publish repository to MavenCentral (bintray/jcenter sunset)
+- Fix javadoc warnings ([#426](https://github.com/optimizely/java-sdk/pull/426))
+ 
 ## [3.8.0]
 February 3rd, 2021
 
