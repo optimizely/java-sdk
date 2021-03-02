@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2020, Optimizely and contributors
+ *    Copyright 2018-2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ public class AudienceIdCondition<T> implements Condition<T> {
     /**
      * Constructor used in json parsing to store the audienceId parsed from Experiment.audienceConditions.
      *
-     * @param audienceId
+     * @param audienceId The audience id
      */
     @JsonCreator
     public AudienceIdCondition(String audienceId) {

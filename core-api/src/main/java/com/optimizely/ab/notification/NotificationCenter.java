@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017-2020, Optimizely and contributors
+ *    Copyright 2017-2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -122,7 +122,7 @@ public class NotificationCenter {
     /**
      * Convenience method to support lambdas as callbacks in later version of Java (8+).
      *
-     * @param activateNotificationListener
+     * @param activateNotificationListener The ActivateNotificationListener
      * @return greater than zero if added.
      *
      * @deprecated by {@link NotificationManager#addHandler(NotificationHandler)}
@@ -151,7 +151,7 @@ public class NotificationCenter {
     /**
      * Convenience method to support lambdas as callbacks in later versions of Java (8+)
      *
-     * @param trackNotificationListener
+     * @param trackNotificationListener The TrackNotificationListener
      * @return greater than zero if added.
      *
      * @deprecated by {@link NotificationManager#addHandler(NotificationHandler)}
@@ -255,6 +255,8 @@ public class NotificationCenter {
 
     /**
      * Clear notification listeners by notification class.
+     *
+     * @param clazz The NotificationLister class
      */
     public void clearNotificationListeners(Class clazz) {
         NotificationManager notificationManager = getNotificationManager(clazz);

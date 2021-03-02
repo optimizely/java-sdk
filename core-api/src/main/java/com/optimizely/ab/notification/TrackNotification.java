@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely and contributors
+ *    Copyright 2019,2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -72,6 +72,8 @@ public final class TrackNotification {
      * This interface is deprecated since this is no longer a one-to-one mapping.
      * Please use a {@link NotificationHandler} explicitly for LogEvent messages.
      * {@link com.optimizely.ab.Optimizely#addLogEventNotificationHandler(NotificationHandler)}
+     *
+     * @return The event
      */
     @Deprecated
     public LogEvent getEvent() {

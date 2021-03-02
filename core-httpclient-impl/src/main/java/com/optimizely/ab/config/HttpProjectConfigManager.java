@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely
+ *    Copyright 2019,2021, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
 import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -212,6 +213,10 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
          * to {@link PollingProjectConfigManager#getConfig()}. If the timeout is exceeded then the
          * PollingProjectConfigManager will begin returning null immediately until the call to Poll
          * succeeds.
+         *
+         * @param period    A timeout period
+         * @param timeUnit  A timeout unit
+         * @return  A HttpProjectConfigManager builder
          */
         public Builder withBlockingTimeout(Long period, TimeUnit timeUnit) {
             if (timeUnit == null) {
@@ -265,6 +270,8 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         /**
          * HttpProjectConfigManager.Builder that builds and starts a HttpProjectConfigManager.
          * This is the default builder which will block until a config is available.
+         *
+         * @return {@link HttpProjectConfigManager}
          */
         public HttpProjectConfigManager build() {
             return build(false);
@@ -275,6 +282,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
          *
          * @param defer When true, we will not wait for the configuration to be available
          *              before returning the HttpProjectConfigManager instance.
+         * @return {@link HttpProjectConfigManager}
          */
         public HttpProjectConfigManager build(boolean defer) {
             if (period <= 0) {
