@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2020, Optimizely and contributors
+ *    Copyright 2016-2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -278,7 +278,7 @@ public class DatafileProjectConfig implements ProjectConfig {
     /**
      * Checks is attributeKey is reserved or not and if it exist in attributeKeyMapping
      *
-     * @param attributeKey
+     * @param attributeKey The attribute key
      * @return AttributeId corresponding to AttributeKeyMapping, AttributeKey when it's a reserved attribute and
      * null when attributeKey is equal to BOT_FILTERING_ATTRIBUTE key.
      */
@@ -484,6 +484,7 @@ public class DatafileProjectConfig implements ProjectConfig {
 
         /**
          * @return a {@link DatafileProjectConfig} instance given a JSON string datafile
+         * @throws ConfigParseException when parsing datafile fails
          */
         public ProjectConfig build() throws ConfigParseException {
             if (datafile == null) {

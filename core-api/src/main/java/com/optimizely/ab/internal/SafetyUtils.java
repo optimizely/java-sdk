@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely
+ *    Copyright 2019,2021, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,6 +28,8 @@ public class SafetyUtils {
 
     /**
      * Helper method which checks if Object is an instance of AutoCloseable and calls close() on it.
+     *
+     * @param obj The object
      */
     public static void tryClose(Object obj) {
         if (!(obj instanceof AutoCloseable)) {
