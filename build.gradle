@@ -140,6 +140,9 @@ configure(publishedProjects) {
             // skip signing for "local" version into MavenLocal for test-app
             required { !version.equals("local") }
 
+            print "[java-sdk signing version] "
+            print version
+
             // base64 for workaround travis escape chars issue
             def signingKeyBase64 = System.getenv('MAVEN_SIGNING_KEY_BASE64')
             byte[] decoded = signingKeyBase64.decodeBase64()
