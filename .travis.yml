@@ -13,11 +13,8 @@ env:
 script:
     - "./gradlew clean"
     - "./gradlew exhaustiveTest"
-    - "if [[ -n $TRAVIS_TAG ]]; then
-          ./gradlew ship;
-      else
-          ./gradlew build;
-      fi"
+    - "./gradlew build"
+
 cache:
   gradle: true
   directories:
@@ -40,6 +37,7 @@ stages:
   - 'Integration tests'
   - 'Full stack production tests'
   - 'Test'
+  - 'Publish'
 
 jobs:
   include:
@@ -75,10 +73,13 @@ jobs:
         
     - stage: 'Source Clear'
       if: type = cron
-      addons:
-        srcclr: true
-      before_install: skip
       install: skip
       before_script: skip
       script: skip
+      after_success: skip
+
+    - stage: 'Publish'
+      if: tag IS present
+      script:
+        - ./gradlew ship
       after_success: skip
