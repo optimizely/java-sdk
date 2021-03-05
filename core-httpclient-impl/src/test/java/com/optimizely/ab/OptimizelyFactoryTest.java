@@ -153,6 +153,27 @@ public class OptimizelyFactoryTest {
     }
 
     @Test
+    public void setEvictIdleConnections() {
+        Long duration = 2000L;
+        TimeUnit timeUnit = TimeUnit.SECONDS;
+        OptimizelyFactory.setEvictIdleConnections(duration, timeUnit);
+
+        assertEquals(duration, PropertyUtils.getLong(HttpProjectConfigManager.CONFIG_EVICT_DURATION));
+        assertEquals(timeUnit, PropertyUtils.getEnum(HttpProjectConfigManager.CONFIG_EVICT_UNIT, TimeUnit.class));
+    }
+
+    @Test
+    public void setInvalidEvictIdleConnections() {
+        OptimizelyFactory.setEvictIdleConnections(-1, TimeUnit.MICROSECONDS);
+        assertNull(PropertyUtils.getLong(HttpProjectConfigManager.CONFIG_EVICT_DURATION));
+        assertNull(PropertyUtils.getEnum(HttpProjectConfigManager.CONFIG_EVICT_UNIT, TimeUnit.class));
+
+        OptimizelyFactory.setEvictIdleConnections(10, null);
+        assertNull(PropertyUtils.getLong(HttpProjectConfigManager.CONFIG_EVICT_DURATION));
+        assertNull(PropertyUtils.getEnum(HttpProjectConfigManager.CONFIG_EVICT_UNIT, TimeUnit.class));
+    }
+
+    @Test
     public void setSdkKey() {
         String expected = "sdk-key";
         OptimizelyFactory.setSdkKey(expected);

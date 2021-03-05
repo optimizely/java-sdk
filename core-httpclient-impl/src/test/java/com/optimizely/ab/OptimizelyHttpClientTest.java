@@ -27,7 +27,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
+import static com.optimizely.ab.OptimizelyHttpClient.builder;
+import static java.util.concurrent.TimeUnit.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -46,24 +49,39 @@ public class OptimizelyHttpClientTest {
 
     @Test
     public void testDefaultConfiguration() {
-        OptimizelyHttpClient optimizelyHttpClient = OptimizelyHttpClient.builder().build();
+        OptimizelyHttpClient optimizelyHttpClient = builder().build();
         assertTrue(optimizelyHttpClient.getHttpClient() instanceof CloseableHttpClient);
     }
 
     @Test
     public void testNonDefaultConfiguration() {
-        OptimizelyHttpClient optimizelyHttpClient = OptimizelyHttpClient.builder()
+        OptimizelyHttpClient optimizelyHttpClient = builder()
             .withValidateAfterInactivity(1)
             .withMaxPerRoute(2)
             .withMaxTotalConnections(3)
+            .withEvictIdleConnections(5, MINUTES)
             .build();
 
         assertTrue(optimizelyHttpClient.getHttpClient() instanceof CloseableHttpClient);
     }
 
+    @Test
+    public void testEvictTime() {
+        OptimizelyHttpClient.Builder builder = builder();
+        long expectedPeriod = builder.evictConnectionIdleTimePeriod;
+        TimeUnit expectedTimeUnit = builder.evictConnectionIdleTimeUnit;
+
+        assertEquals(expectedPeriod, 0L);
+        assertEquals(expectedTimeUnit, MILLISECONDS);
+
+        builder.withEvictIdleConnections(10L, SECONDS);
+        assertEquals(10, builder.evictConnectionIdleTimePeriod);
+        assertEquals(SECONDS, builder.evictConnectionIdleTimeUnit);
+    }
+
     @Test(expected = HttpHostConnectException.class)
     public void testProxySettings() throws IOException {
-        OptimizelyHttpClient optimizelyHttpClient = OptimizelyHttpClient.builder().build();
+        OptimizelyHttpClient optimizelyHttpClient = builder().build();
 
         // If this request succeeds then the proxy config was not picked up.
         HttpGet get = new HttpGet("https://www.optimizely.com");

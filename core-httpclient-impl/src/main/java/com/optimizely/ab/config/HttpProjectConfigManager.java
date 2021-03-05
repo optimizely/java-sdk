@@ -27,6 +27,7 @@ import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,8 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     public static final String CONFIG_POLLING_UNIT      = "http.project.config.manager.polling.unit";
     public static final String CONFIG_BLOCKING_DURATION = "http.project.config.manager.blocking.duration";
     public static final String CONFIG_BLOCKING_UNIT     = "http.project.config.manager.blocking.unit";
+    public static final String CONFIG_EVICT_DURATION    = "http.project.config.manager.evict.duration";
+    public static final String CONFIG_EVICT_UNIT        = "http.project.config.manager.evict.unit";
     public static final String CONFIG_SDK_KEY           = "http.project.config.manager.sdk.key";
     public static final String CONFIG_DATAFILE_AUTH_TOKEN = "http.project.config.manager.datafile.auth.token";
 
@@ -53,6 +56,8 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     public static final TimeUnit DEFAULT_POLLING_UNIT  = TimeUnit.MINUTES;
     public static final long DEFAULT_BLOCKING_DURATION = 10;
     public static final TimeUnit DEFAULT_BLOCKING_UNIT = TimeUnit.SECONDS;
+    public static final long DEFAULT_EVICT_DURATION    = 1;
+    public static final TimeUnit DEFAULT_EVICT_UNIT    = TimeUnit.MINUTES;
 
     private static final Logger logger = LoggerFactory.getLogger(HttpProjectConfigManager.class);
 
@@ -178,6 +183,10 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         long blockingTimeoutPeriod = PropertyUtils.getLong(CONFIG_BLOCKING_DURATION, DEFAULT_BLOCKING_DURATION);
         TimeUnit blockingTimeoutUnit = PropertyUtils.getEnum(CONFIG_BLOCKING_UNIT, TimeUnit.class, DEFAULT_BLOCKING_UNIT);
 
+        // force-close the persistent connection after this idle time
+        long evictConnectionIdleTimePeriod = PropertyUtils.getLong(CONFIG_EVICT_DURATION, DEFAULT_EVICT_DURATION);
+        TimeUnit evictConnectionIdleTimeUnit = PropertyUtils.getEnum(CONFIG_EVICT_UNIT, TimeUnit.class, DEFAULT_EVICT_UNIT);
+
         public Builder withDatafile(String datafile) {
             this.datafile = datafile;
             return this;
@@ -205,6 +214,25 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
         public Builder withOptimizelyHttpClient(OptimizelyHttpClient httpClient) {
             this.httpClient = httpClient;
+            return this;
+        }
+
+        /**
+         * Makes HttpClient proactively evict idle connections from theœ
+         * connection pool using a background thread.
+         *
+         * @see org.apache.http.impl.client.HttpClientBuilder#evictIdleConnections(long, TimeUnit)
+         *
+         * @param maxIdleTime maximum time persistent connections can stay idle while kept alive
+         * in the connection pool. Connections whose inactivity period exceeds this value will
+         * get closed and evicted from the pool.  Set to 0 to disable eviction.
+         * @param maxIdleTimeUnit time unit for the above parameter.
+         *
+         * @return  A HttpProjectConfigManager builder
+         */
+        public Builder withEvictIdleConnections(long maxIdleTime, TimeUnit maxIdleTimeUnit) {
+            this.evictConnectionIdleTimePeriod = maxIdleTime;
+            this.evictConnectionIdleTimeUnit = maxIdleTimeUnit;
             return this;
         }
 
@@ -300,7 +328,9 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
             }
 
             if (httpClient == null) {
-                httpClient = HttpClientUtils.getDefaultHttpClient();
+                httpClient = OptimizelyHttpClient.builder()
+                    .withEvictIdleConnections(evictConnectionIdleTimePeriod, evictConnectionIdleTimeUnit)
+                    .build();
             }
 
             if (url == null) {

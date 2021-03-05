@@ -22,11 +22,13 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Basic HttpClient wrapper to be utilized for fetching the datafile
@@ -73,6 +75,9 @@ public class OptimizelyHttpClient implements Closeable {
         private int maxPerRoute = 20;
         // Defines period of inactivity in milliseconds after which persistent connections must be re-validated prior to being leased to the consumer.
         private int validateAfterInactivity = 5000;
+        // force-close the connection after this idle time (with 0, eviction is disabled by default)
+        long evictConnectionIdleTimePeriod = 0;
+        TimeUnit evictConnectionIdleTimeUnit = TimeUnit.MILLISECONDS;
 
         private Builder() {
 
@@ -93,18 +98,29 @@ public class OptimizelyHttpClient implements Closeable {
             return this;
         }
 
+        public Builder withEvictIdleConnections(long maxIdleTime, TimeUnit maxIdleTimeUnit) {
+            this.evictConnectionIdleTimePeriod = maxIdleTime;
+            this.evictConnectionIdleTimeUnit = maxIdleTimeUnit;
+            return this;
+        }
+
         public OptimizelyHttpClient build() {
             PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager();
             poolingHttpClientConnectionManager.setMaxTotal(maxTotalConnections);
             poolingHttpClientConnectionManager.setDefaultMaxPerRoute(maxPerRoute);
             poolingHttpClientConnectionManager.setValidateAfterInactivity(validateAfterInactivity);
 
-            CloseableHttpClient closableHttpClient = HttpClients.custom()
+            HttpClientBuilder builder = HttpClients.custom()
                 .setDefaultRequestConfig(HttpClientUtils.DEFAULT_REQUEST_CONFIG)
                 .setConnectionManager(poolingHttpClientConnectionManager)
                 .disableCookieManagement()
-                .useSystemProperties()
-                .build();
+                .useSystemProperties();
+
+            if (evictConnectionIdleTimePeriod > 0) {
+                builder.evictIdleConnections(evictConnectionIdleTimePeriod, evictConnectionIdleTimeUnit);
+            }
+
+            CloseableHttpClient closableHttpClient = builder.build();
 
             return new OptimizelyHttpClient(closableHttpClient);
         }
