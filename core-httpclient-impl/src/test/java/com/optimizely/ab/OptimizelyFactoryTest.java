@@ -45,6 +45,8 @@ public class OptimizelyFactoryTest {
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_POLLING_UNIT);
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_BLOCKING_DURATION);
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_BLOCKING_UNIT);
+        PropertyUtils.clear(HttpProjectConfigManager.CONFIG_EVICT_DURATION);
+        PropertyUtils.clear(HttpProjectConfigManager.CONFIG_EVICT_UNIT);
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_SDK_KEY);
     }
 
