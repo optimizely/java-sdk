@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.optimizely.ab.config.HttpProjectConfigManager.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
@@ -252,6 +253,20 @@ public class HttpProjectConfigManagerTest {
         builder.withBlockingTimeout(10L, SECONDS);
         assertEquals(10, builder.blockingTimeoutPeriod);
         assertEquals(SECONDS, builder.blockingTimeoutUnit);
+    }
+
+    @Test
+    public void testEvictTime() {
+        Builder builder = builder();
+        long expectedPeriod = builder.evictConnectionIdleTimePeriod;
+        TimeUnit expectedTimeUnit = builder.evictConnectionIdleTimeUnit;
+
+        assertEquals(expectedPeriod, 1L);
+        assertEquals(expectedTimeUnit, MINUTES);
+
+        builder.withEvictIdleConnections(10L, SECONDS);
+        assertEquals(10, builder.evictConnectionIdleTimePeriod);
+        assertEquals(SECONDS, builder.evictConnectionIdleTimeUnit);
     }
 
     @Test

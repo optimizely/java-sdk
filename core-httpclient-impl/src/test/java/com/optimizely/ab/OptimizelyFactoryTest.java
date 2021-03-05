@@ -45,6 +45,8 @@ public class OptimizelyFactoryTest {
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_POLLING_UNIT);
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_BLOCKING_DURATION);
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_BLOCKING_UNIT);
+        PropertyUtils.clear(HttpProjectConfigManager.CONFIG_EVICT_DURATION);
+        PropertyUtils.clear(HttpProjectConfigManager.CONFIG_EVICT_UNIT);
         PropertyUtils.clear(HttpProjectConfigManager.CONFIG_SDK_KEY);
     }
 
@@ -150,6 +152,27 @@ public class OptimizelyFactoryTest {
         OptimizelyFactory.setBlockingTimeout(10, null);
         assertNull(PropertyUtils.getLong(HttpProjectConfigManager.CONFIG_BLOCKING_DURATION));
         assertNull(PropertyUtils.getEnum(HttpProjectConfigManager.CONFIG_POLLING_UNIT, TimeUnit.class));
+    }
+
+    @Test
+    public void setEvictIdleConnections() {
+        Long duration = 2000L;
+        TimeUnit timeUnit = TimeUnit.SECONDS;
+        OptimizelyFactory.setEvictIdleConnections(duration, timeUnit);
+
+        assertEquals(duration, PropertyUtils.getLong(HttpProjectConfigManager.CONFIG_EVICT_DURATION));
+        assertEquals(timeUnit, PropertyUtils.getEnum(HttpProjectConfigManager.CONFIG_EVICT_UNIT, TimeUnit.class));
+    }
+
+    @Test
+    public void setInvalidEvictIdleConnections() {
+        OptimizelyFactory.setEvictIdleConnections(-1, TimeUnit.MICROSECONDS);
+        assertNull(PropertyUtils.getLong(HttpProjectConfigManager.CONFIG_EVICT_DURATION));
+        assertNull(PropertyUtils.getEnum(HttpProjectConfigManager.CONFIG_EVICT_UNIT, TimeUnit.class));
+
+        OptimizelyFactory.setEvictIdleConnections(10, null);
+        assertNull(PropertyUtils.getLong(HttpProjectConfigManager.CONFIG_EVICT_DURATION));
+        assertNull(PropertyUtils.getEnum(HttpProjectConfigManager.CONFIG_EVICT_UNIT, TimeUnit.class));
     }
 
     @Test

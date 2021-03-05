@@ -124,6 +124,28 @@ public final class OptimizelyFactory {
     }
 
     /**
+     * Convenience method for setting the evict idle connections.
+     * {@link HttpProjectConfigManager.Builder#withEvictIdleConnections(long, TimeUnit)}
+     *
+     * @param maxIdleTime The connection idle time duration (0 to disable eviction)
+     * @param maxIdleTimeUnit The connection idle time unit
+     */
+    public static void setEvictIdleConnections(long maxIdleTime, TimeUnit maxIdleTimeUnit) {
+        if (maxIdleTimeUnit == null) {
+            logger.warn("TimeUnit cannot be null. Reverting to default configuration.");
+            return;
+        }
+
+        if (maxIdleTime < 0) {
+            logger.warn("Timeout cannot be < 0. Reverting to default configuration.");
+            return;
+        }
+
+        PropertyUtils.set(HttpProjectConfigManager.CONFIG_EVICT_DURATION, Long.toString(maxIdleTime));
+        PropertyUtils.set(HttpProjectConfigManager.CONFIG_EVICT_UNIT, maxIdleTimeUnit.toString());
+    }
+
+    /**
      * Convenience method for setting the polling interval on System properties.
      * {@link HttpProjectConfigManager.Builder#withPollingInterval(Long, TimeUnit)}
      *
