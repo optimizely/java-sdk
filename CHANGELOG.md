@@ -1,5 +1,11 @@
 # Optimizely Java X SDK Changelog
 
+## [3.8.2]
+March 8th, 2021
+
+### Fixes
+- Fix intermittent SocketTimeout exceptions while downloading datafiles. Add configurable `evictIdleConnections` to `HttpProjectConfigManager` to force close persistent connections after the idle time (evict after 1min idle time by default) ([#431](https://github.com/optimizely/java-sdk/pull/431)).
+
 ## [3.8.1]
 March 2nd, 2021
 
