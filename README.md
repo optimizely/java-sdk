@@ -18,10 +18,19 @@ Optimizely Rollouts is free feature flags for development teams. Easily roll out
 
 The SDK is available through Bintray and is created with source and target compatibility of 1.8. The core-api and httpclient Bintray packages are [optimizely-sdk-core-api](https://bintray.com/optimizely/optimizely/optimizely-sdk-core-api)
 and [optimizely-sdk-httpclient](https://bintray.com/optimizely/optimizely/optimizely-sdk-httpclient) respectively. To install, place the
-following in your `build.gradle` and substitute `VERSION` for the latest SDK version available via Bintray:
+following in your `build.gradle` and substitute `VERSION` for the latest SDK version available via MavenCentral.
+
+---
+**NOTE**
+
+[Bintray/JCenter will be shut down](https://jfrog.com/blog/into-the-sunset-bintray-jcenter-gocenter-and-chartcenter/). The publish repository has been migrated to MavenCentral for the SDK version 3.8.1 or later. Older versions will be available in JCenter until February 1st, 2022.
+
+---
+
 
 ```
 repositories {
+  mavenCentral()
   jcenter()
 }
 
