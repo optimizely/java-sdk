@@ -59,6 +59,8 @@ public class DatafileProjectConfig implements ProjectConfig {
     private final String accountId;
     private final String projectId;
     private final String revision;
+    private final String sdkKey;
+    private final String environment;
     private final String version;
     private final boolean anonymizeIP;
     private final boolean sendFlagDecisions;
@@ -108,6 +110,8 @@ public class DatafileProjectConfig implements ProjectConfig {
             null,
             projectId,
             revision,
+            null,
+            null,
             version,
             attributes,
             audiences,
@@ -127,6 +131,8 @@ public class DatafileProjectConfig implements ProjectConfig {
                                  Boolean botFiltering,
                                  String projectId,
                                  String revision,
+                                 String sdkKey,
+                                 String environment,
                                  String version,
                                  List<Attribute> attributes,
                                  List<Audience> audiences,
@@ -141,6 +147,8 @@ public class DatafileProjectConfig implements ProjectConfig {
         this.projectId = projectId;
         this.version = version;
         this.revision = revision;
+        this.sdkKey = sdkKey;
+        this.environment = environment;
         this.anonymizeIP = anonymizeIP;
         this.sendFlagDecisions = sendFlagDecisions;
         this.botFiltering = botFiltering;
@@ -327,6 +335,16 @@ public class DatafileProjectConfig implements ProjectConfig {
     }
 
     @Override
+    public String getSdkKey() {
+        return sdkKey;
+    }
+
+    @Override
+    public String getEnvironment() {
+        return environment;
+    }
+
+    @Override
     public boolean getSendFlagDecisions() { return sendFlagDecisions; }
 
     @Override
@@ -451,6 +469,8 @@ public class DatafileProjectConfig implements ProjectConfig {
             "accountId='" + accountId + '\'' +
             ", projectId='" + projectId + '\'' +
             ", revision='" + revision + '\'' +
+            ", sdkKey='" + sdkKey + '\'' +
+            ", environment='" + environment + '\'' +
             ", version='" + version + '\'' +
             ", anonymizeIP=" + anonymizeIP +
             ", botFiltering=" + botFiltering +

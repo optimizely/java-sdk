@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2020, Optimizely, Inc. and contributors                        *
+ * Copyright 2020-2021, Optimizely, Inc. and contributors                        *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -26,21 +26,27 @@ public class OptimizelyConfig {
     private Map<String, OptimizelyExperiment> experimentsMap;
     private Map<String, OptimizelyFeature> featuresMap;
     private String revision;
+    private String sdkKey;
+    private String environment;
     private String datafile;
 
     public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap, 
                             Map<String, OptimizelyFeature> featuresMap,
-                            String revision) {
-        this(experimentsMap, featuresMap, revision, null);
+                            String revision, String sdkKey, String environment) {
+        this(experimentsMap, featuresMap, revision, sdkKey, environment, null);
     }
 
     public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap,
                             Map<String, OptimizelyFeature> featuresMap,
                             String revision,
+                            String sdkKey,
+                            String environment,
                             String datafile) {
         this.experimentsMap = experimentsMap;
         this.featuresMap = featuresMap;
         this.revision = revision;
+        this.sdkKey = sdkKey;
+        this.environment = environment;
         this.datafile = datafile;
     }
 
@@ -54,6 +60,12 @@ public class OptimizelyConfig {
 
     public String getRevision() {
         return revision;
+    }
+
+    public String getSdkKey() { return sdkKey; }
+
+    public String getEnvironment() {
+        return environment;
     }
 
     public String getDatafile() {

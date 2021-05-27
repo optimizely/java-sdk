@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2020, Optimizely and contributors
+ *    Copyright 2016-2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -87,6 +87,8 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
         List<FeatureFlag> featureFlags = null;
         List<Rollout> rollouts = null;
         Boolean botFiltering = null;
+        String sdkKey = null;
+        String environment = null;
         boolean sendFlagDecisions = false;
         if (datafileVersion >= Integer.parseInt(DatafileProjectConfig.Version.V4.toString())) {
             Type featureFlagsType = new TypeToken<List<FeatureFlag>>() {
@@ -95,6 +97,10 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
             Type rolloutsType = new TypeToken<List<Rollout>>() {
             }.getType();
             rollouts = context.deserialize(jsonObject.get("rollouts").getAsJsonArray(), rolloutsType);
+            if (jsonObject.has("sdkKey"))
+                sdkKey = jsonObject.get("sdkKey").getAsString();
+            if (jsonObject.has("environment"))
+                environment = jsonObject.get("environment").getAsString();
             if (jsonObject.has("botFiltering"))
                 botFiltering = jsonObject.get("botFiltering").getAsBoolean();
             if (jsonObject.has("sendFlagDecisions"))
@@ -108,6 +114,8 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
             botFiltering,
             projectId,
             revision,
+            sdkKey,
+            environment,
             version,
             attributes,
             audiences,

@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2020, Optimizely, Inc. and contributors                        *
+ * Copyright 2020-2021, Optimizely, Inc. and contributors                        *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -50,6 +50,18 @@ public class OptimizelyConfigServiceTest {
     public void testRevision() {
         String revision = optimizelyConfigService.getConfig().getRevision();
         assertEquals(expectedConfig.getRevision(), revision);
+    }
+
+    @Test
+    public void testSdkKey() {
+        String sdkKey = optimizelyConfigService.getConfig().getSdkKey();
+        assertEquals(expectedConfig.getSdkKey(), sdkKey);
+    }
+
+    @Test
+    public void testEnvironment() {
+        String environment = optimizelyConfigService.getConfig().getEnvironment();
+        assertEquals(expectedConfig.getEnvironment(), environment);
     }
 
     @Test
@@ -152,6 +164,8 @@ public class OptimizelyConfigServiceTest {
             true,
             "3918735994",
             "1480511547",
+            "ValidProjectConfigV4",
+            "production",
             "4",
             asList(
                 new Attribute(
@@ -510,7 +524,9 @@ public class OptimizelyConfigServiceTest {
         return new OptimizelyConfig(
             optimizelyExperimentMap,
             optimizelyFeatureMap,
-            "1480511547"
+            "1480511547",
+            "ValidProjectConfigV4",
+            "production"
         );
     }
 }
