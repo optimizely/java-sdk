@@ -108,6 +108,8 @@ final public class JsonConfigParser implements ConfigParser {
                 groups,
                 rollouts
             );
+        } catch (RuntimeException e) {
+            throw new ConfigParseException("Unable to parse datafile: " + json, e);
         } catch (Exception e) {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
         }
