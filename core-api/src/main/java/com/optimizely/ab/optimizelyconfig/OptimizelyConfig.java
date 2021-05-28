@@ -16,11 +16,14 @@
 package com.optimizely.ab.optimizelyconfig;
 
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.*;
 
 /**
  * Interface for OptimizleyConfig
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class OptimizelyConfig {
     
     private Map<String, OptimizelyExperiment> experimentsMap;
