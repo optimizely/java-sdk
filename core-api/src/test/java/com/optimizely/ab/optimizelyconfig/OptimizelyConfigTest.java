@@ -36,7 +36,7 @@ public class OptimizelyConfigTest {
         );
         assertEquals("101", optimizelyConfig.getRevision());
         assertEquals("testingSdkKey", optimizelyConfig.getSdkKey());
-        assertEquals("development", optimizelyConfig.getEnvironment());
+        assertEquals("development", optimizelyConfig.getEnvironmentKey());
         // verify the experiments map
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = generateExperimentMap();
         assertEquals(optimizelyExperimentMap.size(), optimizelyConfig.getExperimentsMap().size());

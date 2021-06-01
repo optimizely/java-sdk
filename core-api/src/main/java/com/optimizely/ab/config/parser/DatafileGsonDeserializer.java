@@ -88,7 +88,7 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
         List<Rollout> rollouts = null;
         Boolean botFiltering = null;
         String sdkKey = null;
-        String environment = null;
+        String environmentKey = null;
         boolean sendFlagDecisions = false;
         if (datafileVersion >= Integer.parseInt(DatafileProjectConfig.Version.V4.toString())) {
             Type featureFlagsType = new TypeToken<List<FeatureFlag>>() {
@@ -99,8 +99,8 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
             rollouts = context.deserialize(jsonObject.get("rollouts").getAsJsonArray(), rolloutsType);
             if (jsonObject.has("sdkKey"))
                 sdkKey = jsonObject.get("sdkKey").getAsString();
-            if (jsonObject.has("environment"))
-                environment = jsonObject.get("environment").getAsString();
+            if (jsonObject.has("environmentKey"))
+                environmentKey = jsonObject.get("environmentKey").getAsString();
             if (jsonObject.has("botFiltering"))
                 botFiltering = jsonObject.get("botFiltering").getAsBoolean();
             if (jsonObject.has("sendFlagDecisions"))
@@ -115,7 +115,7 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
             projectId,
             revision,
             sdkKey,
-            environment,
+            environmentKey,
             version,
             attributes,
             audiences,

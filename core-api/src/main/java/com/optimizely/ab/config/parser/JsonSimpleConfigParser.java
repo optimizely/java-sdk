@@ -51,7 +51,7 @@ final public class JsonSimpleConfigParser implements ConfigParser {
             String projectId = (String) rootObject.get("projectId");
             String revision = (String) rootObject.get("revision");
             String sdkKey = (String) rootObject.get("sdkKey");
-            String environment = (String) rootObject.get("environment");
+            String environmentKey = (String) rootObject.get("environmentKey");
             String version = (String) rootObject.get("version");
             int datafileVersion = Integer.parseInt(version);
 
@@ -100,7 +100,7 @@ final public class JsonSimpleConfigParser implements ConfigParser {
                 projectId,
                 revision,
                 sdkKey,
-                environment,
+                environmentKey,
                 version,
                 attributes,
                 audiences,

@@ -30,26 +30,26 @@ public class OptimizelyConfig {
     private Map<String, OptimizelyFeature> featuresMap;
     private String revision;
     private String sdkKey;
-    private String environment;
+    private String environmentKey;
     private String datafile;
 
     public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap, 
                             Map<String, OptimizelyFeature> featuresMap,
-                            String revision, String sdkKey, String environment) {
-        this(experimentsMap, featuresMap, revision, sdkKey, environment, null);
+                            String revision, String sdkKey, String environmentKey) {
+        this(experimentsMap, featuresMap, revision, sdkKey, environmentKey, null);
     }
 
     public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap,
                             Map<String, OptimizelyFeature> featuresMap,
                             String revision,
                             String sdkKey,
-                            String environment,
+                            String environmentKey,
                             String datafile) {
         this.experimentsMap = experimentsMap;
         this.featuresMap = featuresMap;
         this.revision = revision;
         this.sdkKey = sdkKey;
-        this.environment = environment;
+        this.environmentKey = environmentKey;
         this.datafile = datafile;
     }
 
@@ -67,8 +67,8 @@ public class OptimizelyConfig {
 
     public String getSdkKey() { return sdkKey; }
 
-    public String getEnvironment() {
-        return environment;
+    public String getEnvironmentKey() {
+        return environmentKey;
     }
 
     public String getDatafile() {

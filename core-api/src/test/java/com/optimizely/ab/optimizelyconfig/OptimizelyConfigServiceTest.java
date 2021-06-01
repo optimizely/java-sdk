@@ -59,9 +59,9 @@ public class OptimizelyConfigServiceTest {
     }
 
     @Test
-    public void testEnvironment() {
-        String environment = optimizelyConfigService.getConfig().getEnvironment();
-        assertEquals(expectedConfig.getEnvironment(), environment);
+    public void testEnvironmentKey() {
+        String environmentKey = optimizelyConfigService.getConfig().getEnvironmentKey();
+        assertEquals(expectedConfig.getEnvironmentKey(), environmentKey);
     }
 
     @Test

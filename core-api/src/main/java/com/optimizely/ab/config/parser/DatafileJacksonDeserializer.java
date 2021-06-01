@@ -64,7 +64,7 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
         List<FeatureFlag> featureFlags = null;
         List<Rollout> rollouts = null;
         String sdkKey = null;
-        String environment = null;
+        String environmentKey = null;
         Boolean botFiltering = null;
         boolean sendFlagDecisions = false;
         if (datafileVersion >= Integer.parseInt(DatafileProjectConfig.Version.V4.toString())) {
@@ -73,8 +73,8 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
             if (node.hasNonNull("sdkKey")) {
                 sdkKey = node.get("sdkKey").textValue();
             }
-            if (node.hasNonNull("environment")) {
-                environment = node.get("environment").textValue();
+            if (node.hasNonNull("environmentKey")) {
+                environmentKey = node.get("environmentKey").textValue();
             }
             if (node.hasNonNull("botFiltering")) {
                 botFiltering = node.get("botFiltering").asBoolean();
@@ -92,7 +92,7 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
             projectId,
             revision,
             sdkKey,
-            environment,
+            environmentKey,
             version,
             attributes,
             audiences,

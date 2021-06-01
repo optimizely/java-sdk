@@ -60,7 +60,7 @@ public class DatafileProjectConfig implements ProjectConfig {
     private final String projectId;
     private final String revision;
     private final String sdkKey;
-    private final String environment;
+    private final String environmentKey;
     private final String version;
     private final boolean anonymizeIP;
     private final boolean sendFlagDecisions;
@@ -132,7 +132,7 @@ public class DatafileProjectConfig implements ProjectConfig {
                                  String projectId,
                                  String revision,
                                  String sdkKey,
-                                 String environment,
+                                 String environmentKey,
                                  String version,
                                  List<Attribute> attributes,
                                  List<Audience> audiences,
@@ -148,7 +148,7 @@ public class DatafileProjectConfig implements ProjectConfig {
         this.version = version;
         this.revision = revision;
         this.sdkKey = sdkKey;
-        this.environment = environment;
+        this.environmentKey = environmentKey;
         this.anonymizeIP = anonymizeIP;
         this.sendFlagDecisions = sendFlagDecisions;
         this.botFiltering = botFiltering;
@@ -340,8 +340,8 @@ public class DatafileProjectConfig implements ProjectConfig {
     }
 
     @Override
-    public String getEnvironment() {
-        return environment;
+    public String getEnvironmentKey() {
+        return environmentKey;
     }
 
     @Override
@@ -470,7 +470,7 @@ public class DatafileProjectConfig implements ProjectConfig {
             ", projectId='" + projectId + '\'' +
             ", revision='" + revision + '\'' +
             ", sdkKey='" + sdkKey + '\'' +
-            ", environment='" + environment + '\'' +
+            ", environmentKey='" + environmentKey + '\'' +
             ", version='" + version + '\'' +
             ", anonymizeIP=" + anonymizeIP +
             ", botFiltering=" + botFiltering +

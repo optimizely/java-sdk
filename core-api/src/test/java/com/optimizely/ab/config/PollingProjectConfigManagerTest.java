@@ -157,7 +157,7 @@ public class PollingProjectConfigManagerTest {
         testProjectConfigManager.setConfig(projectConfig);
         assertEquals("1480511547", testProjectConfigManager.getOptimizelyConfig().getRevision());
         assertEquals("ValidProjectConfigV4", testProjectConfigManager.getOptimizelyConfig().getSdkKey());
-        assertEquals("production", testProjectConfigManager.getOptimizelyConfig().getEnvironment());
+        assertEquals("production", testProjectConfigManager.getOptimizelyConfig().getEnvironmentKey());
 
         // cached config because project config is null
         testProjectConfigManager.setConfig(null);

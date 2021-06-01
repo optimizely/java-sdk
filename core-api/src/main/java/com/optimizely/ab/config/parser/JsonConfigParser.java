@@ -73,7 +73,7 @@ final public class JsonConfigParser implements ConfigParser {
             List<FeatureFlag> featureFlags = null;
             List<Rollout> rollouts = null;
             String sdkKey = null;
-            String environment = null;
+            String environmentKey = null;
             Boolean botFiltering = null;
             boolean sendFlagDecisions = false;
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
@@ -81,8 +81,8 @@ final public class JsonConfigParser implements ConfigParser {
                 rollouts = parseRollouts(rootObject.getJSONArray("rollouts"));
                 if (rootObject.has("sdkKey"))
                     sdkKey = rootObject.getString("sdkKey");
-                if (rootObject.has("environment"))
-                    environment = rootObject.getString("environment");
+                if (rootObject.has("environmentKey"))
+                    environmentKey = rootObject.getString("environmentKey");
                 if (rootObject.has("botFiltering"))
                     botFiltering = rootObject.getBoolean("botFiltering");
                 if (rootObject.has("sendFlagDecisions"))
@@ -97,7 +97,7 @@ final public class JsonConfigParser implements ConfigParser {
                 projectId,
                 revision,
                 sdkKey,
-                environment,
+                environmentKey,
                 version,
                 attributes,
                 audiences,

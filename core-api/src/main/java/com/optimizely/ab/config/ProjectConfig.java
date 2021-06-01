@@ -57,7 +57,7 @@ public interface ProjectConfig {
 
     String getSdkKey();
 
-    String getEnvironment();
+    String getEnvironmentKey();
 
     boolean getSendFlagDecisions();
 

@@ -33,7 +33,7 @@ public class OptimizelyConfigService {
             getFeaturesMap(experimentsMap),
             projectConfig.getRevision(),
             projectConfig.getSdkKey(),
-            projectConfig.getEnvironment(),
+            projectConfig.getEnvironmentKey(),
             projectConfig.toDatafile()
         );
     }

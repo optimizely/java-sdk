@@ -37,7 +37,7 @@ public class ValidProjectConfigV4 {
     private static final String PROJECT_ID = "3918735994";
     private static final String REVISION = "1480511547";
     private static final String SDK_KEY = "ValidProjectConfigV4";
-    private static final String ENVIRONMENT = "production";
+    private static final String ENVIRONMENT_KEY = "production";
     private static final String VERSION = "4";
     private static final Boolean SEND_FLAG_DECISIONS = true;
 
@@ -1437,7 +1437,7 @@ public class ValidProjectConfigV4 {
             PROJECT_ID,
             REVISION,
             SDK_KEY,
-            ENVIRONMENT,
+            ENVIRONMENT_KEY,
             VERSION,
             attributes,
             audiences,

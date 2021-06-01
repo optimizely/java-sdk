@@ -5,7 +5,7 @@
   "projectId": "3918735994",
   "revision": "1480511547",
   "sdkKey": "ValidProjectConfigV4",
-  "environment": "production",
+  "environmentKey": "production",
   "version": "4",
   "audiences": [
     {
