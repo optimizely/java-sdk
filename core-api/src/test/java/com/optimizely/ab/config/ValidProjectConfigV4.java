@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2017-2020, Optimizely and contributors
+ *    Copyright 2017-2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -36,6 +36,8 @@ public class ValidProjectConfigV4 {
     private static final boolean BOT_FILTERING = true;
     private static final String PROJECT_ID = "3918735994";
     private static final String REVISION = "1480511547";
+    private static final String SDK_KEY = "ValidProjectConfigV4";
+    private static final String ENVIRONMENT_KEY = "production";
     private static final String VERSION = "4";
     private static final Boolean SEND_FLAG_DECISIONS = true;
 
@@ -1434,6 +1436,8 @@ public class ValidProjectConfigV4 {
             BOT_FILTERING,
             PROJECT_ID,
             REVISION,
+            SDK_KEY,
+            ENVIRONMENT_KEY,
             VERSION,
             attributes,
             audiences,

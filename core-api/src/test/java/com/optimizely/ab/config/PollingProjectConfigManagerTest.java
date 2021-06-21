@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019-2020, Optimizely and contributors
+ *    Copyright 2019-2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -156,6 +156,8 @@ public class PollingProjectConfigManagerTest {
 
         testProjectConfigManager.setConfig(projectConfig);
         assertEquals("1480511547", testProjectConfigManager.getOptimizelyConfig().getRevision());
+        assertEquals("ValidProjectConfigV4", testProjectConfigManager.getOptimizelyConfig().getSdkKey());
+        assertEquals("production", testProjectConfigManager.getOptimizelyConfig().getEnvironmentKey());
 
         // cached config because project config is null
         testProjectConfigManager.setConfig(null);

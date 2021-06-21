@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2019, 2020, Optimizely and contributors
+ *    Copyright 2016-2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -72,11 +72,17 @@ final public class JsonConfigParser implements ConfigParser {
 
             List<FeatureFlag> featureFlags = null;
             List<Rollout> rollouts = null;
+            String sdkKey = null;
+            String environmentKey = null;
             Boolean botFiltering = null;
             boolean sendFlagDecisions = false;
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
                 featureFlags = parseFeatureFlags(rootObject.getJSONArray("featureFlags"));
                 rollouts = parseRollouts(rootObject.getJSONArray("rollouts"));
+                if (rootObject.has("sdkKey"))
+                    sdkKey = rootObject.getString("sdkKey");
+                if (rootObject.has("environmentKey"))
+                    environmentKey = rootObject.getString("environmentKey");
                 if (rootObject.has("botFiltering"))
                     botFiltering = rootObject.getBoolean("botFiltering");
                 if (rootObject.has("sendFlagDecisions"))
@@ -90,6 +96,8 @@ final public class JsonConfigParser implements ConfigParser {
                 botFiltering,
                 projectId,
                 revision,
+                sdkKey,
+                environmentKey,
                 version,
                 attributes,
                 audiences,
@@ -100,6 +108,8 @@ final public class JsonConfigParser implements ConfigParser {
                 groups,
                 rollouts
             );
+        } catch (RuntimeException e) {
+            throw new ConfigParseException("Unable to parse datafile: " + json, e);
         } catch (Exception e) {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
         }

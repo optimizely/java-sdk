@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2020, Optimizely, Inc. and contributors                        *
+ * Copyright 2020-2021, Optimizely, Inc. and contributors                        *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -30,9 +30,13 @@ public class OptimizelyConfigTest {
         OptimizelyConfig optimizelyConfig = new OptimizelyConfig(
             generateExperimentMap(),
             generateFeatureMap(),
-            "101"
+            "101",
+            "testingSdkKey",
+            "development"
         );
         assertEquals("101", optimizelyConfig.getRevision());
+        assertEquals("testingSdkKey", optimizelyConfig.getSdkKey());
+        assertEquals("development", optimizelyConfig.getEnvironmentKey());
         // verify the experiments map
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = generateExperimentMap();
         assertEquals(optimizelyExperimentMap.size(), optimizelyConfig.getExperimentsMap().size());

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2019, 2020, Optimizely and contributors
+ *    Copyright 2016-2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -50,6 +50,8 @@ final public class JsonSimpleConfigParser implements ConfigParser {
             String accountId = (String) rootObject.get("accountId");
             String projectId = (String) rootObject.get("projectId");
             String revision = (String) rootObject.get("revision");
+            String sdkKey = (String) rootObject.get("sdkKey");
+            String environmentKey = (String) rootObject.get("environmentKey");
             String version = (String) rootObject.get("version");
             int datafileVersion = Integer.parseInt(version);
 
@@ -97,6 +99,8 @@ final public class JsonSimpleConfigParser implements ConfigParser {
                 botFiltering,
                 projectId,
                 revision,
+                sdkKey,
+                environmentKey,
                 version,
                 attributes,
                 audiences,
