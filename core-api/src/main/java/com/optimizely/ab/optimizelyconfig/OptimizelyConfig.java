@@ -17,6 +17,8 @@ package com.optimizely.ab.optimizelyconfig;
 
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.optimizely.ab.config.Attribute;
+import com.optimizely.ab.config.EventType;
 
 import java.util.*;
 
@@ -28,6 +30,8 @@ public class OptimizelyConfig {
     
     private Map<String, OptimizelyExperiment> experimentsMap;
     private Map<String, OptimizelyFeature> featuresMap;
+    private List<Attribute> attributes;
+    private List<EventType> events;
     private String revision;
     private String sdkKey;
     private String environmentKey;
@@ -53,6 +57,32 @@ public class OptimizelyConfig {
         this.datafile = datafile;
     }
 
+    public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap,
+                            Map<String, OptimizelyFeature> featuresMap,
+                            String revision, String sdkKey, String environmentKey,
+                            List<Attribute> attributes,
+                            List<EventType> events) {
+        this(experimentsMap, featuresMap, revision, sdkKey, environmentKey, attributes, events, null);
+    }
+
+    public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap,
+                            Map<String, OptimizelyFeature> featuresMap,
+                            String revision,
+                            String sdkKey,
+                            String environmentKey,
+                            List<Attribute> attributes,
+                            List<EventType> events,
+                            String datafile) {
+        this.experimentsMap = experimentsMap;
+        this.featuresMap = featuresMap;
+        this.revision = revision;
+        this.sdkKey = sdkKey;
+        this.environmentKey = environmentKey;
+        this.attributes = attributes;
+        this.events = events;
+        this.datafile = datafile;
+    }
+
     public Map<String, OptimizelyExperiment> getExperimentsMap() {
         return experimentsMap;
     }
@@ -60,6 +90,10 @@ public class OptimizelyConfig {
     public Map<String, OptimizelyFeature> getFeaturesMap() {
         return featuresMap;
     }
+
+    public List<Attribute> getAttributes() { return attributes; }
+
+    public List<EventType> getEvents() { return events; }
 
     public String getRevision() {
         return revision;

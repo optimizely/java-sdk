@@ -156,6 +156,22 @@ public class OptimizelyConfigServiceTest {
         assertEquals(expectedOptimizelyVariableMap, optimizelyVariableMap);
     }
 
+    @Test
+    public void testGetAttributesMap(){
+        Map<String, OptimizelyAttribute> attributesMap = optimizelyConfigService.getAttributesMap(projectConfig.getAttributes());
+        Map<String, OptimizelyAttribute> expectedAttributesMap = optimizelyConfigService.getAttributesMap(expectedConfig.getAttributes());
+        assertEquals(expectedAttributesMap.size(), attributesMap.size());
+        assertEquals(expectedAttributesMap, attributesMap);
+    }
+
+    @Test
+    public void testGetEventsMap(){
+        Map<String, OptimizelyEvent> eventsMap = optimizelyConfigService.getEventsMap(projectConfig.getEventTypes());
+        Map<String, OptimizelyEvent> expectedEventsMap = optimizelyConfigService.getEventsMap(expectedConfig.getEvents());
+        assertEquals(expectedEventsMap.size(), eventsMap.size());
+        assertEquals(expectedEventsMap, eventsMap);
+    }
+
     private ProjectConfig generateOptimizelyConfig() {
         return new DatafileProjectConfig(
             "2360254204",
@@ -526,7 +542,29 @@ public class OptimizelyConfigServiceTest {
             optimizelyFeatureMap,
             "1480511547",
             "ValidProjectConfigV4",
-            "production"
+            "production",
+            asList(
+                new Attribute(
+                    "553339214",
+                    "house"
+                ),
+                new Attribute(
+                    "58339410",
+                    "nationality"
+                )
+            ),
+            asList(
+                new EventType(
+                    "3785620495",
+                    "basic_event",
+                    asList("1323241596", "2738374745", "3042640549", "3262035800", "3072915611")
+                ),
+                new EventType(
+                    "3195631717",
+                    "event_with_paused_experiment",
+                    asList("2667098701")
+                )
+            )
         );
     }
 }
