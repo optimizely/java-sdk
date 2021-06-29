@@ -27,13 +27,36 @@ public class OptimizelyConfigService {
     public OptimizelyConfigService(ProjectConfig projectConfig) {
         this.projectConfig = projectConfig;
 
+        List<OptimizelyAttribute> optimizelyAttributes = new ArrayList<>();
+        List<OptimizelyEvent> optimizelyEvents = new ArrayList<>();
+
         Map<String, OptimizelyExperiment> experimentsMap = getExperimentsMap();
+
+        for(Attribute attribute : projectConfig.getAttributes()){
+            OptimizelyAttribute copyAttribute = new OptimizelyAttribute(
+                attribute.getId(),
+                attribute.getKey()
+            );
+            optimizelyAttributes.add(copyAttribute);
+        }
+
+        for(EventType event : projectConfig.getEventTypes()){
+            OptimizelyEvent copyEvent = new OptimizelyEvent(
+                event.getId(),
+                event.getKey(),
+                event.getExperimentIds()
+            );
+            optimizelyEvents.add(copyEvent);
+        }
+
         optimizelyConfig = new OptimizelyConfig(
             experimentsMap,
             getFeaturesMap(experimentsMap),
             projectConfig.getRevision(),
             projectConfig.getSdkKey(),
             projectConfig.getEnvironmentKey(),
+            optimizelyAttributes,
+            optimizelyEvents,
             projectConfig.toDatafile()
         );
     }

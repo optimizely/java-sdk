@@ -526,7 +526,29 @@ public class OptimizelyConfigServiceTest {
             optimizelyFeatureMap,
             "1480511547",
             "ValidProjectConfigV4",
-            "production"
+            "production",
+            asList(
+                new OptimizelyAttribute(
+                    "553339214",
+                    "house"
+                ),
+                new OptimizelyAttribute(
+                    "58339410",
+                    "nationality"
+                )
+            ),
+            asList(
+                new OptimizelyEvent(
+                    "3785620495",
+                    "basic_event",
+                    asList("1323241596", "2738374745", "3042640549", "3262035800", "3072915611")
+                ),
+                new OptimizelyEvent(
+                    "3195631717",
+                    "event_with_paused_experiment",
+                    asList("2667098701")
+                )
+            )
         );
     }
 }
