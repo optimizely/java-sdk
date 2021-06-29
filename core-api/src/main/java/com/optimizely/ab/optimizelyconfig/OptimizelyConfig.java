@@ -30,8 +30,8 @@ public class OptimizelyConfig {
     
     private Map<String, OptimizelyExperiment> experimentsMap;
     private Map<String, OptimizelyFeature> featuresMap;
-    private List<Attribute> attributes;
-    private List<EventType> events;
+    private List<OptimizelyAttribute> attributes;
+    private List<OptimizelyEvent> events;
     private String revision;
     private String sdkKey;
     private String environmentKey;
@@ -60,8 +60,8 @@ public class OptimizelyConfig {
     public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap,
                             Map<String, OptimizelyFeature> featuresMap,
                             String revision, String sdkKey, String environmentKey,
-                            List<Attribute> attributes,
-                            List<EventType> events) {
+                            List<OptimizelyAttribute> attributes,
+                            List<OptimizelyEvent> events) {
         this(experimentsMap, featuresMap, revision, sdkKey, environmentKey, attributes, events, null);
     }
 
@@ -70,8 +70,8 @@ public class OptimizelyConfig {
                             String revision,
                             String sdkKey,
                             String environmentKey,
-                            List<Attribute> attributes,
-                            List<EventType> events,
+                            List<OptimizelyAttribute> attributes,
+                            List<OptimizelyEvent> events,
                             String datafile) {
         this.experimentsMap = experimentsMap;
         this.featuresMap = featuresMap;
@@ -91,9 +91,9 @@ public class OptimizelyConfig {
         return featuresMap;
     }
 
-    public List<Attribute> getAttributes() { return attributes; }
+    public List<OptimizelyAttribute> getAttributes() { return attributes; }
 
-    public List<EventType> getEvents() { return events; }
+    public List<OptimizelyEvent> getEvents() { return events; }
 
     public String getRevision() {
         return revision;

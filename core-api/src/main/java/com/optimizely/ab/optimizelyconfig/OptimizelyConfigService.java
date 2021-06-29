@@ -27,15 +27,36 @@ public class OptimizelyConfigService {
     public OptimizelyConfigService(ProjectConfig projectConfig) {
         this.projectConfig = projectConfig;
 
+        List<OptimizelyAttribute> optimizelyAttributes = new ArrayList<>();
+        List<OptimizelyEvent> optimizelyEvents = new ArrayList<>();
+
         Map<String, OptimizelyExperiment> experimentsMap = getExperimentsMap();
+
+        for(Attribute attribute : projectConfig.getAttributes()){
+            OptimizelyAttribute copyAttribute = new OptimizelyAttribute(
+                attribute.getId(),
+                attribute.getKey()
+            );
+            optimizelyAttributes.add(copyAttribute);
+        }
+
+        for(EventType event : projectConfig.getEventTypes()){
+            OptimizelyEvent copyEvent = new OptimizelyEvent(
+                event.getId(),
+                event.getKey(),
+                event.getExperimentIds()
+            );
+            optimizelyEvents.add(copyEvent);
+        }
+
         optimizelyConfig = new OptimizelyConfig(
             experimentsMap,
             getFeaturesMap(experimentsMap),
             projectConfig.getRevision(),
             projectConfig.getSdkKey(),
             projectConfig.getEnvironmentKey(),
-            projectConfig.getAttributes(),
-            projectConfig.getEventTypes(),
+            optimizelyAttributes,
+            optimizelyEvents,
             projectConfig.toDatafile()
         );
     }
@@ -216,41 +237,5 @@ public class OptimizelyConfigService {
         }
 
         return featureVariableKeyMap;
-    }
-
-    @VisibleForTesting
-    Map<String, OptimizelyAttribute> getAttributesMap(List<Attribute> attributes) {
-        if (attributes == null) {
-            return Collections.emptyMap();
-        }
-
-        Map<String, OptimizelyAttribute> attributeKeyMap = new HashMap<>();
-
-        for(Attribute attribute : attributes) {
-            attributeKeyMap.put(attribute.getKey(), new OptimizelyAttribute(
-                attribute.getId(),
-                attribute.getKey()
-            ));
-        }
-        return attributeKeyMap;
-    }
-
-    @VisibleForTesting
-    Map<String, OptimizelyEvent> getEventsMap(List<EventType> events) {
-        if (events == null) {
-            return Collections.emptyMap();
-        }
-
-        Map<String, OptimizelyEvent> eventsKeyMap = new HashMap<>();
-
-        for(EventType event : events) {
-            eventsKeyMap.put(event.getKey(), new OptimizelyEvent(
-                event.getId(),
-                event.getKey(),
-                event.getExperimentIds()
-            ));
-        }
-
-        return eventsKeyMap;
     }
 }
