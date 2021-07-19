@@ -16,7 +16,6 @@
  */
 package com.optimizely.ab.config.parser;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.Experiment.ExperimentStatus;
 import com.optimizely.ab.config.audience.Audience;
@@ -118,11 +117,11 @@ final public class JsonConfigParser implements ConfigParser {
 
     //======== Helper methods ========//
 
-    private List<Experiment> parseExperiments(JSONArray experimentJson) throws JsonProcessingException {
+    private List<Experiment> parseExperiments(JSONArray experimentJson){
         return parseExperiments(experimentJson, "");
     }
 
-    private List<Experiment> parseExperiments(JSONArray experimentJson, String groupId) throws JsonProcessingException {
+    private List<Experiment> parseExperiments(JSONArray experimentJson, String groupId){
         List<Experiment> experiments = new ArrayList<Experiment>(experimentJson.length());
 
         for (int i = 0; i < experimentJson.length(); i++) {
@@ -328,7 +327,7 @@ final public class JsonConfigParser implements ConfigParser {
         return audiences;
     }
 
-    private List<Group> parseGroups(JSONArray groupJson) throws JsonProcessingException {
+    private List<Group> parseGroups(JSONArray groupJson){
         List<Group> groups = new ArrayList<Group>(groupJson.length());
 
         for (int i = 0; i < groupJson.length(); i++) {
@@ -386,7 +385,7 @@ final public class JsonConfigParser implements ConfigParser {
         return featureVariableUsageInstances;
     }
 
-    private List<Rollout> parseRollouts(JSONArray rolloutsJson) throws JsonProcessingException {
+    private List<Rollout> parseRollouts(JSONArray rolloutsJson){
         List<Rollout> rollouts = new ArrayList<Rollout>(rolloutsJson.length());
 
         for (int i = 0; i < rolloutsJson.length(); i++) {
