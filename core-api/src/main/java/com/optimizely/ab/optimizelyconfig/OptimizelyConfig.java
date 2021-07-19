@@ -32,6 +32,7 @@ public class OptimizelyConfig {
     private Map<String, OptimizelyFeature> featuresMap;
     private List<OptimizelyAttribute> attributes;
     private List<OptimizelyEvent> events;
+    private List<OptimizelyAudience> audiences;
     private String revision;
     private String sdkKey;
     private String environmentKey;
@@ -61,8 +62,9 @@ public class OptimizelyConfig {
                             Map<String, OptimizelyFeature> featuresMap,
                             String revision, String sdkKey, String environmentKey,
                             List<OptimizelyAttribute> attributes,
-                            List<OptimizelyEvent> events) {
-        this(experimentsMap, featuresMap, revision, sdkKey, environmentKey, attributes, events, null);
+                            List<OptimizelyEvent> events,
+                            List<OptimizelyAudience> audiences) {
+        this(experimentsMap, featuresMap, revision, sdkKey, environmentKey, attributes, events, audiences, null);
     }
 
     public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap,
@@ -72,6 +74,7 @@ public class OptimizelyConfig {
                             String environmentKey,
                             List<OptimizelyAttribute> attributes,
                             List<OptimizelyEvent> events,
+                            List<OptimizelyAudience> audiences,
                             String datafile) {
         this.experimentsMap = experimentsMap;
         this.featuresMap = featuresMap;
@@ -80,6 +83,7 @@ public class OptimizelyConfig {
         this.environmentKey = environmentKey;
         this.attributes = attributes;
         this.events = events;
+        this.audiences = audiences;
         this.datafile = datafile;
     }
 
@@ -94,6 +98,8 @@ public class OptimizelyConfig {
     public List<OptimizelyAttribute> getAttributes() { return attributes; }
 
     public List<OptimizelyEvent> getEvents() { return events; }
+
+    public List<OptimizelyAudience> getAudiences() { return audiences; }
 
     public String getRevision() {
         return revision;

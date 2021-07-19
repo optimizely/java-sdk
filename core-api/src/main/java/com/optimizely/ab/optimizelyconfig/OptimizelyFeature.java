@@ -17,6 +17,7 @@ package com.optimizely.ab.optimizelyconfig;
 
 import com.optimizely.ab.config.IdKeyMapped;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,6 +27,9 @@ public class OptimizelyFeature implements IdKeyMapped {
 
     private String id;
     private String key;
+
+    private List<OptimizelyExperiment> deliveryRules;
+    private List<OptimizelyExperiment> experimentRules;
 
     private Map<String, OptimizelyExperiment> experimentsMap;
     private Map<String, OptimizelyVariable> variablesMap;
@@ -54,6 +58,18 @@ public class OptimizelyFeature implements IdKeyMapped {
 
     public Map<String, OptimizelyVariable> getVariablesMap() {
         return variablesMap;
+    }
+
+    public List<OptimizelyExperiment> getExperimentRules() { return experimentRules; }
+
+    public List<OptimizelyExperiment> getDeliveryRules() { return deliveryRules; }
+
+    public void setExperimentRules(List<OptimizelyExperiment> experimentRules) {
+        this.experimentRules = experimentRules;
+    }
+
+    public void setDeliveryRules(List<OptimizelyExperiment> deliveryRules) {
+        this.deliveryRules = deliveryRules;
     }
 
     @Override

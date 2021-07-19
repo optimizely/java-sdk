@@ -17,15 +17,22 @@ package com.optimizely.ab.optimizelyconfig;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.*;
+import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
+import com.optimizely.ab.config.audience.Condition;
+
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class OptimizelyConfigService {
 
     private ProjectConfig projectConfig;
     private OptimizelyConfig optimizelyConfig;
+    private List<OptimizelyAudience> audiences;
 
     public OptimizelyConfigService(ProjectConfig projectConfig) {
         this.projectConfig = projectConfig;
+        this.audiences = getAudiencesList(projectConfig.getTypedAudiences(), projectConfig.getAudiences());
 
         List<OptimizelyAttribute> optimizelyAttributes = new ArrayList<>();
         List<OptimizelyEvent> optimizelyEvents = new ArrayList<>();
@@ -40,7 +47,7 @@ public class OptimizelyConfigService {
             optimizelyAttributes.add(copyAttribute);
         }
 
-        for(EventType event : projectConfig.getEventTypes()){
+        for(EventType event : projectConfig.getEventTypes()) {
             OptimizelyEvent copyEvent = new OptimizelyEvent(
                 event.getId(),
                 event.getKey(),
@@ -57,6 +64,7 @@ public class OptimizelyConfigService {
             projectConfig.getEnvironmentKey(),
             optimizelyAttributes,
             optimizelyEvents,
+            this.audiences,
             projectConfig.toDatafile()
         );
     }
@@ -100,12 +108,25 @@ public class OptimizelyConfigService {
             return Collections.emptyMap();
         }
         Map<String, OptimizelyExperiment> featureExperimentMap = new HashMap<>();
+        Map<String, String> audiencesMap = new HashMap<>();
+
+        // Build audienceMap as [id:name]
+        for(OptimizelyAudience audience: this.audiences) {
+            audiencesMap.put(
+                audience.getId(),
+                audience.getName()
+            );
+        }
+
         for (Experiment experiment : experiments) {
-            featureExperimentMap.put(experiment.getKey(), new OptimizelyExperiment(
+            OptimizelyExperiment optimizelyExperiment = new OptimizelyExperiment(
                 experiment.getId(),
                 experiment.getKey(),
                 getVariationsMap(experiment.getVariations(), experiment.getId())
-            ));
+            );
+
+            optimizelyExperiment.setAudiences(experiment.serializeConditions(audiencesMap));
+            featureExperimentMap.put(experiment.getKey(), optimizelyExperiment);
         }
         return featureExperimentMap;
     }
@@ -195,14 +216,55 @@ public class OptimizelyConfigService {
 
         Map<String, OptimizelyFeature> optimizelyFeatureKeyMap = new HashMap<>();
         for (FeatureFlag featureFlag : featureFlags) {
-            optimizelyFeatureKeyMap.put(featureFlag.getKey(), new OptimizelyFeature(
+            Map<String, OptimizelyExperiment> experimentsMapForFeature =
+                getExperimentsMapForFeature(featureFlag.getExperimentIds(), allExperimentsMap);
+            OptimizelyFeature optimizelyFeature = new OptimizelyFeature(
                 featureFlag.getId(),
                 featureFlag.getKey(),
                 getExperimentsMapForFeature(featureFlag.getExperimentIds(), allExperimentsMap),
                 getFeatureVariablesMap(featureFlag.getVariables())
-            ));
+            );
+
+            List<OptimizelyExperiment> experimentRules =
+                new ArrayList<OptimizelyExperiment>(experimentsMapForFeature.values());
+            List<OptimizelyExperiment> deliveryRules =
+                this.getDeliveryRules(this.projectConfig.getRollouts(), featureFlag.getRolloutId());
+
+            optimizelyFeature.setDeliveryRules(deliveryRules);
+            optimizelyFeature.setExperimentRules(experimentRules);
+
+            optimizelyFeatureKeyMap.put(featureFlag.getKey(), optimizelyFeature);
         }
         return optimizelyFeatureKeyMap;
+    }
+
+    List<OptimizelyExperiment> getDeliveryRules(List<Rollout> rollouts, String rolloutId) {
+
+        List<OptimizelyExperiment> deliveryRules = new ArrayList<OptimizelyExperiment>();
+
+        Map<String, String> audiencesMap = new HashMap<>();
+
+        Rollout rollout = rollouts.stream().filter(r -> r.getId() == rolloutId).collect(Collectors.toList()).get(0);
+
+        if(rollout != null) {
+            for(OptimizelyAudience optimizelyAudience: this.audiences) {
+                audiencesMap.put(optimizelyAudience.getId(), optimizelyAudience.getName());
+            }
+
+            List<Experiment> rolloutExperiments = rollout.getExperiments();
+            for(Experiment experiment: rolloutExperiments) {
+                OptimizelyExperiment optimizelyExperiment = new OptimizelyExperiment(
+                    experiment.getId(),
+                    experiment.getKey(),
+                    this.getVariationsMap(experiment.getVariations(), experiment.getId())
+                );
+
+                optimizelyExperiment.setAudiences(experiment.serializeConditions(audiencesMap));
+                deliveryRules.add(optimizelyExperiment);
+            }
+        }
+
+        return Collections.emptyList();
     }
 
     @VisibleForTesting
@@ -237,5 +299,43 @@ public class OptimizelyConfigService {
         }
 
         return featureVariableKeyMap;
+    }
+
+    @VisibleForTesting
+    List<OptimizelyAudience> getAudiencesList(List<Audience> typedAudiences, List<Audience> audiences) {
+        List<OptimizelyAudience> audiencesList = new ArrayList<>();
+
+        /*
+        * This method merges typedAudiences with audiences from the Project
+        * config. Precedence is given to typedAudiences over audiences.
+        *
+        * Returns:
+        *   A new list with the merged audiences as OptimizelyAudience objects.
+        * */
+
+        // Convert existing Typed Audiences to OptimizelyAudience Objects
+        for(Audience audience: typedAudiences) {
+            OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
+                audience.getId(),
+                audience.getName(),
+                audience.getConditions().toString()
+            );
+            audiencesList.add(optimizelyAudience);
+        }
+
+        for(Audience audience: audiences) {
+            if(typedAudiences.stream().filter(a -> a.getId() == audience.getId()).collect(Collectors.toList()).size() == 0) {
+                if(audience.getId() != "$opt_dummy_audience") {
+                    OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
+                        audience.getId(),
+                        audience.getName(),
+                        audience.getConditions().toString()
+                    );
+                    audiencesList.add(optimizelyAudience);
+                }
+            }
+        }
+
+        return audiencesList;
     }
 }

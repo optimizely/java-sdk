@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config.parser;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.Experiment.ExperimentStatus;
 import com.optimizely.ab.config.audience.Audience;
@@ -117,11 +118,11 @@ final public class JsonConfigParser implements ConfigParser {
 
     //======== Helper methods ========//
 
-    private List<Experiment> parseExperiments(JSONArray experimentJson) {
+    private List<Experiment> parseExperiments(JSONArray experimentJson) throws JsonProcessingException {
         return parseExperiments(experimentJson, "");
     }
 
-    private List<Experiment> parseExperiments(JSONArray experimentJson, String groupId) {
+    private List<Experiment> parseExperiments(JSONArray experimentJson, String groupId) throws JsonProcessingException {
         List<Experiment> experiments = new ArrayList<Experiment>(experimentJson.length());
 
         for (int i = 0; i < experimentJson.length(); i++) {
@@ -142,6 +143,7 @@ final public class JsonConfigParser implements ConfigParser {
             }
 
             Condition conditions = null;
+
             if (experimentObject.has("audienceConditions")) {
                 Object jsonCondition = experimentObject.get("audienceConditions");
                 conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, jsonCondition);
@@ -326,7 +328,7 @@ final public class JsonConfigParser implements ConfigParser {
         return audiences;
     }
 
-    private List<Group> parseGroups(JSONArray groupJson) {
+    private List<Group> parseGroups(JSONArray groupJson) throws JsonProcessingException {
         List<Group> groups = new ArrayList<Group>(groupJson.length());
 
         for (int i = 0; i < groupJson.length(); i++) {
@@ -384,7 +386,7 @@ final public class JsonConfigParser implements ConfigParser {
         return featureVariableUsageInstances;
     }
 
-    private List<Rollout> parseRollouts(JSONArray rolloutsJson) {
+    private List<Rollout> parseRollouts(JSONArray rolloutsJson) throws JsonProcessingException {
         List<Rollout> rollouts = new ArrayList<Rollout>(rolloutsJson.length());
 
         for (int i = 0; i < rolloutsJson.length(); i++) {

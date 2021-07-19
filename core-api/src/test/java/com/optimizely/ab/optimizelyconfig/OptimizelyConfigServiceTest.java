@@ -548,6 +548,13 @@ public class OptimizelyConfigServiceTest {
                     "event_with_paused_experiment",
                     asList("2667098701")
                 )
+            ),
+            asList(
+                new OptimizelyAudience(
+                    "123456",
+                    "test_audience_1",
+                    "['and', ['or', '1', '2'], '3']"
+                )
             )
         );
     }

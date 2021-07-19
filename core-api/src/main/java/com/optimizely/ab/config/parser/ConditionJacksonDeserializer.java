@@ -121,9 +121,6 @@ public class ConditionJacksonDeserializer extends JsonDeserializer<Condition> {
             case "and":
                 condition = new AndCondition(conditions);
                 break;
-            case "or":
-                condition = new OrCondition(conditions);
-                break;
             case "not":
                 condition = new NotCondition(conditions.isEmpty() ? new NullCondition() : conditions.get(0));
                 break;
