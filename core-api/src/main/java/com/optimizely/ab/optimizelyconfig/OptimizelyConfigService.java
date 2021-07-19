@@ -315,6 +315,7 @@ public class OptimizelyConfigService {
         * */
 
         // Convert existing Typed Audiences to OptimizelyAudience Objects
+        Map<String, String> idLookupMap = new HashMap<>();
         for(Audience audience: typedAudiences) {
             OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
                 audience.getId(),
@@ -322,21 +323,20 @@ public class OptimizelyConfigService {
                 audience.getConditions().toString()
             );
             audiencesList.add(optimizelyAudience);
+            idLookupMap.put(audience.getId(), audience.getId());
         }
 
         for(Audience audience: audiences) {
-            if(typedAudiences.stream().filter(a -> a.getId().equals(audience.getId())).collect(Collectors.toList()).size() == 0) {
-                if(audience.getId() != "$opt_dummy_audience") {
-                    OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
-                        audience.getId(),
-                        audience.getName(),
-                        audience.getConditions().toString()
-                    );
-                    audiencesList.add(optimizelyAudience);
-                }
+            if(!idLookupMap.containsKey(audience.getId()) && audience.getId() != "$opt_dummy_audience") {
+                OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
+                    audience.getId(),
+                    audience.getName(),
+                    audience.getConditions().toString()
+                );
+                audiencesList.add(optimizelyAudience);
             }
         }
-
+        
         return audiencesList;
     }
 }
