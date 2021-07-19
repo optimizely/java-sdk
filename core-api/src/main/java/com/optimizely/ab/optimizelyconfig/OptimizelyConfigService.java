@@ -244,7 +244,7 @@ public class OptimizelyConfigService {
 
         Map<String, String> audiencesMap = new HashMap<>();
 
-        Rollout rollout = rollouts.stream().filter(r -> r.getId() == rolloutId).collect(Collectors.toList()).get(0);
+        Rollout rollout = rollouts.stream().filter(r -> r.getId().equals(rolloutId)).collect(Collectors.toList()).get(0);
 
         if(rollout != null) {
             for(OptimizelyAudience optimizelyAudience: this.audiences) {
@@ -262,6 +262,7 @@ public class OptimizelyConfigService {
                 optimizelyExperiment.setAudiences(experiment.serializeConditions(audiencesMap));
                 deliveryRules.add(optimizelyExperiment);
             }
+            return deliveryRules;
         }
 
         return Collections.emptyList();
@@ -324,7 +325,7 @@ public class OptimizelyConfigService {
         }
 
         for(Audience audience: audiences) {
-            if(typedAudiences.stream().filter(a -> a.getId() == audience.getId()).collect(Collectors.toList()).size() == 0) {
+            if(typedAudiences.stream().filter(a -> a.getId().equals(audience.getId())).collect(Collectors.toList()).size() == 0) {
                 if(audience.getId() != "$opt_dummy_audience") {
                     OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
                         audience.getId(),

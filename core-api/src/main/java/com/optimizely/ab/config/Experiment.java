@@ -181,8 +181,8 @@ public class Experiment implements IdKeyMapped {
     }
 
     private String getNameFromAudienceId(String audienceId, Map<String, String> audiencesMap) {
-        String audienceName = "\"" + audiencesMap.get(audienceId) + "\"";
-        return audienceName != null ? audienceName : "\"" + audienceId + "\"";
+        String audienceName = audiencesMap.get(audienceId);
+        return audienceName.isEmpty() ? "\"" + audienceName + "\"" : "\"" + audienceId + "\"";
     }
 
     private String getOperandOrAudienceId(Condition condition, Map<String, String> audiencesMap){
@@ -223,7 +223,7 @@ public class Experiment implements IdKeyMapped {
                 Condition notCondition = ((NotCondition<?>) condition).getCondition();
                 if(notCondition instanceof AudienceIdCondition) {
                     stringBuilder.append(serialize(notCondition, audiencesMap));
-                }else {
+                } else {
                     stringBuilder.append("(" + serialize(notCondition, audiencesMap)+ ")");
                 }
                 break;
@@ -251,17 +251,17 @@ public class Experiment implements IdKeyMapped {
                         String audienceName = this.getNameFromAudienceId(((AudienceIdCondition<?>) con).getAudienceId(),
                             audiencesMap);
                         stringBuilder.append( audienceName + " ");
-                    }else {
+                    } else {
                         stringBuilder.append("(" + serialize(con, audiencesMap) + ") ");
                     }
                     stringBuilder.append(operand);
                     stringBuilder.append(" ");
-                }else {
+                } else {
                     if(con instanceof AudienceIdCondition) {
                         String audienceName = this.getNameFromAudienceId(((AudienceIdCondition<?>) con).getAudienceId(),
                             audiencesMap);
                         stringBuilder.append(audienceName);
-                    }else {
+                    } else {
                         stringBuilder.append("(" + serialize(con, audiencesMap) + ")");
                     }
                 }
