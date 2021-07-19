@@ -117,7 +117,7 @@ final public class JsonConfigParser implements ConfigParser {
 
     //======== Helper methods ========//
 
-    private List<Experiment> parseExperiments(JSONArray experimentJson){
+    private List<Experiment> parseExperiments(JSONArray experimentJson) {
         return parseExperiments(experimentJson, "");
     }
 
