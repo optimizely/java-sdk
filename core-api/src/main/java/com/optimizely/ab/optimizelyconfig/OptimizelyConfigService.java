@@ -115,11 +115,13 @@ public class OptimizelyConfigService {
         Map<String, String> audiencesMap = new HashMap<>();
 
         // Build audienceMap as [id:name]
-        for (OptimizelyAudience audience: this.audiences) {
-            audiencesMap.put(
-                audience.getId(),
-                audience.getName()
-            );
+        if (this.audiences != null) {
+            for (OptimizelyAudience audience : this.audiences) {
+                audiencesMap.put(
+                    audience.getId(),
+                    audience.getName()
+                );
+            }
         }
 
         for (Experiment experiment : experiments) {
