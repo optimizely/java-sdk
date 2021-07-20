@@ -39,7 +39,7 @@ public class OptimizelyConfigService {
 
         Map<String, OptimizelyExperiment> experimentsMap = getExperimentsMap();
 
-        for(Attribute attribute : projectConfig.getAttributes()){
+        for (Attribute attribute : projectConfig.getAttributes()) {
             OptimizelyAttribute copyAttribute = new OptimizelyAttribute(
                 attribute.getId(),
                 attribute.getKey()
@@ -47,7 +47,7 @@ public class OptimizelyConfigService {
             optimizelyAttributes.add(copyAttribute);
         }
 
-        for(EventType event : projectConfig.getEventTypes()) {
+        for (EventType event : projectConfig.getEventTypes()) {
             OptimizelyEvent copyEvent = new OptimizelyEvent(
                 event.getId(),
                 event.getKey(),
@@ -111,7 +111,7 @@ public class OptimizelyConfigService {
         Map<String, String> audiencesMap = new HashMap<>();
 
         // Build audienceMap as [id:name]
-        for(OptimizelyAudience audience: this.audiences) {
+        for (OptimizelyAudience audience: this.audiences) {
             audiencesMap.put(
                 audience.getId(),
                 audience.getName()
@@ -246,13 +246,13 @@ public class OptimizelyConfigService {
 
         Rollout rollout = rollouts.stream().filter(r -> r.getId().equals(rolloutId)).collect(Collectors.toList()).get(0);
 
-        if(rollout != null) {
-            for(OptimizelyAudience optimizelyAudience: this.audiences) {
+        if (rollout != null) {
+            for (OptimizelyAudience optimizelyAudience: this.audiences) {
                 audiencesMap.put(optimizelyAudience.getId(), optimizelyAudience.getName());
             }
 
             List<Experiment> rolloutExperiments = rollout.getExperiments();
-            for(Experiment experiment: rolloutExperiments) {
+            for (Experiment experiment: rolloutExperiments) {
                 OptimizelyExperiment optimizelyExperiment = new OptimizelyExperiment(
                     experiment.getId(),
                     experiment.getKey(),
@@ -316,24 +316,28 @@ public class OptimizelyConfigService {
 
         // Convert existing Typed Audiences to OptimizelyAudience Objects
         Map<String, String> idLookupMap = new HashMap<>();
-        for(Audience audience: typedAudiences) {
-            OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
-                audience.getId(),
-                audience.getName(),
-                audience.getConditions().toString()
-            );
-            audiencesList.add(optimizelyAudience);
-            idLookupMap.put(audience.getId(), audience.getId());
-        }
-
-        for(Audience audience: audiences) {
-            if(!idLookupMap.containsKey(audience.getId()) && audience.getId() != "$opt_dummy_audience") {
+        if (!typedAudiences.isEmpty() && typedAudiences != null) {
+            for (Audience audience : typedAudiences) {
                 OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
                     audience.getId(),
                     audience.getName(),
                     audience.getConditions().toString()
                 );
                 audiencesList.add(optimizelyAudience);
+                idLookupMap.put(audience.getId(), audience.getId());
+            }
+        }
+
+        if (!audiences.isEmpty() && audiences != null) {
+            for (Audience audience : audiences) {
+                if (!idLookupMap.containsKey(audience.getId()) && audience.getId() != "$opt_dummy_audience") {
+                    OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
+                        audience.getId(),
+                        audience.getName(),
+                        audience.getConditions().toString()
+                    );
+                    audiencesList.add(optimizelyAudience);
+                }
             }
         }
         

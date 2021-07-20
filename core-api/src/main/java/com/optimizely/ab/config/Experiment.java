@@ -187,7 +187,7 @@ public class Experiment implements IdKeyMapped {
 
     private String getOperandOrAudienceId(Condition condition, Map<String, String> audiencesMap){
         String operand = "";
-        if(condition != null) {
+        if (condition != null) {
             if (condition instanceof AndCondition) {
                 operand = "AND";
             } else if (condition instanceof NotCondition) {
@@ -209,19 +209,19 @@ public class Experiment implements IdKeyMapped {
         List<Condition> conditions;
 
         String operand = this.getOperandOrAudienceId(condition, audiencesMap);
-        switch(operand){
-            case("AND"):
+        switch (operand){
+            case ("AND"):
                 conditions = ((AndCondition<?>) condition).getConditions();
                 stringBuilder.append(this.helper(operand, conditions, audiencesMap));
                 break;
-            case("OR"):
+            case ("OR"):
                 conditions = ((OrCondition<?>) condition).getConditions();
                 stringBuilder.append(this.helper(operand, conditions, audiencesMap));
                 break;
-            case("NOT"):
+            case ("NOT"):
                 stringBuilder.append(operand + " ");
                 Condition notCondition = ((NotCondition<?>) condition).getCondition();
-                if(notCondition instanceof AudienceIdCondition) {
+                if (notCondition instanceof AudienceIdCondition) {
                     stringBuilder.append(serialize(notCondition, audiencesMap));
                 } else {
                     stringBuilder.append("(" + serialize(notCondition, audiencesMap)+ ")");
@@ -238,16 +238,16 @@ public class Experiment implements IdKeyMapped {
     public String helper(String operand, List<Condition> conditions, Map<String, String> audiencesMap) {
         StringBuilder stringBuilder = new StringBuilder();
         int ctr = 0;
-        if(conditions.isEmpty()) {
+        if (conditions.isEmpty()) {
             return "";
-        }else if(conditions.size() == 1) {
+        } else if(conditions.size() == 1) {
             return serialize(conditions.get(0), audiencesMap);
         }
-        if(conditions.size() > 1) {
+        if (conditions.size() > 1) {
             for (Condition con : conditions) {
                 ctr++;
-                if(ctr + 1 <= conditions.size()) {
-                    if(con instanceof AudienceIdCondition) {
+                if (ctr + 1 <= conditions.size()) {
+                    if (con instanceof AudienceIdCondition) {
                         String audienceName = this.getNameFromAudienceId(((AudienceIdCondition<?>) con).getAudienceId(),
                             audiencesMap);
                         stringBuilder.append( audienceName + " ");
@@ -257,7 +257,7 @@ public class Experiment implements IdKeyMapped {
                     stringBuilder.append(operand);
                     stringBuilder.append(" ");
                 } else {
-                    if(con instanceof AudienceIdCondition) {
+                    if (con instanceof AudienceIdCondition) {
                         String audienceName = this.getNameFromAudienceId(((AudienceIdCondition<?>) con).getAudienceId(),
                             audiencesMap);
                         stringBuilder.append(audienceName);
