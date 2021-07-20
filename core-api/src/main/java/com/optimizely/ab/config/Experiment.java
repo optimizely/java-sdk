@@ -177,7 +177,7 @@ public class Experiment implements IdKeyMapped {
 
         Condition condition = this.audienceConditions;
 
-        return this.serialize(condition, audiencesMap);
+        return condition instanceof EmptyCondition ? "" : this.serialize(condition, audiencesMap);
     }
 
     private String getNameFromAudienceId(String audienceId, Map<String, String> audiencesMap) {
