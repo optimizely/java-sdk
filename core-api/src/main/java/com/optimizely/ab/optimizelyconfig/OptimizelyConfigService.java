@@ -39,21 +39,25 @@ public class OptimizelyConfigService {
 
         Map<String, OptimizelyExperiment> experimentsMap = getExperimentsMap();
 
-        for (Attribute attribute : projectConfig.getAttributes()) {
-            OptimizelyAttribute copyAttribute = new OptimizelyAttribute(
-                attribute.getId(),
-                attribute.getKey()
-            );
-            optimizelyAttributes.add(copyAttribute);
+        if (projectConfig.getAttributes() != null) {
+            for (Attribute attribute : projectConfig.getAttributes()) {
+                OptimizelyAttribute copyAttribute = new OptimizelyAttribute(
+                    attribute.getId(),
+                    attribute.getKey()
+                );
+                optimizelyAttributes.add(copyAttribute);
+            }
         }
 
-        for (EventType event : projectConfig.getEventTypes()) {
-            OptimizelyEvent copyEvent = new OptimizelyEvent(
-                event.getId(),
-                event.getKey(),
-                event.getExperimentIds()
-            );
-            optimizelyEvents.add(copyEvent);
+        if (projectConfig.getEventTypes() != null) {
+            for (EventType event : projectConfig.getEventTypes()) {
+                OptimizelyEvent copyEvent = new OptimizelyEvent(
+                    event.getId(),
+                    event.getKey(),
+                    event.getExperimentIds()
+                );
+                optimizelyEvents.add(copyEvent);
+            }
         }
 
         optimizelyConfig = new OptimizelyConfig(
