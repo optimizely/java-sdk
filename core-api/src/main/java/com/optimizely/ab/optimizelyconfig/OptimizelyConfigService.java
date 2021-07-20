@@ -304,19 +304,16 @@ public class OptimizelyConfigService {
 
     @VisibleForTesting
     List<OptimizelyAudience> getAudiencesList(List<Audience> typedAudiences, List<Audience> audiences) {
-        List<OptimizelyAudience> audiencesList = new ArrayList<>();
-
         /*
-        * This method merges typedAudiences with audiences from the Project
-        * config. Precedence is given to typedAudiences over audiences.
-        *
-        * Returns:
-        *   A new list with the merged audiences as OptimizelyAudience objects.
-        * */
-
-        // Convert existing Typed Audiences to OptimizelyAudience Objects
+         * This method merges typedAudiences with audiences from the Project
+         * config. Precedence is given to typedAudiences over audiences.
+         *
+         * Returns:
+         *   A new list with the merged audiences as OptimizelyAudience objects.
+         * */
+        List<OptimizelyAudience> audiencesList = new ArrayList<>();
         Map<String, String> idLookupMap = new HashMap<>();
-        if (!typedAudiences.isEmpty() && typedAudiences != null) {
+        if (typedAudiences != null) {
             for (Audience audience : typedAudiences) {
                 OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
                     audience.getId(),
@@ -328,7 +325,7 @@ public class OptimizelyConfigService {
             }
         }
 
-        if (!audiences.isEmpty() && audiences != null) {
+        if (audiences != null) {
             for (Audience audience : audiences) {
                 if (!idLookupMap.containsKey(audience.getId()) && audience.getId() != "$opt_dummy_audience") {
                     OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
