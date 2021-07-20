@@ -247,11 +247,13 @@ public class OptimizelyConfigService {
     List<OptimizelyExperiment> getDeliveryRules(List<Rollout> rollouts, String rolloutId) {
 
         List<OptimizelyExperiment> deliveryRules = new ArrayList<OptimizelyExperiment>();
+        Rollout rollout = null;
 
         Map<String, String> audiencesMap = new HashMap<>();
-
-        Rollout rollout = rollouts.stream().filter(r -> r.getId().equals(rolloutId)).collect(Collectors.toList()).get(0);
-
+        if (rollouts != null) {
+            List<Rollout> retrieved = rollouts.stream().filter(r -> r.getId().equals(rolloutId)).collect(Collectors.toList());
+            rollout = retrieved.isEmpty() ? null : retrieved.get(0);
+        }
         if (rollout != null) {
             for (OptimizelyAudience optimizelyAudience: this.audiences) {
                 audiencesMap.put(optimizelyAudience.getId(), optimizelyAudience.getName());
