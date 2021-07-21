@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * Represents the Audiences list {@link OptimizelyConfig}
  */
-public class OptimizelyAudience implements IdKeyMapped{
+public class OptimizelyAudience{
 
     private String id;
     private String name;
@@ -41,8 +41,6 @@ public class OptimizelyAudience implements IdKeyMapped{
 
     public String getName() { return name; }
 
-    public String getKey() { return name; }
-
     public String getConditions() { return conditions; }
 
     @Override
@@ -51,7 +49,7 @@ public class OptimizelyAudience implements IdKeyMapped{
         if (obj == this) return true;
         OptimizelyAudience optimizelyAudience = (OptimizelyAudience) obj;
         return id.equals(optimizelyAudience.getId()) &&
-            name.equals(optimizelyAudience.getKey()) &&
+            name.equals(optimizelyAudience.getName()) &&
             conditions.equals(optimizelyAudience.getConditions());
     }
 
