@@ -17,6 +17,7 @@ package com.optimizely.ab.optimizelyconfig;
 
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import static com.optimizely.ab.optimizelyconfig.OptimizelyExperimentTest.generateVariationMap;
@@ -75,7 +76,9 @@ public class OptimizelyConfigTest {
            "42",
            "test_feature_1",
             generateExperimentMap(),
-            generateVariablesMap()
+            generateVariablesMap(),
+            Collections.emptyList(),
+            Collections.emptyList()
         ));
         return  optimizelyFeatureMap;
     }
