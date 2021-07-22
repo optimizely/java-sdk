@@ -512,8 +512,8 @@ public class OptimizelyConfigServiceTest {
                         )
                     );
                 }},
-                Collections.emptyList(),
-                Collections.emptyList()
+                null,
+                null
             )
         );
         optimizelyFeatureMap.put(
@@ -523,8 +523,8 @@ public class OptimizelyConfigServiceTest {
                 "boolean_feature",
                 Collections.emptyMap(),
                 Collections.emptyMap(),
-                Collections.emptyList(),
-                Collections.emptyList()
+                Collections.<OptimizelyExperiment>emptyList(),
+                Collections.<OptimizelyExperiment>emptyList()
             )
         );
 
