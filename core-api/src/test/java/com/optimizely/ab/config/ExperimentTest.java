@@ -161,7 +161,8 @@ public class ExperimentTest {
 
         OrCondition scenario12 = new OrCondition(scenario12List);
 
-        // Scenario 13 - Empty String "" already accounted for in Datafile parsing
+        // Scenario 13 - ["and", ["and", invalidAudienceIdCondition]] which becomes
+        // the scenario of ["and", "and"] and results in empty string.
         AudienceIdCondition invalidAudience = new AudienceIdCondition("5");
         List<Condition> invalidIdList = new ArrayList<>();
         invalidIdList.add(invalidAudience);
