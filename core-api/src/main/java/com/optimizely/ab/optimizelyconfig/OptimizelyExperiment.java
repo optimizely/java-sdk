@@ -29,10 +29,11 @@ public class OptimizelyExperiment implements IdKeyMapped {
     private String audiences = "";
     private Map<String, OptimizelyVariation> variationsMap;
 
-    public OptimizelyExperiment(String id, String key, Map<String, OptimizelyVariation> variationsMap) {
+    public OptimizelyExperiment(String id, String key, Map<String, OptimizelyVariation> variationsMap, String audiences) {
         this.id = id;
         this.key = key;
         this.variationsMap = variationsMap;
+        this.audiences = audiences;
     }
 
     public String getId() {
@@ -49,8 +50,6 @@ public class OptimizelyExperiment implements IdKeyMapped {
         return variationsMap;
     }
 
-    public void setAudiences(String audiences) { this.audiences = audiences; }
-
     @Override
     public boolean equals(Object obj) {
         if (obj == null || getClass() != obj.getClass()) return false;
@@ -58,7 +57,8 @@ public class OptimizelyExperiment implements IdKeyMapped {
         OptimizelyExperiment optimizelyExperiment = (OptimizelyExperiment) obj;
         return id.equals(optimizelyExperiment.getId()) &&
             key.equals(optimizelyExperiment.getKey()) &&
-            variationsMap.equals(optimizelyExperiment.getVariationsMap());
+            variationsMap.equals(optimizelyExperiment.getVariationsMap()) &&
+            audiences.equals(optimizelyExperiment.getAudiences());
     }
 
     @Override

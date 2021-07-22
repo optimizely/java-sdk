@@ -32,7 +32,11 @@ public class OptimizelyConfigTest {
             generateFeatureMap(),
             "101",
             "testingSdkKey",
-            "development"
+            "development",
+            null,
+            null,
+            null,
+            null
         );
         assertEquals("101", optimizelyConfig.getRevision());
         assertEquals("testingSdkKey", optimizelyConfig.getSdkKey());
@@ -53,12 +57,14 @@ public class OptimizelyConfigTest {
         optimizelyExperimentMap.put("test_exp_1", new OptimizelyExperiment(
             "33",
             "test_exp_1",
-            generateVariationMap()
+            generateVariationMap(),
+            ""
         ));
         optimizelyExperimentMap.put("test_exp_2", new OptimizelyExperiment(
             "34",
             "test_exp_2",
-            generateVariationMap()
+            generateVariationMap(),
+            ""
         ));
         return optimizelyExperimentMap;
     }

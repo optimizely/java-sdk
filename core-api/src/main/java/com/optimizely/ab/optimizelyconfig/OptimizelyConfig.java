@@ -38,35 +38,6 @@ public class OptimizelyConfig {
     private String environmentKey;
     private String datafile;
 
-    public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap, 
-                            Map<String, OptimizelyFeature> featuresMap,
-                            String revision, String sdkKey, String environmentKey) {
-        this(experimentsMap, featuresMap, revision, sdkKey, environmentKey, null);
-    }
-
-    public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap,
-                            Map<String, OptimizelyFeature> featuresMap,
-                            String revision,
-                            String sdkKey,
-                            String environmentKey,
-                            String datafile) {
-        this.experimentsMap = experimentsMap;
-        this.featuresMap = featuresMap;
-        this.revision = revision;
-        this.sdkKey = sdkKey;
-        this.environmentKey = environmentKey;
-        this.datafile = datafile;
-    }
-
-    public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap,
-                            Map<String, OptimizelyFeature> featuresMap,
-                            String revision, String sdkKey, String environmentKey,
-                            List<OptimizelyAttribute> attributes,
-                            List<OptimizelyEvent> events,
-                            List<OptimizelyAudience> audiences) {
-        this(experimentsMap, featuresMap, revision, sdkKey, environmentKey, attributes, events, audiences, null);
-    }
-
     public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap,
                             Map<String, OptimizelyFeature> featuresMap,
                             String revision,
@@ -122,7 +93,10 @@ public class OptimizelyConfig {
         OptimizelyConfig optimizelyConfig = (OptimizelyConfig) obj;
         return revision.equals(optimizelyConfig.getRevision()) &&
             experimentsMap.equals(optimizelyConfig.getExperimentsMap()) &&
-            featuresMap.equals(optimizelyConfig.getFeaturesMap());
+            featuresMap.equals(optimizelyConfig.getFeaturesMap()) &&
+            attributes.equals(optimizelyConfig.getAttributes()) &&
+            events.equals(optimizelyConfig.getEvents()) &&
+            audiences.equals(optimizelyConfig.getAudiences());
     }
 
     @Override

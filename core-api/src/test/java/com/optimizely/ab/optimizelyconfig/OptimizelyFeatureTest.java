@@ -17,6 +17,7 @@ package com.optimizely.ab.optimizelyconfig;
 
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import static com.optimizely.ab.optimizelyconfig.OptimizelyVariationTest.generateVariablesMap;
@@ -31,7 +32,9 @@ public class OptimizelyFeatureTest {
             "41",
             "test_feature",
             generateExperimentMap(),
-            generateVariablesMap()
+            generateVariablesMap(),
+            Collections.emptyList(),
+            Collections.emptyList()
         );
         assertEquals("41", optimizelyFeature.getId());
         assertEquals("test_feature", optimizelyFeature.getKey());
@@ -50,12 +53,14 @@ public class OptimizelyFeatureTest {
         optimizelyExperimentMap.put("test_exp_1", new OptimizelyExperiment (
             "32",
             "test_exp_1",
-            generateVariationMap()
+            generateVariationMap(),
+            ""
         ));
         optimizelyExperimentMap.put("test_exp_2", new OptimizelyExperiment (
             "33",
             "test_exp_2",
-            generateVariationMap()
+            generateVariationMap(),
+            ""
         ));
         return optimizelyExperimentMap;
     }

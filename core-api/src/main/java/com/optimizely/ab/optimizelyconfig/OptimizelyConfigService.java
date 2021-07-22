@@ -29,6 +29,7 @@ public class OptimizelyConfigService {
     private ProjectConfig projectConfig;
     private OptimizelyConfig optimizelyConfig;
     private List<OptimizelyAudience> audiences;
+    private Map<String, String> audiencesMap;
 
     public OptimizelyConfigService(ProjectConfig projectConfig) {
         this.projectConfig = projectConfig;
@@ -57,6 +58,18 @@ public class OptimizelyConfigService {
                     event.getExperimentIds()
                 );
                 optimizelyEvents.add(copyEvent);
+            }
+        }
+
+        audiencesMap = new HashMap<>();
+
+        // Build audienceMap as [id:name]
+        if (this.audiences != null) {
+            for (OptimizelyAudience audience : this.audiences) {
+                audiencesMap.put(
+                    audience.getId(),
+                    audience.getName()
+                );
             }
         }
 
@@ -112,26 +125,15 @@ public class OptimizelyConfigService {
             return Collections.emptyMap();
         }
         Map<String, OptimizelyExperiment> featureExperimentMap = new HashMap<>();
-        Map<String, String> audiencesMap = new HashMap<>();
-
-        // Build audienceMap as [id:name]
-        if (this.audiences != null) {
-            for (OptimizelyAudience audience : this.audiences) {
-                audiencesMap.put(
-                    audience.getId(),
-                    audience.getName()
-                );
-            }
-        }
 
         for (Experiment experiment : experiments) {
             OptimizelyExperiment optimizelyExperiment = new OptimizelyExperiment(
                 experiment.getId(),
                 experiment.getKey(),
-                getVariationsMap(experiment.getVariations(), experiment.getId())
+                getVariationsMap(experiment.getVariations(), experiment.getId()),
+                experiment.serializeConditions(this.audiencesMap)
             );
 
-            optimizelyExperiment.setAudiences(experiment.serializeConditions(audiencesMap));
             featureExperimentMap.put(experiment.getKey(), optimizelyExperiment);
         }
         return featureExperimentMap;
@@ -224,50 +226,42 @@ public class OptimizelyConfigService {
         for (FeatureFlag featureFlag : featureFlags) {
             Map<String, OptimizelyExperiment> experimentsMapForFeature =
                 getExperimentsMapForFeature(featureFlag.getExperimentIds(), allExperimentsMap);
-            OptimizelyFeature optimizelyFeature = new OptimizelyFeature(
-                featureFlag.getId(),
-                featureFlag.getKey(),
-                getExperimentsMapForFeature(featureFlag.getExperimentIds(), allExperimentsMap),
-                getFeatureVariablesMap(featureFlag.getVariables())
-            );
 
             List<OptimizelyExperiment> experimentRules =
                 new ArrayList<OptimizelyExperiment>(experimentsMapForFeature.values());
             List<OptimizelyExperiment> deliveryRules =
-                this.getDeliveryRules(this.projectConfig.getRollouts(), featureFlag.getRolloutId());
+                this.getDeliveryRules(featureFlag.getRolloutId());
 
-            optimizelyFeature.setDeliveryRules(deliveryRules);
-            optimizelyFeature.setExperimentRules(experimentRules);
+            OptimizelyFeature optimizelyFeature = new OptimizelyFeature(
+                featureFlag.getId(),
+                featureFlag.getKey(),
+                experimentsMapForFeature,
+                getFeatureVariablesMap(featureFlag.getVariables()),
+                experimentRules,
+                deliveryRules
+            );
 
             optimizelyFeatureKeyMap.put(featureFlag.getKey(), optimizelyFeature);
         }
         return optimizelyFeatureKeyMap;
     }
 
-    List<OptimizelyExperiment> getDeliveryRules(List<Rollout> rollouts, String rolloutId) {
+    List<OptimizelyExperiment> getDeliveryRules(String rolloutId) {
 
         List<OptimizelyExperiment> deliveryRules = new ArrayList<OptimizelyExperiment>();
-        Rollout rollout = null;
 
-        Map<String, String> audiencesMap = new HashMap<>();
-        if (rollouts != null) {
-            List<Rollout> retrieved = rollouts.stream().filter(r -> r.getId().equals(rolloutId)).collect(Collectors.toList());
-            rollout = retrieved.isEmpty() ? null : retrieved.get(0);
-        }
+        Rollout rollout = projectConfig.getRolloutIdMapping().get(rolloutId);
+
         if (rollout != null) {
-            for (OptimizelyAudience optimizelyAudience: this.audiences) {
-                audiencesMap.put(optimizelyAudience.getId(), optimizelyAudience.getName());
-            }
-
             List<Experiment> rolloutExperiments = rollout.getExperiments();
             for (Experiment experiment: rolloutExperiments) {
                 OptimizelyExperiment optimizelyExperiment = new OptimizelyExperiment(
                     experiment.getId(),
                     experiment.getKey(),
-                    this.getVariationsMap(experiment.getVariations(), experiment.getId())
+                    this.getVariationsMap(experiment.getVariations(), experiment.getId()),
+                    experiment.serializeConditions(this.audiencesMap)
                 );
 
-                optimizelyExperiment.setAudiences(experiment.serializeConditions(audiencesMap));
                 deliveryRules.add(optimizelyExperiment);
             }
             return deliveryRules;

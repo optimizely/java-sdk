@@ -37,11 +37,15 @@ public class OptimizelyFeature implements IdKeyMapped {
     public OptimizelyFeature(String id,
                               String key, 
                               Map<String, OptimizelyExperiment> experimentsMap,
-                              Map<String, OptimizelyVariable> variablesMap) {
+                              Map<String, OptimizelyVariable> variablesMap,
+                             List<OptimizelyExperiment> experimentRules,
+                             List<OptimizelyExperiment> deliveryRules) {
         this.id = id;
         this.key = key;
         this.experimentsMap = experimentsMap;
         this.variablesMap = variablesMap;
+        this.experimentRules = experimentRules;
+        this.deliveryRules = deliveryRules;
     }
 
     public String getId() {
@@ -64,14 +68,6 @@ public class OptimizelyFeature implements IdKeyMapped {
 
     public List<OptimizelyExperiment> getDeliveryRules() { return deliveryRules; }
 
-    public void setExperimentRules(List<OptimizelyExperiment> experimentRules) {
-        this.experimentRules = experimentRules;
-    }
-
-    public void setDeliveryRules(List<OptimizelyExperiment> deliveryRules) {
-        this.deliveryRules = deliveryRules;
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (obj == null || getClass() != obj.getClass()) return false;
@@ -80,7 +76,9 @@ public class OptimizelyFeature implements IdKeyMapped {
         return id.equals(optimizelyFeature.getId()) &&
             key.equals(optimizelyFeature.getKey()) &&
             experimentsMap.equals(optimizelyFeature.getExperimentsMap()) &&
-            variablesMap.equals(optimizelyFeature.getVariablesMap());
+            variablesMap.equals(optimizelyFeature.getVariablesMap()) &&
+            deliveryRules.equals(optimizelyFeature.getDeliveryRules()) &&
+            experimentRules.equals(optimizelyFeature.getExperimentRules());
     }
 
     @Override

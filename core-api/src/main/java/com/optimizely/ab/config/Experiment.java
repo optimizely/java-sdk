@@ -44,7 +44,7 @@ public class Experiment implements IdKeyMapped {
     private final String groupId;
 
     private final List<String> audienceIds;
-    private final Condition audienceConditions;
+    private final Condition<AudienceIdCondition> audienceConditions;
     private final List<Variation> variations;
     private final List<TrafficAllocation> trafficAllocation;
 
@@ -212,11 +212,11 @@ public class Experiment implements IdKeyMapped {
         switch (operand){
             case ("AND"):
                 conditions = ((AndCondition<?>) condition).getConditions();
-                stringBuilder.append(this.helper(operand, conditions, audiencesMap));
+                stringBuilder.append(this.getNameOrNextCondition(operand, conditions, audiencesMap));
                 break;
             case ("OR"):
                 conditions = ((OrCondition<?>) condition).getConditions();
-                stringBuilder.append(this.helper(operand, conditions, audiencesMap));
+                stringBuilder.append(this.getNameOrNextCondition(operand, conditions, audiencesMap));
                 break;
             case ("NOT"):
                 stringBuilder.append(operand + " ");
@@ -235,15 +235,14 @@ public class Experiment implements IdKeyMapped {
         return stringBuilder.toString();
     }
 
-    public String helper(String operand, List<Condition> conditions, Map<String, String> audiencesMap) {
+    public String getNameOrNextCondition(String operand, List<Condition> conditions, Map<String, String> audiencesMap) {
         StringBuilder stringBuilder = new StringBuilder();
         int ctr = 0;
         if (conditions.isEmpty()) {
             return "";
         } else if(conditions.size() == 1) {
             return serialize(conditions.get(0), audiencesMap);
-        }
-        if (conditions.size() > 1) {
+        } else {
             for (Condition con : conditions) {
                 ctr++;
                 if (ctr + 1 <= conditions.size()) {

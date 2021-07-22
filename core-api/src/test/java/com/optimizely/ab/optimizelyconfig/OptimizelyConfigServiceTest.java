@@ -385,7 +385,8 @@ public class OptimizelyConfigServiceTest {
                                 }}
                             )
                         );
-                }}
+                }},
+                ""
             )
         );
         optimizelyExperimentMap.put(
@@ -412,7 +413,8 @@ public class OptimizelyConfigServiceTest {
                             Collections.emptyMap()
                         )
                     );
-                }}
+                }},
+                ""
             )
         );
 
@@ -485,7 +487,8 @@ public class OptimizelyConfigServiceTest {
                                         }}
                                     )
                                 );
-                            }}
+                            }},
+                            ""
                         )
                     );
                 }},
@@ -508,7 +511,9 @@ public class OptimizelyConfigServiceTest {
                             "arry"
                         )
                     );
-                }}
+                }},
+                Collections.emptyList(),
+                Collections.emptyList()
             )
         );
         optimizelyFeatureMap.put(
@@ -517,7 +522,9 @@ public class OptimizelyConfigServiceTest {
                 "4195505407",
                 "boolean_feature",
                 Collections.emptyMap(),
-                Collections.emptyMap()
+                Collections.emptyMap(),
+                Collections.emptyList(),
+                Collections.emptyList()
             )
         );
 
@@ -555,7 +562,8 @@ public class OptimizelyConfigServiceTest {
                     "test_audience_1",
                     "['and', ['or', '1', '2'], '3']"
                 )
-            )
+            ),
+            null
         );
     }
 }
