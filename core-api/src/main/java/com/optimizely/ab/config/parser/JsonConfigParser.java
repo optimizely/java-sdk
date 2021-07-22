@@ -142,7 +142,6 @@ final public class JsonConfigParser implements ConfigParser {
             }
 
             Condition conditions = null;
-
             if (experimentObject.has("audienceConditions")) {
                 Object jsonCondition = experimentObject.get("audienceConditions");
                 conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, jsonCondition);

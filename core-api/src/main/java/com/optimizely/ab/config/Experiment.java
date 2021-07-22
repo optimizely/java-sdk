@@ -174,9 +174,7 @@ public class Experiment implements IdKeyMapped {
     }
 
     public String serializeConditions(Map<String, String> audiencesMap) {
-
         Condition condition = this.audienceConditions;
-
         return condition instanceof EmptyCondition ? "" : this.serialize(condition, audiencesMap);
     }
 
@@ -241,7 +239,7 @@ public class Experiment implements IdKeyMapped {
         int ctr = 0;
         if (conditions.isEmpty()) {
             return "";
-        } else if(conditions.size() == 1) {
+        } else if (conditions.size() == 1) {
             return serialize(conditions.get(0), audiencesMap);
         } else {
             for (Condition con : conditions) {
