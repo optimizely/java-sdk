@@ -182,7 +182,7 @@ public class Experiment implements IdKeyMapped {
 
     private String getNameFromAudienceId(String audienceId, Map<String, String> audiencesMap) {
         String audienceName = audiencesMap.get(audienceId);
-        return !audienceName.isEmpty() ? "\"" + audienceName + "\"" : "\"" + audienceId + "\"";
+        return audienceName != null ? "\"" + audienceName + "\"" : "\"" + audienceId + "\"";
     }
 
     private String getOperandOrAudienceId(Condition condition, Map<String, String> audiencesMap){

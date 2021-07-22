@@ -61,6 +61,7 @@ public class ExperimentTest {
         expectedScenarioStringsMap.put(10, "(\"us\" OR (\"female\" AND \"adult\")) AND (\"fr\" AND (\"male\" OR \"kid\"))");
         expectedScenarioStringsMap.put(11, "NOT (\"us\" AND \"female\")");
         expectedScenarioStringsMap.put(12, "\"us\" OR \"100000\"");
+        expectedScenarioStringsMap.put(13, "");
 
         return expectedScenarioStringsMap;
     }
@@ -161,6 +162,13 @@ public class ExperimentTest {
         OrCondition scenario12 = new OrCondition(scenario12List);
 
         // Scenario 13 - Empty String "" already accounted for in Datafile parsing
+        AudienceIdCondition invalidAudience = new AudienceIdCondition("5");
+        List<Condition> invalidIdList = new ArrayList<>();
+        invalidIdList.add(invalidAudience);
+        AndCondition andCondition = new AndCondition(invalidIdList);
+        List<Condition> andInvalidAudienceId = new ArrayList<>();
+        andInvalidAudienceId.add(andCondition);
+        AndCondition scenario13 = new AndCondition(andInvalidAudienceId);
 
 
         List<Condition> conditionTestScenarios = new ArrayList<>();
@@ -176,6 +184,7 @@ public class ExperimentTest {
         conditionTestScenarios.add(scenario10);
         conditionTestScenarios.add(scenario11);
         conditionTestScenarios.add(scenario12);
+        conditionTestScenarios.add(scenario13);
 
         return conditionTestScenarios;
     }
