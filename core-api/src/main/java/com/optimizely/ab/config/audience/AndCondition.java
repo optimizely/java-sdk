@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  * Represents an 'And' conditions condition operation.
  */
-public class AndCondition<T> implements Condition<T> {
+public class  AndCondition<T> implements Condition<T> {
 
     private final List<Condition> conditions;
 
@@ -65,6 +65,28 @@ public class AndCondition<T> implements Condition<T> {
         }
 
         return true; // otherwise, return true
+    }
+
+    @Override
+    public String serialize() {
+        StringBuilder s = new StringBuilder();
+        for (int i = 0; i < conditions.size(); i++) {
+            Condition condition = conditions.get(i);
+            if (!(condition instanceof AudienceIdCondition)) {
+                if (i + 1 < conditions.size()) {
+                    s.append("(" + condition.serialize() + ")");
+                    s.append(" AND ");
+                } else {
+                    s.append("(" + condition.serialize() + ")");
+                }
+            } else if (i + 1 < conditions.size()) {
+                s.append(condition.serialize());
+                s.append(" AND ");
+            } else {
+                s.append(condition.serialize());
+            }
+        }
+        return s.toString();
     }
 
     @Override

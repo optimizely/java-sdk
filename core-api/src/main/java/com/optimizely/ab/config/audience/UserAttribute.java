@@ -119,6 +119,11 @@ public class UserAttribute<T> implements Condition<T> {
     }
 
     @Override
+    public String serialize() {
+        return this.toString();
+    }
+
+    @Override
     public String toString() {
         final String valueStr;
         if (value == null) {

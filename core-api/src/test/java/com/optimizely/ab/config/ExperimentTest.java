@@ -41,7 +41,7 @@ public class ExperimentTest {
                 Experiment experiment = makeMockExperimentWithStatus(Experiment.ExperimentStatus.RUNNING,
                     audienceConditionsScenarios.get(i));
                 String audiences = experiment.serializeConditions(audiencesMap);
-                assertEquals(audiences, expectedScenarioStringsMap.get(i+1));
+                assertEquals(expectedScenarioStringsMap.get(i+1), audiences);
             }
         }
 
@@ -68,11 +68,47 @@ public class ExperimentTest {
 
     public List<Condition> getAudienceConditionsList() {
         AudienceIdCondition one = new AudienceIdCondition("1");
+        Audience audience1 = new Audience(
+            "1",
+            "us",
+            new EmptyCondition()
+        );
+        one.setAudience(audience1);
         AudienceIdCondition two = new AudienceIdCondition("2");
+        Audience audience2 = new Audience(
+            "2",
+            "female",
+            new EmptyCondition()
+        );
+        two.setAudience(audience2);
         AudienceIdCondition three = new AudienceIdCondition("3");
+        Audience audience3 = new Audience(
+            "3",
+            "adult",
+            new EmptyCondition()
+        );
+        three.setAudience(audience3);
         AudienceIdCondition eleven = new AudienceIdCondition("11");
+        Audience audience11 = new Audience(
+            "11",
+            "fr",
+            new EmptyCondition()
+        );
+        eleven.setAudience(audience11);
         AudienceIdCondition twelve = new AudienceIdCondition("12");
+        Audience audience12 = new Audience(
+            "12",
+            "male",
+            new EmptyCondition()
+        );
+        twelve.setAudience(audience12);
         AudienceIdCondition thirteen = new AudienceIdCondition("13");
+        Audience audience13 = new Audience(
+            "13",
+            "kid",
+            new EmptyCondition()
+        );
+        thirteen.setAudience(audience13);
 
         // Scenario 1 - []
         EmptyCondition scenario1 = new EmptyCondition();
@@ -157,6 +193,12 @@ public class ExperimentTest {
         List<Condition> scenario12List = new ArrayList<>();
         scenario12List.add(one);
         AudienceIdCondition unknownAudience = new AudienceIdCondition("100000");
+        Audience audienceUnknown = new Audience(
+            "100000",
+            "100000",
+            new EmptyCondition()
+        );
+        unknownAudience.setAudience(audienceUnknown);
         scenario12List.add(unknownAudience);
 
         OrCondition scenario12 = new OrCondition(scenario12List);
@@ -164,6 +206,12 @@ public class ExperimentTest {
         // Scenario 13 - ["and", ["and", invalidAudienceIdCondition]] which becomes
         // the scenario of ["and", "and"] and results in empty string.
         AudienceIdCondition invalidAudience = new AudienceIdCondition("5");
+        Audience audience = new Audience(
+            "5",
+            "5",
+            new EmptyCondition()
+        );
+        invalidAudience.setAudience(audience);
         List<Condition> invalidIdList = new ArrayList<>();
         invalidIdList.add(invalidAudience);
         AndCondition andCondition = new AndCondition(invalidIdList);

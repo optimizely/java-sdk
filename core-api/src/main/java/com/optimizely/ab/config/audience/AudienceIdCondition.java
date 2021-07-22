@@ -64,6 +64,11 @@ public class AudienceIdCondition<T> implements Condition<T> {
         return audienceId;
     }
 
+    @Override
+    public String serialize() {
+        return audience.getName() != null ? "\"" + audience.getName() + "\"" : "\"" + audienceId + "\"";
+    }
+
     @Nullable
     @Override
     public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {

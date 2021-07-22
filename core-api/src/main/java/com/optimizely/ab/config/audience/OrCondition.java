@@ -66,6 +66,28 @@ public class OrCondition<T> implements Condition<T> {
     }
 
     @Override
+    public String serialize() {
+        StringBuilder s = new StringBuilder();
+        for (int i = 0; i < conditions.size(); i++) {
+            Condition condition = conditions.get(i);
+            if (!(condition instanceof AudienceIdCondition)) {
+                if (i + 1 < conditions.size()) {
+                    s.append("(" + condition.serialize() + ")");
+                    s.append(" OR ");
+                } else {
+                    s.append("(" + condition.serialize() + ")");
+                }
+            } else if (i + 1 < conditions.size()) {
+                s.append(condition.serialize());
+                s.append(" OR ");
+            } else {
+                s.append(condition.serialize());
+            }
+        }
+        return s.toString();
+    }
+
+    @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
 

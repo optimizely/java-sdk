@@ -48,6 +48,18 @@ public class NotCondition<T> implements Condition<T> {
     }
 
     @Override
+    public String serialize() {
+        StringBuilder s = new StringBuilder();
+        if (!(condition instanceof AudienceIdCondition)) {
+            s.append("NOT ");
+            s.append("(" + condition.serialize() + ")");
+        } else {
+            s.append("NOT " + condition.serialize());
+        }
+        return s.toString();
+    }
+
+    @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
 

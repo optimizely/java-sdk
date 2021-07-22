@@ -28,4 +28,6 @@ public interface Condition<T> {
 
     @Nullable
     Boolean evaluate(ProjectConfig config, Map<String, ?> attributes);
+
+    String serialize();
 }
