@@ -512,8 +512,72 @@ public class OptimizelyConfigServiceTest {
                         )
                     );
                 }},
-                null,
-                null
+                asList(
+                    new OptimizelyExperiment(
+                        "3262035800",
+                        "multivariate_experiment",
+                        new HashMap<String, OptimizelyVariation>() {{
+                            put(
+                                "Feorge",
+                                new OptimizelyVariation(
+                                    "3631049532",
+                                    "Feorge",
+                                    true,
+                                    new HashMap<String, OptimizelyVariable>() {{
+                                        put(
+                                            "first_letter",
+                                            new OptimizelyVariable(
+                                                "675244127",
+                                                "first_letter",
+                                                "string",
+                                                "F"
+                                            )
+                                        );
+                                        put(
+                                            "rest_of_name",
+                                            new OptimizelyVariable(
+                                                "4052219963",
+                                                "rest_of_name",
+                                                "string",
+                                                "eorge"
+                                            )
+                                        );
+                                    }}
+                                )
+                            );
+                            put(
+                                "Fred",
+                                new OptimizelyVariation(
+                                    "1880281238",
+                                    "Fred",
+                                    true,
+                                    new HashMap<String, OptimizelyVariable>() {{
+                                        put(
+                                            "first_letter",
+                                            new OptimizelyVariable(
+                                                "675244127",
+                                                "first_letter",
+                                                "string",
+                                                "F"
+                                            )
+                                        );
+                                        put(
+                                            "rest_of_name",
+                                            new OptimizelyVariable(
+                                                "4052219963",
+                                                "rest_of_name",
+                                                "string",
+                                                "red"
+                                            )
+                                        );
+                                    }}
+                                )
+                            );
+                        }},
+                        ""
+                    )
+                ),
+                Collections.<OptimizelyExperiment>emptyList()
             )
         );
         optimizelyFeatureMap.put(

@@ -85,7 +85,11 @@ public class OptimizelyFeature implements IdKeyMapped {
     @Override
     public int hashCode() {
         int result = id.hashCode();
-        result = 31 * result + experimentsMap.hashCode() + variablesMap.hashCode() + experimentRules.hashCode() + deliveryRules.hashCode();
+        result = 31 * result
+            + experimentsMap.hashCode()
+            + variablesMap.hashCode()
+            + experimentRules.hashCode()
+            + deliveryRules.hashCode();
         return result;
     }
 }
