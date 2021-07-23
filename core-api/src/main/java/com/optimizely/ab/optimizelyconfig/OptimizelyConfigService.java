@@ -34,6 +34,7 @@ public class OptimizelyConfigService {
     public OptimizelyConfigService(ProjectConfig projectConfig) {
         this.projectConfig = projectConfig;
         this.audiences = getAudiencesList(projectConfig.getTypedAudiences(), projectConfig.getAudiences());
+        this.audiencesMap = getAudiencesMap(this.audiences);
 
         List<OptimizelyAttribute> optimizelyAttributes = new ArrayList<>();
         List<OptimizelyEvent> optimizelyEvents = new ArrayList<>();
@@ -58,18 +59,6 @@ public class OptimizelyConfigService {
                     event.getExperimentIds()
                 );
                 optimizelyEvents.add(copyEvent);
-            }
-        }
-
-        audiencesMap = new HashMap<>();
-
-        // Build audienceMap as [id:name]
-        if (this.audiences != null) {
-            for (OptimizelyAudience audience : this.audiences) {
-                audiencesMap.put(
-                    audience.getId(),
-                    audience.getName()
-                );
             }
         }
 
@@ -125,6 +114,18 @@ public class OptimizelyConfigService {
             return Collections.emptyMap();
         }
         Map<String, OptimizelyExperiment> featureExperimentMap = new HashMap<>();
+
+        audiencesMap = new HashMap<>();
+
+        // Build audienceMap as [id:name]
+        if (this.audiences != null) {
+            for (OptimizelyAudience audience : this.audiences) {
+                audiencesMap.put(
+                    audience.getId(),
+                    audience.getName()
+                );
+            }
+        }
 
         for (Experiment experiment : experiments) {
             OptimizelyExperiment optimizelyExperiment = new OptimizelyExperiment(
@@ -341,5 +342,22 @@ public class OptimizelyConfigService {
         }
         
         return audiencesList;
+    }
+
+    @VisibleForTesting
+    Map<String, String> getAudiencesMap(List<OptimizelyAudience> optimizelyAudiences) {
+        Map<String, String> audiencesMap = new HashMap<>();
+
+        // Build audienceMap as [id:name]
+        if (optimizelyAudiences != null) {
+            for (OptimizelyAudience audience : optimizelyAudiences) {
+                audiencesMap.put(
+                    audience.getId(),
+                    audience.getName()
+                );
+            }
+        }
+
+        return audiencesMap;
     }
 }

@@ -156,6 +156,23 @@ public class OptimizelyConfigServiceTest {
         assertEquals(expectedOptimizelyVariableMap, optimizelyVariableMap);
     }
 
+    @Test
+    public void testGetAudiencesMap() {
+        Map<String, String> actualAudiencesMap = optimizelyConfigService.getAudiencesMap(
+            asList(
+                new OptimizelyAudience(
+                    "123456",
+                    "test_audience_1",
+                    "['and', ['or', '1', '2'], '3']"
+                )
+            )
+        );
+
+        Map<String, String> expectedAudiencesMap = optimizelyConfigService.getAudiencesMap(expectedConfig.getAudiences());
+
+        assertEquals(expectedAudiencesMap, actualAudiencesMap);
+    }
+
     private ProjectConfig generateOptimizelyConfig() {
         return new DatafileProjectConfig(
             "2360254204",
