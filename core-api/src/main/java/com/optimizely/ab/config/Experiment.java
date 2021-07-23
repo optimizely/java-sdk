@@ -223,7 +223,7 @@ public class Experiment implements IdKeyMapped {
                 if (notCondition instanceof AudienceIdCondition) {
                     stringBuilder.append(serialize(notCondition, audiencesMap));
                 } else {
-                    stringBuilder.append("(" + serialize(notCondition, audiencesMap)+ ")");
+                    stringBuilder.append("(" + serialize(notCondition, audiencesMap) + ")");
                 }
                 break;
             default:
