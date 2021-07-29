@@ -115,18 +115,6 @@ public class OptimizelyConfigService {
         }
         Map<String, OptimizelyExperiment> featureExperimentMap = new HashMap<>();
 
-        audiencesMap = new HashMap<>();
-
-        // Build audienceMap as [id:name]
-        if (this.audiences != null) {
-            for (OptimizelyAudience audience : this.audiences) {
-                audiencesMap.put(
-                    audience.getId(),
-                    audience.getName()
-                );
-            }
-        }
-
         for (Experiment experiment : experiments) {
             OptimizelyExperiment optimizelyExperiment = new OptimizelyExperiment(
                 experiment.getId(),
