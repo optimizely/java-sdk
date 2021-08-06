@@ -26,4 +26,7 @@ public class NullCondition<T> implements Condition<T> {
     public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
         return null;
     }
+
+    @Override
+    public String toJson() { return null; }
 }

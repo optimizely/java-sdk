@@ -163,7 +163,7 @@ public class OptimizelyConfigServiceTest {
                 new OptimizelyAudience(
                     "123456",
                     "test_audience_1",
-                    "['and', ['or', '1', '2'], '3']"
+                    "[\"and\", [\"or\", \"1\", \"2\"], \"3\"]"
                 )
             )
         );
@@ -641,7 +641,7 @@ public class OptimizelyConfigServiceTest {
                 new OptimizelyAudience(
                     "123456",
                     "test_audience_1",
-                    "['and', ['or', '1', '2'], '3']"
+                    "[\"and\", [\"or\", \"1\", \"2\"], \"3\"]"
                 )
             ),
             null

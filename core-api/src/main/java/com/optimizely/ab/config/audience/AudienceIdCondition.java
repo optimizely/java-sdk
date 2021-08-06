@@ -101,4 +101,7 @@ public class AudienceIdCondition<T> implements Condition<T> {
     public String toString() {
         return audienceId;
     }
+
+    @Override
+    public String toJson() { return null; }
 }

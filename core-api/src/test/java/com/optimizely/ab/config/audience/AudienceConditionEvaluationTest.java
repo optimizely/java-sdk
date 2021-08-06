@@ -115,7 +115,7 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
         assertNull(testInstance.evaluate(null, testUserAttributes));
         logbackVerifier.expectMessage(Level.WARN,
-            "Audience condition \"{\"name\"=\"browser_type\", \"type\"=\"custom_attribute\", \"match\"=\"gt\", \"value\"=\"20\"}\" evaluated to UNKNOWN because a value of type \"java.lang.String\" was passed for user attribute \"browser_type\"");
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because a value of type \"java.lang.String\" was passed for user attribute \"browser_type\"");
     }
 
     /**
@@ -126,7 +126,7 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
         assertNull(testInstance.evaluate(null, Collections.singletonMap("browser_type", null)));
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Audience condition \"{\"name\"=\"browser_type\", \"type\"=\"custom_attribute\", \"match\"=\"gt\", \"value\"=\"20\"}\" evaluated to UNKNOWN because a null value was passed for user attribute \"browser_type\"");
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because a null value was passed for user attribute \"browser_type\"");
     }
 
 
@@ -138,7 +138,7 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
         assertNull(testInstance.evaluate(null, Collections.EMPTY_MAP));
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Audience condition \"{\"name\"=\"browser_type\", \"type\"=\"custom_attribute\", \"match\"=\"gt\", \"value\"=\"20\"}\" evaluated to UNKNOWN because no value was passed for user attribute \"browser_type\"");
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because no value was passed for user attribute \"browser_type\"");
     }
 
     /**
@@ -149,7 +149,7 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
         assertNull(testInstance.evaluate(null, null));
         logbackVerifier.expectMessage(Level.DEBUG,
-            "Audience condition \"{\"name\"=\"browser_type\", \"type\"=\"custom_attribute\", \"match\"=\"gt\", \"value\"=\"20\"}\" evaluated to UNKNOWN because no value was passed for user attribute \"browser_type\"");
+            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because no value was passed for user attribute \"browser_type\"");
     }
 
     /**
@@ -160,8 +160,7 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstance = new UserAttribute("browser_type", "blah", "exists", "firefox");
         assertNull(testInstance.evaluate(null, testUserAttributes));
         logbackVerifier.expectMessage(Level.WARN,
-            "Audience condition \"{\"name\"=\"browser_type\", \"type\"=\"blah\", \"match\"=\"exists\", \"value\"=\"firefox\"}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.");
-            "Audience condition \"{\"name\"=\"browser_type\", \"type\"=\"blah\", \"match\"=\"exists\", \"value\"=\"firefox\"}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.");
+            "Audience condition \"{name='browser_type', type='blah', match='exists', value='firefox'}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.");
     }
 
     /**

@@ -27,4 +27,6 @@ public class EmptyCondition<T> implements Condition<T> {
         return true;
     }
 
+    @Override
+    public String toJson() { return null; }
 }

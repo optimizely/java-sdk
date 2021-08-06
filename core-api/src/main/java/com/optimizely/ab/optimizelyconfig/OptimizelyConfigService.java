@@ -306,7 +306,7 @@ public class OptimizelyConfigService {
                 OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
                     audience.getId(),
                     audience.getName(),
-                    audience.getConditions().toString()
+                    audience.getConditions().toJson()
                 );
                 audiencesList.add(optimizelyAudience);
                 idLookupMap.put(audience.getId(), audience.getId());
@@ -319,7 +319,7 @@ public class OptimizelyConfigService {
                     OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
                         audience.getId(),
                         audience.getName(),
-                        audience.getConditions().toString()
+                        audience.getConditions().toJson()
                     );
                     audiencesList.add(optimizelyAudience);
                 }

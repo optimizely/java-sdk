@@ -68,9 +68,23 @@ public class AndCondition<T> implements Condition<T> {
     }
 
     @Override
-    public String toString() {
+    public String toJson() {
         StringBuilder s = new StringBuilder();
         s.append("[\"and\", ");
+        for (int i = 0; i < conditions.size(); i++) {
+            s.append(conditions.get(i).toJson());
+            if (i < conditions.size() - 1)
+                s.append(", ");
+        }
+        s.append("]");
+
+        return s.toString();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        s.append("[and, ");
         for (int i = 0; i < conditions.size(); i++) {
             s.append(conditions.get(i));
             if (i < conditions.size() - 1)
