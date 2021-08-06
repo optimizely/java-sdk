@@ -315,7 +315,7 @@ public class OptimizelyConfigService {
 
         if (audiences != null) {
             for (Audience audience : audiences) {
-                if (!idLookupMap.containsKey(audience.getId()) && audience.getId() != "$opt_dummy_audience") {
+                if (!idLookupMap.containsKey(audience.getId()) && !audience.getId().equals("$opt_dummy_audience")) {
                     OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
                         audience.getId(),
                         audience.getName(),
