@@ -18,11 +18,8 @@ package com.optimizely.ab.optimizelyconfig;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
-import com.optimizely.ab.config.audience.AudienceIdCondition;
-import com.optimizely.ab.config.audience.Condition;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class OptimizelyConfigService {
 

@@ -124,15 +124,15 @@ public class UserAttribute<T> implements Condition<T> {
         if (value == null) {
             valueStr = "null";
         } else if (value instanceof String) {
-            valueStr = String.format("'%s'", value);
+            valueStr = String.format("%s", value);
         } else {
             valueStr = value.toString();
         }
-        return "{name='" + name + "\'" +
-            ", type='" + type + "\'" +
-            ", match='" + match + "\'" +
-            ", value=" + valueStr +
-            "}";
+        return "{\"name\"=\"" + name + "\"" +
+            ", \"type\"=\"" + type + "\"" +
+            ", \"match\"=\"" + match + "\"" +
+            ", \"value\"=\"" + valueStr +
+            "\"}";
     }
 
     @Override

@@ -51,7 +51,7 @@ public class NotCondition<T> implements Condition<T> {
     public String toString() {
         StringBuilder s = new StringBuilder();
 
-        s.append("[not, ");
+        s.append("[\"not\", ");
         s.append(condition);
         s.append("]");
 
