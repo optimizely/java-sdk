@@ -50,8 +50,8 @@ public class OptimizelyConfig {
         this.experimentsMap = experimentsMap;
         this.featuresMap = featuresMap;
         this.revision = revision;
-        this.sdkKey = sdkKey.isEmpty() || sdkKey == null ? "" : sdkKey;
-        this.environmentKey = environmentKey.isEmpty() || environmentKey == null ? "" : environmentKey;
+        this.sdkKey = sdkKey.isEmpty() ? "" : sdkKey;
+        this.environmentKey = environmentKey.isEmpty() ? "" : environmentKey;
         this.attributes = attributes;
         this.events = events;
         this.audiences = audiences;
