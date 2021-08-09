@@ -216,7 +216,7 @@ public class OptimizelyConfigService {
             List<OptimizelyExperiment> experimentRules =
                 new ArrayList<OptimizelyExperiment>(experimentsMapForFeature.values());
             List<OptimizelyExperiment> deliveryRules =
-                this.getDeliveryRules(featureFlag.getRolloutId(), featureFlag.getId());
+                this.getDeliveryRules(featureFlag.getRolloutId());
 
             OptimizelyFeature optimizelyFeature = new OptimizelyFeature(
                 featureFlag.getId(),
@@ -232,7 +232,7 @@ public class OptimizelyConfigService {
         return optimizelyFeatureKeyMap;
     }
 
-    List<OptimizelyExperiment> getDeliveryRules(String rolloutId, String featureId) {
+    List<OptimizelyExperiment> getDeliveryRules(String rolloutId) {
 
         List<OptimizelyExperiment> deliveryRules = new ArrayList<OptimizelyExperiment>();
 
