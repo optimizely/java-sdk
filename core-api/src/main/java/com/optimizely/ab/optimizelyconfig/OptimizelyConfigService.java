@@ -273,7 +273,7 @@ public class OptimizelyConfigService {
 
         Map<String, OptimizelyExperiment> optimizelyExperimentKeyMap = new HashMap<>();
         for (String experimentId : experimentIds) {
-            String experimentKey = projectConfig.getExperimentIdMapping().get(experimentId).getKey();
+            String experimentKey = experimentMapByExperimentId.get(experimentId).getKey();
             optimizelyExperimentKeyMap.put(experimentKey, allExperimentsMap.get(experimentKey));
         }
 
