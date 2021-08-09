@@ -273,23 +273,11 @@ public class OptimizelyConfigService {
 
         Map<String, OptimizelyExperiment> optimizelyExperimentKeyMap = new HashMap<>();
         for (String experimentId : experimentIds) {
-            String experimentKey = experimentMapByExperimentId.get(experimentId).getKey();
-            optimizelyExperimentKeyMap.put(experimentKey, allExperimentsMap.get(experimentKey));
+            Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
+            optimizelyExperimentKeyMap.put(experiment.getKey(), experimentMapByExperimentId.get(experiment.getId()));
         }
 
         return optimizelyExperimentKeyMap;
-    }
-
-    @VisibleForTesting
-    Map<String, OptimizelyExperiment> getExperimentRulesExperiments(List<String> experimentIds) {
-        if (experimentIds == null) {
-            return Collections.emptyMap();
-        }
-        Map<String, OptimizelyExperiment> optimizelyExperimentIdMap = new HashMap<>();
-        for (String experimentId : experimentIds) {
-            optimizelyExperimentIdMap.put(experimentId, experimentMapByExperimentId.get(experimentId));
-        }
-        return optimizelyExperimentIdMap;
     }
 
     @VisibleForTesting
