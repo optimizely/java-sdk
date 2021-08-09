@@ -206,7 +206,7 @@ final public class JsonConfigParser implements ConfigParser {
             JSONObject variationObject = (JSONObject) obj;
             String id = variationObject.getString("id");
             String key = variationObject.getString("key");
-            Boolean featureEnabled = null;
+            Boolean featureEnabled = false;
 
             if (variationObject.has("featureEnabled") && !variationObject.isNull("featureEnabled")) {
                 featureEnabled = variationObject.getBoolean("featureEnabled");
@@ -218,12 +218,7 @@ final public class JsonConfigParser implements ConfigParser {
                     parseFeatureVariableInstances(variationObject.getJSONArray("variables"));
             }
 
-            variations.add(new Variation(
-                id,
-                key,
-                featureEnabled,
-                featureVariableUsageInstances
-            ));
+            variations.add(new Variation(id, key, featureEnabled, featureVariableUsageInstances));
         }
 
         return variations;
