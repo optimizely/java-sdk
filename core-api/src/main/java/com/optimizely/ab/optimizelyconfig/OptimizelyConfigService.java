@@ -122,7 +122,7 @@ public class OptimizelyConfigService {
                 experiment.serializeConditions(this.audiencesMap)
             );
 
-            featureExperimentMap.put(experiment.getKey(), optimizelyExperiment);
+            featureExperimentMap.put(experiment.getId(), optimizelyExperiment);
         }
         return featureExperimentMap;
     }
@@ -271,8 +271,7 @@ public class OptimizelyConfigService {
 
         Map<String, OptimizelyExperiment> optimizelyExperimentKeyMap = new HashMap<>();
         for (String experimentId : experimentIds) {
-            String experimentKey = projectConfig.getExperimentIdMapping().get(experimentId).getKey();
-            optimizelyExperimentKeyMap.put(experimentKey, allExperimentsMap.get(experimentKey));
+            optimizelyExperimentKeyMap.put(experimentId, allExperimentsMap.get(experimentId));
         }
 
         return optimizelyExperimentKeyMap;
