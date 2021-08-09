@@ -143,18 +143,10 @@ public class UserAttribute<T> implements Condition<T> {
 
     @Override
     public String toString() {
-        final String valueStr;
-        if (value == null) {
-            valueStr = "null";
-        } else if (value instanceof String) {
-            valueStr = String.format("'%s'", value);
-        } else {
-            valueStr = value.toString();
-        }
         return "{name='" + name + "\'" +
             ", type='" + type + "\'" +
             ", match='" + match + "\'" +
-            ", value=" + valueStr +
+            ", value=" + ((value instanceof String) ? ("'" + getValueStr() + "'") : getValueStr()) +
             "}";
     }
 

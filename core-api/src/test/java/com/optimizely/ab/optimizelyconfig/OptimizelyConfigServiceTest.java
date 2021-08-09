@@ -124,7 +124,7 @@ public class OptimizelyConfigServiceTest {
     @Test
     public void testGetVariationsMap() {
         Map<String, OptimizelyVariation> optimizelyVariationMap =
-            optimizelyConfigService.getVariationsMap(projectConfig.getExperiments().get(1).getVariations(), "3262035800");
+            optimizelyConfigService.getVariationsMap(projectConfig.getExperiments().get(1).getVariations(), "3262035800", null);
         assertEquals(expectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap().size(), optimizelyVariationMap.size());
         assertEquals(expectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap(), optimizelyVariationMap);
     }
@@ -149,7 +149,7 @@ public class OptimizelyConfigServiceTest {
     @Test
     public void testGetMergedVariablesMap() {
         Variation variation = projectConfig.getExperiments().get(1).getVariations().get(1);
-        Map<String, OptimizelyVariable> optimizelyVariableMap = optimizelyConfigService.getMergedVariablesMap(variation, "3262035800");
+        Map<String, OptimizelyVariable> optimizelyVariableMap = optimizelyConfigService.getMergedVariablesMap(variation, "3262035800", null);
         Map<String, OptimizelyVariable> expectedOptimizelyVariableMap =
             expectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap().get("Feorge").getVariablesMap();
         assertEquals(expectedOptimizelyVariableMap.size(), optimizelyVariableMap.size());
