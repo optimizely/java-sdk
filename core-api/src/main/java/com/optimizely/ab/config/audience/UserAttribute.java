@@ -126,7 +126,7 @@ public class UserAttribute<T> implements Condition<T> {
         } else if (value instanceof String) {
             valueStr = String.format("%s", value);
         } else {
-            valueStr = "\"" + value.toString() + "\"";
+            valueStr = value.toString();
         }
         StringBuilder attributes = new StringBuilder();
         if (name != null) attributes.append("{\"name\":\"" + name + "\"");
