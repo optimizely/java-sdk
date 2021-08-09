@@ -224,6 +224,7 @@ public class OptimizelyConfigService {
 
             List<OptimizelyExperiment> experimentRules =
                 new ArrayList<OptimizelyExperiment>(getExperimentRulesExperiments(featureFlag.getExperimentIds()).values());
+            Collections.reverse(experimentRules);
             List<OptimizelyExperiment> deliveryRules =
                 this.getDeliveryRules(featureFlag.getRolloutId(), featureFlag.getId());
 
