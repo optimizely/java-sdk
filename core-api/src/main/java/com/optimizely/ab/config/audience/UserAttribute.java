@@ -128,11 +128,13 @@ public class UserAttribute<T> implements Condition<T> {
         } else {
             valueStr = "\"" + value.toString() + "\"";
         }
-        return "{\"name\":\"" + name + "\"" +
-            ", \"type\":\"" + type + "\"" +
-            ", \"match\":\"" + match + "\"" +
-            ", \"value\":" + valueStr +
-            "}";
+        StringBuilder attributes = new StringBuilder();
+        if (name != null) attributes.append("{\"name\":\"" + name + "\"");
+        if (type != null) attributes.append(", \"type\":\"" + type + "\"");
+        if (match != null) attributes.append(", \"match\":\"" + match + "\"");
+        attributes.append(", \"value\":" + valueStr + "}");
+
+        return attributes.toString();
     }
 
     @Override
