@@ -136,7 +136,7 @@ public class UserAttribute<T> implements Condition<T> {
         if (name != null) attributes.append("{\"name\":\"" + name + "\"");
         if (type != null) attributes.append(", \"type\":\"" + type + "\"");
         if (match != null) attributes.append(", \"match\":\"" + match + "\"");
-        attributes.append(", \"value\":\"" + getValueStr() + "\"}");
+        attributes.append(", \"value\":" + ((value instanceof String) ? ("\"" + getValueStr() + "\"") : getValueStr()) + "}");
 
         return attributes.toString();
     }

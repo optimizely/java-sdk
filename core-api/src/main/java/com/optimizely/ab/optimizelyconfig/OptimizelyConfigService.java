@@ -132,7 +132,7 @@ public class OptimizelyConfigService {
         if (variations == null) {
             return Collections.emptyMap();
         }
-       
+
         Map<String, OptimizelyVariation> variationKeyMap = new HashMap<>();
         for (Variation variation : variations) {
             variationKeyMap.put(variation.getKey(), new OptimizelyVariation(
