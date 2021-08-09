@@ -223,8 +223,7 @@ public class OptimizelyConfigService {
                 getExperimentsMapForFeature(featureFlag.getExperimentIds(), allExperimentsMap);
 
             List<OptimizelyExperiment> experimentRules =
-                new ArrayList<OptimizelyExperiment>(getExperimentRulesExperiments(featureFlag.getExperimentIds()).values());
-            Collections.reverse(experimentRules);
+                new ArrayList<OptimizelyExperiment>(experimentsMapForFeature.values());
             List<OptimizelyExperiment> deliveryRules =
                 this.getDeliveryRules(featureFlag.getRolloutId(), featureFlag.getId());
 
