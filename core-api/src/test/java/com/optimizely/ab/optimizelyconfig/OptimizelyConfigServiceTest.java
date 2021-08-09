@@ -125,8 +125,8 @@ public class OptimizelyConfigServiceTest {
     public void testGetVariationsMap() {
         Map<String, OptimizelyVariation> optimizelyVariationMap =
             optimizelyConfigService.getVariationsMap(projectConfig.getExperiments().get(1).getVariations(), "3262035800", null);
-        assertEquals(expectedConfig.getExperimentsMap().get("3262035800").getVariationsMap().size(), optimizelyVariationMap.size());
-        assertEquals(expectedConfig.getExperimentsMap().get("3262035800").getVariationsMap(), optimizelyVariationMap);
+        assertEquals(expectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap().size(), optimizelyVariationMap.size());
+        assertEquals(expectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap(), optimizelyVariationMap);
     }
 
     @Test
@@ -151,7 +151,7 @@ public class OptimizelyConfigServiceTest {
         Variation variation = projectConfig.getExperiments().get(1).getVariations().get(1);
         Map<String, OptimizelyVariable> optimizelyVariableMap = optimizelyConfigService.getMergedVariablesMap(variation, "3262035800", null);
         Map<String, OptimizelyVariable> expectedOptimizelyVariableMap =
-            expectedConfig.getExperimentsMap().get("3262035800").getVariationsMap().get("Feorge").getVariablesMap();
+            expectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap().get("Feorge").getVariablesMap();
         assertEquals(expectedOptimizelyVariableMap.size(), optimizelyVariableMap.size());
         assertEquals(expectedOptimizelyVariableMap, optimizelyVariableMap);
     }
@@ -341,7 +341,7 @@ public class OptimizelyConfigServiceTest {
     OptimizelyConfig getExpectedConfig() {
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = new HashMap<>();
         optimizelyExperimentMap.put(
-            "3262035800",
+            "multivariate_experiment",
             new OptimizelyExperiment(
                 "3262035800",
                 "multivariate_experiment",
@@ -407,7 +407,7 @@ public class OptimizelyConfigServiceTest {
             )
         );
         optimizelyExperimentMap.put(
-            "1323241596",
+            "basic_experiment",
             new OptimizelyExperiment(
                 "1323241596",
                 "basic_experiment",
@@ -443,7 +443,7 @@ public class OptimizelyConfigServiceTest {
                 "multi_variate_feature",
                 new HashMap<String, OptimizelyExperiment>() {{
                     put(
-                        "3262035800",
+                        "multivariate_experiment",
                         new OptimizelyExperiment(
                             "3262035800",
                             "multivariate_experiment",
