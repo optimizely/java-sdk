@@ -138,7 +138,7 @@ public class OptimizelyConfigService {
             variationKeyMap.put(variation.getKey(), new OptimizelyVariation(
                 variation.getId(),
                 variation.getKey(),
-                isFeatureExperiment ? variation.getFeatureEnabled() : null,
+                variation.getFeatureEnabled(),
                 getMergedVariablesMap(variation, experimentId, featureId)
             ));
         }
