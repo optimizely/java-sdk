@@ -132,21 +132,37 @@ public class UserAttribute<T> implements Condition<T> {
 
     @Override
     public String toJson() {
+        final String valueStr;
+        if (value == null) {
+            valueStr = "null";
+        } else if (value instanceof String) {
+            valueStr = String.format("%s", value);
+        } else {
+            valueStr = value.toString();
+        }
         StringBuilder attributes = new StringBuilder();
         if (name != null) attributes.append("{\"name\":\"" + name + "\"");
         if (type != null) attributes.append(", \"type\":\"" + type + "\"");
         if (match != null) attributes.append(", \"match\":\"" + match + "\"");
-        attributes.append(", \"value\":\"" + getValueStr() + "\"}");
+        attributes.append(", \"value\":\"" + valueStr + "\"}");
 
         return attributes.toString();
     }
 
     @Override
     public String toString() {
+        final String valueStr;
+        if (value == null) {
+            valueStr = "null";
+        } else if (value instanceof String) {
+            valueStr = String.format("'%s'", value);
+        } else {
+            valueStr = value.toString();
+        }
         return "{name='" + name + "\'" +
             ", type='" + type + "\'" +
             ", match='" + match + "\'" +
-            ", value=" + getValueStr() +
+            ", value=" + valueStr +
             "}";
     }
 
