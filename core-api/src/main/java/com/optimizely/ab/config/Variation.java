@@ -48,7 +48,7 @@ public class Variation implements IdKeyMapped {
     public Variation(String id,
                      String key,
                      List<FeatureVariableUsageInstance> featureVariableUsageInstances) {
-        this(id, key, false, featureVariableUsageInstances);
+        this(id, key, null, featureVariableUsageInstances);
     }
 
     @JsonCreator
@@ -61,7 +61,7 @@ public class Variation implements IdKeyMapped {
         if (featureEnabled != null)
             this.featureEnabled = featureEnabled;
         else
-            this.featureEnabled = false;
+            this.featureEnabled = null;
         if (featureVariableUsageInstances == null) {
             this.featureVariableUsageInstances = Collections.emptyList();
         } else {
