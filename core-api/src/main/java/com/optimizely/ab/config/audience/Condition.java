@@ -30,4 +30,6 @@ public interface Condition<T> {
     Boolean evaluate(ProjectConfig config, Map<String, ?> attributes);
 
     String toJson();
+
+    String getOperandOrId();
 }

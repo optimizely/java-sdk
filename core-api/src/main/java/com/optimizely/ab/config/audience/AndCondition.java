@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * Represents an 'And' conditions condition operation.
@@ -30,6 +31,7 @@ import java.util.Map;
 public class AndCondition<T> implements Condition<T> {
 
     private final List<Condition> conditions;
+    private static final String OPERAND = "AND";
 
     public AndCondition(@Nonnull List<Condition> conditions) {
         this.conditions = conditions;
@@ -68,16 +70,17 @@ public class AndCondition<T> implements Condition<T> {
     }
 
     @Override
-    public String toJson() {
-        StringBuilder s = new StringBuilder();
-        s.append("[\"and\", ");
-        for (int i = 0; i < conditions.size(); i++) {
-            s.append(conditions.get(i).toJson());
-            if (i < conditions.size() - 1)
-                s.append(", ");
-        }
-        s.append("]");
+    public String getOperandOrId() {
+        return OPERAND;
+    }
 
+    @Override
+    public String toJson() {
+        StringJoiner s = new StringJoiner(", ", "[", "]");
+        s.add("\"and\"");
+        for (int i = 0; i < conditions.size(); i++) {
+            s.add(conditions.get(i).toJson());
+        }
         return s.toString();
     }
 

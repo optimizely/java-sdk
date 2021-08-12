@@ -118,6 +118,11 @@ public class UserAttribute<T> implements Condition<T> {
         return null;
     }
 
+    @Override
+    public String getOperandOrId() {
+        return null;
+    }
+
     public String getValueStr() {
         final String valueStr;
         if (value == null) {

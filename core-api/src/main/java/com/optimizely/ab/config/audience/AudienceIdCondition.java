@@ -64,6 +64,11 @@ public class AudienceIdCondition<T> implements Condition<T> {
         return audienceId;
     }
 
+    @Override
+    public String getOperandOrId() {
+        return audienceId;
+    }
+
     @Nullable
     @Override
     public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {

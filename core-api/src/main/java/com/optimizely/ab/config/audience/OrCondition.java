@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * Represents an 'Or' conditions condition operation.
@@ -30,6 +31,7 @@ import java.util.Map;
 @Immutable
 public class OrCondition<T> implements Condition<T> {
     private final List<Condition> conditions;
+    private static final String OPERAND = "OR";
 
     public OrCondition(@Nonnull List<Condition> conditions) {
         this.conditions = conditions;
@@ -66,17 +68,17 @@ public class OrCondition<T> implements Condition<T> {
     }
 
     @Override
+    public String getOperandOrId() {
+        return OPERAND;
+    }
+
+    @Override
     public String toJson() {
-        StringBuilder s = new StringBuilder();
-
-        s.append("[\"or\", ");
+        StringJoiner s = new StringJoiner(", ", "[", "]");
+        s.add("\"or\"");
         for (int i = 0; i < conditions.size(); i++) {
-            s.append(conditions.get(i).toJson());
-            if (i < conditions.size() - 1)
-                s.append(", ");
+            s.add(conditions.get(i).toJson());
         }
-        s.append("]");
-
         return s.toString();
     }
 

@@ -29,4 +29,9 @@ public class NullCondition<T> implements Condition<T> {
 
     @Override
     public String toJson() { return null; }
+
+    @Override
+    public String getOperandOrId() {
+        return null;
+    }
 }

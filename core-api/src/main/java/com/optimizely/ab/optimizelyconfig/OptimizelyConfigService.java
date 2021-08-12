@@ -110,7 +110,7 @@ public class OptimizelyConfigService {
     @VisibleForTesting
     Map<String, OptimizelyExperiment> getExperimentsMap() {
         List<Experiment> experiments = projectConfig.getExperiments();
-        
+
         if (experiments == null) {
             return Collections.emptyMap();
         }

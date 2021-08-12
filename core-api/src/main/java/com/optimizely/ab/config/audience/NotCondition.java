@@ -23,6 +23,7 @@ import javax.annotation.concurrent.Immutable;
 import javax.annotation.Nonnull;
 
 import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * Represents a 'Not' conditions condition operation.
@@ -31,6 +32,7 @@ import java.util.Map;
 public class NotCondition<T> implements Condition<T> {
 
     private final Condition condition;
+    private static final String OPERAND = "NOT";
 
     public NotCondition(@Nonnull Condition condition) {
         this.condition = condition;
@@ -48,13 +50,15 @@ public class NotCondition<T> implements Condition<T> {
     }
 
     @Override
+    public String getOperandOrId() {
+        return OPERAND;
+    }
+
+    @Override
     public String toJson() {
-        StringBuilder s = new StringBuilder();
-
-        s.append("[\"not\", ");
-        s.append(condition.toJson());
-        s.append("]");
-
+        StringJoiner s = new StringJoiner(", ","[","]");
+        s.add("\"not\"");
+        s.add(condition.toJson());
         return s.toString();
     }
 
