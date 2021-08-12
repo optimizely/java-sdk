@@ -34,7 +34,7 @@ public class OptimizelyFeature implements IdKeyMapped {
 
     /**
      * @Deprecated The experimentsMap has been deprecated. </br>
-     *              {Will be removed un the next version} </br>
+     *              {Will be removed in the upcoming version} </br>
      *              Use experimentRules and deliveryRules instead.
      * */
     @Deprecated()
