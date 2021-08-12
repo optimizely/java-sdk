@@ -53,7 +53,7 @@ public class OptimizelyConfig {
         // across multiple flags, so this map may not include all experiments
         // when keys conflict.
         this.experimentsMap = experimentsMap;
-        
+
         this.featuresMap = featuresMap;
         this.revision = revision;
         this.sdkKey = sdkKey == null ?  "" : sdkKey;
