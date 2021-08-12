@@ -57,6 +57,17 @@ public class AudienceConditionEvaluationTest {
     }
 
     /**
+     * Verify that UserAttribute.toJson returns a json represented string of conditions.
+     */
+    @Test
+    public void userAttributeConditionsToJson() throws Exception {
+        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "true", "safari");
+        String expectedConditionJsonString = "{\"name\":\"browser_type\", \"type\":\"custom_attribute\", \"match\":\"true\", \"value\":\"safari\"}";
+        assertEquals(testInstance.toJson(), expectedConditionJsonString);
+    }
+
+
+    /**
      * Verify that UserAttribute.evaluate returns true on exact-matching visitor attribute data.
      */
     @Test

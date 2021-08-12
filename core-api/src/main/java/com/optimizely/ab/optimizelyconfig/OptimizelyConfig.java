@@ -17,6 +17,8 @@ package com.optimizely.ab.optimizelyconfig;
 
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.optimizely.ab.config.Attribute;
+import com.optimizely.ab.config.EventType;
 
 import java.util.*;
 
@@ -25,31 +27,40 @@ import java.util.*;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OptimizelyConfig {
-    
+
     private Map<String, OptimizelyExperiment> experimentsMap;
     private Map<String, OptimizelyFeature> featuresMap;
+    private List<OptimizelyAttribute> attributes;
+    private List<OptimizelyEvent> events;
+    private List<OptimizelyAudience> audiences;
     private String revision;
     private String sdkKey;
     private String environmentKey;
     private String datafile;
-
-    public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap, 
-                            Map<String, OptimizelyFeature> featuresMap,
-                            String revision, String sdkKey, String environmentKey) {
-        this(experimentsMap, featuresMap, revision, sdkKey, environmentKey, null);
-    }
 
     public OptimizelyConfig(Map<String, OptimizelyExperiment> experimentsMap,
                             Map<String, OptimizelyFeature> featuresMap,
                             String revision,
                             String sdkKey,
                             String environmentKey,
+                            List<OptimizelyAttribute> attributes,
+                            List<OptimizelyEvent> events,
+                            List<OptimizelyAudience> audiences,
                             String datafile) {
+
+        // This experimentsMap is for experiments of legacy projects only.
+        // For flag projects, experiment keys are not guaranteed to be unique
+        // across multiple flags, so this map may not include all experiments
+        // when keys conflict.
         this.experimentsMap = experimentsMap;
+
         this.featuresMap = featuresMap;
         this.revision = revision;
-        this.sdkKey = sdkKey;
-        this.environmentKey = environmentKey;
+        this.sdkKey = sdkKey == null ?  "" : sdkKey;
+        this.environmentKey = environmentKey == null ? "" : environmentKey;
+        this.attributes = attributes;
+        this.events = events;
+        this.audiences = audiences;
         this.datafile = datafile;
     }
 
@@ -60,6 +71,12 @@ public class OptimizelyConfig {
     public Map<String, OptimizelyFeature> getFeaturesMap() {
         return featuresMap;
     }
+
+    public List<OptimizelyAttribute> getAttributes() { return attributes; }
+
+    public List<OptimizelyEvent> getEvents() { return events; }
+
+    public List<OptimizelyAudience> getAudiences() { return audiences; }
 
     public String getRevision() {
         return revision;
@@ -82,7 +99,10 @@ public class OptimizelyConfig {
         OptimizelyConfig optimizelyConfig = (OptimizelyConfig) obj;
         return revision.equals(optimizelyConfig.getRevision()) &&
             experimentsMap.equals(optimizelyConfig.getExperimentsMap()) &&
-            featuresMap.equals(optimizelyConfig.getFeaturesMap());
+            featuresMap.equals(optimizelyConfig.getFeaturesMap()) &&
+            attributes.equals(optimizelyConfig.getAttributes()) &&
+            events.equals(optimizelyConfig.getEvents()) &&
+            audiences.equals(optimizelyConfig.getAudiences());
     }
 
     @Override

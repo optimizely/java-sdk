@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2020, Optimizely, Inc. and contributors                        *
+ * Copyright 2021, Optimizely, Inc. and contributors                        *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -17,54 +17,37 @@ package com.optimizely.ab.optimizelyconfig;
 
 import com.optimizely.ab.config.IdKeyMapped;
 
-import java.util.Map;
-
 /**
- * Represents the experiment's map in {@link OptimizelyConfig}
+ * Represents the Attribute's map {@link OptimizelyConfig}
  */
-public class OptimizelyExperiment implements IdKeyMapped {
+public class OptimizelyAttribute  implements IdKeyMapped {
 
     private String id;
     private String key;
-    private String audiences = "";
-    private Map<String, OptimizelyVariation> variationsMap;
 
-    public OptimizelyExperiment(String id, String key, Map<String, OptimizelyVariation> variationsMap, String audiences) {
+    public OptimizelyAttribute(String id,
+                               String key) {
         this.id = id;
         this.key = key;
-        this.variationsMap = variationsMap;
-        this.audiences = audiences;
     }
 
-    public String getId() {
-        return id;
-    }
+    public String getId() { return id; }
 
-    public String getKey() {
-        return key;
-    }
-
-    public String getAudiences() { return audiences; }
-
-    public Map<String, OptimizelyVariation> getVariationsMap() {
-        return variationsMap;
-    }
+    public String getKey() { return key; }
 
     @Override
     public boolean equals(Object obj) {
         if (obj == null || getClass() != obj.getClass()) return false;
         if (obj == this) return true;
-        OptimizelyExperiment optimizelyExperiment = (OptimizelyExperiment) obj;
-        return id.equals(optimizelyExperiment.getId()) &&
-            key.equals(optimizelyExperiment.getKey()) &&
-            variationsMap.equals(optimizelyExperiment.getVariationsMap()) &&
-            audiences.equals(optimizelyExperiment.getAudiences());
+        OptimizelyAttribute optimizelyAttribute = (OptimizelyAttribute) obj;
+        return id.equals(optimizelyAttribute.getId()) &&
+            key.equals(optimizelyAttribute.getKey());
     }
 
     @Override
     public int hashCode() {
         int hash = id.hashCode();
-        hash = 31 * hash + variationsMap.hashCode();
+        hash = 31 * hash + key.hashCode();
         return hash;
     }
 }

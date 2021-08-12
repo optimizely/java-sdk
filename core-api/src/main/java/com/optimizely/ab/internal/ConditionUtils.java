@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019,2021, Optimizely and contributors
+ *    Copyright 2018-2019, 2021, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -147,23 +147,7 @@ public class ConditionUtils {
             conditions.add(parseConditions(clazz, obj));
         }
 
-        Condition condition;
-        switch (operand) {
-            case "and":
-                condition = new AndCondition(conditions);
-                break;
-            case "or":
-                condition = new OrCondition(conditions);
-                break;
-            case "not":
-                condition = new NotCondition(conditions.isEmpty() ? new NullCondition() : conditions.get(0));
-                break;
-            default:
-                condition = new OrCondition(conditions);
-                break;
-        }
-
-        return condition;
+        return buildCondition(operand, conditions);
     }
 
     static public String operand(Object object) {
@@ -210,13 +194,14 @@ public class ConditionUtils {
             conditions.add(parseConditions(clazz, obj));
         }
 
+        return buildCondition(operand, conditions);
+    }
+
+    private static Condition buildCondition(String operand, List<Condition> conditions) {
         Condition condition;
         switch (operand) {
             case "and":
                 condition = new AndCondition(conditions);
-                break;
-            case "or":
-                condition = new OrCondition(conditions);
                 break;
             case "not":
                 condition = new NotCondition(conditions.isEmpty() ? new NullCondition() : conditions.get(0));

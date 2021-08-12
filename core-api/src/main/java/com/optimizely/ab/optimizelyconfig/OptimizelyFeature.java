@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2020, Optimizely, Inc. and contributors                        *
+ * Copyright 2020-2021, Optimizely, Inc. and contributors                        *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -17,6 +17,8 @@ package com.optimizely.ab.optimizelyconfig;
 
 import com.optimizely.ab.config.IdKeyMapped;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,17 +29,28 @@ public class OptimizelyFeature implements IdKeyMapped {
     private String id;
     private String key;
 
+    private List<OptimizelyExperiment> deliveryRules;
+    private List<OptimizelyExperiment> experimentRules;
+
+    /**
+     * @deprecated use {@link #experimentRules} and {@link #deliveryRules} instead
+     */
+    @Deprecated
     private Map<String, OptimizelyExperiment> experimentsMap;
     private Map<String, OptimizelyVariable> variablesMap;
 
     public OptimizelyFeature(String id,
-                              String key, 
-                              Map<String, OptimizelyExperiment> experimentsMap,
-                              Map<String, OptimizelyVariable> variablesMap) {
+                             String key,
+                             Map<String, OptimizelyExperiment> experimentsMap,
+                             Map<String, OptimizelyVariable> variablesMap,
+                             List<OptimizelyExperiment> experimentRules,
+                             List<OptimizelyExperiment> deliveryRules) {
         this.id = id;
         this.key = key;
         this.experimentsMap = experimentsMap;
         this.variablesMap = variablesMap;
+        this.experimentRules = experimentRules;
+        this.deliveryRules = deliveryRules;
     }
 
     public String getId() {
@@ -56,6 +69,10 @@ public class OptimizelyFeature implements IdKeyMapped {
         return variablesMap;
     }
 
+    public List<OptimizelyExperiment> getExperimentRules() { return experimentRules; }
+
+    public List<OptimizelyExperiment> getDeliveryRules() { return deliveryRules; }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null || getClass() != obj.getClass()) return false;
@@ -64,13 +81,19 @@ public class OptimizelyFeature implements IdKeyMapped {
         return id.equals(optimizelyFeature.getId()) &&
             key.equals(optimizelyFeature.getKey()) &&
             experimentsMap.equals(optimizelyFeature.getExperimentsMap()) &&
-            variablesMap.equals(optimizelyFeature.getVariablesMap());
+            variablesMap.equals(optimizelyFeature.getVariablesMap()) &&
+            experimentRules.equals(optimizelyFeature.getExperimentRules()) &&
+            deliveryRules.equals(optimizelyFeature.getDeliveryRules());
     }
 
     @Override
     public int hashCode() {
         int result = id.hashCode();
-        result = 31 * result + experimentsMap.hashCode() + variablesMap.hashCode();
+        result = 31 * result
+            + experimentsMap.hashCode()
+            + variablesMap.hashCode()
+            + experimentRules.hashCode()
+            + deliveryRules.hashCode();
         return result;
     }
 }

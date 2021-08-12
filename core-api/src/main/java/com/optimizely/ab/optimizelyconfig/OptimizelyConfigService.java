@@ -17,23 +17,59 @@ package com.optimizely.ab.optimizelyconfig;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.*;
+import com.optimizely.ab.config.audience.Audience;
+
 import java.util.*;
 
 public class OptimizelyConfigService {
 
     private ProjectConfig projectConfig;
     private OptimizelyConfig optimizelyConfig;
+    private List<OptimizelyAudience> audiences;
+    private Map<String, String> audiencesMap;
+    private Map<String, List<FeatureVariable>> featureIdToVariablesMap = new HashMap<>();
+    private Map<String, OptimizelyExperiment> experimentMapByExperimentId = new HashMap<>();
 
     public OptimizelyConfigService(ProjectConfig projectConfig) {
         this.projectConfig = projectConfig;
+        this.audiences = getAudiencesList(projectConfig.getTypedAudiences(), projectConfig.getAudiences());
+        this.audiencesMap = getAudiencesMap(this.audiences);
+
+        List<OptimizelyAttribute> optimizelyAttributes = new ArrayList<>();
+        List<OptimizelyEvent> optimizelyEvents = new ArrayList<>();
 
         Map<String, OptimizelyExperiment> experimentsMap = getExperimentsMap();
+
+        if (projectConfig.getAttributes() != null) {
+            for (Attribute attribute : projectConfig.getAttributes()) {
+                OptimizelyAttribute copyAttribute = new OptimizelyAttribute(
+                    attribute.getId(),
+                    attribute.getKey()
+                );
+                optimizelyAttributes.add(copyAttribute);
+            }
+        }
+
+        if (projectConfig.getEventTypes() != null) {
+            for (EventType event : projectConfig.getEventTypes()) {
+                OptimizelyEvent copyEvent = new OptimizelyEvent(
+                    event.getId(),
+                    event.getKey(),
+                    event.getExperimentIds()
+                );
+                optimizelyEvents.add(copyEvent);
+            }
+        }
+
         optimizelyConfig = new OptimizelyConfig(
             experimentsMap,
             getFeaturesMap(experimentsMap),
             projectConfig.getRevision(),
             projectConfig.getSdkKey(),
             projectConfig.getEnvironmentKey(),
+            optimizelyAttributes,
+            optimizelyEvents,
+            this.audiences,
             projectConfig.toDatafile()
         );
     }
@@ -60,6 +96,7 @@ public class OptimizelyConfigService {
         Map<String, List<FeatureVariable>> featureVariableIdMap = new HashMap<>();
         for (FeatureFlag featureFlag : featureFlags) {
             featureVariableIdMap.put(featureFlag.getKey(), featureFlag.getVariables());
+            featureIdToVariablesMap.put(featureFlag.getId(), featureFlag.getVariables());
         }
         return featureVariableIdMap;
     }
@@ -73,33 +110,39 @@ public class OptimizelyConfigService {
     @VisibleForTesting
     Map<String, OptimizelyExperiment> getExperimentsMap() {
         List<Experiment> experiments = projectConfig.getExperiments();
+
         if (experiments == null) {
             return Collections.emptyMap();
         }
         Map<String, OptimizelyExperiment> featureExperimentMap = new HashMap<>();
+
         for (Experiment experiment : experiments) {
-            featureExperimentMap.put(experiment.getKey(), new OptimizelyExperiment(
+            OptimizelyExperiment optimizelyExperiment = new OptimizelyExperiment(
                 experiment.getId(),
                 experiment.getKey(),
-                getVariationsMap(experiment.getVariations(), experiment.getId())
-            ));
+                getVariationsMap(experiment.getVariations(), experiment.getId(), null),
+                experiment.serializeConditions(this.audiencesMap)
+            );
+
+            featureExperimentMap.put(experiment.getKey(), optimizelyExperiment);
+            experimentMapByExperimentId.put(experiment.getId(), optimizelyExperiment);
         }
         return featureExperimentMap;
     }
 
     @VisibleForTesting
-    Map<String, OptimizelyVariation> getVariationsMap(List<Variation> variations, String experimentId) {
+    Map<String, OptimizelyVariation> getVariationsMap(List<Variation> variations, String experimentId, String featureId) {
         if (variations == null) {
             return Collections.emptyMap();
         }
-        Boolean isFeatureExperiment = this.getExperimentFeatureKey(experimentId) != null;
+
         Map<String, OptimizelyVariation> variationKeyMap = new HashMap<>();
         for (Variation variation : variations) {
             variationKeyMap.put(variation.getKey(), new OptimizelyVariation(
                 variation.getId(),
                 variation.getKey(),
-                isFeatureExperiment ? variation.getFeatureEnabled() : null,
-                getMergedVariablesMap(variation, experimentId)
+                variation.getFeatureEnabled(),
+                getMergedVariablesMap(variation, experimentId, featureId)
             ));
         }
         return variationKeyMap;
@@ -112,36 +155,41 @@ public class OptimizelyConfigService {
      * 3. If Variation does not contain a variable, then all `id`, `key`, `type` and defaultValue as `value` is used from feature varaible and added to variation.
      */
     @VisibleForTesting
-    Map<String, OptimizelyVariable> getMergedVariablesMap(Variation variation, String experimentId) {
+    Map<String, OptimizelyVariable> getMergedVariablesMap(Variation variation, String experimentId, String featureId) {
         String featureKey = this.getExperimentFeatureKey(experimentId);
-        if (featureKey != null) {
-            // Map containing variables list for every feature key used for merging variation and feature variables.
-            Map<String, List<FeatureVariable>> featureKeyToVariablesMap = generateFeatureKeyToVariablesMap();
-
-            // Generate temp map of all the available variable values from variation.
-            Map<String, OptimizelyVariable> tempVariableIdMap = getFeatureVariableUsageInstanceMap(variation.getFeatureVariableUsageInstances());
-
-            // Iterate over all the variables available in associated feature.
-            // Use value from variation variable if variable is available in variation and feature is enabled, otherwise use defaultValue from feature variable.
-            List<FeatureVariable> featureVariables = featureKeyToVariablesMap.get(featureKey);
-            if (featureVariables == null) {
-                return Collections.emptyMap();
-            }
-
-            Map<String, OptimizelyVariable> featureVariableKeyMap = new HashMap<>();
-            for (FeatureVariable featureVariable : featureVariables) {
-                featureVariableKeyMap.put(featureVariable.getKey(), new OptimizelyVariable(
-                    featureVariable.getId(),
-                    featureVariable.getKey(),
-                    featureVariable.getType(),
-                    variation.getFeatureEnabled() && tempVariableIdMap.get(featureVariable.getId()) != null
-                        ? tempVariableIdMap.get(featureVariable.getId()).getValue()
-                        : featureVariable.getDefaultValue()
-                ));
-            }
-            return featureVariableKeyMap;
+        Map<String, List<FeatureVariable>> featureKeyToVariablesMap = generateFeatureKeyToVariablesMap();
+        if (featureKey == null && featureId == null) {
+            return Collections.emptyMap();
         }
-        return Collections.emptyMap();
+
+        // Generate temp map of all the available variable values from variation.
+        Map<String, OptimizelyVariable> tempVariableIdMap = getFeatureVariableUsageInstanceMap(variation.getFeatureVariableUsageInstances());
+
+        // Iterate over all the variables available in associated feature.
+        // Use value from variation variable if variable is available in variation and feature is enabled, otherwise use defaultValue from feature variable.
+        List<FeatureVariable> featureVariables;
+
+        if (featureId != null) {
+            featureVariables = featureIdToVariablesMap.get(featureId);
+        } else {
+            featureVariables = featureKeyToVariablesMap.get(featureKey);
+        }
+        if (featureVariables == null) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, OptimizelyVariable> featureVariableKeyMap = new HashMap<>();
+        for (FeatureVariable featureVariable : featureVariables) {
+            featureVariableKeyMap.put(featureVariable.getKey(), new OptimizelyVariable(
+                featureVariable.getId(),
+                featureVariable.getKey(),
+                featureVariable.getType(),
+                variation.getFeatureEnabled() && tempVariableIdMap.get(featureVariable.getId()) != null
+                    ? tempVariableIdMap.get(featureVariable.getId()).getValue()
+                    : featureVariable.getDefaultValue()
+            ));
+        }
+        return featureVariableKeyMap;
     }
 
     @VisibleForTesting
@@ -172,14 +220,50 @@ public class OptimizelyConfigService {
 
         Map<String, OptimizelyFeature> optimizelyFeatureKeyMap = new HashMap<>();
         for (FeatureFlag featureFlag : featureFlags) {
-            optimizelyFeatureKeyMap.put(featureFlag.getKey(), new OptimizelyFeature(
+            Map<String, OptimizelyExperiment> experimentsMapForFeature =
+                getExperimentsMapForFeature(featureFlag.getExperimentIds(), allExperimentsMap);
+
+            List<OptimizelyExperiment> experimentRules =
+                new ArrayList<OptimizelyExperiment>(experimentsMapForFeature.values());
+            List<OptimizelyExperiment> deliveryRules =
+                this.getDeliveryRules(featureFlag.getRolloutId(), featureFlag.getId());
+
+            OptimizelyFeature optimizelyFeature = new OptimizelyFeature(
                 featureFlag.getId(),
                 featureFlag.getKey(),
-                getExperimentsMapForFeature(featureFlag.getExperimentIds(), allExperimentsMap),
-                getFeatureVariablesMap(featureFlag.getVariables())
-            ));
+                experimentsMapForFeature,
+                getFeatureVariablesMap(featureFlag.getVariables()),
+                experimentRules,
+                deliveryRules
+            );
+
+            optimizelyFeatureKeyMap.put(featureFlag.getKey(), optimizelyFeature);
         }
         return optimizelyFeatureKeyMap;
+    }
+
+    List<OptimizelyExperiment> getDeliveryRules(String rolloutId, String featureId) {
+
+        List<OptimizelyExperiment> deliveryRules = new ArrayList<OptimizelyExperiment>();
+
+        Rollout rollout = projectConfig.getRolloutIdMapping().get(rolloutId);
+
+        if (rollout != null) {
+            List<Experiment> rolloutExperiments = rollout.getExperiments();
+            for (Experiment experiment: rolloutExperiments) {
+                OptimizelyExperiment optimizelyExperiment = new OptimizelyExperiment(
+                    experiment.getId(),
+                    experiment.getKey(),
+                    this.getVariationsMap(experiment.getVariations(), experiment.getId(), featureId),
+                    experiment.serializeConditions(this.audiencesMap)
+                );
+
+                deliveryRules.add(optimizelyExperiment);
+            }
+            return deliveryRules;
+        }
+
+        return Collections.emptyList();
     }
 
     @VisibleForTesting
@@ -190,8 +274,8 @@ public class OptimizelyConfigService {
 
         Map<String, OptimizelyExperiment> optimizelyExperimentKeyMap = new HashMap<>();
         for (String experimentId : experimentIds) {
-            String experimentKey = projectConfig.getExperimentIdMapping().get(experimentId).getKey();
-            optimizelyExperimentKeyMap.put(experimentKey, allExperimentsMap.get(experimentKey));
+            Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
+            optimizelyExperimentKeyMap.put(experiment.getKey(), experimentMapByExperimentId.get(experiment.getId()));
         }
 
         return optimizelyExperimentKeyMap;
@@ -214,5 +298,61 @@ public class OptimizelyConfigService {
         }
 
         return featureVariableKeyMap;
+    }
+
+    @VisibleForTesting
+    List<OptimizelyAudience> getAudiencesList(List<Audience> typedAudiences, List<Audience> audiences) {
+        /*
+         * This method merges typedAudiences with audiences from the Project
+         * config. Precedence is given to typedAudiences over audiences.
+         *
+         * Returns:
+         *   A new list with the merged audiences as OptimizelyAudience objects.
+         * */
+        List<OptimizelyAudience> audiencesList = new ArrayList<>();
+        Map<String, String> idLookupMap = new HashMap<>();
+        if (typedAudiences != null) {
+            for (Audience audience : typedAudiences) {
+                OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
+                    audience.getId(),
+                    audience.getName(),
+                    audience.getConditions().toJson()
+                );
+                audiencesList.add(optimizelyAudience);
+                idLookupMap.put(audience.getId(), audience.getId());
+            }
+        }
+
+        if (audiences != null) {
+            for (Audience audience : audiences) {
+                if (!idLookupMap.containsKey(audience.getId()) && !audience.getId().equals("$opt_dummy_audience")) {
+                    OptimizelyAudience optimizelyAudience = new OptimizelyAudience(
+                        audience.getId(),
+                        audience.getName(),
+                        audience.getConditions().toJson()
+                    );
+                    audiencesList.add(optimizelyAudience);
+                }
+            }
+        }
+        
+        return audiencesList;
+    }
+
+    @VisibleForTesting
+    Map<String, String> getAudiencesMap(List<OptimizelyAudience> optimizelyAudiences) {
+        Map<String, String> audiencesMap = new HashMap<>();
+
+        // Build audienceMap as [id:name]
+        if (optimizelyAudiences != null) {
+            for (OptimizelyAudience audience : optimizelyAudiences) {
+                audiencesMap.put(
+                    audience.getId(),
+                    audience.getName()
+                );
+            }
+        }
+
+        return audiencesMap;
     }
 }

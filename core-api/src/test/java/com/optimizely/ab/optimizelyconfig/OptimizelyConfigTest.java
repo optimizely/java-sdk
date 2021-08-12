@@ -17,6 +17,7 @@ package com.optimizely.ab.optimizelyconfig;
 
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import static com.optimizely.ab.optimizelyconfig.OptimizelyExperimentTest.generateVariationMap;
@@ -32,7 +33,11 @@ public class OptimizelyConfigTest {
             generateFeatureMap(),
             "101",
             "testingSdkKey",
-            "development"
+            "development",
+            null,
+            null,
+            null,
+            null
         );
         assertEquals("101", optimizelyConfig.getRevision());
         assertEquals("testingSdkKey", optimizelyConfig.getSdkKey());
@@ -53,12 +58,14 @@ public class OptimizelyConfigTest {
         optimizelyExperimentMap.put("test_exp_1", new OptimizelyExperiment(
             "33",
             "test_exp_1",
-            generateVariationMap()
+            generateVariationMap(),
+            ""
         ));
         optimizelyExperimentMap.put("test_exp_2", new OptimizelyExperiment(
             "34",
             "test_exp_2",
-            generateVariationMap()
+            generateVariationMap(),
+            ""
         ));
         return optimizelyExperimentMap;
     }
@@ -69,7 +76,9 @@ public class OptimizelyConfigTest {
            "42",
            "test_feature_1",
             generateExperimentMap(),
-            generateVariablesMap()
+            generateVariablesMap(),
+            Collections.emptyList(),
+            Collections.emptyList()
         ));
         return  optimizelyFeatureMap;
     }

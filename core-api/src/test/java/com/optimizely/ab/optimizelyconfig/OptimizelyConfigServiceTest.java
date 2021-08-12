@@ -124,7 +124,7 @@ public class OptimizelyConfigServiceTest {
     @Test
     public void testGetVariationsMap() {
         Map<String, OptimizelyVariation> optimizelyVariationMap =
-            optimizelyConfigService.getVariationsMap(projectConfig.getExperiments().get(1).getVariations(), "3262035800");
+            optimizelyConfigService.getVariationsMap(projectConfig.getExperiments().get(1).getVariations(), "3262035800", null);
         assertEquals(expectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap().size(), optimizelyVariationMap.size());
         assertEquals(expectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap(), optimizelyVariationMap);
     }
@@ -149,11 +149,28 @@ public class OptimizelyConfigServiceTest {
     @Test
     public void testGetMergedVariablesMap() {
         Variation variation = projectConfig.getExperiments().get(1).getVariations().get(1);
-        Map<String, OptimizelyVariable> optimizelyVariableMap = optimizelyConfigService.getMergedVariablesMap(variation, "3262035800");
+        Map<String, OptimizelyVariable> optimizelyVariableMap = optimizelyConfigService.getMergedVariablesMap(variation, "3262035800", null);
         Map<String, OptimizelyVariable> expectedOptimizelyVariableMap =
             expectedConfig.getExperimentsMap().get("multivariate_experiment").getVariationsMap().get("Feorge").getVariablesMap();
         assertEquals(expectedOptimizelyVariableMap.size(), optimizelyVariableMap.size());
         assertEquals(expectedOptimizelyVariableMap, optimizelyVariableMap);
+    }
+
+    @Test
+    public void testGetAudiencesMap() {
+        Map<String, String> actualAudiencesMap = optimizelyConfigService.getAudiencesMap(
+            asList(
+                new OptimizelyAudience(
+                    "123456",
+                    "test_audience_1",
+                    "[\"and\", [\"or\", \"1\", \"2\"], \"3\"]"
+                )
+            )
+        );
+
+        Map<String, String> expectedAudiencesMap = optimizelyConfigService.getAudiencesMap(expectedConfig.getAudiences());
+
+        assertEquals(expectedAudiencesMap, actualAudiencesMap);
     }
 
     private ProjectConfig generateOptimizelyConfig() {
@@ -385,7 +402,8 @@ public class OptimizelyConfigServiceTest {
                                 }}
                             )
                         );
-                }}
+                }},
+                ""
             )
         );
         optimizelyExperimentMap.put(
@@ -412,7 +430,8 @@ public class OptimizelyConfigServiceTest {
                             Collections.emptyMap()
                         )
                     );
-                }}
+                }},
+                ""
             )
         );
 
@@ -485,7 +504,8 @@ public class OptimizelyConfigServiceTest {
                                         }}
                                     )
                                 );
-                            }}
+                            }},
+                            ""
                         )
                     );
                 }},
@@ -508,7 +528,73 @@ public class OptimizelyConfigServiceTest {
                             "arry"
                         )
                     );
-                }}
+                }},
+                asList(
+                    new OptimizelyExperiment(
+                        "3262035800",
+                        "multivariate_experiment",
+                        new HashMap<String, OptimizelyVariation>() {{
+                            put(
+                                "Feorge",
+                                new OptimizelyVariation(
+                                    "3631049532",
+                                    "Feorge",
+                                    true,
+                                    new HashMap<String, OptimizelyVariable>() {{
+                                        put(
+                                            "first_letter",
+                                            new OptimizelyVariable(
+                                                "675244127",
+                                                "first_letter",
+                                                "string",
+                                                "F"
+                                            )
+                                        );
+                                        put(
+                                            "rest_of_name",
+                                            new OptimizelyVariable(
+                                                "4052219963",
+                                                "rest_of_name",
+                                                "string",
+                                                "eorge"
+                                            )
+                                        );
+                                    }}
+                                )
+                            );
+                            put(
+                                "Fred",
+                                new OptimizelyVariation(
+                                    "1880281238",
+                                    "Fred",
+                                    true,
+                                    new HashMap<String, OptimizelyVariable>() {{
+                                        put(
+                                            "first_letter",
+                                            new OptimizelyVariable(
+                                                "675244127",
+                                                "first_letter",
+                                                "string",
+                                                "F"
+                                            )
+                                        );
+                                        put(
+                                            "rest_of_name",
+                                            new OptimizelyVariable(
+                                                "4052219963",
+                                                "rest_of_name",
+                                                "string",
+                                                "red"
+                                            )
+                                        );
+                                    }}
+                                )
+                            );
+                        }},
+                        ""
+                    )
+                ),
+                Collections.<OptimizelyExperiment>emptyList()
             )
         );
         optimizelyFeatureMap.put(
@@ -517,7 +603,9 @@ public class OptimizelyConfigServiceTest {
                 "4195505407",
                 "boolean_feature",
                 Collections.emptyMap(),
-                Collections.emptyMap()
+                Collections.emptyMap(),
+                Collections.<OptimizelyExperiment>emptyList(),
+                Collections.<OptimizelyExperiment>emptyList()
             )
         );
 
@@ -526,7 +614,37 @@ public class OptimizelyConfigServiceTest {
             optimizelyFeatureMap,
             "1480511547",
             "ValidProjectConfigV4",
-            "production"
+            "production",
+            asList(
+                new OptimizelyAttribute(
+                    "553339214",
+                    "house"
+                ),
+                new OptimizelyAttribute(
+                    "58339410",
+                    "nationality"
+                )
+            ),
+            asList(
+                new OptimizelyEvent(
+                    "3785620495",
+                    "basic_event",
+                    asList("1323241596", "2738374745", "3042640549", "3262035800", "3072915611")
+                ),
+                new OptimizelyEvent(
+                    "3195631717",
+                    "event_with_paused_experiment",
+                    asList("2667098701")
+                )
+            ),
+            asList(
+                new OptimizelyAudience(
+                    "123456",
+                    "test_audience_1",
+                    "[\"and\", [\"or\", \"1\", \"2\"], \"3\"]"
+                )
+            ),
+            null
         );
     }
 }

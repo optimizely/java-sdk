@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2020, Optimizely, Inc. and contributors                        *
+ * Copyright 2021, Optimizely, Inc. and contributors                        *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -16,55 +16,48 @@
 package com.optimizely.ab.optimizelyconfig;
 
 import com.optimizely.ab.config.IdKeyMapped;
+import com.optimizely.ab.config.audience.Condition;
 
-import java.util.Map;
+import java.util.List;
 
 /**
- * Represents the experiment's map in {@link OptimizelyConfig}
+ * Represents the Audiences list {@link OptimizelyConfig}
  */
-public class OptimizelyExperiment implements IdKeyMapped {
+public class OptimizelyAudience{
 
     private String id;
-    private String key;
-    private String audiences = "";
-    private Map<String, OptimizelyVariation> variationsMap;
+    private String name;
+    private String conditions;
 
-    public OptimizelyExperiment(String id, String key, Map<String, OptimizelyVariation> variationsMap, String audiences) {
+    public OptimizelyAudience(String id,
+                              String name,
+                              String conditions) {
         this.id = id;
-        this.key = key;
-        this.variationsMap = variationsMap;
-        this.audiences = audiences;
+        this.name = name;
+        this.conditions = conditions;
     }
 
-    public String getId() {
-        return id;
-    }
+    public String getId() { return id; }
 
-    public String getKey() {
-        return key;
-    }
+    public String getName() { return name; }
 
-    public String getAudiences() { return audiences; }
-
-    public Map<String, OptimizelyVariation> getVariationsMap() {
-        return variationsMap;
-    }
+    public String getConditions() { return conditions; }
 
     @Override
     public boolean equals(Object obj) {
         if (obj == null || getClass() != obj.getClass()) return false;
         if (obj == this) return true;
-        OptimizelyExperiment optimizelyExperiment = (OptimizelyExperiment) obj;
-        return id.equals(optimizelyExperiment.getId()) &&
-            key.equals(optimizelyExperiment.getKey()) &&
-            variationsMap.equals(optimizelyExperiment.getVariationsMap()) &&
-            audiences.equals(optimizelyExperiment.getAudiences());
+        OptimizelyAudience optimizelyAudience = (OptimizelyAudience) obj;
+        return id.equals(optimizelyAudience.getId()) &&
+            name.equals(optimizelyAudience.getName()) &&
+            conditions.equals(optimizelyAudience.getConditions());
     }
 
     @Override
     public int hashCode() {
         int hash = id.hashCode();
-        hash = 31 * hash + variationsMap.hashCode();
+        hash = 31 * hash + conditions.hashCode();
         return hash;
     }
+
 }

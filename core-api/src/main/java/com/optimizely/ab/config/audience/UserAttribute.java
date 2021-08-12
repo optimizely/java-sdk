@@ -119,19 +119,39 @@ public class UserAttribute<T> implements Condition<T> {
     }
 
     @Override
-    public String toString() {
+    public String getOperandOrId() {
+        return null;
+    }
+
+    public String getValueStr() {
         final String valueStr;
         if (value == null) {
             valueStr = "null";
         } else if (value instanceof String) {
-            valueStr = String.format("'%s'", value);
+            valueStr = String.format("%s", value);
         } else {
             valueStr = value.toString();
         }
+        return valueStr;
+    }
+
+    @Override
+    public String toJson() {
+        StringBuilder attributes = new StringBuilder();
+        if (name != null) attributes.append("{\"name\":\"" + name + "\"");
+        if (type != null) attributes.append(", \"type\":\"" + type + "\"");
+        if (match != null) attributes.append(", \"match\":\"" + match + "\"");
+        attributes.append(", \"value\":" + ((value instanceof String) ? ("\"" + getValueStr() + "\"") : getValueStr()) + "}");
+
+        return attributes.toString();
+    }
+
+    @Override
+    public String toString() {
         return "{name='" + name + "\'" +
             ", type='" + type + "\'" +
             ", match='" + match + "\'" +
-            ", value=" + valueStr +
+            ", value=" + ((value instanceof String) ? ("'" + getValueStr() + "'") : getValueStr()) +
             "}";
     }
 

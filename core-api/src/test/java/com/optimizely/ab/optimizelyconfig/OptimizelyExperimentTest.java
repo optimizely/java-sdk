@@ -29,7 +29,8 @@ public class OptimizelyExperimentTest {
         OptimizelyExperiment optimizelyExperiment = new OptimizelyExperiment(
           "31",
           "test_exp",
-           generateVariationMap()
+           generateVariationMap(),
+            ""
         );
         assertEquals("31", optimizelyExperiment.getId());
         assertEquals("test_exp", optimizelyExperiment.getKey());
