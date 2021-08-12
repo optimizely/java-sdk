@@ -32,11 +32,10 @@ public class OptimizelyFeature implements IdKeyMapped {
     private List<OptimizelyExperiment> deliveryRules;
     private List<OptimizelyExperiment> experimentRules;
 
+    @Deprecated
     /**
-     * @Deprecated The experimentsMap has been deprecated. </br>
-     *              Use experimentRules and deliveryRules instead.
-     * */
-    @Deprecated()
+     * @deprecated use {@link #experimentRules} and {@link #deliveryRules} instead
+     */
     private Map<String, OptimizelyExperiment> experimentsMap;
     private Map<String, OptimizelyVariable> variablesMap;
 
