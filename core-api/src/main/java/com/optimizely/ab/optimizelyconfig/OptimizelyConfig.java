@@ -27,7 +27,7 @@ import java.util.*;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class OptimizelyConfig {
-    
+
     private Map<String, OptimizelyExperiment> experimentsMap;
     private Map<String, OptimizelyFeature> featuresMap;
     private List<OptimizelyAttribute> attributes;
@@ -47,7 +47,13 @@ public class OptimizelyConfig {
                             List<OptimizelyEvent> events,
                             List<OptimizelyAudience> audiences,
                             String datafile) {
+
+        // This experimentsMap is for experiments of legacy projects only.
+        // For flag projects, experiment keys are not guaranteed to be unique
+        // across multiple flags, so this map may not include all experiments
+        // when keys conflict.
         this.experimentsMap = experimentsMap;
+        
         this.featuresMap = featuresMap;
         this.revision = revision;
         this.sdkKey = sdkKey == null ?  "" : sdkKey;
