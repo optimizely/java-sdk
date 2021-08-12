@@ -41,7 +41,7 @@ public class ExperimentTest {
                 Experiment experiment = makeMockExperimentWithStatus(Experiment.ExperimentStatus.RUNNING,
                     audienceConditionsScenarios.get(i));
                 String audiences = experiment.serializeConditions(audiencesMap);
-                assertEquals(audiences, expectedScenarioStringsMap.get(i+1));
+                assertEquals(expectedScenarioStringsMap.get(i+1), audiences);
             }
         }
 
