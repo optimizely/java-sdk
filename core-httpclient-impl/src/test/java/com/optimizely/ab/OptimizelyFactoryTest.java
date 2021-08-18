@@ -247,6 +247,7 @@ public class OptimizelyFactoryTest {
         CloseableHttpClient httpClient = clientBuilder.build();
 
         optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", httpClient);
+        OptimizelyFactory.setCustomHttpClient(null);
         assertFalse(optimizely.isValid());
     }
 
@@ -280,6 +281,7 @@ public class OptimizelyFactoryTest {
         OptimizelyFactory.setCustomHttpClient(httpClient);
         String datafileString = Resources.toString(Resources.getResource("valid-project-config-v4.json"), Charsets.UTF_8);
         optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString, "auth-token");
+        OptimizelyFactory.setCustomHttpClient(null);
         assertTrue(optimizely.isValid());
     }
 
