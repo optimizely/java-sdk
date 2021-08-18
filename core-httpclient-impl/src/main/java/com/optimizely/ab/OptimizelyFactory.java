@@ -51,6 +51,13 @@ public final class OptimizelyFactory {
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyFactory.class);
     private static CloseableHttpClient customHttpClient;
 
+    public static void setCustomHttpClient(CloseableHttpClient httpClient) {
+        if (httpClient == null) {
+            logger.error("CloseableHttpClient must not be null. Please initialize object.");
+        }
+        customHttpClient = httpClient;
+    }
+
     /**
      * Convenience method for setting the maximum number of events contained within a batch.
      * {@link AsyncEventHandler}
@@ -231,7 +238,7 @@ public final class OptimizelyFactory {
             logger.error("Must provide an sdkKey and httpClient, returning non-op Optimizely client");
             return newDefaultInstance(() -> null);
         }
-        customHttpClient = httpClient;
+        setCustomHttpClient(httpClient);
         return newDefaultInstance(sdkKey);
     }
 
