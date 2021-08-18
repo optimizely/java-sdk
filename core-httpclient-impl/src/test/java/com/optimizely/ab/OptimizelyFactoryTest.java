@@ -23,6 +23,12 @@ import com.optimizely.ab.event.AsyncEventHandler;
 import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
+import org.apache.http.HttpHost;
+import org.apache.http.conn.routing.HttpRoutePlanner;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -220,6 +226,27 @@ public class OptimizelyFactoryTest {
         // Set a blocking timeout so we don't block for too long.
         OptimizelyFactory.setBlockingTimeout(5, TimeUnit.MICROSECONDS);
         optimizely = OptimizelyFactory.newDefaultInstance("sdk-key");
+        assertFalse(optimizely.isValid());
+    }
+
+    @Test
+    public void newDefaultInstanceWithSdkKeyAndCustomHttpClient() throws Exception {
+        // Set a blocking timeout so we don't block for too long.
+        OptimizelyFactory.setBlockingTimeout(5, TimeUnit.MICROSECONDS);
+
+        // Add custom Proxy and Port here
+        int port = 443;
+        String proxyHostName = "localhost";
+        HttpHost proxyHost = new HttpHost(proxyHostName, port);
+
+        HttpRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxyHost);
+
+        HttpClientBuilder clientBuilder = HttpClients.custom();
+        clientBuilder = clientBuilder.setRoutePlanner(routePlanner);
+
+        CloseableHttpClient httpClient = clientBuilder.build();
+
+        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", httpClient);
         assertFalse(optimizely.isValid());
     }
 

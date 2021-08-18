@@ -23,6 +23,7 @@ import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +49,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class OptimizelyFactory {
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyFactory.class);
+    private static CloseableHttpClient customHttpClient;
 
     /**
      * Convenience method for setting the maximum number of events contained within a batch.
@@ -221,7 +223,16 @@ public final class OptimizelyFactory {
             return newDefaultInstance(() -> null);
         }
 
-        return newDefaultInstance(sdkKey, null);
+        return newDefaultInstance(sdkKey, "");
+    }
+
+    public static Optimizely newDefaultInstance(String sdkKey, CloseableHttpClient httpClient) {
+        if (sdkKey == null || httpClient == null) {
+            logger.error("Must provide an sdkKey and httpClient, returning non-op Optimizely client");
+            return newDefaultInstance(() -> null);
+        }
+        customHttpClient = httpClient;
+        return newDefaultInstance(sdkKey);
     }
 
     /**
@@ -234,6 +245,7 @@ public final class OptimizelyFactory {
      * @return A new Optimizely instance
      */
     public static Optimizely newDefaultInstance(String sdkKey, String fallback) {
+        if (fallback.equals("")) { fallback = null; }
         String datafileAccessToken = PropertyUtils.get(HttpProjectConfigManager.CONFIG_DATAFILE_AUTH_TOKEN);
         return newDefaultInstance(sdkKey, fallback, datafileAccessToken);
     }
@@ -248,12 +260,21 @@ public final class OptimizelyFactory {
      */
     public static Optimizely newDefaultInstance(String sdkKey, String fallback, String datafileAccessToken) {
         NotificationCenter notificationCenter = new NotificationCenter();
+        HttpProjectConfigManager.Builder builder;
+        if (customHttpClient != null) {
+            OptimizelyHttpClient optimizelyHttpClient = new OptimizelyHttpClient(customHttpClient);
 
-        HttpProjectConfigManager.Builder builder = HttpProjectConfigManager.builder()
-            .withDatafile(fallback)
-            .withNotificationCenter(notificationCenter)
-            .withSdkKey(sdkKey);
-
+            builder = HttpProjectConfigManager.builder()
+                .withDatafile(fallback)
+                .withNotificationCenter(notificationCenter)
+                .withOptimizelyHttpClient(optimizelyHttpClient)
+                .withSdkKey(sdkKey);
+        } else {
+            builder = HttpProjectConfigManager.builder()
+                .withDatafile(fallback)
+                .withNotificationCenter(notificationCenter)
+                .withSdkKey(sdkKey);
+        }
         if (datafileAccessToken != null) {
             builder.withDatafileAccessToken(datafileAccessToken);
         }
