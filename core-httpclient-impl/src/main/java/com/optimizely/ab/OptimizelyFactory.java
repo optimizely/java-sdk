@@ -234,9 +234,9 @@ public final class OptimizelyFactory {
     }
 
     public static Optimizely newDefaultInstance(String sdkKey, CloseableHttpClient httpClient) {
-        if (sdkKey == null || httpClient == null) {
+        if (httpClient == null || sdkKey == null) {
             logger.error("Must provide an sdkKey and httpClient, returning non-op Optimizely client");
-            return newDefaultInstance(() -> null);
+            return sdkKey == null ? newDefaultInstance(() -> null) : newDefaultInstance(sdkKey);
         }
         setCustomHttpClient(httpClient);
         return newDefaultInstance(sdkKey);

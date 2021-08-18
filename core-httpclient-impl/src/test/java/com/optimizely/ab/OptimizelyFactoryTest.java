@@ -252,6 +252,15 @@ public class OptimizelyFactoryTest {
     }
 
     @Test
+    public void newDefaultInstanceWithSdkKeyAndNullCustomHttpClient() throws Exception {
+        // Set a blocking timeout so we don't block for too long.
+        OptimizelyFactory.setBlockingTimeout(5, TimeUnit.MICROSECONDS);
+        CloseableHttpClient httpClient = null;
+        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", httpClient);
+        assertFalse(optimizely.isValid());
+    }
+
+    @Test
     public void newDefaultInstanceWithFallback() throws Exception {
         String datafileString = Resources.toString(Resources.getResource("valid-project-config-v4.json"), Charsets.UTF_8);
         optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString);
