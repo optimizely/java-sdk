@@ -23,6 +23,7 @@ cache:
 branches:
   only:
   - master
+  - jae/snapshot-release
   - /^\d+\.\d+\.(\d|[x])+(-SNAPSHOT|-alpha|-beta)?\d*$/ # trigger builds on tags which are semantically versioned to ship the SDK.
 after_success:
   - ./gradlew coveralls uploadArchives --console plain
