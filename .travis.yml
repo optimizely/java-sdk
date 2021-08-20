@@ -23,7 +23,6 @@ cache:
 branches:
   only:
   - master
-  - jae/snapshot-release
   - /^\d+\.\d+\.(\d|[x])+(-SNAPSHOT|-alpha|-beta)?\d*$/ # trigger builds on tags which are semantically versioned to ship the SDK.
 after_success:
   - ./gradlew coveralls uploadArchives --console plain
@@ -89,5 +88,5 @@ jobs:
     - stage: 'Snapshot'
       if: env(SNAPSHOT) = true and type = api
       script:
-        - TRAVIS_TAG=3-SNAPSHOT ./gradlew ship
+        - TRAVIS_TAG=BB-SNAPSHOT ./gradlew ship
       after_success: skip
