@@ -22,6 +22,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.internal.matchers.Or;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -64,6 +65,21 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "true", "safari");
         String expectedConditionJsonString = "{\"name\":\"browser_type\", \"type\":\"custom_attribute\", \"match\":\"true\", \"value\":\"safari\"}";
         assertEquals(testInstance.toJson(), expectedConditionJsonString);
+    }
+
+    @Test
+    public void userAttributeConditionsToJsonWithComma() throws Exception {
+        UserAttribute testInstance1 = new UserAttribute("browser_type", "custom_attribute", "true", "safari");
+        UserAttribute testInstance2 = new UserAttribute("browser_type", "custom_attribute", "true", "safari");
+        String expectedConditionJsonString = "[\"and\"[\"or\"{\"name\":\"browser_type\", \"type\":\"custom_attribute\", \"match\":\"true\", \"value\":\"safari\"}, {\"name\":\"browser_type\", \"type\":\"custom_attribute\", \"match\":\"true\", \"value\":\"safari\"}]]";
+        List<Condition> userConditions = new ArrayList<>();
+        userConditions.add(testInstance1);
+        userConditions.add(testInstance2);
+        OrCondition orCondition = new OrCondition(userConditions);
+        List<Condition> orConditions = new ArrayList<>();
+        orConditions.add(orCondition);
+        AndCondition andCondition = new AndCondition(orConditions);
+        assertEquals(andCondition.toJson(), expectedConditionJsonString);
     }
 
 
