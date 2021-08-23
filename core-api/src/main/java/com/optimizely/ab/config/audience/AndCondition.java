@@ -80,6 +80,8 @@ public class AndCondition<T> implements Condition<T> {
         s.append("[\"and\"");
         for (int i = 0; i < conditions.size(); i++) {
             s.append(conditions.get(i).toJson());
+            if (i < conditions.size() - 1)
+                s.append(", ");
         }
         s.append("]");
         return s.toString();

@@ -78,6 +78,8 @@ public class OrCondition<T> implements Condition<T> {
         s.append("[\"or\"");
         for (int i = 0; i < conditions.size(); i++) {
             s.append(conditions.get(i).toJson());
+            if (i < conditions.size() - 1)
+                s.append(", ");
         }
         s.append("]");
         return s.toString();
