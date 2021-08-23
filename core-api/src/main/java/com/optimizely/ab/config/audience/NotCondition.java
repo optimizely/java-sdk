@@ -56,9 +56,10 @@ public class NotCondition<T> implements Condition<T> {
 
     @Override
     public String toJson() {
-        StringJoiner s = new StringJoiner(", ","[","]");
-        s.add("\"not\"");
-        s.add(condition.toJson());
+        StringBuilder s = new StringBuilder();
+        s.append("[\"not\"");
+        s.append(condition.toJson());
+        s.append("]");
         return s.toString();
     }
 

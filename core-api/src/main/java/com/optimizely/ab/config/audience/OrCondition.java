@@ -74,11 +74,13 @@ public class OrCondition<T> implements Condition<T> {
 
     @Override
     public String toJson() {
-        StringJoiner s = new StringJoiner(", ", "[", "]");
-        s.add("\"or\"");
+        StringBuilder s = new StringBuilder();
+        s.append("[\"or\"");
         for (int i = 0; i < conditions.size(); i++) {
-            s.add(conditions.get(i).toJson());
+            s.append(conditions.get(i).toJson());
+            s.append(", ");
         }
+        s.append("]");
         return s.toString();
     }
 
