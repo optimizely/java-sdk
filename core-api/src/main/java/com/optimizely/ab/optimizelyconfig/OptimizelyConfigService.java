@@ -222,10 +222,10 @@ public class OptimizelyConfigService {
         for (FeatureFlag featureFlag : featureFlags) {
             Map<String, OptimizelyExperiment> experimentsMapForFeature =
                 getExperimentsMapForFeature(featureFlag.getExperimentIds(), allExperimentsMap);
-
-            List<OptimizelyExperiment> experimentRules =
-                new ArrayList<OptimizelyExperiment>(experimentsMapForFeature.values());
-            List<OptimizelyExperiment> deliveryRules =
+            Collection<OptimizelyExperiment> experimentCollections = experimentsMapForFeature.values();
+            OptimizelyExperiment[] experimentRules = experimentCollections.
+                toArray(new OptimizelyExperiment[experimentCollections.size()]);
+            OptimizelyExperiment[] deliveryRules =
                 this.getDeliveryRules(featureFlag.getRolloutId(), featureFlag.getId());
 
             OptimizelyFeature optimizelyFeature = new OptimizelyFeature(
@@ -242,7 +242,7 @@ public class OptimizelyConfigService {
         return optimizelyFeatureKeyMap;
     }
 
-    List<OptimizelyExperiment> getDeliveryRules(String rolloutId, String featureId) {
+    OptimizelyExperiment[] getDeliveryRules(String rolloutId, String featureId) {
 
         List<OptimizelyExperiment> deliveryRules = new ArrayList<OptimizelyExperiment>();
 
@@ -260,10 +260,10 @@ public class OptimizelyConfigService {
 
                 deliveryRules.add(optimizelyExperiment);
             }
-            return deliveryRules;
+            return deliveryRules.toArray(new OptimizelyExperiment[deliveryRules.size()]);
         }
 
-        return Collections.emptyList();
+        return new OptimizelyExperiment[0];
     }
 
     @VisibleForTesting

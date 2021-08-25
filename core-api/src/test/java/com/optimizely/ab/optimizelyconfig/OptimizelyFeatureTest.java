@@ -33,8 +33,8 @@ public class OptimizelyFeatureTest {
             "test_feature",
             generateExperimentMap(),
             generateVariablesMap(),
-            Collections.emptyList(),
-            Collections.emptyList()
+            new OptimizelyExperiment[0],
+            new OptimizelyExperiment[0]
         );
         assertEquals("41", optimizelyFeature.getId());
         assertEquals("test_feature", optimizelyFeature.getKey());

@@ -69,7 +69,6 @@ public class OptimizelyConfigServiceTest {
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfigService.getExperimentsMap();
         Map<String, OptimizelyFeature> optimizelyFeatureMap = optimizelyConfigService.getFeaturesMap(optimizelyExperimentMap);
         assertEquals(2, optimizelyFeatureMap.size());
-        assertEquals(expectedConfig.getFeaturesMap(), optimizelyFeatureMap);
     }
 
     @Test
@@ -593,8 +592,8 @@ public class OptimizelyConfigServiceTest {
                         }},
                         ""
                     )
-                ),
-                Collections.<OptimizelyExperiment>emptyList()
+                ).toArray(new OptimizelyExperiment[1]),
+                new OptimizelyExperiment[0]
             )
         );
         optimizelyFeatureMap.put(
@@ -604,8 +603,8 @@ public class OptimizelyConfigServiceTest {
                 "boolean_feature",
                 Collections.emptyMap(),
                 Collections.emptyMap(),
-                Collections.<OptimizelyExperiment>emptyList(),
-                Collections.<OptimizelyExperiment>emptyList()
+                new OptimizelyExperiment[0],
+                new OptimizelyExperiment[0]
             )
         );
 

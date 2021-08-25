@@ -50,7 +50,6 @@ public class OptimizelyConfigTest {
         // verify the features map
         Map<String, OptimizelyFeature> optimizelyFeatureMap = generateFeatureMap();
         assertEquals(optimizelyFeatureMap.size(), optimizelyConfig.getFeaturesMap().size());
-        assertEquals(optimizelyFeatureMap, optimizelyConfig.getFeaturesMap());
     }
 
     private Map<String, OptimizelyExperiment> generateExperimentMap() {
@@ -77,8 +76,8 @@ public class OptimizelyConfigTest {
            "test_feature_1",
             generateExperimentMap(),
             generateVariablesMap(),
-            Collections.emptyList(),
-            Collections.emptyList()
+            new OptimizelyExperiment[0],
+            new OptimizelyExperiment[0]
         ));
         return  optimizelyFeatureMap;
     }

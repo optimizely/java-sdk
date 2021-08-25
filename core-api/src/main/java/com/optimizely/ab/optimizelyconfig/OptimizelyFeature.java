@@ -29,8 +29,8 @@ public class OptimizelyFeature implements IdKeyMapped {
     private String id;
     private String key;
 
-    private List<OptimizelyExperiment> deliveryRules;
-    private List<OptimizelyExperiment> experimentRules;
+    private OptimizelyExperiment[] deliveryRules;
+    private OptimizelyExperiment[] experimentRules;
 
     /**
      * @deprecated use {@link #experimentRules} and {@link #deliveryRules} instead
@@ -43,8 +43,8 @@ public class OptimizelyFeature implements IdKeyMapped {
                              String key,
                              Map<String, OptimizelyExperiment> experimentsMap,
                              Map<String, OptimizelyVariable> variablesMap,
-                             List<OptimizelyExperiment> experimentRules,
-                             List<OptimizelyExperiment> deliveryRules) {
+                             OptimizelyExperiment[] experimentRules,
+                             OptimizelyExperiment[] deliveryRules) {
         this.id = id;
         this.key = key;
         this.experimentsMap = experimentsMap;
@@ -73,9 +73,9 @@ public class OptimizelyFeature implements IdKeyMapped {
         return variablesMap;
     }
 
-    public List<OptimizelyExperiment> getExperimentRules() { return experimentRules; }
+    public OptimizelyExperiment[] getExperimentRules() { return experimentRules; }
 
-    public List<OptimizelyExperiment> getDeliveryRules() { return deliveryRules; }
+    public OptimizelyExperiment[] getDeliveryRules() { return deliveryRules; }
 
     @Override
     public boolean equals(Object obj) {
