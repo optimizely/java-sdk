@@ -258,7 +258,7 @@ public final class OptimizelyFactory {
         builder = HttpProjectConfigManager.builder()
             .withDatafile(fallback)
             .withNotificationCenter(notificationCenter)
-            .withOptimizelyHttpClient(optimizelyHttpClient == null ? null : optimizelyHttpClient)
+            .withOptimizelyHttpClient(customHttpClient == null ? null : optimizelyHttpClient)
             .withSdkKey(sdkKey);
 
         if (datafileAccessToken != null) {
