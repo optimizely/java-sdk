@@ -49,7 +49,6 @@ import java.util.concurrent.TimeUnit;
  */
 public final class OptimizelyFactory {
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyFactory.class);
-    private static CloseableHttpClient customHttpClient;
 
     /**
      * Convenience method for setting the maximum number of events contained within a batch.
