@@ -239,7 +239,7 @@ public class OptimizelyFactoryTest {
     @Test
     public void newDefaultInstanceWithDatafileAccessToken() throws Exception {
         String datafileString = Resources.toString(Resources.getResource("valid-project-config-v4.json"), Charsets.UTF_8);
-        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString, "auth-token", null);
+        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString, "auth-token");
         assertTrue(optimizely.isValid());
     }
 
