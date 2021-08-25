@@ -245,6 +245,18 @@ public final class OptimizelyFactory {
      * @param sdkKey   SDK key used to build the ProjectConfigManager.
      * @param fallback Fallback datafile string used by the ProjectConfigManager to be immediately available.
      * @param datafileAccessToken  Token for authenticated datafile access.
+     * @return A new Optimizely instance
+     */
+    public static Optimizely newDefaultInstance(String sdkKey, String fallback, String datafileAccessToken) {
+        return newDefaultInstance(sdkKey, fallback, datafileAccessToken, null);
+    }
+    
+    /**
+     * Returns a new Optimizely instance with authenticated datafile support.
+     *
+     * @param sdkKey   SDK key used to build the ProjectConfigManager.
+     * @param fallback Fallback datafile string used by the ProjectConfigManager to be immediately available.
+     * @param datafileAccessToken  Token for authenticated datafile access.
      * @param customHttpClient  Customizable CloseableHttpClient to build OptimizelyHttpClient.
      * @return A new Optimizely instance
      */
@@ -256,29 +268,6 @@ public final class OptimizelyFactory {
             .withDatafile(fallback)
             .withNotificationCenter(notificationCenter)
             .withOptimizelyHttpClient(customHttpClient == null ? null : optimizelyHttpClient)
-            .withSdkKey(sdkKey);
-
-        if (datafileAccessToken != null) {
-            builder.withDatafileAccessToken(datafileAccessToken);
-        }
-
-        return newDefaultInstance(builder.build(), notificationCenter);
-    }
-
-    /**
-     * Returns a new Optimizely instance with authenticated datafile support.
-     *
-     * @param sdkKey   SDK key used to build the ProjectConfigManager.
-     * @param fallback Fallback datafile string used by the ProjectConfigManager to be immediately available.
-     * @param datafileAccessToken  Token for authenticated datafile access.
-     * @return A new Optimizely instance
-     */
-    public static Optimizely newDefaultInstance(String sdkKey, String fallback, String datafileAccessToken) {
-        NotificationCenter notificationCenter = new NotificationCenter();
-        HttpProjectConfigManager.Builder builder;
-        builder = HttpProjectConfigManager.builder()
-            .withDatafile(fallback)
-            .withNotificationCenter(notificationCenter)
             .withSdkKey(sdkKey);
 
         if (datafileAccessToken != null) {
