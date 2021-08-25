@@ -230,37 +230,6 @@ public class OptimizelyFactoryTest {
     }
 
     @Test
-    public void newDefaultInstanceWithSdkKeyAndCustomHttpClient() throws Exception {
-        // Set a blocking timeout so we don't block for too long.
-        OptimizelyFactory.setBlockingTimeout(5, TimeUnit.MICROSECONDS);
-
-        // Add custom Proxy and Port here
-        int port = 443;
-        String proxyHostName = "someProxy.com";
-        HttpHost proxyHost = new HttpHost(proxyHostName, port);
-
-        HttpRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxyHost);
-
-        HttpClientBuilder clientBuilder = HttpClients.custom();
-        clientBuilder = clientBuilder.setRoutePlanner(routePlanner);
-
-        CloseableHttpClient httpClient = clientBuilder.build();
-
-        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", httpClient);
-        OptimizelyFactory.setCustomHttpClient(null);
-        assertFalse(optimizely.isValid());
-    }
-
-    @Test
-    public void newDefaultInstanceWithSdkKeyAndNullCustomHttpClient() throws Exception {
-        // Set a blocking timeout so we don't block for too long.
-        OptimizelyFactory.setBlockingTimeout(5, TimeUnit.MICROSECONDS);
-        CloseableHttpClient httpClient = null;
-        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", httpClient);
-        assertFalse(optimizely.isValid());
-    }
-
-    @Test
     public void newDefaultInstanceWithFallback() throws Exception {
         String datafileString = Resources.toString(Resources.getResource("valid-project-config-v4.json"), Charsets.UTF_8);
         optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString);
@@ -270,7 +239,7 @@ public class OptimizelyFactoryTest {
     @Test
     public void newDefaultInstanceWithDatafileAccessToken() throws Exception {
         String datafileString = Resources.toString(Resources.getResource("valid-project-config-v4.json"), Charsets.UTF_8);
-        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString, "auth-token");
+        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString, "auth-token", null);
         assertTrue(optimizely.isValid());
     }
 
@@ -287,10 +256,8 @@ public class OptimizelyFactoryTest {
         clientBuilder = clientBuilder.setRoutePlanner(routePlanner);
 
         CloseableHttpClient httpClient = clientBuilder.build();
-        OptimizelyFactory.setCustomHttpClient(httpClient);
         String datafileString = Resources.toString(Resources.getResource("valid-project-config-v4.json"), Charsets.UTF_8);
-        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString, "auth-token");
-        OptimizelyFactory.setCustomHttpClient(null);
+        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString, "auth-token", httpClient);
         assertTrue(optimizely.isValid());
     }
 

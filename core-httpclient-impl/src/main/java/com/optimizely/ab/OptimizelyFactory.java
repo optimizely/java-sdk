@@ -51,13 +51,6 @@ public final class OptimizelyFactory {
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyFactory.class);
     private static CloseableHttpClient customHttpClient;
 
-    public static void setCustomHttpClient(CloseableHttpClient httpClient) {
-        if (httpClient == null) {
-            logger.error("CloseableHttpClient must not be null. Please initialize object.");
-        }
-        customHttpClient = httpClient;
-    }
-
     /**
      * Convenience method for setting the maximum number of events contained within a batch.
      * {@link AsyncEventHandler}
@@ -230,16 +223,7 @@ public final class OptimizelyFactory {
             return newDefaultInstance(() -> null);
         }
 
-        return newDefaultInstance(sdkKey, "");
-    }
-
-    public static Optimizely newDefaultInstance(String sdkKey, CloseableHttpClient httpClient) {
-        if (httpClient == null || sdkKey == null) {
-            logger.error("Must provide an sdkKey and httpClient, returning non-op Optimizely client");
-            return sdkKey == null ? newDefaultInstance(() -> null) : newDefaultInstance(sdkKey);
-        }
-        setCustomHttpClient(httpClient);
-        return newDefaultInstance(sdkKey);
+        return newDefaultInstance(sdkKey, null);
     }
 
     /**
@@ -252,9 +236,8 @@ public final class OptimizelyFactory {
      * @return A new Optimizely instance
      */
     public static Optimizely newDefaultInstance(String sdkKey, String fallback) {
-        if (fallback.equals("")) { fallback = null; }
         String datafileAccessToken = PropertyUtils.get(HttpProjectConfigManager.CONFIG_DATAFILE_AUTH_TOKEN);
-        return newDefaultInstance(sdkKey, fallback, datafileAccessToken);
+        return newDefaultInstance(sdkKey, fallback, datafileAccessToken, null);
     }
 
     /**
@@ -263,25 +246,21 @@ public final class OptimizelyFactory {
      * @param sdkKey   SDK key used to build the ProjectConfigManager.
      * @param fallback Fallback datafile string used by the ProjectConfigManager to be immediately available.
      * @param datafileAccessToken  Token for authenticated datafile access.
+     * @param customHttpClient  Customizable CloseableHttpClient to build OptimizelyHttpClient.
      * @return A new Optimizely instance
      */
-    public static Optimizely newDefaultInstance(String sdkKey, String fallback, String datafileAccessToken) {
+    public static Optimizely newDefaultInstance(String sdkKey, String fallback, String datafileAccessToken, CloseableHttpClient customHttpClient) {
         NotificationCenter notificationCenter = new NotificationCenter();
         HttpProjectConfigManager.Builder builder;
-        if (customHttpClient != null) {
-            OptimizelyHttpClient optimizelyHttpClient = new OptimizelyHttpClient(customHttpClient);
 
-            builder = HttpProjectConfigManager.builder()
-                .withDatafile(fallback)
-                .withNotificationCenter(notificationCenter)
-                .withOptimizelyHttpClient(optimizelyHttpClient)
-                .withSdkKey(sdkKey);
-        } else {
-            builder = HttpProjectConfigManager.builder()
-                .withDatafile(fallback)
-                .withNotificationCenter(notificationCenter)
-                .withSdkKey(sdkKey);
-        }
+        OptimizelyHttpClient optimizelyHttpClient = new OptimizelyHttpClient(customHttpClient);
+
+        builder = HttpProjectConfigManager.builder()
+            .withDatafile(fallback)
+            .withNotificationCenter(notificationCenter)
+            .withOptimizelyHttpClient(optimizelyHttpClient == null ? null : optimizelyHttpClient)
+            .withSdkKey(sdkKey);
+
         if (datafileAccessToken != null) {
             builder.withDatafileAccessToken(datafileAccessToken);
         }
