@@ -26,6 +26,7 @@ public class OptimizelyConfigService {
     private ProjectConfig projectConfig;
     private OptimizelyConfig optimizelyConfig;
     private List<OptimizelyAudience> audiences;
+    private List<OptimizelyExperiment> experimentRules;
     private Map<String, String> audiencesMap;
     private Map<String, List<FeatureVariable>> featureIdToVariablesMap = new HashMap<>();
     private Map<String, OptimizelyExperiment> experimentMapByExperimentId = new HashMap<>();
@@ -221,10 +222,8 @@ public class OptimizelyConfigService {
         Map<String, OptimizelyFeature> optimizelyFeatureKeyMap = new HashMap<>();
         for (FeatureFlag featureFlag : featureFlags) {
             Map<String, OptimizelyExperiment> experimentsMapForFeature =
-                getExperimentsMapForFeature(featureFlag.getExperimentIds(), allExperimentsMap);
+                getExperimentsMapForFeature(featureFlag.getExperimentIds());
 
-            List<OptimizelyExperiment> experimentRules =
-                new ArrayList<OptimizelyExperiment>(experimentsMapForFeature.values());
             List<OptimizelyExperiment> deliveryRules =
                 this.getDeliveryRules(featureFlag.getRolloutId(), featureFlag.getId());
 
@@ -267,16 +266,21 @@ public class OptimizelyConfigService {
     }
 
     @VisibleForTesting
-    Map<String, OptimizelyExperiment> getExperimentsMapForFeature(List<String> experimentIds, Map<String, OptimizelyExperiment> allExperimentsMap) {
+    Map<String, OptimizelyExperiment> getExperimentsMapForFeature(List<String> experimentIds) {
         if (experimentIds == null) {
             return Collections.emptyMap();
         }
 
+        List<OptimizelyExperiment> experimentRulesList = new ArrayList<>();
+
         Map<String, OptimizelyExperiment> optimizelyExperimentKeyMap = new HashMap<>();
         for (String experimentId : experimentIds) {
-            Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
-            optimizelyExperimentKeyMap.put(experiment.getKey(), experimentMapByExperimentId.get(experiment.getId()));
+            OptimizelyExperiment optimizelyExperiment = experimentMapByExperimentId.get(experimentId);
+            optimizelyExperimentKeyMap.put(optimizelyExperiment.getKey(), optimizelyExperiment);
+            experimentRulesList.add(optimizelyExperiment);
         }
+
+        this.experimentRules = experimentRulesList;
 
         return optimizelyExperimentKeyMap;
     }

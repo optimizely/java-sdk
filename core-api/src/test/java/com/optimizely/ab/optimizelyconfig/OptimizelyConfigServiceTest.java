@@ -87,7 +87,7 @@ public class OptimizelyConfigServiceTest {
     public void testGetExperimentsMapForFeature() {
         List<String> experimentIds = projectConfig.getFeatureFlags().get(1).getExperimentIds();
         Map<String, OptimizelyExperiment> optimizelyFeatureExperimentMap =
-            optimizelyConfigService.getExperimentsMapForFeature(experimentIds, optimizelyConfigService.getExperimentsMap());
+            optimizelyConfigService.getExperimentsMapForFeature(experimentIds);
         assertEquals(expectedConfig.getFeaturesMap().get("multi_variate_feature").getExperimentsMap().size(), optimizelyFeatureExperimentMap.size());
     }
 
