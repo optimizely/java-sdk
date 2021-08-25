@@ -22,6 +22,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.internal.matchers.Or;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -56,6 +57,21 @@ public class AudienceConditionEvaluationTest {
         testTypedUserAttributes.put("null_val", null);
     }
 
+    @Test
+    public void nullConditionTest() throws Exception {
+        NullCondition nullCondition = new NullCondition();
+        assertEquals(null, nullCondition.toJson());
+        assertEquals(null, nullCondition.getOperandOrId());
+    }
+
+    @Test
+    public void emptyConditionTest() throws Exception {
+        EmptyCondition emptyCondition = new EmptyCondition();
+        assertEquals(null, emptyCondition.toJson());
+        assertEquals(null, emptyCondition.getOperandOrId());
+        assertEquals(true, emptyCondition.evaluate(null, null));
+    }
+
     /**
      * Verify that UserAttribute.toJson returns a json represented string of conditions.
      */
@@ -66,6 +82,41 @@ public class AudienceConditionEvaluationTest {
         assertEquals(testInstance.toJson(), expectedConditionJsonString);
     }
 
+    /**
+     * Verify that AndCondition.toJson returns a json represented string of conditions.
+     */
+    @Test
+    public void andConditionsToJsonWithComma() throws Exception {
+        UserAttribute testInstance1 = new UserAttribute("browser_type", "custom_attribute", "true", "safari");
+        UserAttribute testInstance2 = new UserAttribute("browser_type", "custom_attribute", "true", "safari");
+        String expectedConditionJsonString = "[\"and\", [\"or\", {\"name\":\"browser_type\", \"type\":\"custom_attribute\", \"match\":\"true\", \"value\":\"safari\"}, {\"name\":\"browser_type\", \"type\":\"custom_attribute\", \"match\":\"true\", \"value\":\"safari\"}]]";
+        List<Condition> userConditions = new ArrayList<>();
+        userConditions.add(testInstance1);
+        userConditions.add(testInstance2);
+        OrCondition orCondition = new OrCondition(userConditions);
+        List<Condition> orConditions = new ArrayList<>();
+        orConditions.add(orCondition);
+        AndCondition andCondition = new AndCondition(orConditions);
+        assertEquals(andCondition.toJson(), expectedConditionJsonString);
+    }
+
+    /**
+     * Verify that orCondition.toJson returns a json represented string of conditions.
+     */
+    @Test
+    public void orConditionsToJsonWithComma() throws Exception {
+        UserAttribute testInstance1 = new UserAttribute("browser_type", "custom_attribute", "true", "safari");
+        UserAttribute testInstance2 = new UserAttribute("browser_type", "custom_attribute", "true", "safari");
+        String expectedConditionJsonString = "[\"or\", [\"and\", {\"name\":\"browser_type\", \"type\":\"custom_attribute\", \"match\":\"true\", \"value\":\"safari\"}, {\"name\":\"browser_type\", \"type\":\"custom_attribute\", \"match\":\"true\", \"value\":\"safari\"}]]";
+        List<Condition> userConditions = new ArrayList<>();
+        userConditions.add(testInstance1);
+        userConditions.add(testInstance2);
+        AndCondition andCondition = new AndCondition(userConditions);
+        List<Condition> andConditions = new ArrayList<>();
+        andConditions.add(andCondition);
+        OrCondition orCondition = new OrCondition(andConditions);
+        assertEquals(orCondition.toJson(), expectedConditionJsonString);
+    }
 
     /**
      * Verify that UserAttribute.evaluate returns true on exact-matching visitor attribute data.

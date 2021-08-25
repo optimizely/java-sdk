@@ -38,6 +38,7 @@ stages:
   - 'Full stack production tests'
   - 'Test'
   - 'Publish'
+  - 'Snapshot'
 
 jobs:
   include:
@@ -82,4 +83,10 @@ jobs:
       if: tag IS present
       script:
         - ./gradlew ship
+      after_success: skip
+
+    - stage: 'Snapshot'
+      if: env(SNAPSHOT) = true and type = api
+      script:
+        - TRAVIS_TAG=BB-SNAPSHOT ./gradlew ship
       after_success: skip
