@@ -23,6 +23,12 @@ import com.optimizely.ab.event.AsyncEventHandler;
 import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
+import org.apache.http.HttpHost;
+import org.apache.http.conn.routing.HttpRoutePlanner;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -234,6 +240,24 @@ public class OptimizelyFactoryTest {
     public void newDefaultInstanceWithDatafileAccessToken() throws Exception {
         String datafileString = Resources.toString(Resources.getResource("valid-project-config-v4.json"), Charsets.UTF_8);
         optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString, "auth-token");
+        assertTrue(optimizely.isValid());
+    }
+
+    @Test
+    public void newDefaultInstanceWithDatafileAccessTokenAndCustomHttpClient() throws Exception {
+        // Add custom Proxy and Port here
+        int port = 443;
+        String proxyHostName = "someProxy.com";
+        HttpHost proxyHost = new HttpHost(proxyHostName, port);
+
+        HttpRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxyHost);
+
+        HttpClientBuilder clientBuilder = HttpClients.custom();
+        clientBuilder = clientBuilder.setRoutePlanner(routePlanner);
+
+        CloseableHttpClient httpClient = clientBuilder.build();
+        String datafileString = Resources.toString(Resources.getResource("valid-project-config-v4.json"), Charsets.UTF_8);
+        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString, "auth-token", httpClient);
         assertTrue(optimizely.isValid());
     }
 

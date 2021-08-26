@@ -23,6 +23,7 @@ import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -247,11 +248,26 @@ public final class OptimizelyFactory {
      * @return A new Optimizely instance
      */
     public static Optimizely newDefaultInstance(String sdkKey, String fallback, String datafileAccessToken) {
+        return newDefaultInstance(sdkKey, fallback, datafileAccessToken, null);
+    }
+    
+    /**
+     * Returns a new Optimizely instance with authenticated datafile support.
+     *
+     * @param sdkKey   SDK key used to build the ProjectConfigManager.
+     * @param fallback Fallback datafile string used by the ProjectConfigManager to be immediately available.
+     * @param datafileAccessToken  Token for authenticated datafile access.
+     * @param customHttpClient  Customizable CloseableHttpClient to build OptimizelyHttpClient.
+     * @return A new Optimizely instance
+     */
+    public static Optimizely newDefaultInstance(String sdkKey, String fallback, String datafileAccessToken, CloseableHttpClient customHttpClient) {
         NotificationCenter notificationCenter = new NotificationCenter();
-
-        HttpProjectConfigManager.Builder builder = HttpProjectConfigManager.builder()
+        OptimizelyHttpClient optimizelyHttpClient = new OptimizelyHttpClient(customHttpClient);
+        HttpProjectConfigManager.Builder builder;
+        builder = HttpProjectConfigManager.builder()
             .withDatafile(fallback)
             .withNotificationCenter(notificationCenter)
+            .withOptimizelyHttpClient(customHttpClient == null ? null : optimizelyHttpClient)
             .withSdkKey(sdkKey);
 
         if (datafileAccessToken != null) {
