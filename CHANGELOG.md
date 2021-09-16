@@ -12,7 +12,7 @@ September 16th, 2021
   - audiences and audiences in OptimizelyExperiment
   - experimentRules
   - deliveryRules
-* Deprecated OptimizelyFeature.experimentsMap and OptimizelyConfig.experimentsMap [#440] (https://github.com/optimizely/java-sdk/pull/440)
+* OptimizelyFeature.experimentsMap of OptimizelyConfig is now deprecated. Please use OptimizelyFeature.experiment_rules and OptimizelyFeature.delivery_rules. [#440] (https://github.com/optimizely/java-sdk/pull/440)
 * For more information please refer to Optimizely documentation: [https://docs.developers.optimizely.com/full-stack/docs/optimizelyconfig-java]
 
 * Added custom closeableHttpClient for custom proxy support. [#441] (https://github.com/optimizely/java-sdk/pull/441)
