@@ -4,10 +4,10 @@
 September 16th, 2021
 
 ### New Features
-* Added new public properties to OptimizelyConfig.
-  - sdkKey [#434] (https://github.com/optimizely/java-sdk/pull/434)
+* Added new public properties to OptimizelyConfig. [#434] (https://github.com/optimizely/java-sdk/pull/434), [#438] (https://github.com/optimizely/java-sdk/pull/438)
+  - sdkKey
   - environmentKey
-  - attributes [#438] (https://github.com/optimizely/java-sdk/pull/438)
+  - attributes
   - events
   - audiences and audiences in OptimizelyExperiment
   - experimentRules
