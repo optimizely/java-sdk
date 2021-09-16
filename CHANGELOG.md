@@ -1,6 +1,6 @@
 # Optimizely Java X SDK Changelog
 
-## [3.8.3]
+## [3.9.0]
 September 16th, 2021
 
 ### New Features
