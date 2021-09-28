@@ -103,6 +103,8 @@ public interface ProjectConfig {
 
     Map<String, List<String>> getExperimentFeatureKeyMapping();
 
+    Map<String, List<Variation>> getFlagVariationsMap();
+
     @Override
     String toString();
 

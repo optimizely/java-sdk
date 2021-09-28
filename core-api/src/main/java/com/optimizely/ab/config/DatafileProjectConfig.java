@@ -80,6 +80,9 @@ public class DatafileProjectConfig implements ProjectConfig {
     private final Map<String, Experiment> experimentKeyMapping;
     private final Map<String, FeatureFlag> featureKeyMapping;
 
+    // Key to Entity mappings for Forced Decisions
+    private final Map<String, List<Variation>> flagVariationsMap;
+
     // id to entity mappings
     private final Map<String, Audience> audienceIdMapping;
     private final Map<String, Experiment> experimentIdMapping;
@@ -209,6 +212,39 @@ public class DatafileProjectConfig implements ProjectConfig {
 
         // Generate experiment to featureFlag list mapping to identify if experiment is AB-Test experiment or Feature-Test Experiment.
         this.experimentFeatureKeyMapping = ProjectConfigUtils.generateExperimentFeatureMapping(this.featureFlags);
+
+        flagVariationsMap = new HashMap<>();
+        if (featureFlags != null) {
+            for (FeatureFlag flag : featureFlags) {
+                Map<String, Variation> variationsIdMap = new HashMap<>();
+                List<Variation> variations = new ArrayList<>();
+                for (String experimentId : flag.getExperimentIds()) {
+                    // We need to get each experiment by id and add to our list of experiments
+                    Experiment exp = experimentIdMapping.get(experimentId);
+                    variations.addAll(getVariationsFromExperiments(variationsIdMap, exp));
+
+                }
+                Rollout rollout = rolloutIdMapping.get(flag.getRolloutId());
+                if (rollout != null) {
+                    for (Experiment experiment : rollout.getExperiments()) {
+                        variations.addAll(getVariationsFromExperiments(variationsIdMap, experiment));
+                    }
+                }
+                // Grab all the variations from the flag experiments and rollouts and add to flagVariationsMap
+                flagVariationsMap.put(flag.getKey(), variations);
+            }
+        }
+    }
+
+    private List<Variation> getVariationsFromExperiments(Map<String, Variation> variationsIdMap, Experiment exp) {
+        List<Variation> variations = new ArrayList<>();
+        for (Variation variation : exp.getVariations()) {
+            if (!variationsIdMap.containsKey(variation.getId())) {
+                variationsIdMap.put(variation.getId(), variation);
+                variations.add(variation);
+            }
+        }
+        return variations;
     }
 
     /**
@@ -461,6 +497,11 @@ public class DatafileProjectConfig implements ProjectConfig {
     @Override
     public Map<String, List<String>> getExperimentFeatureKeyMapping() {
         return experimentFeatureKeyMapping;
+    }
+
+    @Override
+    public Map<String, List<Variation>> getFlagVariationsMap() {
+        return flagVariationsMap;
     }
 
     @Override
