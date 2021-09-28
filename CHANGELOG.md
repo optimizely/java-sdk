@@ -1,5 +1,22 @@
 # Optimizely Java X SDK Changelog
 
+## [3.9.0]
+September 16th, 2021
+
+### New Features
+* Added new public properties to OptimizelyConfig. [#434] (https://github.com/optimizely/java-sdk/pull/434), [#438] (https://github.com/optimizely/java-sdk/pull/438)
+  - sdkKey
+  - environmentKey
+  - attributes
+  - events
+  - audiences and audiences in OptimizelyExperiment
+  - experimentRules
+  - deliveryRules
+* OptimizelyFeature.experimentsMap of OptimizelyConfig is now deprecated. Please use OptimizelyFeature.experiment_rules and OptimizelyFeature.delivery_rules. [#440] (https://github.com/optimizely/java-sdk/pull/440)
+* For more information please refer to Optimizely documentation: [https://docs.developers.optimizely.com/full-stack/docs/optimizelyconfig-java]
+
+* Added custom closeableHttpClient for custom proxy support. [#441] (https://github.com/optimizely/java-sdk/pull/441)
+
 ## [3.8.2]
 March 8th, 2021
 
