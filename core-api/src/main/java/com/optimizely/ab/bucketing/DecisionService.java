@@ -477,10 +477,7 @@ public class DecisionService {
      * @param variationKey  The variation key to force the user into.  If the variation key is null
      *                      then the forcedVariation for that experiment is removed.
      * @return boolean A boolean value that indicates if the set completed successfully.
-     *
-     * @deprecated use {@link OptimizelyUserContext#setForcedDecision(String, String, String)} instead
      */
-    @Deprecated
     public boolean setForcedVariation(@Nonnull Experiment experiment,
                                       @Nonnull String userId,
                                       @Nullable String variationKey) {
@@ -547,10 +544,7 @@ public class DecisionService {
      * @param userId        The user ID to be used for bucketing.
      * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null)
      * and the decision reasons. The variation can be null if the forced variation fails.
-     *
-     * @deprecated use {@link OptimizelyUserContext#getForcedDecision(String, String)} instead
      */
-    @Deprecated
     @Nonnull
     public DecisionResponse<Variation> getForcedVariation(@Nonnull Experiment experiment,
                                                           @Nonnull String userId) {

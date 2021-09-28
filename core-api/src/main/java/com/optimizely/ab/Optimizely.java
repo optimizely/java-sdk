@@ -1082,10 +1082,7 @@ public class Optimizely implements AutoCloseable {
      * @param variationKey  The variation key to force the user into.  If the variation key is null
      *                      then the forcedVariation for that experiment is removed.
      * @return boolean A boolean value that indicates if the set completed successfully.
-     *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     public boolean setForcedVariation(@Nonnull String experimentKey,
                                       @Nonnull String userId,
                                       @Nullable String variationKey) {
@@ -1116,10 +1113,7 @@ public class Optimizely implements AutoCloseable {
      * @param userId        The user ID to be used for bucketing.
      * @return The variation the user was bucketed into. This value can be null if the
      * forced variation fails.
-     *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     @Nullable
     public Variation getForcedVariation(@Nonnull String experimentKey,
                                         @Nonnull String userId) {
