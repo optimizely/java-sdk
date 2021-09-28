@@ -98,13 +98,13 @@ public class DecisionServiceTest {
             experiment,
             optimizely.createUserContext(
                 genericUserId,
-                null),
+                Collections.emptyMap()),
             validProjectConfig).getResult());
 
         logbackVerifier.expectMessage(Level.INFO, "User \"" + whitelistedUserId + "\" is forced in variation \"vtag1\".");
 
         // no attributes provided for a experiment that has an audience
-        assertThat(decisionService.getVariation(experiment, optimizely.createUserContext(whitelistedUserId, null), validProjectConfig).getResult(), is(expectedVariation));
+        assertThat(decisionService.getVariation(experiment, optimizely.createUserContext(whitelistedUserId, Collections.emptyMap()), validProjectConfig).getResult(), is(expectedVariation));
 
         verify(decisionService).getWhitelistedVariation(eq(experiment), eq(whitelistedUserId));
         verify(decisionService, never()).getStoredVariation(eq(experiment), any(UserProfile.class), any(ProjectConfig.class));

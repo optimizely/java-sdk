@@ -2892,8 +2892,6 @@ public class OptimizelyTest {
 
         Optimizely optimizely = optimizelyBuilder.withDecisionService(mockDecisionService).build();
 
-        Attribute attribute = new Attribute("Dummy","Dummy","Dummy");
-
         FeatureDecision featureDecision = new FeatureDecision(multivariateExperiment, VARIATION_MULTIVARIATE_EXPERIMENT_GRED, FeatureDecision.DecisionSource.FEATURE_TEST);
         doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
