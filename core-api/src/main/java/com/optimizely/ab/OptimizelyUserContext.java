@@ -59,7 +59,7 @@ public class OptimizelyUserContext {
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
                                  @Nonnull String userId,
-                                 @Nonnull Map<String, Object> attributes) {
+                                 @Nonnull Map<String, ?> attributes) {
         this.optimizely = optimizely;
         this.userId = userId;
         if (attributes != null) {

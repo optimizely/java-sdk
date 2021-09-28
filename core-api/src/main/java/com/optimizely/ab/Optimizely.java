@@ -422,7 +422,7 @@ public class Optimizely implements AutoCloseable {
             return false;
         }
 
-        Map<String, Object> copiedAttributes = copyAttributes(attributes);
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, createUserContext(userId, copiedAttributes), projectConfig).getResult();
         Boolean featureEnabled = false;
@@ -732,7 +732,7 @@ public class Optimizely implements AutoCloseable {
         }
 
         String variableValue = variable.getDefaultValue();
-        Map<String, Object> copiedAttributes = copyAttributes(attributes);
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, createUserContext(userId, copiedAttributes), projectConfig).getResult();
         Boolean featureEnabled = false;
         if (featureDecision.variation != null) {
@@ -865,7 +865,7 @@ public class Optimizely implements AutoCloseable {
             return null;
         }
 
-        Map<String, Object> copiedAttributes = copyAttributes(attributes);
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, createUserContext(userId, copiedAttributes), projectConfig, Collections.emptyList()).getResult();
         Boolean featureEnabled = false;
         Variation variation = featureDecision.variation;
@@ -935,7 +935,7 @@ public class Optimizely implements AutoCloseable {
             return enabledFeaturesList;
         }
 
-        Map<String, Object> copiedAttributes = copyAttributes(attributes);
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
         for (FeatureFlag featureFlag : projectConfig.getFeatureFlags()) {
             String featureKey = featureFlag.getKey();
             if (isFeatureEnabled(projectConfig, featureKey, userId, copiedAttributes))
@@ -951,7 +951,7 @@ public class Optimizely implements AutoCloseable {
     public Variation getVariation(@Nonnull Experiment experiment,
                                   @Nonnull String userId) throws UnknownExperimentException {
 
-        return getVariation(experiment, userId, Collections.<String, String>emptyMap());
+        return getVariation(experiment, userId, Collections.emptyMap());
     }
 
     @Nullable
@@ -966,7 +966,7 @@ public class Optimizely implements AutoCloseable {
                                    @Nonnull Experiment experiment,
                                    @Nonnull String userId,
                                    @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
-        Map<String, Object> copiedAttributes = copyAttributes(attributes);
+        Map<String, ?> copiedAttributes = copyAttributes(attributes);
         Variation variation = decisionService.getVariation(experiment, createUserContext(userId, copiedAttributes), projectConfig).getResult();
         String notificationType = NotificationCenter.DecisionNotificationType.AB_TEST.toString();
 
@@ -1150,7 +1150,7 @@ public class Optimizely implements AutoCloseable {
      * @return An OptimizelyUserContext associated with this OptimizelyClient.
       */
     public OptimizelyUserContext createUserContext(@Nonnull String userId,
-                                                   @Nonnull Map<String, Object> attributes) {
+                                                   @Nonnull Map<String, ?> attributes) {
         if (userId == null) {
             logger.warn("The userId parameter must be nonnull.");
             return null;
@@ -1360,7 +1360,7 @@ public class Optimizely implements AutoCloseable {
      * @param attributes map to copy
      * @return copy of attributes
      */
-    private Map<String, Object> copyAttributes(Map<String, ?> attributes) {
+    private Map<String, ?> copyAttributes(Map<String, ?> attributes) {
         Map<String, Object> copiedAttributes = null;
         if (attributes != null) {
             copiedAttributes = new HashMap<>(attributes);
