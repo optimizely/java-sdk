@@ -1202,26 +1202,50 @@ public class OptimizelyUserContextTest {
             Collections.emptyMap());
 
         optimizelyUserContext.setForcedDecision(flagKey, ruleKey, variationKey);
-        OptimizelyUserContext.ForcedDecision forcedDecision = optimizelyUserContext.forcedDecisionsMap.get(flagKey).get(ruleKey);
-        assertEquals(forcedDecision.getFlagKey(), flagKey);
-        assertEquals(forcedDecision.getRuleKey(), ruleKey);
-        assertEquals(forcedDecision.getVariationKey(), variationKey);
+        String foundVariationKey = optimizelyUserContext.getForcedDecision(flagKey, ruleKey);
+        assertEquals(variationKey, foundVariationKey);
+    }
+
+    @Test
+    public void setForcedDecisionsWithRuleKeyTest() {
+        String flagKey = "55555";
+        String ruleKey = "77777";
+        String ruleKey2 = "88888";
+        String variationKey = "33333";
+        String variationKey2 = "44444";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+            optimizely,
+            userId,
+            Collections.emptyMap());
+
+        optimizelyUserContext.setForcedDecision(flagKey, ruleKey, variationKey);
+        optimizelyUserContext.setForcedDecision(flagKey, ruleKey2, variationKey2);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(flagKey, ruleKey));
+        assertEquals(variationKey2, optimizelyUserContext.getForcedDecision(flagKey, ruleKey2));
+
+        // Update first forcedDecision
+        optimizelyUserContext.setForcedDecision(flagKey, ruleKey, variationKey2);
+        assertEquals(variationKey2, optimizelyUserContext.getForcedDecision(flagKey, ruleKey));
     }
 
     @Test
     public void setForcedDecisionWithoutRuleKeyTest() {
         String flagKey = "55555";
         String variationKey = "33333";
+        String updatedVariationKey = "55555";
         OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
             optimizely,
             userId,
             Collections.emptyMap());
 
         optimizelyUserContext.setForcedDecision(flagKey, variationKey);
-        OptimizelyUserContext.ForcedDecision forcedDecision = optimizelyUserContext.forcedDecisionsMapWithNoRuleKey.get(flagKey);
-        assertEquals(forcedDecision.getFlagKey(), flagKey);
-        assertEquals(forcedDecision.getVariationKey(), variationKey);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(flagKey));
+
+        // Update forcedDecision
+        optimizelyUserContext.setForcedDecision(flagKey, updatedVariationKey);
+        assertEquals(updatedVariationKey, optimizelyUserContext.getForcedDecision(flagKey));
     }
+
 
     @Test
     public void setForcedDecisionWithoutRuleKeyTestSdkNotReady() {
