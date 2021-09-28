@@ -190,6 +190,7 @@ public class OptimizelyUserContext {
     }
 
     /**
+     * Set a forced decision
      *
      * @param flagKey The flag key for the forced decision
      * @param variationKey The variation key for the forced decision
@@ -239,6 +240,7 @@ public class OptimizelyUserContext {
     }
 
     /**
+     * Get a forced decision
      *
      * @param flagKey The flag key for the forced decision
      * @return Returns a variationKey for a given forced decision
@@ -286,6 +288,7 @@ public class OptimizelyUserContext {
     }
 
     /**
+     * Remove a forced decision
      *
      * @param flagKey The flag key in the forced decision
      * @return Returns a boolean of true if successful, otherwise false
