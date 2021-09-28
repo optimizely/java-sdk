@@ -1361,7 +1361,7 @@ public class Optimizely implements AutoCloseable {
      * @return copy of attributes
      */
     private Map<String, ?> copyAttributes(Map<String, ?> attributes) {
-        Map<String, Object> copiedAttributes = null;
+        Map<String, ?> copiedAttributes = null;
         if (attributes != null) {
             copiedAttributes = new HashMap<>(attributes);
         }
