@@ -4655,4 +4655,15 @@ public class OptimizelyTest {
         assertTrue(user2.getAttributes().isEmpty());
     }
 
+    @Test
+    public void getFlagVariationByKey() throws IOException {
+        String flagKey = "double_single_variable_feature";
+        String variationKey = "pi_variation";
+        Optimizely optimizely = Optimizely.builder().withDatafile(validConfigJsonV4()).build();
+        Variation variation = optimizely.getFlagVariationByKey(flagKey, variationKey);
+
+        assertNotNull(variation);
+        assertEquals(variationKey, variation.getKey());
+    }
+
 }

@@ -1345,10 +1345,12 @@ public class Optimizely implements AutoCloseable {
      */
     public Variation getFlagVariationByKey(String flagKey, String variationKey) {
         Map<String, List<Variation>> flagVariationsMap = getProjectConfig().getFlagVariationsMap();
-        List<Variation> variations = flagVariationsMap.get(flagKey);
-        for (Variation variation : variations) {
-            if (variation.getKey().equals(variationKey)) {
-                return variation;
+        if (flagVariationsMap.containsKey(flagKey)) {
+            List<Variation> variations = flagVariationsMap.get(flagKey);
+            for (Variation variation : variations) {
+                if (variation.getKey().equals(variationKey)) {
+                    return variation;
+                }
             }
         }
         return null;
