@@ -2708,7 +2708,7 @@ public class OptimizelyTest {
     //======== Feature Accessor Tests ========//
 
     /**
-     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}
+     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}
      * returns null and logs a message
      * when it is called with a feature key that has no corresponding feature in the datafile.
      */
