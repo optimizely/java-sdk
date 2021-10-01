@@ -1358,6 +1358,20 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
+    public void removeForcedDecisionWithNullRuleKeyAfterAddingWithRuleKey() {
+        String flagKey = "flag2";
+        String ruleKey = "default-rollout-3045-20390585493";
+        String variationKey = "variation2";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+            optimizely,
+            userId,
+            Collections.emptyMap());
+
+        optimizelyUserContext.setForcedDecision(flagKey, ruleKey, variationKey);
+        assertFalse(optimizelyUserContext.removeForcedDecision(flagKey));
+    }
+
+    @Test
     public void removeForcedDecisionWithoutRuleKeySdkNotReady() {
         String flagKey = "55555";
         String variationKey = "33333";

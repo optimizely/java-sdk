@@ -321,8 +321,10 @@ public class OptimizelyUserContext {
             }
         } else {
             try {
-                forcedDecisionsMapWithNoRuleKey.remove(flagKey);
-                return true;
+                ForcedDecision result = forcedDecisionsMapWithNoRuleKey.remove(flagKey);
+                if (result != null) {
+                    return true;
+                }
             } catch (Exception e) {
                 logger.error("Forced Decision does not exist to remove - " + e);
             }
