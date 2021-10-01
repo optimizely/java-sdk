@@ -216,18 +216,12 @@ public class DatafileProjectConfig implements ProjectConfig {
         flagVariationsMap = new HashMap<>();
         if (featureFlags != null) {
             for (FeatureFlag flag : featureFlags) {
-                Map<String, Variation> variationsIdMap = new HashMap<>();
                 List<Variation> variations = new ArrayList<>();
-                for (String experimentId : flag.getExperimentIds()) {
-                    // We need to get each experiment by id and add to our list of experiments
-                    Experiment exp = experimentIdMapping.get(experimentId);
-                    variations.addAll(getVariationsFromExperiments(variationsIdMap, exp));
-
-                }
-                Rollout rollout = rolloutIdMapping.get(flag.getRolloutId());
-                if (rollout != null) {
-                    for (Experiment experiment : rollout.getExperiments()) {
-                        variations.addAll(getVariationsFromExperiments(variationsIdMap, experiment));
+                for (Experiment rule : getAllRulesForFlag(flag)) {
+                    for (Variation variation : rule.getVariations()) {
+                        if (!variations.contains(variation)) {
+                            variations.add(variation);
+                        }
                     }
                 }
                 // Grab all the variations from the flag experiments and rollouts and add to flagVariationsMap
@@ -236,16 +230,23 @@ public class DatafileProjectConfig implements ProjectConfig {
         }
     }
 
-    private List<Variation> getVariationsFromExperiments(Map<String, Variation> variationsIdMap, Experiment exp) {
-        List<Variation> variations = new ArrayList<>();
-        for (Variation variation : exp.getVariations()) {
-            if (!variationsIdMap.containsKey(variation.getId())) {
-                variationsIdMap.put(variation.getId(), variation);
-                variations.add(variation);
-            }
+    /**
+     *  Helper method to grab all rules for a flag
+     * @param flag The flag to grab all the rules from
+     * @return Returns a list of Experiments as rules
+     */
+    private List<Experiment> getAllRulesForFlag(FeatureFlag flag) {
+        List<Experiment> rules = new ArrayList<>();
+        Rollout rollout = rolloutIdMapping.get(flag.getRolloutId());
+        for (String experimentId : flag.getExperimentIds()) {
+            rules.add(experimentIdMapping.get(experimentId));
         }
-        return variations;
+        if (rollout != null) {
+            rules.addAll(rollout.getExperiments());
+        }
+        return rules;
     }
+
 
     /**
      * Helper method to retrieve the {@link Experiment} for the given experiment key.
