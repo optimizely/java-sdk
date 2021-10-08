@@ -34,7 +34,9 @@ public class OptimizelyForcedDecisionKey {
     public String toString() {
         StringBuilder keyString = new StringBuilder();
         keyString.append(getFlagKey().hashCode());
-        keyString.append(getRuleKey() != null ? getRuleKey().hashCode() : "null");
+        if (getRuleKey() != null) {
+            keyString.append(getRuleKey().hashCode());
+        }
         return keyString.toString();
     }
 }
