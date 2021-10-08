@@ -373,9 +373,7 @@ public class Optimizely implements AutoCloseable {
      * False if the feature is disabled.
      * False if the feature is not found.
      *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     @Nonnull
     public Boolean isFeatureEnabled(@Nonnull String featureKey,
                                     @Nonnull String userId) {
@@ -393,9 +391,7 @@ public class Optimizely implements AutoCloseable {
      * False if the feature is disabled.
      * False if the feature is not found.
      *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     @Nonnull
     public Boolean isFeatureEnabled(@Nonnull String featureKey,
                                     @Nonnull String userId,
@@ -409,11 +405,6 @@ public class Optimizely implements AutoCloseable {
         return isFeatureEnabled(projectConfig, featureKey, userId, attributes);
     }
 
-    /**
-     *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
-     */
-    @Deprecated
     @Nonnull
     private Boolean isFeatureEnabled(@Nonnull ProjectConfig projectConfig,
                                      @Nonnull String featureKey,
@@ -508,9 +499,7 @@ public class Optimizely implements AutoCloseable {
      *
      *
      *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     @Nullable
     public Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
                                              @Nonnull String variableKey,
@@ -535,9 +524,7 @@ public class Optimizely implements AutoCloseable {
      * @return The Double value of the double single variable feature.
      * Null if the feature or variable could not be found.
      *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     @Nullable
     public Double getFeatureVariableDouble(@Nonnull String featureKey,
                                            @Nonnull String variableKey,
@@ -555,9 +542,7 @@ public class Optimizely implements AutoCloseable {
      * @return The Double value of the double single variable feature.
      * Null if the feature or variable could not be found.
      *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     @Nullable
     public Double getFeatureVariableDouble(@Nonnull String featureKey,
                                            @Nonnull String variableKey,
@@ -590,9 +575,7 @@ public class Optimizely implements AutoCloseable {
      * @return The Integer value of the integer single variable feature.
      * Null if the feature or variable could not be found.
      *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     @Nullable
     public Integer getFeatureVariableInteger(@Nonnull String featureKey,
                                              @Nonnull String variableKey,
@@ -610,9 +593,7 @@ public class Optimizely implements AutoCloseable {
      * @return The Integer value of the integer single variable feature.
      * Null if the feature or variable could not be found.
      *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     @Nullable
     public Integer getFeatureVariableInteger(@Nonnull String featureKey,
                                              @Nonnull String variableKey,
@@ -646,9 +627,7 @@ public class Optimizely implements AutoCloseable {
      * @return The String value of the string single variable feature.
      * Null if the feature or variable could not be found.
      *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     @Nullable
     public String getFeatureVariableString(@Nonnull String featureKey,
                                            @Nonnull String variableKey,
@@ -666,9 +645,7 @@ public class Optimizely implements AutoCloseable {
      * @return The String value of the string single variable feature.
      * Null if the feature or variable could not be found.
      *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     @Nullable
     public String getFeatureVariableString(@Nonnull String featureKey,
                                            @Nonnull String variableKey,
@@ -692,9 +669,7 @@ public class Optimizely implements AutoCloseable {
      * @return An OptimizelyJSON instance for the JSON variable value.
      * Null if the feature or variable could not be found.
      *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     @Nullable
     public OptimizelyJSON getFeatureVariableJSON(@Nonnull String featureKey,
                                                  @Nonnull String variableKey,
@@ -712,9 +687,7 @@ public class Optimizely implements AutoCloseable {
      * @return An OptimizelyJSON instance for the JSON variable value.
      * Null if the feature or variable could not be found.
      *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     @Nullable
     public OptimizelyJSON getFeatureVariableJSON(@Nonnull String featureKey,
                                          @Nonnull String variableKey,
@@ -865,9 +838,7 @@ public class Optimizely implements AutoCloseable {
      * @return An OptimizelyJSON instance for all variable values.
      * Null if the feature could not be found.
      *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     @Nullable
     public OptimizelyJSON getAllFeatureVariables(@Nonnull String featureKey,
                                                  @Nonnull String userId) {
@@ -883,9 +854,7 @@ public class Optimizely implements AutoCloseable {
      * @return An OptimizelyJSON instance for all variable values.
      * Null if the feature could not be found.
      *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     @Nullable
     public OptimizelyJSON getAllFeatureVariables(@Nonnull String featureKey,
                                                  @Nonnull String userId,
@@ -969,9 +938,7 @@ public class Optimizely implements AutoCloseable {
      * @return List of the feature keys that are enabled for the user if the userId is empty it will
      * return Empty List.
      *
-     * @deprecated use __decide__ API instead. Refer to [the migration guide] (https://docs.developers.optimizely.com/full-stack/v4.0/docs/migrate-from-older-versions-java)
      */
-    @Deprecated
     public List<String> getEnabledFeatures(@Nonnull String userId, @Nonnull Map<String, ?> attributes) {
         List<String> enabledFeaturesList = new ArrayList();
         if (!validateUserId(userId)) {

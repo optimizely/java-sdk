@@ -311,11 +311,13 @@ public class OptimizelyUserContext {
         }
         if (ruleKey != null) {
             try {
-                forcedDecisionsMap.get(flagKey).remove(ruleKey);
-                if (forcedDecisionsMap.get(flagKey).size() == 0) {
-                    forcedDecisionsMap.remove(flagKey);
+                ForcedDecision result = forcedDecisionsMap.get(flagKey).remove(ruleKey);
+                if (result != null) {
+                    if (forcedDecisionsMap.get(flagKey).size() == 0) {
+                        forcedDecisionsMap.remove(flagKey);
+                    }
+                    return true;
                 }
-                return true;
             } catch (Exception e) {
                 logger.error("Forced Decision does not exist to remove - " + e);
             }
@@ -368,7 +370,6 @@ public class OptimizelyUserContext {
      */
     public DecisionResponse<Variation> findValidatedForcedDecision(@Nonnull String flagKey, String ruleKey) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
-        // TODO - Move all info strings to a single class to be called rather than hardcoded in functions
         String variationKey = findForcedDecision(flagKey, ruleKey);
         if (variationKey != null) {
             Variation variation = optimizely.getFlagVariationByKey(flagKey, variationKey);
