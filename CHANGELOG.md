@@ -26,9 +26,13 @@ March 8th, 2021
 ## [3.8.1]
 March 2nd, 2021
 
-- Switch publish repository to MavenCentral (bintray/jcenter sunset)
-- Fix javadoc warnings ([#426](https://github.com/optimizely/java-sdk/pull/426))
+Switch publish repository to MavenCentral (bintray/jcenter sunset)
  
+### Fixes
+- Fix app crashing when the rollout length is zero ([#423](https://github.com/optimizely/java-sdk/pull/423)).
+- Fix javadoc warnings ([#426](https://github.com/optimizely/java-sdk/pull/426)).
+
+
 ## [3.8.0]
 February 3rd, 2021
 
