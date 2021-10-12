@@ -202,6 +202,52 @@ public class DecisionService {
                                                                     @Nonnull List<OptimizelyDecideOption> options) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
+        DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options);
+        reasons.merge(decisionVariationResponse.getReasons());
+
+        FeatureDecision decision = decisionVariationResponse.getResult();
+        if (decision != null) {
+            return new DecisionResponse(decision, reasons);
+        }
+
+        DecisionResponse<FeatureDecision> decisionFeatureResponse = getVariationForFeatureInRollout(featureFlag, user, projectConfig);
+        reasons.merge(decisionFeatureResponse.getReasons());
+        decision = decisionFeatureResponse.getResult();
+
+        String message;
+        if (decision.variation == null) {
+            message = reasons.addInfo("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
+                user.getUserId(), featureFlag.getKey());
+        } else {
+            message = reasons.addInfo("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
+                user.getUserId(), featureFlag.getKey());
+        }
+        logger.info(message);
+
+        return new DecisionResponse(decision, reasons);
+    }
+
+    @Nonnull
+    public DecisionResponse<FeatureDecision> getVariationForFeature(@Nonnull FeatureFlag featureFlag,
+                                                                    @Nonnull OptimizelyUserContext user,
+                                                                    @Nonnull ProjectConfig projectConfig) {
+        return getVariationForFeature(featureFlag, user, projectConfig, Collections.emptyList());
+    }
+
+    /**
+     *
+     * @param projectConfig     The ProjectConfig.
+     * @param featureFlag       The feature flag the user wants to access.
+     * @param user              The current OptimizelyUserContext.
+     * @param options           An array of decision options
+     * @return A {@link DecisionResponse} including a {@link FeatureDecision} and the decision reasons
+     */
+    @Nonnull
+    DecisionResponse<FeatureDecision> getVariationFromExperiment(@Nonnull ProjectConfig projectConfig,
+                                                                 @Nonnull FeatureFlag featureFlag,
+                                                                 @Nonnull OptimizelyUserContext user,
+                                                                 @Nonnull List<OptimizelyDecideOption> options) {
+        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
         if (!featureFlag.getExperimentIds().isEmpty()) {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
@@ -221,27 +267,8 @@ public class DecisionService {
             logger.info(message);
         }
 
-        DecisionResponse<FeatureDecision> decisionFeature = getVariationForFeatureInRollout(featureFlag, user, projectConfig);
-        reasons.merge(decisionFeature.getReasons());
-        FeatureDecision featureDecision = decisionFeature.getResult();
+        return new DecisionResponse(null, reasons);
 
-        String message;
-        if (featureDecision.variation == null) {
-            message = reasons.addInfo("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
-                user.getUserId(), featureFlag.getKey());
-        } else {
-            message = reasons.addInfo("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
-                user.getUserId(), featureFlag.getKey());
-        }
-        logger.info(message);
-        return new DecisionResponse(featureDecision, reasons);
-    }
-
-    @Nonnull
-    public DecisionResponse<FeatureDecision> getVariationForFeature(@Nonnull FeatureFlag featureFlag,
-                                                                    @Nonnull OptimizelyUserContext user,
-                                                                    @Nonnull ProjectConfig projectConfig) {
-        return getVariationForFeature(featureFlag, user, projectConfig, Collections.emptyList());
     }
 
     /**
