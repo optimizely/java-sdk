@@ -25,6 +25,7 @@ import com.optimizely.ab.optimizelydecision.DecisionReasons;
 import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -306,51 +307,33 @@ public class DecisionService {
         if (rolloutRulesLength == 0) {
             return new DecisionResponse(new FeatureDecision(null, null, null), reasons);
         }
-        String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
 
-        Variation variation;
-        DecisionResponse<Boolean> decisionMeetAudience;
-        DecisionResponse<Variation> decisionVariation;
-        for (int i = 0; i < rolloutRulesLength - 1; i++) {
-            Experiment rolloutRule = rollout.getExperiments().get(i);
 
-            decisionMeetAudience = ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, rolloutRule, user.getAttributes(), RULE, Integer.toString(i + 1));
-            reasons.merge(decisionMeetAudience.getReasons());
-            if (decisionMeetAudience.getResult()) {
-                decisionVariation = bucketer.bucket(rolloutRule, bucketingId, projectConfig);
-                reasons.merge(decisionVariation.getReasons());
-                variation = decisionVariation.getResult();
+        int index = 0;
+        while (index < rolloutRulesLength) {
 
-                if (variation == null) {
-                    break;
-                }
-                return new DecisionResponse(
-                    new FeatureDecision(rolloutRule, variation, FeatureDecision.DecisionSource.ROLLOUT),
-                    reasons);
-            } else {
-                String message = reasons.addInfo("User \"%s\" does not meet conditions for targeting rule \"%d\".", user.getUserId(), i + 1);
-                logger.debug(message);
-            }
-        }
+            DecisionResponse<Map> decisionVariationResponse = getVariationFromDeliveryRule(
+                projectConfig,
+                featureFlag.getKey(),
+                rollout.getExperiments(),
+                index,
+                user
+            );
+            reasons.merge(decisionVariationResponse.getReasons());
 
-        // get last rule which is the fall back rule
-        Experiment finalRule = rollout.getExperiments().get(rolloutRulesLength - 1);
-
-        decisionMeetAudience = ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, finalRule, user.getAttributes(), RULE, "Everyone Else");
-        reasons.merge(decisionMeetAudience.getReasons());
-        if (decisionMeetAudience.getResult()) {
-            decisionVariation = bucketer.bucket(finalRule, bucketingId, projectConfig);
-            variation = decisionVariation.getResult();
-            reasons.merge(decisionVariation.getReasons());
-
+            Map<Variation, Boolean> response = decisionVariationResponse.getResult();
+            Variation variation = (Variation)response.keySet().toArray()[0];
+            Boolean skipToEveryoneElse = response.get(variation);
             if (variation != null) {
-                String message = reasons.addInfo("User \"%s\" meets conditions for targeting rule \"Everyone Else\".", user.getUserId());
-                logger.debug(message);
-                return new DecisionResponse(
-                    new FeatureDecision(finalRule, variation, FeatureDecision.DecisionSource.ROLLOUT),
-                    reasons);
+                Experiment rule = rollout.getExperiments().get(index);
+                FeatureDecision featureDecision = new FeatureDecision(rule, variation, FeatureDecision.DecisionSource.ROLLOUT);
+                return new DecisionResponse(featureDecision, reasons);
             }
+
+            // The last rule is special for "Everyone Else"
+            index = skipToEveryoneElse ? (rolloutRulesLength - 1) : (index + 1);
         }
+
         return new DecisionResponse(new FeatureDecision(null, null, null), reasons);
     }
 
@@ -636,6 +619,72 @@ public class DecisionService {
      */
     private boolean validateUserId(String userId) {
         return (userId != null);
+    }
+
+    DecisionResponse<Map> getVariationFromDeliveryRule(@Nonnull ProjectConfig projectConfig,
+                                                       @Nonnull String flagKey,
+                                                       @Nonnull List<Experiment> rules,
+                                                       @Nonnull int ruleIndex,
+                                                       @Nonnull OptimizelyUserContext user) {
+        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+        Boolean skipToEveryoneElse = false;
+        Map<Variation, Boolean> variationToSkipToEveryoneElse = new HashMap<>();
+        // Check forced-decisions first
+        Experiment rule = rules.get(ruleIndex);
+        DecisionResponse<Variation> forcedDecisionResponse = user.findValidatedForcedDecision(flagKey, rule.getKey());
+        reasons.merge(forcedDecisionResponse.getReasons());
+
+        Variation variation = forcedDecisionResponse.getResult();
+        if (variation != null) {
+            variationToSkipToEveryoneElse.put(variation, false);
+            return new DecisionResponse(variationToSkipToEveryoneElse, reasons);
+        }
+
+        // Handle a regular decision
+        String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
+        Boolean everyoneElse = (ruleIndex == rules.size() - 1);
+        String loggingKey = everyoneElse ? "Everyone Else" : String.valueOf(ruleIndex + 1);
+
+        Variation bucketedVariation = null;
+
+        DecisionResponse<Boolean> audienceDecisionResponse = ExperimentUtils.doesUserMeetAudienceConditions(
+            projectConfig,
+            rule,
+            user.getAttributes(),
+            RULE,
+            String.valueOf(ruleIndex + 1)
+        );
+
+        reasons.merge(audienceDecisionResponse.getReasons());
+        String message;
+        if (audienceDecisionResponse.getResult()) {
+            message = reasons.addInfo("User \"%s\" meets conditions for targeting rule \"%s\".", user.getUserId(), loggingKey);
+            reasons.addInfo(message);
+            logger.debug(message);
+
+            DecisionResponse<Variation> decisionResponse = bucketer.bucket(rule, bucketingId, projectConfig);
+            reasons.merge(decisionResponse.getReasons());
+            bucketedVariation = decisionResponse.getResult();
+
+            if (bucketedVariation != null) {
+                message = reasons.addInfo("User \"%s\" bucketed for targeting rule \"%s\".", user.getUserId(), loggingKey);
+                logger.debug(message);
+                reasons.addInfo(message);
+            } else if (!everyoneElse) {
+                message = reasons.addInfo("User \"%s\" is not bucketed for targeting rule \"%s\".", user.getUserId(), loggingKey);
+                logger.debug(message);
+                reasons.addInfo(message);
+                // Skip the rest of rollout rules to the everyone-else rule if audience matches but not bucketed.
+                skipToEveryoneElse = true;
+            }
+        } else {
+            message = reasons.addInfo("User \"%s\" does not meet conditions for targeting rule \"%d\".", user.getUserId(), ruleIndex + 1);
+            reasons.addInfo(message);
+            logger.debug(message);
+        }
+        variationToSkipToEveryoneElse.clear();
+        variationToSkipToEveryoneElse.put(bucketedVariation, skipToEveryoneElse);
+        return new DecisionResponse(variationToSkipToEveryoneElse, reasons);
     }
 
 }

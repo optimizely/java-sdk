@@ -28,8 +28,11 @@ import java.util.*;
 
 public class OptimizelyUserContext {
 
+    // Constant used for null values when making keys for Forced Decisions
+    static String OPTI_NULL_STRING = "NULL";
+
     // OptimizelyForcedDecisionsKey mapped to variationKeys
-    Map<String, String> forcedDecisionsMap = new HashMap<>();
+    Map<String, Map<String, String>> forcedDecisionsMap = new HashMap<>();
 
     @Nonnull
     private final String userId;
@@ -199,8 +202,17 @@ public class OptimizelyUserContext {
             return false;
         }
 
-        OptimizelyForcedDecisionKey key = new OptimizelyForcedDecisionKey(flagKey, ruleKey);
-        forcedDecisionsMap.put(key.toString(), variationKey);
+        ruleKey = ruleKey != null ? ruleKey : OPTI_NULL_STRING;
+
+        if (forcedDecisionsMap.get(flagKey) != null) {
+            Map<String, String> existingForcedDecisions = forcedDecisionsMap.get(flagKey);
+            existingForcedDecisions.put(ruleKey, variationKey);
+        } else {
+            Map<String, String> forcedDecision = new HashMap<>();
+            forcedDecision.put(ruleKey, variationKey);
+            forcedDecisionsMap.put(flagKey, forcedDecision);
+        }
+
 
         return true;
     }
@@ -222,6 +234,7 @@ public class OptimizelyUserContext {
      * @param ruleKey The rule key for the forced decision
      * @return Returns a variationKey for a given forced decision
      */
+    @Nullable
     public String getForcedDecision(@Nonnull String flagKey, String ruleKey) {
         if (optimizely.getOptimizelyConfig() == null) {
             logger.error("Optimizely SDK not ready.");
@@ -237,10 +250,12 @@ public class OptimizelyUserContext {
      * @param ruleKey The rule key for the forced decision
      * @return Returns a variationKey relating to the found forced decision, otherwise null
      */
+    @Nullable
     public String findForcedDecision(@Nonnull String flagKey, String ruleKey) {
-        String variationKey;
-        OptimizelyForcedDecisionKey lookupKey = new OptimizelyForcedDecisionKey(flagKey, ruleKey);
-        variationKey = forcedDecisionsMap.get(lookupKey.toString());
+        String variationKey = null;
+        if (forcedDecisionsMap.get(flagKey) != null ) {
+            variationKey = forcedDecisionsMap.get(flagKey).get(ruleKey != null ? ruleKey : OPTI_NULL_STRING);
+        }
         return variationKey;
     }
 
@@ -267,11 +282,16 @@ public class OptimizelyUserContext {
             return false;
         }
 
-        OptimizelyForcedDecisionKey removeKey = new OptimizelyForcedDecisionKey(flagKey, ruleKey);
         try {
-            return forcedDecisionsMap.remove(removeKey.toString()) != null ? true : false;
+            if (forcedDecisionsMap.get(flagKey) != null) {
+                ruleKey = ruleKey != null ? ruleKey : OPTI_NULL_STRING;
+                if (forcedDecisionsMap.get(flagKey).remove(ruleKey) != null) {
+                    forcedDecisionsMap.remove(flagKey);
+                    return true;
+                }
+            }
         } catch (Exception e) {
-            logger.error("Forced Decision does not exist to remove - " + e);
+            logger.error("Unable to remove forced-decision - " + e);
         }
 
         return false;
