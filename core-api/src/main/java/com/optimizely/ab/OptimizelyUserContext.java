@@ -30,7 +30,7 @@ public class OptimizelyUserContext {
     // Constant used for null values when making keys for Forced Decisions
     static String OPTI_NULL_STRING = "NULL";
 
-    // OptimizelyForcedDecisionsKey mapped to variationKeys
+    // flagKey mapped to a Map of ruleKey mapped to variationKeys
     Map<String, Map<String, String>> forcedDecisionsMap = new HashMap<>();
 
     @Nonnull
