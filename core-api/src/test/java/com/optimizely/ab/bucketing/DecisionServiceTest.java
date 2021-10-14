@@ -31,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -713,6 +714,55 @@ public class DecisionServiceTest {
         logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"3\" collectively evaluated to true");
         // verify user is only bucketed once for everyone else rule
         verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+    }
+
+    @Test
+    public void getVariationFromDeliveryRuleTest() {
+        int index = 3;
+        List<Experiment> rules = ROLLOUT_2.getExperiments();
+        Experiment experiment = ROLLOUT_2.getExperiments().get(index);
+        Variation expectedVariation = null;
+        for (Variation variation : experiment.getVariations()) {
+            if (variation.getKey().equals("3137445031")) {
+                expectedVariation = variation;
+            }
+        }
+        DecisionResponse<Map> decisionResponse = decisionService.getVariationFromDeliveryRule(
+            v4ProjectConfig,
+            FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(),
+            rules,
+            index,
+            optimizely.createUserContext(genericUserId, Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE))
+        );
+
+        Variation variation = (Variation) decisionResponse.getResult().keySet().toArray()[0];
+        Boolean skipToEveryoneElse = (Boolean) decisionResponse.getResult().get(variation);
+        assertNotNull(decisionResponse.getResult());
+        assertNotNull(variation);
+        assertNotNull(expectedVariation);
+        assertEquals(expectedVariation, variation);
+        assertFalse(skipToEveryoneElse);
+    }
+
+    @Test
+    public void getVariationFromExperimentRuleTest() {
+        int index = 3;
+        Experiment experiment = ROLLOUT_2.getExperiments().get(index);
+        Variation expectedVariation = null;
+        for (Variation variation : experiment.getVariations()) {
+            if (variation.getKey().equals("3137445031")) {
+                expectedVariation = variation;
+            }
+        }
+        DecisionResponse<Variation> decisionResponse = decisionService.getVariationFromExperimentRule(
+            v4ProjectConfig,
+            FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(),
+            experiment,
+            optimizely.createUserContext(genericUserId, Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE)),
+            Collections.emptyList()
+        );
+
+        assertEquals(expectedVariation, decisionResponse.getResult());
     }
 
     //========= white list tests ==========/
