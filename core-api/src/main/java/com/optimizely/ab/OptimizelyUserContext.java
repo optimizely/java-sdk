@@ -16,7 +16,6 @@
  */
 package com.optimizely.ab;
 
-import com.optimizely.ab.bucketing.OptimizelyForcedDecisionKey;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.optimizelydecision.*;
 import org.slf4j.Logger;
