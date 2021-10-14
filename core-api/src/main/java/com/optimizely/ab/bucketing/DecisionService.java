@@ -621,6 +621,16 @@ public class DecisionService {
         return (userId != null);
     }
 
+    /**
+     *
+     * @param projectConfig     The Project config
+     * @param flagKey           The flag key for the feature flag
+     * @param rules             The experiments belonging to a rollout
+     * @param ruleIndex         The index of the rule
+     * @param user              The OptimizelyUserContext
+     * @return                  Returns a DecisionResponse Object containing a Map<Variation, Boolean>
+     *                          where the Variation is the result and the Boolean is the skipToEveryoneElse.
+     */
     DecisionResponse<Map> getVariationFromDeliveryRule(@Nonnull ProjectConfig projectConfig,
                                                        @Nonnull String flagKey,
                                                        @Nonnull List<Experiment> rules,
