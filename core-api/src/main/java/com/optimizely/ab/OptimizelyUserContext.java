@@ -334,20 +334,14 @@ public class OptimizelyUserContext {
         if (variationKey != null) {
             Variation variation = optimizely.getFlagVariationByKey(flagKey, variationKey);
             String strRuleKey = ruleKey != null ? ruleKey : "null";
+            String info;
             if (variation != null) {
-                String info = "Variation " + variationKey
-                    + " is mapped to flag: " + flagKey
-                    + " and rule: " + strRuleKey
-                    + " and user: " + userId
-                    + " in the forced decision map.";
+                info = String.format("Variation %s is mapped to flag: %s and rule: %s and user: %s in the forced decisions map.", variationKey, flagKey, strRuleKey, userId);
                 logger.debug(info);
                 reasons.addInfo(info);
                 return new DecisionResponse(variation, reasons);
             } else {
-                String info = "Invalid variation is mapped to flag: " + flagKey
-                + " and rule: " + strRuleKey
-                + " and user: " + userId
-                + " forced decision map.";
+                info = String.format("Invalid variation is mapped to flag: %s and rule: %s and user: %s in the forced decisions map.", flagKey, strRuleKey, userId);
                 logger.debug(info);
                 reasons.addInfo(info);
             }
