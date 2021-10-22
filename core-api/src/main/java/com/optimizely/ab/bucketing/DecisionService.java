@@ -16,7 +16,6 @@
 package com.optimizely.ab.bucketing;
 
 import com.optimizely.ab.OptimizelyDecisionContext;
-import com.optimizely.ab.OptimizelyForcedDecision;
 import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.*;
@@ -27,7 +26,6 @@ import com.optimizely.ab.optimizelydecision.DecisionReasons;
 import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -596,8 +594,9 @@ public class DecisionService {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         String ruleKey = rule != null ? rule.getKey() : null;
-        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
         // Check Forced-Decision
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
         DecisionResponse<Variation> forcedDecisionResponse = user.findValidatedForcedDecision(optimizelyDecisionContext);
 
         reasons.merge(forcedDecisionResponse.getReasons());
