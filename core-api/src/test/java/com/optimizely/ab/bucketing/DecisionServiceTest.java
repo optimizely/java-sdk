@@ -727,7 +727,7 @@ public class DecisionServiceTest {
                 expectedVariation = variation;
             }
         }
-        DecisionResponse<Pair> decisionResponse = decisionService.getVariationFromDeliveryRule(
+        DecisionResponse<Map> decisionResponse = decisionService.getVariationFromDeliveryRule(
             v4ProjectConfig,
             FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(),
             rules,
@@ -735,8 +735,8 @@ public class DecisionServiceTest {
             optimizely.createUserContext(genericUserId, Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE))
         );
 
-        Variation variation = (Variation) decisionResponse.getResult().getKey();
-        Boolean skipToEveryoneElse = (Boolean) decisionResponse.getResult().getValue();
+        Variation variation = (Variation) decisionResponse.getResult().values().toArray()[0];
+        Boolean skipToEveryoneElse = (Boolean) decisionResponse.getResult().get(variation);
         assertNotNull(decisionResponse.getResult());
         assertNotNull(variation);
         assertNotNull(expectedVariation);
