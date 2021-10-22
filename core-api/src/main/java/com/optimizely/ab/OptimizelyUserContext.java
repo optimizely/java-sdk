@@ -53,6 +53,20 @@ public class OptimizelyUserContext {
         }
     }
 
+    public OptimizelyUserContext(@Nonnull Optimizely optimizely,
+                                 @Nonnull String userId,
+                                 @Nonnull Map<String, ?> attributes,
+                                 @Nullable Map<String, OptimizelyForcedDecision> forcedDecisionsMap) {
+        this.optimizely = optimizely;
+        this.userId = userId;
+        if (attributes != null) {
+            this.attributes = Collections.synchronizedMap(new HashMap<>(attributes));
+        } else {
+            this.attributes = Collections.synchronizedMap(new HashMap<>());
+        }
+        this.forcedDecisionsMap = forcedDecisionsMap;
+    }
+
     public OptimizelyUserContext(@Nonnull Optimizely optimizely, @Nonnull String userId) {
         this(optimizely, userId, Collections.EMPTY_MAP);
     }
@@ -70,7 +84,7 @@ public class OptimizelyUserContext {
     }
 
     public OptimizelyUserContext copy() {
-        return new OptimizelyUserContext(optimizely, userId, attributes);
+        return new OptimizelyUserContext(optimizely, userId, attributes, forcedDecisionsMap);
     }
 
     /**

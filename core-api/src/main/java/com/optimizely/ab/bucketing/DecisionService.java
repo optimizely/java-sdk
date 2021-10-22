@@ -30,10 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.optimizely.ab.internal.LoggingConstants.LoggingEntityType.EXPERIMENT;
@@ -311,7 +308,7 @@ public class DecisionService {
         int index = 0;
         while (index < rolloutRulesLength) {
 
-            DecisionResponse<Map> decisionVariationResponse = getVariationFromDeliveryRule(
+            DecisionResponse<AbstractMap.SimpleEntry> decisionVariationResponse = getVariationFromDeliveryRule(
                 projectConfig,
                 featureFlag.getKey(),
                 rollout.getExperiments(),
@@ -320,9 +317,9 @@ public class DecisionService {
             );
             reasons.merge(decisionVariationResponse.getReasons());
 
-            Map<Variation, Boolean> response = decisionVariationResponse.getResult();
-            Variation variation = (Variation)response.keySet().toArray()[0];
-            Boolean skipToEveryoneElse = response.get(variation);
+            AbstractMap.SimpleEntry<Variation, Boolean> response = decisionVariationResponse.getResult();
+            Variation variation = response.getKey();
+            Boolean skipToEveryoneElse = response.getValue();
             if (variation != null) {
                 Experiment rule = rollout.getExperiments().get(index);
                 FeatureDecision featureDecision = new FeatureDecision(rule, variation, FeatureDecision.DecisionSource.ROLLOUT);
@@ -631,15 +628,14 @@ public class DecisionService {
      * @return                  Returns a DecisionResponse Object containing a Pair<Variation, Boolean>
      *                          where the Variation is the result and the Boolean is the skipToEveryoneElse.
      */
-    DecisionResponse<Map> getVariationFromDeliveryRule(@Nonnull ProjectConfig projectConfig,
+    DecisionResponse<AbstractMap.SimpleEntry> getVariationFromDeliveryRule(@Nonnull ProjectConfig projectConfig,
                                                        @Nonnull String flagKey,
                                                        @Nonnull List<Experiment> rules,
                                                        @Nonnull int ruleIndex,
                                                        @Nonnull OptimizelyUserContext user) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
         Boolean skipToEveryoneElse = false;
-        Map<Variation, Boolean> variationToSkipToEveryoneElse = new HashMap<>();;
-
+        AbstractMap.SimpleEntry<Variation, Boolean> variationToSkipToEveryoneElsePair;
         // Check forced-decisions first
         Experiment rule = rules.get(ruleIndex);
         OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, rule.getKey());
@@ -648,8 +644,8 @@ public class DecisionService {
 
         Variation variation = forcedDecisionResponse.getResult();
         if (variation != null) {
-            variationToSkipToEveryoneElse.put(variation, false);
-            return new DecisionResponse(variationToSkipToEveryoneElse, reasons);
+            variationToSkipToEveryoneElsePair = new AbstractMap.SimpleEntry<>(variation, false);
+            return new DecisionResponse(variationToSkipToEveryoneElsePair, reasons);
         }
 
         // Handle a regular decision
@@ -694,8 +690,8 @@ public class DecisionService {
             reasons.addInfo(message);
             logger.debug(message);
         }
-        variationToSkipToEveryoneElse.put(bucketedVariation, skipToEveryoneElse);
-        return new DecisionResponse(variationToSkipToEveryoneElse, reasons);
+        variationToSkipToEveryoneElsePair = new AbstractMap.SimpleEntry<>(bucketedVariation, skipToEveryoneElse);
+        return new DecisionResponse(variationToSkipToEveryoneElsePair, reasons);
     }
 
 }

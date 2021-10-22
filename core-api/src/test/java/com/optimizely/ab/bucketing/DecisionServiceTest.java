@@ -32,10 +32,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
@@ -727,7 +724,7 @@ public class DecisionServiceTest {
                 expectedVariation = variation;
             }
         }
-        DecisionResponse<Map> decisionResponse = decisionService.getVariationFromDeliveryRule(
+        DecisionResponse<AbstractMap.SimpleEntry> decisionResponse = decisionService.getVariationFromDeliveryRule(
             v4ProjectConfig,
             FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(),
             rules,
@@ -735,8 +732,8 @@ public class DecisionServiceTest {
             optimizely.createUserContext(genericUserId, Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE))
         );
 
-        Variation variation = (Variation) decisionResponse.getResult().values().toArray()[0];
-        Boolean skipToEveryoneElse = (Boolean) decisionResponse.getResult().get(variation);
+        Variation variation = (Variation) decisionResponse.getResult().getKey();
+        Boolean skipToEveryoneElse = (Boolean) decisionResponse.getResult().getValue();
         assertNotNull(decisionResponse.getResult());
         assertNotNull(variation);
         assertNotNull(expectedVariation);
