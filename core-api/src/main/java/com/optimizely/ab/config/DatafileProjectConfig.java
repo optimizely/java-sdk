@@ -31,9 +31,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * DatafileProjectConfig is an implementation of ProjectConfig that is backed by a
@@ -216,16 +214,16 @@ public class DatafileProjectConfig implements ProjectConfig {
         flagVariationsMap = new HashMap<>();
         if (featureFlags != null) {
             for (FeatureFlag flag : featureFlags) {
-                List<Variation> variations = new ArrayList<>();
+                Map<String, Variation> variationIdToVariationsMap = new HashMap<>();
                 for (Experiment rule : getAllRulesForFlag(flag)) {
                     for (Variation variation : rule.getVariations()) {
-                        if (!variations.contains(variation)) {
-                            variations.add(variation);
+                        if(!variationIdToVariationsMap.containsKey(variation.getId())) {
+                            variationIdToVariationsMap.put(variation.getId(), variation);
                         }
                     }
                 }
                 // Grab all the variations from the flag experiments and rollouts and add to flagVariationsMap
-                flagVariationsMap.put(flag.getKey(), variations);
+                flagVariationsMap.put(flag.getKey(), new ArrayList<>(variationIdToVariationsMap.values()));
             }
         }
     }
