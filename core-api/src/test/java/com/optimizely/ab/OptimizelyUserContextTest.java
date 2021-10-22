@@ -1200,9 +1200,10 @@ public class OptimizelyUserContextTest {
             optimizely,
             userId,
             Collections.emptyMap());
-
-        optimizelyUserContext.setForcedDecision(flagKey, ruleKey, variationKey);
-        String foundVariationKey = optimizelyUserContext.getForcedDecision(flagKey, ruleKey);
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        String foundVariationKey = optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey();
         assertEquals(variationKey, foundVariationKey);
     }
 
@@ -1218,14 +1219,18 @@ public class OptimizelyUserContextTest {
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey, ruleKey, variationKey);
-        optimizelyUserContext.setForcedDecision(flagKey, ruleKey2, variationKey2);
-        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(flagKey, ruleKey));
-        assertEquals(variationKey2, optimizelyUserContext.getForcedDecision(flagKey, ruleKey2));
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        OptimizelyDecisionContext optimizelyDecisionContext2 = new OptimizelyDecisionContext(flagKey, ruleKey2);
+        OptimizelyForcedDecision optimizelyForcedDecision2 = new OptimizelyForcedDecision(variationKey2);
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext2, optimizelyForcedDecision2);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+        assertEquals(variationKey2, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext2).getVariationKey());
 
         // Update first forcedDecision
-        optimizelyUserContext.setForcedDecision(flagKey, ruleKey, variationKey2);
-        assertEquals(variationKey2, optimizelyUserContext.getForcedDecision(flagKey, ruleKey));
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision2);
+        assertEquals(variationKey2, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
     }
 
     @Test
@@ -1238,12 +1243,16 @@ public class OptimizelyUserContextTest {
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey, variationKey);
-        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(flagKey));
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        OptimizelyForcedDecision updatedOptimizelyForcedDecision = new OptimizelyForcedDecision(updatedVariationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
 
         // Update forcedDecision
-        optimizelyUserContext.setForcedDecision(flagKey, updatedVariationKey);
-        assertEquals(updatedVariationKey, optimizelyUserContext.getForcedDecision(flagKey));
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, updatedOptimizelyForcedDecision);
+        assertEquals(updatedVariationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
     }
 
 
@@ -1257,7 +1266,9 @@ public class OptimizelyUserContextTest {
             userId,
             Collections.emptyMap());
 
-        assertFalse(optimizelyUserContext.setForcedDecision(flagKey, variationKey));
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        assertFalse(optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision));
     }
 
     @Test
@@ -1270,8 +1281,11 @@ public class OptimizelyUserContextTest {
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey, ruleKey, variationKey);
-        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(flagKey, ruleKey));
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
     }
 
     @Test
@@ -1285,8 +1299,12 @@ public class OptimizelyUserContextTest {
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey, ruleKey, variationKey);
-        assertNull(optimizelyUserContext.getForcedDecision(invalidFlagKey, ruleKey));
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyDecisionContext invalidOptimizelyDecisionContext = new OptimizelyDecisionContext(invalidFlagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertNull(optimizelyUserContext.getForcedDecision(invalidOptimizelyDecisionContext));
     }
 
     @Test
@@ -1298,8 +1316,11 @@ public class OptimizelyUserContextTest {
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey, variationKey);
-        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(flagKey));
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
     }
 
     @Test
@@ -1312,8 +1333,11 @@ public class OptimizelyUserContextTest {
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey, variationKey);
-        assertNull(optimizelyUserContext.getForcedDecision(flagKey));
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertNull(optimizelyUserContext.getForcedDecision(optimizelyDecisionContext));
     }
 
     @Test
@@ -1326,8 +1350,12 @@ public class OptimizelyUserContextTest {
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey, variationKey);
-        assertNull(optimizelyUserContext.getForcedDecision(invalidFlagKey));
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyDecisionContext invalidOptimizelyDecisionContext = new OptimizelyDecisionContext(invalidFlagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertNull(optimizelyUserContext.getForcedDecision(invalidOptimizelyDecisionContext));
     }
 
     @Test
@@ -1340,8 +1368,11 @@ public class OptimizelyUserContextTest {
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey, ruleKey, variationKey);
-        assertTrue(optimizelyUserContext.removeForcedDecision(flagKey, ruleKey));
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertTrue(optimizelyUserContext.removeForcedDecision(optimizelyDecisionContext));
     }
 
     @Test
@@ -1353,8 +1384,11 @@ public class OptimizelyUserContextTest {
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey, variationKey);
-        assertTrue(optimizelyUserContext.removeForcedDecision(flagKey));
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertTrue(optimizelyUserContext.removeForcedDecision(optimizelyDecisionContext));
     }
 
     @Test
@@ -1367,8 +1401,12 @@ public class OptimizelyUserContextTest {
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey, ruleKey, variationKey);
-        assertFalse(optimizelyUserContext.removeForcedDecision(flagKey));
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyDecisionContext optimizelyDecisionContextNonNull = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertFalse(optimizelyUserContext.removeForcedDecision(optimizelyDecisionContextNonNull));
     }
 
     @Test
@@ -1381,42 +1419,45 @@ public class OptimizelyUserContextTest {
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey, variationKey);
-        assertFalse(optimizelyUserContext.removeForcedDecision(flagKey));
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertFalse(optimizelyUserContext.removeForcedDecision(optimizelyDecisionContext));
     }
 
     @Test
     public void removeAllForcedDecisions() {
-        String flagKey1 = "55555";
-        String ruleKey1 = "77777";
-        String variationKey1 = "33333";
-        String flagKey2 = "11";
-        String variationKey2 = "5";
+        String flagKey = "55555";
+        String ruleKey = "77777";
+        String variationKey = "33333";
         OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
             optimizely,
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey1, ruleKey1, variationKey1);
-        optimizelyUserContext.setForcedDecision(flagKey2, variationKey2);
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
         assertTrue(optimizelyUserContext.removeAllForcedDecisions());
     }
 
     @Test
     public void removeAllForcedDecisionsSdkNotReady() {
-        String flagKey1 = "55555";
-        String ruleKey1 = "77777";
-        String variationKey1 = "33333";
-        String flagKey2 = "11";
-        String variationKey2 = "5";
+        String flagKey = "55555";
+        String ruleKey = "77777";
+        String variationKey = "33333";
         Optimizely optimizely = new Optimizely.Builder().build();
         OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
             optimizely,
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey1, ruleKey1, variationKey1);
-        optimizelyUserContext.setForcedDecision(flagKey2, variationKey2);
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
         assertFalse(optimizelyUserContext.removeAllForcedDecisions());
     }
 
@@ -1430,8 +1471,11 @@ public class OptimizelyUserContextTest {
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey, ruleKey, variationKey);
-        DecisionResponse<Variation> response = optimizelyUserContext.findValidatedForcedDecision(flagKey, ruleKey);
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        DecisionResponse<Variation> response = optimizelyUserContext.findValidatedForcedDecision(optimizelyDecisionContext);
         Variation variation = response.getResult();
         assertEquals(variationKey, variation.getKey());
     }
@@ -1445,8 +1489,11 @@ public class OptimizelyUserContextTest {
             userId,
             Collections.emptyMap());
 
-        optimizelyUserContext.setForcedDecision(flagKey, variationKey);
-        DecisionResponse<Variation> response = optimizelyUserContext.findValidatedForcedDecision(flagKey);
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        DecisionResponse<Variation> response = optimizelyUserContext.findValidatedForcedDecision(optimizelyDecisionContext);
         Variation variation = response.getResult();
         assertEquals(variationKey, variation.getKey());
     }

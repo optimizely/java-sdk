@@ -24,14 +24,11 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class OptimizelyUserContext {
-
-    // Constant used for null values when making keys for Forced Decisions
-    static String OPTI_NULL_STRING = "NULL";
-
     // OptimizelyForcedDecisionsKey mapped to variationKeys
-    Map<String, Map<String, String>> forcedDecisionsMap = new HashMap<>();
+    Map<String, OptimizelyForcedDecision> forcedDecisionsMap;
 
     @Nonnull
     private final String userId;
@@ -179,113 +176,69 @@ public class OptimizelyUserContext {
     /**
      * Set a forced decision
      *
-     * @param flagKey The flag key for the forced decision
-     * @param variationKey The variation key for the forced decision
-     * @return Returns a boolean, True if successfully set, otherwise false
-     */
-    public Boolean setForcedDecision(@Nonnull String flagKey, @Nonnull String variationKey) {
-        return setForcedDecision(flagKey, null, variationKey);
-    }
-
-    /**
-     * Set a forced decision
-     *
-     * @param flagKey The flag key for the forced decision
-     * @param ruleKey The rule key for the forced decision
-     * @param variationKey The variation key for the forced decision
+     * @param optimizelyDecisionContext The OptimizelyDecisionContext containing flagKey and ruleKey
+     * @param optimizelyForcedDecision The OptimizelyForcedDecision containing the variationKey
      * @return Returns a boolean, Ture if successfully set, otherwise false
      */
-    public Boolean setForcedDecision(@Nonnull String flagKey, String ruleKey, @Nonnull String variationKey) {
+    public Boolean setForcedDecision(@Nonnull OptimizelyDecisionContext optimizelyDecisionContext,
+                                     @Nonnull OptimizelyForcedDecision optimizelyForcedDecision) {
         if (optimizely.getOptimizelyConfig() == null) {
             logger.error("Optimizely SDK not ready.");
             return false;
         }
-
-        ruleKey = ruleKey != null ? ruleKey : OPTI_NULL_STRING;
-
-        if (forcedDecisionsMap.get(flagKey) != null) {
-            Map<String, String> existingForcedDecisions = forcedDecisionsMap.get(flagKey);
-            existingForcedDecisions.put(ruleKey, variationKey);
-        } else {
-            Map<String, String> forcedDecision = new HashMap<>();
-            forcedDecision.put(ruleKey, variationKey);
-            forcedDecisionsMap.put(flagKey, forcedDecision);
+        // Check if the forcedDecisionsMap has been initialized yet or not
+        if (forcedDecisionsMap == null ){
+            // Thread-safe implementation of HashMap
+            forcedDecisionsMap = new ConcurrentHashMap<>();
         }
-
-
+        forcedDecisionsMap.put(optimizelyDecisionContext.getKey(), optimizelyForcedDecision);
         return true;
     }
 
     /**
      * Get a forced decision
      *
-     * @param flagKey The flag key for the forced decision
-     * @return Returns a variationKey for a given forced decision
-     */
-    public String getForcedDecision(@Nonnull String flagKey) {
-        return getForcedDecision(flagKey, null);
-    }
-
-    /**
-     * Get a forced decision
-     *
-     * @param flagKey The flag key for the forced decision
-     * @param ruleKey The rule key for the forced decision
+     * @param optimizelyDecisionContext The OptimizelyDecisionContext containing flagKey and ruleKey
      * @return Returns a variationKey for a given forced decision
      */
     @Nullable
-    public String getForcedDecision(@Nonnull String flagKey, String ruleKey) {
+    public OptimizelyForcedDecision getForcedDecision(@Nonnull OptimizelyDecisionContext optimizelyDecisionContext) {
         if (optimizely.getOptimizelyConfig() == null) {
             logger.error("Optimizely SDK not ready.");
             return null;
         }
-        return findForcedDecision(flagKey, ruleKey);
+        return findForcedDecision(optimizelyDecisionContext);
     }
 
     /**
      * Finds a forced decision
      *
-     * @param flagKey The flag key for the forced decision
-     * @param ruleKey The rule key for the forced decision
+     * @param optimizelyDecisionContext The OptimizelyDecisionContext containing flagKey and ruleKey
      * @return Returns a variationKey relating to the found forced decision, otherwise null
      */
     @Nullable
-    public String findForcedDecision(@Nonnull String flagKey, String ruleKey) {
-        String variationKey = null;
-        if (forcedDecisionsMap.get(flagKey) != null ) {
-            variationKey = forcedDecisionsMap.get(flagKey).get(ruleKey != null ? ruleKey : OPTI_NULL_STRING);
+    public OptimizelyForcedDecision findForcedDecision(@Nonnull OptimizelyDecisionContext optimizelyDecisionContext) {
+        if (forcedDecisionsMap != null) {
+            return forcedDecisionsMap.get(optimizelyDecisionContext.getKey());
         }
-        return variationKey;
+        return null;
     }
 
     /**
      * Remove a forced decision
      *
-     * @param flagKey The flag key in the forced decision
-     * @return Returns a boolean of true if successful, otherwise false
-     */
-    public boolean removeForcedDecision(@Nonnull String flagKey) {
-        return removeForcedDecision(flagKey, null);
-    }
-
-    /**
-     * Remove a forced decision
-     *
-     * @param flagKey The flag key for the forced decision
-     * @param ruleKey The rule key for the forced decision
+     * @param optimizelyDecisionContext The OptimizelyDecisionContext containing flagKey and ruleKey
      * @return Returns a boolean, true if successfully removed, otherwise false
      */
-    public boolean removeForcedDecision(@Nonnull String flagKey, String ruleKey) {
+    public boolean removeForcedDecision(@Nonnull OptimizelyDecisionContext optimizelyDecisionContext) {
         if (optimizely.getOptimizelyConfig() == null) {
             logger.error("Optimizely SDK not ready.");
             return false;
         }
 
         try {
-            if (forcedDecisionsMap.get(flagKey) != null) {
-                ruleKey = ruleKey != null ? ruleKey : OPTI_NULL_STRING;
-                if (forcedDecisionsMap.get(flagKey).remove(ruleKey) != null) {
-                    forcedDecisionsMap.remove(flagKey);
+            if (forcedDecisionsMap != null) {
+                if (forcedDecisionsMap.remove(optimizelyDecisionContext.getKey()) != null) {
                     return true;
                 }
             }
@@ -307,41 +260,34 @@ public class OptimizelyUserContext {
             return false;
         }
         // Clear both maps for with and without ruleKey
-        forcedDecisionsMap.clear();
+        if (forcedDecisionsMap != null) {
+            forcedDecisionsMap.clear();
+        }
         return true;
     }
 
     /**
      * Find a validated forced decision
      *
-     * @param flagKey The flag key for the forced decision
-     * @return Returns a DecisionResponse structure of type Variation, otherwise null with reasons
-     */
-    public DecisionResponse<Variation> findValidatedForcedDecision(@Nonnull String flagKey) {
-        return findValidatedForcedDecision(flagKey, null);
-    }
-
-    /**
-     * Find a validated forced decision
-     *
-     * @param flagKey The flag key for a forced decision
-     * @param ruleKey The rule key for a forced decision
+     * @param optimizelyDecisionContext The OptimizelyDecisionContext containing flagKey and ruleKey
      * @return Returns a DecisionResponse structure of type Variation, otherwise null result with reasons
      */
-    public DecisionResponse<Variation> findValidatedForcedDecision(@Nonnull String flagKey, String ruleKey) {
+    public DecisionResponse<Variation> findValidatedForcedDecision(@Nonnull OptimizelyDecisionContext optimizelyDecisionContext) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
-        String variationKey = findForcedDecision(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = findForcedDecision(optimizelyDecisionContext);
+        String variationKey = optimizelyForcedDecision != null ? optimizelyForcedDecision.getVariationKey() : null;
         if (variationKey != null) {
-            Variation variation = optimizely.getFlagVariationByKey(flagKey, variationKey);
-            String strRuleKey = ruleKey != null ? ruleKey : "null";
+            Variation variation = optimizely.getFlagVariationByKey(optimizelyDecisionContext.getFlagKey(), variationKey);
+            String ruleKey = optimizelyDecisionContext.getRuleKey();
+            String flagKey = optimizelyDecisionContext.getFlagKey();
             String info;
             if (variation != null) {
-                info = String.format("Variation %s is mapped to flag: %s and rule: %s and user: %s in the forced decisions map.", variationKey, flagKey, strRuleKey, userId);
+                info = String.format("Variation %s is mapped to flag: %s and rule: %s and user: %s in the forced decisions map.", variationKey, flagKey, ruleKey, userId);
                 logger.debug(info);
                 reasons.addInfo(info);
                 return new DecisionResponse(variation, reasons);
             } else {
-                info = String.format("Invalid variation is mapped to flag: %s and rule: %s and user: %s in the forced decisions map.", flagKey, strRuleKey, userId);
+                info = String.format("Invalid variation is mapped to flag: %s and rule: %s and user: %s in the forced decisions map.", flagKey, ruleKey, userId);
                 logger.debug(info);
                 reasons.addInfo(info);
             }

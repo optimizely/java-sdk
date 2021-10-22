@@ -24,6 +24,7 @@ import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import javafx.util.Pair;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -726,7 +727,7 @@ public class DecisionServiceTest {
                 expectedVariation = variation;
             }
         }
-        DecisionResponse<Map> decisionResponse = decisionService.getVariationFromDeliveryRule(
+        DecisionResponse<Pair> decisionResponse = decisionService.getVariationFromDeliveryRule(
             v4ProjectConfig,
             FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(),
             rules,
@@ -734,8 +735,8 @@ public class DecisionServiceTest {
             optimizely.createUserContext(genericUserId, Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE))
         );
 
-        Variation variation = (Variation) decisionResponse.getResult().keySet().toArray()[0];
-        Boolean skipToEveryoneElse = (Boolean) decisionResponse.getResult().get(variation);
+        Variation variation = (Variation) decisionResponse.getResult().getKey();
+        Boolean skipToEveryoneElse = (Boolean) decisionResponse.getResult().getValue();
         assertNotNull(decisionResponse.getResult());
         assertNotNull(variation);
         assertNotNull(expectedVariation);

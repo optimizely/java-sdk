@@ -20,7 +20,7 @@ import com.optimizely.ab.config.Variation;
 
 import javax.annotation.Nullable;
 
-public class  FeatureDecision {
+public class FeatureDecision {
     /**
      * The {@link Experiment} the Feature is associated with.
      */

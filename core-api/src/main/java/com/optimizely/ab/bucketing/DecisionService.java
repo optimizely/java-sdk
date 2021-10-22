@@ -15,6 +15,8 @@
  ***************************************************************************/
 package com.optimizely.ab.bucketing;
 
+import com.optimizely.ab.OptimizelyDecisionContext;
+import com.optimizely.ab.OptimizelyForcedDecision;
 import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.*;
@@ -26,6 +28,7 @@ import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import com.sun.org.apache.xpath.internal.operations.Bool;
+import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -312,7 +315,7 @@ public class DecisionService {
         int index = 0;
         while (index < rolloutRulesLength) {
 
-            DecisionResponse<Map> decisionVariationResponse = getVariationFromDeliveryRule(
+            DecisionResponse<Pair> decisionVariationResponse = getVariationFromDeliveryRule(
                 projectConfig,
                 featureFlag.getKey(),
                 rollout.getExperiments(),
@@ -321,9 +324,9 @@ public class DecisionService {
             );
             reasons.merge(decisionVariationResponse.getReasons());
 
-            Map<Variation, Boolean> response = decisionVariationResponse.getResult();
-            Variation variation = (Variation)response.keySet().toArray()[0];
-            Boolean skipToEveryoneElse = response.get(variation);
+            Pair<Variation, Boolean> response = decisionVariationResponse.getResult();
+            Variation variation = response.getKey();
+            Boolean skipToEveryoneElse = response.getValue();
             if (variation != null) {
                 Experiment rule = rollout.getExperiments().get(index);
                 FeatureDecision featureDecision = new FeatureDecision(rule, variation, FeatureDecision.DecisionSource.ROLLOUT);
@@ -593,8 +596,9 @@ public class DecisionService {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         String ruleKey = rule != null ? rule.getKey() : null;
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
         // Check Forced-Decision
-        DecisionResponse<Variation> forcedDecisionResponse = user.findValidatedForcedDecision(flagKey, ruleKey);
+        DecisionResponse<Variation> forcedDecisionResponse = user.findValidatedForcedDecision(optimizelyDecisionContext);
 
         reasons.merge(forcedDecisionResponse.getReasons());
 
@@ -628,25 +632,27 @@ public class DecisionService {
      * @param rules             The experiments belonging to a rollout
      * @param ruleIndex         The index of the rule
      * @param user              The OptimizelyUserContext
-     * @return                  Returns a DecisionResponse Object containing a Map<Variation, Boolean>
+     * @return                  Returns a DecisionResponse Object containing a Pair<Variation, Boolean>
      *                          where the Variation is the result and the Boolean is the skipToEveryoneElse.
      */
-    DecisionResponse<Map> getVariationFromDeliveryRule(@Nonnull ProjectConfig projectConfig,
+    DecisionResponse<Pair> getVariationFromDeliveryRule(@Nonnull ProjectConfig projectConfig,
                                                        @Nonnull String flagKey,
                                                        @Nonnull List<Experiment> rules,
                                                        @Nonnull int ruleIndex,
                                                        @Nonnull OptimizelyUserContext user) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
         Boolean skipToEveryoneElse = false;
-        Map<Variation, Boolean> variationToSkipToEveryoneElse = new HashMap<>();
+        Pair<Variation, Boolean> variationToSkipToEveryoneElse;
+
         // Check forced-decisions first
         Experiment rule = rules.get(ruleIndex);
-        DecisionResponse<Variation> forcedDecisionResponse = user.findValidatedForcedDecision(flagKey, rule.getKey());
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, rule.getKey());
+        DecisionResponse<Variation> forcedDecisionResponse = user.findValidatedForcedDecision(optimizelyDecisionContext);
         reasons.merge(forcedDecisionResponse.getReasons());
 
         Variation variation = forcedDecisionResponse.getResult();
         if (variation != null) {
-            variationToSkipToEveryoneElse.put(variation, false);
+            variationToSkipToEveryoneElse = new Pair<>(variation, false);
             return new DecisionResponse(variationToSkipToEveryoneElse, reasons);
         }
 
@@ -692,8 +698,7 @@ public class DecisionService {
             reasons.addInfo(message);
             logger.debug(message);
         }
-        variationToSkipToEveryoneElse.clear();
-        variationToSkipToEveryoneElse.put(bucketedVariation, skipToEveryoneElse);
+        variationToSkipToEveryoneElse = new Pair<>(bucketedVariation, skipToEveryoneElse);
         return new DecisionResponse(variationToSkipToEveryoneElse, reasons);
     }
 

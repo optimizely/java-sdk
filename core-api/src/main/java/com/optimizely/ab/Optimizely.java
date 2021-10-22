@@ -1197,7 +1197,8 @@ public class Optimizely implements AutoCloseable {
         FeatureDecision flagDecision;
 
         // Check Forced Decision
-        DecisionResponse<Variation> forcedDecisionVariation = user.findValidatedForcedDecision(flag.getKey());
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flag.getKey(), null);
+        DecisionResponse<Variation> forcedDecisionVariation = user.findValidatedForcedDecision(optimizelyDecisionContext);
         decisionReasons.merge(forcedDecisionVariation.getReasons());
         if (forcedDecisionVariation.getResult() != null) {
             flagDecision = new FeatureDecision(null, forcedDecisionVariation.getResult(), FeatureDecision.DecisionSource.FEATURE_TEST);
