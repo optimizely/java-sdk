@@ -24,7 +24,6 @@ import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import javafx.util.Pair;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

@@ -16,16 +16,15 @@
  */
 package com.optimizely.ab;
 
-import javax.annotation.Nonnull;
+import org.junit.Test;
+import static junit.framework.TestCase.assertEquals;
 
-public class OptimizelyForcedDecision {
-    private String variationKey;
+public class OptimizelyForcedDecisionTest {
 
-    public OptimizelyForcedDecision(@Nonnull String variationKey) {
-        this.variationKey = variationKey;
-    }
-
-    public String getVariationKey() {
-        return variationKey;
+    @Test
+    public void initializeOptimizelyForcedDecision() {
+        String variationKey = "test-variation-key";
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        assertEquals(variationKey, optimizelyForcedDecision.getVariationKey());
     }
 }
