@@ -372,7 +372,6 @@ public class Optimizely implements AutoCloseable {
      * @return True if the feature is enabled.
      * False if the feature is disabled.
      * False if the feature is not found.
-     *
      */
     @Nonnull
     public Boolean isFeatureEnabled(@Nonnull String featureKey,
@@ -390,7 +389,6 @@ public class Optimizely implements AutoCloseable {
      * @return True if the feature is enabled.
      * False if the feature is disabled.
      * False if the feature is not found.
-     *
      */
     @Nonnull
     public Boolean isFeatureEnabled(@Nonnull String featureKey,
@@ -496,9 +494,6 @@ public class Optimizely implements AutoCloseable {
      * @param attributes  The user's attributes.
      * @return The Boolean value of the boolean single variable feature.
      * Null if the feature or variable could not be found.
-     *
-     *
-     *
      */
     @Nullable
     public Boolean getFeatureVariableBoolean(@Nonnull String featureKey,
@@ -523,7 +518,6 @@ public class Optimizely implements AutoCloseable {
      * @param userId      The ID of the user.
      * @return The Double value of the double single variable feature.
      * Null if the feature or variable could not be found.
-     *
      */
     @Nullable
     public Double getFeatureVariableDouble(@Nonnull String featureKey,
@@ -541,7 +535,6 @@ public class Optimizely implements AutoCloseable {
      * @param attributes  The user's attributes.
      * @return The Double value of the double single variable feature.
      * Null if the feature or variable could not be found.
-     *
      */
     @Nullable
     public Double getFeatureVariableDouble(@Nonnull String featureKey,
@@ -574,7 +567,6 @@ public class Optimizely implements AutoCloseable {
      * @param userId      The ID of the user.
      * @return The Integer value of the integer single variable feature.
      * Null if the feature or variable could not be found.
-     *
      */
     @Nullable
     public Integer getFeatureVariableInteger(@Nonnull String featureKey,
@@ -592,7 +584,6 @@ public class Optimizely implements AutoCloseable {
      * @param attributes  The user's attributes.
      * @return The Integer value of the integer single variable feature.
      * Null if the feature or variable could not be found.
-     *
      */
     @Nullable
     public Integer getFeatureVariableInteger(@Nonnull String featureKey,
@@ -626,7 +617,6 @@ public class Optimizely implements AutoCloseable {
      * @param userId      The ID of the user.
      * @return The String value of the string single variable feature.
      * Null if the feature or variable could not be found.
-     *
      */
     @Nullable
     public String getFeatureVariableString(@Nonnull String featureKey,
@@ -644,7 +634,6 @@ public class Optimizely implements AutoCloseable {
      * @param attributes  The user's attributes.
      * @return The String value of the string single variable feature.
      * Null if the feature or variable could not be found.
-     *
      */
     @Nullable
     public String getFeatureVariableString(@Nonnull String featureKey,
@@ -668,7 +657,6 @@ public class Optimizely implements AutoCloseable {
      * @param userId      The ID of the user.
      * @return An OptimizelyJSON instance for the JSON variable value.
      * Null if the feature or variable could not be found.
-     *
      */
     @Nullable
     public OptimizelyJSON getFeatureVariableJSON(@Nonnull String featureKey,
@@ -686,7 +674,6 @@ public class Optimizely implements AutoCloseable {
      * @param attributes  The user's attributes.
      * @return An OptimizelyJSON instance for the JSON variable value.
      * Null if the feature or variable could not be found.
-     *
      */
     @Nullable
     public OptimizelyJSON getFeatureVariableJSON(@Nonnull String featureKey,

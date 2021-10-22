@@ -1209,11 +1209,11 @@ public class OptimizelyUserContextTest {
 
     @Test
     public void setForcedDecisionsWithRuleKeyTest() {
-        String flagKey = "55555";
-        String ruleKey = "77777";
+        String flagKey = "feature_2";
+        String ruleKey = "exp_no_audience";
         String ruleKey2 = "88888";
         String variationKey = "33333";
-        String variationKey2 = "44444";
+        String variationKey2 = "variation_with_traffic";
         OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
             optimizely,
             userId,
@@ -1231,6 +1231,13 @@ public class OptimizelyUserContextTest {
         // Update first forcedDecision
         optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision2);
         assertEquals(variationKey2, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+
+        // Test to confirm decide uses proper FD
+        OptimizelyDecision decision = optimizelyUserContext.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(decision.getReasons().contains(
+            String.format("Variation %s is mapped to flag: %s and rule: %s and user: %s in the forced decisions map.", variationKey2, flagKey, ruleKey, userId)
+        ));
     }
 
     @Test

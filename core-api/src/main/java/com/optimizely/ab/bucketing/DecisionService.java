@@ -625,7 +625,7 @@ public class DecisionService {
      * @param rules             The experiments belonging to a rollout
      * @param ruleIndex         The index of the rule
      * @param user              The OptimizelyUserContext
-     * @return                  Returns a DecisionResponse Object containing a Pair<Variation, Boolean>
+     * @return                  Returns a DecisionResponse Object containing a AbstractMap.SimpleEntry<Variation, Boolean>
      *                          where the Variation is the result and the Boolean is the skipToEveryoneElse.
      */
     DecisionResponse<AbstractMap.SimpleEntry> getVariationFromDeliveryRule(@Nonnull ProjectConfig projectConfig,
