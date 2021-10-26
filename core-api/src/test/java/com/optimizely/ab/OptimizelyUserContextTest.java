@@ -1417,8 +1417,26 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
-    public void removeForcedDecisionWithoutRuleKeySdkNotReady() {
+    public void removeForcedDecisionWithIncorrectFlagKey() {
         String flagKey = "55555";
+        String variationKey = "variation2";
+        String incorrectFlagKey = "flag1";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+            optimizely,
+            userId,
+            Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyDecisionContext incorrectOptimizelyDecisionContext = new OptimizelyDecisionContext(incorrectFlagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertFalse(optimizelyUserContext.removeForcedDecision(incorrectOptimizelyDecisionContext));
+    }
+
+    @Test
+    public void removeForcedDecisionWithoutRuleKeySdkNotReady() {
+        String flagKey = "flag2";
         String variationKey = "33333";
         Optimizely optimizely = new Optimizely.Builder().build();
         OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
@@ -1431,6 +1449,25 @@ public class OptimizelyUserContextTest {
 
         optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
         assertFalse(optimizelyUserContext.removeForcedDecision(optimizelyDecisionContext));
+    }
+
+    @Test
+    public void removeForcedDecisionWithIncorrectFlagKeyButSimilarRuleKey() {
+        String flagKey = "flag2";
+        String incorrectFlagKey = "flag3";
+        String ruleKey = "default-rollout-3045-20390585493";
+        String variationKey = "variation2";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+            optimizely,
+            userId,
+            Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyDecisionContext similarOptimizelyDecisionContext = new OptimizelyDecisionContext(incorrectFlagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertFalse(optimizelyUserContext.removeForcedDecision(similarOptimizelyDecisionContext));
     }
 
     @Test

@@ -295,13 +295,14 @@ public class OptimizelyUserContext {
             String ruleKey = optimizelyDecisionContext.getRuleKey();
             String flagKey = optimizelyDecisionContext.getFlagKey();
             String info;
+            String target = ruleKey != OptimizelyDecisionContext.OPTI_NULL_RULE_KEY ? String.format("flag (%s), rule (%s)", flagKey, ruleKey) : String.format("flag (%s)", flagKey);
             if (variation != null) {
-                info = String.format("Variation %s is mapped to flag: %s and rule: %s and user: %s in the forced decisions map.", variationKey, flagKey, ruleKey, userId);
+                info = String.format("Variation (%s) is mapped to %s and user (%s) in the forced decision map.", variationKey, target, userId);
                 logger.debug(info);
                 reasons.addInfo(info);
                 return new DecisionResponse(variation, reasons);
             } else {
-                info = String.format("Invalid variation is mapped to flag: %s and rule: %s and user: %s in the forced decisions map.", flagKey, ruleKey, userId);
+                info = String.format("Invalid variation is mapped to %s and user (%s) in the forced decision map.", target, userId);
                 logger.debug(info);
                 reasons.addInfo(info);
             }
