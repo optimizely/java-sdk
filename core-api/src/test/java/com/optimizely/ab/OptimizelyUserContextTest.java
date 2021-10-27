@@ -1236,7 +1236,7 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = optimizelyUserContext.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
 
         assertTrue(decision.getReasons().contains(
-            String.format("Variation %s is mapped to flag: %s and rule: %s and user: %s in the forced decisions map.", variationKey2, flagKey, ruleKey, userId)
+            String.format("Variation (%s) is mapped to flag (%s), rule (%s) and user (%s) in the forced decision map.", variationKey2, flagKey, ruleKey, userId)
         ));
     }
 
@@ -1540,6 +1540,30 @@ public class OptimizelyUserContextTest {
         DecisionResponse<Variation> response = optimizelyUserContext.findValidatedForcedDecision(optimizelyDecisionContext);
         Variation variation = response.getResult();
         assertEquals(variationKey, variation.getKey());
+    }
+
+    @Test
+    public void setForcedDecisionsAndCallDecide() {
+        String flagKey = "feature_2";
+        String ruleKey = "exp_no_audience";
+        String variationKey = "variation_with_traffic";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+            optimizely,
+            userId,
+            Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+
+        // Test to confirm decide uses proper FD
+        OptimizelyDecision decision = optimizelyUserContext.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertNotNull(decision);
+        assertTrue(decision.getReasons().contains(
+            String.format("Variation (%s) is mapped to flag (%s), rule (%s) and user (%s) in the forced decision map.", variationKey, flagKey, ruleKey, userId)
+        ));
     }
 
     // utils
