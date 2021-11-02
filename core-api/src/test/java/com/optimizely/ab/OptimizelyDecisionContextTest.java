@@ -25,7 +25,7 @@ public class OptimizelyDecisionContextTest {
     public void initializeOptimizelyDecisionContextWithFlagKeyAndRuleKey() {
         String flagKey = "test-flag-key";
         String ruleKey = "1029384756";
-        String expectedKey = flagKey + ruleKey;
+        String expectedKey = flagKey + OptimizelyDecisionContext.OPTI_KEY_DIVIDER + ruleKey;
         OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
         assertEquals(flagKey, optimizelyDecisionContext.getFlagKey());
         assertEquals(ruleKey, optimizelyDecisionContext.getRuleKey());
@@ -35,7 +35,7 @@ public class OptimizelyDecisionContextTest {
     @Test
     public void initializeOptimizelyDecisionContextWithFlagKey() {
         String flagKey = "test-flag-key";
-        String expectedKey = flagKey + OptimizelyDecisionContext.OPTI_NULL_RULE_KEY;
+        String expectedKey = flagKey + OptimizelyDecisionContext.OPTI_KEY_DIVIDER + OptimizelyDecisionContext.OPTI_NULL_RULE_KEY;
         OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
         assertEquals(flagKey, optimizelyDecisionContext.getFlagKey());
         assertEquals(OptimizelyDecisionContext.OPTI_NULL_RULE_KEY, optimizelyDecisionContext.getRuleKey());
