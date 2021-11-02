@@ -1565,7 +1565,151 @@ public class OptimizelyUserContextTest {
             String.format("Variation (%s) is mapped to flag (%s), rule (%s) and user (%s) in the forced decision map.", variationKey, flagKey, ruleKey, userId)
         ));
     }
+    /******************************************[START DECIDE TESTS WITH FDs]******************************************/
+    @Test
+    public void setForcedDecisionsAndCallDecideFlagToDecision() {
+        String flagKey = "feature_1";
+        String variationKey = "a";
 
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .build();
+
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+            optimizely,
+            userId,
+            Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+
+        optimizely.addDecisionNotificationHandler(
+            decisionNotification -> {
+                Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
+                isListenerCalled = true;
+            });
+
+        isListenerCalled = false;
+
+        // Test to confirm decide uses proper FD
+        OptimizelyDecision decision = optimizelyUserContext.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(isListenerCalled);
+
+        String variationId = "10389729780";
+        String experimentId = "";
+
+
+        DecisionMetadata metadata = new DecisionMetadata.Builder()
+            .setFlagKey(flagKey)
+            .setRuleKey("")
+            .setRuleType("feature-test")
+            .setVariationKey(variationKey)
+            .setEnabled(true)
+            .build();
+
+        eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap(), metadata);
+
+        assertNotNull(decision);
+        assertTrue(decision.getReasons().contains(
+            String.format("Variation (%s) is mapped to flag (%s) and user (%s) in the forced decision map.", variationKey, flagKey, userId)
+        ));
+    }
+    @Test
+    public void setForcedDecisionsAndCallDecideExperimentRuleToDecision() {
+        String flagKey = "feature_1";
+        String ruleKey = "exp_with_audience";
+        String variationKey = "a";
+
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .build();
+
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+            optimizely,
+            userId,
+            Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+
+        optimizely.addDecisionNotificationHandler(
+            decisionNotification -> {
+                Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
+                isListenerCalled = true;
+            });
+
+        isListenerCalled = false;
+
+        // Test to confirm decide uses proper FD
+        OptimizelyDecision decision = optimizelyUserContext.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(isListenerCalled);
+
+        String variationId = "10389729780";
+        String experimentId = "10390977673";
+
+
+        eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap());
+
+        assertNotNull(decision);
+        assertTrue(decision.getReasons().contains(
+            String.format("Variation (%s) is mapped to flag (%s), rule (%s) and user (%s) in the forced decision map.", variationKey, flagKey, ruleKey, userId)
+        ));
+    }
+
+    @Test
+    public void setForcedDecisionsAndCallDecideDeliveryRuleToDecision() {
+        String flagKey = "feature_1";
+        String ruleKey = "3332020515";
+        String variationKey = "3324490633";
+
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .build();
+
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+            optimizely,
+            userId,
+            Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+
+        optimizely.addDecisionNotificationHandler(
+            decisionNotification -> {
+                Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
+                isListenerCalled = true;
+            });
+
+        isListenerCalled = false;
+
+        // Test to confirm decide uses proper FD
+        OptimizelyDecision decision = optimizelyUserContext.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(isListenerCalled);
+
+        String variationId = "3324490633";
+        String experimentId = "3332020515";
+
+
+        eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap());
+
+        assertNotNull(decision);
+        assertTrue(decision.getReasons().contains(
+            String.format("Variation (%s) is mapped to flag (%s), rule (%s) and user (%s) in the forced decision map.", variationKey, flagKey, ruleKey, userId)
+        ));
+    }
+    /********************************************[END DECIDE TESTS WITH FDs]******************************************/
     // utils
 
     Map<String, Object> createUserProfileMap(String experimentId, String variationId) {

@@ -634,6 +634,7 @@ public class DecisionService {
                                                        @Nonnull int ruleIndex,
                                                        @Nonnull OptimizelyUserContext user) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+
         Boolean skipToEveryoneElse = false;
         AbstractMap.SimpleEntry<Variation, Boolean> variationToSkipToEveryoneElsePair;
         // Check forced-decisions first

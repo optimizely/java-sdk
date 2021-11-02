@@ -54,9 +54,9 @@ public class UserEventFactory {
         if (variation != null) {
             variationKey = variation.getKey();
             variationID = variation.getId();
-            layerID = activatedExperiment.getLayerId();
-            experimentId = activatedExperiment.getId();
-            experimentKey = activatedExperiment.getKey();
+            layerID = activatedExperiment != null ? activatedExperiment.getLayerId() : "";
+            experimentId = activatedExperiment != null ? activatedExperiment.getId() : "";
+            experimentKey = activatedExperiment != null ? activatedExperiment.getKey() : "";
         }
 
         UserContext userContext = new UserContext.Builder()
