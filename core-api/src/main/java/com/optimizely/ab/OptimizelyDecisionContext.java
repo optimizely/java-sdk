@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 
 public class OptimizelyDecisionContext {
     public static final String OPTI_NULL_RULE_KEY = "$opt-null-rule-key";
+    public static final String OPTI_KEY_DIVIDER = "-$opt$-";
 
     private String flagKey;
     private String ruleKey;
@@ -41,6 +42,7 @@ public class OptimizelyDecisionContext {
     public String getKey() {
         StringBuilder keyBuilder = new StringBuilder();
         keyBuilder.append(flagKey);
+        keyBuilder.append(OPTI_KEY_DIVIDER);
         keyBuilder.append(getRuleKey());
         return keyBuilder.toString();
     }
