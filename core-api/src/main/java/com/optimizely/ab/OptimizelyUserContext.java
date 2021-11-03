@@ -60,9 +60,9 @@ public class OptimizelyUserContext {
         this.optimizely = optimizely;
         this.userId = userId;
         if (attributes != null) {
-            this.attributes = new ConcurrentHashMap<>(new HashMap<>(attributes));
+            this.attributes = Collections.synchronizedMap(new HashMap<>(attributes));
         } else {
-            this.attributes = new ConcurrentHashMap<>(new HashMap<>());
+            this.attributes = Collections.synchronizedMap(new HashMap<>());
         }
         this.forcedDecisionsMap = forcedDecisionsMap != null ? forcedDecisionsMap : new ConcurrentHashMap<>();
     }
