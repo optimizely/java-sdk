@@ -64,9 +64,9 @@ public class OptimizelyUserContext {
         } else {
             this.attributes = Collections.synchronizedMap(new HashMap<>());
         }
-    if (forcedDecisionMap != null) {
-          this.forcedDecisionsMap = new ConcurrentHashMap<>(forcedDecisionMap)
-    }
+        if (forcedDecisionsMap != null) {
+          this.forcedDecisionsMap = new ConcurrentHashMap<>(forcedDecisionsMap);
+        }
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely, @Nonnull String userId) {
