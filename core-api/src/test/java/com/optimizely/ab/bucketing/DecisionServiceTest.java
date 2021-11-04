@@ -16,6 +16,8 @@
 package com.optimizely.ab.bucketing;
 
 import ch.qos.logback.classic.Level;
+import com.optimizely.ab.Optimizely;
+import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ControlAttribute;
@@ -29,10 +31,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
@@ -62,6 +61,8 @@ public class DecisionServiceTest {
     private Variation whitelistedVariation;
     private DecisionService decisionService;
 
+    private Optimizely optimizely;
+
     @Rule
     public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
@@ -74,13 +75,14 @@ public class DecisionServiceTest {
         whitelistedVariation = whitelistedExperiment.getVariationKeyToVariationMap().get("vtag1");
         Bucketer bucketer = new Bucketer();
         decisionService = spy(new DecisionService(bucketer, mockErrorHandler, null));
+        this.optimizely = Optimizely.builder().build();
     }
 
 
     //========= getVariation tests =========/
 
     /**
-     * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariation(Experiment, OptimizelyUserContext, ProjectConfig)}
      * gives precedence to forced variation bucketing over audience evaluation.
      */
     @Test
@@ -89,19 +91,24 @@ public class DecisionServiceTest {
         Variation expectedVariation = experiment.getVariations().get(0);
 
         // user excluded without audiences and whitelisting
-        assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap(), validProjectConfig).getResult());
+        assertNull(decisionService.getVariation(
+            experiment,
+            optimizely.createUserContext(
+                genericUserId,
+                Collections.emptyMap()),
+            validProjectConfig).getResult());
 
         logbackVerifier.expectMessage(Level.INFO, "User \"" + whitelistedUserId + "\" is forced in variation \"vtag1\".");
 
         // no attributes provided for a experiment that has an audience
-        assertThat(decisionService.getVariation(experiment, whitelistedUserId, Collections.<String, String>emptyMap(), validProjectConfig).getResult(), is(expectedVariation));
+        assertThat(decisionService.getVariation(experiment, optimizely.createUserContext(whitelistedUserId, Collections.emptyMap()), validProjectConfig).getResult(), is(expectedVariation));
 
         verify(decisionService).getWhitelistedVariation(eq(experiment), eq(whitelistedUserId));
         verify(decisionService, never()).getStoredVariation(eq(experiment), any(UserProfile.class), any(ProjectConfig.class));
     }
 
     /**
-     * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariation(Experiment, OptimizelyUserContext, ProjectConfig)}
      * gives precedence to forced variation bucketing over whitelisting.
      */
     @Test
@@ -111,23 +118,23 @@ public class DecisionServiceTest {
         Variation expectedVariation = experiment.getVariations().get(1);
 
         // user excluded without audiences and whitelisting
-        assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap(), validProjectConfig).getResult());
+        assertNull(decisionService.getVariation(experiment, optimizely.createUserContext(genericUserId, Collections.<String, Object>emptyMap()), validProjectConfig).getResult());
 
         // set the runtimeForcedVariation
         decisionService.setForcedVariation(experiment, whitelistedUserId, expectedVariation.getKey());
         // no attributes provided for a experiment that has an audience
-        assertThat(decisionService.getVariation(experiment, whitelistedUserId, Collections.<String, String>emptyMap(), validProjectConfig).getResult(), is(expectedVariation));
+        assertThat(decisionService.getVariation(experiment, optimizely.createUserContext(whitelistedUserId, Collections.<String, Object>emptyMap()), validProjectConfig).getResult(), is(expectedVariation));
 
         //verify(decisionService).getForcedVariation(experiment.getKey(), whitelistedUserId);
         verify(decisionService, never()).getStoredVariation(eq(experiment), any(UserProfile.class), any(ProjectConfig.class));
         assertEquals(decisionService.getWhitelistedVariation(experiment, whitelistedUserId).getResult(), whitelistVariation);
         assertTrue(decisionService.setForcedVariation(experiment, whitelistedUserId, null));
         assertNull(decisionService.getForcedVariation(experiment, whitelistedUserId).getResult());
-        assertThat(decisionService.getVariation(experiment, whitelistedUserId, Collections.<String, String>emptyMap(), validProjectConfig).getResult(), is(whitelistVariation));
+        assertThat(decisionService.getVariation(experiment, optimizely.createUserContext(whitelistedUserId, Collections.<String, Object>emptyMap()), validProjectConfig).getResult(), is(whitelistVariation));
     }
 
     /**
-     * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariation(Experiment, OptimizelyUserContext, ProjectConfig)}
      * gives precedence to forced variation bucketing over audience evaluation.
      */
     @Test
@@ -136,12 +143,12 @@ public class DecisionServiceTest {
         Variation expectedVariation = experiment.getVariations().get(1);
 
         // user excluded without audiences and whitelisting
-        assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap(), validProjectConfig).getResult());
+        assertNull(decisionService.getVariation(experiment, optimizely.createUserContext(genericUserId, Collections.<String, Object>emptyMap()), validProjectConfig).getResult());
 
         // set the runtimeForcedVariation
         decisionService.setForcedVariation(experiment, genericUserId, expectedVariation.getKey());
         // no attributes provided for a experiment that has an audience
-        assertThat(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap(), validProjectConfig).getResult(), is(expectedVariation));
+        assertThat(decisionService.getVariation(experiment, optimizely.createUserContext(genericUserId, Collections.<String, Object>emptyMap()), validProjectConfig).getResult(), is(expectedVariation));
 
         verify(decisionService, never()).getStoredVariation(eq(experiment), any(UserProfile.class), eq(validProjectConfig));
         assertEquals(decisionService.setForcedVariation(experiment, genericUserId, null), true);
@@ -149,7 +156,7 @@ public class DecisionServiceTest {
     }
 
     /**
-     * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariation(Experiment, OptimizelyUserContext, ProjectConfig)}
      * gives precedence to forced variation bucketing over user profile.
      */
     @Test
@@ -165,22 +172,22 @@ public class DecisionServiceTest {
         DecisionService decisionService = spy(new DecisionService(new Bucketer(), mockErrorHandler, userProfileService));
 
         // ensure that normal users still get excluded from the experiment when they fail audience evaluation
-        assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap(), validProjectConfig).getResult());
+        assertNull(decisionService.getVariation(experiment, optimizely.createUserContext(genericUserId, Collections.<String, Object>emptyMap()), validProjectConfig).getResult());
 
         // ensure that a user with a saved user profile, sees the same variation regardless of audience evaluation
         assertEquals(variation,
-            decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap(), validProjectConfig).getResult());
+            decisionService.getVariation(experiment, optimizely.createUserContext(userProfileId, Collections.<String, Object>emptyMap()), validProjectConfig).getResult());
 
         Variation forcedVariation = experiment.getVariations().get(1);
         decisionService.setForcedVariation(experiment, userProfileId, forcedVariation.getKey());
         assertEquals(forcedVariation,
-            decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap(), validProjectConfig).getResult());
+            decisionService.getVariation(experiment, optimizely.createUserContext(userProfileId, Collections.<String, Object>emptyMap()), validProjectConfig).getResult());
         assertTrue(decisionService.setForcedVariation(experiment, userProfileId, null));
         assertNull(decisionService.getForcedVariation(experiment, userProfileId).getResult());
     }
 
     /**
-     * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariation(Experiment, OptimizelyUserContext, ProjectConfig)}
      * gives precedence to user profile over audience evaluation.
      */
     @Test
@@ -196,16 +203,16 @@ public class DecisionServiceTest {
         DecisionService decisionService = spy(new DecisionService(new Bucketer(), mockErrorHandler, userProfileService));
 
         // ensure that normal users still get excluded from the experiment when they fail audience evaluation
-        assertNull(decisionService.getVariation(experiment, genericUserId, Collections.<String, String>emptyMap(), validProjectConfig).getResult());
+        assertNull(decisionService.getVariation(experiment, optimizely.createUserContext(genericUserId, Collections.<String, Object>emptyMap()), validProjectConfig).getResult());
 
         // ensure that a user with a saved user profile, sees the same variation regardless of audience evaluation
         assertEquals(variation,
-            decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap(), validProjectConfig).getResult());
+            decisionService.getVariation(experiment, optimizely.createUserContext(userProfileId, Collections.<String, Object>emptyMap()), validProjectConfig).getResult());
 
     }
 
     /**
-     * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariation(Experiment, OptimizelyUserContext, ProjectConfig)}
      * gives a null variation on a Experiment that is not running. Set the forced variation.
      * And, test to make sure that after setting forced variation, the getVariation still returns
      * null.
@@ -217,7 +224,7 @@ public class DecisionServiceTest {
         Variation variation = experiment.getVariations().get(0);
 
         // ensure that the not running variation returns null with no forced variation set.
-        assertNull(decisionService.getVariation(experiment, "userId", Collections.<String, String>emptyMap(), validProjectConfig).getResult());
+        assertNull(decisionService.getVariation(experiment, optimizely.createUserContext("userId", Collections.<String, Object>emptyMap()), validProjectConfig).getResult());
 
         // we call getVariation 3 times on an experiment that is not running.
         logbackVerifier.expectMessage(Level.INFO,
@@ -228,12 +235,12 @@ public class DecisionServiceTest {
 
         // ensure that a user with a forced variation set
         // still gets back a null variation if the variation is not running.
-        assertNull(decisionService.getVariation(experiment, "userId", Collections.<String, String>emptyMap(), validProjectConfig).getResult());
+        assertNull(decisionService.getVariation(experiment, optimizely.createUserContext("userId", Collections.<String, Object>emptyMap()), validProjectConfig).getResult());
 
         // set the forced variation back to null
         assertTrue(decisionService.setForcedVariation(experiment, "userId", null));
         // test one more time that the getVariation returns null for the experiment that is not running.
-        assertNull(decisionService.getVariation(experiment, "userId", Collections.<String, String>emptyMap(), validProjectConfig).getResult());
+        assertNull(decisionService.getVariation(experiment, optimizely.createUserContext("userid", Collections.<String, Object>emptyMap()), validProjectConfig).getResult());
 
 
     }
@@ -241,7 +248,7 @@ public class DecisionServiceTest {
     //========== get Variation for Feature tests ==========//
 
     /**
-     * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, OptimizelyUserContext, ProjectConfig)}
      * returns null when the {@link FeatureFlag} is not used in any experiments or rollouts.
      */
     @Test
@@ -263,8 +270,7 @@ public class DecisionServiceTest {
 
         FeatureDecision featureDecision = decisionService.getVariationForFeature(
             emptyFeatureFlag,
-            genericUserId,
-            Collections.<String, String>emptyMap(),
+            optimizely.createUserContext(genericUserId, Collections.<String, Object>emptyMap()),
             validProjectConfig).getResult();
         assertNull(featureDecision.variation);
         assertNull(featureDecision.decisionSource);
@@ -275,7 +281,7 @@ public class DecisionServiceTest {
     }
 
     /**
-     * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, OptimizelyUserContext, ProjectConfig)}
      * returns null when the user is not bucketed into any experiments or rollouts for the {@link FeatureFlag}.
      */
     @Test
@@ -286,24 +292,21 @@ public class DecisionServiceTest {
         // do not bucket to any experiments
         doReturn(DecisionResponse.nullNoReasons()).when(decisionService).getVariation(
             any(Experiment.class),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
             anyObject()
         );
         // do not bucket to any rollouts
         doReturn(DecisionResponse.responseNoReasons(new FeatureDecision(null, null, null))).when(decisionService).getVariationForFeatureInRollout(
             any(FeatureFlag.class),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
 
         // try to get a variation back from the decision service for the feature flag
         FeatureDecision featureDecision = decisionService.getVariationForFeature(
             spyFeatureFlag,
-            genericUserId,
-            Collections.<String, String>emptyMap(),
+            optimizely.createUserContext(genericUserId, Collections.emptyMap()),
             validProjectConfig
         ).getResult();
         assertNull(featureDecision.variation);
@@ -314,11 +317,11 @@ public class DecisionServiceTest {
                 FEATURE_MULTI_VARIATE_FEATURE_KEY + "\".");
 
         verify(spyFeatureFlag, times(2)).getExperimentIds();
-        verify(spyFeatureFlag, times(1)).getKey();
+        verify(spyFeatureFlag, times(2)).getKey();
     }
 
     /**
-     * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariationForFeature(FeatureFlag, OptimizelyUserContext, ProjectConfig)}
      * returns the variation of the experiment a user gets bucketed into for an experiment.
      */
     @Test
@@ -328,36 +331,33 @@ public class DecisionServiceTest {
 
         doReturn(DecisionResponse.nullNoReasons()).when(decisionService).getVariation(
             eq(ValidProjectConfigV4.EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
             anyObject()
         );
 
         doReturn(DecisionResponse.responseNoReasons(ValidProjectConfigV4.VARIATION_MUTEX_GROUP_EXP_2_VAR_1)).when(decisionService).getVariation(
             eq(ValidProjectConfigV4.EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
             anyObject()
         );
 
         FeatureDecision featureDecision = decisionService.getVariationForFeature(
             spyFeatureFlag,
-            genericUserId,
-            Collections.<String, String>emptyMap(),
+            optimizely.createUserContext(genericUserId, Collections.emptyMap()),
             v4ProjectConfig
         ).getResult();
         assertEquals(ValidProjectConfigV4.VARIATION_MUTEX_GROUP_EXP_2_VAR_1, featureDecision.variation);
         assertEquals(FeatureDecision.DecisionSource.FEATURE_TEST, featureDecision.decisionSource);
 
         verify(spyFeatureFlag, times(2)).getExperimentIds();
-        verify(spyFeatureFlag, never()).getKey();
+        verify(spyFeatureFlag, times(2)).getKey();
     }
 
     /**
      * Verify that when getting a {@link Variation} for a {@link FeatureFlag} in
-     * {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map, ProjectConfig)},
+     * {@link DecisionService#getVariationForFeature(FeatureFlag, OptimizelyUserContext, ProjectConfig)},
      * check first if the user is bucketed to an {@link Experiment}
      * then check if the user is not bucketed to an experiment,
      * check for a {@link Rollout}.
@@ -376,8 +376,7 @@ public class DecisionServiceTest {
         doReturn(DecisionResponse.responseNoReasons(experimentVariation))
             .when(decisionService).getVariation(
             eq(featureExperiment),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
             anyObject()
         );
@@ -386,16 +385,14 @@ public class DecisionServiceTest {
         doReturn(DecisionResponse.responseNoReasons(new FeatureDecision(rolloutExperiment, rolloutVariation, FeatureDecision.DecisionSource.ROLLOUT)))
             .when(decisionService).getVariationForFeatureInRollout(
             eq(featureFlag),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
 
         // make sure we get the right variation back
         FeatureDecision featureDecision = decisionService.getVariationForFeature(
             featureFlag,
-            genericUserId,
-            Collections.<String, String>emptyMap(),
+            optimizely.createUserContext(genericUserId, Collections.<String, Object>emptyMap()),
             v4ProjectConfig
         ).getResult();
         assertEquals(experimentVariation, featureDecision.variation);
@@ -404,16 +401,14 @@ public class DecisionServiceTest {
         // make sure we do not even check for rollout bucketing
         verify(decisionService, never()).getVariationForFeatureInRollout(
             any(FeatureFlag.class),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
 
         // make sure we ask for experiment bucketing once
         verify(decisionService, times(1)).getVariation(
             any(Experiment.class),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
             anyObject()
         );
@@ -421,7 +416,7 @@ public class DecisionServiceTest {
 
     /**
      * Verify that when getting a {@link Variation} for a {@link FeatureFlag} in
-     * {@link DecisionService#getVariationForFeature(FeatureFlag, String, Map, ProjectConfig)},
+     * {@link DecisionService#getVariationForFeature(FeatureFlag, OptimizelyUserContext, ProjectConfig)},
      * check first if the user is bucketed to an {@link Rollout}
      * if the user is not bucketed to an experiment.
      */
@@ -438,8 +433,7 @@ public class DecisionServiceTest {
         doReturn(DecisionResponse.nullNoReasons())
             .when(decisionService).getVariation(
             eq(featureExperiment),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
             anyObject()
         );
@@ -448,16 +442,14 @@ public class DecisionServiceTest {
         doReturn(DecisionResponse.responseNoReasons(new FeatureDecision(rolloutExperiment, rolloutVariation, FeatureDecision.DecisionSource.ROLLOUT)))
             .when(decisionService).getVariationForFeatureInRollout(
             eq(featureFlag),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
 
         // make sure we get the right variation back
         FeatureDecision featureDecision = decisionService.getVariationForFeature(
             featureFlag,
-            genericUserId,
-            Collections.<String, String>emptyMap(),
+            optimizely.createUserContext(genericUserId, Collections.<String, Object>emptyMap()),
             v4ProjectConfig
         ).getResult();
         assertEquals(rolloutVariation, featureDecision.variation);
@@ -466,16 +458,14 @@ public class DecisionServiceTest {
         // make sure we do not even check for rollout bucketing
         verify(decisionService, times(1)).getVariationForFeatureInRollout(
             any(FeatureFlag.class),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
 
         // make sure we ask for experiment bucketing once
         verify(decisionService, times(1)).getVariation(
             any(Experiment.class),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
             anyObject()
         );
@@ -490,7 +480,7 @@ public class DecisionServiceTest {
     //========== getVariationForFeatureInRollout tests ==========//
 
     /**
-     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, OptimizelyUserContext, ProjectConfig)}
      * returns null when trying to bucket a user into a {@link FeatureFlag}
      * that does not have a {@link Rollout} attached.
      */
@@ -503,8 +493,7 @@ public class DecisionServiceTest {
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             mockFeatureFlag,
-            genericUserId,
-            Collections.<String, String>emptyMap(),
+            optimizely.createUserContext(genericUserId, Collections.<String, Object>emptyMap()),
             validProjectConfig
         ).getResult();
         assertNull(featureDecision.variation);
@@ -517,7 +506,7 @@ public class DecisionServiceTest {
     }
 
     /**
-     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, OptimizelyUserContext, ProjectConfig)}
      * return null when a user is excluded from every rule of a rollout due to traffic allocation.
      */
     @Test
@@ -533,10 +522,7 @@ public class DecisionServiceTest {
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
-            genericUserId,
-            Collections.singletonMap(
-                ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE
-            ),
+            optimizely.createUserContext(genericUserId, Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             v4ProjectConfig
         ).getResult();
         assertNull(featureDecision.variation);
@@ -549,7 +535,7 @@ public class DecisionServiceTest {
     }
 
     /**
-     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, OptimizelyUserContext, ProjectConfig)}
      * returns null when a user is excluded from every rule of a rollout due to targeting
      * and also fails traffic allocation in the everyone else rollout.
      */
@@ -562,8 +548,7 @@ public class DecisionServiceTest {
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
-            genericUserId,
-            Collections.<String, String>emptyMap(),
+            optimizely.createUserContext(genericUserId, Collections.<String, Object>emptyMap()),
             v4ProjectConfig
         ).getResult();
         assertNull(featureDecision.variation);
@@ -574,7 +559,7 @@ public class DecisionServiceTest {
     }
 
     /**
-     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, OptimizelyUserContext, ProjectConfig)}
      * returns the variation of "Everyone Else" rule
      * when the user fails targeting for all rules, but is bucketed into the "Everyone Else" rule.
      */
@@ -594,8 +579,7 @@ public class DecisionServiceTest {
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
-            genericUserId,
-            Collections.<String, String>emptyMap(),
+            optimizely.createUserContext(genericUserId, Collections.<String, Object>emptyMap()),
             v4ProjectConfig
         ).getResult();
         logbackVerifier.expectMessage(Level.DEBUG, "Evaluating audiences for rule \"1\": [3468206642].");
@@ -614,7 +598,7 @@ public class DecisionServiceTest {
     }
 
     /**
-     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, OptimizelyUserContext, ProjectConfig)}
      * returns the variation of "Everyone Else" rule
      * when the user passes targeting for a rule, but was failed the traffic allocation for that rule,
      * and is bucketed successfully into the "Everyone Else" rule.
@@ -636,10 +620,7 @@ public class DecisionServiceTest {
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
-            genericUserId,
-            Collections.singletonMap(
-                ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE
-            ),
+            optimizely.createUserContext(genericUserId, Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             v4ProjectConfig
         ).getResult();
         assertEquals(expectedVariation, featureDecision.variation);
@@ -652,7 +633,7 @@ public class DecisionServiceTest {
     }
 
     /**
-     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, OptimizelyUserContext, ProjectConfig)}
      * returns the variation of "Everyone Else" rule
      * when the user passes targeting for a rule, but was failed the traffic allocation for that rule,
      * and is bucketed successfully into the "Everyone Else" rule.
@@ -679,15 +660,14 @@ public class DecisionServiceTest {
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
-            genericUserId,
-            DatafileProjectConfigTestUtils.createMapOfObjects(
+            optimizely.createUserContext(genericUserId, DatafileProjectConfigTestUtils.createMapOfObjects(
                 DatafileProjectConfigTestUtils.createListOfObjects(
                     ATTRIBUTE_HOUSE_KEY, ATTRIBUTE_NATIONALITY_KEY
                 ),
                 DatafileProjectConfigTestUtils.createListOfObjects(
                     AUDIENCE_GRYFFINDOR_VALUE, AUDIENCE_ENGLISH_CITIZENS_VALUE
                 )
-            ),
+            )),
             v4ProjectConfig
         ).getResult();
         assertEquals(expectedVariation, featureDecision.variation);
@@ -698,7 +678,7 @@ public class DecisionServiceTest {
     }
 
     /**
-     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, OptimizelyUserContext, ProjectConfig)}
      * returns the variation of "English Citizens" rule
      * when the user fails targeting for previous rules, but passes targeting and traffic for Rule 3.
      */
@@ -718,10 +698,7 @@ public class DecisionServiceTest {
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
-            genericUserId,
-            Collections.singletonMap(
-                ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE
-            ),
+            optimizely.createUserContext(genericUserId, Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE)),
             v4ProjectConfig
         ).getResult();
         assertEquals(englishCitizenVariation, featureDecision.variation);
@@ -733,6 +710,55 @@ public class DecisionServiceTest {
         logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"3\" collectively evaluated to true");
         // verify user is only bucketed once for everyone else rule
         verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+    }
+
+    @Test
+    public void getVariationFromDeliveryRuleTest() {
+        int index = 3;
+        List<Experiment> rules = ROLLOUT_2.getExperiments();
+        Experiment experiment = ROLLOUT_2.getExperiments().get(index);
+        Variation expectedVariation = null;
+        for (Variation variation : experiment.getVariations()) {
+            if (variation.getKey().equals("3137445031")) {
+                expectedVariation = variation;
+            }
+        }
+        DecisionResponse<AbstractMap.SimpleEntry> decisionResponse = decisionService.getVariationFromDeliveryRule(
+            v4ProjectConfig,
+            FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(),
+            rules,
+            index,
+            optimizely.createUserContext(genericUserId, Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE))
+        );
+
+        Variation variation = (Variation) decisionResponse.getResult().getKey();
+        Boolean skipToEveryoneElse = (Boolean) decisionResponse.getResult().getValue();
+        assertNotNull(decisionResponse.getResult());
+        assertNotNull(variation);
+        assertNotNull(expectedVariation);
+        assertEquals(expectedVariation, variation);
+        assertFalse(skipToEveryoneElse);
+    }
+
+    @Test
+    public void getVariationFromExperimentRuleTest() {
+        int index = 3;
+        Experiment experiment = ROLLOUT_2.getExperiments().get(index);
+        Variation expectedVariation = null;
+        for (Variation variation : experiment.getVariations()) {
+            if (variation.getKey().equals("3137445031")) {
+                expectedVariation = variation;
+            }
+        }
+        DecisionResponse<Variation> decisionResponse = decisionService.getVariationFromExperimentRule(
+            v4ProjectConfig,
+            FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(),
+            experiment,
+            optimizely.createUserContext(genericUserId, Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE)),
+            Collections.emptyList()
+        );
+
+        assertEquals(expectedVariation, decisionResponse.getResult());
     }
 
     //========= white list tests ==========/
@@ -811,7 +837,7 @@ public class DecisionServiceTest {
 
         // ensure user with an entry in the user profile is bucketed into the corresponding stored variation
         assertEquals(variation,
-            decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap(), noAudienceProjectConfig).getResult());
+            decisionService.getVariation(experiment, optimizely.createUserContext(userProfileId, Collections.emptyMap()), noAudienceProjectConfig).getResult());
 
         verify(userProfileService).lookup(userProfileId);
     }
@@ -867,7 +893,7 @@ public class DecisionServiceTest {
     }
 
     /**
-     * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariation(Experiment, OptimizelyUserContext, ProjectConfig)}
      * saves a {@link Variation}of an {@link Experiment} for a user when a {@link UserProfileService} is present.
      */
     @SuppressFBWarnings
@@ -890,7 +916,7 @@ public class DecisionServiceTest {
         DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, userProfileService);
 
         assertEquals(variation, decisionService.getVariation(
-            experiment, userProfileId, Collections.<String, String>emptyMap(), noAudienceProjectConfig).getResult()
+            experiment, optimizely.createUserContext(userProfileId, Collections.emptyMap()), noAudienceProjectConfig).getResult()
         );
         logbackVerifier.expectMessage(Level.INFO,
             String.format("Saved variation \"%s\" of experiment \"%s\" for user \"" + userProfileId + "\".", variation.getId(),
@@ -900,7 +926,7 @@ public class DecisionServiceTest {
     }
 
     /**
-     * Verify that {@link DecisionService#getVariation(Experiment, String, Map, ProjectConfig)} logs correctly
+     * Verify that {@link DecisionService#getVariation(Experiment, OptimizelyUserContext, ProjectConfig)} logs correctly
      * when a {@link UserProfileService} is present but fails to save an activation.
      */
     @Test
@@ -950,7 +976,7 @@ public class DecisionServiceTest {
         when(bucketer.bucket(eq(experiment), eq(userProfileId), eq(noAudienceProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(variation));
         when(userProfileService.lookup(userProfileId)).thenReturn(null);
 
-        assertEquals(variation, decisionService.getVariation(experiment, userProfileId, Collections.<String, String>emptyMap(), noAudienceProjectConfig).getResult());
+        assertEquals(variation, decisionService.getVariation(experiment, optimizely.createUserContext(userProfileId, Collections.emptyMap()), noAudienceProjectConfig).getResult());
         verify(userProfileService).save(expectedUserProfile.toMap());
     }
 
@@ -963,15 +989,15 @@ public class DecisionServiceTest {
 
         when(bucketer.bucket(eq(experiment), eq("bucketId"), eq(validProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(expectedVariation));
 
-        Map<String, String> attr = new HashMap<String, String>();
+        Map<String, Object> attr = new HashMap();
         attr.put(ControlAttribute.BUCKETING_ATTRIBUTE.toString(), "bucketId");
         // user excluded without audiences and whitelisting
-        assertThat(decisionService.getVariation(experiment, genericUserId, attr, validProjectConfig).getResult(), is(expectedVariation));
+        assertThat(decisionService.getVariation(experiment, optimizely.createUserContext(genericUserId, attr), validProjectConfig).getResult(), is(expectedVariation));
 
     }
 
     /**
-     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, String, Map, ProjectConfig)}
+     * Verify that {@link DecisionService#getVariationForFeatureInRollout(FeatureFlag, OptimizelyUserContext, ProjectConfig)}
      * uses bucketing ID to bucket the user into rollouts.
      */
     @Test
@@ -981,7 +1007,7 @@ public class DecisionServiceTest {
         FeatureFlag featureFlag = FEATURE_FLAG_SINGLE_VARIABLE_INTEGER;
         String bucketingId = "user_bucketing_id";
         String userId = "user_id";
-        Map<String, String> attributes = new HashMap<String, String>();
+        Map<String, Object> attributes = new HashMap();
         attributes.put(ControlAttribute.BUCKETING_ATTRIBUTE.toString(), bucketingId);
 
         Bucketer bucketer = mock(Bucketer.class);
@@ -999,7 +1025,7 @@ public class DecisionServiceTest {
             rolloutVariation,
             FeatureDecision.DecisionSource.ROLLOUT);
 
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, attributes, v4ProjectConfig).getResult();
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, optimizely.createUserContext(userId, attributes), v4ProjectConfig).getResult();
 
         assertEquals(expectedFeatureDecision, featureDecision);
     }

@@ -17,15 +17,14 @@
 package com.optimizely.ab.config;
 
 import ch.qos.logback.classic.Level;
+import com.google.errorprone.annotations.Var;
 import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
@@ -168,6 +167,24 @@ public class DatafileProjectConfigTest {
         assertEquals(attributeID, "583394100");
         logbackVerifier.expectMessage(Level.WARN, "Attribute " + attributeWithReservedPrefix + " unexpectedly" +
             " has reserved prefix $opt_; using attribute ID instead of reserved attribute name.");
+    }
+
+    @Test
+    public void confirmUniqueVariationsInFlagVariationsMapTest() {
+        // Test to confirm no duplicate variations are added for each flag
+        // This should never happen as a Map is used for each flag based on variation ID as the key
+        Map<String, List<Variation>> flagVariationsMap = projectConfig.getFlagVariationsMap();
+        for (List<Variation> variationsList : flagVariationsMap.values()) {
+            Boolean duplicate = false;
+            Map<String, Variation> variationIdToVariationsMap = new HashMap<>();
+            for (Variation variation : variationsList) {
+                if (variationIdToVariationsMap.containsKey(variation.getId())) {
+                    duplicate = true;
+                }
+                variationIdToVariationsMap.put(variation.getId(), variation);
+            }
+            assertFalse(duplicate);
+        }
     }
 
 }

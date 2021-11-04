@@ -1716,8 +1716,7 @@ public class OptimizelyTest {
         FeatureDecision featureDecision = new FeatureDecision(null, null, FeatureDecision.DecisionSource.ROLLOUT);
         doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
         int notificationId = optimizely.addDecisionNotificationHandler( decisionNotification -> { });
@@ -1833,8 +1832,7 @@ public class OptimizelyTest {
         FeatureDecision featureDecision = new FeatureDecision(activatedExperiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST);
         doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
 
@@ -2897,8 +2895,7 @@ public class OptimizelyTest {
         FeatureDecision featureDecision = new FeatureDecision(multivariateExperiment, VARIATION_MULTIVARIATE_EXPERIMENT_GRED, FeatureDecision.DecisionSource.FEATURE_TEST);
         doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
-            genericUserId,
-            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE),
+            optimizely.createUserContext(genericUserId, Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             validProjectConfig
         );
 
@@ -3110,8 +3107,7 @@ public class OptimizelyTest {
 
         verify(mockDecisionService, never()).getVariationForFeature(
             any(FeatureFlag.class),
-            any(String.class),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
     }
@@ -3132,8 +3128,7 @@ public class OptimizelyTest {
 
         verify(mockDecisionService, never()).getVariationForFeature(
             any(FeatureFlag.class),
-            any(String.class),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
     }
@@ -3156,8 +3151,7 @@ public class OptimizelyTest {
 
         verify(mockDecisionService, never()).getVariation(
             any(Experiment.class),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
     }
@@ -3179,8 +3173,7 @@ public class OptimizelyTest {
         FeatureDecision featureDecision = new FeatureDecision(null, null, null);
         doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
 
@@ -3195,8 +3188,7 @@ public class OptimizelyTest {
 
         verify(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
-            eq(genericUserId),
-            eq(Collections.<String, String>emptyMap()),
+            eq(optimizely.createUserContext(genericUserId, Collections.emptyMap())),
             eq(validProjectConfig)
         );
     }
@@ -3221,8 +3213,7 @@ public class OptimizelyTest {
         FeatureDecision featureDecision = new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.ROLLOUT);
         doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
-            eq(genericUserId),
-            eq(Collections.<String, String>emptyMap()),
+            eq(optimizely.createUserContext(genericUserId, Collections.emptyMap())),
             eq(validProjectConfig)
         );
 
@@ -3242,8 +3233,7 @@ public class OptimizelyTest {
 
         verify(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
-            eq(genericUserId),
-            eq(Collections.<String, String>emptyMap()),
+            eq(optimizely.createUserContext(genericUserId, Collections.emptyMap())),
             eq(validProjectConfig)
         );
     }
@@ -3306,8 +3296,7 @@ public class OptimizelyTest {
         FeatureDecision featureDecision = new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.ROLLOUT);
         doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
-            eq(genericUserId),
-            eq(Collections.<String, String>emptyMap()),
+            eq(optimizely.createUserContext(genericUserId, Collections.emptyMap())),
             eq(validProjectConfig)
         );
 
@@ -3336,8 +3325,7 @@ public class OptimizelyTest {
         FeatureDecision featureDecision = new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.ROLLOUT);
         doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
-            eq(genericUserId),
-            eq(Collections.<String, String>emptyMap()),
+            eq(spyOptimizely.createUserContext(genericUserId, Collections.emptyMap())),
             eq(validProjectConfig)
         );
 
@@ -3366,8 +3354,7 @@ public class OptimizelyTest {
         FeatureDecision featureDecision = new FeatureDecision(activatedExperiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST);
         doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
 
@@ -3422,8 +3409,7 @@ public class OptimizelyTest {
         // make sure we didn't even attempt to bucket the user
         verify(mockDecisionService, never()).getVariationForFeature(
             any(FeatureFlag.class),
-            anyString(),
-            anyMap(),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
     }
@@ -3512,13 +3498,11 @@ public class OptimizelyTest {
         FeatureDecision featureDecision = new FeatureDecision(null, null, FeatureDecision.DecisionSource.ROLLOUT);
         doReturn(DecisionResponse.responseNoReasons(featureDecision)).when(mockDecisionService).getVariationForFeature(
             any(FeatureFlag.class),
-            anyString(),
-            anyMapOf(String.class, String.class),
+            any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
 
-        List<String> featureFlags = optimizely.getEnabledFeatures(genericUserId,
-            Collections.<String, String>emptyMap());
+        List<String> featureFlags = optimizely.getEnabledFeatures(genericUserId, Collections.emptyMap());
         assertTrue(featureFlags.isEmpty());
 
         eventHandler.expectImpression(null, "", genericUserId);
@@ -4669,6 +4653,17 @@ public class OptimizelyTest {
         assertEquals(user1.getAttributes(), attributes);
         assertEquals(user2.getUserId(), userId2);
         assertTrue(user2.getAttributes().isEmpty());
+    }
+
+    @Test
+    public void getFlagVariationByKey() throws IOException {
+        String flagKey = "double_single_variable_feature";
+        String variationKey = "pi_variation";
+        Optimizely optimizely = Optimizely.builder().withDatafile(validConfigJsonV4()).build();
+        Variation variation = optimizely.getFlagVariationByKey(flagKey, variationKey);
+
+        assertNotNull(variation);
+        assertEquals(variationKey, variation.getKey());
     }
 
 }

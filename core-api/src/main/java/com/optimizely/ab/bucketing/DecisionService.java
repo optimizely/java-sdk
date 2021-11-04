@@ -15,7 +15,9 @@
  ***************************************************************************/
 package com.optimizely.ab.bucketing;
 
+import com.optimizely.ab.OptimizelyDecisionContext;
 import com.optimizely.ab.OptimizelyRuntimeException;
+import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ControlAttribute;
@@ -26,13 +28,9 @@ import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.optimizely.ab.internal.LoggingConstants.LoggingEntityType.EXPERIMENT;
@@ -83,16 +81,14 @@ public class DecisionService {
      * Get a {@link Variation} of an {@link Experiment} for a user to be allocated into.
      *
      * @param experiment         The Experiment the user will be bucketed into.
-     * @param userId             The userId of the user.
-     * @param filteredAttributes The user's attributes. This should be filtered to just attributes in the Datafile.
+     * @param user               The current OptimizelyUserContext
      * @param projectConfig      The current projectConfig
      * @param options            An array of decision options
      * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
      */
     @Nonnull
     public DecisionResponse<Variation> getVariation(@Nonnull Experiment experiment,
-                                                    @Nonnull String userId,
-                                                    @Nonnull Map<String, ?> filteredAttributes,
+                                                    @Nonnull OptimizelyUserContext user,
                                                     @Nonnull ProjectConfig projectConfig,
                                                     @Nonnull List<OptimizelyDecideOption> options) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
@@ -104,13 +100,13 @@ public class DecisionService {
         }
 
         // look for forced bucketing first.
-        DecisionResponse<Variation> decisionVariation = getForcedVariation(experiment, userId);
+        DecisionResponse<Variation> decisionVariation = getForcedVariation(experiment, user.getUserId());
         reasons.merge(decisionVariation.getReasons());
         Variation variation = decisionVariation.getResult();
 
         // check for whitelisting
         if (variation == null) {
-            decisionVariation = getWhitelistedVariation(experiment, userId);
+            decisionVariation = getWhitelistedVariation(experiment, user.getUserId());
             reasons.merge(decisionVariation.getReasons());
             variation = decisionVariation.getResult();
         }
@@ -125,7 +121,7 @@ public class DecisionService {
 
         if (userProfileService != null && !ignoreUPS) {
             try {
-                Map<String, Object> userProfileMap = userProfileService.lookup(userId);
+                Map<String, Object> userProfileMap = userProfileService.lookup(user.getUserId());
                 if (userProfileMap == null) {
                     String message = reasons.addInfo("We were unable to get a user profile map from the UserProfileService.");
                     logger.info(message);
@@ -151,14 +147,14 @@ public class DecisionService {
                     return new DecisionResponse(variation, reasons);
                 }
             } else { // if we could not find a user profile, make a new one
-                userProfile = new UserProfile(userId, new HashMap<String, Decision>());
+                userProfile = new UserProfile(user.getUserId(), new HashMap<String, Decision>());
             }
         }
 
-        DecisionResponse<Boolean> decisionMeetAudience = ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, experiment, filteredAttributes, EXPERIMENT, experiment.getKey());
+        DecisionResponse<Boolean> decisionMeetAudience = ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, experiment, user.getAttributes(), EXPERIMENT, experiment.getKey());
         reasons.merge(decisionMeetAudience.getReasons());
         if (decisionMeetAudience.getResult()) {
-            String bucketingId = getBucketingId(userId, filteredAttributes);
+            String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
 
             decisionVariation = bucketer.bucket(experiment, bucketingId, projectConfig);
             reasons.merge(decisionVariation.getReasons());
@@ -175,42 +171,85 @@ public class DecisionService {
             return new DecisionResponse(variation, reasons);
         }
 
-        String message = reasons.addInfo("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experiment.getKey());
+        String message = reasons.addInfo("User \"%s\" does not meet conditions to be in experiment \"%s\".", user.getUserId(), experiment.getKey());
         logger.info(message);
         return new DecisionResponse(null, reasons);
     }
 
     @Nonnull
     public DecisionResponse<Variation>  getVariation(@Nonnull Experiment experiment,
-                                                     @Nonnull String userId,
-                                                     @Nonnull Map<String, ?> filteredAttributes,
+                                                     @Nonnull OptimizelyUserContext user,
                                                      @Nonnull ProjectConfig projectConfig) {
-        return getVariation(experiment, userId, filteredAttributes, projectConfig, Collections.emptyList());
+        return getVariation(experiment, user, projectConfig, Collections.emptyList());
     }
 
     /**
      * Get the variation the user is bucketed into for the FeatureFlag
      *
      * @param featureFlag        The feature flag the user wants to access.
-     * @param userId             User Identifier
-     * @param filteredAttributes A map of filtered attributes.
+     * @param user               The current OptimizelyuserContext
      * @param projectConfig      The current projectConfig
      * @param options            An array of decision options
      * @return A {@link DecisionResponse} including a {@link FeatureDecision} and the decision reasons
      */
     @Nonnull
     public DecisionResponse<FeatureDecision> getVariationForFeature(@Nonnull FeatureFlag featureFlag,
-                                                                    @Nonnull String userId,
-                                                                    @Nonnull Map<String, ?> filteredAttributes,
+                                                                    @Nonnull OptimizelyUserContext user,
                                                                     @Nonnull ProjectConfig projectConfig,
                                                                     @Nonnull List<OptimizelyDecideOption> options) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
+        DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options);
+        reasons.merge(decisionVariationResponse.getReasons());
+
+        FeatureDecision decision = decisionVariationResponse.getResult();
+        if (decision != null) {
+            return new DecisionResponse(decision, reasons);
+        }
+
+        DecisionResponse<FeatureDecision> decisionFeatureResponse = getVariationForFeatureInRollout(featureFlag, user, projectConfig);
+        reasons.merge(decisionFeatureResponse.getReasons());
+        decision = decisionFeatureResponse.getResult();
+
+        String message;
+        if (decision.variation == null) {
+            message = reasons.addInfo("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
+                user.getUserId(), featureFlag.getKey());
+        } else {
+            message = reasons.addInfo("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
+                user.getUserId(), featureFlag.getKey());
+        }
+        logger.info(message);
+
+        return new DecisionResponse(decision, reasons);
+    }
+
+    @Nonnull
+    public DecisionResponse<FeatureDecision> getVariationForFeature(@Nonnull FeatureFlag featureFlag,
+                                                                    @Nonnull OptimizelyUserContext user,
+                                                                    @Nonnull ProjectConfig projectConfig) {
+        return getVariationForFeature(featureFlag, user, projectConfig, Collections.emptyList());
+    }
+
+    /**
+     *
+     * @param projectConfig     The ProjectConfig.
+     * @param featureFlag       The feature flag the user wants to access.
+     * @param user              The current OptimizelyUserContext.
+     * @param options           An array of decision options
+     * @return A {@link DecisionResponse} including a {@link FeatureDecision} and the decision reasons
+     */
+    @Nonnull
+    DecisionResponse<FeatureDecision> getVariationFromExperiment(@Nonnull ProjectConfig projectConfig,
+                                                                 @Nonnull FeatureFlag featureFlag,
+                                                                 @Nonnull OptimizelyUserContext user,
+                                                                 @Nonnull List<OptimizelyDecideOption> options) {
+        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
         if (!featureFlag.getExperimentIds().isEmpty()) {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
 
-                DecisionResponse<Variation> decisionVariation = getVariation(experiment, userId, filteredAttributes, projectConfig, options);
+                DecisionResponse<Variation> decisionVariation = getVariationFromExperimentRule(projectConfig, featureFlag.getKey(), experiment, user, options);
                 reasons.merge(decisionVariation.getReasons());
                 Variation variation = decisionVariation.getResult();
 
@@ -225,28 +264,8 @@ public class DecisionService {
             logger.info(message);
         }
 
-        DecisionResponse<FeatureDecision> decisionFeature = getVariationForFeatureInRollout(featureFlag, userId, filteredAttributes, projectConfig);
-        reasons.merge(decisionFeature.getReasons());
-        FeatureDecision featureDecision = decisionFeature.getResult();
+        return new DecisionResponse(null, reasons);
 
-        if (featureDecision.variation == null) {
-            String message = reasons.addInfo("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
-                userId, featureFlag.getKey());
-            logger.info(message);
-        } else {
-            String message = reasons.addInfo("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
-                userId, featureFlag.getKey());
-            logger.info(message);
-        }
-        return new DecisionResponse(featureDecision, reasons);
-    }
-
-    @Nonnull
-    public DecisionResponse<FeatureDecision> getVariationForFeature(@Nonnull FeatureFlag featureFlag,
-                                                                    @Nonnull String userId,
-                                                                    @Nonnull Map<String, ?> filteredAttributes,
-                                                                    @Nonnull ProjectConfig projectConfig) {
-        return getVariationForFeature(featureFlag, userId, filteredAttributes, projectConfig,Collections.emptyList());
     }
 
     /**
@@ -255,15 +274,13 @@ public class DecisionService {
      * Fall back onto the everyone else rule if the user is ever excluded from a rule due to traffic allocation.
      *
      * @param featureFlag        The feature flag the user wants to access.
-     * @param userId             User Identifier
-     * @param filteredAttributes A map of filtered attributes.
+     * @param user               The current OptimizelyUserContext
      * @param projectConfig      The current projectConfig
      * @return A {@link DecisionResponse} including a {@link FeatureDecision} and the decision reasons
      */
     @Nonnull
     DecisionResponse<FeatureDecision> getVariationForFeatureInRollout(@Nonnull FeatureFlag featureFlag,
-                                                                      @Nonnull String userId,
-                                                                      @Nonnull Map<String, ?> filteredAttributes,
+                                                                      @Nonnull OptimizelyUserContext user,
                                                                       @Nonnull ProjectConfig projectConfig) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
@@ -286,51 +303,33 @@ public class DecisionService {
         if (rolloutRulesLength == 0) {
             return new DecisionResponse(new FeatureDecision(null, null, null), reasons);
         }
-        String bucketingId = getBucketingId(userId, filteredAttributes);
 
-        Variation variation;
-        DecisionResponse<Boolean> decisionMeetAudience;
-        DecisionResponse<Variation> decisionVariation;
-        for (int i = 0; i < rolloutRulesLength - 1; i++) {
-            Experiment rolloutRule = rollout.getExperiments().get(i);
 
-            decisionMeetAudience = ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, rolloutRule, filteredAttributes, RULE, Integer.toString(i + 1));
-            reasons.merge(decisionMeetAudience.getReasons());
-            if (decisionMeetAudience.getResult()) {
-                decisionVariation = bucketer.bucket(rolloutRule, bucketingId, projectConfig);
-                reasons.merge(decisionVariation.getReasons());
-                variation = decisionVariation.getResult();
+        int index = 0;
+        while (index < rolloutRulesLength) {
 
-                if (variation == null) {
-                    break;
-                }
-                return new DecisionResponse(
-                    new FeatureDecision(rolloutRule, variation, FeatureDecision.DecisionSource.ROLLOUT),
-                    reasons);
-            } else {
-                String message = reasons.addInfo("User \"%s\" does not meet conditions for targeting rule \"%d\".", userId, i + 1);
-                logger.debug(message);
-            }
-        }
+            DecisionResponse<AbstractMap.SimpleEntry> decisionVariationResponse = getVariationFromDeliveryRule(
+                projectConfig,
+                featureFlag.getKey(),
+                rollout.getExperiments(),
+                index,
+                user
+            );
+            reasons.merge(decisionVariationResponse.getReasons());
 
-        // get last rule which is the fall back rule
-        Experiment finalRule = rollout.getExperiments().get(rolloutRulesLength - 1);
-
-        decisionMeetAudience = ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, finalRule, filteredAttributes, RULE, "Everyone Else");
-        reasons.merge(decisionMeetAudience.getReasons());
-        if (decisionMeetAudience.getResult()) {
-            decisionVariation = bucketer.bucket(finalRule, bucketingId, projectConfig);
-            variation = decisionVariation.getResult();
-            reasons.merge(decisionVariation.getReasons());
-
+            AbstractMap.SimpleEntry<Variation, Boolean> response = decisionVariationResponse.getResult();
+            Variation variation = response.getKey();
+            Boolean skipToEveryoneElse = response.getValue();
             if (variation != null) {
-                String message = reasons.addInfo("User \"%s\" meets conditions for targeting rule \"Everyone Else\".", userId);
-                logger.debug(message);
-                return new DecisionResponse(
-                    new FeatureDecision(finalRule, variation, FeatureDecision.DecisionSource.ROLLOUT),
-                    reasons);
+                Experiment rule = rollout.getExperiments().get(index);
+                FeatureDecision featureDecision = new FeatureDecision(rule, variation, FeatureDecision.DecisionSource.ROLLOUT);
+                return new DecisionResponse(featureDecision, reasons);
             }
+
+            // The last rule is special for "Everyone Else"
+            index = skipToEveryoneElse ? (rolloutRulesLength - 1) : (index + 1);
         }
+
         return new DecisionResponse(new FeatureDecision(null, null, null), reasons);
     }
 
@@ -509,7 +508,7 @@ public class DecisionService {
 
         ConcurrentHashMap<String, String> experimentToVariation;
         if (!forcedVariationMapping.containsKey(userId)) {
-            forcedVariationMapping.putIfAbsent(userId, new ConcurrentHashMap<String, String>());
+            forcedVariationMapping.putIfAbsent(userId, new ConcurrentHashMap());
         }
         experimentToVariation = forcedVariationMapping.get(userId);
 
@@ -581,6 +580,34 @@ public class DecisionService {
         return new DecisionResponse(null, reasons);
     }
 
+
+    public DecisionResponse<Variation> getVariationFromExperimentRule(@Nonnull ProjectConfig projectConfig,
+                                                                      @Nonnull String flagKey,
+                                                                      @Nonnull Experiment rule,
+                                                                      @Nonnull OptimizelyUserContext user,
+                                                                      @Nonnull List<OptimizelyDecideOption> options) {
+        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+
+        String ruleKey = rule != null ? rule.getKey() : null;
+        // Check Forced-Decision
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        DecisionResponse<Variation> forcedDecisionResponse = user.findValidatedForcedDecision(optimizelyDecisionContext);
+
+        reasons.merge(forcedDecisionResponse.getReasons());
+
+        Variation variation = forcedDecisionResponse.getResult();
+        if (variation != null) {
+            return new DecisionResponse(variation, reasons);
+        }
+        //regular decision
+        DecisionResponse<Variation> decisionResponse = getVariation(rule, user, projectConfig, options);
+        reasons.merge(decisionResponse.getReasons());
+
+        variation = decisionResponse.getResult();
+
+        return new DecisionResponse(variation, reasons);
+    }
+
     /**
      * Helper function to check that the provided userId is valid
      *
@@ -589,6 +616,83 @@ public class DecisionService {
      */
     private boolean validateUserId(String userId) {
         return (userId != null);
+    }
+
+    /**
+     *
+     * @param projectConfig     The Project config
+     * @param flagKey           The flag key for the feature flag
+     * @param rules             The experiments belonging to a rollout
+     * @param ruleIndex         The index of the rule
+     * @param user              The OptimizelyUserContext
+     * @return                  Returns a DecisionResponse Object containing a AbstractMap.SimpleEntry<Variation, Boolean>
+     *                          where the Variation is the result and the Boolean is the skipToEveryoneElse.
+     */
+    DecisionResponse<AbstractMap.SimpleEntry> getVariationFromDeliveryRule(@Nonnull ProjectConfig projectConfig,
+                                                       @Nonnull String flagKey,
+                                                       @Nonnull List<Experiment> rules,
+                                                       @Nonnull int ruleIndex,
+                                                       @Nonnull OptimizelyUserContext user) {
+        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+
+        Boolean skipToEveryoneElse = false;
+        AbstractMap.SimpleEntry<Variation, Boolean> variationToSkipToEveryoneElsePair;
+        // Check forced-decisions first
+        Experiment rule = rules.get(ruleIndex);
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, rule.getKey());
+        DecisionResponse<Variation> forcedDecisionResponse = user.findValidatedForcedDecision(optimizelyDecisionContext);
+        reasons.merge(forcedDecisionResponse.getReasons());
+
+        Variation variation = forcedDecisionResponse.getResult();
+        if (variation != null) {
+            variationToSkipToEveryoneElsePair = new AbstractMap.SimpleEntry<>(variation, false);
+            return new DecisionResponse(variationToSkipToEveryoneElsePair, reasons);
+        }
+
+        // Handle a regular decision
+        String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
+        Boolean everyoneElse = (ruleIndex == rules.size() - 1);
+        String loggingKey = everyoneElse ? "Everyone Else" : String.valueOf(ruleIndex + 1);
+
+        Variation bucketedVariation = null;
+
+        DecisionResponse<Boolean> audienceDecisionResponse = ExperimentUtils.doesUserMeetAudienceConditions(
+            projectConfig,
+            rule,
+            user.getAttributes(),
+            RULE,
+            String.valueOf(ruleIndex + 1)
+        );
+
+        reasons.merge(audienceDecisionResponse.getReasons());
+        String message;
+        if (audienceDecisionResponse.getResult()) {
+            message = reasons.addInfo("User \"%s\" meets conditions for targeting rule \"%s\".", user.getUserId(), loggingKey);
+            reasons.addInfo(message);
+            logger.debug(message);
+
+            DecisionResponse<Variation> decisionResponse = bucketer.bucket(rule, bucketingId, projectConfig);
+            reasons.merge(decisionResponse.getReasons());
+            bucketedVariation = decisionResponse.getResult();
+
+            if (bucketedVariation != null) {
+                message = reasons.addInfo("User \"%s\" bucketed for targeting rule \"%s\".", user.getUserId(), loggingKey);
+                logger.debug(message);
+                reasons.addInfo(message);
+            } else if (!everyoneElse) {
+                message = reasons.addInfo("User \"%s\" is not bucketed for targeting rule \"%s\".", user.getUserId(), loggingKey);
+                logger.debug(message);
+                reasons.addInfo(message);
+                // Skip the rest of rollout rules to the everyone-else rule if audience matches but not bucketed.
+                skipToEveryoneElse = true;
+            }
+        } else {
+            message = reasons.addInfo("User \"%s\" does not meet conditions for targeting rule \"%d\".", user.getUserId(), ruleIndex + 1);
+            reasons.addInfo(message);
+            logger.debug(message);
+        }
+        variationToSkipToEveryoneElsePair = new AbstractMap.SimpleEntry<>(bucketedVariation, skipToEveryoneElse);
+        return new DecisionResponse(variationToSkipToEveryoneElsePair, reasons);
     }
 
 }

@@ -376,7 +376,7 @@ public class Optimizely implements AutoCloseable {
     @Nonnull
     public Boolean isFeatureEnabled(@Nonnull String featureKey,
                                     @Nonnull String userId) {
-        return isFeatureEnabled(featureKey, userId, Collections.<String, String>emptyMap());
+        return isFeatureEnabled(featureKey, userId, Collections.emptyMap());
     }
 
     /**
@@ -424,7 +424,7 @@ public class Optimizely implements AutoCloseable {
 
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
         FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes, projectConfig).getResult();
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, createUserContext(userId, copiedAttributes), projectConfig).getResult();
         Boolean featureEnabled = false;
         SourceInfo sourceInfo = new RolloutSourceInfo();
         if (featureDecision.decisionSource != null) {
@@ -733,7 +733,7 @@ public class Optimizely implements AutoCloseable {
 
         String variableValue = variable.getDefaultValue();
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes, projectConfig).getResult();
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, createUserContext(userId, copiedAttributes), projectConfig).getResult();
         Boolean featureEnabled = false;
         if (featureDecision.variation != null) {
             if (featureDecision.variation.getFeatureEnabled()) {
@@ -824,6 +824,7 @@ public class Optimizely implements AutoCloseable {
      * @param userId      The ID of the user.
      * @return An OptimizelyJSON instance for all variable values.
      * Null if the feature could not be found.
+     *
      */
     @Nullable
     public OptimizelyJSON getAllFeatureVariables(@Nonnull String featureKey,
@@ -839,6 +840,7 @@ public class Optimizely implements AutoCloseable {
      * @param attributes  The user's attributes.
      * @return An OptimizelyJSON instance for all variable values.
      * Null if the feature could not be found.
+     *
      */
     @Nullable
     public OptimizelyJSON getAllFeatureVariables(@Nonnull String featureKey,
@@ -866,7 +868,7 @@ public class Optimizely implements AutoCloseable {
         }
 
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
-        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, userId, copiedAttributes, projectConfig).getResult();
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(featureFlag, createUserContext(userId, copiedAttributes), projectConfig, Collections.emptyList()).getResult();
         Boolean featureEnabled = false;
         Variation variation = featureDecision.variation;
 
@@ -922,9 +924,10 @@ public class Optimizely implements AutoCloseable {
      * @param attributes The user's attributes.
      * @return List of the feature keys that are enabled for the user if the userId is empty it will
      * return Empty List.
+     *
      */
     public List<String> getEnabledFeatures(@Nonnull String userId, @Nonnull Map<String, ?> attributes) {
-        List<String> enabledFeaturesList = new ArrayList<String>();
+        List<String> enabledFeaturesList = new ArrayList();
         if (!validateUserId(userId)) {
             return enabledFeaturesList;
         }
@@ -951,7 +954,7 @@ public class Optimizely implements AutoCloseable {
     public Variation getVariation(@Nonnull Experiment experiment,
                                   @Nonnull String userId) throws UnknownExperimentException {
 
-        return getVariation(experiment, userId, Collections.<String, String>emptyMap());
+        return getVariation(experiment, userId, Collections.emptyMap());
     }
 
     @Nullable
@@ -967,8 +970,7 @@ public class Optimizely implements AutoCloseable {
                                    @Nonnull String userId,
                                    @Nonnull Map<String, ?> attributes) throws UnknownExperimentException {
         Map<String, ?> copiedAttributes = copyAttributes(attributes);
-        Variation variation = decisionService.getVariation(experiment, userId, copiedAttributes, projectConfig).getResult();
-
+        Variation variation = decisionService.getVariation(experiment, createUserContext(userId, copiedAttributes), projectConfig).getResult();
         String notificationType = NotificationCenter.DecisionNotificationType.AB_TEST.toString();
 
         if (projectConfig.getExperimentFeatureKeyMapping().get(experiment.getId()) != null) {
@@ -1145,7 +1147,7 @@ public class Optimizely implements AutoCloseable {
      * @return An OptimizelyUserContext associated with this OptimizelyClient.
       */
     public OptimizelyUserContext createUserContext(@Nonnull String userId,
-                                                   @Nonnull Map<String, Object> attributes) {
+                                                   @Nonnull Map<String, ?> attributes) {
         if (userId == null) {
             logger.warn("The userId parameter must be nonnull.");
             return null;
@@ -1179,14 +1181,24 @@ public class Optimizely implements AutoCloseable {
         DecisionReasons decisionReasons = DefaultDecisionReasons.newInstance(allOptions);
 
         Map<String, ?> copiedAttributes = new HashMap<>(attributes);
-        DecisionResponse<FeatureDecision> decisionVariation = decisionService.getVariationForFeature(
-            flag,
-            userId,
-            copiedAttributes,
-            projectConfig,
-            allOptions);
-        FeatureDecision flagDecision = decisionVariation.getResult();
-        decisionReasons.merge(decisionVariation.getReasons());
+        FeatureDecision flagDecision;
+
+        // Check Forced Decision
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flag.getKey(), null);
+        DecisionResponse<Variation> forcedDecisionVariation = user.findValidatedForcedDecision(optimizelyDecisionContext);
+        decisionReasons.merge(forcedDecisionVariation.getReasons());
+        if (forcedDecisionVariation.getResult() != null) {
+            flagDecision = new FeatureDecision(null, forcedDecisionVariation.getResult(), FeatureDecision.DecisionSource.FEATURE_TEST);
+        } else {
+            // Regular decision
+            DecisionResponse<FeatureDecision> decisionVariation = decisionService.getVariationForFeature(
+                flag,
+                user,
+                projectConfig,
+                allOptions);
+            flagDecision = decisionVariation.getResult();
+            decisionReasons.merge(decisionVariation.getReasons());
+        }
 
         Boolean flagEnabled = false;
         if (flagDecision.variation != null) {
@@ -1330,6 +1342,26 @@ public class Optimizely implements AutoCloseable {
         }
 
         return new DecisionResponse(valuesMap, reasons);
+    }
+
+    /**
+     *  Gets a variation based on flagKey and variationKey
+     *
+     * @param flagKey The flag key for the variation
+     * @param variationKey The variation key for the variation
+     * @return Returns a variation based on flagKey and variationKey, otherwise null
+     */
+    public Variation getFlagVariationByKey(String flagKey, String variationKey) {
+        Map<String, List<Variation>> flagVariationsMap = getProjectConfig().getFlagVariationsMap();
+        if (flagVariationsMap.containsKey(flagKey)) {
+            List<Variation> variations = flagVariationsMap.get(flagKey);
+            for (Variation variation : variations) {
+                if (variation.getKey().equals(variationKey)) {
+                    return variation;
+                }
+            }
+        }
+        return null;
     }
 
     /**
