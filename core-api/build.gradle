@@ -10,6 +10,7 @@ dependencies {
     compileOnly group: 'org.json', name: 'json', version: jsonVersion, optional
     compileOnly group: 'com.googlecode.json-simple', name: 'json-simple', version: jsonSimpleVersion, optional
     compileOnly group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion, optional
+    compileOnly group: 'com.squareup.moshi', name: 'moshi', version: moshiVersion, optional
 }
 
 test {

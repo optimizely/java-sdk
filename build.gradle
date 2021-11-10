@@ -109,6 +109,7 @@ configure(publishedProjects) {
         testCompile group: 'org.json', name: 'json', version: jsonVersion
         testCompile group: 'com.googlecode.json-simple', name: 'json-simple', version: jsonSimpleVersion
         testCompile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
+        compileOnly group: 'com.squareup.moshi', name: 'moshi', version: moshiVersion, optional
     }
 
     def docTitle = "Optimizely Java SDK"
