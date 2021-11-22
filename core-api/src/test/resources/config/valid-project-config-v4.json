@@ -824,6 +824,36 @@
           ]
         },
         {
+          "id": "3421010888",
+          "key": "3421010888",
+          "status": "Paused",
+          "layerId": "813411034",
+          "audienceIds": [],
+          "forcedVariations": {},
+          "variations": [
+            {
+              "id": "521740987",
+              "key": "521740987",
+              "variables": [
+                {
+                  "id": "675244127",
+                  "value": "H"
+                },
+                {
+                  "id": "4052219963",
+                  "value": "endric"
+                }
+              ]
+            }
+          ],
+          "trafficAllocation": [
+            {
+              "entityId": "521740987",
+              "endOfRange": 5000
+            }
+          ]
+        },
+        {
           "id": "600050626",
           "key": "600050626",
           "status": "Running",

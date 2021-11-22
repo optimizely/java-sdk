@@ -1200,6 +1200,38 @@ public class ValidProjectConfigV4 {
             )
         )
     );
+    private static final Experiment ROLLOUT_2_RULE_PAUSED = new Experiment(
+        "3421010888",
+        "3421010888",
+        Experiment.ExperimentStatus.PAUSED.toString(),
+        ROLLOUT_2_ID,
+        Collections.emptyList(),
+        null,
+        Collections.singletonList(
+            new Variation(
+                "521740987",
+                "521740987",
+                true,
+                DatafileProjectConfigTestUtils.createListOfObjects(
+                    new FeatureVariableUsageInstance(
+                        "675244127",
+                        "H"
+                    ),
+                    new FeatureVariableUsageInstance(
+                        "4052219963",
+                        "endric"
+                    )
+                )
+            )
+        ),
+        Collections.<String, String>emptyMap(),
+        Collections.singletonList(
+            new TrafficAllocation(
+                "521740987",
+                5000
+            )
+        )
+    );
     private static final Experiment ROLLOUT_2_RULE_2 = new Experiment(
         "600050626",
         "600050626",
@@ -1300,6 +1332,7 @@ public class ValidProjectConfigV4 {
         ROLLOUT_2_ID,
         DatafileProjectConfigTestUtils.createListOfObjects(
             ROLLOUT_2_RULE_1,
+            ROLLOUT_2_RULE_PAUSED,
             ROLLOUT_2_RULE_2,
             ROLLOUT_2_RULE_3,
             ROLLOUT_2_EVERYONE_ELSE_RULE

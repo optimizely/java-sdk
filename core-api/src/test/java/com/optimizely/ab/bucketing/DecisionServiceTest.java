@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2017-2020, Optimizely, Inc. and contributors                   *
+ * Copyright 2017-2021, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -584,10 +584,10 @@ public class DecisionServiceTest {
         ).getResult();
         logbackVerifier.expectMessage(Level.DEBUG, "Evaluating audiences for rule \"1\": [3468206642].");
         logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"1\" collectively evaluated to null.");
-        logbackVerifier.expectMessage(Level.DEBUG, "Evaluating audiences for rule \"2\": [3988293898].");
-        logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"2\" collectively evaluated to null.");
-        logbackVerifier.expectMessage(Level.DEBUG, "Evaluating audiences for rule \"3\": [4194404272].");
+        logbackVerifier.expectMessage(Level.DEBUG, "Evaluating audiences for rule \"3\": [3988293898].");
         logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"3\" collectively evaluated to null.");
+        logbackVerifier.expectMessage(Level.DEBUG, "Evaluating audiences for rule \"4\": [4194404272].");
+        logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"4\" collectively evaluated to null.");
         logbackVerifier.expectMessage(Level.DEBUG, "User \"genericUserId\" meets conditions for targeting rule \"Everyone Else\".");
 
         assertEquals(expectedVariation, featureDecision.variation);
@@ -686,7 +686,7 @@ public class DecisionServiceTest {
     public void getVariationForFeatureInRolloutReturnsVariationWhenUserFailsTargetingInPreviousRulesButPassesRule3() {
         Bucketer mockBucketer = mock(Bucketer.class);
         Rollout rollout = ROLLOUT_2;
-        Experiment englishCitizensRule = rollout.getExperiments().get(2);
+        Experiment englishCitizensRule = rollout.getExperiments().get(3);
         Variation englishCitizenVariation = englishCitizensRule.getVariations().get(0);
         Experiment everyoneElseRule = rollout.getExperiments().get(rollout.getExperiments().size() - 1);
         Variation everyoneElseVariation = everyoneElseRule.getVariations().get(0);
@@ -703,18 +703,18 @@ public class DecisionServiceTest {
         ).getResult();
         assertEquals(englishCitizenVariation, featureDecision.variation);
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT, featureDecision.decisionSource);
-        logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"2\" collectively evaluated to null");
-        logbackVerifier.expectMessage(Level.DEBUG, "Evaluating audiences for rule \"3\": [4194404272].");
+        logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"3\" collectively evaluated to null");
+        logbackVerifier.expectMessage(Level.DEBUG, "Evaluating audiences for rule \"4\": [4194404272].");
         logbackVerifier.expectMessage(Level.DEBUG, "Starting to evaluate audience \"4194404272\" with conditions: [and, [or, [or, {name='nationality', type='custom_attribute', match='exact', value='English'}]]].");
         logbackVerifier.expectMessage(Level.DEBUG, "Audience \"4194404272\" evaluated to true.");
-        logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"3\" collectively evaluated to true");
+        logbackVerifier.expectMessage(Level.INFO, "Audiences for rule \"4\" collectively evaluated to true");
         // verify user is only bucketed once for everyone else rule
         verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
     }
 
     @Test
     public void getVariationFromDeliveryRuleTest() {
-        int index = 3;
+        int index = 4;
         List<Experiment> rules = ROLLOUT_2.getExperiments();
         Experiment experiment = ROLLOUT_2.getExperiments().get(index);
         Variation expectedVariation = null;

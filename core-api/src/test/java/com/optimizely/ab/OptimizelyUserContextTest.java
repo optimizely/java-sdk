@@ -36,6 +36,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.*;
 
 import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_HOUSE_KEY;
@@ -202,6 +203,47 @@ public class OptimizelyUserContextTest {
         String variationKey = "18257766532";
         String experimentId = "18322080788";
         String variationId = "18257766532";
+        OptimizelyJSON variablesExpected = optimizely.getAllFeatureVariables(flagKey, userId);
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey);
+
+        assertEquals(decision.getVariationKey(), variationKey);
+        assertTrue(decision.getEnabled());
+        assertEquals(decision.getVariables().toMap(), variablesExpected.toMap());
+        assertEquals(decision.getRuleKey(), experimentKey);
+        assertEquals(decision.getFlagKey(), flagKey);
+        assertEquals(decision.getUserContext(), user);
+        assertTrue(decision.getReasons().isEmpty());
+
+        DecisionMetadata metadata = new DecisionMetadata.Builder()
+            .setFlagKey(flagKey)
+            .setRuleKey(experimentKey)
+            .setRuleType(FeatureDecision.DecisionSource.ROLLOUT.toString())
+            .setVariationKey(variationKey)
+            .setEnabled(true)
+            .build();
+        eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap(), metadata);
+    }
+
+    @Test
+    public void decide_rolloutIgnorePausedRule() {
+        String datafileV4 = "";
+        try {
+            datafileV4 = Resources.toString(Resources.getResource("config/valid-project-config-v4.json"), Charsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafileV4)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .build();
+
+        String flagKey = "multi_variate_feature";
+        String experimentKey = "828245624";
+        String variationKey = "3137445031";
+        String experimentId = "828245624";
+        String variationId = "3137445031";
         OptimizelyJSON variablesExpected = optimizely.getAllFeatureVariables(flagKey, userId);
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);

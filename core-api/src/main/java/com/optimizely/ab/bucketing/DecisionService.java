@@ -307,7 +307,10 @@ public class DecisionService {
 
         int index = 0;
         while (index < rolloutRulesLength) {
-
+            if (!rollout.getExperiments().get(index).isRunning()) {
+                index++;
+                continue;
+            }
             DecisionResponse<AbstractMap.SimpleEntry> decisionVariationResponse = getVariationFromDeliveryRule(
                 projectConfig,
                 featureFlag.getKey(),
