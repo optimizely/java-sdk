@@ -198,10 +198,6 @@ public class OptimizelyUserContext {
      */
     public Boolean setForcedDecision(@Nonnull OptimizelyDecisionContext optimizelyDecisionContext,
                                      @Nonnull OptimizelyForcedDecision optimizelyForcedDecision) {
-        if (optimizely.getOptimizelyConfig() == null) {
-            logger.error("Optimizely SDK not ready.");
-            return false;
-        }
         // Check if the forcedDecisionsMap has been initialized yet or not
         if (forcedDecisionsMap == null ){
             // Thread-safe implementation of HashMap
@@ -219,10 +215,6 @@ public class OptimizelyUserContext {
      */
     @Nullable
     public OptimizelyForcedDecision getForcedDecision(@Nonnull OptimizelyDecisionContext optimizelyDecisionContext) {
-        if (optimizely.getOptimizelyConfig() == null) {
-            logger.error("Optimizely SDK not ready.");
-            return null;
-        }
         return findForcedDecision(optimizelyDecisionContext);
     }
 
@@ -247,11 +239,6 @@ public class OptimizelyUserContext {
      * @return Returns a boolean, true if successfully removed, otherwise false
      */
     public boolean removeForcedDecision(@Nonnull OptimizelyDecisionContext optimizelyDecisionContext) {
-        if (optimizely.getOptimizelyConfig() == null) {
-            logger.error("Optimizely SDK not ready.");
-            return false;
-        }
-
         try {
             if (forcedDecisionsMap != null) {
                 if (forcedDecisionsMap.remove(optimizelyDecisionContext.getKey()) != null) {
@@ -271,10 +258,6 @@ public class OptimizelyUserContext {
      * @return Returns a boolean, True if successfully, otherwise false
      */
     public boolean removeAllForcedDecisions() {
-        if (optimizely.getProjectConfig() == null) {
-            logger.error("Optimizely SDK not ready.");
-            return false;
-        }
         // Clear both maps for with and without ruleKey
         if (forcedDecisionsMap != null) {
             forcedDecisionsMap.clear();
