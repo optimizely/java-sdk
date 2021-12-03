@@ -82,11 +82,13 @@ public class OptimizelyUserContextTest {
 
     @Test
     public void optimizelyUserContext_noAttributes() {
-        OptimizelyUserContext user = new OptimizelyUserContext(optimizely, userId);
+        OptimizelyUserContext user_1 = new OptimizelyUserContext(optimizely, userId);
+        OptimizelyUserContext user_2 = new OptimizelyUserContext(optimizely, userId);
 
-        assertEquals(user.getOptimizely(), optimizely);
-        assertEquals(user.getUserId(), userId);
-        assertTrue(user.getAttributes().isEmpty());
+        assertEquals(user_1.getOptimizely(), optimizely);
+        assertEquals(user_1.getUserId(), userId);
+        assertTrue(user_1.getAttributes().isEmpty());
+        assertEquals(user_1.hashCode(), user_2.hashCode());
     }
 
     @Test
