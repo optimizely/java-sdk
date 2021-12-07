@@ -27,6 +27,7 @@ public class OptimizelyDecisionContext {
     private String ruleKey;
 
     public OptimizelyDecisionContext(@Nonnull String flagKey, @Nullable String ruleKey) {
+        if (flagKey == null) throw new NullPointerException("FlagKey must not be null, please provide a valid input.");
         this.flagKey = flagKey;
         this.ruleKey = ruleKey;
     }
