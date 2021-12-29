@@ -4660,7 +4660,7 @@ public class OptimizelyTest {
         String flagKey = "double_single_variable_feature";
         String variationKey = "pi_variation";
         Optimizely optimizely = Optimizely.builder().withDatafile(validConfigJsonV4()).build();
-        Variation variation = optimizely.getFlagVariationByKey(flagKey, variationKey);
+        Variation variation = optimizely.getProjectConfig().getFlagVariationByKey(flagKey, variationKey);
 
         assertNotNull(variation);
         assertEquals(variationKey, variation.getKey());

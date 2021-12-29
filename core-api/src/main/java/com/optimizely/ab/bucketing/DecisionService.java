@@ -16,6 +16,7 @@
 package com.optimizely.ab.bucketing;
 
 import com.optimizely.ab.OptimizelyDecisionContext;
+import com.optimizely.ab.OptimizelyForcedDecision;
 import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.*;
@@ -469,6 +470,37 @@ public class DecisionService {
         return bucketingId;
     }
 
+    /**
+     * Find a validated forced decision
+     *
+     * @param optimizelyDecisionContext The OptimizelyDecisionContext containing flagKey and ruleKey
+     * @return Returns a DecisionResponse structure of type Variation, otherwise null result with reasons
+     */
+    public DecisionResponse<Variation> validatedForcedDecision(@Nonnull OptimizelyDecisionContext optimizelyDecisionContext, @Nonnull ProjectConfig projectConfig, @Nonnull OptimizelyUserContext user) {
+        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+        String userId = user.getUserId();
+        OptimizelyForcedDecision optimizelyForcedDecision = user.findForcedDecision(optimizelyDecisionContext);
+        String variationKey = optimizelyForcedDecision != null ? optimizelyForcedDecision.getVariationKey() : null;
+        if (projectConfig != null && variationKey != null) {
+            Variation variation = projectConfig.getFlagVariationByKey(optimizelyDecisionContext.getFlagKey(), variationKey);
+            String ruleKey = optimizelyDecisionContext.getRuleKey();
+            String flagKey = optimizelyDecisionContext.getFlagKey();
+            String info;
+            String target = ruleKey != OptimizelyDecisionContext.OPTI_NULL_RULE_KEY ? String.format("flag (%s), rule (%s)", flagKey, ruleKey) : String.format("flag (%s)", flagKey);
+            if (variation != null) {
+                info = String.format("Variation (%s) is mapped to %s and user (%s) in the forced decision map.", variationKey, target, userId);
+                logger.debug(info);
+                reasons.addInfo(info);
+                return new DecisionResponse(variation, reasons);
+            } else {
+                info = String.format("Invalid variation is mapped to %s and user (%s) in the forced decision map.", target, userId);
+                logger.debug(info);
+                reasons.addInfo(info);
+            }
+        }
+        return new DecisionResponse<>(null, reasons);
+    }
+
     public ConcurrentHashMap<String, ConcurrentHashMap<String, String>> getForcedVariationMapping() {
         return forcedVariationMapping;
     }
@@ -591,7 +623,7 @@ public class DecisionService {
         String ruleKey = rule != null ? rule.getKey() : null;
         // Check Forced-Decision
         OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
-        DecisionResponse<Variation> forcedDecisionResponse = user.findValidatedForcedDecision(optimizelyDecisionContext);
+        DecisionResponse<Variation> forcedDecisionResponse = validatedForcedDecision(optimizelyDecisionContext, projectConfig, user);
 
         reasons.merge(forcedDecisionResponse.getReasons());
 
@@ -640,7 +672,7 @@ public class DecisionService {
         // Check forced-decisions first
         Experiment rule = rules.get(ruleIndex);
         OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, rule.getKey());
-        DecisionResponse<Variation> forcedDecisionResponse = user.findValidatedForcedDecision(optimizelyDecisionContext);
+        DecisionResponse<Variation> forcedDecisionResponse = validatedForcedDecision(optimizelyDecisionContext, projectConfig, user);
         reasons.merge(forcedDecisionResponse.getReasons());
 
         Variation variation = forcedDecisionResponse.getResult();

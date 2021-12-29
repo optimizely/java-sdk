@@ -105,6 +105,8 @@ public interface ProjectConfig {
 
     Map<String, List<Variation>> getFlagVariationsMap();
 
+    Variation getFlagVariationByKey(String flagKey, String variationKey);
+
     @Override
     String toString();
 
