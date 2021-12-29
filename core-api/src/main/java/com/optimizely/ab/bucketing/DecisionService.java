@@ -474,6 +474,8 @@ public class DecisionService {
      * Find a validated forced decision
      *
      * @param optimizelyDecisionContext The OptimizelyDecisionContext containing flagKey and ruleKey
+     * @param projectConfig             The Project config
+     * @param user                      The OptimizelyUserContext
      * @return Returns a DecisionResponse structure of type Variation, otherwise null result with reasons
      */
     public DecisionResponse<Variation> validatedForcedDecision(@Nonnull OptimizelyDecisionContext optimizelyDecisionContext, @Nonnull ProjectConfig projectConfig, @Nonnull OptimizelyUserContext user) {
