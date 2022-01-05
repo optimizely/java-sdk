@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2021, Optimizely and contributors
+ *    Copyright 2021-2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -1440,44 +1440,6 @@ public class OptimizelyUserContextTest {
 
         optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
         assertTrue(optimizelyUserContext.removeAllForcedDecisions());
-    }
-
-
-    @Test
-    public void findValidatedForcedDecisionWithRuleKey() {
-        String ruleKey = "77777";
-        String flagKey = "feature_2";
-        String variationKey = "variation_no_traffic";
-        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
-            optimizely,
-            userId,
-            Collections.emptyMap());
-
-        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
-        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
-
-        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
-        DecisionResponse<Variation> response = optimizelyUserContext.findValidatedForcedDecision(optimizelyDecisionContext);
-        Variation variation = response.getResult();
-        assertEquals(variationKey, variation.getKey());
-    }
-
-    @Test
-    public void findValidatedForcedDecisionWithoutRuleKey() {
-        String flagKey = "feature_2";
-        String variationKey = "variation_no_traffic";
-        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
-            optimizely,
-            userId,
-            Collections.emptyMap());
-
-        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
-        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
-
-        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
-        DecisionResponse<Variation> response = optimizelyUserContext.findValidatedForcedDecision(optimizelyDecisionContext);
-        Variation variation = response.getResult();
-        assertEquals(variationKey, variation.getKey());
     }
 
     @Test

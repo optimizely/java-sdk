@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2021, Optimizely and contributors
+ *    Copyright 2016-2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -501,6 +501,27 @@ public class DatafileProjectConfig implements ProjectConfig {
     @Override
     public Map<String, List<Variation>> getFlagVariationsMap() {
         return flagVariationsMap;
+    }
+
+    /**
+     *  Gets a variation based on flagKey and variationKey
+     *
+     * @param flagKey The flag key for the variation
+     * @param variationKey The variation key for the variation
+     * @return Returns a variation based on flagKey and variationKey, otherwise null
+     */
+    @Override
+    public Variation getFlagVariationByKey(String flagKey, String variationKey) {
+        Map<String, List<Variation>> flagVariationsMap = getFlagVariationsMap();
+        if (flagVariationsMap.containsKey(flagKey)) {
+            List<Variation> variations = flagVariationsMap.get(flagKey);
+            for (Variation variation : variations) {
+                if (variation.getKey().equals(variationKey)) {
+                    return variation;
+                }
+            }
+        }
+        return null;
     }
 
     @Override

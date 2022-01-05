@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2017-2020, Optimizely, Inc. and contributors                   *
+ * Copyright 2017-2022, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -17,6 +17,8 @@ package com.optimizely.ab.bucketing;
 
 import ch.qos.logback.classic.Level;
 import com.optimizely.ab.Optimizely;
+import com.optimizely.ab.OptimizelyDecisionContext;
+import com.optimizely.ab.OptimizelyForcedDecision;
 import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
@@ -35,6 +37,7 @@ import java.util.*;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
 import static com.optimizely.ab.config.ValidProjectConfigV4.*;
+import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
@@ -759,6 +762,45 @@ public class DecisionServiceTest {
         );
 
         assertEquals(expectedVariation, decisionResponse.getResult());
+    }
+
+    @Test
+    public void validatedForcedDecisionWithRuleKey() {
+        String userId = "testUser1";
+        String ruleKey = "2637642575";
+        String flagKey = "multi_variate_feature";
+        String variationKey = "2346257680";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+            optimizely,
+            userId,
+            Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        DecisionResponse<Variation> response = decisionService.validatedForcedDecision(optimizelyDecisionContext, v4ProjectConfig, optimizelyUserContext);
+        Variation variation = response.getResult();
+        assertEquals(variationKey, variation.getKey());
+    }
+
+    @Test
+    public void validatedForcedDecisionWithoutRuleKey() {
+        String userId = "testUser1";
+        String flagKey = "multi_variate_feature";
+        String variationKey = "521740985";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+            optimizely,
+            userId,
+            Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        DecisionResponse<Variation> response = decisionService.validatedForcedDecision(optimizelyDecisionContext, v4ProjectConfig, optimizelyUserContext);
+        Variation variation = response.getResult();
+        assertEquals(variationKey, variation.getKey());
     }
 
     //========= white list tests ==========/

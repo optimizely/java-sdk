@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2020-2021, Optimizely and contributors
+ *    Copyright 2020-2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -265,35 +265,7 @@ public class OptimizelyUserContext {
         return true;
     }
 
-    /**
-     * Find a validated forced decision
-     *
-     * @param optimizelyDecisionContext The OptimizelyDecisionContext containing flagKey and ruleKey
-     * @return Returns a DecisionResponse structure of type Variation, otherwise null result with reasons
-     */
-    public DecisionResponse<Variation> findValidatedForcedDecision(@Nonnull OptimizelyDecisionContext optimizelyDecisionContext) {
-        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
-        OptimizelyForcedDecision optimizelyForcedDecision = findForcedDecision(optimizelyDecisionContext);
-        String variationKey = optimizelyForcedDecision != null ? optimizelyForcedDecision.getVariationKey() : null;
-        if (variationKey != null) {
-            Variation variation = optimizely.getFlagVariationByKey(optimizelyDecisionContext.getFlagKey(), variationKey);
-            String ruleKey = optimizelyDecisionContext.getRuleKey();
-            String flagKey = optimizelyDecisionContext.getFlagKey();
-            String info;
-            String target = ruleKey != OptimizelyDecisionContext.OPTI_NULL_RULE_KEY ? String.format("flag (%s), rule (%s)", flagKey, ruleKey) : String.format("flag (%s)", flagKey);
-            if (variation != null) {
-                info = String.format("Variation (%s) is mapped to %s and user (%s) in the forced decision map.", variationKey, target, userId);
-                logger.debug(info);
-                reasons.addInfo(info);
-                return new DecisionResponse(variation, reasons);
-            } else {
-                info = String.format("Invalid variation is mapped to %s and user (%s) in the forced decision map.", target, userId);
-                logger.debug(info);
-                reasons.addInfo(info);
-            }
-        }
-        return new DecisionResponse<>(null, reasons);
-    }
+
 
     // Utils
 
