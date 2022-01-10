@@ -1,7 +1,7 @@
 # Optimizely Java X SDK Changelog
 
 ## 3.10.0
-January 7th, 2022
+January 10th, 2022
 
 ### New Features
 * Add a set of new APIs for overriding and managing user-level flag, experiment and delivery rule decisions. These methods can be used for QA and automated testing purposes. They are an extension of the OptimizelyUserContext interface ([#451](https://github.com/optimizely/java-sdk/pull/451), [#454](https://github.com/optimizely/java-sdk/pull/454), [#455](https://github.com/optimizely/java-sdk/pull/455), [#457](https://github.com/optimizely/java-sdk/pull/457))
