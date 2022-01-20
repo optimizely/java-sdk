@@ -226,6 +226,17 @@ public class AudienceConditionEvaluationTest {
     }
 
     /**
+     * Verify that UserAttribute.evaluate results of log level of DEBUG for number values passed for revisionNumber
+     */
+    @Test
+    public void missingConditionType() throws Exception {
+        UserAttribute testInstance = new UserAttribute("revisionNumber", "custom_attribute", "exact", 17065555);
+        assertNull(testInstance.evaluate(null, testUserAttributes));
+        logbackVerifier.expectMessage(Level.DEBUG,
+            "Audience condition \"{name='revisionNumber', type='custom_attribute', match='exact', value=17065555}\" has an unsupported condition value. You may need to upgrade to a newer release of the Optimizely SDK.");
+    }
+
+    /**
      * Verify that UserAttribute.evaluate for EXIST match type returns true for known visitor
      * attributes with non-null instances and empty string.
      */
