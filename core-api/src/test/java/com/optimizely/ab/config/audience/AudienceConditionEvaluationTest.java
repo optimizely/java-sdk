@@ -22,7 +22,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.internal.matchers.Or;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -165,7 +164,7 @@ public class AudienceConditionEvaluationTest {
     public void invalidMatch() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah", "chrome");
         assertNull(testInstance.evaluate(null, testUserAttributes));
-        logbackVerifier.expectMessage(Level.WARN,
+        logbackVerifier.expectMessage(Level.DEBUG,
             "Audience condition \"{name='browser_type', type='custom_attribute', match='blah', value='chrome'}\" uses an unknown match type. You may need to upgrade to a newer release of the Optimizely SDK");
     }
 
