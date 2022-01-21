@@ -262,7 +262,7 @@ public class ExperimentUtilsTest {
 
         logbackVerifier.expectMessage(Level.DEBUG,
             "Starting to evaluate audience \"2196265320\" with conditions: [and, [or, [or, {name='nationality', type='custom_attribute', match='null', value='English'}, {name='nationality', type='custom_attribute', match='null', value=null}]]].");
-        logbackVerifier.expectMessage(Level.WARN,
+        logbackVerifier.expectMessage(Level.DEBUG,
             "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unsupported condition value. You may need to upgrade to a newer release of the Optimizely SDK.");
         logbackVerifier.expectMessage(Level.DEBUG,
             "Audience \"2196265320\" evaluated to null.");
@@ -283,7 +283,7 @@ public class ExperimentUtilsTest {
 
         logbackVerifier.expectMessage(Level.DEBUG,
             "Starting to evaluate audience \"2196265320\" with conditions: [and, [or, [or, {name='nationality', type='custom_attribute', match='null', value='English'}, {name='nationality', type='custom_attribute', match='null', value=null}]]].");
-        logbackVerifier.expectMessage(Level.WARN,
+        logbackVerifier.expectMessage(Level.DEBUG,
             "Audience condition \"{name='nationality', type='custom_attribute', match='null', value=null}\" has an unsupported condition value. You may need to upgrade to a newer release of the Optimizely SDK.");
         logbackVerifier.expectMessage(Level.DEBUG,
             "Audience \"2196265320\" evaluated to null.");
