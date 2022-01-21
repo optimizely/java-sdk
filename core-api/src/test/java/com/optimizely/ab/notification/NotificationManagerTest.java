@@ -100,7 +100,7 @@ public class NotificationManagerTest {
                 }
             });
         }
-        latch.await(10, TimeUnit.SECONDS);
+        assertTrue(latch.await(10, TimeUnit.SECONDS));
         assertEquals(numThreads * numRepeats, notificationManager.size());
     }
 }
