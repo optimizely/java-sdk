@@ -23,7 +23,7 @@ following in your `build.gradle` and substitute `VERSION` for the latest SDK ver
 ---
 **NOTE**
 
-[Bintray/JCenter will be shut down](https://jfrog.com/blog/into-the-sunset-bintray-jcenter-gocenter-and-chartcenter/). The publish repository has been migrated to MavenCentral for the SDK version 3.8.1 or later. Older versions will be available in JCenter until February 1st, 2022.
+[Bintray/JCenter will be shut down](https://jfrog.com/blog/into-the-sunset-bintray-jcenter-gocenter-and-chartcenter/). The publish repository has been migrated to MavenCentral for the SDK version 3.8.1 or later. Older versions will be available in JCenter.
 
 ---
 
