@@ -1,5 +1,11 @@
 # Optimizely Java X SDK Changelog
 
+## [3.10.1]
+February 3rd, 2022
+
+### Fixes
+- Fix NotificationManager to be thread-safe (add-handler and send-notifications can happen concurrently) ([#460](https://github.com/optimizely/java-sdk/pull/460)).
+
 ## 3.10.0
 January 10th, 2022
 
