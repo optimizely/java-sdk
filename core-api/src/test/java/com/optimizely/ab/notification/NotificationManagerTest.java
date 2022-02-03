@@ -20,6 +20,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
@@ -69,5 +74,33 @@ public class NotificationManagerTest {
         List<TestNotification> messages = handler.getMessages();
         assertEquals(1, messages.size());
         assertEquals("message1", messages.get(0).getMessage());
+    }
+
+    @Test
+    public void testThreadSafety() throws InterruptedException {
+        int numThreads = 10;
+        int numRepeats = 2;
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+        CountDownLatch latch = new CountDownLatch(numThreads);
+        AtomicBoolean failedAlready = new AtomicBoolean(false);
+
+        for(int i = 0; i < numThreads; i++) {
+            executor.execute(() -> {
+                try {
+                    for (int j = 0; j < numRepeats; j++) {
+                        if(!failedAlready.get()) {
+                            notificationManager.addHandler(new TestNotificationHandler<>());
+                            notificationManager.send(new TestNotification("message1"));
+                        }
+                    }
+                } catch (Exception e) {
+                    failedAlready.set(true);
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+        assertTrue(latch.await(10, TimeUnit.SECONDS));
+        assertEquals(numThreads * numRepeats, notificationManager.size());
     }
 }
