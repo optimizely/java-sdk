@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2020, Optimizely and contributors
+ *    Copyright 2020, 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import static org.junit.Assert.*;
 public class SemanticVersionTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
-
 
     @Test
     public void semanticVersionInvalidOnlyDash() throws Exception {
@@ -165,4 +164,16 @@ public class SemanticVersionTest {
         assertTrue(SemanticVersion.compare("3.7.1-prerelease-prerelease+rc", "3.7.1-prerelease+build") > 0);
         assertTrue(SemanticVersion.compare("3.7.1-beta.2", "3.7.1-beta.1") > 0);
     }
+
+    @Test
+    public void testSilentForNullOrMissingAttributesValues() throws Exception {
+        // SemanticVersionMatcher will throw UnexpectedValueType exception for invalid condition or attribute values (this exception is handled to log WARNING messages).
+        // But, for missing (or null) attribute value, it should not throw the exception.
+        assertNull(new SemanticVersionEqualsMatch().eval("1.2.3", null));
+        assertNull(new SemanticVersionGEMatch().eval("1.2.3", null));
+        assertNull(new SemanticVersionGTMatch().eval("1.2.3", null));
+        assertNull(new SemanticVersionLEMatch().eval("1.2.3", null));
+        assertNull(new SemanticVersionLTMatch().eval("1.2.3", null));
+    }
+
 }

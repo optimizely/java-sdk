@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2020, Optimizely and contributors
+ *    Copyright 2020, 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 class SemanticVersionLTMatch implements Match {
     @Nullable
     public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
+        if (attributeValue == null) return null;  // stay silent (no WARNING) when attribute value is missing or empty.
         return SemanticVersion.compare(attributeValue, conditionValue) < 0;
     }
 }
