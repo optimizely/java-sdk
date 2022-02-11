@@ -203,6 +203,14 @@ public class AudienceConditionEvaluationTest {
             "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because no value was passed for user attribute \"browser_type\"");
     }
 
+    @Test
+    public void missingAttribute_semVersion() throws Exception {
+        UserAttribute testInstance = new UserAttribute("app_version", "custom_attribute", "semver_eq", "1.0.2");
+        assertNull(testInstance.evaluate(null, Collections.EMPTY_MAP));
+        logbackVerifier.expectMessage(Level.DEBUG,
+            "Audience condition \"{name='app_version', type='custom_attribute', match='semver_eq', value='1.0.2'}\" evaluated to UNKNOWN because no value was passed for user attribute \"app_version\"");
+    }
+
     /**
      * Verify that UserAttribute.evaluate returns null on passing null attribute object.
      */
