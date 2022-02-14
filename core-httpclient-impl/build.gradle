@@ -5,3 +5,7 @@ dependencies {
 
     compile group: 'org.apache.httpcomponents', name: 'httpclient', version: httpClientVersion
 }
+
+task exhaustiveTest {
+    dependsOn('test')
+}
