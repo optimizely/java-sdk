@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2020, Optimizely and contributors
+ *    Copyright 2018-2020, 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,6 +28,8 @@ import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
 class ExactMatch implements Match {
     @Nullable
     public Boolean eval(Object conditionValue, Object attributeValue) throws UnexpectedValueTypeException {
+        if (attributeValue == null) return null;
+
         if (isValidNumber(attributeValue)) {
             if (isValidNumber(conditionValue)) {
                 return NumberComparator.compareUnsafe(attributeValue, conditionValue) == 0;
@@ -39,7 +41,7 @@ class ExactMatch implements Match {
             throw new UnexpectedValueTypeException();
         }
 
-        if (attributeValue == null || attributeValue.getClass() != conditionValue.getClass()) {
+        if (attributeValue.getClass() != conditionValue.getClass()) {
             return null;
         }
 

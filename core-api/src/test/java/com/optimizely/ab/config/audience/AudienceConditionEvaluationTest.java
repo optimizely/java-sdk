@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2020, Optimizely and contributors
+ *    Copyright 2016-2020, 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.optimizely.ab.config.audience;
 
 import ch.qos.logback.classic.Level;
+import com.fasterxml.jackson.databind.deser.std.MapEntryDeserializer;
 import com.optimizely.ab.internal.LogbackVerifier;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Before;
@@ -191,16 +192,35 @@ public class AudienceConditionEvaluationTest {
             "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because a null value was passed for user attribute \"browser_type\"");
     }
 
-
     /**
-     * Verify that UserAttribute.evaluate returns null on missing attribute value.
+     * Verify that UserAttribute.evaluate returns null (and log debug message) on missing attribute value.
      */
     @Test
-    public void missingAttribute() throws Exception {
-        UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
-        assertNull(testInstance.evaluate(null, Collections.EMPTY_MAP));
-        logbackVerifier.expectMessage(Level.DEBUG,
-            "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because no value was passed for user attribute \"browser_type\"");
+    public void missingAttribute_returnsNullAndLogDebugMessage() throws Exception {
+        // check with all valid value types for each match
+
+        Map<String, Object[]> items = new HashMap<>();
+        items.put("exact", new Object[]{"string", 123, true});
+        items.put("substring", new Object[]{"string"});
+        items.put("gt", new Object[]{123, 5.3});
+        items.put("ge", new Object[]{123, 5.3});
+        items.put("lt", new Object[]{123, 5.3});
+        items.put("le", new Object[]{123, 5.3});
+        items.put("semver_eq", new Object[]{"1.2.3"});
+        items.put("semver_ge", new Object[]{"1.2.3"});
+        items.put("semver_gt", new Object[]{"1.2.3"});
+        items.put("semver_le", new Object[]{"1.2.3"});
+        items.put("semver_lt", new Object[]{"1.2.3"});
+
+        for (Map.Entry<String, Object[]> entry : items.entrySet()) {
+            for (Object value : entry.getValue()) {
+                UserAttribute testInstance = new UserAttribute("n", "custom_attribute", entry.getKey(), value);
+                assertNull(testInstance.evaluate(null, Collections.EMPTY_MAP));
+                String valueStr = (value instanceof String) ? ("'" + value + "'") : value.toString();
+                logbackVerifier.expectMessage(Level.DEBUG,
+                    "Audience condition \"{name='n', type='custom_attribute', match='" + entry.getKey() + "', value=" + valueStr + "}\" evaluated to UNKNOWN because no value was passed for user attribute \"n\"");
+            }
+        }
     }
 
     /**
