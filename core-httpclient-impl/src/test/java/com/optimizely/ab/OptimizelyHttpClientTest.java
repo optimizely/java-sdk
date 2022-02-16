@@ -40,6 +40,8 @@ public class OptimizelyHttpClientTest {
     @Before
     public void setUp() {
         System.setProperty("https.proxyHost", "localhost");
+        // default port (80) returns 404 instead of HttpHostConnectException
+        System.setProperty("https.proxyPort", "12345");
     }
 
     @After
