@@ -30,20 +30,23 @@ import javax.annotation.concurrent.Immutable;
 /**
  * Helper class to retrieve the SDK version information.
  */
-@Immutable
 public final class BuildVersionInfo {
 
     private static final Logger logger = LoggerFactory.getLogger(BuildVersionInfo.class);
 
-    public static String VERSION = readVersionNumber();
+    @Deprecated
+    public final static String VERSION = readVersionNumber();
 
-    // can be overridden by other wrapper client (android-sdk)
+    // can be overridden by other wrapper client (android-sdk, etc)
+
+    private static String clientVersion = readVersionNumber();
+
     public static void setClientVersion(String version) {
-         VERSION = version;
+         clientVersion = version;
     }
 
     public static String getClientVersion() {
-        return VERSION;
+        return clientVersion;
     }
 
     private static String readVersionNumber() {
