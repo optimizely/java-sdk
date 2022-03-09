@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, 2019, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -35,7 +35,16 @@ public final class BuildVersionInfo {
 
     private static final Logger logger = LoggerFactory.getLogger(BuildVersionInfo.class);
 
-    public final static String VERSION = readVersionNumber();
+    public static String VERSION = readVersionNumber();
+
+    // can be overridden by other wrapper client (android-sdk)
+    public static void setClientVersion(String version) {
+         VERSION = version;
+    }
+
+    public static String getClientVersion() {
+        return VERSION;
+    }
 
     private static String readVersionNumber() {
         BufferedReader bufferedReader = null;

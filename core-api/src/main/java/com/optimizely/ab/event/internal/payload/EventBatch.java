@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2018-2019, Optimizely and contributors
+ *    Copyright 2018-2019, 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -165,7 +165,7 @@ public class EventBatch {
     public static class Builder {
 
         private String clientName = ClientEngine.JAVA_SDK.getClientEngineValue();
-        private String clientVersion = BuildVersionInfo.VERSION;
+        private String clientVersion = BuildVersionInfo.getClientVersion();
         private String accountId;
         private List<Visitor> visitors;
         private Boolean anonymizeIp;

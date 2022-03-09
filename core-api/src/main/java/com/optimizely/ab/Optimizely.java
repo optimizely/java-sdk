@@ -25,10 +25,7 @@ import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.*;
-import com.optimizely.ab.event.internal.ClientEngineInfo;
-import com.optimizely.ab.event.internal.EventFactory;
-import com.optimizely.ab.event.internal.UserEvent;
-import com.optimizely.ab.event.internal.UserEventFactory;
+import com.optimizely.ab.event.internal.*;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.notification.*;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
@@ -1516,6 +1513,12 @@ public class Optimizely implements AutoCloseable {
 
         public Builder withUserProfileService(UserProfileService userProfileService) {
             this.userProfileService = userProfileService;
+            return this;
+        }
+
+        public Builder withClientInfo(EventBatch.ClientEngine clientEngine, String clientVersion) {
+            ClientEngineInfo.setClientEngine(clientEngine);
+            BuildVersionInfo.setClientVersion(clientVersion);
             return this;
         }
 

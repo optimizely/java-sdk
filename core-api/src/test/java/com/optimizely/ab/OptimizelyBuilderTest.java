@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, 2019, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,12 +20,17 @@ import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
+import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.event.EventHandler;
+import com.optimizely.ab.event.LogEvent;
+import com.optimizely.ab.event.internal.BuildVersionInfo;
+import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -34,11 +39,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
+import static junit.framework.Assert.assertEquals;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
 
 /**
  * Tests for {@link Optimizely#builder(String, EventHandler)}.
@@ -193,6 +201,35 @@ public class OptimizelyBuilderTest {
         assertEquals(optimizelyClient.defaultDecideOptions.get(0), OptimizelyDecideOption.DISABLE_DECISION_EVENT);
         assertEquals(optimizelyClient.defaultDecideOptions.get(1), OptimizelyDecideOption.ENABLED_FLAGS_ONLY);
         assertEquals(optimizelyClient.defaultDecideOptions.get(2), OptimizelyDecideOption.EXCLUDE_VARIABLES);
+    }
+
+    @Test
+    public void withClientInfo() throws Exception {
+        Optimizely optimizely;
+        EventHandler eventHandler;
+        ArgumentCaptor<LogEvent> argument = ArgumentCaptor.forClass(LogEvent.class);
+
+        // default client-engine info (java-sdk)
+
+        eventHandler = mock(EventHandler.class);
+        optimizely = Optimizely.builder(validConfigJsonV4(), eventHandler).build();
+        optimizely.track("basic_event", "tester");
+
+        verify(eventHandler, timeout(5000)).dispatchEvent(argument.capture());
+        assertEquals(argument.getValue().getEventBatch().getClientName(), "java-sdk");
+        assertEquals(argument.getValue().getEventBatch().getClientVersion(), BuildVersionInfo.getClientVersion());
+
+        // override client-engine info
+
+        eventHandler = mock(EventHandler.class);
+        optimizely = Optimizely.builder(validConfigJsonV4(), eventHandler)
+            .withClientInfo(EventBatch.ClientEngine.ANDROID_SDK, "1.2.3")
+            .build();
+        optimizely.track("basic_event", "tester");
+
+        verify(eventHandler, timeout(5000)).dispatchEvent(argument.capture());
+        assertEquals(argument.getValue().getEventBatch().getClientName(), "android-sdk");
+        assertEquals(argument.getValue().getEventBatch().getClientVersion(), "1.2.3");
     }
 
 }
