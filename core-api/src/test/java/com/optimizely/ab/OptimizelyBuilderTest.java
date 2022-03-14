@@ -219,9 +219,21 @@ public class OptimizelyBuilderTest {
         assertEquals(argument.getValue().getEventBatch().getClientName(), "java-sdk");
         assertEquals(argument.getValue().getEventBatch().getClientVersion(), BuildVersionInfo.getClientVersion());
 
+        // invalid override with null inputs
+
+        reset(eventHandler);
+        optimizely = Optimizely.builder(validConfigJsonV4(), eventHandler)
+            .withClientInfo(null, null)
+            .build();
+        optimizely.track("basic_event", "tester");
+
+        verify(eventHandler, timeout(5000)).dispatchEvent(argument.capture());
+        assertEquals(argument.getValue().getEventBatch().getClientName(), "java-sdk");
+        assertEquals(argument.getValue().getEventBatch().getClientVersion(), BuildVersionInfo.getClientVersion());
+
         // override client-engine info
 
-        eventHandler = mock(EventHandler.class);
+        reset(eventHandler);
         optimizely = Optimizely.builder(validConfigJsonV4(), eventHandler)
             .withClientInfo(EventBatch.ClientEngine.ANDROID_SDK, "1.2.3")
             .build();
