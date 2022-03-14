@@ -1486,7 +1486,7 @@ public class Optimizely implements AutoCloseable {
         }
 
         /**
-         * The withEventHandler has has been moved to the EventProcessor which takes a EventHandler in it's builder
+         * The withEventHandler has been moved to the EventProcessor which takes a EventHandler in it's builder
          * method.
          * {@link com.optimizely.ab.event.BatchEventProcessor.Builder#withEventHandler(com.optimizely.ab.event.EventHandler)}  label}
          * Please use that builder method instead.
@@ -1516,6 +1516,13 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
+        /**
+         * Override the SDK name and version (for client SDKs like android-sdk wrapping the core java-sdk) to be included in events.
+         *
+         * @param clientEngine the client engine type.
+         * @param clientVersion the client SDK version.
+         * @return An Optimizely builder
+         */
         public Builder withClientInfo(EventBatch.ClientEngine clientEngine, String clientVersion) {
             ClientEngineInfo.setClientEngine(clientEngine);
             BuildVersionInfo.setClientVersion(clientVersion);
