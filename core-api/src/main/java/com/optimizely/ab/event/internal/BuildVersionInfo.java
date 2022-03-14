@@ -42,7 +42,11 @@ public final class BuildVersionInfo {
     private static String clientVersion = readVersionNumber();
 
     public static void setClientVersion(String version) {
-         clientVersion = version;
+        if (version == null || version.isEmpty()) {
+            logger.warn("ClientVersion cannot be empty, defaulting to the core java-sdk version.");
+            return;
+        }
+        clientVersion = version;
     }
 
     public static String getClientVersion() {
