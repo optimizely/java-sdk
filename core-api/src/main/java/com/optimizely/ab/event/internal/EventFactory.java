@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2020, Optimizely and contributors
+ *    Copyright 2016-2020, 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ public class EventFactory {
 
             builder
                 .setClientName(ClientEngineInfo.getClientEngine().getClientEngineValue())
-                .setClientVersion(BuildVersionInfo.VERSION)
+                .setClientVersion(BuildVersionInfo.getClientVersion())
                 .setAccountId(projectConfig.getAccountId())
                 .setAnonymizeIp(projectConfig.getAnonymizeIP())
                 .setProjectId(projectConfig.getProjectId())

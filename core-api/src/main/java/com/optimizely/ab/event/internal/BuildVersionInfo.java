@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, 2019, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -30,12 +30,28 @@ import javax.annotation.concurrent.Immutable;
 /**
  * Helper class to retrieve the SDK version information.
  */
-@Immutable
 public final class BuildVersionInfo {
 
     private static final Logger logger = LoggerFactory.getLogger(BuildVersionInfo.class);
 
+    @Deprecated
     public final static String VERSION = readVersionNumber();
+
+    // can be overridden by other wrapper client (android-sdk, etc)
+
+    private static String clientVersion = readVersionNumber();
+
+    public static void setClientVersion(String version) {
+        if (version == null || version.isEmpty()) {
+            logger.warn("ClientVersion cannot be empty, defaulting to the core java-sdk version.");
+            return;
+        }
+        clientVersion = version;
+    }
+
+    public static String getClientVersion() {
+        return clientVersion;
+    }
 
     private static String readVersionNumber() {
         BufferedReader bufferedReader = null;
