@@ -1,12 +1,21 @@
 # Optimizely Java X SDK Changelog
 
+## [3.10.2]
+March 17th, 2022
+
+### Fixes
+
+- For some audience condition matchers (semantic-version, le, or ge), SDK logs WARNING messages when the attribute value is missing. This is fixed down to the DEBUG level to be consistent with other condition matchers ([#463](https://github.com/optimizely/java-sdk/pull/463)).
+- Add an option to specify the client-engine version (android-sdk, etc) in the Optimizely builder ([#466](https://github.com/optimizely/java-sdk/pull/466)).
+
+
 ## [3.10.1]
 February 3rd, 2022
 
 ### Fixes
 - Fix NotificationManager to be thread-safe (add-handler and send-notifications can happen concurrently) ([#460](https://github.com/optimizely/java-sdk/pull/460)).
 
-## 3.10.0
+## [3.10.0]
 January 10th, 2022
 
 ### New Features
