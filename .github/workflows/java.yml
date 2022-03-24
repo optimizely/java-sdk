@@ -123,10 +123,10 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       
-      - name: set up JDK ${{ matrix.java }}
+      - name: set up JDK ${{ matrix.jdk }}
         uses: AdoptOpenJDK/install-jdk@v1
         with:
-          version: ${{ matrix.java }}
+          version: ${{ matrix.jdk }}
           architecture: x64
       
       - name: Grant execute permission for gradlew
