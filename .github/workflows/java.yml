@@ -128,6 +128,7 @@ jobs:
         with:
           version: ${{ matrix.java }}
           architecture: x64
+      
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
           
