@@ -163,7 +163,7 @@ jobs:
     uses: optimizely/java-sdk/.github/workflows/build.yml@mnoman/gitAction
     with:
       action: ship
-      travis_tag: ${{ GITHUB_REF#refs/*/ }}
+      travis_tag: ${GITHUB_REF#refs/*/}
     secrets:
       MAVEN_SIGNING_KEY_BASE64: ${{ secrets.MAVEN_SIGNING_KEY_BASE64 }}
       MAVEN_SIGNING_PASSPHRASE: ${{ secrets.MAVEN_SIGNING_PASSPHRASE }}
