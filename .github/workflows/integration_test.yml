@@ -12,9 +12,6 @@ on:
       GITHUB_CONTEXT:
         required: true
         type: string
-      TRAVIS_EVENT_TYPE:
-        required: true
-        type: string
       REPOSITORY:
         required: true
         type: string
@@ -34,6 +31,9 @@ on:
         required: true
         type: string
       REF_NAME:
+        required: true
+        type: string
+      EVENT_NAME:
         required: true
         type: string
     secrets:
@@ -69,7 +69,7 @@ jobs:
         BUILD_NUMBER: ${{ inputs.BUILD_NUMBER }}
         TESTAPP_BRANCH: master
         GITHUB_TOKEN: ${{ secrets.CI_USER_TOKEN }}
-        TRAVIS_EVENT_TYPE: ${{ inputs.TRAVIS_EVENT_TYPE }}
+        TRAVIS_EVENT_TYPE: ${{ inputs.EVENT_NAME }}
         GITHUB_CONTEXT: ${{ inputs.GITHUB_CONTEXT }}
         TRAVIS_REPO_SLUG: ${{ inputs.REPOSITORY }}
         TRAVIS_PULL_REQUEST_SLUG: ${{ inputs.REPOSITORY }}
