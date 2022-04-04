@@ -113,7 +113,7 @@ jobs:
         echo "$GITHUB_CONTEXT"
         home/runner/travisci-tools/trigger-script-with-status-update.sh
   test:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
