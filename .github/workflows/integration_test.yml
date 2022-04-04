@@ -1,0 +1,95 @@
+name: Reusable action of running integration of production suite
+
+on:
+  workflow_call:
+    inputs:
+      FULLSTACK_TEST_REPO:
+        required: false
+        type: string
+      GITHUB_CONTEXT:
+        required: true
+        type: string
+      TRAVIS_EVENT_TYPE:
+        required: true
+        type: string
+      TRAVIS_REPO_SLUG:
+        required: true
+        type: string
+      TRAVIS_PULL_REQUEST_SLUG:
+        required: true
+        type: string
+      UPSTREAM_REPO:
+        required: true
+        type: string
+      TRAVIS_COMMIT:
+        required: true
+        type: string
+      TRAVIS_PULL_REQUEST_SHA:
+        required: true
+        type: string
+      TRAVIS_PULL_REQUEST:
+        required: true
+        type: string
+      UPSTREAM_SHA:
+        required: true
+        type: string
+      EVENT_MESSAGE:
+        required: true
+        type: string
+      HEAD_REF:
+        required: true
+        type: string
+      REF_NAME:
+        required: true
+        type: string
+      EVENT_NAME:
+        required: true
+        type: string
+    secrets:
+      CI_USER_TOKEN:
+        required: true
+      TRAVIS_COM_TOKEN:
+        required: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        # You should create a personal access token and store it in your repository
+        token: ${{ secrets.CI_USER_TOKEN }}
+        repository: 'optimizely/travisci-tools'
+        path: 'home/runner/travisci-tools'
+        ref: 'master'
+    - name: set SDK Branch if PR
+      if: ${{ inputs.EVENT_NAME == 'pull_request' }}
+      run: |
+        echo "SDK_BRANCH=${{ inputs.HEAD_REF }}" >> $GITHUB_ENV
+        echo "TRAVIS_BRANCH=${{ inputs.HEAD_REF }}" >> $GITHUB_ENV
+    - name: set SDK Branch if not pull request
+      if: ${{ inputs.EVENT_NAME != 'pull_request' }}
+      run: |
+        echo "SDK_BRANCH=${{ inputs.REF_NAME }}" >> $GITHUB_ENV
+        echo "TRAVIS_BRANCH=${{ inputs.REF_NAME }}" >> $GITHUB_ENV
+    - name: Trigger build
+      env:
+        SDK: java
+        FULLSTACK_TEST_REPO: ${{ inputs.FULLSTACK_TEST_REPO }}
+        BUILD_NUMBER: ${{ inputs.BUILD_NUMBER }}
+        TESTAPP_BRANCH: master
+        GITHUB_TOKEN: ${{ secrets.CI_USER_TOKEN }}
+        TRAVIS_EVENT_TYPE: ${{ inputs.TRAVIS_EVENT_TYPE }}
+        GITHUB_CONTEXT: ${{ inputs.GITHUB_CONTEXT }}
+        TRAVIS_REPO_SLUG: ${{ inputs.TRAVIS_REPO_SLUG }}
+        TRAVIS_PULL_REQUEST_SLUG: ${{ inputs.TRAVIS_PULL_REQUEST_SLUG }}
+        UPSTREAM_REPO: ${{ inputs.UPSTREAM_REPO }}
+        TRAVIS_COMMIT: ${{ inputs.TRAVIS_COMMIT }}
+        TRAVIS_PULL_REQUEST_SHA: ${{ inputs.TRAVIS_PULL_REQUEST_SHA }}
+        TRAVIS_PULL_REQUEST: ${{ inputs.TRAVIS_PULL_REQUEST }}
+        UPSTREAM_SHA: ${{ inputs.UPSTREAM_SHA }}
+        TRAVIS_COM_TOKEN: ${{ secrets.TRAVIS_COM_TOKEN }}
+        EVENT_MESSAGE: ${{ inputs.EVENT_MESSAGE }}
+        HOME: 'home/runner'
+      run: |
+        echo "$GITHUB_CONTEXT"
+        home/runner/travisci-tools/trigger-script-with-status-update.sh
