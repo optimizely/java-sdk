@@ -6,31 +6,25 @@ on:
       FULLSTACK_TEST_REPO:
         required: false
         type: string
+      BUILD_NUMBER:
+        required: true
+        type: string
       GITHUB_CONTEXT:
         required: true
         type: string
       TRAVIS_EVENT_TYPE:
         required: true
         type: string
-      TRAVIS_REPO_SLUG:
+      REPOSITORY:
         required: true
         type: string
-      TRAVIS_PULL_REQUEST_SLUG:
-        required: true
-        type: string
-      UPSTREAM_REPO:
-        required: true
-        type: string
-      TRAVIS_COMMIT:
+      SHA:
         required: true
         type: string
       TRAVIS_PULL_REQUEST_SHA:
         required: true
         type: string
       TRAVIS_PULL_REQUEST:
-        required: true
-        type: string
-      UPSTREAM_SHA:
         required: true
         type: string
       EVENT_MESSAGE:
@@ -40,9 +34,6 @@ on:
         required: true
         type: string
       REF_NAME:
-        required: true
-        type: string
-      EVENT_NAME:
         required: true
         type: string
     secrets:
@@ -80,13 +71,13 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.CI_USER_TOKEN }}
         TRAVIS_EVENT_TYPE: ${{ inputs.TRAVIS_EVENT_TYPE }}
         GITHUB_CONTEXT: ${{ inputs.GITHUB_CONTEXT }}
-        TRAVIS_REPO_SLUG: ${{ inputs.TRAVIS_REPO_SLUG }}
-        TRAVIS_PULL_REQUEST_SLUG: ${{ inputs.TRAVIS_PULL_REQUEST_SLUG }}
-        UPSTREAM_REPO: ${{ inputs.UPSTREAM_REPO }}
-        TRAVIS_COMMIT: ${{ inputs.TRAVIS_COMMIT }}
+        TRAVIS_REPO_SLUG: ${{ inputs.REPOSITORY }}
+        TRAVIS_PULL_REQUEST_SLUG: ${{ inputs.REPOSITORY }}
+        UPSTREAM_REPO: ${{ inputs.REPOSITORY }}
+        TRAVIS_COMMIT: ${{ inputs.SHA }}
         TRAVIS_PULL_REQUEST_SHA: ${{ inputs.TRAVIS_PULL_REQUEST_SHA }}
         TRAVIS_PULL_REQUEST: ${{ inputs.TRAVIS_PULL_REQUEST }}
-        UPSTREAM_SHA: ${{ inputs.UPSTREAM_SHA }}
+        UPSTREAM_SHA: ${{ inputs.SHA }}
         TRAVIS_COM_TOKEN: ${{ secrets.TRAVIS_COM_TOKEN }}
         EVENT_MESSAGE: ${{ inputs.EVENT_MESSAGE }}
         HOME: 'home/runner'
