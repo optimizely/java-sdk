@@ -33,12 +33,12 @@ jobs:
     with:
       BUILD_NUMBER: ${{ github.run_id }}
       GITHUB_CONTEXT: ${{ toJson(github) }}
-      TRAVIS_EVENT_TYPE: ${{ github.event_name }}
+      EVENT_NAME: ${{ github.event_name }}
       REPOSITORY: ${{ github.repository }}
       SHA: ${{ github.sha }}
       TRAVIS_PULL_REQUEST_SHA: ${{ github.event.pull_request.head.sha }}
       TRAVIS_PULL_REQUEST: ${{ github.event.pull_request.number }}
-      EVENT_MESSAGE: ${{ github.event_name }}
+      EVENT_MESSAGE: ${{ github.event.message }}
       HEAD_REF: ${{ github.head_ref }}
       REF_NAME: ${{ github.ref_name }}
     secrets:
@@ -51,12 +51,12 @@ jobs:
       FULLSTACK_TEST_REPO: ProdTesting
       BUILD_NUMBER: ${{ github.run_id }}
       GITHUB_CONTEXT: ${{ toJson(github) }}
-      TRAVIS_EVENT_TYPE: ${{ github.event_name }}
+      EVENT_NAME: ${{ github.event_name }}
       REPOSITORY: ${{ github.repository }}
       SHA: ${{ github.sha }}
       TRAVIS_PULL_REQUEST_SHA: ${{ github.event.pull_request.head.sha }}
       TRAVIS_PULL_REQUEST: ${{ github.event.pull_request.number }}
-      EVENT_MESSAGE: ${{ github.event_name }}
+      EVENT_MESSAGE: ${{ github.event.message }}
       HEAD_REF: ${{ github.head_ref }}
       REF_NAME: ${{ github.ref_name }}
     secrets:
