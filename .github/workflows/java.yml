@@ -45,6 +45,7 @@ jobs:
       TRAVIS_COM_TOKEN: ${{ secrets.TRAVIS_COM_TOKEN }}
   
   test:
+    if: startsWith(github.ref, 'refs/tags/') != true
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
