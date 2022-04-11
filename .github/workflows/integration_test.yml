@@ -23,12 +23,12 @@ jobs:
         path: 'home/runner/travisci-tools'
         ref: 'master'
     - name: set SDK Branch if PR
-      if: ${{ inputs.EVENT_NAME == 'pull_request' }}
+      if: ${{ github.event_name == 'pull_request' }}
       run: |
         echo "SDK_BRANCH=${{ github.head_ref }}" >> $GITHUB_ENV
         echo "TRAVIS_BRANCH=${{ github.head_ref }}" >> $GITHUB_ENV
     - name: set SDK Branch if not pull request
-      if: ${{ inputs.EVENT_NAME != 'pull_request' }}
+      if: ${{ github.event_name != 'pull_request' }}
       run: |
         echo "SDK_BRANCH=${{ github.ref_name }}" >> $GITHUB_ENV
         echo "TRAVIS_BRANCH=${{ github.ref_name }}" >> $GITHUB_ENV
