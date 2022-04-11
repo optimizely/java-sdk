@@ -6,41 +6,23 @@ on:
       FULLSTACK_TEST_REPO:
         required: false
         type: string
-      BUILD_NUMBER:
-        required: true
-        type: string
-      GITHUB_CONTEXT:
-        required: true
-        type: string
-      REPOSITORY:
-        required: true
-        type: string
-      SHA:
-        required: true
-        type: string
-      TRAVIS_PULL_REQUEST_SHA:
-        required: true
-        type: string
-      TRAVIS_PULL_REQUEST:
-        required: true
-        type: string
-      EVENT_MESSAGE:
-        required: true
-        type: string
-      HEAD_REF:
-        required: true
-        type: string
-      REF_NAME:
-        required: true
-        type: string
-      EVENT_NAME:
-        required: true
-        type: string
     secrets:
       CI_USER_TOKEN:
         required: true
       TRAVIS_COM_TOKEN:
         required: true
+env:
+  # Whether to run tests against all SDKS
+  BUILD_NUMBER: ${{ github.run_id }}
+  GITHUB_CONTEXT: ${{ toJson(github) }}
+  REPOSITORY: ${{ github.repository }}
+  EVENT_NAME: ${{ github.event_name }}
+  SHA: ${{ github.repository }}
+  TRAVIS_PULL_REQUEST_SHA: ${{ github.event.pull_request.head.sha }}
+  TRAVIS_PULL_REQUEST: ${{ github.event.pull_request.number }}
+  EVENT_MESSAGE: ${{ github.event.message }}
+  HEAD_REF: ${{ github.head_ref }}
+  REF_NAME: ${{ github.ref_name }}
 jobs:
   test:
     runs-on: ubuntu-latest
