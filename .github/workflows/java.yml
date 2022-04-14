@@ -31,13 +31,13 @@ jobs:
       run: find . -type f -name '*.md' -exec awesome_bot {} \;
   
   integration_tests:
-    uses: optimizely/java-sdk/.github/workflows/integration_test.yml@mnoman/gitAction
+    uses: optimizely/java-sdk/.github/workflows/integration_test.yml@master
     secrets:
       CI_USER_TOKEN: ${{ secrets.CI_USER_TOKEN }}
       TRAVIS_COM_TOKEN: ${{ secrets.TRAVIS_COM_TOKEN }}
       
   fullstack_production_suite:
-    uses: optimizely/java-sdk/.github/workflows/integration_test.yml@mnoman/gitAction
+    uses: optimizely/java-sdk/.github/workflows/integration_test.yml@master
     with:
       FULLSTACK_TEST_REPO: ProdTesting
     secrets:
@@ -93,7 +93,7 @@ jobs:
           
   publish:
     if: startsWith(github.ref, 'refs/tags/')
-    uses: optimizely/java-sdk/.github/workflows/build.yml@mnoman/gitAction
+    uses: optimizely/java-sdk/.github/workflows/build.yml@master
     with:
       action: ship
       travis_tag: ${GITHUB_REF#refs/*/}
@@ -105,7 +105,7 @@ jobs:
 
   snapshot:
     if: ${{ github.event.inputs.SNAPSHOT == 'true' && github.event_name == 'workflow_dispatch' }}
-    uses: optimizely/java-sdk/.github/workflows/build.yml@mnoman/gitAction
+    uses: optimizely/java-sdk/.github/workflows/build.yml@master
     with:
       action: ship
       travis_tag: BB-SNAPSHOT
