@@ -1,0 +1,116 @@
+
+name: Java CI with Gradle
+
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - '*'
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+    inputs:
+      SNAPSHOT:
+        type: boolean
+        description: Set SNAPSHOT true to publish
+
+jobs:
+  lint_markdown_files:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '2.6'
+        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+    - name: Install gem
+      run: |
+        gem install awesome_bot
+    - name: Run tests
+      run: find . -type f -name '*.md' -exec awesome_bot {} \;
+  
+  integration_tests:
+    uses: optimizely/java-sdk/.github/workflows/integration_test.yml@master
+    secrets:
+      CI_USER_TOKEN: ${{ secrets.CI_USER_TOKEN }}
+      TRAVIS_COM_TOKEN: ${{ secrets.TRAVIS_COM_TOKEN }}
+      
+  fullstack_production_suite:
+    uses: optimizely/java-sdk/.github/workflows/integration_test.yml@master
+    with:
+      FULLSTACK_TEST_REPO: ProdTesting
+    secrets:
+      CI_USER_TOKEN: ${{ secrets.CI_USER_TOKEN }}
+      TRAVIS_COM_TOKEN: ${{ secrets.TRAVIS_COM_TOKEN }}
+  
+  test:
+    if: startsWith(github.ref, 'refs/tags/') != true
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: [8, 9]
+        optimizely_default_parser: [GSON_CONFIG_PARSER, JACKSON_CONFIG_PARSER, JSON_CONFIG_PARSER, JSON_SIMPLE_CONFIG_PARSER]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      
+      - name: set up JDK ${{ matrix.jdk }}
+        uses: AdoptOpenJDK/install-jdk@v1
+        with:
+          version: ${{ matrix.jdk }}
+          architecture: x64
+      
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+          
+      - name: Gradle cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('**/buildSrc/**/*.kt') }}
+
+      - name: run tests
+        id: unit_tests
+        env: 
+          optimizely_default_parser: ${{ matrix.optimizely_default_parser }}
+        run: |
+          ./gradlew clean
+          ./gradlew exhaustiveTest
+          ./gradlew build
+      - name: Check on failures
+        if: steps.unit_tests.outcome != 'success'
+        run: |
+          cat /home/runner/java-sdk/core-api/build/reports/findbugs/main.html
+          cat /home/runner/java-sdk/core-api/build/reports/findbugs/test.html
+      - name: Check on success
+        if: steps.unit_tests.outcome == 'success'
+        run: |
+          ./gradlew coveralls uploadArchives --console plain
+          
+  publish:
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: optimizely/java-sdk/.github/workflows/build.yml@master
+    with:
+      action: ship
+      travis_tag: ${GITHUB_REF#refs/*/}
+    secrets:
+      MAVEN_SIGNING_KEY_BASE64: ${{ secrets.MAVEN_SIGNING_KEY_BASE64 }}
+      MAVEN_SIGNING_PASSPHRASE: ${{ secrets.MAVEN_SIGNING_PASSPHRASE }}
+      MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+      MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+
+  snapshot:
+    if: ${{ github.event.inputs.SNAPSHOT == 'true' && github.event_name == 'workflow_dispatch' }}
+    uses: optimizely/java-sdk/.github/workflows/build.yml@master
+    with:
+      action: ship
+      travis_tag: BB-SNAPSHOT
+    secrets:
+      MAVEN_SIGNING_KEY_BASE64: ${{ secrets.MAVEN_SIGNING_KEY_BASE64 }}
+      MAVEN_SIGNING_PASSPHRASE: ${{ secrets.MAVEN_SIGNING_PASSPHRASE }}
+      MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+      MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
