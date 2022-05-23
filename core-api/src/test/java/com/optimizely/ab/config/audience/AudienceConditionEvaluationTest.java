@@ -18,7 +18,9 @@ package com.optimizely.ab.config.audience;
 
 import ch.qos.logback.classic.Level;
 import com.fasterxml.jackson.databind.deser.std.MapEntryDeserializer;
+import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.internal.LogbackVerifier;
+import com.optimizely.ab.testutils.OTUtils;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Before;
 import org.junit.Rule;
@@ -129,7 +131,7 @@ public class AudienceConditionEvaluationTest {
         assertNull(testInstance.getMatch());
         assertEquals(testInstance.getName(), "browser_type");
         assertEquals(testInstance.getType(), "custom_attribute");
-        assertTrue(testInstance.evaluate(null, testUserAttributes));
+        assertTrue(testInstance.evaluate(null, OTUtils.user(testUserAttributes)));
     }
 
     /**
@@ -138,7 +140,7 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void userAttributeEvaluateFalse() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", null, "firefox");
-        assertFalse(testInstance.evaluate(null, testUserAttributes));
+        assertFalse(testInstance.evaluate(null, OTUtils.user(testUserAttributes)));
     }
 
     /**
@@ -147,7 +149,7 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void userAttributeUnknownAttribute() throws Exception {
         UserAttribute testInstance = new UserAttribute("unknown_dim", "custom_attribute", null, "unknown");
-        assertFalse(testInstance.evaluate(null, testUserAttributes));
+        assertFalse(testInstance.evaluate(null, OTUtils.user(testUserAttributes)));
     }
 
     /**
@@ -156,7 +158,7 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void invalidMatchCondition() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "unknown_dimension", null, "chrome");
-        assertNull(testInstance.evaluate(null, testUserAttributes));
+        assertNull(testInstance.evaluate(null, OTUtils.user(testUserAttributes)));
     }
 
     /**
@@ -165,7 +167,7 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void invalidMatch() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "blah", "chrome");
-        assertNull(testInstance.evaluate(null, testUserAttributes));
+        assertNull(testInstance.evaluate(null, OTUtils.user(testUserAttributes)));
         logbackVerifier.expectMessage(Level.WARN,
             "Audience condition \"{name='browser_type', type='custom_attribute', match='blah', value='chrome'}\" uses an unknown match type. You may need to upgrade to a newer release of the Optimizely SDK");
     }
@@ -176,7 +178,7 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void unexpectedAttributeType() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
-        assertNull(testInstance.evaluate(null, testUserAttributes));
+        assertNull(testInstance.evaluate(null, OTUtils.user(testUserAttributes)));
         logbackVerifier.expectMessage(Level.WARN,
             "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because a value of type \"java.lang.String\" was passed for user attribute \"browser_type\"");
     }
@@ -187,7 +189,7 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void unexpectedAttributeTypeNull() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
-        assertNull(testInstance.evaluate(null, Collections.singletonMap("browser_type", null)));
+        assertNull(testInstance.evaluate(null, OTUtils.user(Collections.singletonMap("browser_type", null))));
         logbackVerifier.expectMessage(Level.DEBUG,
             "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because a null value was passed for user attribute \"browser_type\"");
     }
@@ -215,7 +217,7 @@ public class AudienceConditionEvaluationTest {
         for (Map.Entry<String, Object[]> entry : items.entrySet()) {
             for (Object value : entry.getValue()) {
                 UserAttribute testInstance = new UserAttribute("n", "custom_attribute", entry.getKey(), value);
-                assertNull(testInstance.evaluate(null, Collections.EMPTY_MAP));
+                assertNull(testInstance.evaluate(null, OTUtils.user(Collections.EMPTY_MAP)));
                 String valueStr = (value instanceof String) ? ("'" + value + "'") : value.toString();
                 logbackVerifier.expectMessage(Level.DEBUG,
                     "Audience condition \"{name='n', type='custom_attribute', match='" + entry.getKey() + "', value=" + valueStr + "}\" evaluated to UNKNOWN because no value was passed for user attribute \"n\"");
@@ -229,7 +231,7 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void nullAttribute() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
-        assertNull(testInstance.evaluate(null, null));
+        assertNull(testInstance.evaluate(null, OTUtils.user(null)));
         logbackVerifier.expectMessage(Level.DEBUG,
             "Audience condition \"{name='browser_type', type='custom_attribute', match='gt', value=20}\" evaluated to UNKNOWN because no value was passed for user attribute \"browser_type\"");
     }
@@ -240,7 +242,7 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void unknownConditionType() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "blah", "exists", "firefox");
-        assertNull(testInstance.evaluate(null, testUserAttributes));
+        assertNull(testInstance.evaluate(null, OTUtils.user(testUserAttributes)));
         logbackVerifier.expectMessage(Level.WARN,
             "Audience condition \"{name='browser_type', type='blah', match='exists', value='firefox'}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.");
     }
@@ -254,9 +256,9 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "exists", "firefox");
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("browser_type", "");
-        assertTrue(testInstance.evaluate(null, attributes));
+        assertTrue(testInstance.evaluate(null, OTUtils.user(attributes)));
         attributes.put("browser_type", null);
-        assertFalse(testInstance.evaluate(null, attributes));
+        assertFalse(testInstance.evaluate(null, OTUtils.user(attributes)));
     }
 
     /**
@@ -266,16 +268,16 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void existsMatchConditionEvaluatesTrue() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "exists", "firefox");
-        assertTrue(testInstance.evaluate(null, testUserAttributes));
+        assertTrue(testInstance.evaluate(null, OTUtils.user(testUserAttributes)));
 
         UserAttribute testInstanceBoolean = new UserAttribute("is_firefox", "custom_attribute", "exists", false);
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "exists", 5);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "exists", 4.55);
         UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "exists", testUserAttributes);
-        assertTrue(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
-        assertTrue(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertTrue(testInstanceDouble.evaluate(null, testTypedUserAttributes));
-        assertTrue(testInstanceObject.evaluate(null, testTypedUserAttributes));
+        assertTrue(testInstanceBoolean.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertTrue(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertTrue(testInstanceDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertTrue(testInstanceObject.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -286,8 +288,8 @@ public class AudienceConditionEvaluationTest {
     public void existsMatchConditionEvaluatesFalse() throws Exception {
         UserAttribute testInstance = new UserAttribute("bad_var", "custom_attribute", "exists", "chrome");
         UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "exists", "chrome");
-        assertFalse(testInstance.evaluate(null, testTypedUserAttributes));
-        assertFalse(testInstanceNull.evaluate(null, testTypedUserAttributes));
+        assertFalse(testInstance.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertFalse(testInstanceNull.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -302,11 +304,11 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceFloat = new UserAttribute("num_size", "custom_attribute", "exact", (float) 3);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "exact", 3.55);
 
-        assertTrue(testInstanceString.evaluate(null, testUserAttributes));
-        assertTrue(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
-        assertTrue(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertTrue(testInstanceFloat.evaluate(null, Collections.singletonMap("num_size", (float) 3)));
-        assertTrue(testInstanceDouble.evaluate(null, testTypedUserAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testUserAttributes)));
+        assertTrue(testInstanceBoolean.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertTrue(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertTrue(testInstanceFloat.evaluate(null, OTUtils.user(Collections.singletonMap("num_size", (float) 3))));
+        assertTrue(testInstanceDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -339,22 +341,22 @@ public class AudienceConditionEvaluationTest {
 
         assertNull(testInstanceInteger.evaluate(
             null,
-            Collections.singletonMap("num_size", bigInteger)));
+            OTUtils.user(Collections.singletonMap("num_size", bigInteger))));
         assertNull(testInstanceFloat.evaluate(
             null,
-            Collections.singletonMap("num_size", invalidFloatValue)));
+            OTUtils.user(Collections.singletonMap("num_size", invalidFloatValue))));
         assertNull(testInstanceDouble.evaluate(
             null,
-            Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble)));
+            OTUtils.user(Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble))));
         assertNull(testInstanceDouble.evaluate(
             null,
-            Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble)));
+            OTUtils.user(Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble))));
         assertNull(testInstanceDouble.evaluate(
-            null, Collections.singletonMap("num_counts",
-                Collections.singletonMap("num_counts", infiniteNANDouble))));
+            null, OTUtils.user(Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", infiniteNANDouble)))));
         assertNull(testInstanceDouble.evaluate(
-            null, Collections.singletonMap("num_counts",
-                Collections.singletonMap("num_counts", largeDouble))));
+            null, OTUtils.user(Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", largeDouble)))));
     }
 
     /**
@@ -372,10 +374,10 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts", "custom_attribute", "exact", infiniteNegativeInfiniteDouble);
         UserAttribute testInstanceNANDouble = new UserAttribute("num_counts", "custom_attribute", "exact", infiniteNANDouble);
 
-        assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstancePositiveInfinite.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNegativeInfiniteDouble.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNANDouble.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstancePositiveInfinite.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNegativeInfiniteDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNANDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -389,10 +391,10 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "exact", 5);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "exact", 5.55);
 
-        assertFalse(testInstanceString.evaluate(null, testUserAttributes));
-        assertFalse(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
-        assertFalse(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertFalse(testInstanceDouble.evaluate(null, testTypedUserAttributes));
+        assertFalse(testInstanceString.evaluate(null, OTUtils.user(testUserAttributes)));
+        assertFalse(testInstanceBoolean.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertFalse(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertFalse(testInstanceDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -408,15 +410,15 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "exact", "3.55");
         UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "exact", "null_val");
 
-        assertNull(testInstanceObject.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceString.evaluate(null, testUserAttributes));
-        assertNull(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceDouble.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNull.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceObject.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(testUserAttributes)));
+        assertNull(testInstanceBoolean.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNull.evaluate(null, OTUtils.user(testTypedUserAttributes)));
         Map<String, Object> attr = new HashMap<>();
         attr.put("browser_type", "true");
-        assertNull(testInstanceString.evaluate(null, attr));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(attr)));
     }
 
     /**
@@ -430,13 +432,13 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceFloat = new UserAttribute("num_size", "custom_attribute", "gt", (float) 2);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "gt", 2.55);
 
-        assertTrue(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertTrue(testInstanceFloat.evaluate(null, Collections.singletonMap("num_size", (float) 3)));
-        assertTrue(testInstanceDouble.evaluate(null, testTypedUserAttributes));
+        assertTrue(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertTrue(testInstanceFloat.evaluate(null, OTUtils.user(Collections.singletonMap("num_size", (float) 3))));
+        assertTrue(testInstanceDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
 
         Map<String, Object> badAttributes = new HashMap<>();
         badAttributes.put("num_size", "bobs burgers");
-        assertNull(testInstanceInteger.evaluate(null, badAttributes));
+        assertNull(testInstanceInteger.evaluate(null, OTUtils.user(badAttributes)));
     }
 
     /**
@@ -470,22 +472,22 @@ public class AudienceConditionEvaluationTest {
 
         assertNull(testInstanceInteger.evaluate(
             null,
-            Collections.singletonMap("num_size", bigInteger)));
+            OTUtils.user(Collections.singletonMap("num_size", bigInteger))));
         assertNull(testInstanceFloat.evaluate(
             null,
-            Collections.singletonMap("num_size", invalidFloatValue)));
+            OTUtils.user(Collections.singletonMap("num_size", invalidFloatValue))));
         assertNull(testInstanceDouble.evaluate(
             null,
-            Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble)));
+            OTUtils.user(Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble))));
         assertNull(testInstanceDouble.evaluate(
             null,
-            Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble)));
+            OTUtils.user(Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble))));
         assertNull(testInstanceDouble.evaluate(
-            null, Collections.singletonMap("num_counts",
-                Collections.singletonMap("num_counts", infiniteNANDouble))));
+            null, OTUtils.user(Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", infiniteNANDouble)))));
         assertNull(testInstanceDouble.evaluate(
-            null, Collections.singletonMap("num_counts",
-                Collections.singletonMap("num_counts", largeDouble))));
+            null, OTUtils.user(Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", largeDouble)))));
     }
 
     /**
@@ -503,10 +505,10 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts", "custom_attribute", "gt", infiniteNegativeInfiniteDouble);
         UserAttribute testInstanceNANDouble = new UserAttribute("num_counts", "custom_attribute", "gt", infiniteNANDouble);
 
-        assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstancePositiveInfinite.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNegativeInfiniteDouble.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNANDouble.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstancePositiveInfinite.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNegativeInfiniteDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNANDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -519,8 +521,8 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "gt", 5);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "gt", 5.55);
 
-        assertFalse(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertFalse(testInstanceDouble.evaluate(null, testTypedUserAttributes));
+        assertFalse(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertFalse(testInstanceDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -534,10 +536,10 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "gt", 3.5);
         UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "gt", 3.5);
 
-        assertNull(testInstanceString.evaluate(null, testUserAttributes));
-        assertNull(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceObject.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNull.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(testUserAttributes)));
+        assertNull(testInstanceBoolean.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceObject.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNull.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
 
@@ -552,13 +554,13 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceFloat = new UserAttribute("num_size", "custom_attribute", "ge", (float) 2);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "ge", 2.55);
 
-        assertTrue(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertTrue(testInstanceFloat.evaluate(null, Collections.singletonMap("num_size", (float) 2)));
-        assertTrue(testInstanceDouble.evaluate(null, testTypedUserAttributes));
+        assertTrue(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertTrue(testInstanceFloat.evaluate(null, OTUtils.user(Collections.singletonMap("num_size", (float) 2))));
+        assertTrue(testInstanceDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
 
         Map<String, Object> badAttributes = new HashMap<>();
         badAttributes.put("num_size", "bobs burgers");
-        assertNull(testInstanceInteger.evaluate(null, badAttributes));
+        assertNull(testInstanceInteger.evaluate(null, OTUtils.user(badAttributes)));
     }
 
     /**
@@ -592,22 +594,22 @@ public class AudienceConditionEvaluationTest {
 
         assertNull(testInstanceInteger.evaluate(
             null,
-            Collections.singletonMap("num_size", bigInteger)));
+            OTUtils.user(Collections.singletonMap("num_size", bigInteger))));
         assertNull(testInstanceFloat.evaluate(
             null,
-            Collections.singletonMap("num_size", invalidFloatValue)));
+            OTUtils.user(Collections.singletonMap("num_size", invalidFloatValue))));
         assertNull(testInstanceDouble.evaluate(
             null,
-            Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble)));
+            OTUtils.user(Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble))));
         assertNull(testInstanceDouble.evaluate(
             null,
-            Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble)));
+            OTUtils.user(Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble))));
         assertNull(testInstanceDouble.evaluate(
-            null, Collections.singletonMap("num_counts",
-                Collections.singletonMap("num_counts", infiniteNANDouble))));
+            null, OTUtils.user(Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", infiniteNANDouble)))));
         assertNull(testInstanceDouble.evaluate(
-            null, Collections.singletonMap("num_counts",
-                Collections.singletonMap("num_counts", largeDouble))));
+            null, OTUtils.user(Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", largeDouble)))));
     }
 
     /**
@@ -625,10 +627,10 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts", "custom_attribute", "ge", infiniteNegativeInfiniteDouble);
         UserAttribute testInstanceNANDouble = new UserAttribute("num_counts", "custom_attribute", "ge", infiniteNANDouble);
 
-        assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstancePositiveInfinite.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNegativeInfiniteDouble.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNANDouble.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstancePositiveInfinite.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNegativeInfiniteDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNANDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -641,8 +643,8 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "ge", 5);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "ge", 5.55);
 
-        assertFalse(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertFalse(testInstanceDouble.evaluate(null, testTypedUserAttributes));
+        assertFalse(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertFalse(testInstanceDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -656,10 +658,10 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "ge", 3.5);
         UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "ge", 3.5);
 
-        assertNull(testInstanceString.evaluate(null, testUserAttributes));
-        assertNull(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceObject.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNull.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(testUserAttributes)));
+        assertNull(testInstanceBoolean.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceObject.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNull.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
 
@@ -673,8 +675,8 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "lt", 5);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "lt", 5.55);
 
-        assertTrue(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertTrue(testInstanceDouble.evaluate(null, testTypedUserAttributes));
+        assertTrue(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertTrue(testInstanceDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -687,8 +689,8 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "lt", 2);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "lt", 2.55);
 
-        assertFalse(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertFalse(testInstanceDouble.evaluate(null, testTypedUserAttributes));
+        assertFalse(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertFalse(testInstanceDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -702,10 +704,10 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "lt", 3.5);
         UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "lt", 3.5);
 
-        assertNull(testInstanceString.evaluate(null, testUserAttributes));
-        assertNull(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceObject.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNull.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(testUserAttributes)));
+        assertNull(testInstanceBoolean.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceObject.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNull.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -739,22 +741,22 @@ public class AudienceConditionEvaluationTest {
 
         assertNull(testInstanceInteger.evaluate(
             null,
-            Collections.singletonMap("num_size", bigInteger)));
+            OTUtils.user(Collections.singletonMap("num_size", bigInteger))));
         assertNull(testInstanceFloat.evaluate(
             null,
-            Collections.singletonMap("num_size", invalidFloatValue)));
+            OTUtils.user(Collections.singletonMap("num_size", invalidFloatValue))));
         assertNull(testInstanceDouble.evaluate(
             null,
-            Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble)));
+            OTUtils.user(Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble))));
         assertNull(testInstanceDouble.evaluate(
             null,
-            Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble)));
+            OTUtils.user(Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble))));
         assertNull(testInstanceDouble.evaluate(
-            null, Collections.singletonMap("num_counts",
-                Collections.singletonMap("num_counts", infiniteNANDouble))));
+            null, OTUtils.user(Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", infiniteNANDouble)))));
         assertNull(testInstanceDouble.evaluate(
-            null, Collections.singletonMap("num_counts",
-                Collections.singletonMap("num_counts", largeDouble))));
+            null, OTUtils.user(Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", largeDouble)))));
     }
 
     /**
@@ -772,10 +774,10 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts", "custom_attribute", "lt", infiniteNegativeInfiniteDouble);
         UserAttribute testInstanceNANDouble = new UserAttribute("num_counts", "custom_attribute", "lt", infiniteNANDouble);
 
-        assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstancePositiveInfinite.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNegativeInfiniteDouble.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNANDouble.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstancePositiveInfinite.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNegativeInfiniteDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNANDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
 
@@ -789,8 +791,8 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "le", 5);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "le", 5.55);
 
-        assertTrue(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertTrue(testInstanceDouble.evaluate(null, Collections.singletonMap("num_counts", 5.55)));
+        assertTrue(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertTrue(testInstanceDouble.evaluate(null, OTUtils.user(Collections.singletonMap("num_counts", 5.55))));
     }
 
     /**
@@ -803,8 +805,8 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceInteger = new UserAttribute("num_size", "custom_attribute", "le", 2);
         UserAttribute testInstanceDouble = new UserAttribute("num_counts", "custom_attribute", "le", 2.55);
 
-        assertFalse(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertFalse(testInstanceDouble.evaluate(null, testTypedUserAttributes));
+        assertFalse(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertFalse(testInstanceDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -818,10 +820,10 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "le", 3.5);
         UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "le", 3.5);
 
-        assertNull(testInstanceString.evaluate(null, testUserAttributes));
-        assertNull(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceObject.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNull.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(testUserAttributes)));
+        assertNull(testInstanceBoolean.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceObject.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNull.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -855,22 +857,22 @@ public class AudienceConditionEvaluationTest {
 
         assertNull(testInstanceInteger.evaluate(
             null,
-            Collections.singletonMap("num_size", bigInteger)));
+            OTUtils.user(Collections.singletonMap("num_size", bigInteger))));
         assertNull(testInstanceFloat.evaluate(
             null,
-            Collections.singletonMap("num_size", invalidFloatValue)));
+            OTUtils.user(Collections.singletonMap("num_size", invalidFloatValue))));
         assertNull(testInstanceDouble.evaluate(
             null,
-            Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble)));
+            OTUtils.user(Collections.singletonMap("num_counts", infinitePositiveInfiniteDouble))));
         assertNull(testInstanceDouble.evaluate(
             null,
-            Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble)));
+            OTUtils.user(Collections.singletonMap("num_counts", infiniteNegativeInfiniteDouble))));
         assertNull(testInstanceDouble.evaluate(
-            null, Collections.singletonMap("num_counts",
-                Collections.singletonMap("num_counts", infiniteNANDouble))));
+            null, OTUtils.user(Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", infiniteNANDouble)))));
         assertNull(testInstanceDouble.evaluate(
-            null, Collections.singletonMap("num_counts",
-                Collections.singletonMap("num_counts", largeDouble))));
+            null, OTUtils.user(Collections.singletonMap("num_counts",
+                Collections.singletonMap("num_counts", largeDouble)))));
     }
 
     /**
@@ -888,10 +890,10 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceNegativeInfiniteDouble = new UserAttribute("num_counts", "custom_attribute", "le", infiniteNegativeInfiniteDouble);
         UserAttribute testInstanceNANDouble = new UserAttribute("num_counts", "custom_attribute", "le", infiniteNANDouble);
 
-        assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstancePositiveInfinite.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNegativeInfiniteDouble.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNANDouble.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstancePositiveInfinite.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNegativeInfiniteDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNANDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     /**
@@ -901,7 +903,7 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void substringMatchConditionEvaluatesTrue()  {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "substring", "chrome");
-        assertTrue(testInstanceString.evaluate(null, testUserAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testUserAttributes)));
     }
 
     /**
@@ -911,7 +913,7 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void substringMatchConditionPartialMatchEvaluatesTrue()  {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "substring", "chro");
-        assertTrue(testInstanceString.evaluate(null, testUserAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testUserAttributes)));
     }
 
     /**
@@ -921,7 +923,7 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void substringMatchConditionEvaluatesFalse()  {
         UserAttribute testInstanceString = new UserAttribute("browser_type", "custom_attribute", "substring", "chr0me");
-        assertFalse(testInstanceString.evaluate(null, testUserAttributes));
+        assertFalse(testInstanceString.evaluate(null, OTUtils.user(testUserAttributes)));
     }
 
     /**
@@ -936,11 +938,11 @@ public class AudienceConditionEvaluationTest {
         UserAttribute testInstanceObject = new UserAttribute("meta_data", "custom_attribute", "substring", "chrome1");
         UserAttribute testInstanceNull = new UserAttribute("null_val", "custom_attribute", "substring", "chrome1");
 
-        assertNull(testInstanceBoolean.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceInteger.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceDouble.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceObject.evaluate(null, testTypedUserAttributes));
-        assertNull(testInstanceNull.evaluate(null, testTypedUserAttributes));
+        assertNull(testInstanceBoolean.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceInteger.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceDouble.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceObject.evaluate(null, OTUtils.user(testTypedUserAttributes)));
+        assertNull(testInstanceNull.evaluate(null, OTUtils.user(testTypedUserAttributes)));
     }
 
     //======== Semantic version evaluation tests ========//
@@ -951,7 +953,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", 2.0);
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.0.0");
-        assertNull(testInstanceString.evaluate(null, testAttributes));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     @Test
@@ -959,7 +961,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "a.1.2");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.0.0");
-        assertNull(testInstanceString.evaluate(null, testAttributes));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     @Test
@@ -967,7 +969,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "1.b.2");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.0.0");
-        assertNull(testInstanceString.evaluate(null, testAttributes));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     @Test
@@ -975,7 +977,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "1.2.c");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.0.0");
-        assertNull(testInstanceString.evaluate(null, testAttributes));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test SemanticVersionEqualsMatch returns null if given invalid UserCondition Variable type
@@ -984,7 +986,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.0");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", 2.0);
-        assertNull(testInstanceString.evaluate(null, testAttributes));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test SemanticVersionGTMatch returns null if given invalid value type
@@ -993,7 +995,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", false);
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.0.0");
-        assertNull(testInstanceString.evaluate(null, testAttributes));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test SemanticVersionGEMatch returns null if given invalid value type
@@ -1002,7 +1004,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", 2);
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_ge", "2.0.0");
-        assertNull(testInstanceString.evaluate(null, testAttributes));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test SemanticVersionLTMatch returns null if given invalid value type
@@ -1011,7 +1013,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", 2);
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_lt", "2.0.0");
-        assertNull(testInstanceString.evaluate(null, testAttributes));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test SemanticVersionLEMatch returns null if given invalid value type
@@ -1020,7 +1022,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", 2);
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.0.0");
-        assertNull(testInstanceString.evaluate(null, testAttributes));
+        assertNull(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test if not same when targetVersion is only major.minor.patch and version is major.minor
@@ -1029,7 +1031,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "1.2");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "1.2.0");
-        assertFalse(testInstanceString.evaluate(null, testAttributes));
+        assertFalse(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test if same when target is only major but user condition checks only major.minor,patch
@@ -1038,7 +1040,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "3.0.0");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "3");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test if greater when User value patch is greater even when its beta
@@ -1047,7 +1049,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "3.1.1-beta");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "3.1.0");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test if greater when preRelease is greater alphabetically
@@ -1056,7 +1058,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "3.1.1-beta.y.1+1.1");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "3.1.1-beta.x.1+1.1");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test if greater when preRelease version number is greater
@@ -1065,7 +1067,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "3.1.1-beta.x.2+1.1");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "3.1.1-beta.x.1+1.1");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test if equals semantic version even when only same preRelease is passed in user attribute and no build meta
@@ -1074,7 +1076,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "3.1.1-beta.x.1");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "3.1.1-beta.x.1");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test if not same
@@ -1083,7 +1085,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.2");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.1.1");
-        assertFalse(testInstanceString.evaluate(null, testAttributes));
+        assertFalse(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test when target is full semantic version major.minor.patch
@@ -1092,7 +1094,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "3.0.1");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "3.0.1");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare less when user condition checks only major.minor
@@ -1101,7 +1103,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.6");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_lt", "2.2");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // When user condition checks major.minor but target is major.minor.patch then its equals
@@ -1110,7 +1112,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.0");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_lt", "2.1");
-        assertFalse(testInstanceString.evaluate(null, testAttributes));
+        assertFalse(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare less when target is full major.minor.patch
@@ -1119,7 +1121,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.6");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_lt", "2.1.9");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare greater when user condition checks only major.minor
@@ -1128,7 +1130,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.3.6");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.2");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare greater when both are major.minor.patch-beta but target is greater than user condition
@@ -1137,7 +1139,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.3.6-beta");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.3.5-beta");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare greater when target is major.minor.patch
@@ -1146,7 +1148,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.7");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.1.6");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare greater when target is major.minor.patch is smaller then it returns false
@@ -1155,7 +1157,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.9");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.1.10");
-        assertFalse(testInstanceString.evaluate(null, testAttributes));
+        assertFalse(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare equal when both are exactly same - major.minor.patch-beta
@@ -1164,7 +1166,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.9-beta");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_eq", "2.1.9-beta");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare equal when both major.minor.patch is same, but due to beta user condition is smaller
@@ -1173,7 +1175,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.9");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.1.9-beta");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare greater when target is major.minor.patch-beta and user condition only compares major.minor.patch
@@ -1182,7 +1184,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.9");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_gt", "2.1.9-beta");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare equal when target is major.minor.patch
@@ -1191,7 +1193,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.9");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.1.9");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare less when target is major.minor.patch
@@ -1200,7 +1202,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.132.9");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.233.91");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare less when target is major.minor.patch
@@ -1209,7 +1211,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.233.91");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_le", "2.132.009");
-        assertFalse(testInstanceString.evaluate(null, testAttributes));
+        assertFalse(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare equal when target is major.minor.patch
@@ -1218,7 +1220,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.1.9");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_ge", "2.1.9");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare less when target is major.minor.patch
@@ -1227,7 +1229,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.233.91");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_ge", "2.132.9");
-        assertTrue(testInstanceString.evaluate(null, testAttributes));
+        assertTrue(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     // Test compare less when target is major.minor.patch
@@ -1236,7 +1238,7 @@ public class AudienceConditionEvaluationTest {
         Map testAttributes = new HashMap<String, String>();
         testAttributes.put("version", "2.132.009");
         UserAttribute testInstanceString = new UserAttribute("version", "custom_attribute", "semver_ge", "2.233.91");
-        assertFalse(testInstanceString.evaluate(null, testAttributes));
+        assertFalse(testInstanceString.evaluate(null, OTUtils.user(testAttributes)));
     }
 
     /**
@@ -1245,7 +1247,7 @@ public class AudienceConditionEvaluationTest {
     @Test
     public void notConditionEvaluateNull()  {
         NotCondition notCondition = new NotCondition(new NullCondition());
-        assertNull(notCondition.evaluate(null, testUserAttributes));
+        assertNull(notCondition.evaluate(null, OTUtils.user(testUserAttributes)));
     }
 
     /**
@@ -1253,12 +1255,13 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void notConditionEvaluateTrue()  {
+        OptimizelyUserContext user = OTUtils.user(testUserAttributes);
         UserAttribute userAttribute = mock(UserAttribute.class);
-        when(userAttribute.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(userAttribute.evaluate(null, user)).thenReturn(false);
 
         NotCondition notCondition = new NotCondition(userAttribute);
-        assertTrue(notCondition.evaluate(null, testUserAttributes));
-        verify(userAttribute, times(1)).evaluate(null, testUserAttributes);
+        assertTrue(notCondition.evaluate(null, user));
+        verify(userAttribute, times(1)).evaluate(null, user);
     }
 
     /**
@@ -1266,12 +1269,13 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void notConditionEvaluateFalse()  {
+        OptimizelyUserContext user = OTUtils.user(testUserAttributes);
         UserAttribute userAttribute = mock(UserAttribute.class);
-        when(userAttribute.evaluate(null, testUserAttributes)).thenReturn(true);
+        when(userAttribute.evaluate(null, user)).thenReturn(true);
 
         NotCondition notCondition = new NotCondition(userAttribute);
-        assertFalse(notCondition.evaluate(null, testUserAttributes));
-        verify(userAttribute, times(1)).evaluate(null, testUserAttributes);
+        assertFalse(notCondition.evaluate(null, user));
+        verify(userAttribute, times(1)).evaluate(null, user);
     }
 
     /**
@@ -1279,21 +1283,22 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void orConditionEvaluateTrue()  {
+        OptimizelyUserContext user = OTUtils.user(testUserAttributes);
         UserAttribute userAttribute1 = mock(UserAttribute.class);
-        when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(true);
+        when(userAttribute1.evaluate(null, user)).thenReturn(true);
 
         UserAttribute userAttribute2 = mock(UserAttribute.class);
-        when(userAttribute2.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(userAttribute2.evaluate(null, user)).thenReturn(false);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(userAttribute1);
         conditions.add(userAttribute2);
 
         OrCondition orCondition = new OrCondition(conditions);
-        assertTrue(orCondition.evaluate(null, testUserAttributes));
-        verify(userAttribute1, times(1)).evaluate(null, testUserAttributes);
+        assertTrue(orCondition.evaluate(null, user));
+        verify(userAttribute1, times(1)).evaluate(null, user);
         // shouldn't be called due to short-circuiting in 'Or' evaluation
-        verify(userAttribute2, times(0)).evaluate(null, testUserAttributes);
+        verify(userAttribute2, times(0)).evaluate(null, user);
     }
 
     /**
@@ -1301,21 +1306,22 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void orConditionEvaluateTrueWithNullAndTrue()  {
+        OptimizelyUserContext user = OTUtils.user(testUserAttributes);
         UserAttribute userAttribute1 = mock(UserAttribute.class);
-        when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(null);
+        when(userAttribute1.evaluate(null, user)).thenReturn(null);
 
         UserAttribute userAttribute2 = mock(UserAttribute.class);
-        when(userAttribute2.evaluate(null, testUserAttributes)).thenReturn(true);
+        when(userAttribute2.evaluate(null, user)).thenReturn(true);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(userAttribute1);
         conditions.add(userAttribute2);
 
         OrCondition orCondition = new OrCondition(conditions);
-        assertTrue(orCondition.evaluate(null, testUserAttributes));
-        verify(userAttribute1, times(1)).evaluate(null, testUserAttributes);
+        assertTrue(orCondition.evaluate(null, user));
+        verify(userAttribute1, times(1)).evaluate(null, user);
         // shouldn't be called due to short-circuiting in 'Or' evaluation
-        verify(userAttribute2, times(1)).evaluate(null, testUserAttributes);
+        verify(userAttribute2, times(1)).evaluate(null, user);
     }
 
     /**
@@ -1323,21 +1329,22 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void orConditionEvaluateNullWithNullAndFalse()  {
+        OptimizelyUserContext user = OTUtils.user(testUserAttributes);
         UserAttribute userAttribute1 = mock(UserAttribute.class);
-        when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(null);
+        when(userAttribute1.evaluate(null, user)).thenReturn(null);
 
         UserAttribute userAttribute2 = mock(UserAttribute.class);
-        when(userAttribute2.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(userAttribute2.evaluate(null, user)).thenReturn(false);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(userAttribute1);
         conditions.add(userAttribute2);
 
         OrCondition orCondition = new OrCondition(conditions);
-        assertNull(orCondition.evaluate(null, testUserAttributes));
-        verify(userAttribute1, times(1)).evaluate(null, testUserAttributes);
+        assertNull(orCondition.evaluate(null, user));
+        verify(userAttribute1, times(1)).evaluate(null, user);
         // shouldn't be called due to short-circuiting in 'Or' evaluation
-        verify(userAttribute2, times(1)).evaluate(null, testUserAttributes);
+        verify(userAttribute2, times(1)).evaluate(null, user);
     }
 
     /**
@@ -1345,21 +1352,22 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void orConditionEvaluateFalseWithFalseAndFalse()  {
+        OptimizelyUserContext user = OTUtils.user(testUserAttributes);
         UserAttribute userAttribute1 = mock(UserAttribute.class);
-        when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(userAttribute1.evaluate(null, user)).thenReturn(false);
 
         UserAttribute userAttribute2 = mock(UserAttribute.class);
-        when(userAttribute2.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(userAttribute2.evaluate(null, user)).thenReturn(false);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(userAttribute1);
         conditions.add(userAttribute2);
 
         OrCondition orCondition = new OrCondition(conditions);
-        assertFalse(orCondition.evaluate(null, testUserAttributes));
-        verify(userAttribute1, times(1)).evaluate(null, testUserAttributes);
+        assertFalse(orCondition.evaluate(null, user));
+        verify(userAttribute1, times(1)).evaluate(null, user);
         // shouldn't be called due to short-circuiting in 'Or' evaluation
-        verify(userAttribute2, times(1)).evaluate(null, testUserAttributes);
+        verify(userAttribute2, times(1)).evaluate(null, user);
     }
 
     /**
@@ -1367,20 +1375,21 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void orConditionEvaluateFalse()  {
+        OptimizelyUserContext user = OTUtils.user(testUserAttributes);
         UserAttribute userAttribute1 = mock(UserAttribute.class);
-        when(userAttribute1.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(userAttribute1.evaluate(null, user)).thenReturn(false);
 
         UserAttribute userAttribute2 = mock(UserAttribute.class);
-        when(userAttribute2.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(userAttribute2.evaluate(null, user)).thenReturn(false);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(userAttribute1);
         conditions.add(userAttribute2);
 
         OrCondition orCondition = new OrCondition(conditions);
-        assertFalse(orCondition.evaluate(null, testUserAttributes));
-        verify(userAttribute1, times(1)).evaluate(null, testUserAttributes);
-        verify(userAttribute2, times(1)).evaluate(null, testUserAttributes);
+        assertFalse(orCondition.evaluate(null, user));
+        verify(userAttribute1, times(1)).evaluate(null, user);
+        verify(userAttribute2, times(1)).evaluate(null, user);
     }
 
     /**
@@ -1388,20 +1397,21 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void andConditionEvaluateTrue()  {
+        OptimizelyUserContext user = OTUtils.user(testUserAttributes);
         OrCondition orCondition1 = mock(OrCondition.class);
-        when(orCondition1.evaluate(null, testUserAttributes)).thenReturn(true);
+        when(orCondition1.evaluate(null, user)).thenReturn(true);
 
         OrCondition orCondition2 = mock(OrCondition.class);
-        when(orCondition2.evaluate(null, testUserAttributes)).thenReturn(true);
+        when(orCondition2.evaluate(null, user)).thenReturn(true);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(orCondition1);
         conditions.add(orCondition2);
 
         AndCondition andCondition = new AndCondition(conditions);
-        assertTrue(andCondition.evaluate(null, testUserAttributes));
-        verify(orCondition1, times(1)).evaluate(null, testUserAttributes);
-        verify(orCondition2, times(1)).evaluate(null, testUserAttributes);
+        assertTrue(andCondition.evaluate(null, user));
+        verify(orCondition1, times(1)).evaluate(null, user);
+        verify(orCondition2, times(1)).evaluate(null, user);
     }
 
     /**
@@ -1409,20 +1419,21 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void andConditionEvaluateFalseWithNullAndFalse()  {
+        OptimizelyUserContext user = OTUtils.user(testUserAttributes);
         OrCondition orCondition1 = mock(OrCondition.class);
-        when(orCondition1.evaluate(null, testUserAttributes)).thenReturn(null);
+        when(orCondition1.evaluate(null, user)).thenReturn(null);
 
         OrCondition orCondition2 = mock(OrCondition.class);
-        when(orCondition2.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(orCondition2.evaluate(null, user)).thenReturn(false);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(orCondition1);
         conditions.add(orCondition2);
 
         AndCondition andCondition = new AndCondition(conditions);
-        assertFalse(andCondition.evaluate(null, testUserAttributes));
-        verify(orCondition1, times(1)).evaluate(null, testUserAttributes);
-        verify(orCondition2, times(1)).evaluate(null, testUserAttributes);
+        assertFalse(andCondition.evaluate(null, user));
+        verify(orCondition1, times(1)).evaluate(null, user);
+        verify(orCondition2, times(1)).evaluate(null, user);
     }
 
     /**
@@ -1430,20 +1441,21 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void andConditionEvaluateNullWithNullAndTrue()  {
+        OptimizelyUserContext user = OTUtils.user(testUserAttributes);
         OrCondition orCondition1 = mock(OrCondition.class);
-        when(orCondition1.evaluate(null, testUserAttributes)).thenReturn(null);
+        when(orCondition1.evaluate(null, user)).thenReturn(null);
 
         OrCondition orCondition2 = mock(OrCondition.class);
-        when(orCondition2.evaluate(null, testUserAttributes)).thenReturn(true);
+        when(orCondition2.evaluate(null, user)).thenReturn(true);
 
         List<Condition> conditions = new ArrayList<Condition>();
         conditions.add(orCondition1);
         conditions.add(orCondition2);
 
         AndCondition andCondition = new AndCondition(conditions);
-        assertNull(andCondition.evaluate(null, testUserAttributes));
-        verify(orCondition1, times(1)).evaluate(null, testUserAttributes);
-        verify(orCondition2, times(1)).evaluate(null, testUserAttributes);
+        assertNull(andCondition.evaluate(null, user));
+        verify(orCondition1, times(1)).evaluate(null, user);
+        verify(orCondition2, times(1)).evaluate(null, user);
     }
 
     /**
@@ -1451,11 +1463,12 @@ public class AudienceConditionEvaluationTest {
      */
     @Test
     public void andConditionEvaluateFalse()  {
+        OptimizelyUserContext user = OTUtils.user(testUserAttributes);
         OrCondition orCondition1 = mock(OrCondition.class);
-        when(orCondition1.evaluate(null, testUserAttributes)).thenReturn(false);
+        when(orCondition1.evaluate(null, user)).thenReturn(false);
 
         OrCondition orCondition2 = mock(OrCondition.class);
-        when(orCondition2.evaluate(null, testUserAttributes)).thenReturn(true);
+        when(orCondition2.evaluate(null, user)).thenReturn(true);
 
         // and[false, true]
         List<Condition> conditions = new ArrayList<Condition>();
@@ -1463,13 +1476,13 @@ public class AudienceConditionEvaluationTest {
         conditions.add(orCondition2);
 
         AndCondition andCondition = new AndCondition(conditions);
-        assertFalse(andCondition.evaluate(null, testUserAttributes));
-        verify(orCondition1, times(1)).evaluate(null, testUserAttributes);
+        assertFalse(andCondition.evaluate(null, user));
+        verify(orCondition1, times(1)).evaluate(null, user);
         // shouldn't be called due to short-circuiting in 'And' evaluation
-        verify(orCondition2, times(0)).evaluate(null, testUserAttributes);
+        verify(orCondition2, times(0)).evaluate(null, user);
 
         OrCondition orCondition3 = mock(OrCondition.class);
-        when(orCondition3.evaluate(null, testUserAttributes)).thenReturn(null);
+        when(orCondition3.evaluate(null, user)).thenReturn(null);
 
         // and[null, false]
         List<Condition> conditions2 = new ArrayList<Condition>();
@@ -1477,7 +1490,7 @@ public class AudienceConditionEvaluationTest {
         conditions2.add(orCondition1);
 
         AndCondition andCondition2 = new AndCondition(conditions2);
-        assertFalse(andCondition2.evaluate(null, testUserAttributes));
+        assertFalse(andCondition2.evaluate(null, user));
 
         // and[true, false, null]
         List<Condition> conditions3 = new ArrayList<Condition>();
@@ -1486,7 +1499,7 @@ public class AudienceConditionEvaluationTest {
         conditions3.add(orCondition1);
 
         AndCondition andCondition3 = new AndCondition(conditions3);
-        assertFalse(andCondition3.evaluate(null, testUserAttributes));
+        assertFalse(andCondition3.evaluate(null, user));
     }
 
     /**
@@ -1498,7 +1511,7 @@ public class AudienceConditionEvaluationTest {
     // }
 
     /**
-     * Verify that {@link Condition#evaluate(com.optimizely.ab.config.ProjectConfig, java.util.Map)}
+     * Verify that {@link Condition#evaluate(com.optimizely.ab.config.ProjectConfig, com.optimizely.ab.OptimizelyUserContext)}
      * called when its attribute value is null
      * returns True when the user's attribute value is also null
      * True when the attribute is not in the map
@@ -1518,8 +1531,8 @@ public class AudienceConditionEvaluationTest {
             attributeValue
         );
 
-        assertNull(nullValueAttribute.evaluate(null, Collections.<String, String>emptyMap()));
-        assertNull(nullValueAttribute.evaluate(null, Collections.singletonMap(attributeName, attributeValue)));
-        assertNull(nullValueAttribute.evaluate(null, (Collections.singletonMap(attributeName, ""))));
+        assertNull(nullValueAttribute.evaluate(null, OTUtils.user(Collections.<String, String>emptyMap())));
+        assertNull(nullValueAttribute.evaluate(null, OTUtils.user(Collections.singletonMap(attributeName, attributeValue))));
+        assertNull(nullValueAttribute.evaluate(null, OTUtils.user((Collections.singletonMap(attributeName, "")))));
     }
 }

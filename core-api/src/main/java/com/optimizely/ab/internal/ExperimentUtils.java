@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.internal;
 
+import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.AudienceIdCondition;
@@ -54,7 +55,7 @@ public final class ExperimentUtils {
      *
      * @param projectConfig     the current projectConfig
      * @param experiment        the experiment we are evaluating audiences for
-     * @param attributes        the attributes of the user
+     * @param user              the current OptimizelyUserContext
      * @param loggingEntityType It can be either experiment or rule.
      * @param loggingKey        In case of loggingEntityType is experiment it will be experiment key or else it will be rule number.
      * @return whether the user meets the criteria for the experiment
@@ -62,7 +63,7 @@ public final class ExperimentUtils {
     @Nonnull
     public static DecisionResponse<Boolean> doesUserMeetAudienceConditions(@Nonnull ProjectConfig projectConfig,
                                                                            @Nonnull Experiment experiment,
-                                                                           @Nonnull Map<String, ?> attributes,
+                                                                           @Nonnull OptimizelyUserContext user,
                                                                            @Nonnull String loggingEntityType,
                                                                            @Nonnull String loggingKey) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
@@ -70,9 +71,9 @@ public final class ExperimentUtils {
         DecisionResponse<Boolean> decisionResponse;
         if (experiment.getAudienceConditions() != null) {
             logger.debug("Evaluating audiences for {} \"{}\": {}.", loggingEntityType, loggingKey, experiment.getAudienceConditions());
-            decisionResponse = evaluateAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey);
+            decisionResponse = evaluateAudienceConditions(projectConfig, experiment, user, loggingEntityType, loggingKey);
         } else {
-            decisionResponse = evaluateAudience(projectConfig, experiment, attributes, loggingEntityType, loggingKey);
+            decisionResponse = evaluateAudience(projectConfig, experiment, user, loggingEntityType, loggingKey);
         }
 
         Boolean resolveReturn = decisionResponse.getResult();
@@ -86,7 +87,7 @@ public final class ExperimentUtils {
     @Nonnull
     public static DecisionResponse<Boolean> evaluateAudience(@Nonnull ProjectConfig projectConfig,
                                                              @Nonnull Experiment experiment,
-                                                             @Nonnull Map<String, ?> attributes,
+                                                             @Nonnull OptimizelyUserContext user,
                                                              @Nonnull String loggingEntityType,
                                                              @Nonnull String loggingKey) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
@@ -108,7 +109,7 @@ public final class ExperimentUtils {
 
         logger.debug("Evaluating audiences for {} \"{}\": {}.", loggingEntityType, loggingKey, conditions);
 
-        Boolean result = implicitOr.evaluate(projectConfig, attributes);
+        Boolean result = implicitOr.evaluate(projectConfig, user);
         String message = reasons.addInfo("Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
         logger.info(message);
 
@@ -118,7 +119,7 @@ public final class ExperimentUtils {
     @Nonnull
     public static DecisionResponse<Boolean> evaluateAudienceConditions(@Nonnull ProjectConfig projectConfig,
                                                                        @Nonnull Experiment experiment,
-                                                                       @Nonnull Map<String, ?> attributes,
+                                                                       @Nonnull OptimizelyUserContext user,
                                                                        @Nonnull String loggingEntityType,
                                                                        @Nonnull String loggingKey) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
@@ -128,7 +129,7 @@ public final class ExperimentUtils {
 
         Boolean result = null;
         try {
-            result = conditions.evaluate(projectConfig, attributes);
+            result = conditions.evaluate(projectConfig, user);
             String message = reasons.addInfo("Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
             logger.info(message);
         } catch (Exception e) {

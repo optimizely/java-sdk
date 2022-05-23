@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.ProjectConfig;
 
 import javax.annotation.Nullable;
@@ -27,7 +28,7 @@ import java.util.Map;
 public interface Condition<T> {
 
     @Nullable
-    Boolean evaluate(ProjectConfig config, Map<String, ?> attributes);
+    Boolean evaluate(ProjectConfig config, OptimizelyUserContext user);
 
     String toJson();
 

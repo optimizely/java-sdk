@@ -152,7 +152,7 @@ public class DecisionService {
             }
         }
 
-        DecisionResponse<Boolean> decisionMeetAudience = ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, experiment, user.getAttributes(), EXPERIMENT, experiment.getKey());
+        DecisionResponse<Boolean> decisionMeetAudience = ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, experiment, user, EXPERIMENT, experiment.getKey());
         reasons.merge(decisionMeetAudience.getReasons());
         if (decisionMeetAudience.getResult()) {
             String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
@@ -693,7 +693,7 @@ public class DecisionService {
         DecisionResponse<Boolean> audienceDecisionResponse = ExperimentUtils.doesUserMeetAudienceConditions(
             projectConfig,
             rule,
-            user.getAttributes(),
+            user,
             RULE,
             String.valueOf(ruleIndex + 1)
         );

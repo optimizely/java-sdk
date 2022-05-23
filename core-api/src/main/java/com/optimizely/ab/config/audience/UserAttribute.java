@@ -19,6 +19,7 @@ package com.optimizely.ab.config.audience;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.match.*;
 import org.slf4j.Logger;
@@ -71,7 +72,8 @@ public class UserAttribute<T> implements Condition<T> {
     }
 
     @Nullable
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    public Boolean evaluate(ProjectConfig config, OptimizelyUserContext user) {
+        Map<String,Object> attributes = user.getAttributes();
         if (attributes == null) {
             attributes = Collections.emptyMap();
         }

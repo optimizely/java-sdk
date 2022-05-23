@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.ProjectConfig;
 
 import javax.annotation.Nonnull;
@@ -42,7 +43,7 @@ public class AndCondition<T> implements Condition<T> {
     }
 
     @Nullable
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    public Boolean evaluate(ProjectConfig config, OptimizelyUserContext user) {
         if (conditions == null) return null;
         boolean foundNull = false;
         // According to the matrix where:
@@ -53,7 +54,7 @@ public class AndCondition<T> implements Condition<T> {
         // true and true is true
         // null and null is null
         for (Condition condition : conditions) {
-            Boolean conditionEval = condition.evaluate(config, attributes);
+            Boolean conditionEval = condition.evaluate(config, user);
             if (conditionEval == null) {
                 foundNull = true;
             } else if (!conditionEval) { // false with nulls or trues is false.

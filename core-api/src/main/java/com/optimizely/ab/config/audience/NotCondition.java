@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.ProjectConfig;
 
 import javax.annotation.Nullable;
@@ -43,9 +44,8 @@ public class NotCondition<T> implements Condition<T> {
     }
 
     @Nullable
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
-
-        Boolean conditionEval = condition == null ? null : condition.evaluate(config, attributes);
+    public Boolean evaluate(ProjectConfig config, OptimizelyUserContext user) {
+        Boolean conditionEval = condition == null ? null : condition.evaluate(config, user);
         return (conditionEval == null ? null : !conditionEval);
     }
 

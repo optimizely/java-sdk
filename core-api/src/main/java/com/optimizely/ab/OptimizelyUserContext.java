@@ -36,6 +36,8 @@ public class OptimizelyUserContext {
     @Nonnull
     private final Map<String, Object> attributes;
 
+    private List<String> qualifiedSegments;
+
     @Nonnull
     private final Optimizely optimizely;
 
@@ -51,6 +53,7 @@ public class OptimizelyUserContext {
         } else {
             this.attributes = Collections.synchronizedMap(new HashMap<>());
         }
+        this.qualifiedSegments = Collections.synchronizedList(new LinkedList<>());
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
@@ -67,6 +70,7 @@ public class OptimizelyUserContext {
         if (forcedDecisionsMap != null) {
           this.forcedDecisionsMap = new ConcurrentHashMap<>(forcedDecisionsMap);
         }
+        this.qualifiedSegments = Collections.synchronizedList(new LinkedList<>());
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely, @Nonnull String userId) {
@@ -87,6 +91,11 @@ public class OptimizelyUserContext {
 
     public OptimizelyUserContext copy() {
         return new OptimizelyUserContext(optimizely, userId, attributes, forcedDecisionsMap);
+    }
+
+    // true if the user is qualified for the given segment name
+    public boolean isQualifiedFor(@Nonnull String segment) {
+        return qualifiedSegments.contains(segment);
     }
 
     /**
