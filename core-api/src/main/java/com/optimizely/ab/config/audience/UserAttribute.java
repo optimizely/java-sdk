@@ -80,12 +80,21 @@ public class UserAttribute<T> implements Condition<T> {
         // Valid for primitive types, but needs to change when a value is an object or an array
         Object userAttributeValue = attributes.get(name);
 
-        if (!"custom_attribute".equals(type)) {
+        if (!"custom_attribute".equals(type) && !"third_party_dimension".equals(type)) {
             logger.warn("Audience condition \"{}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.", this);
             return null; // unknown type
         }
         // check user attribute value is equal
         try {
+            // Handle qualified segments
+            if ("qualified".equals(match)) {
+                if (userAttributeValue instanceof String) {
+                    return user.isQualifiedFor(userAttributeValue.toString());
+                } else {
+                    throw new UnknownValueTypeException();
+                }
+            }
+            // Handle other conditions
             Match matcher = MatchRegistry.getMatch(match);
             Boolean result = matcher.eval(value, userAttributeValue);
             if (result == null) {
