@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.Nonnull;
 
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
@@ -43,9 +44,9 @@ public class NotCondition<T> implements Condition<T> {
     }
 
     @Nullable
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes, List<String> qualifiedSegments) {
 
-        Boolean conditionEval = condition == null ? null : condition.evaluate(config, attributes);
+        Boolean conditionEval = condition == null ? null : condition.evaluate(config, attributes, qualifiedSegments);
         return (conditionEval == null ? null : !conditionEval);
     }
 

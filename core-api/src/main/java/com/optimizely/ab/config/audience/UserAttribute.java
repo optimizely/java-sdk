@@ -28,6 +28,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -71,21 +72,27 @@ public class UserAttribute<T> implements Condition<T> {
     }
 
     @Nullable
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes, List<String> qualifiedSegments) {
         if (attributes == null) {
             attributes = Collections.emptyMap();
+        }
+
+        if (!"custom_attribute".equals(type) && !"third_party_dimension".equals(type)) {
+            logger.warn("Audience condition \"{}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.", this);
+            return null; // unknown type
         }
         // Valid for primitive types, but needs to change when a value is an object or an array
         Object userAttributeValue = attributes.get(name);
 
-        if (!"custom_attribute".equals(type)) {
-            logger.warn("Audience condition \"{}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.", this);
-            return null; // unknown type
-        }
         // check user attribute value is equal
         try {
             Match matcher = MatchRegistry.getMatch(match);
-            Boolean result = matcher.eval(value, userAttributeValue);
+            Boolean result;
+            if ("qualified".equals(match)) {
+                result = matcher.eval(value, qualifiedSegments);
+            } else {
+                result = matcher.eval(value, userAttributeValue);
+            }
             if (result == null) {
                 throw new UnknownValueTypeException();
             }

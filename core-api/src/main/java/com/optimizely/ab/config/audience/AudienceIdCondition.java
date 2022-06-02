@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -71,7 +72,7 @@ public class AudienceIdCondition<T> implements Condition<T> {
 
     @Nullable
     @Override
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes, List<String> qualifiedSegments) {
         if (config != null) {
             audience = config.getAudienceIdMapping().get(audienceId);
         }
@@ -80,7 +81,7 @@ public class AudienceIdCondition<T> implements Condition<T> {
             return null;
         }
         logger.debug("Starting to evaluate audience \"{}\" with conditions: {}.", audience.getId(), audience.getConditions());
-        Boolean result = audience.getConditions().evaluate(config, attributes);
+        Boolean result = audience.getConditions().evaluate(config, attributes, qualifiedSegments);
         logger.debug("Audience \"{}\" evaluated to {}.", audience.getId(), result);
         return result;
     }

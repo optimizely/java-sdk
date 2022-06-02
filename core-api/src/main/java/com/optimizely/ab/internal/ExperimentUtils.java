@@ -28,9 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class ExperimentUtils {
 
@@ -48,7 +46,6 @@ public final class ExperimentUtils {
     public static boolean isExperimentActive(@Nonnull Experiment experiment) {
         return experiment.isActive();
     }
-
     /**
      * Determines whether a user satisfies audience conditions for the experiment.
      *
@@ -65,14 +62,34 @@ public final class ExperimentUtils {
                                                                            @Nonnull Map<String, ?> attributes,
                                                                            @Nonnull String loggingEntityType,
                                                                            @Nonnull String loggingKey) {
+        return doesUserMeetAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey, Collections.synchronizedList(new ArrayList<>()));
+    }
+
+    /**
+     * Determines whether a user satisfies audience conditions for the experiment.
+     *
+     * @param projectConfig     the current projectConfig
+     * @param experiment        the experiment we are evaluating audiences for
+     * @param attributes        the attributes of the user
+     * @param loggingEntityType It can be either experiment or rule.
+     * @param loggingKey        In case of loggingEntityType is experiment it will be experiment key or else it will be rule number.
+     * @return whether the user meets the criteria for the experiment
+     */
+    @Nonnull
+    public static DecisionResponse<Boolean> doesUserMeetAudienceConditions(@Nonnull ProjectConfig projectConfig,
+                                                                           @Nonnull Experiment experiment,
+                                                                           @Nonnull Map<String, ?> attributes,
+                                                                           @Nonnull String loggingEntityType,
+                                                                           @Nonnull String loggingKey,
+                                                                           @Nonnull List<String> qualifiedSegments) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         DecisionResponse<Boolean> decisionResponse;
         if (experiment.getAudienceConditions() != null) {
             logger.debug("Evaluating audiences for {} \"{}\": {}.", loggingEntityType, loggingKey, experiment.getAudienceConditions());
-            decisionResponse = evaluateAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey);
+            decisionResponse = evaluateAudienceConditions(projectConfig, experiment, attributes, loggingEntityType, loggingKey, qualifiedSegments);
         } else {
-            decisionResponse = evaluateAudience(projectConfig, experiment, attributes, loggingEntityType, loggingKey);
+            decisionResponse = evaluateAudience(projectConfig, experiment, attributes, loggingEntityType, loggingKey, qualifiedSegments);
         }
 
         Boolean resolveReturn = decisionResponse.getResult();
@@ -88,7 +105,8 @@ public final class ExperimentUtils {
                                                              @Nonnull Experiment experiment,
                                                              @Nonnull Map<String, ?> attributes,
                                                              @Nonnull String loggingEntityType,
-                                                             @Nonnull String loggingKey) {
+                                                             @Nonnull String loggingKey,
+                                                             @Nonnull List<String> qualifiedSegments) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         List<String> experimentAudienceIds = experiment.getAudienceIds();
@@ -108,7 +126,7 @@ public final class ExperimentUtils {
 
         logger.debug("Evaluating audiences for {} \"{}\": {}.", loggingEntityType, loggingKey, conditions);
 
-        Boolean result = implicitOr.evaluate(projectConfig, attributes);
+        Boolean result = implicitOr.evaluate(projectConfig, attributes, qualifiedSegments);
         String message = reasons.addInfo("Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
         logger.info(message);
 
@@ -120,7 +138,8 @@ public final class ExperimentUtils {
                                                                        @Nonnull Experiment experiment,
                                                                        @Nonnull Map<String, ?> attributes,
                                                                        @Nonnull String loggingEntityType,
-                                                                       @Nonnull String loggingKey) {
+                                                                       @Nonnull String loggingKey,
+                                                                       @Nonnull List<String> qualifiedSegments) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         Condition conditions = experiment.getAudienceConditions();
@@ -128,7 +147,7 @@ public final class ExperimentUtils {
 
         Boolean result = null;
         try {
-            result = conditions.evaluate(projectConfig, attributes);
+            result = conditions.evaluate(projectConfig, attributes, qualifiedSegments);
             String message = reasons.addInfo("Audiences for %s \"%s\" collectively evaluated to %s.", loggingEntityType, loggingKey, result);
             logger.info(message);
         } catch (Exception e) {

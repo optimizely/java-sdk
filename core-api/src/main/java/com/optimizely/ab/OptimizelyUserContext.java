@@ -37,6 +37,9 @@ public class OptimizelyUserContext {
     private final Map<String, Object> attributes;
 
     @Nonnull
+    private List<String> qualifiedSegments;
+
+    @Nonnull
     private final Optimizely optimizely;
 
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyUserContext.class);
@@ -51,6 +54,7 @@ public class OptimizelyUserContext {
         } else {
             this.attributes = Collections.synchronizedMap(new HashMap<>());
         }
+        this.qualifiedSegments = Collections.synchronizedList(new ArrayList<>());
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
@@ -67,6 +71,7 @@ public class OptimizelyUserContext {
         if (forcedDecisionsMap != null) {
           this.forcedDecisionsMap = new ConcurrentHashMap<>(forcedDecisionsMap);
         }
+        this.qualifiedSegments = Collections.synchronizedList(new ArrayList<>());
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely, @Nonnull String userId) {
@@ -83,6 +88,10 @@ public class OptimizelyUserContext {
 
     public Optimizely getOptimizely() {
         return optimizely;
+    }
+
+    public List<String> getQualifiedSegments() {
+        return  qualifiedSegments;
     }
 
     public OptimizelyUserContext copy() {

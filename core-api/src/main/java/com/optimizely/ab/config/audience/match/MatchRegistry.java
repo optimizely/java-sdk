@@ -41,6 +41,7 @@ public class MatchRegistry {
     public static final String SEMVER_LE = "semver_le";
     public static final String SEMVER_LT = "semver_lt";
     public static final String SUBSTRING = "substring";
+    public static final String QUALIFIED = "qualified";
 
     static {
         register(EXACT, new ExactMatch());
@@ -56,6 +57,7 @@ public class MatchRegistry {
         register(SEMVER_LE, new SemanticVersionLEMatch());
         register(SEMVER_LT, new SemanticVersionLTMatch());
         register(SUBSTRING, new SubstringMatch());
+        register(QUALIFIED, new QualifiedMatch());
     }
 
     // TODO rename Match to Matcher

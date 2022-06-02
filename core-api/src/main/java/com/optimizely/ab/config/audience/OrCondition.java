@@ -47,12 +47,12 @@ public class OrCondition<T> implements Condition<T> {
     // false or false is false
     // null or null is null
     @Nullable
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes, List<String> qualifiedSegments) {
         if (conditions == null) return null;
         boolean foundNull = false;
         for (Condition condition : conditions) {
-            Boolean conditionEval = condition.evaluate(config, attributes);
-            if (conditionEval == null) { // true with falses and nulls is still true
+            Boolean conditionEval = condition.evaluate(config, attributes, qualifiedSegments);
+            if (conditionEval == null) { // true with false and nulls is still true
                 foundNull = true;
             } else if (conditionEval) {
                 return true;
