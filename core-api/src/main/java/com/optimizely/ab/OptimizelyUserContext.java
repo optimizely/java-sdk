@@ -16,7 +16,6 @@
  */
 package com.optimizely.ab;
 
-import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.optimizelydecision.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +36,7 @@ public class OptimizelyUserContext {
     private final Map<String, Object> attributes;
 
     @Nonnull
-    private List<String> qualifiedSegments;
+    private final List<String> qualifiedSegments;
 
     @Nonnull
     private final Optimizely optimizely;
