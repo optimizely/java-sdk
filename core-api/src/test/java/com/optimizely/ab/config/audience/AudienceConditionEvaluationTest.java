@@ -1522,4 +1522,267 @@ public class AudienceConditionEvaluationTest {
         assertNull(nullValueAttribute.evaluate(null, Collections.singletonMap(attributeName, attributeValue), null));
         assertNull(nullValueAttribute.evaluate(null, (Collections.singletonMap(attributeName, "")), null));
     }
+
+    /**
+     * Verify that with odp segment evaluator single ODP audience evaluates true
+     */
+    @Test
+    public void singleODPAudienceEvaluateTrueIfSegmentExist() throws Exception {
+
+        UserAttribute testInstanceSingleAudience = new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-1");
+        List<Condition> userConditions = new ArrayList<>();
+        userConditions.add(testInstanceSingleAudience);
+        AndCondition andCondition = new AndCondition(userConditions);
+
+        // Should evaluate true if qualified segment exist
+        List<String> qualifiedSegments = Collections.singletonList("odp-segment-1");
+        assertTrue(andCondition.evaluate(null, null, qualifiedSegments));
+    }
+
+    /**
+     * Verify that with odp segment evaluator single ODP audience evaluates false
+     */
+    @Test
+    public void singleODPAudienceEvaluateFalseIfSegmentNotExist() throws Exception {
+
+        UserAttribute testInstanceSingleAudience = new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-1");
+        List<Condition> userConditions = new ArrayList<>();
+        userConditions.add(testInstanceSingleAudience);
+        AndCondition andCondition = new AndCondition(userConditions);
+
+        // Should evaluate false if qualified segment does not exist
+        List<String> qualifiedSegments = Collections.singletonList("odp-segment-2");
+        assertFalse(andCondition.evaluate(null, null, qualifiedSegments));
+    }
+
+    /**
+     * Verify that with odp segment evaluator single ODP audience evaluates false when segments not provided
+     */
+    @Test
+    public void singleODPAudienceEvaluateFalseIfSegmentNotProvided() throws Exception {
+
+        UserAttribute testInstanceSingleAudience = new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-1");
+        List<Condition> userConditions = new ArrayList<>();
+        userConditions.add(testInstanceSingleAudience);
+        AndCondition andCondition = new AndCondition(userConditions);
+
+        // Should evaluate false if qualified segment does not exist
+        List<String> qualifiedSegments = Collections.emptyList();
+        assertFalse(andCondition.evaluate(null, null, qualifiedSegments));
+    }
+
+    /**
+     * Verify that with odp segment evaluator evaluates multiple ODP audience true when segment provided exist
+     */
+    @Test
+    public void singleODPAudienceEvaluateMultipleOdpConditions() {
+        Condition andCondition = createMultipleConditionAudienceAndOrODP();
+        // Should evaluate correctly based on the given segments
+        List<String> qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+
+        assertTrue(andCondition.evaluate(null, null, qualifiedSegments));
+
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-4");
+
+        assertTrue(andCondition.evaluate(null, null, qualifiedSegments));
+
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+
+        assertTrue(andCondition.evaluate(null, null, qualifiedSegments));
+    }
+
+    /**
+     * Verify that with odp segment evaluator evaluates multiple ODP audience true when segment provided exist
+     */
+    @Test
+    public void singleODPAudienceEvaluateMultipleOdpConditionsEvaluateFalse() {
+        Condition andCondition = createMultipleConditionAudienceAndOrODP();
+        // Should evaluate correctly based on the given segments
+        List<String> qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+
+        assertFalse(andCondition.evaluate(null, null, qualifiedSegments));
+
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+
+        assertFalse(andCondition.evaluate(null, null, qualifiedSegments));
+    }
+
+    /**
+     * Verify that with odp segment evaluator evaluates multiple ODP audience with multiple conditions true or false when segment conditions meet
+     */
+    @Test
+    public void multipleAudienceEvaluateMultipleOdpConditionsEvaluate() {
+        // ["and", "1", "2"]
+        List<Condition> audience1And2 = new ArrayList<>();
+        audience1And2.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-1"));
+        audience1And2.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-2"));
+        AndCondition audienceCondition1 = new AndCondition(audience1And2);
+
+        // ["and", "3", "4"]
+        List<Condition> audience3And4 = new ArrayList<>();
+        audience3And4.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-3"));
+        audience3And4.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-4"));
+        AndCondition audienceCondition2 = new AndCondition(audience3And4);
+
+        // ["or", "5", "6"]
+        List<Condition> audience5And6 = new ArrayList<>();
+        audience5And6.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-5"));
+        audience5And6.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-6"));
+        OrCondition audienceCondition3 = new OrCondition(audience5And6);
+
+
+        //Scenario 1- ['or', '1', '2', '3']
+        List<Condition> conditions = new ArrayList<>();
+        conditions.add(audienceCondition1);
+        conditions.add(audienceCondition2);
+        conditions.add(audienceCondition3);
+
+        OrCondition implicitOr = new OrCondition(conditions);
+        // Should evaluate correctly based on the given segments
+        List<String> qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        assertTrue(implicitOr.evaluate(null, null, qualifiedSegments));
+
+
+        //Scenario 2- ['and', '1', '2', '3']
+        AndCondition implicitAnd = new AndCondition(conditions);
+        // Should evaluate correctly based on the given segments
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        assertFalse(implicitAnd.evaluate(null, null, qualifiedSegments));
+
+        // Should evaluate correctly based on the given segments
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+        qualifiedSegments.add("odp-segment-6");
+        assertTrue(implicitAnd.evaluate(null, null, qualifiedSegments));
+
+
+        ////Scenario 3- ['and', '1', '2',['not', '3']]
+        conditions = new ArrayList<>();
+        conditions.add(audienceCondition1);
+        conditions.add(audienceCondition2);
+        conditions.add(new NotCondition(audienceCondition3));
+        implicitAnd = new AndCondition(conditions);
+
+        // Should evaluate correctly based on the given segments
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+        assertTrue(implicitAnd.evaluate(null, null, qualifiedSegments));
+
+        // Should evaluate correctly based on the given segments
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+        qualifiedSegments.add("odp-segment-5");
+        assertFalse(implicitAnd.evaluate(null, null, qualifiedSegments));
+    }
+
+    /**
+     * Verify that with odp segment evaluator evaluates multiple ODP audience with multiple type of evaluators
+     */
+    @Test
+    public void multipleAudienceEvaluateMultipleOdpConditionsEvaluateWithMultipleTypeOfEvaluator() {
+        // ["and", "1", "2"]
+        List<Condition> audience1And2 = new ArrayList<>();
+        audience1And2.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-1"));
+        audience1And2.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-2"));
+        AndCondition audienceCondition1 = new AndCondition(audience1And2);
+
+        // ["and", "3", "4"]
+        List<Condition> audience3And4 = new ArrayList<>();
+        audience3And4.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-3"));
+        audience3And4.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-4"));
+        AndCondition audienceCondition2 = new AndCondition(audience3And4);
+
+        // ["or", "chrome", "safari"]
+        List<Condition> chromeUserAudience = new ArrayList<>();
+        chromeUserAudience.add(new UserAttribute("browser_type", "custom_attribute", "exact", "chrome"));
+        chromeUserAudience.add(new UserAttribute("browser_type", "custom_attribute", "exact", "safari"));
+        OrCondition audienceCondition3 = new OrCondition(chromeUserAudience);
+
+
+        //Scenario 1- ['or', '1', '2', '3']
+        List<Condition> conditions = new ArrayList<>();
+        conditions.add(audienceCondition1);
+        conditions.add(audienceCondition2);
+        conditions.add(audienceCondition3);
+
+        OrCondition implicitOr = new OrCondition(conditions);
+        // Should evaluate correctly based on the given segments
+        List<String> qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        assertTrue(implicitOr.evaluate(null, null, qualifiedSegments));
+
+
+        //Scenario 2- ['and', '1', '2', '3']
+        AndCondition implicitAnd = new AndCondition(conditions);
+        // Should evaluate correctly based on the given segments
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        assertFalse(implicitAnd.evaluate(null, Collections.singletonMap("browser_type", "chrome"), qualifiedSegments));
+
+        // Should evaluate correctly based on the given segments
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+        assertTrue(implicitAnd.evaluate(null, Collections.singletonMap("browser_type", "chrome"), qualifiedSegments));
+
+        // Should evaluate correctly based on the given segments
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+        assertFalse(implicitAnd.evaluate(null, Collections.singletonMap("browser_type", "not_chrome"), qualifiedSegments));
+    }
+
+    public Condition createMultipleConditionAudienceAndOrODP() {
+        UserAttribute testInstanceSingleAudience1 = new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-1");
+        UserAttribute testInstanceSingleAudience2 = new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-2");
+        UserAttribute testInstanceSingleAudience3 = new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-3");
+        UserAttribute testInstanceSingleAudience4 = new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-4");
+
+        List<Condition> userConditionsOR = new ArrayList<>();
+        userConditionsOR.add(testInstanceSingleAudience3);
+        userConditionsOR.add(testInstanceSingleAudience4);
+        OrCondition orCondition = new OrCondition(userConditionsOR);
+        List<Condition> userConditionsAnd = new ArrayList<>();
+        userConditionsAnd.add(testInstanceSingleAudience1);
+        userConditionsAnd.add(testInstanceSingleAudience2);
+        userConditionsAnd.add(orCondition);
+        AndCondition andCondition = new AndCondition(userConditionsAnd);
+
+        return andCondition;
+    }
 }
