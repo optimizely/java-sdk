@@ -24,6 +24,7 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
+import org.junit.Assert;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -491,7 +492,7 @@ public final class DatafileProjectConfigTestUtils {
             assertThat(actualExperiment.getGroupId(), is(expectedExperiment.getGroupId()));
             assertThat(actualExperiment.getStatus(), is(expectedExperiment.getStatus()));
             assertThat(actualExperiment.getAudienceIds(), is(expectedExperiment.getAudienceIds()));
-            assertThat(actualExperiment.getAudienceConditions(), is(expectedExperiment.getAudienceConditions()));
+            Assert.assertEquals(actualExperiment.getAudienceConditions(), expectedExperiment.getAudienceConditions());
             assertThat(actualExperiment.getUserIdToVariationKeyMap(),
                 is(expectedExperiment.getUserIdToVariationKeyMap()));
 

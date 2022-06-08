@@ -31,6 +31,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static com.optimizely.ab.config.audience.AttributeType.CUSTOM_ATTRIBUTE;
+import static com.optimizely.ab.config.audience.AttributeType.THIRD_PARTY_DIMENSION;
+
 /**
  * Represents a user attribute instance within an audience's conditions.
  */
@@ -77,7 +80,7 @@ public class UserAttribute<T> implements Condition<T> {
             attributes = Collections.emptyMap();
         }
 
-        if (!"custom_attribute".equals(type) && !"third_party_dimension".equals(type)) {
+        if (!isValidType(type)) {
             logger.warn("Audience condition \"{}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.", this);
             return null; // unknown type
         }
@@ -123,6 +126,13 @@ public class UserAttribute<T> implements Condition<T> {
             logger.error("attribute or value null for match {}", match != null ? match : "legacy condition", e);
         }
         return null;
+    }
+
+    private boolean isValidType(String type) {
+        if (type.equals(CUSTOM_ATTRIBUTE.toString()) || type.equals(THIRD_PARTY_DIMENSION.toString())) {
+            return true;
+        }
+        return false;
     }
 
     @Override
