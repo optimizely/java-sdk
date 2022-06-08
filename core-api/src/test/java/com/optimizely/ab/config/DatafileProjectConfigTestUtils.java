@@ -462,10 +462,10 @@ public final class DatafileProjectConfigTestUtils {
         assertNotNull(actual);
 
         // verify the project-level values
-        Assert.assertEquals(actual.getAccountId(), expected.getAccountId());
-        Assert.assertEquals(actual.getProjectId(), expected.getProjectId());
-        Assert.assertEquals(actual.getVersion(), expected.getVersion());
-        Assert.assertEquals(actual.getRevision(), expected.getRevision());
+        assertThat(actual.getAccountId(), is(expected.getAccountId()));
+        assertThat(actual.getProjectId(), is(expected.getProjectId()));
+        assertThat(actual.getVersion(), is(expected.getVersion()));
+        assertThat(actual.getRevision(), is(expected.getRevision()));
 
         verifyAttributes(actual.getAttributes(), expected.getAttributes());
         verifyAudiences(actual.getAudiences(), expected.getAudiences());
@@ -481,20 +481,20 @@ public final class DatafileProjectConfigTestUtils {
      * Asserts that the provided experiment configs are equivalent.
      */
     private static void verifyExperiments(List<Experiment> actual, List<Experiment> expected) {
-        Assert.assertEquals(actual.size(), expected.size());
+        assertThat(actual.size(), is(expected.size()));
 
         for (int i = 0; i < actual.size(); i++) {
             Experiment actualExperiment = actual.get(i);
             Experiment expectedExperiment = expected.get(i);
 
-            Assert.assertEquals(actualExperiment.getId(), expectedExperiment.getId());
-            Assert.assertEquals(actualExperiment.getKey(), expectedExperiment.getKey());
-            Assert.assertEquals(actualExperiment.getGroupId(), expectedExperiment.getGroupId());
-            Assert.assertEquals(actualExperiment.getStatus(), expectedExperiment.getStatus());
-            Assert.assertEquals(actualExperiment.getAudienceIds(), expectedExperiment.getAudienceIds());
+            assertThat(actualExperiment.getId(), is(expectedExperiment.getId()));
+            assertThat(actualExperiment.getKey(), is(expectedExperiment.getKey()));
+            assertThat(actualExperiment.getGroupId(), is(expectedExperiment.getGroupId()));
+            assertThat(actualExperiment.getStatus(), is(expectedExperiment.getStatus()));
+            assertThat(actualExperiment.getAudienceIds(), is(expectedExperiment.getAudienceIds()));
             Assert.assertEquals(actualExperiment.getAudienceConditions(), expectedExperiment.getAudienceConditions());
-            Assert.assertEquals(actualExperiment.getUserIdToVariationKeyMap(),
-                expectedExperiment.getUserIdToVariationKeyMap());
+            assertThat(actualExperiment.getUserIdToVariationKeyMap(),
+                is(expectedExperiment.getUserIdToVariationKeyMap()));
 
             verifyVariations(actualExperiment.getVariations(), expectedExperiment.getVariations());
             verifyTrafficAllocations(actualExperiment.getTrafficAllocation(),
@@ -516,14 +516,14 @@ public final class DatafileProjectConfigTestUtils {
      * Asserts that the provided variation configs are equivalent.
      */
     private static void verifyVariations(List<Variation> actual, List<Variation> expected) {
-        Assert.assertEquals(actual.size(), expected.size());
+        assertThat(actual.size(), is(expected.size()));
 
         for (int i = 0; i < actual.size(); i++) {
             Variation actualVariation = actual.get(i);
             Variation expectedVariation = expected.get(i);
 
-            Assert.assertEquals(actualVariation.getId(), expectedVariation.getId());
-            Assert.assertEquals(actualVariation.getKey(), expectedVariation.getKey());
+            assertThat(actualVariation.getId(), is(expectedVariation.getId()));
+            assertThat(actualVariation.getKey(), is(expectedVariation.getKey()));
             verifyFeatureVariableInstances(actualVariation.getFeatureVariableUsageInstances(),
                 expectedVariation.getFeatureVariableUsageInstances());
         }
@@ -534,13 +534,13 @@ public final class DatafileProjectConfigTestUtils {
      */
     private static void verifyTrafficAllocations(List<TrafficAllocation> actual,
                                                  List<TrafficAllocation> expected) {
-        Assert.assertEquals(actual.size(), expected.size());
+        assertThat(actual.size(), is(expected.size()));
 
         for (int i = 0; i < actual.size(); i++) {
             TrafficAllocation actualDistribution = actual.get(i);
             TrafficAllocation expectedDistribution = expected.get(i);
 
-            Assert.assertEquals(actualDistribution.getEntityId(), expectedDistribution.getEntityId());
+            assertThat(actualDistribution.getEntityId(), is(expectedDistribution.getEntityId()));
             assertEquals("expectedDistribution: " + expectedDistribution.toString() +
                     "is not equal to the actualDistribution: " + actualDistribution.toString(),
                 expectedDistribution.getEndOfRange(), actualDistribution.getEndOfRange());
@@ -551,15 +551,15 @@ public final class DatafileProjectConfigTestUtils {
      * Asserts that the provided attributes configs are equivalent.
      */
     private static void verifyAttributes(List<Attribute> actual, List<Attribute> expected) {
-        Assert.assertEquals(actual.size(), expected.size());
+        assertThat(actual.size(), is(expected.size()));
 
         for (int i = 0; i < actual.size(); i++) {
             Attribute actualAttribute = actual.get(i);
             Attribute expectedAttribute = expected.get(i);
 
-            Assert.assertEquals(actualAttribute.getId(), expectedAttribute.getId());
-            Assert.assertEquals(actualAttribute.getKey(), expectedAttribute.getKey());
-            Assert.assertEquals(actualAttribute.getSegmentId(), expectedAttribute.getSegmentId());
+            assertThat(actualAttribute.getId(), is(expectedAttribute.getId()));
+            assertThat(actualAttribute.getKey(), is(expectedAttribute.getKey()));
+            assertThat(actualAttribute.getSegmentId(), is(expectedAttribute.getSegmentId()));
         }
     }
 
@@ -567,15 +567,15 @@ public final class DatafileProjectConfigTestUtils {
      * Asserts that the provided event configs are equivalent.
      */
     private static void verifyEvents(List<EventType> actual, List<EventType> expected) {
-        Assert.assertEquals(actual.size(), expected.size());
+        assertThat(actual.size(), is(expected.size()));
 
         for (int i = 0; i < actual.size(); i++) {
             EventType actualEvent = actual.get(i);
             EventType expectedEvent = expected.get(i);
 
-            Assert.assertEquals(actualEvent.getExperimentIds(), expectedEvent.getExperimentIds());
-            Assert.assertEquals(actualEvent.getId(), expectedEvent.getId());
-            Assert.assertEquals(actualEvent.getKey(), expectedEvent.getKey());
+            assertThat(actualEvent.getExperimentIds(), is(expectedEvent.getExperimentIds()));
+            assertThat(actualEvent.getId(), is(expectedEvent.getId()));
+            assertThat(actualEvent.getKey(), is(expectedEvent.getKey()));
         }
     }
 
@@ -583,15 +583,15 @@ public final class DatafileProjectConfigTestUtils {
      * Asserts that the provided audience configs are equivalent.
      */
     private static void verifyAudiences(List<Audience> actual, List<Audience> expected) {
-        Assert.assertEquals(actual.size(), expected.size());
+        assertThat(actual.size(), is(expected.size()));
 
         for (int i = 0; i < actual.size(); i++) {
             Audience actualAudience = actual.get(i);
             Audience expectedAudience = expected.get(i);
 
-            Assert.assertEquals(actualAudience.getId(), expectedAudience.getId());
-            Assert.assertEquals(actualAudience.getKey(), expectedAudience.getKey());
-            Assert.assertEquals(actualAudience.getConditions(), expectedAudience.getConditions());
+            assertThat(actualAudience.getId(), is(expectedAudience.getId()));
+            assertThat(actualAudience.getKey(), is(expectedAudience.getKey()));
+            assertThat(actualAudience.getConditions(), is(expectedAudience.getConditions()));
         }
     }
 
@@ -599,14 +599,14 @@ public final class DatafileProjectConfigTestUtils {
      * Assert that the provided group configs are equivalent.
      */
     private static void verifyGroups(List<Group> actual, List<Group> expected) {
-        Assert.assertEquals(actual.size(), expected.size());
+        assertThat(actual.size(), is(expected.size()));
 
         for (int i = 0; i < actual.size(); i++) {
             Group actualGroup = actual.get(i);
             Group expectedGroup = expected.get(i);
 
-            Assert.assertEquals(actualGroup.getId(), expectedGroup.getId());
-            Assert.assertEquals(actualGroup.getPolicy(), expectedGroup.getPolicy());
+            assertThat(actualGroup.getId(), is(expectedGroup.getId()));
+            assertThat(actualGroup.getPolicy(), is(expectedGroup.getPolicy()));
             verifyTrafficAllocations(actualGroup.getTrafficAllocation(), expectedGroup.getTrafficAllocation());
             verifyExperiments(actualGroup.getExperiments(), expectedGroup.getExperiments());
         }
@@ -637,14 +637,14 @@ public final class DatafileProjectConfigTestUtils {
         if (expected == null) {
             assertNull(actual);
         } else {
-            Assert.assertEquals(actual.size(), expected.size());
+            assertThat(actual.size(), is(expected.size()));
 
             for (int i = 0; i < actual.size(); i++) {
                 FeatureVariableUsageInstance actualFeatureVariableUsageInstance = actual.get(i);
                 FeatureVariableUsageInstance expectedFeatureVariableUsageInstance = expected.get(i);
 
-                Assert.assertEquals(actualFeatureVariableUsageInstance.getId(), expectedFeatureVariableUsageInstance.getId());
-                Assert.assertEquals(actualFeatureVariableUsageInstance.getValue(), expectedFeatureVariableUsageInstance.getValue());
+                assertThat(actualFeatureVariableUsageInstance.getId(), is(expectedFeatureVariableUsageInstance.getId()));
+                assertThat(actualFeatureVariableUsageInstance.getValue(), is(expectedFeatureVariableUsageInstance.getValue()));
             }
         }
     }

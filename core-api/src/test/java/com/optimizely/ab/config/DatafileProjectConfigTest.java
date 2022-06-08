@@ -33,7 +33,6 @@ import static org.junit.Assert.*;
 
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.internal.ControlAttribute;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -75,11 +74,11 @@ public class DatafileProjectConfigTest {
         Experiment experiment118 = projectConfig.getExperimentIdMapping().get("118");
         List<Experiment> expectedSingleExperiment = asList(experiment223);
         List<Experiment> actualSingleExperiment = projectConfig.getExperimentsForEventKey("clicked_cart");
-        Assert.assertEquals(actualSingleExperiment, expectedSingleExperiment);
+        assertThat(actualSingleExperiment, is(expectedSingleExperiment));
 
         List<Experiment> expectedMultipleExperiments = asList(experiment118, experiment223);
         List<Experiment> actualMultipleExperiments = projectConfig.getExperimentsForEventKey("clicked_purchase");
-        Assert.assertEquals(actualMultipleExperiments, expectedMultipleExperiments);
+        assertThat(actualMultipleExperiments, is(expectedMultipleExperiments));
     }
 
     /**
@@ -90,7 +89,7 @@ public class DatafileProjectConfigTest {
     public void verifyGetExperimentsForInvalidEvent() throws Exception {
         List<Experiment> expectedExperiments = Collections.emptyList();
         List<Experiment> actualExperiments = projectConfig.getExperimentsForEventKey("a_fake_event");
-        Assert.assertEquals(actualExperiments, expectedExperiments);
+        assertThat(actualExperiments, is(expectedExperiments));
     }
 
     /**
@@ -114,7 +113,7 @@ public class DatafileProjectConfigTest {
 
         Condition expectedConditions = new AndCondition(andList);
         Condition actualConditions = projectConfig.getAudience("100").getConditions();
-        Assert.assertEquals(actualConditions, expectedConditions);
+        assertThat(actualConditions, is(expectedConditions));
     }
 
     /**
