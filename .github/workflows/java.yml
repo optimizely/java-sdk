@@ -50,17 +50,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jdk: [8, 11]
+        jdk: [8, 11, 17]
         optimizely_default_parser: [GSON_CONFIG_PARSER, JACKSON_CONFIG_PARSER, JSON_CONFIG_PARSER, JSON_SIMPLE_CONFIG_PARSER]
     steps:
       - name: checkout
         uses: actions/checkout@v2
-      
       - name: set up JDK ${{ matrix.jdk }}
-        uses: actions/setup-java@v3
+        uses: oracle-actions/setup-java@v1
         with:
-          distribution: 'temurin'
-          java-version: ${{ matrix.jdk }}
+          website: jdk.java.net
+          release: ${{ matrix.jdk }}
           
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
