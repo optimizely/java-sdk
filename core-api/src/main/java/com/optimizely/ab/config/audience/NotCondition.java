@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2019, Optimizely and contributors
+ *    Copyright 2016-2019, 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,8 +23,6 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.Nonnull;
 
-import java.util.Map;
-import java.util.StringJoiner;
 
 /**
  * Represents a 'Not' conditions condition operation.

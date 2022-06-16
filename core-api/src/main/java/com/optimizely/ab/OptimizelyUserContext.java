@@ -46,14 +46,7 @@ public class OptimizelyUserContext {
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
                                  @Nonnull String userId,
                                  @Nonnull Map<String, ?> attributes) {
-        this.optimizely = optimizely;
-        this.userId = userId;
-        if (attributes != null) {
-            this.attributes = Collections.synchronizedMap(new HashMap<>(attributes));
-        } else {
-            this.attributes = Collections.synchronizedMap(new HashMap<>());
-        }
-        this.qualifiedSegments = Collections.synchronizedList(new LinkedList<>());
+        this(optimizely, userId, attributes, Collections.EMPTY_MAP);
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,

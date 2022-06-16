@@ -17,7 +17,6 @@
 package com.optimizely.ab.config.audience;
 
 import ch.qos.logback.classic.Level;
-import com.fasterxml.jackson.databind.deser.std.MapEntryDeserializer;
 import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.testutils.OTUtils;
@@ -25,7 +24,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.internal.matchers.Or;
+import org.mockito.internal.util.reflection.Whitebox;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -1500,6 +1501,310 @@ public class AudienceConditionEvaluationTest {
 
         AndCondition andCondition3 = new AndCondition(conditions3);
         assertFalse(andCondition3.evaluate(null, user));
+    }
+
+    /**
+     * Verify that with odp segment evaluator single ODP audience evaluates true
+     */
+    @Test
+    public void singleODPAudienceEvaluateTrueIfSegmentExist() throws Exception {
+
+        OptimizelyUserContext mockedUser = OTUtils.user();
+
+        UserAttribute testInstanceSingleAudience = new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-1");
+        List<Condition> userConditions = new ArrayList<>();
+        userConditions.add(testInstanceSingleAudience);
+        AndCondition andCondition = new AndCondition(userConditions);
+
+        // Should evaluate true if qualified segment exist
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", Collections.singletonList("odp-segment-1"));
+
+        assertTrue(andCondition.evaluate(null, mockedUser));
+    }
+
+    /**
+     * Verify that with odp segment evaluator single ODP audience evaluates false
+     */
+    @Test
+    public void singleODPAudienceEvaluateFalseIfSegmentNotExist() throws Exception {
+
+        OptimizelyUserContext mockedUser = OTUtils.user();
+
+        UserAttribute testInstanceSingleAudience = new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-1");
+        List<Condition> userConditions = new ArrayList<>();
+        userConditions.add(testInstanceSingleAudience);
+        AndCondition andCondition = new AndCondition(userConditions);
+
+        // Should evaluate false if qualified segment does not exist
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", Collections.singletonList("odp-segment-2"));
+
+        assertFalse(andCondition.evaluate(null, mockedUser));
+    }
+
+    /**
+     * Verify that with odp segment evaluator single ODP audience evaluates false when segments not provided
+     */
+    @Test
+    public void singleODPAudienceEvaluateFalseIfSegmentNotProvided() throws Exception {
+        OptimizelyUserContext mockedUser = OTUtils.user();
+
+        UserAttribute testInstanceSingleAudience = new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-1");
+        List<Condition> userConditions = new ArrayList<>();
+        userConditions.add(testInstanceSingleAudience);
+        AndCondition andCondition = new AndCondition(userConditions);
+
+        // Should evaluate false if qualified segment does not exist
+        List<String> qualifiedSegments = Collections.emptyList();
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", Collections.emptyList());
+
+        assertFalse(andCondition.evaluate(null, mockedUser));
+    }
+
+    /**
+     * Verify that with odp segment evaluator evaluates multiple ODP audience true when segment provided exist
+     */
+    @Test
+    public void singleODPAudienceEvaluateMultipleOdpConditions() {
+        OptimizelyUserContext mockedUser = OTUtils.user();
+
+        Condition andCondition = createMultipleConditionAudienceAndOrODP();
+        // Should evaluate correctly based on the given segments
+        List<String> qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", qualifiedSegments);
+        assertTrue(andCondition.evaluate(null, mockedUser));
+
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-4");
+
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", qualifiedSegments);
+        assertTrue(andCondition.evaluate(null, mockedUser));
+
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", qualifiedSegments);
+        assertTrue(andCondition.evaluate(null, mockedUser));
+    }
+
+    /**
+     * Verify that with odp segment evaluator evaluates multiple ODP audience true when segment provided exist
+     */
+    @Test
+    public void singleODPAudienceEvaluateMultipleOdpConditionsEvaluateFalse() {
+        OptimizelyUserContext mockedUser = OTUtils.user();
+
+        Condition andCondition = createMultipleConditionAudienceAndOrODP();
+        // Should evaluate correctly based on the given segments
+        List<String> qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", qualifiedSegments);
+        assertFalse(andCondition.evaluate(null, mockedUser));
+
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", qualifiedSegments);
+        assertFalse(andCondition.evaluate(null, mockedUser));
+    }
+
+    /**
+     * Verify that with odp segment evaluator evaluates multiple ODP audience with multiple conditions true or false when segment conditions meet
+     */
+    @Test
+    public void multipleAudienceEvaluateMultipleOdpConditionsEvaluate() {
+        OptimizelyUserContext mockedUser = OTUtils.user();
+
+        // ["and", "1", "2"]
+        List<Condition> audience1And2 = new ArrayList<>();
+        audience1And2.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-1"));
+        audience1And2.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-2"));
+        AndCondition audienceCondition1 = new AndCondition(audience1And2);
+
+        // ["and", "3", "4"]
+        List<Condition> audience3And4 = new ArrayList<>();
+        audience3And4.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-3"));
+        audience3And4.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-4"));
+        AndCondition audienceCondition2 = new AndCondition(audience3And4);
+
+        // ["or", "5", "6"]
+        List<Condition> audience5And6 = new ArrayList<>();
+        audience5And6.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-5"));
+        audience5And6.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-6"));
+        OrCondition audienceCondition3 = new OrCondition(audience5And6);
+
+
+        //Scenario 1- ['or', '1', '2', '3']
+        List<Condition> conditions = new ArrayList<>();
+        conditions.add(audienceCondition1);
+        conditions.add(audienceCondition2);
+        conditions.add(audienceCondition3);
+
+        OrCondition implicitOr = new OrCondition(conditions);
+        // Should evaluate correctly based on the given segments
+        List<String> qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", qualifiedSegments);
+        assertTrue(implicitOr.evaluate(null, mockedUser));
+
+
+        //Scenario 2- ['and', '1', '2', '3']
+        AndCondition implicitAnd = new AndCondition(conditions);
+        // Should evaluate correctly based on the given segments
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", qualifiedSegments);
+        assertFalse(implicitAnd.evaluate(null, mockedUser));
+
+        // Should evaluate correctly based on the given segments
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+        qualifiedSegments.add("odp-segment-6");
+
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", qualifiedSegments);
+        assertTrue(implicitAnd.evaluate(null, mockedUser));
+
+
+        ////Scenario 3- ['and', '1', '2',['not', '3']]
+        conditions = new ArrayList<>();
+        conditions.add(audienceCondition1);
+        conditions.add(audienceCondition2);
+        conditions.add(new NotCondition(audienceCondition3));
+        implicitAnd = new AndCondition(conditions);
+
+        // Should evaluate correctly based on the given segments
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", qualifiedSegments);
+        assertTrue(implicitAnd.evaluate(null, mockedUser));
+
+        // Should evaluate correctly based on the given segments
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+        qualifiedSegments.add("odp-segment-5");
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", qualifiedSegments);
+        assertFalse(implicitAnd.evaluate(null, mockedUser));
+    }
+
+    /**
+     * Verify that with odp segment evaluator evaluates multiple ODP audience with multiple type of evaluators
+     */
+    @Test
+    public void multipleAudienceEvaluateMultipleOdpConditionsEvaluateWithMultipleTypeOfEvaluator() {
+        OptimizelyUserContext mockedUser = OTUtils.user();
+
+        // ["and", "1", "2"]
+        List<Condition> audience1And2 = new ArrayList<>();
+        audience1And2.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-1"));
+        audience1And2.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-2"));
+        AndCondition audienceCondition1 = new AndCondition(audience1And2);
+
+        // ["and", "3", "4"]
+        List<Condition> audience3And4 = new ArrayList<>();
+        audience3And4.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-3"));
+        audience3And4.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-4"));
+        AndCondition audienceCondition2 = new AndCondition(audience3And4);
+
+        // ["or", "chrome", "safari"]
+        List<Condition> chromeUserAudience = new ArrayList<>();
+        chromeUserAudience.add(new UserAttribute("browser_type", "custom_attribute", "exact", "chrome"));
+        chromeUserAudience.add(new UserAttribute("browser_type", "custom_attribute", "exact", "safari"));
+        OrCondition audienceCondition3 = new OrCondition(chromeUserAudience);
+
+
+        //Scenario 1- ['or', '1', '2', '3']
+        List<Condition> conditions = new ArrayList<>();
+        conditions.add(audienceCondition1);
+        conditions.add(audienceCondition2);
+        conditions.add(audienceCondition3);
+
+        OrCondition implicitOr = new OrCondition(conditions);
+        // Should evaluate correctly based on the given segments
+        List<String> qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", qualifiedSegments);
+        assertTrue(implicitOr.evaluate(null, mockedUser));
+
+
+        //Scenario 2- ['and', '1', '2', '3']
+        AndCondition implicitAnd = new AndCondition(conditions);
+        // Should evaluate correctly based on the given segments
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+
+        mockedUser = OTUtils.user(Collections.singletonMap("browser_type", "chrome"));
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", qualifiedSegments);
+        assertFalse(implicitAnd.evaluate(null, mockedUser));
+
+        // Should evaluate correctly based on the given segments
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+
+        mockedUser = OTUtils.user(Collections.singletonMap("browser_type", "chrome"));
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", qualifiedSegments);
+        assertTrue(implicitAnd.evaluate(null, mockedUser));
+
+        // Should evaluate correctly based on the given segments
+        qualifiedSegments = new ArrayList<>();
+        qualifiedSegments.add("odp-segment-1");
+        qualifiedSegments.add("odp-segment-2");
+        qualifiedSegments.add("odp-segment-3");
+        qualifiedSegments.add("odp-segment-4");
+
+        mockedUser = OTUtils.user(Collections.singletonMap("browser_type", "not_chrome"));
+        Whitebox.setInternalState(mockedUser, "qualifiedSegments", qualifiedSegments);
+        assertFalse(implicitAnd.evaluate(null, mockedUser));
+    }
+
+    public Condition createMultipleConditionAudienceAndOrODP() {
+        UserAttribute testInstanceSingleAudience1 = new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-1");
+        UserAttribute testInstanceSingleAudience2 = new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-2");
+        UserAttribute testInstanceSingleAudience3 = new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-3");
+        UserAttribute testInstanceSingleAudience4 = new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-4");
+
+        List<Condition> userConditionsOR = new ArrayList<>();
+        userConditionsOR.add(testInstanceSingleAudience3);
+        userConditionsOR.add(testInstanceSingleAudience4);
+        OrCondition orCondition = new OrCondition(userConditionsOR);
+        List<Condition> userConditionsAnd = new ArrayList<>();
+        userConditionsAnd.add(testInstanceSingleAudience1);
+        userConditionsAnd.add(testInstanceSingleAudience2);
+        userConditionsAnd.add(orCondition);
+        AndCondition andCondition = new AndCondition(userConditionsAnd);
+
+        return andCondition;
     }
 
     /**
