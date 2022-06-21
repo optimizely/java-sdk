@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 
 public class OTUtils {
-    public static OptimizelyUserContext user(String userId, Map<String,?> attributes) {
+    public static OptimizelyUserContext user(String userId, Map<String, ?> attributes) {
         Optimizely optimizely = new Optimizely.Builder().build();
         return new OptimizelyUserContext(optimizely, userId, attributes);
     }

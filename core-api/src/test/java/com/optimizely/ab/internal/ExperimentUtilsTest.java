@@ -155,7 +155,7 @@ public class ExperimentUtilsTest {
      * If the {@link Experiment} contains at least one {@link Audience}, but attributes is empty,
      * then {@link ExperimentUtils#doesUserMeetAudienceConditions(ProjectConfig, Experiment, Map, String, String)} should return false.
      */
-    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
+    @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
     @Test
     public void doesUserMeetAudienceConditionsEvaluatesEvenIfExperimentHasAudiencesButUserSendNullAttributes() throws Exception {
         Experiment experiment = projectConfig.getExperiments().get(0);

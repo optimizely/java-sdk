@@ -229,6 +229,7 @@ public class AudienceConditionEvaluationTest {
     /**
      * Verify that UserAttribute.evaluate returns null on passing null attribute object.
      */
+    @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
     @Test
     public void nullAttribute() throws Exception {
         UserAttribute testInstance = new UserAttribute("browser_type", "custom_attribute", "gt", 20);
@@ -1554,7 +1555,6 @@ public class AudienceConditionEvaluationTest {
         AndCondition andCondition = new AndCondition(userConditions);
 
         // Should evaluate false if qualified segment does not exist
-        List<String> qualifiedSegments = Collections.emptyList();
         Whitebox.setInternalState(mockedUser, "qualifiedSegments", Collections.emptyList());
 
         assertFalse(andCondition.evaluate(null, mockedUser));
