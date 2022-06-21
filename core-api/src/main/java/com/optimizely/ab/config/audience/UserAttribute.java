@@ -28,11 +28,11 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 import static com.optimizely.ab.config.audience.AttributeType.CUSTOM_ATTRIBUTE;
 import static com.optimizely.ab.config.audience.AttributeType.THIRD_PARTY_DIMENSION;
+import static com.optimizely.ab.config.audience.match.MatchRegistry.QUALIFIED;
 
 /**
  * Represents a user attribute instance within an audience's conditions.
@@ -46,7 +46,7 @@ public class UserAttribute<T> implements Condition<T> {
     private final String type;
     private final String match;
     private final Object value;
-
+    private final static List ATTRIBUTE_TYPE = Arrays.asList(new String[]{CUSTOM_ATTRIBUTE.toString(), THIRD_PARTY_DIMENSION.toString()});
     @JsonCreator
     public UserAttribute(@JsonProperty("name") @Nonnull String name,
                          @JsonProperty("type") @Nonnull String type,
@@ -90,7 +90,7 @@ public class UserAttribute<T> implements Condition<T> {
         // check user attribute value is equal
         try {
             // Handle qualified segments
-            if ("qualified".equals(match)) {
+            if (QUALIFIED.equals(match)) {
                 if (value instanceof String) {
                     return user.isQualifiedFor(value.toString());
                 } else {
@@ -133,7 +133,7 @@ public class UserAttribute<T> implements Condition<T> {
     }
 
     private boolean isValidType(String type) {
-        if (type.equals(CUSTOM_ATTRIBUTE.toString()) || type.equals(THIRD_PARTY_DIMENSION.toString())) {
+        if (ATTRIBUTE_TYPE.contains(type)) {
             return true;
         }
         return false;

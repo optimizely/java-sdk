@@ -41,6 +41,7 @@ public class MatchRegistry {
     public static final String SEMVER_LE = "semver_le";
     public static final String SEMVER_LT = "semver_lt";
     public static final String SUBSTRING = "substring";
+    public static final String QUALIFIED = "qualified";
 
     static {
         register(EXACT, new ExactMatch());
