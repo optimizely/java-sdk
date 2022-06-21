@@ -77,9 +77,6 @@ public class UserAttribute<T> implements Condition<T> {
     @Nullable
     public Boolean evaluate(ProjectConfig config, OptimizelyUserContext user) {
         Map<String,Object> attributes = user.getAttributes();
-        if (attributes == null) {
-            attributes = Collections.emptyMap();
-        }
         // Valid for primitive types, but needs to change when a value is an object or an array
         Object userAttributeValue = attributes.get(name);
 
