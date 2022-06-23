@@ -72,11 +72,9 @@ public class JacksonConfigParserTest {
     @SuppressFBWarnings("NP_NULL_PARAM_DEREF")
     @Test
     public void parseProjectConfigV4() throws Exception {
-        ProjectConfig actual = null;
-        ProjectConfig expected= null;
         JacksonConfigParser parser = new JacksonConfigParser();
-        actual = parser.parseProjectConfig(validConfigJsonV4());
-        expected = validProjectConfigV4();
+        ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV4());
+        ProjectConfig expected = validProjectConfigV4();
 
         verifyProjectConfig(actual, expected);
     }
