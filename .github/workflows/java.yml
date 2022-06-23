@@ -63,19 +63,26 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: run tests
-        id: unit_tests
+        env: 
+          optimizely_default_parser: ${{ matrix.optimizely_default_parser }}
+        run: |
+          ./gradlew clean
+          ./gradlew test
+          ./gradlew build
+      - name: run tests again due to some bug of gitAction
+        if: always()
         env: 
           optimizely_default_parser: ${{ matrix.optimizely_default_parser }}
         run: |
           ./gradlew test
           ./gradlew build
       - name: Check on failures
-        if: steps.unit_tests.outcome != 'success'
+        if: always() && steps.unit_tests.outcome != 'success'
         run: |
           cat /home/runner/java-sdk/core-api/build/reports/findbugs/main.html
           cat /home/runner/java-sdk/core-api/build/reports/findbugs/test.html
       - name: Check on success
-        if: steps.unit_tests.outcome == 'success'
+        if: always() && steps.unit_tests.outcome == 'success'
         run: |
           ./gradlew coveralls uploadArchives --console plain
           
