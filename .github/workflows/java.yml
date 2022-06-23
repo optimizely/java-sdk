@@ -46,7 +46,7 @@ jobs:
   
   test:
     if: startsWith(github.ref, 'refs/tags/') != true
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     strategy:
       fail-fast: false
       matrix:
@@ -63,17 +63,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: run tests
+        id: unit_tests
         env: 
           optimizely_default_parser: ${{ matrix.optimizely_default_parser }}
         run: |
           ./gradlew clean
-          ./gradlew test
-          ./gradlew build
-      - name: run tests again due to some bug of gitAction
-        if: always()
-        env: 
-          optimizely_default_parser: ${{ matrix.optimizely_default_parser }}
-        run: |
           ./gradlew test
           ./gradlew build
       - name: Check on failures
