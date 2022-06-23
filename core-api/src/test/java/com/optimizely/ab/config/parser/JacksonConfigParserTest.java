@@ -71,11 +71,16 @@ public class JacksonConfigParserTest {
 
     @Test
     public void parseProjectConfigV4() {
-        JacksonConfigParser parser = new JacksonConfigParser();
-        ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV4());
-        ProjectConfig expected = validProjectConfigV4();
+        ProjectConfig actual = null;
+        ProjectConfig expected= null;
         try {
+
+            JacksonConfigParser parser = new JacksonConfigParser();
+            actual = parser.parseProjectConfig(validConfigJsonV4());
+            expected = validProjectConfigV4();
+
             verifyProjectConfig(actual, expected);
+
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
             verifyProjectConfig(actual, expected);
