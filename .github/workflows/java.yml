@@ -62,14 +62,11 @@ jobs:
           cache: 'gradle'  
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
       - name: run tests
         id: unit_tests
         env: 
           optimizely_default_parser: ${{ matrix.optimizely_default_parser }}
         run: |
-          ./gradlew clean
           ./gradlew test
           ./gradlew build
       - name: Check on failures
