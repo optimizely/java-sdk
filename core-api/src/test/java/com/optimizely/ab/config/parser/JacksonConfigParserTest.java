@@ -69,22 +69,16 @@ public class JacksonConfigParserTest {
         verifyProjectConfig(actual, expected);
     }
 
+    @SuppressFBWarnings("NP_NULL_PARAM_DEREF")
     @Test
-    public void parseProjectConfigV4() {
+    public void parseProjectConfigV4() throws Exception {
         ProjectConfig actual = null;
         ProjectConfig expected= null;
-        try {
+        JacksonConfigParser parser = new JacksonConfigParser();
+        actual = parser.parseProjectConfig(validConfigJsonV4());
+        expected = validProjectConfigV4();
 
-            JacksonConfigParser parser = new JacksonConfigParser();
-            actual = parser.parseProjectConfig(validConfigJsonV4());
-            expected = validProjectConfigV4();
-
-            verifyProjectConfig(actual, expected);
-
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-            verifyProjectConfig(actual, expected);
-        }
+        verifyProjectConfig(actual, expected);
     }
 
     @Test
