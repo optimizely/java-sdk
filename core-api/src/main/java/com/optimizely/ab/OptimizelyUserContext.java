@@ -86,7 +86,11 @@ public class OptimizelyUserContext {
         return new OptimizelyUserContext(optimizely, userId, attributes, forcedDecisionsMap);
     }
 
-    // true if the user is qualified for the given segment name
+    /**
+     * Returns true if the user is qualified for the given segment name
+     * @param segment A String segment key which will be check in qualified segments list that if it exist then user is qualified.
+     * @return boolean Is user qualified for a segment.
+     */
     public boolean isQualifiedFor(@Nonnull String segment) {
         return qualifiedSegments.contains(segment);
     }
