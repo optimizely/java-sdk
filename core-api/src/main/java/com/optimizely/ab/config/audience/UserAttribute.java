@@ -90,9 +90,8 @@ public class UserAttribute<T> implements Condition<T> {
             if (QUALIFIED.equals(match)) {
                 if (value instanceof String) {
                     return user.isQualifiedFor(value.toString());
-                } else {
-                    throw new UnknownValueTypeException();
                 }
+                throw new UnknownValueTypeException();
             }
             // Handle other conditions
             Match matcher = MatchRegistry.getMatch(match);

@@ -46,13 +46,14 @@ public class OptimizelyUserContext {
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
                                  @Nonnull String userId,
                                  @Nonnull Map<String, ?> attributes) {
-        this(optimizely, userId, attributes, Collections.EMPTY_MAP);
+        this(optimizely, userId, attributes, Collections.EMPTY_MAP, null);
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
                                  @Nonnull String userId,
                                  @Nonnull Map<String, ?> attributes,
-                                 @Nullable Map<String, OptimizelyForcedDecision> forcedDecisionsMap) {
+                                 @Nullable Map<String, OptimizelyForcedDecision> forcedDecisionsMap,
+                                 @Nullable List<String> qualifiedSegments) {
         this.optimizely = optimizely;
         this.userId = userId;
         if (attributes != null) {
@@ -61,9 +62,10 @@ public class OptimizelyUserContext {
             this.attributes = Collections.synchronizedMap(new HashMap<>());
         }
         if (forcedDecisionsMap != null) {
-          this.forcedDecisionsMap = new ConcurrentHashMap<>(forcedDecisionsMap);
+            this.forcedDecisionsMap = new ConcurrentHashMap<>(forcedDecisionsMap);
         }
-        this.qualifiedSegments = Collections.synchronizedList(new LinkedList<>());
+
+        this.qualifiedSegments = Collections.synchronizedList( qualifiedSegments == null ? new LinkedList<>(): qualifiedSegments);
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely, @Nonnull String userId) {
@@ -83,7 +85,7 @@ public class OptimizelyUserContext {
     }
 
     public OptimizelyUserContext copy() {
-        return new OptimizelyUserContext(optimizely, userId, attributes, forcedDecisionsMap);
+        return new OptimizelyUserContext(optimizely, userId, attributes, forcedDecisionsMap, qualifiedSegments);
     }
 
     /**
@@ -271,7 +273,14 @@ public class OptimizelyUserContext {
         return true;
     }
 
+    public List<String> getQualifiedSegments() {
+        return qualifiedSegments;
+    }
 
+    public void setQualifiedSegments(List<String> qualifiedSegments) {
+        this.qualifiedSegments.clear();
+        this.qualifiedSegments.addAll(qualifiedSegments);
+    }
 
     // Utils
 

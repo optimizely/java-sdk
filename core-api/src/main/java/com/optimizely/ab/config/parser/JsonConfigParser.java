@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2021, Optimizely and contributors
+ *    Copyright 2016-2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -72,6 +72,7 @@ final public class JsonConfigParser implements ConfigParser {
 
             List<FeatureFlag> featureFlags = null;
             List<Rollout> rollouts = null;
+            List<Integration> integrations = null;
             String sdkKey = null;
             String environmentKey = null;
             Boolean botFiltering = null;
@@ -79,6 +80,9 @@ final public class JsonConfigParser implements ConfigParser {
             if (datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString())) {
                 featureFlags = parseFeatureFlags(rootObject.getJSONArray("featureFlags"));
                 rollouts = parseRollouts(rootObject.getJSONArray("rollouts"));
+                if (rootObject.has("integrations")) {
+                    integrations = parseIntegrations(rootObject.getJSONArray("integrations"));
+                }
                 if (rootObject.has("sdkKey"))
                     sdkKey = rootObject.getString("sdkKey");
                 if (rootObject.has("environmentKey"))
@@ -106,7 +110,8 @@ final public class JsonConfigParser implements ConfigParser {
                 experiments,
                 featureFlags,
                 groups,
-                rollouts
+                rollouts,
+                integrations
             );
         } catch (RuntimeException e) {
             throw new ConfigParseException("Unable to parse datafile: " + json, e);
@@ -397,6 +402,21 @@ final public class JsonConfigParser implements ConfigParser {
         }
 
         return rollouts;
+    }
+
+    private List<Integration> parseIntegrations(JSONArray integrationsJson) {
+        List<Integration> integrations = new ArrayList<Integration>(integrationsJson.length());
+
+        for (int i = 0; i < integrationsJson.length(); i++) {
+            Object obj = integrationsJson.get(i);
+            JSONObject integrationObject = (JSONObject) obj;
+            String key = integrationObject.getString("key");
+            String host = integrationObject.getString("host");
+            String publicKey = integrationObject.getString("publicKey");
+            integrations.add(new Integration(key, host, publicKey));
+        }
+
+        return integrations;
     }
 
     @Override

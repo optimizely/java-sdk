@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2021, Optimizely and contributors
+ *    Copyright 2016-2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
         List<Experiment> experiments = JacksonHelpers.arrayNodeToList(node.get("experiments"), Experiment.class, codec);
         List<Attribute> attributes = JacksonHelpers.arrayNodeToList(node.get("attributes"), Attribute.class, codec);
         List<EventType> events = JacksonHelpers.arrayNodeToList(node.get("events"), EventType.class, codec);
+        List<Integration> integrations = JacksonHelpers.arrayNodeToList(node.get("integrations"), Integration.class, codec);
 
         List<Audience> audiences = Collections.emptyList();
         if (node.has("audiences")) {
@@ -101,7 +102,8 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
             experiments,
             featureFlags,
             groups,
-            rollouts
+            rollouts,
+            integrations
         );
     }
 

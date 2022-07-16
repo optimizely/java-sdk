@@ -107,6 +107,10 @@ public interface ProjectConfig {
 
     Variation getFlagVariationByKey(String flagKey, String variationKey);
 
+    String getHostForODP();
+
+    String getPublicKeyForODP();
+
     @Override
     String toString();
 
