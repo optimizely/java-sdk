@@ -32,7 +32,6 @@ import java.util.*;
 
 import static com.optimizely.ab.config.audience.AttributeType.CUSTOM_ATTRIBUTE;
 import static com.optimizely.ab.config.audience.AttributeType.THIRD_PARTY_DIMENSION;
-import static com.optimizely.ab.config.audience.match.MatchRegistry.QUALIFIED;
 
 /**
  * Represents a user attribute instance within an audience's conditions.
@@ -40,6 +39,7 @@ import static com.optimizely.ab.config.audience.match.MatchRegistry.QUALIFIED;
 @Immutable
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserAttribute<T> implements Condition<T> {
+    public static final String QUALIFIED = "qualified";
 
     private static final Logger logger = LoggerFactory.getLogger(UserAttribute.class);
     private final String name;

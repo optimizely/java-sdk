@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2020-2021, Optimizely and contributors
+ *    Copyright 2020-2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -41,7 +41,6 @@ public class MatchRegistry {
     public static final String SEMVER_LE = "semver_le";
     public static final String SEMVER_LT = "semver_lt";
     public static final String SUBSTRING = "substring";
-    public static final String QUALIFIED = "qualified";
 
     static {
         register(EXACT, new ExactMatch());

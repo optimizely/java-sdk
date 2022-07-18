@@ -1428,7 +1428,7 @@ public class ValidProjectConfigV4 {
         rollouts.add(ROLLOUT_1);
         rollouts.add(ROLLOUT_2);
         rollouts.add(ROLLOUT_3);
-
+        List<Integration> integrations = new ArrayList<>();
         return new DatafileProjectConfig(
             ACCOUNT_ID,
             ANONYMIZE_IP,
@@ -1446,7 +1446,8 @@ public class ValidProjectConfigV4 {
             experiments,
             featureFlags,
             groups,
-            rollouts
+            rollouts,
+            integrations
         );
     }
 }
