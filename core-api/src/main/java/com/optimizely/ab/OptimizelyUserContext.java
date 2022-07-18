@@ -90,7 +90,7 @@ public class OptimizelyUserContext {
 
     /**
      * Returns true if the user is qualified for the given segment name
-     * @param segment A String segment key which will be check in qualified segments list that if it exist then user is qualified.
+     * @param segment A String segment key which will be checked in the qualified segments list that if it exists then user is qualified.
      * @return boolean Is user qualified for a segment.
      */
     public boolean isQualifiedFor(@Nonnull String segment) {
