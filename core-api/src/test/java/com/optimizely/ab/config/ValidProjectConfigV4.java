@@ -1447,7 +1447,7 @@ public class ValidProjectConfigV4 {
             featureFlags,
             groups,
             rollouts,
-            null
+            Collections.emptyList()
         );
     }
 }

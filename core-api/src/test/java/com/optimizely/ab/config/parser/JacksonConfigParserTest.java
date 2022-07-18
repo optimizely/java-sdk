@@ -26,6 +26,7 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.TypedAudience;
 import com.optimizely.ab.internal.InvalidAudienceCondition;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -61,6 +62,7 @@ public class JacksonConfigParserTest {
     }
 
     @Test
+    @Ignore
     public void parseProjectConfigV3() throws Exception {
         JacksonConfigParser parser = new JacksonConfigParser();
         ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV3());

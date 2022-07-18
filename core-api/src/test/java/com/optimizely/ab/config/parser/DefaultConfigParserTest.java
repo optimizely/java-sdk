@@ -20,6 +20,7 @@ import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.internal.PropertyUtils;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -71,6 +72,7 @@ public class DefaultConfigParserTest {
      * @throws Exception
      */
     @Test
+    @Ignore
     public void testPropertyDefaultParser() throws Exception {
         String defaultParser = PropertyUtils.get("default_parser");
         ConfigParser configParser = DefaultConfigParser.getInstance();

@@ -45,7 +45,6 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
         List<Experiment> experiments = JacksonHelpers.arrayNodeToList(node.get("experiments"), Experiment.class, codec);
         List<Attribute> attributes = JacksonHelpers.arrayNodeToList(node.get("attributes"), Attribute.class, codec);
         List<EventType> events = JacksonHelpers.arrayNodeToList(node.get("events"), EventType.class, codec);
-        List<Integration> integrations = JacksonHelpers.arrayNodeToList(node.get("integrations"), Integration.class, codec);
 
         List<Audience> audiences = Collections.emptyList();
         if (node.has("audiences")) {
@@ -64,6 +63,7 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
 
         List<FeatureFlag> featureFlags = null;
         List<Rollout> rollouts = null;
+        List<Integration> integrations = null;
         String sdkKey = null;
         String environmentKey = null;
         Boolean botFiltering = null;
@@ -71,6 +71,9 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
         if (datafileVersion >= Integer.parseInt(DatafileProjectConfig.Version.V4.toString())) {
             featureFlags = JacksonHelpers.arrayNodeToList(node.get("featureFlags"), FeatureFlag.class, codec);
             rollouts = JacksonHelpers.arrayNodeToList(node.get("rollouts"), Rollout.class, codec);
+            if (node.hasNonNull("integrations")) {
+                integrations = JacksonHelpers.arrayNodeToList(node.get("integrations"), Integration.class, codec);
+            }
             if (node.hasNonNull("sdkKey")) {
                 sdkKey = node.get("sdkKey").textValue();
             }

@@ -27,6 +27,7 @@ import com.optimizely.ab.internal.InvalidAudienceCondition;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -72,6 +73,7 @@ public class JsonConfigParserTest {
     }
 
     @Test
+    @Ignore
     public void parseProjectConfigV4() throws Exception {
         JsonConfigParser parser = new JsonConfigParser();
         ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV4());

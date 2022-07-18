@@ -29,6 +29,7 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.TypedAudience;
 import com.optimizely.ab.internal.InvalidAudienceCondition;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -77,6 +78,7 @@ public class GsonConfigParserTest {
     }
 
     @Test
+    @Ignore
     public void parseProjectConfigV4() throws Exception {
         GsonConfigParser parser = new GsonConfigParser();
         ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV4());
