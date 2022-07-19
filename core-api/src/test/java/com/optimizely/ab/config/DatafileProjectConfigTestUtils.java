@@ -491,7 +491,7 @@ public final class DatafileProjectConfigTestUtils {
             assertThat(actualExperiment.getGroupId(), is(expectedExperiment.getGroupId()));
             assertThat(actualExperiment.getStatus(), is(expectedExperiment.getStatus()));
             assertThat(actualExperiment.getAudienceIds(), is(expectedExperiment.getAudienceIds()));
-            assertEquals(actualExperiment.getAudienceConditions(), expectedExperiment.getAudienceConditions());
+            assertThat(actualExperiment.getAudienceConditions(), is(expectedExperiment.getAudienceConditions()));
             assertThat(actualExperiment.getUserIdToVariationKeyMap(),
                 is(expectedExperiment.getUserIdToVariationKeyMap()));
 
