@@ -73,7 +73,6 @@ public class JsonConfigParserTest {
     }
 
     @Test
-    @Ignore
     public void parseProjectConfigV4() throws Exception {
         JsonConfigParser parser = new JsonConfigParser();
         ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV4());

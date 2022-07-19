@@ -78,7 +78,6 @@ public class GsonConfigParserTest {
     }
 
     @Test
-    @Ignore
     public void parseProjectConfigV4() throws Exception {
         GsonConfigParser parser = new GsonConfigParser();
         ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV4());
