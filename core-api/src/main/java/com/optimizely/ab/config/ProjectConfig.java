@@ -83,6 +83,8 @@ public interface ProjectConfig {
 
     List<Audience> getTypedAudiences();
 
+    List<Integration> getIntegrations();
+
     Audience getAudience(String audienceId);
 
     Map<String, Experiment> getExperimentKeyMapping();

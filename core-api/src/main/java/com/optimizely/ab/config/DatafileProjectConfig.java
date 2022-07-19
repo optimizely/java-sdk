@@ -471,6 +471,11 @@ public class DatafileProjectConfig implements ProjectConfig {
     }
 
     @Override
+    public List<Integration> getIntegrations() {
+        return integrations;
+    }
+
+    @Override
     public Audience getAudience(String audienceId) {
         return audienceIdMapping.get(audienceId);
     }
