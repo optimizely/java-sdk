@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -43,20 +45,23 @@ public class Integration {
         this.publicKey = publicKey;
     }
 
+    @Nonnull
     public String getKey() {
         return key;
     }
 
+    @Nullable
     public String getHost() { return host; }
 
+    @Nullable
     public String getPublicKey() { return publicKey; }
 
     @Override
     public String toString() {
         return "Integration{" +
             "key='" + key + '\'' +
-            ", host='" + host + '\'' +
-            ", publicKey='" + publicKey + '\'' +
+            ((this.host != null) ? (", host='" + host + '\'') : "") +
+            ((this.publicKey != null) ? (", publicKey='" + publicKey + '\'') : "") +
             '}';
     }
 }
