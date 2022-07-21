@@ -256,6 +256,52 @@ public class JsonSimpleConfigParserTest {
     }
 
     @Test
+    public void integrationsArrayAbsent() throws Exception {
+        JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
+        ProjectConfig actual = parser.parseProjectConfig(nullFeatureEnabledConfigJsonV4());
+        assertEquals(actual.getHostForODP(), "");
+        assertEquals(actual.getPublicKeyForODP(), "");
+    }
+
+    @Test
+    public void integrationsArrayHasODP() throws Exception {
+        JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
+        ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV4());
+        assertEquals(actual.getHostForODP(), "https://example.com");
+        assertEquals(actual.getPublicKeyForODP(), "test-key");
+    }
+
+    @Test
+    public void integrationsArrayHasOtherIntegration() throws Exception {
+        JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
+        String integrationsObject = ", \"integrations\": [" +
+            "{ \"key\": \"not-odp\", " +
+            "\"host\": \"https://example.com\", " +
+            "\"publicKey\": \"test-key\" }" +
+            "]}";
+        String datafile = nullFeatureEnabledConfigJsonV4();
+        datafile = datafile.substring(0, datafile.lastIndexOf("}")) + integrationsObject;
+        ProjectConfig actual = parser.parseProjectConfig(datafile);
+        assertEquals(actual.getIntegrations().size(), 1);
+        assertEquals(actual.getHostForODP(), "");
+        assertEquals(actual.getPublicKeyForODP(), "");
+    }
+
+    @Test
+    public void integrationsArrayHasMissingHost() throws Exception {
+        JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
+        String integrationsObject = ", \"integrations\": [" +
+            "{ \"key\": \"odp\", " +
+            "\"publicKey\": \"test-key\" }" +
+            "]}";
+        String datafile = nullFeatureEnabledConfigJsonV4();
+        datafile = datafile.substring(0, datafile.lastIndexOf("}")) + integrationsObject;
+        ProjectConfig actual = parser.parseProjectConfig(datafile);
+        assertEquals(actual.getHostForODP(), null);
+        assertEquals(actual.getPublicKeyForODP(), "test-key");
+    }
+
+    @Test
     public void testToJson() {
         Map<String, Object> map = new HashMap<>();
         map.put("k1", "v1");

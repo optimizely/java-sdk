@@ -411,8 +411,8 @@ final public class JsonConfigParser implements ConfigParser {
             Object obj = integrationsJson.get(i);
             JSONObject integrationObject = (JSONObject) obj;
             String key = integrationObject.getString("key");
-            String host = integrationObject.getString("host");
-            String publicKey = integrationObject.getString("publicKey");
+            String host = integrationObject.has("host") ? integrationObject.getString("host") : null;
+            String publicKey = integrationObject.has("publicKey") ? integrationObject.getString("publicKey") : null;
             integrations.add(new Integration(key, host, publicKey));
         }
 
