@@ -302,6 +302,23 @@ public class JsonSimpleConfigParserTest {
     }
 
     @Test
+    public void integrationsArrayHasOtherKeys() throws Exception {
+        JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
+        String integrationsObject = ", \"integrations\": [" +
+            "{ \"key\": \"odp\", " +
+            "\"host\": \"https://example.com\", " +
+            "\"publicKey\": \"test-key\", " +
+            "\"new-key\": \"new-value\" }" +
+            "]}";
+        String datafile = nullFeatureEnabledConfigJsonV4();
+        datafile = datafile.substring(0, datafile.lastIndexOf("}")) + integrationsObject;
+        ProjectConfig actual = parser.parseProjectConfig(datafile);
+        assertEquals(actual.getIntegrations().size(), 1);
+        assertEquals(actual.getHostForODP(), "https://example.com");
+        assertEquals(actual.getPublicKeyForODP(), "test-key");
+    }
+
+    @Test
     public void testToJson() {
         Map<String, Object> map = new HashMap<>();
         map.put("k1", "v1");
