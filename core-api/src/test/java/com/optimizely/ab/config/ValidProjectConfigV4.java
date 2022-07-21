@@ -1360,6 +1360,7 @@ public class ValidProjectConfigV4 {
             VARIABLE_INTEGER_VARIABLE
         )
     );
+    public static final Integration odpIntegration = new Integration("odp", "https://example.com", "test-key");
 
     public static ProjectConfig generateValidProjectConfigV4() {
 
@@ -1429,6 +1430,9 @@ public class ValidProjectConfigV4 {
         rollouts.add(ROLLOUT_2);
         rollouts.add(ROLLOUT_3);
 
+        List<Integration> integrations = new ArrayList<>();
+        integrations.add(odpIntegration);
+
         return new DatafileProjectConfig(
             ACCOUNT_ID,
             ANONYMIZE_IP,
@@ -1446,7 +1450,8 @@ public class ValidProjectConfigV4 {
             experiments,
             featureFlags,
             groups,
-            rollouts
+            rollouts,
+            integrations
         );
     }
 }

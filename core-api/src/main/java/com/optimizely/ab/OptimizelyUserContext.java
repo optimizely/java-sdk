@@ -36,6 +36,8 @@ public class OptimizelyUserContext {
     @Nonnull
     private final Map<String, Object> attributes;
 
+    private List<String> qualifiedSegments;
+
     @Nonnull
     private final Optimizely optimizely;
 
@@ -44,19 +46,14 @@ public class OptimizelyUserContext {
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
                                  @Nonnull String userId,
                                  @Nonnull Map<String, ?> attributes) {
-        this.optimizely = optimizely;
-        this.userId = userId;
-        if (attributes != null) {
-            this.attributes = Collections.synchronizedMap(new HashMap<>(attributes));
-        } else {
-            this.attributes = Collections.synchronizedMap(new HashMap<>());
-        }
+        this(optimizely, userId, attributes, Collections.EMPTY_MAP, null);
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
                                  @Nonnull String userId,
                                  @Nonnull Map<String, ?> attributes,
-                                 @Nullable Map<String, OptimizelyForcedDecision> forcedDecisionsMap) {
+                                 @Nullable Map<String, OptimizelyForcedDecision> forcedDecisionsMap,
+                                 @Nullable List<String> qualifiedSegments) {
         this.optimizely = optimizely;
         this.userId = userId;
         if (attributes != null) {
@@ -65,8 +62,10 @@ public class OptimizelyUserContext {
             this.attributes = Collections.synchronizedMap(new HashMap<>());
         }
         if (forcedDecisionsMap != null) {
-          this.forcedDecisionsMap = new ConcurrentHashMap<>(forcedDecisionsMap);
+            this.forcedDecisionsMap = new ConcurrentHashMap<>(forcedDecisionsMap);
         }
+
+        this.qualifiedSegments = Collections.synchronizedList( qualifiedSegments == null ? new LinkedList<>(): qualifiedSegments);
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely, @Nonnull String userId) {
@@ -86,7 +85,16 @@ public class OptimizelyUserContext {
     }
 
     public OptimizelyUserContext copy() {
-        return new OptimizelyUserContext(optimizely, userId, attributes, forcedDecisionsMap);
+        return new OptimizelyUserContext(optimizely, userId, attributes, forcedDecisionsMap, qualifiedSegments);
+    }
+
+    /**
+     * Returns true if the user is qualified for the given segment name
+     * @param segment A String segment key which will be checked in the qualified segments list that if it exists then user is qualified.
+     * @return boolean Is user qualified for a segment.
+     */
+    public boolean isQualifiedFor(@Nonnull String segment) {
+        return qualifiedSegments.contains(segment);
     }
 
     /**
@@ -265,7 +273,14 @@ public class OptimizelyUserContext {
         return true;
     }
 
+    public List<String> getQualifiedSegments() {
+        return qualifiedSegments;
+    }
 
+    public void setQualifiedSegments(List<String> qualifiedSegments) {
+        this.qualifiedSegments.clear();
+        this.qualifiedSegments.addAll(qualifiedSegments);
+    }
 
     // Utils
 

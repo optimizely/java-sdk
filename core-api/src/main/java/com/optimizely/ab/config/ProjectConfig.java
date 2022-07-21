@@ -83,6 +83,8 @@ public interface ProjectConfig {
 
     List<Audience> getTypedAudiences();
 
+    List<Integration> getIntegrations();
+
     Audience getAudience(String audienceId);
 
     Map<String, Experiment> getExperimentKeyMapping();
@@ -106,6 +108,10 @@ public interface ProjectConfig {
     Map<String, List<Variation>> getFlagVariationsMap();
 
     Variation getFlagVariationByKey(String flagKey, String variationKey);
+
+    String getHostForODP();
+
+    String getPublicKeyForODP();
 
     @Override
     String toString();

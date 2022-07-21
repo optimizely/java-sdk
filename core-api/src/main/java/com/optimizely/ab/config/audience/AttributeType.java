@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, 2022, Optimizely and contributors
+ *    Copyright 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,21 +16,18 @@
  */
 package com.optimizely.ab.config.audience;
 
-import com.optimizely.ab.OptimizelyUserContext;
-import com.optimizely.ab.config.ProjectConfig;
+public enum AttributeType {
+    CUSTOM_ATTRIBUTE("custom_attribute"),
+    THIRD_PARTY_DIMENSION("third_party_dimension");
 
-import javax.annotation.Nullable;
-import java.util.Map;
+    private final String key;
 
-/**
- * Interface implemented by all conditions condition objects to aid in condition evaluation.
- */
-public interface Condition<T> {
+    AttributeType(String key) {
+        this.key = key;
+    }
 
-    @Nullable
-    Boolean evaluate(ProjectConfig config, OptimizelyUserContext user);
-
-    String toJson();
-
-    String getOperandOrId();
+    @Override
+    public String toString() {
+        return key;
+    }
 }
