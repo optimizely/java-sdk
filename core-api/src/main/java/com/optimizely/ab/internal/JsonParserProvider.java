@@ -5,10 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public enum JsonParserProvider {
-    GSON("com.google.gson.Gson"),
-    JACKSON("com.fasterxml.jackson.databind.ObjectMapper" ),
-    JSON("org.json.JSONObject"),
-    JSON_SIMPLE("org.json.simple.JSONObject");
+    GSON_CONFIG_PARSER("com.google.gson.Gson"),
+    JACKSON_CONFIG_PARSER("com.fasterxml.jackson.databind.ObjectMapper" ),
+    JSON_CONFIG_PARSER("org.json.JSONObject"),
+    JSON_SIMPLE_CONFIG_PARSER("org.json.simple.JSONObject");
 
     private static final Logger logger = LoggerFactory.getLogger(JsonParserProvider.class);
 

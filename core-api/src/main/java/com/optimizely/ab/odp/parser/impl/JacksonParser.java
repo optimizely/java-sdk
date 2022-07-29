@@ -18,20 +18,34 @@ public class JacksonParser implements ResponseJsonParser {
     public List<String> parseQualifiedSegments(String responseJson) {
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> parsedSegments = new ArrayList<>();
-        JsonNode node;
+        JsonNode root;
         try {
-             node = objectMapper.readTree(responseJson);
+            root = objectMapper.readTree(responseJson);
+
+            if (root.has("errors")) {
+                JsonNode errors = root.path("errors");
+                StringBuilder logMessage = new StringBuilder();
+                for (int i = 0; i < errors.size(); i++) {
+                    if (i > 0) {
+                        logMessage.append(", ");
+                    }
+                    logMessage.append(errors.get(i).path("message"));
+                }
+                logger.error(logMessage.toString());
+                return null;
+            }
+
+            JsonNode edges = root.path("data").path("customer").path("audiences").path("edges");
+            for (JsonNode edgeNode : edges) {
+                String state = edgeNode.path("node").path("state").asText();
+                if (state.equals("qualified")) {
+                    parsedSegments.add(edgeNode.path("node").path("name").asText());
+                }
+            }
+            return parsedSegments;
         } catch (JsonProcessingException e) {
             logger.error("Error parsing qualified segments from response", e);
             return null;
         }
-        JsonNode edges = node.path("data").path("customer").path("audiences").path("edges");
-        for (JsonNode edgeNode: edges) {
-            String state = edgeNode.path("node").path("state").asText();
-            if (state.equals("qualified")) {
-                parsedSegments.add(edgeNode.path("node").path("name").asText());
-            }
-        }
-        return parsedSegments;
     }
 }

@@ -15,16 +15,16 @@ public class ResponseJsonParserFactory {
         JsonParserProvider parserProvider = JsonParserProvider.getDefaultParser();
         ResponseJsonParser jsonParser = null;
         switch (parserProvider) {
-            case GSON:
+            case GSON_CONFIG_PARSER:
                 jsonParser = new GsonParser();
                 break;
-            case JACKSON:
+            case JACKSON_CONFIG_PARSER:
                 jsonParser = new JacksonParser();
                 break;
-            case JSON:
+            case JSON_CONFIG_PARSER:
                 jsonParser = new JsonParser();
                 break;
-            case JSON_SIMPLE:
+            case JSON_SIMPLE_CONFIG_PARSER:
                 jsonParser = new JsonSimpleParser();
                 break;
         }

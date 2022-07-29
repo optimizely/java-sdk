@@ -21,6 +21,20 @@ public class JsonSimpleParser implements ResponseJsonParser {
         JSONObject root = null;
         try {
             root = (JSONObject) parser.parse(responseJson);
+
+            if (root.containsKey("errors")) {
+                JSONArray errors = (JSONArray) root.get("errors");
+                StringBuilder logMessage = new StringBuilder();
+                for (int i = 0; i < errors.size(); i++) {
+                    if (i > 0) {
+                        logMessage.append(", ");
+                    }
+                    logMessage.append((String)((JSONObject) errors.get(i)).get("message"));
+                }
+                logger.error(logMessage.toString());
+                return null;
+            }
+
             JSONArray edges = (JSONArray)((JSONObject)((JSONObject)(((JSONObject) root.get("data"))).get("customer")).get("audiences")).get("edges");
             for (int i = 0; i < edges.size(); i++) {
                 JSONObject node = (JSONObject) ((JSONObject) edges.get(i)).get("node");
@@ -29,7 +43,7 @@ public class JsonSimpleParser implements ResponseJsonParser {
                 }
             }
             return parsedSegments;
-        } catch (ParseException e) {
+        } catch (ParseException | NullPointerException e) {
             logger.error("Error parsing qualified segments from response", e);
             return null;
         }

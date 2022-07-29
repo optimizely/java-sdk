@@ -17,6 +17,20 @@ public class GsonParser implements ResponseJsonParser {
         List<String> parsedSegments = new ArrayList<>();
         try {
             JsonObject root = JsonParser.parseString(responseJson).getAsJsonObject();
+
+            if (root.has("errors")) {
+                JsonArray errors =  root.getAsJsonArray("errors");
+                StringBuilder logMessage = new StringBuilder();
+                for (int i = 0; i < errors.size(); i++) {
+                    if (i > 0) {
+                        logMessage.append(", ");
+                    }
+                    logMessage.append(errors.get(i).getAsJsonObject().get("message").getAsString());
+                }
+                logger.error(logMessage.toString());
+                return null;
+            }
+
             JsonArray edges = root.getAsJsonObject("data").getAsJsonObject("customer").getAsJsonObject("audiences").getAsJsonArray("edges");
             for (int i = 0; i < edges.size(); i++) {
                 JsonObject node = edges.get(i).getAsJsonObject().getAsJsonObject("node");

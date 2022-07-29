@@ -1,9 +1,11 @@
 package com.optimizely.ab.odp.parser;
 
-import com.optimizely.ab.odp.parser.ResponseJsonParser;
+import ch.qos.logback.classic.Level;
+import com.optimizely.ab.internal.LogbackVerifier;
 import static junit.framework.TestCase.assertEquals;
 
 import com.optimizely.ab.odp.parser.impl.*;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -13,7 +15,10 @@ import java.util.List;
 
 @RunWith(Parameterized.class)
 public class ResponseJsonParserTest {
-    private ResponseJsonParser jsonParser;
+    private final ResponseJsonParser jsonParser;
+
+    @Rule
+    public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
     public ResponseJsonParserTest(ResponseJsonParser jsonParser) {
         super();
@@ -28,7 +33,7 @@ public class ResponseJsonParserTest {
     @Test
     public void returnSegmentsListWhenResponseIsCorrect() {
         String responseToParse = "{\"data\":{\"customer\":{\"audiences\":{\"edges\":[{\"node\":{\"name\":\"has_email\",\"state\":\"qualified\"}},{\"node\":{\"name\":\"has_email_opted_in\",\"state\":\"qualified\"}}]}}}}";
-        List<String> parsedSegments =  jsonParser.parseQualifiedSegments(responseToParse);
+        List<String> parsedSegments = jsonParser.parseQualifiedSegments(responseToParse);
         assertEquals(Arrays.asList("has_email", "has_email_opted_in"), parsedSegments);
     }
 
@@ -50,6 +55,7 @@ public class ResponseJsonParserTest {
     public void returnNullWhenJsonFormatIsValidButUnexpectedData() {
         String responseToParse = "{\"data\"\"consumer\":{\"randomKey\":{\"edges\":[{\"node\":{\"name\":\"has_email\",\"state\":\"qualified\"}},{\"node\":{\"name\":\"has_email_opted_in\",\"state\":\"qualified\"}}]}}}}";
         List<String> parsedSegments =  jsonParser.parseQualifiedSegments(responseToParse);
+        logbackVerifier.expectMessage(Level.ERROR, "Error parsing qualified segments from response");
         assertEquals(null, parsedSegments);
     }
 
@@ -57,6 +63,15 @@ public class ResponseJsonParserTest {
     public void returnNullWhenJsonIsMalformed() {
         String responseToParse = "{\"data\"\"customer\":{\"audiences\":{\"edges\":[{\"node\":{\"name\":\"has_email\",\"state\":\"qualified\"}},{\"node\":{\"name\":\"has_email_opted_in\",\"state\":\"qualified\"}}]}}}}";
         List<String> parsedSegments =  jsonParser.parseQualifiedSegments(responseToParse);
+        logbackVerifier.expectMessage(Level.ERROR, "Error parsing qualified segments from response");
+        assertEquals(null, parsedSegments);
+    }
+
+    @Test
+    public void returnNullAndLogCorrectErrorWhenErrorResponseIsReturned() {
+        String responseToParse = "{\"errors\":[{\"message\":\"Exception while fetching data (/customer) : java.lang.RuntimeException: could not resolve _fs_user_id = wrong_id\",\"locations\":[{\"line\":2,\"column\":3}],\"path\":[\"customer\"],\"extensions\":{\"classification\":\"InvalidIdentifierException\"}}],\"data\":{\"customer\":null}}";
+        List<String> parsedSegments =  jsonParser.parseQualifiedSegments(responseToParse);
+        logbackVerifier.expectMessage(Level.ERROR, "Exception while fetching data (/customer) : java.lang.RuntimeException: could not resolve _fs_user_id = wrong_id");
         assertEquals(null, parsedSegments);
     }
 }

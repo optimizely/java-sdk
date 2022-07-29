@@ -18,6 +18,20 @@ public class JsonParser implements ResponseJsonParser {
         List<String> parsedSegments = new ArrayList<>();
         try {
             JSONObject root = new JSONObject(responseJson);
+
+            if (root.has("errors")) {
+                JSONArray errors =  root.getJSONArray("errors");
+                StringBuilder logMessage = new StringBuilder();
+                for (int i = 0; i < errors.length(); i++) {
+                    if (i > 0) {
+                        logMessage.append(", ");
+                    }
+                    logMessage.append(errors.getJSONObject(i).getString("message"));
+                }
+                logger.error(logMessage.toString());
+                return null;
+            }
+
             JSONArray edges = root.getJSONObject("data").getJSONObject("customer").getJSONObject("audiences").getJSONArray("edges");
             for (int i = 0; i < edges.length(); i++) {
                 JSONObject node = edges.getJSONObject(i).getJSONObject("node");
