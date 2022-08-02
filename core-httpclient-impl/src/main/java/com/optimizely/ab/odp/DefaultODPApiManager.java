@@ -150,7 +150,7 @@ public class DefaultODPApiManager implements ODPApiManager {
             return null;
         }
 
-        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+        if (response.getStatusLine().getStatusCode() >= 400) {
             StatusLine statusLine = response.getStatusLine();
             logger.error(String.format("Unexpected response from ODP server, Response code: %d, %s", statusLine.getStatusCode(), statusLine.getReasonPhrase()));
             closeHttpResponse(response);
