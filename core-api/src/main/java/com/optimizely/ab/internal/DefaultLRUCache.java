@@ -112,6 +112,19 @@ public class DefaultLRUCache<T> implements LRUCache<T> {
         }
     }
 
+    public T peek(String key) {
+        if (maxSize == 0) {
+            // Cache is disabled when maxSize = 0
+            return null;
+        }
+
+        if (hashMap.containsKey(key)) {
+            return hashMap.get(key).value;
+        }
+
+        return null;
+    }
+
     public void reset() {
         synchronized (lock) {
             linkedList.clear();

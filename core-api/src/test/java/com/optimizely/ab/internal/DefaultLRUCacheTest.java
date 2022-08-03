@@ -134,4 +134,38 @@ public class DefaultLRUCacheTest {
         assertEquals(1, cache.linkedList.size());
         assertEquals(1, cache.hashMap.size());
     }
+
+    @Test
+    public void saveAndPeekItems() {
+        DefaultLRUCache<List<String>> cache = new DefaultLRUCache<>();
+
+        cache.save("user1", Arrays.asList("segment1", "segment2"));
+        cache.save("user2", Arrays.asList("segment3", "segment4"));
+        cache.save("user3", Arrays.asList("segment5", "segment6"));
+
+        assertEquals("user3", cache.linkedList.get(0).key);
+        assertEquals("user2", cache.linkedList.get(1).key);
+        assertEquals("user1", cache.linkedList.get(2).key);
+
+        assertEquals(Arrays.asList("segment1", "segment2"), cache.peek("user1"));
+
+        // Peek should not alter the order of array
+        assertEquals("user3", cache.linkedList.get(0).key);
+        assertEquals("user2", cache.linkedList.get(1).key);
+        assertEquals("user1", cache.linkedList.get(2).key);
+
+        assertEquals(Arrays.asList("segment3", "segment4"), cache.peek("user2"));
+
+        // Peek should not alter the order of array
+        assertEquals("user3", cache.linkedList.get(0).key);
+        assertEquals("user2", cache.linkedList.get(1).key);
+        assertEquals("user1", cache.linkedList.get(2).key);
+
+        assertEquals(Arrays.asList("segment5", "segment6"), cache.peek("user3"));
+
+        // Peek should not alter the order of array
+        assertEquals("user3", cache.linkedList.get(0).key);
+        assertEquals("user2", cache.linkedList.get(1).key);
+        assertEquals("user1", cache.linkedList.get(2).key);
+    }
 }

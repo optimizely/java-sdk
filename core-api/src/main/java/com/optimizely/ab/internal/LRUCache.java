@@ -21,7 +21,8 @@ public interface LRUCache<T> {
     int DEFAULT_TIMEOUT_SECONDS = 600;
     void save(String key, T value);
     T lookup(String key);
+    T peek(String key);
     void reset();
     void setMaxSize(Integer size);
-    void setTimeout(Long ttlSeconds);
+    void setTimeout(Long timeoutSeconds);
 }
