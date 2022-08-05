@@ -32,6 +32,7 @@ public class DefaultLRUCache<T> implements Cache<T> {
     private Integer maxSize;
 
     private Long timeoutMillis;
+    
     @VisibleForTesting
     final LinkedHashMap<String, ItemWrapper> linkedHashMap = new LinkedHashMap<String, ItemWrapper>(16, 0.75f, true) {
         @Override
