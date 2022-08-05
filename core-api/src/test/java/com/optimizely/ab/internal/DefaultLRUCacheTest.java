@@ -16,20 +16,14 @@
  */
 package com.optimizely.ab.internal;
 
-import ch.qos.logback.classic.Level;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.Assert.*;
 
 public class DefaultLRUCacheTest {
-    @Rule
-    public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
     @Test
     public void createSaveAndLookupOneItem() {
@@ -117,8 +111,8 @@ public class DefaultLRUCacheTest {
 
     @Test
     public void whenCacheIsDisabled() {
-        DefaultLRUCache<List<String>> cache = new DefaultLRUCache<>();
-        cache.setMaxSize(0);
+        DefaultLRUCache<List<String>> cache = new DefaultLRUCache<>(0,Cache.DEFAULT_TIMEOUT_SECONDS);
+
         cache.save("user1", Arrays.asList("segment1", "segment2"));
         cache.save("user2", Arrays.asList("segment3", "segment4"));
         cache.save("user3", Arrays.asList("segment5", "segment6"));
@@ -130,8 +124,7 @@ public class DefaultLRUCacheTest {
 
     @Test
     public void whenItemsExpire() throws InterruptedException {
-        DefaultLRUCache<List<String>> cache = new DefaultLRUCache<>();
-        cache.setTimeout(1L);
+        DefaultLRUCache<List<String>> cache = new DefaultLRUCache<>(Cache.DEFAULT_MAX_SIZE, 1);
         cache.save("user1", Arrays.asList("segment1", "segment2"));
         assertEquals(Arrays.asList("segment1", "segment2"), cache.lookup("user1"));
         assertEquals(1, cache.linkedHashMap.size());
@@ -142,8 +135,7 @@ public class DefaultLRUCacheTest {
 
     @Test
     public void whenCacheReachesMaxSize() {
-        DefaultLRUCache<List<String>> cache = new DefaultLRUCache<>();
-        cache.setMaxSize(2);
+        DefaultLRUCache<List<String>> cache = new DefaultLRUCache<>(2, Cache.DEFAULT_TIMEOUT_SECONDS);
 
         cache.save("user1", Arrays.asList("segment1", "segment2"));
         cache.save("user2", Arrays.asList("segment3", "segment4"));
@@ -154,30 +146,6 @@ public class DefaultLRUCacheTest {
         assertEquals(Arrays.asList("segment5", "segment6"), cache.lookup("user3"));
         assertEquals(Arrays.asList("segment3", "segment4"), cache.lookup("user2"));
         assertNull(cache.lookup("user1"));
-    }
-
-    @Test
-    public void whenMaxSizeIsReducedInBetween() {
-        DefaultLRUCache<List<String>> cache = new DefaultLRUCache<>();
-        cache.save("user1", Arrays.asList("segment1", "segment2"));
-        cache.save("user2", Arrays.asList("segment3", "segment4"));
-        cache.save("user3", Arrays.asList("segment5", "segment6"));
-
-        assertEquals(Arrays.asList("segment1", "segment2"), cache.lookup("user1"));
-        assertEquals(Arrays.asList("segment3", "segment4"), cache.lookup("user2"));
-        assertEquals(Arrays.asList("segment5", "segment6"), cache.lookup("user3"));
-
-        assertEquals(3, cache.linkedHashMap.size());
-
-        cache.setMaxSize(1);
-
-        logbackVerifier.expectMessage(Level.WARN, "Cannot set max cache size less than current size.");
-
-        assertEquals(Arrays.asList("segment5", "segment6"), cache.lookup("user3"));
-        assertEquals(Arrays.asList("segment3", "segment4"), cache.lookup("user2"));
-        assertEquals(Arrays.asList("segment5", "segment6"), cache.lookup("user3"));
-
-        assertEquals(3, cache.linkedHashMap.size());
     }
 
     @Test

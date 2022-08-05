@@ -17,53 +17,32 @@
 package com.optimizely.ab.internal;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
-import com.optimizely.ab.config.parser.DefaultConfigParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class DefaultLRUCache<T> implements Cache<T> {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultLRUCache.class);
-
     private final Object lock = new Object();
 
-    private Integer maxSize;
+    private final Integer maxSize;
 
-    private Long timeoutMillis;
+    private final Long timeoutMillis;
     
     @VisibleForTesting
-    final LinkedHashMap<String, ItemWrapper> linkedHashMap = new LinkedHashMap<String, ItemWrapper>(16, 0.75f, true) {
+    final LinkedHashMap<String, CacheEntity> linkedHashMap = new LinkedHashMap<String, CacheEntity>(16, 0.75f, true) {
         @Override
-        protected boolean removeEldestEntry(Map.Entry<String, ItemWrapper> eldest) {
+        protected boolean removeEldestEntry(Map.Entry<String, CacheEntity> eldest) {
             return this.size() > maxSize;
         }
     };
 
     public DefaultLRUCache() {
-        this.maxSize = DEFAULT_MAX_SIZE;
-        this.timeoutMillis = (long) (DEFAULT_TIMEOUT_SECONDS * 1000);
+        this(DEFAULT_MAX_SIZE, DEFAULT_TIMEOUT_SECONDS);
     }
 
-    public void setMaxSize(Integer size) {
-        if (linkedHashMap.size() > 0) {
-            if (size >= linkedHashMap.size()) {
-                maxSize = size;
-            } else {
-                logger.warn("Cannot set max cache size less than current size.");
-            }
-        } else {
-            Integer sizeToSet = size;
-            if (size < 0) {
-                sizeToSet = 0;
-            }
-            maxSize = sizeToSet;
-        }
-    }
-
-    public void setTimeout(Long timeoutSeconds) {
-        this.timeoutMillis = timeoutSeconds * 1000;
+    public DefaultLRUCache(Integer maxSize, Integer timeoutSeconds) {
+        this.maxSize = maxSize < 0 ? 0 : maxSize;
+        this.timeoutMillis =  (timeoutSeconds < 0) ? 0 : (timeoutSeconds * 1000L);
     }
 
     public void save(String key, T value) {
@@ -73,7 +52,7 @@ public class DefaultLRUCache<T> implements Cache<T> {
         }
 
         synchronized (lock) {
-            linkedHashMap.put(key, new ItemWrapper(value));
+            linkedHashMap.put(key, new CacheEntity(value));
         }
     }
 
@@ -85,12 +64,12 @@ public class DefaultLRUCache<T> implements Cache<T> {
 
         synchronized (lock) {
             if (linkedHashMap.containsKey(key)) {
-                ItemWrapper item = linkedHashMap.get(key);
+                CacheEntity entity = linkedHashMap.get(key);
                 Long nowMs = new Date().getTime();
 
-                // ttl = 0 means items never expire.
-                if (timeoutMillis == 0 || (nowMs - item.timestamp < timeoutMillis)) {
-                    return item.value;
+                // ttl = 0 means entities never expire.
+                if (timeoutMillis == 0 || (nowMs - entity.timestamp < timeoutMillis)) {
+                    return entity.value;
                 }
 
                 linkedHashMap.remove(key);
@@ -105,11 +84,11 @@ public class DefaultLRUCache<T> implements Cache<T> {
         }
     }
 
-    private class ItemWrapper {
+    private class CacheEntity {
         public T value;
         public Long timestamp;
 
-        public ItemWrapper(T value) {
+        public CacheEntity(T value) {
             this.value = value;
             this.timestamp = new Date().getTime();
         }
