@@ -17,20 +17,28 @@
 package com.optimizely.ab.internal;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.config.parser.DefaultConfigParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public class DefaultLRUCache<T> implements LRUCache<T> {
+public class DefaultLRUCache<T> implements Cache<T> {
+
+    private static final Logger logger = LoggerFactory.getLogger(DefaultLRUCache.class);
 
     private final Object lock = new Object();
 
     private Integer maxSize;
 
     private Long timeoutMillis;
-
-    final LinkedList<ItemWrapper> linkedList = new LinkedList<>();
-
-    final Map<String, ItemWrapper> hashMap = new HashMap<>();
+    @VisibleForTesting
+    final LinkedHashMap<String, ItemWrapper> linkedHashMap = new LinkedHashMap<String, ItemWrapper>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, ItemWrapper> eldest) {
+            return this.size() > maxSize;
+        }
+    };
 
     public DefaultLRUCache() {
         this.maxSize = DEFAULT_MAX_SIZE;
@@ -38,21 +46,18 @@ public class DefaultLRUCache<T> implements LRUCache<T> {
     }
 
     public void setMaxSize(Integer size) {
-        Integer sizeToSet = size;
-        if (size < 0 ) {
-            sizeToSet = DEFAULT_MAX_SIZE;
-        }
-
-        synchronized (lock) {
-            if (linkedList.size() > sizeToSet) {
-                // If cache is bigger than the new maxSize, remove additional items from the end.
-                int itemsToTrim = linkedList.size() - sizeToSet;
-                for (int i = 0; i < itemsToTrim; i++) {
-                    ItemWrapper item = linkedList.removeLast();
-                    hashMap.remove(item.key);
-                }
+        if (linkedHashMap.size() > 0) {
+            if (size >= linkedHashMap.size()) {
+                maxSize = size;
+            } else {
+                logger.warn("Cannot set max cache size less than current size.");
             }
-            this.maxSize = sizeToSet;
+        } else {
+            Integer sizeToSet = size;
+            if (size < 0) {
+                sizeToSet = 0;
+            }
+            maxSize = sizeToSet;
         }
     }
 
@@ -65,24 +70,9 @@ public class DefaultLRUCache<T> implements LRUCache<T> {
             // Cache is disabled when maxSize = 0
             return;
         }
+
         synchronized (lock) {
-            ItemWrapper item = new ItemWrapper(key, value);
-
-            if (hashMap.containsKey(key)) {
-                ItemWrapper oldItem = hashMap.get(key);
-                linkedList.remove(oldItem);
-                linkedList.addFirst(item);
-                hashMap.replace(key, item);
-                return;
-            }
-
-            if (linkedList.size() == maxSize) {
-                ItemWrapper removedItem = linkedList.removeLast();
-                hashMap.remove(removedItem.key);
-            }
-
-            linkedList.addFirst(item);
-            hashMap.put(key, item);
+            linkedHashMap.put(key, new ItemWrapper(value));
         }
     }
 
@@ -93,53 +83,32 @@ public class DefaultLRUCache<T> implements LRUCache<T> {
         }
 
         synchronized (lock) {
-            if (hashMap.containsKey(key)) {
-                ItemWrapper item = hashMap.get(key);
+            if (linkedHashMap.containsKey(key)) {
+                ItemWrapper item = linkedHashMap.get(key);
                 Long nowMs = new Date().getTime();
 
                 // ttl = 0 means items never expire.
                 if (timeoutMillis == 0 || (nowMs - item.timestamp < timeoutMillis)) {
-                    linkedList.remove(item);
-                    linkedList.addFirst(item);
                     return item.value;
                 }
 
-                // If item is stale, remove it.
-                linkedList.remove(item);
-                hashMap.remove(item.key);
+                linkedHashMap.remove(key);
             }
             return null;
         }
     }
 
-    public T peek(String key) {
-        if (maxSize == 0) {
-            // Cache is disabled when maxSize = 0
-            return null;
-        }
-
-        if (hashMap.containsKey(key)) {
-            return hashMap.get(key).value;
-        }
-
-        return null;
-    }
-
     public void reset() {
         synchronized (lock) {
-            linkedList.clear();
-            hashMap.clear();
+            linkedHashMap.clear();
         }
     }
 
-    @VisibleForTesting
-    class ItemWrapper {
-        public String key;
+    private class ItemWrapper {
         public T value;
         public Long timestamp;
 
-        public ItemWrapper(String key, T value) {
-            this.key = key;
+        public ItemWrapper(T value) {
             this.value = value;
             this.timestamp = new Date().getTime();
         }

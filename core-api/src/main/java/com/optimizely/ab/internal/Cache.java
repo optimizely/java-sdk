@@ -16,12 +16,11 @@
  */
 package com.optimizely.ab.internal;
 
-public interface LRUCache<T> {
+public interface Cache<T> {
     int DEFAULT_MAX_SIZE = 10000;
     int DEFAULT_TIMEOUT_SECONDS = 600;
     void save(String key, T value);
     T lookup(String key);
-    T peek(String key);
     void reset();
     void setMaxSize(Integer size);
     void setTimeout(Long timeoutSeconds);

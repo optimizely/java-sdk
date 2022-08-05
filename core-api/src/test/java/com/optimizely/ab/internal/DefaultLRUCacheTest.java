@@ -16,18 +16,24 @@
  */
 package com.optimizely.ab.internal;
 
+import ch.qos.logback.classic.Level;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
 public class DefaultLRUCacheTest {
+    @Rule
+    public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
     @Test
     public void createSaveAndLookupOneItem() {
-        LRUCache<String> cache = new DefaultLRUCache<>();
+        Cache<String> cache = new DefaultLRUCache<>();
         assertNull(cache.lookup("key1"));
         cache.save("key1", "value1");
         assertEquals("value1", cache.lookup("key1"));
@@ -41,30 +47,34 @@ public class DefaultLRUCacheTest {
         cache.save("user2", Arrays.asList("segment3", "segment4"));
         cache.save("user3", Arrays.asList("segment5", "segment6"));
 
-        assertEquals("user3", cache.linkedList.get(0).key);
-        assertEquals("user2", cache.linkedList.get(1).key);
-        assertEquals("user1", cache.linkedList.get(2).key);
+        String[] itemKeys = cache.linkedHashMap.keySet().toArray(new String[0]);
+        assertEquals("user1", itemKeys[0]);
+        assertEquals("user2", itemKeys[1]);
+        assertEquals("user3", itemKeys[2]);
 
         assertEquals(Arrays.asList("segment1", "segment2"), cache.lookup("user1"));
 
-        // Lookup should move user1 to top of the list and push down others.
-        assertEquals("user1", cache.linkedList.get(0).key);
-        assertEquals("user3", cache.linkedList.get(1).key);
-        assertEquals("user2", cache.linkedList.get(2).key);
+        itemKeys = cache.linkedHashMap.keySet().toArray(new String[0]);
+        // Lookup should move user1 to bottom of the list and push up others.
+        assertEquals("user2", itemKeys[0]);
+        assertEquals("user3", itemKeys[1]);
+        assertEquals("user1", itemKeys[2]);
 
         assertEquals(Arrays.asList("segment3", "segment4"), cache.lookup("user2"));
 
-        // Lookup should move user2 to top of the list and push down others.
-        assertEquals("user2", cache.linkedList.get(0).key);
-        assertEquals("user1", cache.linkedList.get(1).key);
-        assertEquals("user3", cache.linkedList.get(2).key);
+        itemKeys = cache.linkedHashMap.keySet().toArray(new String[0]);
+        // Lookup should move user2 to bottom of the list and push up others.
+        assertEquals("user3", itemKeys[0]);
+        assertEquals("user1", itemKeys[1]);
+        assertEquals("user2", itemKeys[2]);
 
         assertEquals(Arrays.asList("segment5", "segment6"), cache.lookup("user3"));
 
-        // Lookup should move user3 to top of the list and push down others.
-        assertEquals("user3", cache.linkedList.get(0).key);
-        assertEquals("user2", cache.linkedList.get(1).key);
-        assertEquals("user1", cache.linkedList.get(2).key);
+        itemKeys = cache.linkedHashMap.keySet().toArray(new String[0]);
+        // Lookup should move user3 to bottom of the list and push up others.
+        assertEquals("user1", itemKeys[0]);
+        assertEquals("user2", itemKeys[1]);
+        assertEquals("user3", itemKeys[2]);
     }
 
     @Test
@@ -86,12 +96,10 @@ public class DefaultLRUCacheTest {
         cache.setTimeout(1L);
         cache.save("user1", Arrays.asList("segment1", "segment2"));
         assertEquals(Arrays.asList("segment1", "segment2"), cache.lookup("user1"));
-        assertEquals(1, cache.linkedList.size());
-        assertEquals(1, cache.hashMap.size());
+        assertEquals(1, cache.linkedHashMap.size());
         Thread.sleep(1000);
         assertNull(cache.lookup("user1"));
-        assertEquals(0, cache.linkedList.size());
-        assertEquals(0, cache.hashMap.size());
+        assertEquals(0, cache.linkedHashMap.size());
     }
 
     @Test
@@ -103,8 +111,7 @@ public class DefaultLRUCacheTest {
         cache.save("user2", Arrays.asList("segment3", "segment4"));
         cache.save("user3", Arrays.asList("segment5", "segment6"));
 
-        assertEquals(2, cache.linkedList.size());
-        assertEquals(2, cache.hashMap.size());
+        assertEquals(2, cache.linkedHashMap.size());
 
         assertEquals(Arrays.asList("segment5", "segment6"), cache.lookup("user3"));
         assertEquals(Arrays.asList("segment3", "segment4"), cache.lookup("user2"));
@@ -122,50 +129,38 @@ public class DefaultLRUCacheTest {
         assertEquals(Arrays.asList("segment3", "segment4"), cache.lookup("user2"));
         assertEquals(Arrays.asList("segment5", "segment6"), cache.lookup("user3"));
 
-        assertEquals(3, cache.linkedList.size());
-        assertEquals(3, cache.hashMap.size());
+        assertEquals(3, cache.linkedHashMap.size());
 
         cache.setMaxSize(1);
 
-        assertEquals(Arrays.asList("segment5", "segment6"), cache.lookup("user3"));
-        assertNull(cache.lookup("user1"));
-        assertNull(cache.lookup("user2"));
+        logbackVerifier.expectMessage(Level.WARN, "Cannot set max cache size less than current size.");
 
-        assertEquals(1, cache.linkedList.size());
-        assertEquals(1, cache.hashMap.size());
+        assertEquals(Arrays.asList("segment5", "segment6"), cache.lookup("user3"));
+        assertEquals(Arrays.asList("segment3", "segment4"), cache.lookup("user2"));
+        assertEquals(Arrays.asList("segment5", "segment6"), cache.lookup("user3"));
+
+        assertEquals(3, cache.linkedHashMap.size());
     }
 
     @Test
-    public void saveAndPeekItems() {
+    public void whenCacheIsReset() {
         DefaultLRUCache<List<String>> cache = new DefaultLRUCache<>();
-
         cache.save("user1", Arrays.asList("segment1", "segment2"));
         cache.save("user2", Arrays.asList("segment3", "segment4"));
         cache.save("user3", Arrays.asList("segment5", "segment6"));
 
-        assertEquals("user3", cache.linkedList.get(0).key);
-        assertEquals("user2", cache.linkedList.get(1).key);
-        assertEquals("user1", cache.linkedList.get(2).key);
+        assertEquals(Arrays.asList("segment1", "segment2"), cache.lookup("user1"));
+        assertEquals(Arrays.asList("segment3", "segment4"), cache.lookup("user2"));
+        assertEquals(Arrays.asList("segment5", "segment6"), cache.lookup("user3"));
 
-        assertEquals(Arrays.asList("segment1", "segment2"), cache.peek("user1"));
+        assertEquals(3, cache.linkedHashMap.size());
 
-        // Peek should not alter the order of array
-        assertEquals("user3", cache.linkedList.get(0).key);
-        assertEquals("user2", cache.linkedList.get(1).key);
-        assertEquals("user1", cache.linkedList.get(2).key);
+        cache.reset();
 
-        assertEquals(Arrays.asList("segment3", "segment4"), cache.peek("user2"));
+        assertNull(cache.lookup("user1"));
+        assertNull(cache.lookup("user2"));
+        assertNull(cache.lookup("user3"));
 
-        // Peek should not alter the order of array
-        assertEquals("user3", cache.linkedList.get(0).key);
-        assertEquals("user2", cache.linkedList.get(1).key);
-        assertEquals("user1", cache.linkedList.get(2).key);
-
-        assertEquals(Arrays.asList("segment5", "segment6"), cache.peek("user3"));
-
-        // Peek should not alter the order of array
-        assertEquals("user3", cache.linkedList.get(0).key);
-        assertEquals("user2", cache.linkedList.get(1).key);
-        assertEquals("user1", cache.linkedList.get(2).key);
+        assertEquals(0, cache.linkedHashMap.size());
     }
 }
