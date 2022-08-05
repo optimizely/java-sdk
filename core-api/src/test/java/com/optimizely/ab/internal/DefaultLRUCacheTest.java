@@ -78,6 +78,44 @@ public class DefaultLRUCacheTest {
     }
 
     @Test
+    public void saveShouldReorderList() {
+        DefaultLRUCache<List<String>> cache = new DefaultLRUCache<>();
+
+        cache.save("user1", Arrays.asList("segment1", "segment2"));
+        cache.save("user2", Arrays.asList("segment3", "segment4"));
+        cache.save("user3", Arrays.asList("segment5", "segment6"));
+
+        String[] itemKeys = cache.linkedHashMap.keySet().toArray(new String[0]);
+        assertEquals("user1", itemKeys[0]);
+        assertEquals("user2", itemKeys[1]);
+        assertEquals("user3", itemKeys[2]);
+
+        cache.save("user1", Arrays.asList("segment1", "segment2"));
+
+        itemKeys = cache.linkedHashMap.keySet().toArray(new String[0]);
+        // save should move user1 to bottom of the list and push up others.
+        assertEquals("user2", itemKeys[0]);
+        assertEquals("user3", itemKeys[1]);
+        assertEquals("user1", itemKeys[2]);
+
+        cache.save("user2", Arrays.asList("segment3", "segment4"));
+
+        itemKeys = cache.linkedHashMap.keySet().toArray(new String[0]);
+        // save should move user2 to bottom of the list and push up others.
+        assertEquals("user3", itemKeys[0]);
+        assertEquals("user1", itemKeys[1]);
+        assertEquals("user2", itemKeys[2]);
+
+        cache.save("user3", Arrays.asList("segment5", "segment6"));
+
+        itemKeys = cache.linkedHashMap.keySet().toArray(new String[0]);
+        // save should move user3 to bottom of the list and push up others.
+        assertEquals("user1", itemKeys[0]);
+        assertEquals("user2", itemKeys[1]);
+        assertEquals("user3", itemKeys[2]);
+    }
+
+    @Test
     public void whenCacheIsDisabled() {
         DefaultLRUCache<List<String>> cache = new DefaultLRUCache<>();
         cache.setMaxSize(0);
