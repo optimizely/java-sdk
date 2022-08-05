@@ -41,7 +41,7 @@ public class DefaultLRUCache<T> implements Cache<T> {
     }
 
     public DefaultLRUCache(Integer maxSize, Integer timeoutSeconds) {
-        this.maxSize = maxSize < 0 ? 0 : maxSize;
+        this.maxSize = maxSize < 0 ? Integer.valueOf(0) : maxSize;
         this.timeoutMillis =  (timeoutSeconds < 0) ? 0 : (timeoutSeconds * 1000L);
     }
 
