@@ -38,7 +38,7 @@ import static com.optimizely.ab.config.audience.AttributeType.THIRD_PARTY_DIMENS
  */
 @Immutable
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UserAttribute<T> implements Condition<T> {
+public class UserAttribute<T> extends LeafCondition<T> {
     public static final String QUALIFIED = "qualified";
 
     private static final Logger logger = LoggerFactory.getLogger(UserAttribute.class);

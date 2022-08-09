@@ -74,6 +74,7 @@ public class DatafileProjectConfig implements ProjectConfig {
     private final List<Group> groups;
     private final List<Rollout> rollouts;
     private final List<Integration> integrations;
+    private final Set<String> allSegments;
 
     // key to entity mappings
     private final Map<String, Attribute> attributeKeyMapping;
@@ -203,6 +204,15 @@ public class DatafileProjectConfig implements ProjectConfig {
 
         this.publicKeyForODP = publicKeyForODP;
         this.hostForODP = hostForODP;
+
+        Set<String> allSegments = new HashSet<>();
+        if (typedAudiences != null) {
+            for(Audience audience: typedAudiences) {
+                allSegments.addAll(audience.getSegments());
+            }
+        }
+
+        this.allSegments = allSegments;
 
         Map<String, Experiment> variationIdToExperimentMap = new HashMap<String, Experiment>();
         for (Experiment experiment : this.experiments) {

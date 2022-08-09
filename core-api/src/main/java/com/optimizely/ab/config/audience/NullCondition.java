@@ -21,7 +21,7 @@ import com.optimizely.ab.config.ProjectConfig;
 import javax.annotation.Nullable;
 import java.util.Map;
 
-public class NullCondition<T> implements Condition<T> {
+public class NullCondition<T> extends LeafCondition<T> {
     @Nullable
     @Override
     public Boolean evaluate(ProjectConfig config, OptimizelyUserContext user) {

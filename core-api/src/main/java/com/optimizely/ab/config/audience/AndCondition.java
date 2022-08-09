@@ -38,6 +38,7 @@ public class AndCondition<T> implements Condition<T> {
         this.conditions = conditions;
     }
 
+    @Override
     public List<Condition> getConditions() {
         return conditions;
     }

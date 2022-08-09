@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -95,6 +96,11 @@ public class AudienceIdCondition<T> implements Condition<T> {
             (audience.getId().equals(condition.audience != null ? condition.audience.getId() : null))) &&
             ((audienceId == null) ? (null == condition.audienceId) :
                 (audienceId.equals(condition.audienceId)));
+    }
+
+    @Override
+    public List<Condition> getConditions() {
+        return null;
     }
 
     @Override

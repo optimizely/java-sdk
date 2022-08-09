@@ -22,6 +22,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.config.IdKeyMapped;
 
 import javax.annotation.concurrent.Immutable;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Represents the Optimizely Audience configuration.
@@ -68,5 +71,28 @@ public class Audience implements IdKeyMapped {
             ", name='" + name + '\'' +
             ", conditions=" + conditions +
             '}';
+    }
+
+    public Set<String> getSegments() {
+        return getSegments(conditions);
+    }
+
+    private static Set<String> getSegments(Condition conditions) {
+        List<Condition> nestedConditions = conditions.getConditions();
+        Set<String> segments = new HashSet<>();
+        if (nestedConditions != null) {
+            for (Condition nestedCondition : nestedConditions) {
+                Set<String> nestedSegments = getSegments(nestedCondition);
+                segments.addAll(nestedSegments);
+            }
+        } else {
+            if (conditions.getClass() == UserAttribute.class) {
+                UserAttribute userAttributeCondition = (UserAttribute) conditions;
+                if (UserAttribute.QUALIFIED.equals(userAttributeCondition.getMatch())) {
+                    segments.add((String)userAttributeCondition.getValue());
+                }
+            }
+        }
+        return segments;
     }
 }
