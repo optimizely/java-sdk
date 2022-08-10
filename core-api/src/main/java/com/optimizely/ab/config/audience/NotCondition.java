@@ -22,6 +22,8 @@ import com.optimizely.ab.config.ProjectConfig;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.Nonnull;
+import java.util.Arrays;
+import java.util.List;
 
 
 /**
@@ -39,6 +41,11 @@ public class NotCondition<T> implements Condition<T> {
 
     public Condition getCondition() {
         return condition;
+    }
+
+    @Override
+    public List<Condition> getConditions() {
+        return Arrays.asList(condition);
     }
 
     @Nullable

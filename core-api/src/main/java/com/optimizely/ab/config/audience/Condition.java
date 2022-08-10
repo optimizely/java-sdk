@@ -20,6 +20,7 @@ import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.ProjectConfig;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,4 +34,6 @@ public interface Condition<T> {
     String toJson();
 
     String getOperandOrId();
+
+    List<Condition> getConditions();
 }

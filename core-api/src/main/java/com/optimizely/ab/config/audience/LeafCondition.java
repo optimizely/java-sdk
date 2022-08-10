@@ -1,5 +1,5 @@
 /**
- *    Copyright 2019, 2022, Optimizely Inc. and contributors
+ *    Copyright 2022, Optimizely Inc. and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,24 +15,12 @@
  */
 package com.optimizely.ab.config.audience;
 
-import com.optimizely.ab.OptimizelyUserContext;
-import com.optimizely.ab.config.ProjectConfig;
+import java.util.List;
 
-import javax.annotation.Nullable;
-import java.util.Map;
-
-public class NullCondition<T> extends LeafCondition<T> {
-    @Nullable
-    @Override
-    public Boolean evaluate(ProjectConfig config, OptimizelyUserContext user) {
-        return null;
-    }
+public abstract class LeafCondition<T> implements Condition<T> {
 
     @Override
-    public String toJson() { return null; }
-
-    @Override
-    public String getOperandOrId() {
+    public List<Condition> getConditions() {
         return null;
     }
 }
