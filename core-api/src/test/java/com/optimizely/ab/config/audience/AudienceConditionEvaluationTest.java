@@ -1840,4 +1840,40 @@ public class AudienceConditionEvaluationTest {
         assertNull(nullValueAttribute.evaluate(null, OTUtils.user(Collections.singletonMap(attributeName, attributeValue))));
         assertNull(nullValueAttribute.evaluate(null, OTUtils.user((Collections.singletonMap(attributeName, "")))));
     }
+
+    @Test
+    public void getAllSegmentsFromAudience() {
+        Condition condition = createMultipleConditionAudienceAndOrODP();
+        Audience audience = new Audience("1", "testAudience", condition);
+        assertEquals(new HashSet<>(Arrays.asList("odp-segment-1", "odp-segment-2", "odp-segment-3", "odp-segment-4")), audience.getSegments());
+
+        // ["and", "1", "2"]
+        List<Condition> audience1And2 = new ArrayList<>();
+        audience1And2.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-1"));
+        audience1And2.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-2"));
+        AndCondition audienceCondition1 = new AndCondition(audience1And2);
+
+        // ["and", "3", "4"]
+        List<Condition> audience3And4 = new ArrayList<>();
+        audience3And4.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-3"));
+        audience3And4.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-4"));
+        AndCondition audienceCondition2 = new AndCondition(audience3And4);
+
+        // ["or", "5", "6"]
+        List<Condition> audience5And6 = new ArrayList<>();
+        audience5And6.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-5"));
+        audience5And6.add(new UserAttribute("odp.audiences", "third_party_dimension", "qualified", "odp-segment-6"));
+        OrCondition audienceCondition3 = new OrCondition(audience5And6);
+
+
+        //['or', '1', '2', '3']
+        List<Condition> conditions = new ArrayList<>();
+        conditions.add(audienceCondition1);
+        conditions.add(audienceCondition2);
+        conditions.add(audienceCondition3);
+
+        OrCondition implicitOr = new OrCondition(conditions);
+        audience = new Audience("1", "testAudience", implicitOr);
+        assertEquals(new HashSet<>(Arrays.asList("odp-segment-1", "odp-segment-2", "odp-segment-3", "odp-segment-4", "odp-segment-5", "odp-segment-6")), audience.getSegments());
+    }
 }
