@@ -434,6 +434,10 @@ public class DatafileProjectConfig implements ProjectConfig {
         return experiments;
     }
 
+    public Set<String> getAllSegments() {
+        return this.allSegments;
+    }
+
     @Override
     public List<Experiment> getExperimentsForEventKey(String eventKey) {
         EventType event = eventNameMapping.get(eventKey);
