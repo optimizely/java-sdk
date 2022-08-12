@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2021, Optimizely and contributors
+ *    Copyright 2016-2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -83,6 +83,8 @@ public interface ProjectConfig {
 
     List<Audience> getTypedAudiences();
 
+    List<Integration> getIntegrations();
+
     Audience getAudience(String audienceId);
 
     Map<String, Experiment> getExperimentKeyMapping();
@@ -104,6 +106,12 @@ public interface ProjectConfig {
     Map<String, List<String>> getExperimentFeatureKeyMapping();
 
     Map<String, List<Variation>> getFlagVariationsMap();
+
+    Variation getFlagVariationByKey(String flagKey, String variationKey);
+
+    String getHostForODP();
+
+    String getPublicKeyForODP();
 
     @Override
     String toString();

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2020, Optimizely and contributors
+ *    Copyright 2016-2020, 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package com.optimizely.ab.config.audience;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.match.*;
 import org.slf4j.Logger;
@@ -27,22 +28,25 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
+
+import static com.optimizely.ab.config.audience.AttributeType.CUSTOM_ATTRIBUTE;
+import static com.optimizely.ab.config.audience.AttributeType.THIRD_PARTY_DIMENSION;
 
 /**
  * Represents a user attribute instance within an audience's conditions.
  */
 @Immutable
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UserAttribute<T> implements Condition<T> {
+public class UserAttribute<T> extends LeafCondition<T> {
+    public static final String QUALIFIED = "qualified";
 
     private static final Logger logger = LoggerFactory.getLogger(UserAttribute.class);
     private final String name;
     private final String type;
     private final String match;
     private final Object value;
-
+    private final static List ATTRIBUTE_TYPE = Arrays.asList(new String[]{CUSTOM_ATTRIBUTE.toString(), THIRD_PARTY_DIMENSION.toString()});
     @JsonCreator
     public UserAttribute(@JsonProperty("name") @Nonnull String name,
                          @JsonProperty("type") @Nonnull String type,
@@ -71,19 +75,25 @@ public class UserAttribute<T> implements Condition<T> {
     }
 
     @Nullable
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
-        if (attributes == null) {
-            attributes = Collections.emptyMap();
-        }
+    public Boolean evaluate(ProjectConfig config, OptimizelyUserContext user) {
+        Map<String,Object> attributes = user.getAttributes();
         // Valid for primitive types, but needs to change when a value is an object or an array
         Object userAttributeValue = attributes.get(name);
 
-        if (!"custom_attribute".equals(type)) {
+        if (!isValidType(type)) {
             logger.warn("Audience condition \"{}\" uses an unknown condition type. You may need to upgrade to a newer release of the Optimizely SDK.", this);
             return null; // unknown type
         }
         // check user attribute value is equal
         try {
+            // Handle qualified segments
+            if (QUALIFIED.equals(match)) {
+                if (value instanceof String) {
+                    return user.isQualifiedFor(value.toString());
+                }
+                throw new UnknownValueTypeException();
+            }
+            // Handle other conditions
             Match matcher = MatchRegistry.getMatch(match);
             Boolean result = matcher.eval(value, userAttributeValue);
             if (result == null) {
@@ -116,6 +126,13 @@ public class UserAttribute<T> implements Condition<T> {
             logger.error("attribute or value null for match {}", match != null ? match : "legacy condition", e);
         }
         return null;
+    }
+
+    private boolean isValidType(String type) {
+        if (ATTRIBUTE_TYPE.contains(type)) {
+            return true;
+        }
+        return false;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2016-2020, Optimizely, Inc. and contributors                   *
+ * Copyright 2016-2022, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -4660,7 +4660,7 @@ public class OptimizelyTest {
         String flagKey = "double_single_variable_feature";
         String variationKey = "pi_variation";
         Optimizely optimizely = Optimizely.builder().withDatafile(validConfigJsonV4()).build();
-        Variation variation = optimizely.getFlagVariationByKey(flagKey, variationKey);
+        Variation variation = optimizely.getProjectConfig().getFlagVariationByKey(flagKey, variationKey);
 
         assertNotNull(variation);
         assertEquals(variationKey, variation.getKey());

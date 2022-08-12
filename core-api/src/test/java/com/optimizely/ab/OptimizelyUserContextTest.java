@@ -1484,44 +1484,6 @@ public class OptimizelyUserContextTest {
         assertTrue(optimizelyUserContext.removeAllForcedDecisions());
     }
 
-
-    @Test
-    public void findValidatedForcedDecisionWithRuleKey() {
-        String ruleKey = "77777";
-        String flagKey = "feature_2";
-        String variationKey = "variation_no_traffic";
-        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
-            optimizely,
-            userId,
-            Collections.emptyMap());
-
-        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
-        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
-
-        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
-        DecisionResponse<Variation> response = optimizelyUserContext.findValidatedForcedDecision(optimizelyDecisionContext);
-        Variation variation = response.getResult();
-        assertEquals(variationKey, variation.getKey());
-    }
-
-    @Test
-    public void findValidatedForcedDecisionWithoutRuleKey() {
-        String flagKey = "feature_2";
-        String variationKey = "variation_no_traffic";
-        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
-            optimizely,
-            userId,
-            Collections.emptyMap());
-
-        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
-        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
-
-        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
-        DecisionResponse<Variation> response = optimizelyUserContext.findValidatedForcedDecision(optimizelyDecisionContext);
-        Variation variation = response.getResult();
-        assertEquals(variationKey, variation.getKey());
-    }
-
     @Test
     public void setForcedDecisionsAndCallDecide() {
         String flagKey = "feature_2";

@@ -19,6 +19,7 @@ package com.optimizely.ab.notification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,7 +34,7 @@ public class NotificationManager<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationManager.class);
 
-    private final Map<Integer, NotificationHandler<T>> handlers = new LinkedHashMap<>();
+    private final Map<Integer, NotificationHandler<T>> handlers = Collections.synchronizedMap(new LinkedHashMap<>());
     private final AtomicInteger counter;
 
     public NotificationManager() {
@@ -47,10 +48,12 @@ public class NotificationManager<T> {
     public int addHandler(NotificationHandler<T> newHandler) {
 
         // Prevent registering a duplicate listener.
-        for (NotificationHandler<T> handler: handlers.values()) {
-            if (handler.equals(newHandler)) {
-                logger.warn("Notification listener was already added");
-                return -1;
+        synchronized (handlers) {
+            for (NotificationHandler<T> handler : handlers.values()) {
+                if (handler.equals(newHandler)) {
+                    logger.warn("Notification listener was already added");
+                    return -1;
+                }
             }
         }
 
@@ -61,11 +64,13 @@ public class NotificationManager<T> {
     }
 
     public void send(final T message) {
-        for (Map.Entry<Integer, NotificationHandler<T>> handler: handlers.entrySet()) {
-            try {
-                handler.getValue().handle(message);
-            } catch (Exception e) {
-                logger.warn("Catching exception sending notification for class: {}, handler: {}", message.getClass(), handler.getKey());
+        synchronized (handlers) {
+            for (Map.Entry<Integer, NotificationHandler<T>> handler: handlers.entrySet()) {
+                try {
+                    handler.getValue().handle(message);
+                } catch (Exception e) {
+                    logger.warn("Catching exception sending notification for class: {}, handler: {}", message.getClass(), handler.getKey());
+                }
             }
         }
     }

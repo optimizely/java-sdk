@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2016-2021, Optimizely, Inc. and contributors                   *
+ * Copyright 2016-2022, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -25,10 +25,7 @@ import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.*;
-import com.optimizely.ab.event.internal.ClientEngineInfo;
-import com.optimizely.ab.event.internal.EventFactory;
-import com.optimizely.ab.event.internal.UserEvent;
-import com.optimizely.ab.event.internal.UserEventFactory;
+import com.optimizely.ab.event.internal.*;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.notification.*;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
@@ -1185,7 +1182,7 @@ public class Optimizely implements AutoCloseable {
 
         // Check Forced Decision
         OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flag.getKey(), null);
-        DecisionResponse<Variation> forcedDecisionVariation = user.findValidatedForcedDecision(optimizelyDecisionContext);
+        DecisionResponse<Variation> forcedDecisionVariation = decisionService.validatedForcedDecision(optimizelyDecisionContext, projectConfig, user);
         decisionReasons.merge(forcedDecisionVariation.getReasons());
         if (forcedDecisionVariation.getResult() != null) {
             flagDecision = new FeatureDecision(null, forcedDecisionVariation.getResult(), FeatureDecision.DecisionSource.FEATURE_TEST);
@@ -1345,26 +1342,6 @@ public class Optimizely implements AutoCloseable {
     }
 
     /**
-     *  Gets a variation based on flagKey and variationKey
-     *
-     * @param flagKey The flag key for the variation
-     * @param variationKey The variation key for the variation
-     * @return Returns a variation based on flagKey and variationKey, otherwise null
-     */
-    public Variation getFlagVariationByKey(String flagKey, String variationKey) {
-        Map<String, List<Variation>> flagVariationsMap = getProjectConfig().getFlagVariationsMap();
-        if (flagVariationsMap.containsKey(flagKey)) {
-            List<Variation> variations = flagVariationsMap.get(flagKey);
-            for (Variation variation : variations) {
-                if (variation.getKey().equals(variationKey)) {
-                    return variation;
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
      * Helper method which makes separate copy of attributesMap variable and returns it
      *
      * @param attributes map to copy
@@ -1509,7 +1486,7 @@ public class Optimizely implements AutoCloseable {
         }
 
         /**
-         * The withEventHandler has has been moved to the EventProcessor which takes a EventHandler in it's builder
+         * The withEventHandler has been moved to the EventProcessor which takes a EventHandler in it's builder
          * method.
          * {@link com.optimizely.ab.event.BatchEventProcessor.Builder#withEventHandler(com.optimizely.ab.event.EventHandler)}  label}
          * Please use that builder method instead.
@@ -1536,6 +1513,19 @@ public class Optimizely implements AutoCloseable {
 
         public Builder withUserProfileService(UserProfileService userProfileService) {
             this.userProfileService = userProfileService;
+            return this;
+        }
+
+        /**
+         * Override the SDK name and version (for client SDKs like android-sdk wrapping the core java-sdk) to be included in events.
+         *
+         * @param clientEngine the client engine type.
+         * @param clientVersion the client SDK version.
+         * @return An Optimizely builder
+         */
+        public Builder withClientInfo(EventBatch.ClientEngine clientEngine, String clientVersion) {
+            ClientEngineInfo.setClientEngine(clientEngine);
+            BuildVersionInfo.setClientVersion(clientVersion);
             return this;
         }
 

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2020, Optimizely and contributors
+ *    Copyright 2016-2020, 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -157,7 +157,7 @@ public class EventFactoryTest {
         assertThat(eventBatch.getAccountId(), is(validProjectConfig.getAccountId()));
         assertThat(eventBatch.getVisitors().get(0).getAttributes(), is(expectedUserFeatures));
         assertThat(eventBatch.getClientName(), is(EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue()));
-        assertThat(eventBatch.getClientVersion(), is(BuildVersionInfo.VERSION));
+        assertThat(eventBatch.getClientVersion(), is(BuildVersionInfo.getClientVersion()));
         assertNull(eventBatch.getVisitors().get(0).getSessionId());
     }
 
@@ -224,7 +224,7 @@ public class EventFactoryTest {
         assertThat(eventBatch.getAccountId(), is(validProjectConfig.getAccountId()));
         assertThat(eventBatch.getVisitors().get(0).getAttributes(), is(expectedUserFeatures));
         assertThat(eventBatch.getClientName(), is(EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue()));
-        assertThat(eventBatch.getClientVersion(), is(BuildVersionInfo.VERSION));
+        assertThat(eventBatch.getClientVersion(), is(BuildVersionInfo.getClientVersion()));
         assertNull(eventBatch.getVisitors().get(0).getSessionId());
     }
 
@@ -649,7 +649,7 @@ public class EventFactoryTest {
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
         assertTrue(conversion.getEnrichDecisions());
         assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
-        assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
+        assertEquals(conversion.getClientVersion(), BuildVersionInfo.getClientVersion());
     }
 
     /**
@@ -717,7 +717,7 @@ public class EventFactoryTest {
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
         assertTrue(conversion.getEnrichDecisions());
         assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
-        assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
+        assertEquals(conversion.getClientVersion(), BuildVersionInfo.getClientVersion());
     }
 
     /**
@@ -961,7 +961,7 @@ public class EventFactoryTest {
 
         assertThat(impression.getVisitors().get(0).getAttributes(), is(expectedUserFeatures));
         assertThat(impression.getClientName(), is(EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue()));
-        assertThat(impression.getClientVersion(), is(BuildVersionInfo.VERSION));
+        assertThat(impression.getClientVersion(), is(BuildVersionInfo.getClientVersion()));
         assertNull(impression.getVisitors().get(0).getSessionId());
     }
 
@@ -1034,7 +1034,7 @@ public class EventFactoryTest {
         assertEquals(conversion.getAnonymizeIp(), validProjectConfig.getAnonymizeIP());
         assertTrue(conversion.getEnrichDecisions());
         assertEquals(conversion.getClientName(), EventBatch.ClientEngine.JAVA_SDK.getClientEngineValue());
-        assertEquals(conversion.getClientVersion(), BuildVersionInfo.VERSION);
+        assertEquals(conversion.getClientVersion(), BuildVersionInfo.getClientVersion());
     }
 
 

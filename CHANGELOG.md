@@ -1,5 +1,32 @@
 # Optimizely Java X SDK Changelog
 
+## [3.10.2]
+March 17th, 2022
+
+### Fixes
+
+- For some audience condition matchers (semantic-version, le, or ge), SDK logs WARNING messages when the attribute value is missing. This is fixed down to the DEBUG level to be consistent with other condition matchers ([#463](https://github.com/optimizely/java-sdk/pull/463)).
+- Add an option to specify the client-engine version (android-sdk, etc) in the Optimizely builder ([#466](https://github.com/optimizely/java-sdk/pull/466)).
+
+
+## [3.10.1]
+February 3rd, 2022
+
+### Fixes
+- Fix NotificationManager to be thread-safe (add-handler and send-notifications can happen concurrently) ([#460](https://github.com/optimizely/java-sdk/pull/460)).
+
+## [3.10.0]
+January 10th, 2022
+
+### New Features
+* Add a set of new APIs for overriding and managing user-level flag, experiment and delivery rule decisions. These methods can be used for QA and automated testing purposes. They are an extension of the OptimizelyUserContext interface ([#451](https://github.com/optimizely/java-sdk/pull/451), [#454](https://github.com/optimizely/java-sdk/pull/454), [#455](https://github.com/optimizely/java-sdk/pull/455), [#457](https://github.com/optimizely/java-sdk/pull/457))
+  - setForcedDecision
+  - getForcedDecision
+  - removeForcedDecision
+  - removeAllForcedDecisions
+
+- For details, refer to our documentation pages: [OptimizelyUserContext](https://docs.developers.optimizely.com/full-stack/v4.0/docs/optimizelyusercontext-java) and [Forced Decision methods](https://docs.developers.optimizely.com/full-stack/v4.0/docs/forced-decision-methods-java).
+
 ## [3.9.0]
 September 16th, 2021
 

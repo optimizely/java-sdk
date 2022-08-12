@@ -29,6 +29,7 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.TypedAudience;
 import com.optimizely.ab.internal.InvalidAudienceCondition;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -310,6 +311,69 @@ public class GsonConfigParserTest {
 
         GsonConfigParser parser = new GsonConfigParser();
         parser.parseProjectConfig(null);
+    }
+
+    @Test
+    public void integrationsArrayAbsent() throws Exception {
+        GsonConfigParser parser = new GsonConfigParser();
+        ProjectConfig actual = parser.parseProjectConfig(nullFeatureEnabledConfigJsonV4());
+        assertEquals(actual.getHostForODP(), "");
+        assertEquals(actual.getPublicKeyForODP(), "");
+    }
+
+    @Test
+    public void integrationsArrayHasODP() throws Exception {
+        GsonConfigParser parser = new GsonConfigParser();
+        ProjectConfig actual = parser.parseProjectConfig(validConfigJsonV4());
+        assertEquals(actual.getHostForODP(), "https://example.com");
+        assertEquals(actual.getPublicKeyForODP(), "test-key");
+    }
+
+    @Test
+    public void integrationsArrayHasOtherIntegration() throws Exception {
+        GsonConfigParser parser = new GsonConfigParser();
+        String integrationsObject = ", \"integrations\": [" +
+            "{ \"key\": \"not-odp\", " +
+            "\"host\": \"https://example.com\", " +
+            "\"publicKey\": \"test-key\" }" +
+            "]}";
+        String datafile = nullFeatureEnabledConfigJsonV4();
+        datafile = datafile.substring(0, datafile.lastIndexOf("}")) + integrationsObject;
+        ProjectConfig actual = parser.parseProjectConfig(datafile);
+        assertEquals(actual.getIntegrations().size(), 1);
+        assertEquals(actual.getHostForODP(), "");
+        assertEquals(actual.getPublicKeyForODP(), "");
+    }
+
+    @Test
+    public void integrationsArrayHasMissingHost() throws Exception {
+        GsonConfigParser parser = new GsonConfigParser();
+        String integrationsObject = ", \"integrations\": [" +
+            "{ \"key\": \"odp\", " +
+            "\"publicKey\": \"test-key\" }" +
+            "]}";
+        String datafile = nullFeatureEnabledConfigJsonV4();
+        datafile = datafile.substring(0, datafile.lastIndexOf("}")) + integrationsObject;
+        ProjectConfig actual = parser.parseProjectConfig(datafile);
+        assertEquals(actual.getHostForODP(), null);
+        assertEquals(actual.getPublicKeyForODP(), "test-key");
+    }
+
+    @Test
+    public void integrationsArrayHasOtherKeys() throws Exception {
+        GsonConfigParser parser = new GsonConfigParser();
+        String integrationsObject = ", \"integrations\": [" +
+            "{ \"key\": \"odp\", " +
+            "\"host\": \"https://example.com\", " +
+            "\"publicKey\": \"test-key\", " +
+            "\"new-key\": \"new-value\" }" +
+            "]}";
+        String datafile = nullFeatureEnabledConfigJsonV4();
+        datafile = datafile.substring(0, datafile.lastIndexOf("}")) + integrationsObject;
+        ProjectConfig actual = parser.parseProjectConfig(datafile);
+        assertEquals(actual.getIntegrations().size(), 1);
+        assertEquals(actual.getHostForODP(), "https://example.com");
+        assertEquals(actual.getPublicKeyForODP(), "test-key");
     }
 
     @Test

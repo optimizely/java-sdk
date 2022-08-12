@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2021, Optimizely and contributors
+ *    Copyright 2016-2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -86,6 +86,7 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
 
         List<FeatureFlag> featureFlags = null;
         List<Rollout> rollouts = null;
+        List<Integration> integrations = null;
         Boolean botFiltering = null;
         String sdkKey = null;
         String environmentKey = null;
@@ -97,6 +98,10 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
             Type rolloutsType = new TypeToken<List<Rollout>>() {
             }.getType();
             rollouts = context.deserialize(jsonObject.get("rollouts").getAsJsonArray(), rolloutsType);
+            if (jsonObject.has("integrations")) {
+                Type integrationsType = new TypeToken<List<Integration>>() {}.getType();
+                integrations = context.deserialize(jsonObject.get("integrations").getAsJsonArray(), integrationsType);
+            }
             if (jsonObject.has("sdkKey"))
                 sdkKey = jsonObject.get("sdkKey").getAsString();
             if (jsonObject.has("environmentKey"))
@@ -124,7 +129,8 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
             experiments,
             featureFlags,
             groups,
-            rollouts
+            rollouts,
+            integrations
         );
     }
 }

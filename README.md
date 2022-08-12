@@ -5,9 +5,9 @@ Optimizely Java SDK
 
 This repository houses the Java SDK for use with Optimizely Full Stack and Optimizely Rollouts.
 
-Optimizely Full Stack is A/B testing and feature flag management for product development teams. Experiment in any application. Make every feature on your roadmap an opportunity to learn. Learn more at https://www.optimizely.com/platform/full-stack/, or see the [documentation](https://docs.developers.optimizely.com/full-stack/docs).
+Optimizely Full Stack is A/B testing and feature flag management for product development teams. Experiment in any application. Make every feature on your roadmap an opportunity to learn. Learn more at https://www.optimizely.com/platform/full-stack/, or see the [documentation](https://docs.developers.optimizely.com/experimentation/v4.0-full-stack/docs).
 
-Optimizely Rollouts is free feature flags for development teams. Easily roll out and roll back features in any application without code deploys. Mitigate risk for every feature on your roadmap. Learn more at https://www.optimizely.com/rollouts/, or see the [documentation](https://docs.developers.optimizely.com/rollouts/docs).
+Optimizely Rollouts is free feature flags for development teams. Easily roll out and roll back features in any application without code deploys. Mitigate risk for every feature on your roadmap. Learn more at https://www.optimizely.com/rollouts/, or see the [documentation](https://docs.developers.optimizely.com/experimentation/v3.1.0-full-stack/docs/introduction-to-rollouts).
 
 
 ## Getting Started
@@ -16,14 +16,12 @@ Optimizely Rollouts is free feature flags for development teams. Easily roll out
 
 #### Gradle
 
-The SDK is available through Bintray and is created with source and target compatibility of 1.8. The core-api and httpclient Bintray packages are [optimizely-sdk-core-api](https://bintray.com/optimizely/optimizely/optimizely-sdk-core-api)
-and [optimizely-sdk-httpclient](https://bintray.com/optimizely/optimizely/optimizely-sdk-httpclient) respectively. To install, place the
-following in your `build.gradle` and substitute `VERSION` for the latest SDK version available via MavenCentral.
+The Java SDK is distributed through Maven Central and is created with source and target compatibility of Java 1.8. The `core-api` and `httpclient` packages are [optimizely-sdk-core-api](https://mvnrepository.com/artifact/com.optimizely.ab/core-api) and [optimizely-sdk-httpclient](https://mvnrepository.com/artifact/com.optimizely.ab/core-httpclient-impl), respectively. 
 
 ---
 **NOTE**
 
-[Bintray/JCenter will be shut down](https://jfrog.com/blog/into-the-sunset-bintray-jcenter-gocenter-and-chartcenter/). The publish repository has been migrated to MavenCentral for the SDK version 3.8.1 or later. Older versions will be available in JCenter until February 1st, 2022.
+Optimizely previously distributed the Java SDK through Bintray/JCenter. But, as of April 27, 2021, [Bintray/JCenter will become a read-only repository indefinitely](https://jfrog.com/blog/into-the-sunset-bintray-jcenter-gocenter-and-chartcenter/). The publish repository has been migrated to [MavenCentral](https://mvnrepository.com/artifact/com.optimizely.ab) for the SDK version 3.8.1 or later.
 
 ---
 
@@ -59,7 +57,7 @@ To access the Feature Management configuration in the Optimizely dashboard, plea
 
 ### Using the SDK
 
-See the Optimizely Full Stack [developer documentation](http://developers.optimizely.com/server/reference/index.html) to learn how to set
+See the Optimizely Full Stack [developer documentation](https://docs.developers.optimizely.com/experimentation/v4.0-full-stack/docs/java-sdk) to learn how to set
 up your first Java project and use the SDK.
 
 ## Development

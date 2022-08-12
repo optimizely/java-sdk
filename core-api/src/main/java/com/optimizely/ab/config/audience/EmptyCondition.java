@@ -1,5 +1,5 @@
 /**
- *    Copyright 2019, Optimizely Inc. and contributors
+ *    Copyright 2019, 2022, Optimizely Inc. and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,15 +15,16 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.ProjectConfig;
 
 import javax.annotation.Nullable;
 import java.util.Map;
 
-public class EmptyCondition<T> implements Condition<T> {
+public class EmptyCondition<T> extends LeafCondition<T> {
     @Nullable
     @Override
-    public Boolean evaluate(ProjectConfig config, Map<String, ?> attributes) {
+    public Boolean evaluate(ProjectConfig config, OptimizelyUserContext user) {
         return true;
     }
 

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2018, Optimizely and contributors
+ *    Copyright 2016-2018, 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,9 +16,11 @@
  */
 package com.optimizely.ab.config.audience;
 
+import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.ProjectConfig;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,9 +29,11 @@ import java.util.Map;
 public interface Condition<T> {
 
     @Nullable
-    Boolean evaluate(ProjectConfig config, Map<String, ?> attributes);
+    Boolean evaluate(ProjectConfig config, OptimizelyUserContext user);
 
     String toJson();
 
     String getOperandOrId();
+
+    List<Condition> getConditions();
 }

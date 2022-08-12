@@ -975,5 +975,12 @@
         }
       ]
     }
+  ],
+  "integrations": [
+    {
+      "key": "odp",
+      "host": "https://example.com",
+      "publicKey": "test-key"
+    }
   ]
 }

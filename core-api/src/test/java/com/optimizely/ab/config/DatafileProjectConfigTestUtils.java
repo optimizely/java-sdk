@@ -474,6 +474,7 @@ public final class DatafileProjectConfigTestUtils {
         verifyFeatureFlags(actual.getFeatureFlags(), expected.getFeatureFlags());
         verifyGroups(actual.getGroups(), expected.getGroups());
         verifyRollouts(actual.getRollouts(), expected.getRollouts());
+        verifyIntegrations(actual.getIntegrations(), expected.getIntegrations());
     }
 
     /**
@@ -623,6 +624,23 @@ public final class DatafileProjectConfigTestUtils {
 
                 assertEquals(expectedRollout.getId(), actualRollout.getId());
                 verifyExperiments(actualRollout.getExperiments(), expectedRollout.getExperiments());
+            }
+        }
+    }
+
+    private static void verifyIntegrations(List<Integration> actual, List<Integration> expected) {
+        if (expected == null) {
+            assertNull(actual);
+        } else {
+            assertEquals(expected.size(), actual.size());
+
+            for (int i = 0; i < actual.size(); i++) {
+                Integration actualIntegrations = actual.get(i);
+                Integration expectedIntegration = expected.get(i);
+
+                assertEquals(expectedIntegration.getKey(), actualIntegrations.getKey());
+                assertEquals(expectedIntegration.getHost(), actualIntegrations.getHost());
+                assertEquals(expectedIntegration.getPublicKey(), actualIntegrations.getPublicKey());
             }
         }
     }

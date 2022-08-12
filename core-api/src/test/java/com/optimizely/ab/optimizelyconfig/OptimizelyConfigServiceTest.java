@@ -334,7 +334,8 @@ public class OptimizelyConfigServiceTest {
                 )
             ),
             Collections.<Group>emptyList(),
-            Collections.<Rollout>emptyList()
+            Collections.<Rollout>emptyList(),
+            Collections.<Integration>emptyList()
         );
     }
 

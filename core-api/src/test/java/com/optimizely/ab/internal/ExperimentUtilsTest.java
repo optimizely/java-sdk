@@ -1,12 +1,12 @@
 /**
  *
- *    Copyright 2017, 2019-2020, Optimizely and contributors
+ *    Copyright 2017, 2019-2020, 2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
+ *        https://www.apache.org/licenses/LICENSE-2.0
  *
  *    Unless required by applicable law or agreed to in writing, software
  *    distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,6 +25,7 @@ import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.TypedAudience;
+import com.optimizely.ab.testutils.OTUtils;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -128,7 +129,7 @@ public class ExperimentUtilsTest {
     @Test
     public void doesUserMeetAudienceConditionsReturnsTrueIfExperimentHasNoAudiences() {
         Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
-        assertTrue(doesUserMeetAudienceConditions(noAudienceProjectConfig, experiment, Collections.<String, String>emptyMap(), RULE, "Everyone Else").getResult());
+        assertTrue(doesUserMeetAudienceConditions(noAudienceProjectConfig, experiment, OTUtils.user(Collections.<String, String>emptyMap()), RULE, "Everyone Else").getResult());
     }
 
     /**
@@ -138,7 +139,7 @@ public class ExperimentUtilsTest {
     @Test
     public void doesUserMeetAudienceConditionsEvaluatesEvenIfExperimentHasAudiencesButUserHasNoAttributes() {
         Experiment experiment = projectConfig.getExperiments().get(0);
-        Boolean result = doesUserMeetAudienceConditions(projectConfig, experiment, Collections.<String, String>emptyMap(), EXPERIMENT, experiment.getKey()).getResult();
+        Boolean result = doesUserMeetAudienceConditions(projectConfig, experiment, OTUtils.user(Collections.<String, String>emptyMap()), EXPERIMENT, experiment.getKey()).getResult();
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
             "Evaluating audiences for experiment \"etag1\": [100].");
@@ -154,11 +155,11 @@ public class ExperimentUtilsTest {
      * If the {@link Experiment} contains at least one {@link Audience}, but attributes is empty,
      * then {@link ExperimentUtils#doesUserMeetAudienceConditions(ProjectConfig, Experiment, Map, String, String)} should return false.
      */
-    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
+    @SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
     @Test
     public void doesUserMeetAudienceConditionsEvaluatesEvenIfExperimentHasAudiencesButUserSendNullAttributes() throws Exception {
         Experiment experiment = projectConfig.getExperiments().get(0);
-        Boolean result = doesUserMeetAudienceConditions(projectConfig, experiment, null, EXPERIMENT, experiment.getKey()).getResult();
+        Boolean result = doesUserMeetAudienceConditions(projectConfig, experiment, OTUtils.user(null), EXPERIMENT, experiment.getKey()).getResult();
 
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
@@ -179,7 +180,7 @@ public class ExperimentUtilsTest {
     public void doesUserMeetAudienceConditionsEvaluatesExperimentHasTypedAudiences() {
         Experiment experiment = v4ProjectConfig.getExperiments().get(1);
         Map<String, Boolean> attribute = Collections.singletonMap("booleanKey", true);
-        Boolean result = doesUserMeetAudienceConditions(v4ProjectConfig, experiment, attribute, EXPERIMENT, experiment.getKey()).getResult();
+        Boolean result = doesUserMeetAudienceConditions(v4ProjectConfig, experiment, OTUtils.user(attribute), EXPERIMENT, experiment.getKey()).getResult();
 
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
@@ -200,7 +201,7 @@ public class ExperimentUtilsTest {
     public void doesUserMeetAudienceConditionsReturnsTrueIfUserSatisfiesAnAudience() {
         Experiment experiment = projectConfig.getExperiments().get(0);
         Map<String, String> attributes = Collections.singletonMap("browser_type", "chrome");
-        Boolean result = doesUserMeetAudienceConditions(projectConfig, experiment, attributes, EXPERIMENT, experiment.getKey()).getResult();
+        Boolean result = doesUserMeetAudienceConditions(projectConfig, experiment, OTUtils.user(attributes), EXPERIMENT, experiment.getKey()).getResult();
 
         assertTrue(result);
         logbackVerifier.expectMessage(Level.DEBUG,
@@ -221,7 +222,7 @@ public class ExperimentUtilsTest {
     public void doesUserMeetAudienceConditionsReturnsTrueIfUserDoesNotSatisfyAnyAudiences() {
         Experiment experiment = projectConfig.getExperiments().get(0);
         Map<String, String> attributes = Collections.singletonMap("browser_type", "firefox");
-        Boolean result = doesUserMeetAudienceConditions(projectConfig, experiment, attributes, EXPERIMENT, experiment.getKey()).getResult();
+        Boolean result = doesUserMeetAudienceConditions(projectConfig, experiment, OTUtils.user(attributes), EXPERIMENT, experiment.getKey()).getResult();
 
         assertFalse(result);
         logbackVerifier.expectMessage(Level.DEBUG,
@@ -246,8 +247,8 @@ public class ExperimentUtilsTest {
             AUDIENCE_WITH_MISSING_VALUE_VALUE);
         Map<String, String> nonMatchingMap = Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, "American");
 
-        assertTrue(doesUserMeetAudienceConditions(v4ProjectConfig, experiment, satisfiesFirstCondition, EXPERIMENT, experiment.getKey()).getResult());
-        assertFalse(doesUserMeetAudienceConditions(v4ProjectConfig, experiment, nonMatchingMap, EXPERIMENT, experiment.getKey()).getResult());
+        assertTrue(doesUserMeetAudienceConditions(v4ProjectConfig, experiment, OTUtils.user(satisfiesFirstCondition), EXPERIMENT, experiment.getKey()).getResult());
+        assertFalse(doesUserMeetAudienceConditions(v4ProjectConfig, experiment, OTUtils.user(nonMatchingMap), EXPERIMENT, experiment.getKey()).getResult());
     }
 
     /**
@@ -258,7 +259,7 @@ public class ExperimentUtilsTest {
         Experiment experiment = v4ProjectConfig.getExperimentKeyMapping().get(EXPERIMENT_WITH_MALFORMED_AUDIENCE_KEY);
         Map<String, String> attributesWithNull = Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, null);
 
-        assertFalse(doesUserMeetAudienceConditions(v4ProjectConfig, experiment, attributesWithNull, EXPERIMENT, experiment.getKey()).getResult());
+        assertFalse(doesUserMeetAudienceConditions(v4ProjectConfig, experiment, OTUtils.user(attributesWithNull), EXPERIMENT, experiment.getKey()).getResult());
 
         logbackVerifier.expectMessage(Level.DEBUG,
             "Starting to evaluate audience \"2196265320\" with conditions: [and, [or, [or, {name='nationality', type='custom_attribute', match='null', value='English'}, {name='nationality', type='custom_attribute', match='null', value=null}]]].");
@@ -279,7 +280,7 @@ public class ExperimentUtilsTest {
         Map<String, String> attributesEmpty = Collections.emptyMap();
 
         // It should explicitly be set to null otherwise we will return false on empty maps
-        assertFalse(doesUserMeetAudienceConditions(v4ProjectConfig, experiment, attributesEmpty, EXPERIMENT, experiment.getKey()).getResult());
+        assertFalse(doesUserMeetAudienceConditions(v4ProjectConfig, experiment, OTUtils.user(attributesEmpty), EXPERIMENT, experiment.getKey()).getResult());
 
         logbackVerifier.expectMessage(Level.DEBUG,
             "Starting to evaluate audience \"2196265320\" with conditions: [and, [or, [or, {name='nationality', type='custom_attribute', match='null', value='English'}, {name='nationality', type='custom_attribute', match='null', value=null}]]].");

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2021, Optimizely and contributors
+ *    Copyright 2016-2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -63,6 +63,8 @@ public class DatafileProjectConfig implements ProjectConfig {
     private final boolean anonymizeIP;
     private final boolean sendFlagDecisions;
     private final Boolean botFiltering;
+    private final String hostForODP;
+    private final String publicKeyForODP;
     private final List<Attribute> attributes;
     private final List<Audience> audiences;
     private final List<Audience> typedAudiences;
@@ -71,6 +73,8 @@ public class DatafileProjectConfig implements ProjectConfig {
     private final List<FeatureFlag> featureFlags;
     private final List<Group> groups;
     private final List<Rollout> rollouts;
+    private final List<Integration> integrations;
+    private final Set<String> allSegments;
 
     // key to entity mappings
     private final Map<String, Attribute> attributeKeyMapping;
@@ -121,6 +125,7 @@ public class DatafileProjectConfig implements ProjectConfig {
             experiments,
             null,
             groups,
+            null,
             null
         );
     }
@@ -142,8 +147,8 @@ public class DatafileProjectConfig implements ProjectConfig {
                                  List<Experiment> experiments,
                                  List<FeatureFlag> featureFlags,
                                  List<Group> groups,
-                                 List<Rollout> rollouts) {
-
+                                 List<Rollout> rollouts,
+                                 List<Integration> integrations) {
         this.accountId = accountId;
         this.projectId = projectId;
         this.version = version;
@@ -181,6 +186,33 @@ public class DatafileProjectConfig implements ProjectConfig {
         allExperiments.addAll(experiments);
         allExperiments.addAll(aggregateGroupExperiments(groups));
         this.experiments = Collections.unmodifiableList(allExperiments);
+
+        String publicKeyForODP = "";
+        String hostForODP = "";
+        if (integrations == null) {
+            this.integrations = Collections.emptyList();
+        } else {
+            this.integrations = Collections.unmodifiableList(integrations);
+            for (Integration integration: this.integrations) {
+                if (integration.getKey().equals("odp")) {
+                    hostForODP = integration.getHost();
+                    publicKeyForODP = integration.getPublicKey();
+                    break;
+                }
+            }
+        }
+
+        this.publicKeyForODP = publicKeyForODP;
+        this.hostForODP = hostForODP;
+
+        Set<String> allSegments = new HashSet<>();
+        if (typedAudiences != null) {
+            for(Audience audience: typedAudiences) {
+                allSegments.addAll(audience.getSegments());
+            }
+        }
+
+        this.allSegments = allSegments;
 
         Map<String, Experiment> variationIdToExperimentMap = new HashMap<String, Experiment>();
         for (Experiment experiment : this.experiments) {
@@ -402,6 +434,10 @@ public class DatafileProjectConfig implements ProjectConfig {
         return experiments;
     }
 
+    public Set<String> getAllSegments() {
+        return this.allSegments;
+    }
+
     @Override
     public List<Experiment> getExperimentsForEventKey(String eventKey) {
         EventType event = eventNameMapping.get(eventKey);
@@ -446,6 +482,11 @@ public class DatafileProjectConfig implements ProjectConfig {
     @Override
     public List<Audience> getTypedAudiences() {
         return typedAudiences;
+    }
+
+    @Override
+    public List<Integration> getIntegrations() {
+        return integrations;
     }
 
     @Override
@@ -501,6 +542,37 @@ public class DatafileProjectConfig implements ProjectConfig {
     @Override
     public Map<String, List<Variation>> getFlagVariationsMap() {
         return flagVariationsMap;
+    }
+
+    /**
+     *  Gets a variation based on flagKey and variationKey
+     *
+     * @param flagKey The flag key for the variation
+     * @param variationKey The variation key for the variation
+     * @return Returns a variation based on flagKey and variationKey, otherwise null
+     */
+    @Override
+    public Variation getFlagVariationByKey(String flagKey, String variationKey) {
+        Map<String, List<Variation>> flagVariationsMap = getFlagVariationsMap();
+        if (flagVariationsMap.containsKey(flagKey)) {
+            List<Variation> variations = flagVariationsMap.get(flagKey);
+            for (Variation variation : variations) {
+                if (variation.getKey().equals(variationKey)) {
+                    return variation;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String getHostForODP() {
+        return hostForODP;
+    }
+
+    @Override
+    public String getPublicKeyForODP() {
+        return publicKeyForODP;
     }
 
     @Override

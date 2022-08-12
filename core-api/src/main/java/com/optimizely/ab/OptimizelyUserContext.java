@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2020-2021, Optimizely and contributors
+ *    Copyright 2020-2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -36,6 +36,8 @@ public class OptimizelyUserContext {
     @Nonnull
     private final Map<String, Object> attributes;
 
+    private List<String> qualifiedSegments;
+
     @Nonnull
     private final Optimizely optimizely;
 
@@ -44,19 +46,14 @@ public class OptimizelyUserContext {
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
                                  @Nonnull String userId,
                                  @Nonnull Map<String, ?> attributes) {
-        this.optimizely = optimizely;
-        this.userId = userId;
-        if (attributes != null) {
-            this.attributes = Collections.synchronizedMap(new HashMap<>(attributes));
-        } else {
-            this.attributes = Collections.synchronizedMap(new HashMap<>());
-        }
+        this(optimizely, userId, attributes, Collections.EMPTY_MAP, null);
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
                                  @Nonnull String userId,
                                  @Nonnull Map<String, ?> attributes,
-                                 @Nullable Map<String, OptimizelyForcedDecision> forcedDecisionsMap) {
+                                 @Nullable Map<String, OptimizelyForcedDecision> forcedDecisionsMap,
+                                 @Nullable List<String> qualifiedSegments) {
         this.optimizely = optimizely;
         this.userId = userId;
         if (attributes != null) {
@@ -65,8 +62,10 @@ public class OptimizelyUserContext {
             this.attributes = Collections.synchronizedMap(new HashMap<>());
         }
         if (forcedDecisionsMap != null) {
-          this.forcedDecisionsMap = new ConcurrentHashMap<>(forcedDecisionsMap);
+            this.forcedDecisionsMap = new ConcurrentHashMap<>(forcedDecisionsMap);
         }
+
+        this.qualifiedSegments = Collections.synchronizedList( qualifiedSegments == null ? new LinkedList<>(): qualifiedSegments);
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely, @Nonnull String userId) {
@@ -86,7 +85,16 @@ public class OptimizelyUserContext {
     }
 
     public OptimizelyUserContext copy() {
-        return new OptimizelyUserContext(optimizely, userId, attributes, forcedDecisionsMap);
+        return new OptimizelyUserContext(optimizely, userId, attributes, forcedDecisionsMap, qualifiedSegments);
+    }
+
+    /**
+     * Returns true if the user is qualified for the given segment name
+     * @param segment A String segment key which will be checked in the qualified segments list that if it exists then user is qualified.
+     * @return boolean Is user qualified for a segment.
+     */
+    public boolean isQualifiedFor(@Nonnull String segment) {
+        return qualifiedSegments.contains(segment);
     }
 
     /**
@@ -265,34 +273,13 @@ public class OptimizelyUserContext {
         return true;
     }
 
-    /**
-     * Find a validated forced decision
-     *
-     * @param optimizelyDecisionContext The OptimizelyDecisionContext containing flagKey and ruleKey
-     * @return Returns a DecisionResponse structure of type Variation, otherwise null result with reasons
-     */
-    public DecisionResponse<Variation> findValidatedForcedDecision(@Nonnull OptimizelyDecisionContext optimizelyDecisionContext) {
-        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
-        OptimizelyForcedDecision optimizelyForcedDecision = findForcedDecision(optimizelyDecisionContext);
-        String variationKey = optimizelyForcedDecision != null ? optimizelyForcedDecision.getVariationKey() : null;
-        if (variationKey != null) {
-            Variation variation = optimizely.getFlagVariationByKey(optimizelyDecisionContext.getFlagKey(), variationKey);
-            String ruleKey = optimizelyDecisionContext.getRuleKey();
-            String flagKey = optimizelyDecisionContext.getFlagKey();
-            String info;
-            String target = ruleKey != OptimizelyDecisionContext.OPTI_NULL_RULE_KEY ? String.format("flag (%s), rule (%s)", flagKey, ruleKey) : String.format("flag (%s)", flagKey);
-            if (variation != null) {
-                info = String.format("Variation (%s) is mapped to %s and user (%s) in the forced decision map.", variationKey, target, userId);
-                logger.debug(info);
-                reasons.addInfo(info);
-                return new DecisionResponse(variation, reasons);
-            } else {
-                info = String.format("Invalid variation is mapped to %s and user (%s) in the forced decision map.", target, userId);
-                logger.debug(info);
-                reasons.addInfo(info);
-            }
-        }
-        return new DecisionResponse<>(null, reasons);
+    public List<String> getQualifiedSegments() {
+        return qualifiedSegments;
+    }
+
+    public void setQualifiedSegments(List<String> qualifiedSegments) {
+        this.qualifiedSegments.clear();
+        this.qualifiedSegments.addAll(qualifiedSegments);
     }
 
     // Utils

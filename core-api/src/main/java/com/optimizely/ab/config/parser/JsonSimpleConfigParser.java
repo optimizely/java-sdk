@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2021, Optimizely and contributors
+ *    Copyright 2016-2022, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -81,11 +81,15 @@ final public class JsonSimpleConfigParser implements ConfigParser {
 
             List<FeatureFlag> featureFlags = null;
             List<Rollout> rollouts = null;
+            List<Integration> integrations = null;
             Boolean botFiltering = null;
             boolean sendFlagDecisions = false;
             if (datafileVersion >= Integer.parseInt(DatafileProjectConfig.Version.V4.toString())) {
                 featureFlags = parseFeatureFlags((JSONArray) rootObject.get("featureFlags"));
                 rollouts = parseRollouts((JSONArray) rootObject.get("rollouts"));
+                if (rootObject.containsKey("integrations")) {
+                    integrations = parseIntegrations((JSONArray) rootObject.get("integrations"));
+                }
                 if (rootObject.containsKey("botFiltering"))
                     botFiltering = (Boolean) rootObject.get("botFiltering");
                 if (rootObject.containsKey("sendFlagDecisions"))
@@ -109,7 +113,8 @@ final public class JsonSimpleConfigParser implements ConfigParser {
                 experiments,
                 featureFlags,
                 groups,
-                rollouts
+                rollouts,
+                integrations
             );
         } catch (RuntimeException ex) {
             throw new ConfigParseException("Unable to parse datafile: " + json, ex);
@@ -377,6 +382,20 @@ final public class JsonSimpleConfigParser implements ConfigParser {
         }
 
         return rollouts;
+    }
+
+    private List<Integration> parseIntegrations(JSONArray integrationsJson) {
+        List<Integration> integrations = new ArrayList<>(integrationsJson.size());
+
+        for (Object obj : integrationsJson) {
+            JSONObject integrationObject = (JSONObject) obj;
+            String key = (String) integrationObject.get("key");
+            String host = (String) integrationObject.get("host");
+            String publicKey = (String) integrationObject.get("publicKey");
+            integrations.add(new Integration(key, host, publicKey));
+        }
+
+        return integrations;
     }
 
     @Override
