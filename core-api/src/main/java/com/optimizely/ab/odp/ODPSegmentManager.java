@@ -67,7 +67,7 @@ public class ODPSegmentManager {
 
     public List<String> getQualifiedSegments(ODPUserKey userKey, String userValue, List<ODPSegmentOption> options) {
         if (!odpConfig.isReady()) {
-            logger.error("ODP is not enabled.");
+            logger.error("Audience segments fetch failed (ODP is not enabled)");
             return Collections.emptyList();
         }
 

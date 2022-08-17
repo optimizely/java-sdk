@@ -181,7 +181,7 @@ public class ODPSegmentManagerTest {
         verify(mockCache, times(0)).save(any(), any());
         verify(mockCache, times(0)).reset();
 
-        logbackVerifier.expectMessage(Level.ERROR, "ODP is not enabled.");
+        logbackVerifier.expectMessage(Level.ERROR, "Audience segments fetch failed (ODP is not enabled)");
 
         assertEquals(Collections.emptyList(), segments);
     }
