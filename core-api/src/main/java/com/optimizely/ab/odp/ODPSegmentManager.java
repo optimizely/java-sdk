@@ -66,6 +66,16 @@ public class ODPSegmentManager {
     }
 
     public List<String> getQualifiedSegments(ODPUserKey userKey, String userValue, List<ODPSegmentOption> options) {
+        if (!odpConfig.isReady()) {
+            logger.warn("ODP Config not ready. apiHost and/or apiKey null. Returning Empty list");
+            return Collections.emptyList();
+        }
+
+        if (!odpConfig.hasSegments()) {
+            logger.debug("No Segments are used in the project, Not Fetching segments. Returning empty list");
+            return Collections.emptyList();
+        }
+
         List<String> qualifiedSegments;
         String cacheKey = getCacheKey(userKey.getKeyString(), userValue);
 
@@ -79,7 +89,7 @@ public class ODPSegmentManager {
             }
         }
 
-        logger.debug("ODP Cache Miss. Making a call to ODP Server");
+        logger.debug("ODP Cache Miss. Making a call to ODP Server.");
 
         ResponseJsonParser parser = ResponseJsonParserFactory.getParser();
         String qualifiedSegmentsResponse = apiManager.fetchQualifiedSegments(odpConfig.getApiKey(), odpConfig.getApiHost() + SEGMENT_URL_PATH, userKey.getKeyString(), userValue, odpConfig.getAllSegments());

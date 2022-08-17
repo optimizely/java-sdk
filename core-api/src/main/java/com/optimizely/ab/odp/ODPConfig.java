@@ -16,7 +16,6 @@
  */
 package com.optimizely.ab.odp;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,31 +33,42 @@ public class ODPConfig {
         this.allSegments = allSegments;
     }
 
+    public Boolean isReady() {
+        return !(
+            this.apiKey == null || this.apiKey.isEmpty()
+            || this.apiHost == null || this.apiHost.isEmpty()
+        );
+    }
+
+    public Boolean hasSegments() {
+        return allSegments != null && !allSegments.isEmpty();
+    }
+
     public ODPConfig(String apiKey, String apiHost) {
         this(apiKey, apiHost, Collections.emptyList());
     }
 
-    public void setApiKey(String apiKey) {
+    public synchronized void setApiKey(String apiKey) {
         this.apiKey = apiKey;
     }
 
-    public void setApiHost(String apiHost) {
+    public synchronized void setApiHost(String apiHost) {
         this.apiHost = apiHost;
     }
 
-    public String getApiKey() {
+    public synchronized String getApiKey() {
         return apiKey;
     }
 
-    public String getApiHost() {
+    public synchronized String getApiHost() {
         return apiHost;
     }
 
-    public List<String> getAllSegments() {
+    public synchronized List<String> getAllSegments() {
         return allSegments;
     }
 
-    public void setAllSegments(List<String> allSegments) {
+    public synchronized void setAllSegments(List<String> allSegments) {
         this.allSegments = allSegments;
     }
 }

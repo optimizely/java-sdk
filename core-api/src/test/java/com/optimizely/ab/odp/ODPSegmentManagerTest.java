@@ -16,8 +16,11 @@
  */
 package com.optimizely.ab.odp;
 
+import ch.qos.logback.classic.Level;
 import com.optimizely.ab.internal.Cache;
+import com.optimizely.ab.internal.LogbackVerifier;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -31,6 +34,9 @@ import java.util.Collections;
 import java.util.List;
 
 public class ODPSegmentManagerTest {
+
+    @Rule
+    public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
     @Mock
     Cache<List<String>> mockCache;
@@ -62,6 +68,8 @@ public class ODPSegmentManagerTest {
         verify(mockCache, times(0)).save(any(), any());
         verify(mockCache, times(0)).reset();
 
+        logbackVerifier.expectMessage(Level.DEBUG, "ODP Cache Hit. Returning segments from Cache.");
+
         assertEquals(Arrays.asList("segment1-cached", "segment2-cached"), segments);
     }
 
@@ -83,6 +91,8 @@ public class ODPSegmentManagerTest {
             .fetchQualifiedSegments(odpConfig.getApiKey(), odpConfig.getApiHost() + "/v3/graphql", "vuid", "testId", Arrays.asList("segment1", "segment2"));
         verify(mockCache, times(1)).save("vuid-$-testId", Arrays.asList("segment1", "segment2"));
         verify(mockCache, times(0)).reset();
+
+        logbackVerifier.expectMessage(Level.DEBUG, "ODP Cache Miss. Making a call to ODP Server.");
 
         assertEquals(Arrays.asList("segment1", "segment2"), segments);
     }
@@ -155,5 +165,47 @@ public class ODPSegmentManagerTest {
         verify(mockCache, times(0)).save(any(), any());
 
         assertEquals(Arrays.asList("segment1", "segment2"), segments);
+    }
+
+    @Test
+    public void odpConfigNotReady() {
+        Mockito.when(mockCache.lookup(any())).thenReturn(Arrays.asList("segment1-cached", "segment2-cached"));
+
+        ODPConfig odpConfig = new ODPConfig(null, null, Arrays.asList("segment1", "segment2"));
+        ODPSegmentManager segmentManager = new ODPSegmentManager(odpConfig, mockApiManager, mockCache);
+        List<String> segments = segmentManager.getQualifiedSegments(ODPUserKey.FS_USER_ID, "testId");
+
+        // Cache lookup called with correct key
+        verify(mockCache, times(0)).lookup("fs_user_id-$-testId");
+
+        // Cache hit! No api call was made to the server.
+        verify(mockApiManager, times(0)).fetchQualifiedSegments(any(), any(), any(), any(), any());
+        verify(mockCache, times(0)).save(any(), any());
+        verify(mockCache, times(0)).reset();
+
+        logbackVerifier.expectMessage(Level.WARN, "ODP Config not ready. apiHost and/or apiKey null. Returning Empty list");
+
+        assertEquals(Collections.emptyList(), segments);
+    }
+
+    @Test
+    public void noSegmentsInProject() {
+        Mockito.when(mockCache.lookup(any())).thenReturn(Arrays.asList("segment1-cached", "segment2-cached"));
+
+        ODPConfig odpConfig = new ODPConfig("testKey", "testHost", null);
+        ODPSegmentManager segmentManager = new ODPSegmentManager(odpConfig, mockApiManager, mockCache);
+        List<String> segments = segmentManager.getQualifiedSegments(ODPUserKey.FS_USER_ID, "testId");
+
+        // Cache lookup called with correct key
+        verify(mockCache, times(0)).lookup("fs_user_id-$-testId");
+
+        // Cache hit! No api call was made to the server.
+        verify(mockApiManager, times(0)).fetchQualifiedSegments(any(), any(), any(), any(), any());
+        verify(mockCache, times(0)).save(any(), any());
+        verify(mockCache, times(0)).reset();
+
+        logbackVerifier.expectMessage(Level.DEBUG, "No Segments are used in the project, Not Fetching segments. Returning empty list");
+
+        assertEquals(Collections.emptyList(), segments);
     }
 }
