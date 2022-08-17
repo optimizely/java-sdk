@@ -175,15 +175,13 @@ public class ODPSegmentManagerTest {
         ODPSegmentManager segmentManager = new ODPSegmentManager(odpConfig, mockApiManager, mockCache);
         List<String> segments = segmentManager.getQualifiedSegments(ODPUserKey.FS_USER_ID, "testId");
 
-        // Cache lookup called with correct key
+        // No further methods should be called.
         verify(mockCache, times(0)).lookup("fs_user_id-$-testId");
-
-        // Cache hit! No api call was made to the server.
         verify(mockApiManager, times(0)).fetchQualifiedSegments(any(), any(), any(), any(), any());
         verify(mockCache, times(0)).save(any(), any());
         verify(mockCache, times(0)).reset();
 
-        logbackVerifier.expectMessage(Level.WARN, "ODP Config not ready. apiHost and/or apiKey null. Returning Empty list");
+        logbackVerifier.expectMessage(Level.ERROR, "ODP is not enabled.");
 
         assertEquals(Collections.emptyList(), segments);
     }
@@ -196,10 +194,8 @@ public class ODPSegmentManagerTest {
         ODPSegmentManager segmentManager = new ODPSegmentManager(odpConfig, mockApiManager, mockCache);
         List<String> segments = segmentManager.getQualifiedSegments(ODPUserKey.FS_USER_ID, "testId");
 
-        // Cache lookup called with correct key
+        // No further methods should be called.
         verify(mockCache, times(0)).lookup("fs_user_id-$-testId");
-
-        // Cache hit! No api call was made to the server.
         verify(mockApiManager, times(0)).fetchQualifiedSegments(any(), any(), any(), any(), any());
         verify(mockCache, times(0)).save(any(), any());
         verify(mockCache, times(0)).reset();

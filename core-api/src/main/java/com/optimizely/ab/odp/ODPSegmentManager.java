@@ -67,7 +67,7 @@ public class ODPSegmentManager {
 
     public List<String> getQualifiedSegments(ODPUserKey userKey, String userValue, List<ODPSegmentOption> options) {
         if (!odpConfig.isReady()) {
-            logger.warn("ODP Config not ready. apiHost and/or apiKey null. Returning Empty list");
+            logger.error("ODP is not enabled.");
             return Collections.emptyList();
         }
 
