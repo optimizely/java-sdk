@@ -33,19 +33,19 @@ public class ODPConfig {
         this.allSegments = allSegments;
     }
 
-    public Boolean isReady() {
+    public ODPConfig(String apiKey, String apiHost) {
+        this(apiKey, apiHost, Collections.emptyList());
+    }
+
+    public synchronized Boolean isReady() {
         return !(
             this.apiKey == null || this.apiKey.isEmpty()
             || this.apiHost == null || this.apiHost.isEmpty()
         );
     }
 
-    public Boolean hasSegments() {
+    public synchronized Boolean hasSegments() {
         return allSegments != null && !allSegments.isEmpty();
-    }
-
-    public ODPConfig(String apiKey, String apiHost) {
-        this(apiKey, apiHost, Collections.emptyList());
     }
 
     public synchronized void setApiKey(String apiKey) {
