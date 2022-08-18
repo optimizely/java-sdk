@@ -17,6 +17,8 @@ package com.optimizely.ab.odp;
 
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.odp.serializer.ODPJsonSerializer;
+import com.optimizely.ab.odp.serializer.ODPJsonSerializerFactory;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -165,6 +167,43 @@ public class DefaultODPApiManager implements ODPApiManager {
             closeHttpResponse(response);
         }
         return null;
+    }
+
+    @Override
+    public void sendEvents(String apiKey, String apiEndpoint, List<ODPEvent> events) {
+        HttpPost request = new HttpPost(apiEndpoint);
+        String requestPayload = ODPJsonSerializerFactory.getSerializer().serializeEvents(events);
+
+        if (requestPayload == null || requestPayload.isEmpty()) {
+            logger.error("ODP event send failed (Failed to serialize event payload)");
+            return;
+        }
+
+        try {
+            request.setEntity(new StringEntity(requestPayload));
+        } catch (UnsupportedEncodingException e) {
+            logger.error("ODP event send failed (Error encoding request payload)", e);
+            return;
+        }
+        request.setHeader("x-api-key", apiKey);
+        request.setHeader("content-type", "application/json");
+
+        CloseableHttpResponse response = null;
+        try {
+            response = httpClient.execute(request);
+        } catch (IOException e) {
+            logger.error("Error retrieving response from event request", e);
+            return;
+        }
+
+        if (response.getStatusLine().getStatusCode() >= 400) {
+            StatusLine statusLine = response.getStatusLine();
+            logger.error(String.format("ODP event send failed (Response code: %d, %s)", statusLine.getStatusCode(), statusLine.getReasonPhrase()));
+        } else {
+            logger.debug("ODP Event Dispatched successfully");
+        }
+
+        closeHttpResponse(response);
     }
 
     private static void closeHttpResponse(CloseableHttpResponse response) {
