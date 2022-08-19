@@ -37,13 +37,26 @@ public class DefaultODPApiManager implements ODPApiManager {
 
     private final OptimizelyHttpClient httpClient;
 
+    private final ODPJsonSerializer jsonSerializer;
+
     public DefaultODPApiManager() {
-        this(OptimizelyHttpClient.builder().build());
+        this(OptimizelyHttpClient.builder().build(), ODPJsonSerializerFactory.getSerializer());
     }
 
     @VisibleForTesting
-    DefaultODPApiManager(OptimizelyHttpClient httpClient) {
-        this.httpClient = httpClient;
+    DefaultODPApiManager(OptimizelyHttpClient httpClient, ODPJsonSerializer jsonSerializer) {
+
+        if (httpClient != null) {
+            this.httpClient = httpClient;
+        } else {
+            this.httpClient = OptimizelyHttpClient.builder().build();
+        }
+
+        if (jsonSerializer != null) {
+            this.jsonSerializer = jsonSerializer;
+        } else {
+            this.jsonSerializer = ODPJsonSerializerFactory.getSerializer();
+        }
     }
 
     @VisibleForTesting
@@ -172,7 +185,7 @@ public class DefaultODPApiManager implements ODPApiManager {
     @Override
     public void sendEvents(String apiKey, String apiEndpoint, List<ODPEvent> events) {
         HttpPost request = new HttpPost(apiEndpoint);
-        String requestPayload = ODPJsonSerializerFactory.getSerializer().serializeEvents(events);
+        String requestPayload = this.jsonSerializer.serializeEvents(events);
 
         if (requestPayload == null || requestPayload.isEmpty()) {
             logger.error("ODP event send failed (Failed to serialize event payload)");

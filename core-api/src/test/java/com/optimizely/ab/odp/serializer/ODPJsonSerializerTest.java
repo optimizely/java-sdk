@@ -26,7 +26,6 @@ import org.junit.runners.Parameterized;
 import java.util.*;
 
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
 
 @RunWith(Parameterized.class)
 public class ODPJsonSerializerTest {
@@ -43,7 +42,7 @@ public class ODPJsonSerializerTest {
     }
 
     @Test
-    public void serializeValidEvents() throws JsonProcessingException {
+    public void serializeMultipleEvents() throws JsonProcessingException {
         List<ODPEvent> events = Arrays.asList(
             createTestEvent("1"),
             createTestEvent("2"),
@@ -54,8 +53,15 @@ public class ODPJsonSerializerTest {
 
         String expectedResult = "[{\"type\":\"type-1\",\"action\":\"action-1\",\"identifiers\":{\"vuid-1-3\":\"fs-1-3\",\"vuid-1-1\":\"fs-1-1\",\"vuid-1-2\":\"fs-1-2\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-1\"}},{\"type\":\"type-2\",\"action\":\"action-2\",\"identifiers\":{\"vuid-2-3\":\"fs-2-3\",\"vuid-2-2\":\"fs-2-2\",\"vuid-2-1\":\"fs-2-1\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-2\"}},{\"type\":\"type-3\",\"action\":\"action-3\",\"identifiers\":{\"vuid-3-3\":\"fs-3-3\",\"vuid-3-2\":\"fs-3-2\",\"vuid-3-1\":\"fs-3-1\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-3\"}}]";
         String serializedString = jsonSerializer.serializeEvents(events);
-        System.out.println(serializedString);
         assertEquals(mapper.readTree(expectedResult), mapper.readTree(serializedString));
+    }
+
+    @Test
+    public void serializeEmptyList() throws JsonProcessingException {
+        List<ODPEvent> events = Collections.emptyList();
+        String expectedResult = "[]";
+        String serializedString = jsonSerializer.serializeEvents(events);
+        assertEquals(expectedResult, serializedString);
     }
 
     private static ODPEvent createTestEvent(String index) {

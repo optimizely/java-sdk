@@ -13,18 +13,18 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.odp.parser;
+package com.optimizely.ab.odp.serializer;
 
 import com.optimizely.ab.internal.PropertyUtils;
-import com.optimizely.ab.odp.parser.impl.GsonParser;
-import com.optimizely.ab.odp.parser.impl.JsonParser;
+import com.optimizely.ab.odp.serializer.impl.GsonSerializer;
+import com.optimizely.ab.odp.serializer.impl.JsonSerializer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-public class ResponseJsonParserFactoryTest {
+public class ODPJsonSerializerFactoryTest {
     @Before
     @After
     public void clearParserSystemProperty() {
@@ -32,19 +32,19 @@ public class ResponseJsonParserFactoryTest {
     }
 
     @Test
-    public void getGsonParserWhenNoDefaultIsSet() {
-        assertEquals(GsonParser.class, ResponseJsonParserFactory.getParser().getClass());
+    public void getGsonSerializerWhenNoDefaultIsSet() {
+        assertEquals(GsonSerializer.class, ODPJsonSerializerFactory.getSerializer().getClass());
     }
 
     @Test
-    public void getCorrectParserWhenValidDefaultIsProvided() {
+    public void getCorrectSerializerWhenValidDefaultIsProvided() {
         PropertyUtils.set("default_parser", "JSON_CONFIG_PARSER");
-        assertEquals(JsonParser.class, ResponseJsonParserFactory.getParser().getClass());
+        assertEquals(JsonSerializer.class, ODPJsonSerializerFactory.getSerializer().getClass());
     }
 
     @Test
-    public void getGsonParserWhenGivenDefaultParserDoesNotExist() {
+    public void getGsonSerializerWhenGivenDefaultSerializerDoesNotExist() {
         PropertyUtils.set("default_parser", "GARBAGE_VALUE");
-        assertEquals(GsonParser.class, ResponseJsonParserFactory.getParser().getClass());
+        assertEquals(GsonSerializer.class, ODPJsonSerializerFactory.getSerializer().getClass());
     }
 }
