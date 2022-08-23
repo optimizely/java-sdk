@@ -17,7 +17,9 @@ package com.optimizely.ab.odp.serializer;
 
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.odp.serializer.impl.GsonSerializer;
+import com.optimizely.ab.odp.serializer.impl.JacksonSerializer;
 import com.optimizely.ab.odp.serializer.impl.JsonSerializer;
+import com.optimizely.ab.odp.serializer.impl.JsonSimpleSerializer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,9 +39,21 @@ public class ODPJsonSerializerFactoryTest {
     }
 
     @Test
-    public void getCorrectSerializerWhenValidDefaultIsProvided() {
+    public void getCorrectSerializerWhenValidDefaultIsProvidedIsJson() {
         PropertyUtils.set("default_parser", "JSON_CONFIG_PARSER");
         assertEquals(JsonSerializer.class, ODPJsonSerializerFactory.getSerializer().getClass());
+    }
+
+    @Test
+    public void getCorrectSerializerWhenValidDefaultIsProvidedIsJsonSimple() {
+        PropertyUtils.set("default_parser", "JSON_SIMPLE_CONFIG_PARSER");
+        assertEquals(JsonSimpleSerializer.class, ODPJsonSerializerFactory.getSerializer().getClass());
+    }
+
+    @Test
+    public void getCorrectSerializerWhenValidDefaultIsProvidedIsJackson() {
+        PropertyUtils.set("default_parser", "JACKSON_CONFIG_PARSER");
+        assertEquals(JacksonSerializer.class, ODPJsonSerializerFactory.getSerializer().getClass());
     }
 
     @Test

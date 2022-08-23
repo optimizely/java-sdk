@@ -51,7 +51,7 @@ public class ODPJsonSerializerTest {
 
         ObjectMapper mapper = new ObjectMapper();
 
-        String expectedResult = "[{\"type\":\"type-1\",\"action\":\"action-1\",\"identifiers\":{\"vuid-1-3\":\"fs-1-3\",\"vuid-1-1\":\"fs-1-1\",\"vuid-1-2\":\"fs-1-2\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-1\"}},{\"type\":\"type-2\",\"action\":\"action-2\",\"identifiers\":{\"vuid-2-3\":\"fs-2-3\",\"vuid-2-2\":\"fs-2-2\",\"vuid-2-1\":\"fs-2-1\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-2\"}},{\"type\":\"type-3\",\"action\":\"action-3\",\"identifiers\":{\"vuid-3-3\":\"fs-3-3\",\"vuid-3-2\":\"fs-3-2\",\"vuid-3-1\":\"fs-3-1\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-3\"}}]";
+        String expectedResult = "[{\"type\":\"type-1\",\"action\":\"action-1\",\"identifiers\":{\"vuid-1-3\":\"fs-1-3\",\"vuid-1-1\":\"fs-1-1\",\"vuid-1-2\":\"fs-1-2\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-1\",\"data-num\":1,\"data-bool-true\":true,\"data-bool-false\":false,\"data-float\":2.33}},{\"type\":\"type-2\",\"action\":\"action-2\",\"identifiers\":{\"vuid-2-3\":\"fs-2-3\",\"vuid-2-2\":\"fs-2-2\",\"vuid-2-1\":\"fs-2-1\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-2\",\"data-num\":2,\"data-bool-true\":true,\"data-bool-false\":false,\"data-float\":2.33}},{\"type\":\"type-3\",\"action\":\"action-3\",\"identifiers\":{\"vuid-3-3\":\"fs-3-3\",\"vuid-3-2\":\"fs-3-2\",\"vuid-3-1\":\"fs-3-1\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-3\",\"data-num\":3,\"data-bool-true\":true,\"data-bool-false\":false,\"data-float\":2.33}}]";
         String serializedString = jsonSerializer.serializeEvents(events);
         assertEquals(mapper.readTree(expectedResult), mapper.readTree(serializedString));
     }
@@ -70,9 +70,14 @@ public class ODPJsonSerializerTest {
         identifiers.put("vuid-" + index + "-2", "fs-" + index + "-2");
         identifiers.put("vuid-" + index + "-3", "fs-" + index + "-3");
 
-        Map<String, String> data = new HashMap<>();
+        Map<String, Object> data = new HashMap<>();
         data.put("source", "java-sdk");
         data.put("data-1", "data-value-" + index);
+        data.put("data-num", Integer.parseInt(index));
+        data.put("data-float", 2.33);
+        data.put("data-bool-true", true);
+        data.put("data-bool-false", false);
+
 
         return new ODPEvent("type-" + index, "action-" + index, identifiers, data);
     }

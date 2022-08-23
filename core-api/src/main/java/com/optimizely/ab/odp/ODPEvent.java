@@ -21,9 +21,9 @@ public class ODPEvent {
     private String type;
     private String action;
     private Map<String, String > identifiers;
-    private Map<String, String> data;
+    private Map<String, Object> data;
 
-    public ODPEvent(String type, String action, Map<String, String> identifiers, Map<String, String> data) {
+    public ODPEvent(String type, String action, Map<String, String> identifiers, Map<String, Object> data) {
         this.type = type;
         this.action = action;
         this.identifiers = identifiers;
@@ -54,11 +54,11 @@ public class ODPEvent {
         this.identifiers = identifiers;
     }
 
-    public Map<String, String> getData() {
+    public Map<String, Object> getData() {
         return data;
     }
 
-    public void setData(Map<String, String> data) {
+    public void setData(Map<String, Object> data) {
         this.data = data;
     }
 }

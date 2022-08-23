@@ -42,7 +42,7 @@ public class JsonSimpleSerializer implements ODPJsonSerializer {
 
             if (event.getData() != null) {
                 JSONObject data = new JSONObject();
-                for (Map.Entry<String, String> dataEntry : event.getData().entrySet()) {
+                for (Map.Entry<String, Object> dataEntry : event.getData().entrySet()) {
                     data.put(dataEntry.getKey(), dataEntry.getValue());
                 }
                 eventObject.put("data", data);
