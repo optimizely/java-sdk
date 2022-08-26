@@ -20,5 +20,5 @@ import java.util.List;
 public interface ODPApiManager {
     String fetchQualifiedSegments(String apiKey, String apiEndpoint, String userKey, String userValue, List<String> segmentsToCheck);
 
-    Integer sendEvents(String apiKey, String apiEndpoint, List<ODPEvent> events);
+    Integer sendEvents(String apiKey, String apiEndpoint, String eventPayload);
 }

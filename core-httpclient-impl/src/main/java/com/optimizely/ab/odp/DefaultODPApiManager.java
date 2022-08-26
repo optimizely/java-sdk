@@ -17,8 +17,6 @@ package com.optimizely.ab.odp;
 
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
-import com.optimizely.ab.odp.serializer.ODPJsonSerializer;
-import com.optimizely.ab.odp.serializer.ODPJsonSerializerFactory;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -36,26 +34,13 @@ public class DefaultODPApiManager implements ODPApiManager {
 
     private final OptimizelyHttpClient httpClient;
 
-    private final ODPJsonSerializer jsonSerializer;
-
     public DefaultODPApiManager() {
-        this(OptimizelyHttpClient.builder().build(), ODPJsonSerializerFactory.getSerializer());
+        this(OptimizelyHttpClient.builder().build());
     }
 
     @VisibleForTesting
-    DefaultODPApiManager(OptimizelyHttpClient httpClient, ODPJsonSerializer jsonSerializer) {
-
-        if (httpClient != null) {
-            this.httpClient = httpClient;
-        } else {
-            this.httpClient = OptimizelyHttpClient.builder().build();
-        }
-
-        if (jsonSerializer != null) {
-            this.jsonSerializer = jsonSerializer;
-        } else {
-            this.jsonSerializer = ODPJsonSerializerFactory.getSerializer();
-        }
+    DefaultODPApiManager(OptimizelyHttpClient httpClient) {
+        this.httpClient = httpClient;
     }
 
     @VisibleForTesting
@@ -181,18 +166,35 @@ public class DefaultODPApiManager implements ODPApiManager {
         return null;
     }
 
-    @Override
-    public Integer sendEvents(String apiKey, String apiEndpoint, List<ODPEvent> events) {
-        HttpPost request = new HttpPost(apiEndpoint);
-        String requestPayload = this.jsonSerializer.serializeEvents(events);
+    /*
+    eventPayload Format
+    [
+      {
+        "action": "identified",
+        "identifiers": {"vuid": <vuid>, "fs_user_id": <userId>, ....},
+        "data": {“source”: <source sdk>, ....},
+        "type": " fullstack "
+      },
+      {
+        "action": "client_initialized",
+        "identifiers": {"vuid": <vuid>, ....},
+        "data": {“source”: <source sdk>, ....},
+        "type": "fullstack"
+      }
+    ]
 
-        if (requestPayload == null || requestPayload.isEmpty()) {
-            logger.error("ODP event send failed (Failed to serialize event payload)");
-            return null;
-        }
+    Returns:
+    1. null, When there was a non-recoverable error and no retry is needed.
+    2. 0 If an unexpected error occurred and retrying can be useful.
+    3. HTTPStatus code if httpclient was able to make the request and was able to receive response.
+       It is recommended to retry if status code was 5xx.
+     */
+    @Override
+    public Integer sendEvents(String apiKey, String apiEndpoint, String eventPayload) {
+        HttpPost request = new HttpPost(apiEndpoint);
 
         try {
-            request.setEntity(new StringEntity(requestPayload));
+            request.setEntity(new StringEntity(eventPayload));
         } catch (UnsupportedEncodingException e) {
             logger.error("ODP event send failed (Error encoding request payload)", e);
             return null;

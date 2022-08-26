@@ -25,7 +25,7 @@ import java.util.List;
 public class GsonSerializer implements ODPJsonSerializer {
     @Override
     public String serializeEvents(List<ODPEvent> events) {
-        Gson gson = new GsonBuilder().create();
+        Gson gson = new GsonBuilder().serializeNulls().create();
         return gson.toJson(events);
     }
 }

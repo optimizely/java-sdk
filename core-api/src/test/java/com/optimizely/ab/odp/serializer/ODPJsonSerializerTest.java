@@ -51,7 +51,7 @@ public class ODPJsonSerializerTest {
 
         ObjectMapper mapper = new ObjectMapper();
 
-        String expectedResult = "[{\"type\":\"type-1\",\"action\":\"action-1\",\"identifiers\":{\"vuid-1-3\":\"fs-1-3\",\"vuid-1-1\":\"fs-1-1\",\"vuid-1-2\":\"fs-1-2\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-1\",\"data-num\":1,\"data-bool-true\":true,\"data-bool-false\":false,\"data-float\":2.33}},{\"type\":\"type-2\",\"action\":\"action-2\",\"identifiers\":{\"vuid-2-3\":\"fs-2-3\",\"vuid-2-2\":\"fs-2-2\",\"vuid-2-1\":\"fs-2-1\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-2\",\"data-num\":2,\"data-bool-true\":true,\"data-bool-false\":false,\"data-float\":2.33}},{\"type\":\"type-3\",\"action\":\"action-3\",\"identifiers\":{\"vuid-3-3\":\"fs-3-3\",\"vuid-3-2\":\"fs-3-2\",\"vuid-3-1\":\"fs-3-1\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-3\",\"data-num\":3,\"data-bool-true\":true,\"data-bool-false\":false,\"data-float\":2.33}}]";
+        String expectedResult = "[{\"type\":\"type-1\",\"action\":\"action-1\",\"identifiers\":{\"vuid-1-3\":\"fs-1-3\",\"vuid-1-1\":\"fs-1-1\",\"vuid-1-2\":\"fs-1-2\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-1\",\"data-num\":1,\"data-bool-true\":true,\"data-bool-false\":false,\"data-float\":2.33,\"data-null\":null}},{\"type\":\"type-2\",\"action\":\"action-2\",\"identifiers\":{\"vuid-2-3\":\"fs-2-3\",\"vuid-2-2\":\"fs-2-2\",\"vuid-2-1\":\"fs-2-1\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-2\",\"data-num\":2,\"data-bool-true\":true,\"data-bool-false\":false,\"data-float\":2.33,\"data-null\":null}},{\"type\":\"type-3\",\"action\":\"action-3\",\"identifiers\":{\"vuid-3-3\":\"fs-3-3\",\"vuid-3-2\":\"fs-3-2\",\"vuid-3-1\":\"fs-3-1\"},\"data\":{\"source\":\"java-sdk\",\"data-1\":\"data-value-3\",\"data-num\":3,\"data-bool-true\":true,\"data-bool-false\":false,\"data-float\":2.33,\"data-null\":null}}]";
         String serializedString = jsonSerializer.serializeEvents(events);
         assertEquals(mapper.readTree(expectedResult), mapper.readTree(serializedString));
     }
@@ -77,6 +77,7 @@ public class ODPJsonSerializerTest {
         data.put("data-float", 2.33);
         data.put("data-bool-true", true);
         data.put("data-bool-false", false);
+        data.put("data-null", null);
 
 
         return new ODPEvent("type-" + index, "action-" + index, identifiers, data);

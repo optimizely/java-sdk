@@ -18,7 +18,6 @@ package com.optimizely.ab.odp;
 import ch.qos.logback.classic.Level;
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.internal.LogbackVerifier;
-import com.optimizely.ab.odp.serializer.ODPJsonSerializer;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -31,7 +30,6 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
@@ -40,14 +38,10 @@ import static org.mockito.Mockito.*;
 public class DefaultODPApiManagerTest {
     private static final String validResponse = "{\"data\":{\"customer\":{\"audiences\":{\"edges\":[{\"node\":{\"name\":\"has_email\",\"state\":\"qualified\"}},{\"node\":{\"name\":\"has_email_opted_in\",\"state\":\"qualified\"}}]}}}}";
 
-    private static final String validEventPayload = "[{\"action\":\"identified\",\"identifiers\":{\"vuid\":\"testid\"},\"data\":{\"data_source_type\":\"sdk\",\"data_source\":\"javascript-sdk\"},\"type\":\"fullstack\"}]";
-
     @Rule
     public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
     OptimizelyHttpClient mockHttpClient;
-
-    ODPJsonSerializer mockJsonSerializer;
 
     @Before
     public void setUp() throws Exception {
@@ -65,11 +59,6 @@ public class DefaultODPApiManagerTest {
 
         when(mockHttpClient.execute(any(HttpPost.class)))
             .thenReturn(httpResponse);
-    }
-
-    private void setupJsonSerializer(String mockResponse) {
-        mockJsonSerializer = mock(ODPJsonSerializer.class);
-        when(mockJsonSerializer.serializeEvents(any())).thenReturn(mockResponse);
     }
 
     @Test
@@ -97,7 +86,7 @@ public class DefaultODPApiManagerTest {
 
     @Test
     public void generateCorrectRequestBody() throws Exception {
-        ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient, null);
+        ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient);
         apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", Arrays.asList("segment_1", "segment_2"));
         verify(mockHttpClient, times(1)).execute(any(HttpPost.class));
 
@@ -109,7 +98,7 @@ public class DefaultODPApiManagerTest {
 
     @Test
     public void returnResponseStringWhenStatusIs200() throws Exception {
-        ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient, null);
+        ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient);
         String responseString = apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", Arrays.asList("segment_1", "segment_2"));
         verify(mockHttpClient, times(1)).execute(any(HttpPost.class));
         assertEquals(validResponse, responseString);
@@ -118,35 +107,25 @@ public class DefaultODPApiManagerTest {
     @Test
     public void returnNullWhenStatusIsNot200AndLogError() throws Exception {
         setupHttpClient(500);
-        ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient, null);
+        ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient);
         String responseString = apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", Arrays.asList("segment_1", "segment_2"));
         verify(mockHttpClient, times(1)).execute(any(HttpPost.class));
         logbackVerifier.expectMessage(Level.ERROR, "Unexpected response from ODP server, Response code: 500, null");
-        assertEquals(null, responseString);
+        assertNull(responseString);
     }
 
     @Test
     public void eventDispatchSuccess() {
-        setupJsonSerializer(validEventPayload);
-        ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient, mockJsonSerializer);
-        apiManager.sendEvents("testKey", "testEndpoint", Collections.emptyList());
+        ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient);
+        apiManager.sendEvents("testKey", "testEndpoint", "[]");
         logbackVerifier.expectMessage(Level.DEBUG, "ODP Event Dispatched successfully");
     }
 
     @Test
     public void eventDispatchFailStatus() throws Exception {
         setupHttpClient(400);
-        setupJsonSerializer(validEventPayload);
-        ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient, mockJsonSerializer);
-        apiManager.sendEvents("testKey", "testEndpoint", Collections.emptyList());
+        ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient);
+        apiManager.sendEvents("testKey", "testEndpoint", "[]]");
         logbackVerifier.expectMessage(Level.ERROR, "ODP event send failed (Response code: 400, null)");
-    }
-
-    @Test
-    public void eventDispatchFailSerialize() {
-        setupJsonSerializer(null);
-        ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient, mockJsonSerializer);
-        apiManager.sendEvents("testKey", "testEndpoint", Collections.emptyList());
-        logbackVerifier.expectMessage(Level.ERROR, "ODP event send failed (Failed to serialize event payload)");
     }
 }

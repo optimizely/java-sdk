@@ -18,12 +18,42 @@ package com.optimizely.ab.odp.serializer.impl;
 import com.optimizely.ab.odp.ODPEvent;
 import com.optimizely.ab.odp.serializer.ODPJsonSerializer;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Map;
 
 public class JsonSerializer implements ODPJsonSerializer {
     @Override
     public String serializeEvents(List<ODPEvent> events) {
-        return new JSONArray(events).toString();
+        JSONArray jsonArray = new JSONArray();
+        for (ODPEvent event: events) {
+            JSONObject eventObject = new JSONObject();
+            eventObject.put("type", event.getType());
+            eventObject.put("action", event.getAction());
+
+            if (event.getIdentifiers() != null) {
+                JSONObject identifiers = new JSONObject();
+                for (Map.Entry<String, String> identifier : event.getIdentifiers().entrySet()) {
+                    identifiers.put(identifier.getKey(), identifier.getValue());
+                }
+                eventObject.put("identifiers", identifiers);
+            }
+
+            if (event.getData() != null) {
+                JSONObject data = new JSONObject();
+                for (Map.Entry<String, Object> dataEntry : event.getData().entrySet()) {
+                    data.put(dataEntry.getKey(), getJSONObjectValue(dataEntry.getValue()));
+                }
+                eventObject.put("data", data);
+            }
+
+            jsonArray.put(eventObject);
+        }
+        return jsonArray.toString();
+    }
+
+    private static Object getJSONObjectValue(Object value)  {
+        return value == null ? JSONObject.NULL : value;
     }
 }
