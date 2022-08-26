@@ -205,7 +205,7 @@ public class DefaultODPApiManager implements ODPApiManager {
             response = httpClient.execute(request);
         } catch (IOException e) {
             logger.error("Error retrieving response from event request", e);
-            return null;
+            return 0;
         }
 
         int statusCode = response.getStatusLine().getStatusCode();
