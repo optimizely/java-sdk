@@ -13,12 +13,19 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.odp;
+package com.optimizely.ab.odp.serializer.impl;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.optimizely.ab.odp.ODPEvent;
+import com.optimizely.ab.odp.serializer.ODPJsonSerializer;
 
 import java.util.List;
 
-public interface ODPApiManager {
-    String fetchQualifiedSegments(String apiKey, String apiEndpoint, String userKey, String userValue, List<String> segmentsToCheck);
-
-    Integer sendEvents(String apiKey, String apiEndpoint, String eventPayload);
+public class GsonSerializer implements ODPJsonSerializer {
+    @Override
+    public String serializeEvents(List<ODPEvent> events) {
+        Gson gson = new GsonBuilder().serializeNulls().create();
+        return gson.toJson(events);
+    }
 }

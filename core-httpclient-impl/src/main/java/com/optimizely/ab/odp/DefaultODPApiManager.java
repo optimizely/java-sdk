@@ -17,7 +17,6 @@ package com.optimizely.ab.odp;
 
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
-import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -165,6 +164,62 @@ public class DefaultODPApiManager implements ODPApiManager {
             closeHttpResponse(response);
         }
         return null;
+    }
+
+    /*
+    eventPayload Format
+    [
+      {
+        "action": "identified",
+        "identifiers": {"vuid": <vuid>, "fs_user_id": <userId>, ....},
+        "data": {“source”: <source sdk>, ....},
+        "type": " fullstack "
+      },
+      {
+        "action": "client_initialized",
+        "identifiers": {"vuid": <vuid>, ....},
+        "data": {“source”: <source sdk>, ....},
+        "type": "fullstack"
+      }
+    ]
+
+    Returns:
+    1. null, When there was a non-recoverable error and no retry is needed.
+    2. 0 If an unexpected error occurred and retrying can be useful.
+    3. HTTPStatus code if httpclient was able to make the request and was able to receive response.
+       It is recommended to retry if status code was 5xx.
+     */
+    @Override
+    public Integer sendEvents(String apiKey, String apiEndpoint, String eventPayload) {
+        HttpPost request = new HttpPost(apiEndpoint);
+
+        try {
+            request.setEntity(new StringEntity(eventPayload));
+        } catch (UnsupportedEncodingException e) {
+            logger.error("ODP event send failed (Error encoding request payload)", e);
+            return null;
+        }
+        request.setHeader("x-api-key", apiKey);
+        request.setHeader("content-type", "application/json");
+
+        CloseableHttpResponse response = null;
+        try {
+            response = httpClient.execute(request);
+        } catch (IOException e) {
+            logger.error("Error retrieving response from event request", e);
+            return 0;
+        }
+
+        int statusCode = response.getStatusLine().getStatusCode();
+        if ( statusCode >= 400) {
+            StatusLine statusLine = response.getStatusLine();
+            logger.error(String.format("ODP event send failed (Response code: %d, %s)", statusLine.getStatusCode(), statusLine.getReasonPhrase()));
+        } else {
+            logger.debug("ODP Event Dispatched successfully");
+        }
+
+        closeHttpResponse(response);
+        return statusCode;
     }
 
     private static void closeHttpResponse(CloseableHttpResponse response) {

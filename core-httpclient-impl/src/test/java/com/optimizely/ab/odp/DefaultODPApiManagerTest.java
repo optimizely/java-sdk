@@ -111,6 +111,21 @@ public class DefaultODPApiManagerTest {
         String responseString = apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", Arrays.asList("segment_1", "segment_2"));
         verify(mockHttpClient, times(1)).execute(any(HttpPost.class));
         logbackVerifier.expectMessage(Level.ERROR, "Unexpected response from ODP server, Response code: 500, null");
-        assertEquals(null, responseString);
+        assertNull(responseString);
+    }
+
+    @Test
+    public void eventDispatchSuccess() {
+        ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient);
+        apiManager.sendEvents("testKey", "testEndpoint", "[]");
+        logbackVerifier.expectMessage(Level.DEBUG, "ODP Event Dispatched successfully");
+    }
+
+    @Test
+    public void eventDispatchFailStatus() throws Exception {
+        setupHttpClient(400);
+        ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient);
+        apiManager.sendEvents("testKey", "testEndpoint", "[]]");
+        logbackVerifier.expectMessage(Level.ERROR, "ODP event send failed (Response code: 400, null)");
     }
 }

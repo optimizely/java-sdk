@@ -13,12 +13,12 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.optimizely.ab.odp;
+package com.optimizely.ab.odp.serializer;
+
+import com.optimizely.ab.odp.ODPEvent;
 
 import java.util.List;
 
-public interface ODPApiManager {
-    String fetchQualifiedSegments(String apiKey, String apiEndpoint, String userKey, String userValue, List<String> segmentsToCheck);
-
-    Integer sendEvents(String apiKey, String apiEndpoint, String eventPayload);
+public interface ODPJsonSerializer {
+    public String serializeEvents(List<ODPEvent> events);
 }

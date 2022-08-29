@@ -15,7 +15,6 @@
  */
 package com.optimizely.ab.odp.parser;
 
-import com.optimizely.ab.internal.JsonParserProvider;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.odp.parser.impl.GsonParser;
 import com.optimizely.ab.odp.parser.impl.JsonParser;
