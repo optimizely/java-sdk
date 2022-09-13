@@ -37,11 +37,10 @@ public class ODPEventManager {
     private int batchSize = DEFAULT_BATCH_SIZE;
 
     private Boolean isRunning = false;
-    private ODPConfig odpConfig;
+    private volatile ODPConfig odpConfig;
     private EventDispatcherThread eventDispatcherThread;
 
     private final ODPApiManager apiManager;
-    private final List<ODPEvent> currentBatch = new ArrayList<>();
     private final BlockingQueue<ODPEvent> eventQueue = new LinkedBlockingQueue<>();
 
     public ODPEventManager(ODPConfig odpConfig, ODPApiManager apiManager) {
@@ -87,6 +86,11 @@ public class ODPEventManager {
     }
 
     private void processEvent(ODPEvent event) {
+        if (!odpConfig.isReady()) {
+            logger.debug("Unable to Process Event. ODPConfig is not ready.");
+            return;
+        }
+
         if (!isRunning) {
             logger.warn("Failed to Process ODP Event. ODPEventManager is not running");
             return;
@@ -98,7 +102,7 @@ public class ODPEventManager {
         }
 
         if (!eventQueue.offer(event)) {
-            logger.warn("Failed to Process ODP Event. Event Queue is not accepting any more events");
+            logger.error("Failed to Process ODP Event. Event Queue is not accepting any more events");
         }
     }
 
@@ -111,11 +115,17 @@ public class ODPEventManager {
 
         private volatile boolean shouldStop = false;
 
+        private final List<ODPEvent> currentBatch = new ArrayList<>();
+
+        private long lastFlushTime = new Date().getTime();
+
         @Override
         public void run() {
             while (true) {
                 try {
-                    ODPEvent nextEvent = eventQueue.poll(FLUSH_INTERVAL, TimeUnit.MILLISECONDS);
+                    long nextFlushMillis = Math.max(0, FLUSH_INTERVAL - (new Date().getTime() - lastFlushTime));
+                    ODPEvent nextEvent = eventQueue.poll(nextFlushMillis, TimeUnit.MILLISECONDS);
+
                     if (nextEvent == null) {
                         // null means no new events received and flush interval is over, dispatch whatever is in the batch.
                         if (!currentBatch.isEmpty()) {
@@ -126,10 +136,12 @@ public class ODPEventManager {
                         }
                         continue;
                     }
+
+                    currentBatch.add(nextEvent);
+
                     if (currentBatch.size() >= batchSize) {
                         flush();
                     }
-                    currentBatch.add(nextEvent);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -139,6 +151,8 @@ public class ODPEventManager {
         }
 
         private void flush() {
+            lastFlushTime = new Date().getTime();
+
             if (odpConfig.isReady()) {
                 String payload = ODPJsonSerializerFactory.getSerializer().serializeEvents(currentBatch);
                 String endpoint = odpConfig.getApiHost() + EVENT_URL_PATH;
@@ -149,7 +163,7 @@ public class ODPEventManager {
                     numAttempts ++;
                 } while (numAttempts < MAX_RETRIES && statusCode != null && (statusCode == 0 || statusCode >= 500));
             } else {
-                logger.warn("ODPConfig not ready, discarding event batch");
+                logger.debug("ODPConfig not ready, discarding event batch");
             }
             currentBatch.clear();
         }
