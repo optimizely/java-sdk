@@ -29,12 +29,13 @@ public class ODPEventManager {
     private static final Logger logger = LoggerFactory.getLogger(ODPEventManager.class);
     private static final int DEFAULT_BATCH_SIZE = 10;
     private static final int DEFAULT_QUEUE_SIZE = 10000;
-    private static final int FLUSH_INTERVAL = 1000;
+    private static final int DEFAULT_FLUSH_INTERVAL = 1000;
     private static final int MAX_RETRIES = 3;
     private static final String EVENT_URL_PATH = "/v3/events";
 
-    private int queueSize = DEFAULT_QUEUE_SIZE;
-    private int batchSize = DEFAULT_BATCH_SIZE;
+    private final int queueSize;
+    private final int batchSize;
+    private final int flushInterval;
 
     private Boolean isRunning = false;
     private volatile ODPConfig odpConfig;
@@ -44,14 +45,15 @@ public class ODPEventManager {
     private final BlockingQueue<ODPEvent> eventQueue = new LinkedBlockingQueue<>();
 
     public ODPEventManager(ODPConfig odpConfig, ODPApiManager apiManager) {
-        this.apiManager = apiManager;
-        this.odpConfig = odpConfig;
+        this(odpConfig, apiManager, null, null, null);
     }
 
-    public ODPEventManager(ODPConfig odpConfig, ODPApiManager apiManager, int batchSize, int queueSize) {
-        this(odpConfig, apiManager);
-        this.batchSize = batchSize;
-        this.queueSize = queueSize;
+    public ODPEventManager(ODPConfig odpConfig, ODPApiManager apiManager, Integer batchSize, Integer queueSize, Integer flushInterval) {
+        this.odpConfig = odpConfig;
+        this.apiManager = apiManager;
+        this.batchSize = (batchSize != null && batchSize > 1) ? batchSize : DEFAULT_BATCH_SIZE;
+        this.queueSize = queueSize != null ? queueSize : DEFAULT_QUEUE_SIZE;
+        this.flushInterval = (flushInterval != null && flushInterval > 0) ? flushInterval : DEFAULT_FLUSH_INTERVAL;
     }
 
     public void start() {
@@ -64,10 +66,12 @@ public class ODPEventManager {
         this.odpConfig = odpConfig;
     }
 
-    public void sendEvents(List<ODPEvent> events) {
-        for (ODPEvent event: events) {
-            sendEvent(event);
-        }
+    public void identifyUser(String vuid, String userId) {
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put(ODPUserKey.VUID.getKeyString(), vuid);
+        identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
+        ODPEvent event = new ODPEvent("fullstack", "client_initialized", identifiers, null);
+        sendEvent(event);
     }
 
     public void sendEvent(ODPEvent event) {
@@ -86,13 +90,13 @@ public class ODPEventManager {
     }
 
     private void processEvent(ODPEvent event) {
-        if (!odpConfig.isReady()) {
-            logger.debug("Unable to Process Event. ODPConfig is not ready.");
+        if (!isRunning) {
+            logger.warn("Failed to Process ODP Event. ODPEventManager is not running");
             return;
         }
 
-        if (!isRunning) {
-            logger.warn("Failed to Process ODP Event. ODPEventManager is not running");
+        if (!odpConfig.isReady()) {
+            logger.debug("Unable to Process Event. ODPConfig is not ready.");
             return;
         }
 
@@ -123,7 +127,7 @@ public class ODPEventManager {
         public void run() {
             while (true) {
                 try {
-                    long nextFlushMillis = Math.max(0, FLUSH_INTERVAL - (new Date().getTime() - lastFlushTime));
+                    long nextFlushMillis = Math.max(0, flushInterval - (new Date().getTime() - lastFlushTime));
                     ODPEvent nextEvent = eventQueue.poll(nextFlushMillis, TimeUnit.MILLISECONDS);
 
                     if (nextEvent == null) {
@@ -147,7 +151,7 @@ public class ODPEventManager {
                 }
             }
 
-            logger.warn("Exiting ODP Event Dispatcher Thread");
+            logger.debug("Exiting ODP Event Dispatcher Thread.");
         }
 
         private void flush() {

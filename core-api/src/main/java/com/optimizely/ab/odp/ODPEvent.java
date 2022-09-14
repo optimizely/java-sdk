@@ -15,6 +15,7 @@
  */
 package com.optimizely.ab.odp;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class ODPEvent {
@@ -26,8 +27,8 @@ public class ODPEvent {
     public ODPEvent(String type, String action, Map<String, String> identifiers, Map<String, Object> data) {
         this.type = type;
         this.action = action;
-        this.identifiers = identifiers;
-        this.data = data;
+        this.identifiers = identifiers != null ? identifiers : Collections.emptyMap();
+        this.data = data != null ? data : Collections.emptyMap();
     }
 
     public String getType() {
