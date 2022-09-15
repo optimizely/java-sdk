@@ -47,6 +47,9 @@ public class ODPEventManager {
     private EventDispatcherThread eventDispatcherThread;
 
     private final ODPApiManager apiManager;
+
+    // The eventQueue needs to be thread safe. We are not doing anything extra for thread safety here
+    //      because `LinkedBlockingQueue` itself is thread safe.
     private final BlockingQueue<ODPEvent> eventQueue = new LinkedBlockingQueue<>();
 
     public ODPEventManager(@Nonnull ODPConfig odpConfig, @Nonnull ODPApiManager apiManager) {
@@ -139,7 +142,6 @@ public class ODPEventManager {
                     // If batch has events, set the timeout to remaining time for flush interval,
                     //      otherwise wait for the new event indefinitely
                     if (currentBatch.size() > 0) {
-                        //long nextFlushMillis = Math.max(0, flushInterval - (new Date().getTime() - lastFlushTime));
                         nextEvent = eventQueue.poll(nextFlushTime - new Date().getTime(), TimeUnit.MILLISECONDS);
                     } else {
                         nextEvent = eventQueue.poll();
