@@ -15,6 +15,8 @@
  */
 package com.optimizely.ab.odp;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Map;
 
@@ -24,7 +26,7 @@ public class ODPEvent {
     private Map<String, String > identifiers;
     private Map<String, Object> data;
 
-    public ODPEvent(String type, String action, Map<String, String> identifiers, Map<String, Object> data) {
+    public ODPEvent(@Nonnull String type, @Nonnull String action, @Nullable Map<String, String> identifiers, @Nullable Map<String, Object> data) {
         this.type = type;
         this.action = action;
         this.identifiers = identifiers != null ? identifiers : Collections.emptyMap();

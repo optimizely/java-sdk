@@ -72,7 +72,7 @@ public class ODPEventManagerTest {
         eventManager.start();
         ODPEvent event = new ODPEvent("test-type", "test-action", Collections.emptyMap(), Collections.emptyMap());
         eventManager.sendEvent(event);
-        logbackVerifier.expectMessage(Level.DEBUG, "Unable to Process Event. ODPConfig is not ready.");
+        logbackVerifier.expectMessage(Level.DEBUG, "Unable to Process ODP Event. ODPConfig is not ready.");
     }
 
     @Test
