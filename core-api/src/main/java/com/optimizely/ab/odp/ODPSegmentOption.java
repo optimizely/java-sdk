@@ -1,5 +1,6 @@
 /**
- *    Copyright 2022, Optimizely Inc. and contributors
+ *
+ *    Copyright 2022, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,10 +16,10 @@
  */
 package com.optimizely.ab.odp;
 
-import java.util.List;
+public enum ODPSegmentOption {
 
-public interface ODPApiManager {
-    String fetchQualifiedSegments(String apiKey, String apiEndpoint, String userKey, String userValue, List<String> segmentsToCheck);
+    IGNORE_CACHE,
 
-    Integer sendEvents(String apiKey, String apiEndpoint, String eventPayload);
+    RESET_CACHE;
+
 }

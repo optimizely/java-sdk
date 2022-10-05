@@ -1,5 +1,6 @@
 /**
- *    Copyright 2022, Optimizely Inc. and contributors
+ *
+ *    Copyright 2022, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,10 +16,19 @@
  */
 package com.optimizely.ab.odp;
 
-import java.util.List;
+public enum ODPUserKey {
 
-public interface ODPApiManager {
-    String fetchQualifiedSegments(String apiKey, String apiEndpoint, String userKey, String userValue, List<String> segmentsToCheck);
+    VUID("vuid"),
 
-    Integer sendEvents(String apiKey, String apiEndpoint, String eventPayload);
+    FS_USER_ID("fs_user_id");
+
+    private final String keyString;
+
+    ODPUserKey(String keyString) {
+        this.keyString = keyString;
+    }
+
+    public String getKeyString() {
+        return keyString;
+    }
 }
