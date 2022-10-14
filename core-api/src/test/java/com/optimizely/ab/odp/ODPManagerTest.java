@@ -49,7 +49,7 @@ public class ODPManagerTest {
     @Test
     public void shouldStartEventManagerWhenODPManagerIsInitialized() {
         ODPConfig config = new ODPConfig("test-key", "test-host");
-        ODPManager odpManager = new ODPManager(config, mockSegmentManager, mockEventManager);
+        new ODPManager(config, mockSegmentManager, mockEventManager);
         verify(mockEventManager, times(1)).start();
     }
 
