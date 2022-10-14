@@ -63,7 +63,7 @@ public class ODPManagerTest {
 
         odpManager.updateSettings("test-host-updated", "test-key-updated", Arrays.asList("segment1"));
         odpManager.getEventManager().identifyUser("vuid", "fsuid");
-        Thread.sleep(1200);
+        Thread.sleep(2000);
         verify(mockApiManager, times(1))
             .sendEvents(eq("test-key-updated"), eq("test-host-updated/v3/events"), any());
     }
