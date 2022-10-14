@@ -71,4 +71,8 @@ public class ODPConfig {
     public synchronized void setAllSegments(List<String> allSegments) {
         this.allSegments = allSegments;
     }
+
+    public Boolean equals(ODPConfig toCompare) {
+        return getApiHost().equals(toCompare.getApiHost()) && getApiKey().equals(toCompare.getApiKey()) && getAllSegments().equals(toCompare.allSegments);
+    }
 }

@@ -34,7 +34,7 @@ public class ODPSegmentManager {
 
     private final ODPApiManager apiManager;
 
-    private final ODPConfig odpConfig;
+    private volatile ODPConfig odpConfig;
 
     private final Cache<List<String>> segmentsCache;
 
@@ -104,5 +104,13 @@ public class ODPSegmentManager {
 
     private String getCacheKey(String userKey, String userValue) {
         return userKey + "-$-" + userValue;
+    }
+
+    public void updateSettings(ODPConfig odpConfig) {
+        this.odpConfig = odpConfig;
+    }
+
+    public void resetCache() {
+        segmentsCache.reset();
     }
 }
