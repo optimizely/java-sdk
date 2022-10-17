@@ -216,7 +216,16 @@ public class ODPEventManagerTest {
         Thread.sleep(500);
         Mockito.verify(mockApiManager, times(2)).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), any());
         eventManager.updateSettings(new ODPConfig("new-key", "http://www.new-odp-host.com"));
-        Thread.sleep(1500);
+
+        // Should immediately Flush current batch with old ODP config when settings are changed
+        Thread.sleep(100);
+        Mockito.verify(mockApiManager, times(3)).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), any());
+
+        // New events should use new config
+        for (int i = 0; i < 10; i++) {
+            eventManager.sendEvent(getEvent(i));
+        }
+        Thread.sleep(100);
         Mockito.verify(mockApiManager, times(1)).sendEvents(eq("new-key"), eq("http://www.new-odp-host.com/v3/events"), any());
     }
 
