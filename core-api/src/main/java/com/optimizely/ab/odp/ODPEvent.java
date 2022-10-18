@@ -17,6 +17,7 @@ package com.optimizely.ab.odp;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.beans.Transient;
 import java.util.Collections;
 import java.util.Map;
 
@@ -63,5 +64,21 @@ public class ODPEvent {
 
     public void setData(Map<String, Object> data) {
         this.data = data;
+    }
+
+    @Transient
+    public Boolean isDataValid() {
+        for (Object entry: this.data.values()) {
+            if (
+                !( entry instanceof String
+                || entry instanceof Integer
+                || entry instanceof Long
+                || entry instanceof Boolean
+                || entry instanceof Float
+                || entry instanceof Double)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

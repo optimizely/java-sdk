@@ -76,7 +76,7 @@ public class ODPConfig {
         return getApiHost().equals(toCompare.getApiHost()) && getApiKey().equals(toCompare.getApiKey()) && getAllSegments().equals(toCompare.allSegments);
     }
 
-    public ODPConfig getClone() {
+    public synchronized ODPConfig getClone() {
         return new ODPConfig(apiKey, apiHost, allSegments);
     }
 }

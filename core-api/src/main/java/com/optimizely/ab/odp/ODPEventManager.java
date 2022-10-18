@@ -71,8 +71,7 @@ public class ODPEventManager {
     }
 
     public void updateSettings(ODPConfig odpConfig) {
-        if (!this.odpConfig.equals(odpConfig)) {
-            eventQueue.offer(new FlushEvent(this.odpConfig));
+        if (!this.odpConfig.equals(odpConfig) && eventQueue.offer(new FlushEvent(this.odpConfig))) {
             this.odpConfig = odpConfig;
         }
     }
@@ -88,6 +87,10 @@ public class ODPEventManager {
     }
 
     public void sendEvent(ODPEvent event) {
+        if (!event.isDataValid()) {
+            logger.error("Error Sending Event: ODP data is not valid");
+            return;
+        }
         event.setData(augmentCommonData(event.getData()));
         processEvent(event);
     }

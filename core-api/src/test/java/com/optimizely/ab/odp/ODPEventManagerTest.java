@@ -229,6 +229,22 @@ public class ODPEventManagerTest {
         Mockito.verify(mockApiManager, times(1)).sendEvents(eq("new-key"), eq("http://www.new-odp-host.com/v3/events"), any());
     }
 
+    @Test
+    public void validateEventData() {
+        ODPEvent event = new ODPEvent("type", "action", null, null);
+        Map<String, Object> data = new HashMap<>();
+
+        data.put("String", "string Value");
+        data.put("Integer", 100);
+        data.put("Float", 33.89);
+        data.put("Boolean", true);
+        event.setData(data);
+        assertTrue(event.isDataValid());
+
+        data.put("RandomObject", new Object());
+        assertFalse(event.isDataValid());
+    }
+
     private ODPEvent getEvent(int id) {
         Map<String, String> identifiers = new HashMap<>();
         identifiers.put("identifier1", "value1-" + id);
