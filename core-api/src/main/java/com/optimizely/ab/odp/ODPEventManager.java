@@ -50,7 +50,7 @@ public class ODPEventManager {
 
     // The eventQueue needs to be thread safe. We are not doing anything extra for thread safety here
     //      because `LinkedBlockingQueue` itself is thread safe.
-    private final BlockingQueue<ODPEvent> eventQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Object> eventQueue = new LinkedBlockingQueue<>();
 
     public ODPEventManager(@Nonnull ODPConfig odpConfig, @Nonnull ODPApiManager apiManager) {
         this(odpConfig, apiManager, null, null, null);
@@ -71,7 +71,9 @@ public class ODPEventManager {
     }
 
     public void updateSettings(ODPConfig odpConfig) {
-        this.odpConfig = odpConfig;
+        if (!this.odpConfig.equals(odpConfig) && eventQueue.offer(new FlushEvent(this.odpConfig))) {
+            this.odpConfig = odpConfig;
+        }
     }
 
     public void identifyUser(@Nullable String vuid, String userId) {
@@ -85,6 +87,10 @@ public class ODPEventManager {
     }
 
     public void sendEvent(ODPEvent event) {
+        if (!event.isDataValid()) {
+            logger.error("ODP event send failed (ODP data is not valid)");
+            return;
+        }
         event.setData(augmentCommonData(event.getData()));
         processEvent(event);
     }
@@ -137,7 +143,7 @@ public class ODPEventManager {
         public void run() {
             while (true) {
                 try {
-                    ODPEvent nextEvent;
+                    Object nextEvent;
 
                     // If batch has events, set the timeout to remaining time for flush interval,
                     //      otherwise wait for the new event indefinitely
@@ -158,12 +164,17 @@ public class ODPEventManager {
                         continue;
                     }
 
+                    if (nextEvent instanceof FlushEvent) {
+                        flush(((FlushEvent) nextEvent).getOdpConfig());
+                        continue;
+                    }
+
                     if (currentBatch.size() == 0) {
                         // Batch starting, create a new flush time
                         nextFlushTime = new Date().getTime() + flushInterval;
                     }
 
-                    currentBatch.add(nextEvent);
+                    currentBatch.add((ODPEvent) nextEvent);
 
                     if (currentBatch.size() >= batchSize) {
                         flush();
@@ -176,7 +187,7 @@ public class ODPEventManager {
             logger.debug("Exiting ODP Event Dispatcher Thread.");
         }
 
-        private void flush() {
+        private void flush(ODPConfig odpConfig) {
             if (odpConfig.isReady()) {
                 String payload = ODPJsonSerializerFactory.getSerializer().serializeEvents(currentBatch);
                 String endpoint = odpConfig.getApiHost() + EVENT_URL_PATH;
@@ -192,8 +203,23 @@ public class ODPEventManager {
             currentBatch.clear();
         }
 
+        private void flush() {
+            flush(odpConfig);
+        }
+
         public void signalStop() {
             shouldStop = true;
+        }
+    }
+
+    private static class FlushEvent {
+        private final ODPConfig odpConfig;
+        public FlushEvent(ODPConfig odpConfig) {
+            this.odpConfig = odpConfig.getClone();
+        }
+
+        public ODPConfig getOdpConfig() {
+            return odpConfig;
         }
     }
 }
