@@ -75,7 +75,8 @@ public class ODPEvent {
                 || entry instanceof Long
                 || entry instanceof Boolean
                 || entry instanceof Float
-                || entry instanceof Double)) {
+                || entry instanceof Double
+                || entry == null)) {
                 return false;
             }
         }

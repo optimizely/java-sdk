@@ -88,7 +88,7 @@ public class ODPEventManager {
 
     public void sendEvent(ODPEvent event) {
         if (!event.isDataValid()) {
-            logger.error("Error Sending Event: ODP data is not valid");
+            logger.error("ODP event send failed (ODP data is not valid)");
             return;
         }
         event.setData(augmentCommonData(event.getData()));

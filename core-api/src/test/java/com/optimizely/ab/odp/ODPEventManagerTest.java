@@ -238,6 +238,7 @@ public class ODPEventManagerTest {
         data.put("Integer", 100);
         data.put("Float", 33.89);
         data.put("Boolean", true);
+        data.put("null", null);
         event.setData(data);
         assertTrue(event.isDataValid());
 
