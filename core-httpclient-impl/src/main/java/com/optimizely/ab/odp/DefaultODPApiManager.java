@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Iterator;
 import java.util.Set;
 
 public class DefaultODPApiManager implements ODPApiManager {
@@ -45,12 +46,14 @@ public class DefaultODPApiManager implements ODPApiManager {
 
     @VisibleForTesting
     String getSegmentsStringForRequest(Set<String> segmentsList) {
+
         StringBuilder segmentsString = new StringBuilder();
+        Iterator<String> segmentsListIterator = segmentsList.iterator();
         for (int i = 0; i < segmentsList.size(); i++) {
             if (i > 0) {
                 segmentsString.append(", ");
             }
-            segmentsString.append("\\\"").append(segmentsList.get(i)).append("\\\"");
+            segmentsString.append("\\\"").append(segmentsListIterator.next()).append("\\\"");
         }
         return segmentsString.toString();
     }
