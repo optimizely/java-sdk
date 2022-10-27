@@ -17,6 +17,8 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.odp.ODPManager;
+import com.optimizely.ab.odp.ODPSegmentOption;
 import com.optimizely.ab.optimizelydecision.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +68,11 @@ public class OptimizelyUserContext {
         }
 
         this.qualifiedSegments = Collections.synchronizedList( qualifiedSegments == null ? new LinkedList<>(): qualifiedSegments);
+
+        ODPManager odpManager = optimizely.getODPManager();
+        if (odpManager != null) {
+            odpManager.getEventManager().identifyUser(userId);
+        }
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely, @Nonnull String userId) {
@@ -282,6 +289,24 @@ public class OptimizelyUserContext {
         this.qualifiedSegments.addAll(qualifiedSegments);
     }
 
+    public void fetchQualifiedSegments() {
+        fetchQualifiedSegments(false, false);
+    }
+
+    public void fetchQualifiedSegments(@Nonnull Boolean ignoreCache, @Nonnull Boolean resetCache) {
+        ODPManager odpManager = optimizely.getODPManager();
+        if (odpManager != null) {
+            List<ODPSegmentOption> segmentOptions = new ArrayList<>();
+            if (ignoreCache) {
+                segmentOptions.add(ODPSegmentOption.IGNORE_CACHE);
+            }
+            if (resetCache) {
+                segmentOptions.add(ODPSegmentOption.RESET_CACHE);
+            }
+            setQualifiedSegments(odpManager.getSegmentManager().getQualifiedSegments(userId, segmentOptions));
+        }
+    }
+
     // Utils
 
     @Override
@@ -309,5 +334,4 @@ public class OptimizelyUserContext {
             ", attributes='" + attributes + '\'' +
             '}';
     }
-
 }

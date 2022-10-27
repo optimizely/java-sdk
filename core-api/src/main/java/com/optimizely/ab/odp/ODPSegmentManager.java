@@ -38,19 +38,17 @@ public class ODPSegmentManager {
 
     private final Cache<List<String>> segmentsCache;
 
-    public ODPSegmentManager(ODPConfig odpConfig, ODPApiManager apiManager) {
-        this(odpConfig, apiManager, Cache.DEFAULT_MAX_SIZE, Cache.DEFAULT_TIMEOUT_SECONDS);
+    public ODPSegmentManager(ODPApiManager apiManager) {
+        this(apiManager, Cache.DEFAULT_MAX_SIZE, Cache.DEFAULT_TIMEOUT_SECONDS);
     }
 
-    public ODPSegmentManager(ODPConfig odpConfig, ODPApiManager apiManager, Cache<List<String>> cache) {
+    public ODPSegmentManager(ODPApiManager apiManager, Cache<List<String>> cache) {
         this.apiManager = apiManager;
-        this.odpConfig = odpConfig;
         this.segmentsCache = cache;
     }
 
-    public ODPSegmentManager(ODPConfig odpConfig, ODPApiManager apiManager, Integer cacheSize, Integer cacheTimeoutSeconds) {
+    public ODPSegmentManager(ODPApiManager apiManager, Integer cacheSize, Integer cacheTimeoutSeconds) {
         this.apiManager = apiManager;
-        this.odpConfig = odpConfig;
         this.segmentsCache = new DefaultLRUCache<>(cacheSize, cacheTimeoutSeconds);
     }
 
@@ -66,7 +64,7 @@ public class ODPSegmentManager {
     }
 
     public List<String> getQualifiedSegments(ODPUserKey userKey, String userValue, List<ODPSegmentOption> options) {
-        if (!odpConfig.isReady()) {
+        if (odpConfig == null || !odpConfig.isReady()) {
             logger.error("Audience segments fetch failed (ODP is not enabled)");
             return Collections.emptyList();
         }
@@ -93,7 +91,13 @@ public class ODPSegmentManager {
 
         ResponseJsonParser parser = ResponseJsonParserFactory.getParser();
         String qualifiedSegmentsResponse = apiManager.fetchQualifiedSegments(odpConfig.getApiKey(), odpConfig.getApiHost() + SEGMENT_URL_PATH, userKey.getKeyString(), userValue, odpConfig.getAllSegments());
-        qualifiedSegments = parser.parseQualifiedSegments(qualifiedSegmentsResponse);
+        try {
+            qualifiedSegments = parser.parseQualifiedSegments(qualifiedSegmentsResponse);
+        } catch (Exception e) {
+            logger.debug("Audience segments fetch failed (Error Parsing Response)");
+            logger.debug(e.getMessage());
+            qualifiedSegments = Collections.emptyList();
+        }
 
         if (qualifiedSegments != null && !options.contains(ODPSegmentOption.IGNORE_CACHE)) {
             segmentsCache.save(cacheKey, qualifiedSegments);

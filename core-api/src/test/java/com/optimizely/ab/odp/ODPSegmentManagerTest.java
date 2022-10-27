@@ -31,6 +31,7 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 public class ODPSegmentManagerTest {
@@ -56,8 +57,9 @@ public class ODPSegmentManagerTest {
     public void cacheHit() {
         Mockito.when(mockCache.lookup(any())).thenReturn(Arrays.asList("segment1-cached", "segment2-cached"));
 
-        ODPConfig odpConfig = new ODPConfig("testKey", "testHost", Arrays.asList("segment1", "segment2"));
-        ODPSegmentManager segmentManager = new ODPSegmentManager(odpConfig, mockApiManager, mockCache);
+        ODPConfig odpConfig = new ODPConfig("testKey", "testHost", new HashSet<>(Arrays.asList("segment1", "segment2")));
+        ODPSegmentManager segmentManager = new ODPSegmentManager(mockApiManager, mockCache);
+        segmentManager.updateSettings(odpConfig);
         List<String> segments = segmentManager.getQualifiedSegments(ODPUserKey.FS_USER_ID, "testId");
 
         // Cache lookup called with correct key
@@ -76,11 +78,12 @@ public class ODPSegmentManagerTest {
     @Test
     public void cacheMiss() {
         Mockito.when(mockCache.lookup(any())).thenReturn(null);
-        Mockito.when(mockApiManager.fetchQualifiedSegments(anyString(), anyString(), anyString(), anyString(), anyList()))
+        Mockito.when(mockApiManager.fetchQualifiedSegments(anyString(), anyString(), anyString(), anyString(), anySet()))
             .thenReturn(API_RESPONSE);
 
-        ODPConfig odpConfig = new ODPConfig("testKey", "testHost", Arrays.asList("segment1", "segment2"));
-        ODPSegmentManager segmentManager = new ODPSegmentManager(odpConfig, mockApiManager, mockCache);
+        ODPConfig odpConfig = new ODPConfig("testKey", "testHost", new HashSet<>(Arrays.asList("segment1", "segment2")));
+        ODPSegmentManager segmentManager = new ODPSegmentManager(mockApiManager, mockCache);
+        segmentManager.updateSettings(odpConfig);
         List<String> segments = segmentManager.getQualifiedSegments(ODPUserKey.VUID, "testId");
 
         // Cache lookup called with correct key
@@ -88,7 +91,7 @@ public class ODPSegmentManagerTest {
 
         // Cache miss! Make api call and save to cache
         verify(mockApiManager, times(1))
-            .fetchQualifiedSegments(odpConfig.getApiKey(), odpConfig.getApiHost() + "/v3/graphql", "vuid", "testId", Arrays.asList("segment1", "segment2"));
+            .fetchQualifiedSegments(odpConfig.getApiKey(), odpConfig.getApiHost() + "/v3/graphql", "vuid", "testId", new HashSet<>(Arrays.asList("segment1", "segment2")));
         verify(mockCache, times(1)).save("vuid-$-testId", Arrays.asList("segment1", "segment2"));
         verify(mockCache, times(0)).reset();
 
@@ -100,11 +103,12 @@ public class ODPSegmentManagerTest {
     @Test
     public void ignoreCache() {
         Mockito.when(mockCache.lookup(any())).thenReturn(Arrays.asList("segment1-cached", "segment2-cached"));
-        Mockito.when(mockApiManager.fetchQualifiedSegments(anyString(), anyString(), anyString(), anyString(), anyList()))
+        Mockito.when(mockApiManager.fetchQualifiedSegments(anyString(), anyString(), anyString(), anyString(), anySet()))
             .thenReturn(API_RESPONSE);
 
-        ODPConfig odpConfig = new ODPConfig("testKey", "testHost", Arrays.asList("segment1", "segment2"));
-        ODPSegmentManager segmentManager = new ODPSegmentManager(odpConfig, mockApiManager, mockCache);
+        ODPConfig odpConfig = new ODPConfig("testKey", "testHost", new HashSet<>(Arrays.asList("segment1", "segment2")));
+        ODPSegmentManager segmentManager = new ODPSegmentManager(mockApiManager, mockCache);
+        segmentManager.updateSettings(odpConfig);
         List<String> segments = segmentManager.getQualifiedSegments(ODPUserKey.FS_USER_ID, "testId", Collections.singletonList(ODPSegmentOption.IGNORE_CACHE));
 
         // Cache Ignored! lookup should not be called
@@ -112,7 +116,7 @@ public class ODPSegmentManagerTest {
 
         // Cache Ignored! Make API Call but do NOT save because of cacheIgnore
         verify(mockApiManager, times(1))
-            .fetchQualifiedSegments(odpConfig.getApiKey(), odpConfig.getApiHost() + "/v3/graphql", "fs_user_id", "testId", Arrays.asList("segment1", "segment2"));
+            .fetchQualifiedSegments(odpConfig.getApiKey(), odpConfig.getApiHost() + "/v3/graphql", "fs_user_id", "testId", new HashSet<>(Arrays.asList("segment1", "segment2")));
         verify(mockCache, times(0)).save(any(), any());
         verify(mockCache, times(0)).reset();
 
@@ -122,22 +126,23 @@ public class ODPSegmentManagerTest {
     @Test
     public void resetCache() {
         Mockito.when(mockCache.lookup(any())).thenReturn(Arrays.asList("segment1-cached", "segment2-cached"));
-        Mockito.when(mockApiManager.fetchQualifiedSegments(anyString(), anyString(), anyString(), anyString(), anyList()))
+        Mockito.when(mockApiManager.fetchQualifiedSegments(anyString(), anyString(), anyString(), anyString(), anySet()))
             .thenReturn(API_RESPONSE);
 
-        ODPConfig odpConfig = new ODPConfig("testKey", "testHost", Arrays.asList("segment1", "segment2"));
-        ODPSegmentManager segmentManager = new ODPSegmentManager(odpConfig, mockApiManager, mockCache);
+        ODPConfig odpConfig = new ODPConfig("testKey", "testHost", new HashSet<>(Arrays.asList("segment1", "segment2")));
+        ODPSegmentManager segmentManager = new ODPSegmentManager(mockApiManager, mockCache);
+        segmentManager.updateSettings(odpConfig);
         List<String> segments = segmentManager.getQualifiedSegments(ODPUserKey.FS_USER_ID, "testId", Collections.singletonList(ODPSegmentOption.RESET_CACHE));
 
         // Call reset
         verify(mockCache, times(1)).reset();
 
-        // Cache Reset! lookup should not be called becaues cache would be empty.
+        // Cache Reset! lookup should not be called because cache would be empty.
         verify(mockCache, times(0)).lookup(any());
 
         // Cache reset but not Ignored! Make API Call and save to cache
         verify(mockApiManager, times(1))
-            .fetchQualifiedSegments(odpConfig.getApiKey(), odpConfig.getApiHost() + "/v3/graphql", "fs_user_id", "testId", Arrays.asList("segment1", "segment2"));
+            .fetchQualifiedSegments(odpConfig.getApiKey(), odpConfig.getApiHost() + "/v3/graphql", "fs_user_id", "testId", new HashSet<>(Arrays.asList("segment1", "segment2")));
         verify(mockCache, times(1)).save("fs_user_id-$-testId", Arrays.asList("segment1", "segment2"));
 
         assertEquals(Arrays.asList("segment1", "segment2"), segments);
@@ -146,11 +151,12 @@ public class ODPSegmentManagerTest {
     @Test
     public void resetAndIgnoreCache() {
         Mockito.when(mockCache.lookup(any())).thenReturn(Arrays.asList("segment1-cached", "segment2-cached"));
-        Mockito.when(mockApiManager.fetchQualifiedSegments(anyString(), anyString(), anyString(), anyString(), anyList()))
+        Mockito.when(mockApiManager.fetchQualifiedSegments(anyString(), anyString(), anyString(), anyString(), anySet()))
             .thenReturn(API_RESPONSE);
 
-        ODPConfig odpConfig = new ODPConfig("testKey", "testHost", Arrays.asList("segment1", "segment2"));
-        ODPSegmentManager segmentManager = new ODPSegmentManager(odpConfig, mockApiManager, mockCache);
+        ODPConfig odpConfig = new ODPConfig("testKey", "testHost", new HashSet<>(Arrays.asList("segment1", "segment2")));
+        ODPSegmentManager segmentManager = new ODPSegmentManager(mockApiManager, mockCache);
+        segmentManager.updateSettings(odpConfig);
         List<String> segments = segmentManager
             .getQualifiedSegments(ODPUserKey.FS_USER_ID, "testId", Arrays.asList(ODPSegmentOption.RESET_CACHE, ODPSegmentOption.IGNORE_CACHE));
 
@@ -161,7 +167,7 @@ public class ODPSegmentManagerTest {
 
         // Cache is also Ignored! Make API Call but do not save
         verify(mockApiManager, times(1))
-            .fetchQualifiedSegments(odpConfig.getApiKey(), odpConfig.getApiHost() + "/v3/graphql", "fs_user_id", "testId", Arrays.asList("segment1", "segment2"));
+            .fetchQualifiedSegments(odpConfig.getApiKey(), odpConfig.getApiHost() + "/v3/graphql", "fs_user_id", "testId", new HashSet<>(Arrays.asList("segment1", "segment2")));
         verify(mockCache, times(0)).save(any(), any());
 
         assertEquals(Arrays.asList("segment1", "segment2"), segments);
@@ -171,8 +177,9 @@ public class ODPSegmentManagerTest {
     public void odpConfigNotReady() {
         Mockito.when(mockCache.lookup(any())).thenReturn(Arrays.asList("segment1-cached", "segment2-cached"));
 
-        ODPConfig odpConfig = new ODPConfig(null, null, Arrays.asList("segment1", "segment2"));
-        ODPSegmentManager segmentManager = new ODPSegmentManager(odpConfig, mockApiManager, mockCache);
+        ODPConfig odpConfig = new ODPConfig(null, null, new HashSet<>(Arrays.asList("segment1", "segment2")));
+        ODPSegmentManager segmentManager = new ODPSegmentManager(mockApiManager, mockCache);
+        segmentManager.updateSettings(odpConfig);
         List<String> segments = segmentManager.getQualifiedSegments(ODPUserKey.FS_USER_ID, "testId");
 
         // No further methods should be called.
@@ -191,7 +198,8 @@ public class ODPSegmentManagerTest {
         Mockito.when(mockCache.lookup(any())).thenReturn(Arrays.asList("segment1-cached", "segment2-cached"));
 
         ODPConfig odpConfig = new ODPConfig("testKey", "testHost", null);
-        ODPSegmentManager segmentManager = new ODPSegmentManager(odpConfig, mockApiManager, mockCache);
+        ODPSegmentManager segmentManager = new ODPSegmentManager(mockApiManager, mockCache);
+        segmentManager.updateSettings(odpConfig);
         List<String> segments = segmentManager.getQualifiedSegments(ODPUserKey.FS_USER_ID, "testId");
 
         // No further methods should be called.

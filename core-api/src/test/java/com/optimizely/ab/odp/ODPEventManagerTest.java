@@ -59,7 +59,8 @@ public class ODPEventManagerTest {
     @Test
     public void logAndDiscardEventWhenEventManagerIsNotRunning() {
         ODPConfig odpConfig = new ODPConfig("key", "host", null);
-        ODPEventManager eventManager = new ODPEventManager(odpConfig, mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.updateSettings(odpConfig);
         ODPEvent event = new ODPEvent("test-type", "test-action", Collections.emptyMap(), Collections.emptyMap());
         eventManager.sendEvent(event);
         logbackVerifier.expectMessage(Level.WARN, "Failed to Process ODP Event. ODPEventManager is not running");
@@ -68,7 +69,8 @@ public class ODPEventManagerTest {
     @Test
     public void logAndDiscardEventWhenODPConfigNotReady() {
         ODPConfig odpConfig = new ODPConfig(null, null, null);
-        ODPEventManager eventManager = new ODPEventManager(odpConfig, mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.updateSettings(odpConfig);
         eventManager.start();
         ODPEvent event = new ODPEvent("test-type", "test-action", Collections.emptyMap(), Collections.emptyMap());
         eventManager.sendEvent(event);
@@ -80,7 +82,8 @@ public class ODPEventManagerTest {
         Mockito.reset(mockApiManager);
         Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(202);
         ODPConfig odpConfig = new ODPConfig("key", "http://www.odp-host.com", null);
-        ODPEventManager eventManager = new ODPEventManager(odpConfig, mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.updateSettings(odpConfig);
         eventManager.start();
         for (int i = 0; i < 25; i++) {
             eventManager.sendEvent(getEvent(i));
@@ -95,7 +98,8 @@ public class ODPEventManagerTest {
         Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(202);
         int batchSize = 2;
         ODPConfig odpConfig = new ODPConfig("key", "http://www.odp-host.com", null);
-        ODPEventManager eventManager = new ODPEventManager(odpConfig, mockApiManager, batchSize, null, null);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager, batchSize, null, null);
+        eventManager.updateSettings(odpConfig);
         eventManager.start();
         for (int i = 0; i < 6; i++) {
             eventManager.sendEvent(getEvent(i));
@@ -126,7 +130,8 @@ public class ODPEventManagerTest {
         Mockito.reset(mockApiManager);
         Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(202);
         ODPConfig odpConfig = new ODPConfig("key", "http://www.odp-host.com", null);
-        ODPEventManager eventManager = new ODPEventManager(odpConfig, mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.updateSettings(odpConfig);
         eventManager.start();
         for (int i = 0; i < 25; i++) {
             eventManager.sendEvent(getEvent(i));
@@ -144,7 +149,8 @@ public class ODPEventManagerTest {
         Mockito.reset(mockApiManager);
         Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(500);
         ODPConfig odpConfig = new ODPConfig("key", "http://www.odp-host.com", null);
-        ODPEventManager eventManager = new ODPEventManager(odpConfig, mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.updateSettings(odpConfig);
         eventManager.start();
         for (int i = 0; i < 25; i++) {
             eventManager.sendEvent(getEvent(i));
@@ -164,7 +170,8 @@ public class ODPEventManagerTest {
         Mockito.reset(mockApiManager);
         Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(202);
         ODPConfig odpConfig = new ODPConfig("key", "http://www.odp-host.com", null);
-        ODPEventManager eventManager = new ODPEventManager(odpConfig, mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.updateSettings(odpConfig);
         eventManager.start();
         for (int i = 0; i < 25; i++) {
             eventManager.sendEvent(getEvent(i));
@@ -181,7 +188,8 @@ public class ODPEventManagerTest {
         Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(202);
         int batchSize = 2;
         ODPConfig odpConfig = new ODPConfig("key", "http://www.odp-host.com", null);
-        ODPEventManager eventManager = new ODPEventManager(odpConfig, mockApiManager, batchSize, null, null);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager, batchSize, null, null);
+        eventManager.updateSettings(odpConfig);
         eventManager.start();
         for (int i = 0; i < 2; i++) {
             eventManager.identifyUser("the-vuid-" + i, "the-fs-user-id-" + i);
@@ -208,7 +216,8 @@ public class ODPEventManagerTest {
         Mockito.reset(mockApiManager);
         Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(202);
         ODPConfig odpConfig = new ODPConfig("key", "http://www.odp-host.com", null);
-        ODPEventManager eventManager = new ODPEventManager(odpConfig, mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.updateSettings(odpConfig);
         eventManager.start();
         for (int i = 0; i < 25; i++) {
             eventManager.sendEvent(getEvent(i));

@@ -28,6 +28,8 @@ import com.optimizely.ab.event.*;
 import com.optimizely.ab.event.internal.*;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.notification.*;
+import com.optimizely.ab.odp.ODPEvent;
+import com.optimizely.ab.odp.ODPManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
@@ -96,6 +98,9 @@ public class Optimizely implements AutoCloseable {
     @Nullable
     private final UserProfileService userProfileService;
 
+    @Nullable
+    private final ODPManager odpManager;
+
     private Optimizely(@Nonnull EventHandler eventHandler,
                        @Nonnull EventProcessor eventProcessor,
                        @Nonnull ErrorHandler errorHandler,
@@ -104,7 +109,8 @@ public class Optimizely implements AutoCloseable {
                        @Nonnull ProjectConfigManager projectConfigManager,
                        @Nullable OptimizelyConfigManager optimizelyConfigManager,
                        @Nonnull NotificationCenter notificationCenter,
-                       @Nonnull List<OptimizelyDecideOption> defaultDecideOptions
+                       @Nonnull List<OptimizelyDecideOption> defaultDecideOptions,
+                       @Nullable ODPManager odpManager
     ) {
         this.eventHandler = eventHandler;
         this.eventProcessor = eventProcessor;
@@ -115,6 +121,15 @@ public class Optimizely implements AutoCloseable {
         this.optimizelyConfigManager = optimizelyConfigManager;
         this.notificationCenter = notificationCenter;
         this.defaultDecideOptions = defaultDecideOptions;
+        this.odpManager = odpManager;
+
+        if (odpManager != null) {
+            odpManager.getEventManager().start();
+            if (getProjectConfig() != null) {
+                updateODPSettings();
+            }
+            addUpdateConfigNotificationHandler(configNotification -> { updateODPSettings(); });
+        }
     }
 
     /**
@@ -127,8 +142,6 @@ public class Optimizely implements AutoCloseable {
     public boolean isValid() {
         return getProjectConfig() != null;
     }
-
-
 
     /**
      * Checks if eventHandler {@link EventHandler} and projectConfigManager {@link ProjectConfigManager}
@@ -674,9 +687,9 @@ public class Optimizely implements AutoCloseable {
      */
     @Nullable
     public OptimizelyJSON getFeatureVariableJSON(@Nonnull String featureKey,
-                                         @Nonnull String variableKey,
-                                         @Nonnull String userId,
-                                         @Nonnull Map<String, ?> attributes) {
+                                                 @Nonnull String variableKey,
+                                                 @Nonnull String userId,
+                                                 @Nonnull Map<String, ?> attributes) {
 
         return getFeatureVariableValueForType(
             featureKey,
@@ -688,10 +701,10 @@ public class Optimizely implements AutoCloseable {
 
     @VisibleForTesting
     <T> T getFeatureVariableValueForType(@Nonnull String featureKey,
-                                          @Nonnull String variableKey,
-                                          @Nonnull String userId,
-                                          @Nonnull Map<String, ?> attributes,
-                                          @Nonnull String variableType) {
+                                         @Nonnull String variableKey,
+                                         @Nonnull String userId,
+                                         @Nonnull Map<String, ?> attributes,
+                                         @Nonnull String variableType) {
         if (featureKey == null) {
             logger.warn("The featureKey parameter must be nonnull.");
             return null;
@@ -878,7 +891,7 @@ public class Optimizely implements AutoCloseable {
             }
         } else {
             logger.info("User \"{}\" was not bucketed into any variation for feature flag \"{}\". " +
-                    "The default values are being returned.", userId, featureKey);
+                "The default values are being returned.", userId, featureKey);
         }
 
         Map<String, Object> valuesMap = new HashMap<String, Object>();
@@ -1142,7 +1155,7 @@ public class Optimizely implements AutoCloseable {
      * @param userId The user ID to be used for bucketing.
      * @param attributes: A map of attribute names to current user attribute values.
      * @return An OptimizelyUserContext associated with this OptimizelyClient.
-      */
+     */
     public OptimizelyUserContext createUserContext(@Nonnull String userId,
                                                    @Nonnull Map<String, ?> attributes) {
         if (userId == null) {
@@ -1413,6 +1426,23 @@ public class Optimizely implements AutoCloseable {
         return notificationCenter.addNotificationHandler(clazz, handler);
     }
 
+    public ODPManager getODPManager() {
+        return odpManager;
+    }
+
+    public void sendODPEvent(ODPEvent event) {
+        if (odpManager != null) {
+            odpManager.getEventManager().sendEvent(event);
+        }
+    }
+
+    private void updateODPSettings() {
+        if (odpManager != null && getProjectConfig() != null) {
+            ProjectConfig projectConfig = getProjectConfig();
+            odpManager.updateSettings(projectConfig.getHostForODP(), projectConfig.getPublicKeyForODP(), projectConfig.getAllSegments());
+        }
+    }
+
     //======== Builder ========//
 
     /**
@@ -1467,6 +1497,7 @@ public class Optimizely implements AutoCloseable {
         private UserProfileService userProfileService;
         private NotificationCenter notificationCenter;
         private List<OptimizelyDecideOption> defaultDecideOptions;
+        private ODPManager odpManager;
 
         // For backwards compatibility
         private AtomicProjectConfigManager fallbackConfigManager = new AtomicProjectConfigManager();
@@ -1562,6 +1593,11 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
+        public Builder withODPManager(ODPManager odpManager) {
+            this.odpManager = odpManager;
+            return this;
+        }
+
         // Helper functions for making testing easier
         protected Builder withBucketing(Bucketer bucketer) {
             this.bucketer = bucketer;
@@ -1636,7 +1672,7 @@ public class Optimizely implements AutoCloseable {
                 defaultDecideOptions = Collections.emptyList();
             }
 
-            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, optimizelyConfigManager, notificationCenter, defaultDecideOptions);
+            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, optimizelyConfigManager, notificationCenter, defaultDecideOptions, odpManager);
         }
     }
 }

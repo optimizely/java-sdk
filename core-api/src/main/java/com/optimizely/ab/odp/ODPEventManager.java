@@ -52,12 +52,11 @@ public class ODPEventManager {
     //      because `LinkedBlockingQueue` itself is thread safe.
     private final BlockingQueue<Object> eventQueue = new LinkedBlockingQueue<>();
 
-    public ODPEventManager(@Nonnull ODPConfig odpConfig, @Nonnull ODPApiManager apiManager) {
-        this(odpConfig, apiManager, null, null, null);
+    public ODPEventManager(@Nonnull ODPApiManager apiManager) {
+        this(apiManager, null, null, null);
     }
 
-    public ODPEventManager(@Nonnull ODPConfig odpConfig, @Nonnull ODPApiManager apiManager, @Nullable Integer batchSize, @Nullable Integer queueSize, @Nullable Integer flushInterval) {
-        this.odpConfig = odpConfig;
+    public ODPEventManager(@Nonnull ODPApiManager apiManager, @Nullable Integer batchSize, @Nullable Integer queueSize, @Nullable Integer flushInterval) {
         this.apiManager = apiManager;
         this.batchSize = (batchSize != null && batchSize > 1) ? batchSize : DEFAULT_BATCH_SIZE;
         this.queueSize = queueSize != null ? queueSize : DEFAULT_QUEUE_SIZE;
@@ -70,10 +69,14 @@ public class ODPEventManager {
         eventDispatcherThread.start();
     }
 
-    public void updateSettings(ODPConfig odpConfig) {
-        if (!this.odpConfig.equals(odpConfig) && eventQueue.offer(new FlushEvent(this.odpConfig))) {
-            this.odpConfig = odpConfig;
+    public void updateSettings(ODPConfig newConfig) {
+        if (odpConfig == null || (!odpConfig.equals(newConfig) && eventQueue.offer(new FlushEvent(odpConfig)))) {
+            odpConfig = newConfig;
         }
+    }
+
+    public void identifyUser(String userId) {
+        identifyUser(null, userId);
     }
 
     public void identifyUser(@Nullable String vuid, String userId) {
@@ -111,7 +114,7 @@ public class ODPEventManager {
             return;
         }
 
-        if (!odpConfig.isReady()) {
+        if (odpConfig == null || !odpConfig.isReady()) {
             logger.debug("Unable to Process ODP Event. ODPConfig is not ready.");
             return;
         }
@@ -188,6 +191,10 @@ public class ODPEventManager {
         }
 
         private void flush(ODPConfig odpConfig) {
+            if (currentBatch.size() == 0) {
+                return;
+            }
+
             if (odpConfig.isReady()) {
                 String payload = ODPJsonSerializerFactory.getSerializer().serializeEvents(currentBatch);
                 String endpoint = odpConfig.getApiHost() + EVENT_URL_PATH;

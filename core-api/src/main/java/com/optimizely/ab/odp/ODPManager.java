@@ -16,20 +16,26 @@
  */
 package com.optimizely.ab.odp;
 
+import com.optimizely.ab.internal.Cache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.Set;
 
 public class ODPManager {
+    private static final Logger logger = LoggerFactory.getLogger(ODPManager.class);
+
     private volatile ODPConfig odpConfig;
     private final ODPSegmentManager segmentManager;
     private final ODPEventManager eventManager;
 
-    public ODPManager(@Nonnull ODPConfig odpConfig, @Nonnull ODPApiManager apiManager) {
-        this(odpConfig, new ODPSegmentManager(odpConfig, apiManager), new ODPEventManager(odpConfig, apiManager));
+    private ODPManager(@Nonnull ODPApiManager apiManager) {
+        this(new ODPSegmentManager(apiManager), new ODPEventManager(apiManager));
     }
 
-    public ODPManager(@Nonnull ODPConfig odpConfig, @Nonnull ODPSegmentManager segmentManager, @Nonnull ODPEventManager eventManager) {
-        this.odpConfig = odpConfig;
+    private ODPManager(@Nonnull ODPSegmentManager segmentManager, @Nonnull ODPEventManager eventManager) {
         this.segmentManager = segmentManager;
         this.eventManager = eventManager;
         this.eventManager.start();
@@ -43,9 +49,10 @@ public class ODPManager {
         return eventManager;
     }
 
-    public Boolean updateSettings(String apiHost, String apiKey, List<String> allSegments) {
+    public Boolean updateSettings(String apiHost, String apiKey, Set<String> allSegments) {
         ODPConfig newConfig = new ODPConfig(apiKey, apiHost, allSegments);
-        if (!odpConfig.equals(newConfig)) {
+        if (odpConfig == null || !odpConfig.equals(newConfig)) {
+            logger.debug("Updating ODP Config");
             odpConfig = newConfig;
             eventManager.updateSettings(odpConfig);
             segmentManager.resetCache();
@@ -57,5 +64,90 @@ public class ODPManager {
 
     public void close() {
         eventManager.stop();
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private ODPSegmentManager segmentManager;
+        private ODPEventManager eventManager;
+        private ODPApiManager apiManager;
+        private Integer cacheSize;
+        private Integer cacheTimeoutSeconds;
+        private Integer batchSize;
+        private Integer flushIntervalMillis;
+        private Cache<List<String>> cacheImpl;
+
+        public Builder withApiManager(ODPApiManager apiManager) {
+            this.apiManager = apiManager;
+            return this;
+        }
+
+        public Builder withSegmentManager(ODPSegmentManager segmentManager) {
+            this.segmentManager = segmentManager;
+            return this;
+        }
+
+        public Builder withEventManager(ODPEventManager eventManager) {
+            this.eventManager = eventManager;
+            return this;
+        }
+
+        public Builder withSegmentCacheSize(Integer cacheSize) {
+            this.cacheSize = cacheSize;
+            return this;
+        }
+
+        public Builder withSegmentCacheTimeout(Integer cacheTimeoutSeconds) {
+            this.cacheTimeoutSeconds = cacheTimeoutSeconds;
+            return this;
+        }
+
+        public Builder withSegmentCache(Cache<List<String>> cacheImpl) {
+            this.cacheImpl = cacheImpl;
+            return this;
+        }
+
+        public Builder withEventBatchSize(Integer batchSize) {
+            this.batchSize = batchSize;
+            return this;
+        }
+
+        public Builder withEventFlushInterval(Integer flushIntervalMillis) {
+            this.flushIntervalMillis = flushIntervalMillis;
+            return this;
+        }
+
+        public ODPManager build() {
+            if ((segmentManager == null || eventManager == null) && apiManager == null) {
+                logger.warn("ApiManager instance is needed when using default EventManager or SegmentManager");
+                return null;
+            }
+
+            if (segmentManager == null) {
+                if (cacheImpl != null) {
+                    segmentManager = new ODPSegmentManager(apiManager, cacheImpl);
+                } else if (cacheSize != null || cacheTimeoutSeconds != null) {
+                    // Converting null to -1 so that DefaultCache uses the default values;
+                    if (cacheSize == null) {
+                        cacheSize = -1;
+                    }
+                    if (cacheTimeoutSeconds == null) {
+                        cacheTimeoutSeconds = -1;
+                    }
+                    segmentManager = new ODPSegmentManager(apiManager, cacheSize, cacheTimeoutSeconds);
+                } else {
+                    segmentManager = new ODPSegmentManager(apiManager);
+                }
+            }
+
+            if (eventManager == null) {
+                eventManager = new ODPEventManager(apiManager, batchSize, null, flushIntervalMillis);
+            }
+
+            return new ODPManager(segmentManager, eventManager);
+        }
     }
 }
