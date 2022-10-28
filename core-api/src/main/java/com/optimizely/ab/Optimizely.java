@@ -154,6 +154,9 @@ public class Optimizely implements AutoCloseable {
         tryClose(eventProcessor);
         tryClose(eventHandler);
         tryClose(projectConfigManager);
+        if (odpManager != null) {
+            tryClose(odpManager);
+        }
     }
 
     //======== activate calls ========//

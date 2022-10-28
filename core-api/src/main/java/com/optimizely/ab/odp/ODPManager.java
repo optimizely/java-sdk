@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Set;
 
-public class ODPManager {
+public class ODPManager implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(ODPManager.class);
 
     private volatile ODPConfig odpConfig;

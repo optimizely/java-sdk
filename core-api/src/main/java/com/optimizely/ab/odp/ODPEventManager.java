@@ -64,9 +64,13 @@ public class ODPEventManager {
     }
 
     public void start() {
+        if (eventDispatcherThread == null) {
+            eventDispatcherThread = new EventDispatcherThread();
+        }
+        if (!isRunning) {
+            eventDispatcherThread.start();
+        }
         isRunning = true;
-        eventDispatcherThread = new EventDispatcherThread();
-        eventDispatcherThread.start();
     }
 
     public void updateSettings(ODPConfig newConfig) {
@@ -187,6 +191,7 @@ public class ODPEventManager {
                 }
             }
 
+            isRunning = false;
             logger.debug("Exiting ODP Event Dispatcher Thread.");
         }
 
