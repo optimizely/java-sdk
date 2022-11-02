@@ -56,6 +56,15 @@ public class OptimizelyUserContext {
                                  @Nonnull Map<String, ?> attributes,
                                  @Nullable Map<String, OptimizelyForcedDecision> forcedDecisionsMap,
                                  @Nullable List<String> qualifiedSegments) {
+        this(optimizely, userId, attributes, forcedDecisionsMap, qualifiedSegments, false);
+    }
+
+    public OptimizelyUserContext(@Nonnull Optimizely optimizely,
+                                 @Nonnull String userId,
+                                 @Nonnull Map<String, ?> attributes,
+                                 @Nullable Map<String, OptimizelyForcedDecision> forcedDecisionsMap,
+                                 @Nullable List<String> qualifiedSegments,
+                                 @Nullable Boolean shouldIdentifyUser) {
         this.optimizely = optimizely;
         this.userId = userId;
         if (attributes != null) {
@@ -69,9 +78,8 @@ public class OptimizelyUserContext {
 
         this.qualifiedSegments = Collections.synchronizedList( qualifiedSegments == null ? new LinkedList<>(): qualifiedSegments);
 
-        ODPManager odpManager = optimizely.getODPManager();
-        if (odpManager != null) {
-            odpManager.getEventManager().identifyUser(userId);
+        if (shouldIdentifyUser == null || shouldIdentifyUser) {
+            optimizely.identifyUser(userId);
         }
     }
 
@@ -289,21 +297,33 @@ public class OptimizelyUserContext {
         this.qualifiedSegments.addAll(qualifiedSegments);
     }
 
+    /**
+     * Fetch all qualified segments for the user context.
+     *
+     * The segments fetched will be saved and can be accessed at any time by calling {@link #getQualifiedSegments()}.
+     */
     public void fetchQualifiedSegments() {
-        fetchQualifiedSegments(false, false);
-    }
-
-    public void fetchQualifiedSegments(@Nonnull Boolean ignoreCache, @Nonnull Boolean resetCache) {
         ODPManager odpManager = optimizely.getODPManager();
         if (odpManager != null) {
-            List<ODPSegmentOption> segmentOptions = new ArrayList<>();
-            if (ignoreCache) {
-                segmentOptions.add(ODPSegmentOption.IGNORE_CACHE);
+            synchronized (odpManager) {
+                setQualifiedSegments(odpManager.getSegmentManager().getQualifiedSegments(userId));
             }
-            if (resetCache) {
-                segmentOptions.add(ODPSegmentOption.RESET_CACHE);
+        }
+    }
+
+    /**
+     * Fetch all qualified segments for the user context.
+     *
+     * The segments fetched will be saved and can be accessed at any time by calling {@link #getQualifiedSegments()}.
+     *
+     * @param segmentOptions A set of options for fetching qualified segments.
+     */
+    public void fetchQualifiedSegments(@Nonnull List<ODPSegmentOption> segmentOptions) {
+        ODPManager odpManager = optimizely.getODPManager();
+        if (odpManager != null) {
+            synchronized (odpManager) {
+                setQualifiedSegments(odpManager.getSegmentManager().getQualifiedSegments(userId, segmentOptions));
             }
-            setQualifiedSegments(odpManager.getSegmentManager().getQualifiedSegments(userId, segmentOptions));
         }
     }
 

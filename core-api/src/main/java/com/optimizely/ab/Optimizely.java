@@ -1429,13 +1429,31 @@ public class Optimizely implements AutoCloseable {
         return notificationCenter.addNotificationHandler(clazz, handler);
     }
 
+    @Nullable
     public ODPManager getODPManager() {
         return odpManager;
     }
 
-    public void sendODPEvent(ODPEvent event) {
+    public void sendODPEvent(@Nonnull String type, @Nonnull String action, @Nullable Map<String, String> identifiers, @Nullable Map<String, Object> data) {
         if (odpManager != null) {
+            ODPEvent event = new ODPEvent(type, action, identifiers, data);
             odpManager.getEventManager().sendEvent(event);
+        } else {
+            logger.error("ODP event send failed (ODP is not enabled)");
+        }
+    }
+
+    public void identifyUser(String userId) {
+        ODPManager odpManager = getODPManager();
+        if (odpManager != null) {
+            odpManager.getEventManager().identifyUser(userId);
+        }
+    }
+
+    public void identifyUser(@Nullable String vuid, String userId) {
+        ODPManager odpManager = getODPManager();
+        if (odpManager != null) {
+            odpManager.getEventManager().identifyUser(vuid, userId);
         }
     }
 

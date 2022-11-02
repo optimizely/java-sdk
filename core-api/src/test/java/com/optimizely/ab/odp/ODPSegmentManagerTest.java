@@ -190,7 +190,7 @@ public class ODPSegmentManagerTest {
 
         logbackVerifier.expectMessage(Level.ERROR, "Audience segments fetch failed (ODP is not enabled)");
 
-        assertEquals(Collections.emptyList(), segments);
+        assertNull(segments);
     }
 
     @Test

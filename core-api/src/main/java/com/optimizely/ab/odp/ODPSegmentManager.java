@@ -66,7 +66,7 @@ public class ODPSegmentManager {
     public List<String> getQualifiedSegments(ODPUserKey userKey, String userValue, List<ODPSegmentOption> options) {
         if (odpConfig == null || !odpConfig.isReady()) {
             logger.error("Audience segments fetch failed (ODP is not enabled)");
-            return Collections.emptyList();
+            return null;
         }
 
         if (!odpConfig.hasSegments()) {
@@ -94,9 +94,9 @@ public class ODPSegmentManager {
         try {
             qualifiedSegments = parser.parseQualifiedSegments(qualifiedSegmentsResponse);
         } catch (Exception e) {
-            logger.debug("Audience segments fetch failed (Error Parsing Response)");
+            logger.error("Audience segments fetch failed (Error Parsing Response)");
             logger.debug(e.getMessage());
-            qualifiedSegments = Collections.emptyList();
+            qualifiedSegments = null;
         }
 
         if (qualifiedSegments != null && !options.contains(ODPSegmentOption.IGNORE_CACHE)) {

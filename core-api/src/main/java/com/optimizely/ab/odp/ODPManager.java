@@ -76,47 +76,83 @@ public class ODPManager implements AutoCloseable {
         private ODPApiManager apiManager;
         private Integer cacheSize;
         private Integer cacheTimeoutSeconds;
-        private Integer batchSize;
-        private Integer flushIntervalMillis;
         private Cache<List<String>> cacheImpl;
 
+        /**
+         * Provide an custom {@link ODPManager} instance which makes http calls to fetch segments and send events.
+         *
+         * A Default ODPApiManager is available in `core-httpclient-impl` package.
+         *
+         * @param apiManager The implementation of {@link ODPManager}
+         * @return ODPManager builder
+         */
         public Builder withApiManager(ODPApiManager apiManager) {
             this.apiManager = apiManager;
             return this;
         }
 
+        /**
+         * Provide an optional custom {@link ODPSegmentManager} instance.
+         *
+         * A Default {@link ODPSegmentManager} implementation is automatically used if none provided.
+         *
+         * @param segmentManager The implementation of {@link ODPSegmentManager}
+         * @return ODPManager builder
+         */
         public Builder withSegmentManager(ODPSegmentManager segmentManager) {
             this.segmentManager = segmentManager;
             return this;
         }
 
+        /**
+         * Provide an optional custom {@link ODPEventManager} instance.
+         *
+         * A Default {@link ODPEventManager} implementation is automatically used if none provided.
+         *
+         * @param eventManager The implementation of {@link ODPEventManager}
+         * @return ODPManager builder
+         */
         public Builder withEventManager(ODPEventManager eventManager) {
             this.eventManager = eventManager;
             return this;
         }
 
+        /**
+         * Provide an optional custom cache size
+         *
+         * A Default cache size is automatically used if none provided.
+         *
+         * @param cacheSize Custom cache size to be used.
+         * @return ODPManager builder
+         */
         public Builder withSegmentCacheSize(Integer cacheSize) {
             this.cacheSize = cacheSize;
             return this;
         }
 
+        /**
+         * Provide an optional custom cache timeout.
+         *
+         * A Default cache timeout is automatically used if none provided.
+         *
+         * @param cacheTimeoutSeconds Custom cache timeout in seconds.
+         * @return ODPManager builder
+         */
         public Builder withSegmentCacheTimeout(Integer cacheTimeoutSeconds) {
             this.cacheTimeoutSeconds = cacheTimeoutSeconds;
             return this;
         }
 
+        /**
+         * Provide an optional custom Segment Cache implementation.
+         *
+         * A Default LRU Cache implementation is automatically used if none provided.
+         *
+         * @param cacheImpl Customer Cache Implementation.
+         * @return ODPManager builder
+         */
         public Builder withSegmentCache(Cache<List<String>> cacheImpl) {
             this.cacheImpl = cacheImpl;
-            return this;
-        }
-
-        public Builder withEventBatchSize(Integer batchSize) {
-            this.batchSize = batchSize;
-            return this;
-        }
-
-        public Builder withEventFlushInterval(Integer flushIntervalMillis) {
-            this.flushIntervalMillis = flushIntervalMillis;
             return this;
         }
 
@@ -144,7 +180,7 @@ public class ODPManager implements AutoCloseable {
             }
 
             if (eventManager == null) {
-                eventManager = new ODPEventManager(apiManager, batchSize, null, flushIntervalMillis);
+                eventManager = new ODPEventManager(apiManager);
             }
 
             return new ODPManager(segmentManager, eventManager);
