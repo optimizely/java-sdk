@@ -65,7 +65,7 @@ public class DefaultODPApiManagerTest {
     @Test
     public void generateCorrectSegmentsStringWhenListHasOneItem() {
         DefaultODPApiManager apiManager = new DefaultODPApiManager();
-        String expected = "\\\"only_segment\\\"";
+        String expected = "\"only_segment\"";
         String actual = apiManager.getSegmentsStringForRequest(new HashSet<>(Arrays.asList("only_segment")));
         assertEquals(expected, actual);
     }
@@ -73,7 +73,7 @@ public class DefaultODPApiManagerTest {
     @Test
     public void generateCorrectSegmentsStringWhenListHasMultipleItems() {
         DefaultODPApiManager apiManager = new DefaultODPApiManager();
-        String expected = "\\\"segment_1\\\", \\\"segment_3\\\", \\\"segment_2\\\"";
+        String expected = "\"segment_1\", \"segment_3\", \"segment_2\"";
         String actual = apiManager.getSegmentsStringForRequest(new HashSet<>(Arrays.asList("segment_1", "segment_2", "segment_3")));
         assertEquals(expected, actual);
     }
@@ -91,7 +91,7 @@ public class DefaultODPApiManagerTest {
         apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", new HashSet<>(Arrays.asList("segment_1", "segment_2")));
         verify(mockHttpClient, times(1)).execute(any(HttpPost.class));
 
-        String expectedResponse = "{\"query\": \"query {customer(fs_user_id: \\\"test_user\\\") {audiences(subset: [\\\"segment_1\\\", \\\"segment_2\\\"]) {edges {node {name state}}}}}\"}";
+        String expectedResponse = "{\"query\": \"query($userId: String, $audiences: [String]) {customer(fs_user_id: $userId) {audiences(subset: $audiences) {edges {node {name state}}}}}\", \"variables\": {\"userId\": \"test_user\", \"audiences\": [\"segment_1\", \"segment_2\"]}}";
         ArgumentCaptor<HttpPost> request = ArgumentCaptor.forClass(HttpPost.class);
         verify(mockHttpClient).execute(request.capture());
         assertEquals(expectedResponse, EntityUtils.toString(request.getValue().getEntity()));

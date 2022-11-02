@@ -53,7 +53,7 @@ public class DefaultODPApiManager implements ODPApiManager {
             if (i > 0) {
                 segmentsString.append(", ");
             }
-            segmentsString.append("\\\"").append(segmentsListIterator.next()).append("\\\"");
+            segmentsString.append("\"").append(segmentsListIterator.next()).append("\"");
         }
         return segmentsString.toString();
     }
@@ -135,7 +135,11 @@ public class DefaultODPApiManager implements ODPApiManager {
     public String fetchQualifiedSegments(String apiKey, String apiEndpoint, String userKey, String userValue, Set<String> segmentsToCheck) {
         HttpPost request = new HttpPost(apiEndpoint);
         String segmentsString = getSegmentsStringForRequest(segmentsToCheck);
-        String requestPayload = String.format("{\"query\": \"query {customer(%s: \\\"%s\\\") {audiences(subset: [%s]) {edges {node {name state}}}}}\"}", userKey, userValue, segmentsString);
+
+        String query = String.format("query($userId: String, $audiences: [String]) {customer(%s: $userId) {audiences(subset: $audiences) {edges {node {name state}}}}}", userKey);
+        String variables = String.format("{\"userId\": \"%s\", \"audiences\": [%s]}", userValue, segmentsString);
+        String requestPayload = String.format("{\"query\": \"%s\", \"variables\": %s}", query, variables);
+
         try {
             request.setEntity(new StringEntity(requestPayload));
         } catch (UnsupportedEncodingException e) {
