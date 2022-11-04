@@ -83,12 +83,14 @@ public class ODPEventManager {
         identifyUser(null, userId);
     }
 
-    public void identifyUser(@Nullable String vuid, String userId) {
+    public void identifyUser(@Nullable String vuid, @Nullable String userId) {
         Map<String, String> identifiers = new HashMap<>();
         if (vuid != null) {
             identifiers.put(ODPUserKey.VUID.getKeyString(), vuid);
         }
-        identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
+        if (userId != null) {
+            identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
+        }
         ODPEvent event = new ODPEvent("fullstack", "client_initialized", identifiers, null);
         sendEvent(event);
     }

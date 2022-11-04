@@ -56,7 +56,7 @@ public class OptimizelyUserContext {
                                  @Nonnull Map<String, ?> attributes,
                                  @Nullable Map<String, OptimizelyForcedDecision> forcedDecisionsMap,
                                  @Nullable List<String> qualifiedSegments) {
-        this(optimizely, userId, attributes, forcedDecisionsMap, qualifiedSegments, false);
+        this(optimizely, userId, attributes, forcedDecisionsMap, qualifiedSegments, true);
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely,
@@ -100,7 +100,7 @@ public class OptimizelyUserContext {
     }
 
     public OptimizelyUserContext copy() {
-        return new OptimizelyUserContext(optimizely, userId, attributes, forcedDecisionsMap, qualifiedSegments);
+        return new OptimizelyUserContext(optimizely, userId, attributes, forcedDecisionsMap, qualifiedSegments, false);
     }
 
     /**
@@ -303,12 +303,7 @@ public class OptimizelyUserContext {
      * The segments fetched will be saved and can be accessed at any time by calling {@link #getQualifiedSegments()}.
      */
     public void fetchQualifiedSegments() {
-        ODPManager odpManager = optimizely.getODPManager();
-        if (odpManager != null) {
-            synchronized (odpManager) {
-                setQualifiedSegments(odpManager.getSegmentManager().getQualifiedSegments(userId));
-            }
-        }
+        fetchQualifiedSegments(Collections.emptyList());
     }
 
     /**

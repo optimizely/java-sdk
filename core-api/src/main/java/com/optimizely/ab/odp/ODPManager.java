@@ -79,7 +79,7 @@ public class ODPManager implements AutoCloseable {
         private Cache<List<String>> cacheImpl;
 
         /**
-         * Provide an custom {@link ODPManager} instance which makes http calls to fetch segments and send events.
+         * Provide a custom {@link ODPManager} instance which makes http calls to fetch segments and send events.
          *
          * A Default ODPApiManager is available in `core-httpclient-impl` package.
          *
