@@ -34,6 +34,9 @@ import com.optimizely.ab.event.internal.UserEventFactory;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.notification.*;
+import com.optimizely.ab.odp.ODPEvent;
+import com.optimizely.ab.odp.ODPEventManager;
+import com.optimizely.ab.odp.ODPManager;
 import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -44,7 +47,9 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -179,10 +184,21 @@ public class OptimizelyTest {
             withSettings().extraInterfaces(AutoCloseable.class)
         );
 
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        Mockito.doNothing().when(mockODPEventManager).sendEvent(any());
+
+        ODPManager mockODPManager = mock(
+            ODPManager.class,
+            withSettings().extraInterfaces(AutoCloseable.class)
+        );
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+
         Optimizely optimizely = Optimizely.builder()
             .withEventHandler(mockEventHandler)
             .withEventProcessor(mockEventProcessor)
             .withConfigManager(mockProjectConfigManager)
+            .withODPManager(mockODPManager)
             .build();
 
         optimizely.close();
@@ -190,7 +206,7 @@ public class OptimizelyTest {
         verify((AutoCloseable) mockEventHandler).close();
         verify((AutoCloseable) mockProjectConfigManager).close();
         verify((AutoCloseable) mockEventProcessor).close();
-
+        verify((AutoCloseable) mockODPManager).close();
     }
 
     //======== activate tests ========//
@@ -4666,4 +4682,123 @@ public class OptimizelyTest {
         assertEquals(variationKey, variation.getKey());
     }
 
+    @Test
+    public void initODPManagerWithoutProjectConfig() {
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withODPManager(mockODPManager)
+            .build();
+
+        verify(mockODPEventManager).start();
+        verify(mockODPManager, never()).updateSettings(any(), any(), any());
+    }
+
+    @Test
+    public void initODPManagerWithProjectConfig() throws IOException {
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Optimizely.builder()
+            .withDatafile(validConfigJsonV4())
+            .withODPManager(mockODPManager)
+            .build();
+
+        verify(mockODPEventManager).start();
+        verify(mockODPManager, times(1)).updateSettings(any(), any(), any());
+    }
+
+    @Test
+    public void updateODPManagerWhenConfigUpdates() throws IOException {
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+        NotificationCenter mockNotificationCenter = mock(NotificationCenter.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Optimizely.builder()
+            .withDatafile(validConfigJsonV4())
+            .withNotificationCenter(mockNotificationCenter)
+            .withODPManager(mockODPManager)
+            .build();
+
+        verify(mockODPManager, times(1)).updateSettings(any(), any(), any());
+
+        Mockito.verify(mockNotificationCenter, times(1)).addNotificationHandler(any(), any());
+    }
+
+    @Test
+    public void sendODPEvent() {
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withODPManager(mockODPManager)
+            .build();
+
+        verify(mockODPEventManager).start();
+
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("id1", "value1");
+        identifiers.put("id2", "value2");
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("sdk", "java");
+        data.put("revision", 52);
+
+        optimizely.sendODPEvent("fullstack", "identify", identifiers, data);
+        ArgumentCaptor<ODPEvent> eventArgument = ArgumentCaptor.forClass(ODPEvent.class);
+        verify(mockODPEventManager).sendEvent(eventArgument.capture());
+
+        assertEquals("fullstack", eventArgument.getValue().getType());
+        assertEquals("identify", eventArgument.getValue().getAction());
+        assertEquals(identifiers, eventArgument.getValue().getIdentifiers());
+        assertEquals(data, eventArgument.getValue().getData());
+    }
+
+    @Test
+    public void sendODPEventError() {
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .build();
+
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("id1", "value1");
+        identifiers.put("id2", "value2");
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("sdk", "java");
+        data.put("revision", 52);
+
+        optimizely.sendODPEvent("fullstack", "identify", identifiers, data);
+        logbackVerifier.expectMessage(Level.ERROR, "ODP event send failed (ODP is not enabled)");
+    }
+
+    @Test
+    public void identifyUser() {
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withODPManager(mockODPManager)
+            .build();
+
+        optimizely.identifyUser("the-user");
+        Mockito.verify(mockODPEventManager, times(1)).identifyUser("the-user");
+
+        optimizely.identifyUser("the-vuid", "the-user");
+        Mockito.verify(mockODPEventManager, times(1)).identifyUser("the-vuid", "the-user");
+    }
 }
