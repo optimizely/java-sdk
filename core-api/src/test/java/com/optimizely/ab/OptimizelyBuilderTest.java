@@ -20,11 +20,12 @@ import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
-import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.payload.EventBatch;
+import com.optimizely.ab.odp.ODPEventManager;
+import com.optimizely.ab.odp.ODPManager;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Rule;
@@ -32,6 +33,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -43,10 +45,7 @@ import static junit.framework.Assert.assertEquals;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.never;
 
 /**
  * Tests for {@link Optimizely#builder(String, EventHandler)}.
@@ -244,4 +243,15 @@ public class OptimizelyBuilderTest {
         assertEquals(argument.getValue().getEventBatch().getClientVersion(), "1.2.3");
     }
 
+    @Test
+    public void withODPManager() {
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Optimizely optimizely = Optimizely.builder()
+            .withODPManager(mockODPManager)
+            .build();
+        assertEquals(mockODPManager, optimizely.getODPManager());
+    }
 }

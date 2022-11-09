@@ -110,6 +110,14 @@ public class ODPSegmentManager {
         return userKey + "-$-" + userValue;
     }
 
+    public Integer getCacheMaxSize() {
+        return segmentsCache.getMaxSize();
+    }
+
+    public Integer getCacheTimeoutSeconds() {
+        return segmentsCache.getCacheTimeoutSeconds();
+    }
+
     public void updateSettings(ODPConfig odpConfig) {
         this.odpConfig = odpConfig;
     }

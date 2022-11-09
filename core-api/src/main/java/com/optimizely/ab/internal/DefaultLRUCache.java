@@ -84,6 +84,16 @@ public class DefaultLRUCache<T> implements Cache<T> {
         }
     }
 
+    @Override
+    public Integer getMaxSize() {
+        return maxSize;
+    }
+
+    @Override
+    public Integer getCacheTimeoutSeconds() {
+        return (int) (timeoutMillis / 1000);
+    }
+
     private class CacheEntity {
         public T value;
         public Long timestamp;

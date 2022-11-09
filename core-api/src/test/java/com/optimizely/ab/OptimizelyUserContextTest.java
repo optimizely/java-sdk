@@ -23,8 +23,13 @@ import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.event.ForwardingEventProcessor;
+import com.optimizely.ab.event.internal.UserContext;
 import com.optimizely.ab.event.internal.payload.DecisionMetadata;
 import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.odp.ODPEventManager;
+import com.optimizely.ab.odp.ODPManager;
+import com.optimizely.ab.odp.ODPSegmentManager;
+import com.optimizely.ab.odp.ODPSegmentOption;
 import com.optimizely.ab.optimizelydecision.DecisionMessage;
 import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
@@ -35,6 +40,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.util.*;
 
@@ -1610,6 +1616,54 @@ public class OptimizelyUserContextTest {
         ));
     }
     /********************************************[END DECIDE TESTS WITH FDs]******************************************/
+
+    @Test
+    public void fetchQualifiedSegments() {
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPSegmentManager mockODPSegmentManager = mock(ODPSegmentManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+            .withODPManager(mockODPManager)
+            .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+
+        userContext.fetchQualifiedSegments();
+        verify(mockODPSegmentManager).getQualifiedSegments("test-user", Collections.emptyList());
+
+        userContext.fetchQualifiedSegments(Collections.singletonList(ODPSegmentOption.RESET_CACHE));
+        verify(mockODPSegmentManager).getQualifiedSegments("test-user", Collections.singletonList(ODPSegmentOption.RESET_CACHE));
+    }
+
+    @Test
+    public void identifyUser() {
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPSegmentManager mockODPSegmentManager = mock(ODPSegmentManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+            .withODPManager(mockODPManager)
+            .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+        verify(mockODPEventManager).identifyUser("test-user");
+
+        Mockito.reset(mockODPEventManager);
+        OptimizelyUserContext userContextClone = userContext.copy();
+
+        // identifyUser should not be called the new userContext is created through copy
+        verify(mockODPEventManager, never()).identifyUser("test-user");
+
+        assertNotSame(userContextClone, userContext);
+    }
+
     // utils
 
     Map<String, Object> createUserProfileMap(String experimentId, String variationId) {
