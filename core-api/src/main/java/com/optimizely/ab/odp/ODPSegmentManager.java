@@ -106,6 +106,23 @@ public class ODPSegmentManager {
         return qualifiedSegments;
     }
 
+    public void getQualifiedSegments(ODPUserKey userKey, String userValue, ODPSegmentFetchCallback callback, List<ODPSegmentOption> options) {
+        AsyncSegmentFetcher segmentFetcher = new AsyncSegmentFetcher(userKey, userValue, options, callback);
+        segmentFetcher.start();
+    }
+
+    public void getQualifiedSegments(ODPUserKey userKey, String userValue, ODPSegmentFetchCallback callback) {
+        getQualifiedSegments(userKey, userValue, callback, Collections.emptyList());
+    }
+
+    public void getQualifiedSegments(String fsUserId, ODPSegmentFetchCallback callback, List<ODPSegmentOption> segmentOptions) {
+        getQualifiedSegments(ODPUserKey.FS_USER_ID, fsUserId, callback, segmentOptions);
+    }
+
+    public void getQualifiedSegments(String fsUserId, ODPSegmentFetchCallback callback) {
+        getQualifiedSegments(ODPUserKey.FS_USER_ID, fsUserId, callback, Collections.emptyList());
+    }
+
     private String getCacheKey(String userKey, String userValue) {
         return userKey + "-$-" + userValue;
     }
@@ -124,5 +141,31 @@ public class ODPSegmentManager {
 
     public void resetCache() {
         segmentsCache.reset();
+    }
+
+    @FunctionalInterface
+    public interface ODPSegmentFetchCallback {
+        void invokeCallback(List<String> segments);
+    }
+
+    private class AsyncSegmentFetcher extends Thread {
+
+        private final ODPUserKey userKey;
+        private final String userValue;
+        private final List<ODPSegmentOption> segmentOptions;
+        private final ODPSegmentFetchCallback callback;
+
+        public AsyncSegmentFetcher(ODPUserKey userKey, String userValue, List<ODPSegmentOption> segmentOptions, ODPSegmentFetchCallback callback) {
+            this.userKey = userKey;
+            this.userValue = userValue;
+            this.segmentOptions = segmentOptions;
+            this.callback = callback;
+        }
+
+        @Override
+        public void run() {
+            List<String> segments = getQualifiedSegments(userKey, userValue, segmentOptions);
+            callback.invokeCallback(segments);
+        }
     }
 }

@@ -16,8 +16,9 @@
  */
 package com.optimizely.ab;
 
-import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.odp.ODPManager;
+import com.optimizely.ab.odp.ODPSegmentCallback;
+import com.optimizely.ab.odp.ODPSegmentManager;
 import com.optimizely.ab.odp.ODPSegmentOption;
 import com.optimizely.ab.optimizelydecision.*;
 import org.slf4j.Logger;
@@ -299,7 +300,7 @@ public class OptimizelyUserContext {
 
     /**
      * Fetch all qualified segments for the user context.
-     *
+     * <p>
      * The segments fetched will be saved and can be accessed at any time by calling {@link #getQualifiedSegments()}.
      */
     public void fetchQualifiedSegments() {
@@ -308,7 +309,7 @@ public class OptimizelyUserContext {
 
     /**
      * Fetch all qualified segments for the user context.
-     *
+     * <p>
      * The segments fetched will be saved and can be accessed at any time by calling {@link #getQualifiedSegments()}.
      *
      * @param segmentOptions A set of options for fetching qualified segments.
@@ -320,6 +321,42 @@ public class OptimizelyUserContext {
                 setQualifiedSegments(odpManager.getSegmentManager().getQualifiedSegments(userId, segmentOptions));
             }
         }
+    }
+
+    /**
+     * Fetch all qualified segments for the user context in a non-blocking manner. This method will fetch segments
+     * in a separate thread and invoke the provided callback when results are available.
+     * <p>
+     * The segments fetched will be saved and can be accessed at any time by calling {@link #getQualifiedSegments()}.
+     *
+     * @param callback A callback to invoke when results are available.
+     * @param segmentOptions A set of options for fetching qualified segments.
+     */
+    public void fetchQualifiedSegments(ODPSegmentCallback callback, List<ODPSegmentOption> segmentOptions) {
+        ODPManager odpManager = optimizely.getODPManager();
+        if (odpManager == null) {
+            logger.error("Audience segments fetch failed (ODP is not enabled");
+            callback.invokeCallback();
+        } else {
+            odpManager.getSegmentManager().getQualifiedSegments(userId, segments -> {
+                if (segments != null) {
+                    setQualifiedSegments(segments);
+                }
+                callback.invokeCallback();
+            }, segmentOptions);
+        }
+    }
+
+    /**
+     * Fetch all qualified segments for the user context in a non-blocking manner. This method will fetch segments
+     * in a separate thread and invoke the provided callback when results are available.
+     * <p>
+     * The segments fetched will be saved and can be accessed at any time by calling {@link #getQualifiedSegments()}.
+     *
+     * @param callback A callback to invoke when results are available.
+     */
+    public void fetchQualifiedSegments(ODPSegmentCallback callback) {
+        fetchQualifiedSegments(callback, Collections.emptyList());
     }
 
     // Utils

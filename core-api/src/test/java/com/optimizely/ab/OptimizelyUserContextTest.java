@@ -23,15 +23,10 @@ import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.event.ForwardingEventProcessor;
-import com.optimizely.ab.event.internal.UserContext;
 import com.optimizely.ab.event.internal.payload.DecisionMetadata;
 import com.optimizely.ab.notification.NotificationCenter;
-import com.optimizely.ab.odp.ODPEventManager;
-import com.optimizely.ab.odp.ODPManager;
-import com.optimizely.ab.odp.ODPSegmentManager;
-import com.optimizely.ab.odp.ODPSegmentOption;
+import com.optimizely.ab.odp.*;
 import com.optimizely.ab.optimizelydecision.DecisionMessage;
-import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
@@ -43,6 +38,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 
 import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_HOUSE_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_GRYFFINDOR_VALUE;
@@ -1637,6 +1633,45 @@ public class OptimizelyUserContextTest {
 
         userContext.fetchQualifiedSegments(Collections.singletonList(ODPSegmentOption.RESET_CACHE));
         verify(mockODPSegmentManager).getQualifiedSegments("test-user", Collections.singletonList(ODPSegmentOption.RESET_CACHE));
+    }
+
+    @Test
+    public void fetchQualifiedSegmentsAsync() throws InterruptedException {
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPSegmentManager mockODPSegmentManager = mock(ODPSegmentManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        doAnswer(
+            invocation -> {
+                ODPSegmentManager.ODPSegmentFetchCallback callback = invocation.getArgumentAt(1, ODPSegmentManager.ODPSegmentFetchCallback.class);
+                callback.invokeCallback(Arrays.asList("segment1", "segment2"));
+                return null;
+            }
+        ).when(mockODPSegmentManager).getQualifiedSegments(any(), (ODPSegmentManager.ODPSegmentFetchCallback) any(), any());
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+            .withODPManager(mockODPManager)
+            .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        userContext.fetchQualifiedSegments(countDownLatch::countDown);
+
+        countDownLatch.await();
+        verify(mockODPSegmentManager).getQualifiedSegments(eq("test-user"), any(ODPSegmentManager.ODPSegmentFetchCallback.class), eq(Collections.emptyList()));
+        assertEquals(Arrays.asList("segment1", "segment2"), userContext.getQualifiedSegments());
+
+        // reset qualified segments
+        userContext.setQualifiedSegments(Collections.emptyList());
+        CountDownLatch countDownLatch2 = new CountDownLatch(1);
+        userContext.fetchQualifiedSegments(countDownLatch2::countDown, Collections.singletonList(ODPSegmentOption.RESET_CACHE));
+
+        countDownLatch2.await();
+        verify(mockODPSegmentManager).getQualifiedSegments(eq("test-user"), any(ODPSegmentManager.ODPSegmentFetchCallback.class), eq(Collections.singletonList(ODPSegmentOption.RESET_CACHE)));
+        assertEquals(Arrays.asList("segment1", "segment2"), userContext.getQualifiedSegments());
     }
 
     @Test
