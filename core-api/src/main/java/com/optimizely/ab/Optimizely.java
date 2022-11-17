@@ -28,8 +28,7 @@ import com.optimizely.ab.event.*;
 import com.optimizely.ab.event.internal.*;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.notification.*;
-import com.optimizely.ab.odp.ODPEvent;
-import com.optimizely.ab.odp.ODPManager;
+import com.optimizely.ab.odp.*;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
@@ -1429,6 +1428,25 @@ public class Optimizely implements AutoCloseable {
         return notificationCenter.addNotificationHandler(clazz, handler);
     }
 
+    public List<String> fetchQualifiedSegments(String userId, @Nonnull List<ODPSegmentOption> segmentOptions) {
+        if (odpManager != null) {
+            synchronized (odpManager) {
+                return odpManager.getSegmentManager().getQualifiedSegments(userId, segmentOptions);
+            }
+        }
+        logger.error("Audience segments fetch failed (ODP is not enabled).");
+        return null;
+    }
+
+    public void fetchQualifiedSegments(String userId, ODPSegmentManager.ODPSegmentFetchCallback callback, List<ODPSegmentOption> segmentOptions) {
+        if (odpManager == null) {
+            logger.error("Audience segments fetch failed (ODP is not enabled).");
+            callback.onCompleted(null);
+        } else {
+            odpManager.getSegmentManager().getQualifiedSegments(userId, callback, segmentOptions);
+        }
+    }
+
     @Nullable
     public ODPManager getODPManager() {
         return odpManager;
@@ -1447,13 +1465,6 @@ public class Optimizely implements AutoCloseable {
         ODPManager odpManager = getODPManager();
         if (odpManager != null) {
             odpManager.getEventManager().identifyUser(userId);
-        }
-    }
-
-    public void identifyUser(@Nullable String vuid, @Nullable String userId) {
-        ODPManager odpManager = getODPManager();
-        if (odpManager != null) {
-            odpManager.getEventManager().identifyUser(vuid, userId);
         }
     }
 

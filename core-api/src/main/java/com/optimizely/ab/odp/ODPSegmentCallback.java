@@ -18,5 +18,5 @@ package com.optimizely.ab.odp;
 
 @FunctionalInterface
 public interface ODPSegmentCallback {
-    void invokeCallback();
+    void onCompleted(Boolean isFetchSuccessful);
 }

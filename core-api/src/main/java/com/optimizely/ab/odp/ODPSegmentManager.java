@@ -145,7 +145,7 @@ public class ODPSegmentManager {
 
     @FunctionalInterface
     public interface ODPSegmentFetchCallback {
-        void invokeCallback(List<String> segments);
+        void onCompleted(List<String> segments);
     }
 
     private class AsyncSegmentFetcher extends Thread {
@@ -165,7 +165,7 @@ public class ODPSegmentManager {
         @Override
         public void run() {
             List<String> segments = getQualifiedSegments(userKey, userValue, segmentOptions);
-            callback.invokeCallback(segments);
+            callback.onCompleted(segments);
         }
     }
 }

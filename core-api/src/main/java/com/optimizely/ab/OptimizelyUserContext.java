@@ -18,7 +18,6 @@ package com.optimizely.ab;
 
 import com.optimizely.ab.odp.ODPManager;
 import com.optimizely.ab.odp.ODPSegmentCallback;
-import com.optimizely.ab.odp.ODPSegmentManager;
 import com.optimizely.ab.odp.ODPSegmentOption;
 import com.optimizely.ab.optimizelydecision.*;
 import org.slf4j.Logger;
@@ -303,8 +302,8 @@ public class OptimizelyUserContext {
      * <p>
      * The segments fetched will be saved and can be accessed at any time by calling {@link #getQualifiedSegments()}.
      */
-    public void fetchQualifiedSegments() {
-        fetchQualifiedSegments(Collections.emptyList());
+    public Boolean fetchQualifiedSegments() {
+        return fetchQualifiedSegments(Collections.emptyList());
     }
 
     /**
@@ -314,13 +313,12 @@ public class OptimizelyUserContext {
      *
      * @param segmentOptions A set of options for fetching qualified segments.
      */
-    public void fetchQualifiedSegments(@Nonnull List<ODPSegmentOption> segmentOptions) {
-        ODPManager odpManager = optimizely.getODPManager();
-        if (odpManager != null) {
-            synchronized (odpManager) {
-                setQualifiedSegments(odpManager.getSegmentManager().getQualifiedSegments(userId, segmentOptions));
-            }
+    public Boolean fetchQualifiedSegments(@Nonnull List<ODPSegmentOption> segmentOptions) {
+        List<String> segments = optimizely.fetchQualifiedSegments(userId, segmentOptions);
+        if (segments != null) {
+            setQualifiedSegments(segments);
         }
+        return segments != null;
     }
 
     /**
@@ -333,18 +331,12 @@ public class OptimizelyUserContext {
      * @param segmentOptions A set of options for fetching qualified segments.
      */
     public void fetchQualifiedSegments(ODPSegmentCallback callback, List<ODPSegmentOption> segmentOptions) {
-        ODPManager odpManager = optimizely.getODPManager();
-        if (odpManager == null) {
-            logger.error("Audience segments fetch failed (ODP is not enabled");
-            callback.invokeCallback();
-        } else {
-            odpManager.getSegmentManager().getQualifiedSegments(userId, segments -> {
-                if (segments != null) {
-                    setQualifiedSegments(segments);
-                }
-                callback.invokeCallback();
-            }, segmentOptions);
-        }
+        optimizely.fetchQualifiedSegments(userId, segments -> {
+            if (segments != null) {
+                setQualifiedSegments(segments);
+            }
+            callback.onCompleted(segments != null);
+        }, segmentOptions);
     }
 
     /**

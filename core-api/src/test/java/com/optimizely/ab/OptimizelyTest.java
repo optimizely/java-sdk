@@ -4797,8 +4797,5 @@ public class OptimizelyTest {
 
         optimizely.identifyUser("the-user");
         Mockito.verify(mockODPEventManager, times(1)).identifyUser("the-user");
-
-        optimizely.identifyUser("the-vuid", "the-user");
-        Mockito.verify(mockODPEventManager, times(1)).identifyUser("the-vuid", "the-user");
     }
 }

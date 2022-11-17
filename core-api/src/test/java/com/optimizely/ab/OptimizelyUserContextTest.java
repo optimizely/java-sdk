@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab;
 
+import ch.qos.logback.classic.Level;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.optimizely.ab.bucketing.FeatureDecision;
@@ -24,6 +25,7 @@ import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.event.ForwardingEventProcessor;
 import com.optimizely.ab.event.internal.payload.DecisionMetadata;
+import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.odp.*;
 import com.optimizely.ab.optimizelydecision.DecisionMessage;
@@ -52,6 +54,9 @@ import static org.mockito.Mockito.*;
 public class OptimizelyUserContextTest {
     @Rule
     public EventHandlerRule eventHandler = new EventHandlerRule();
+
+    @Rule
+    public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
     String userId = "tester";
     boolean isListenerCalled = false;
@@ -1628,11 +1633,21 @@ public class OptimizelyUserContextTest {
 
         OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
 
-        userContext.fetchQualifiedSegments();
+        assertTrue(userContext.fetchQualifiedSegments());
         verify(mockODPSegmentManager).getQualifiedSegments("test-user", Collections.emptyList());
 
-        userContext.fetchQualifiedSegments(Collections.singletonList(ODPSegmentOption.RESET_CACHE));
+        assertTrue(userContext.fetchQualifiedSegments(Collections.singletonList(ODPSegmentOption.RESET_CACHE)));
         verify(mockODPSegmentManager).getQualifiedSegments("test-user", Collections.singletonList(ODPSegmentOption.RESET_CACHE));
+    }
+
+    @Test
+    public void fetchQualifiedSegmentsError() {
+        Optimizely optimizely = Optimizely.builder()
+            .build();
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+
+        assertFalse(userContext.fetchQualifiedSegments());
+        logbackVerifier.expectMessage(Level.ERROR, "Audience segments fetch failed (ODP is not enabled).");
     }
 
     @Test
@@ -1644,7 +1659,7 @@ public class OptimizelyUserContextTest {
         doAnswer(
             invocation -> {
                 ODPSegmentManager.ODPSegmentFetchCallback callback = invocation.getArgumentAt(1, ODPSegmentManager.ODPSegmentFetchCallback.class);
-                callback.invokeCallback(Arrays.asList("segment1", "segment2"));
+                callback.onCompleted(Arrays.asList("segment1", "segment2"));
                 return null;
             }
         ).when(mockODPSegmentManager).getQualifiedSegments(any(), (ODPSegmentManager.ODPSegmentFetchCallback) any(), any());
@@ -1658,7 +1673,10 @@ public class OptimizelyUserContextTest {
         OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
-        userContext.fetchQualifiedSegments(countDownLatch::countDown);
+        userContext.fetchQualifiedSegments((Boolean isFetchSuccessful) -> {
+            assertTrue(isFetchSuccessful);
+            countDownLatch.countDown();
+        });
 
         countDownLatch.await();
         verify(mockODPSegmentManager).getQualifiedSegments(eq("test-user"), any(ODPSegmentManager.ODPSegmentFetchCallback.class), eq(Collections.emptyList()));
@@ -1667,11 +1685,32 @@ public class OptimizelyUserContextTest {
         // reset qualified segments
         userContext.setQualifiedSegments(Collections.emptyList());
         CountDownLatch countDownLatch2 = new CountDownLatch(1);
-        userContext.fetchQualifiedSegments(countDownLatch2::countDown, Collections.singletonList(ODPSegmentOption.RESET_CACHE));
+        userContext.fetchQualifiedSegments((Boolean isFetchSuccessful) -> {
+            assertTrue(isFetchSuccessful);
+            countDownLatch2.countDown();
+        }, Collections.singletonList(ODPSegmentOption.RESET_CACHE));
 
         countDownLatch2.await();
         verify(mockODPSegmentManager).getQualifiedSegments(eq("test-user"), any(ODPSegmentManager.ODPSegmentFetchCallback.class), eq(Collections.singletonList(ODPSegmentOption.RESET_CACHE)));
         assertEquals(Arrays.asList("segment1", "segment2"), userContext.getQualifiedSegments());
+    }
+
+    @Test
+    public void fetchQualifiedSegmentsAsyncError() throws InterruptedException {
+        Optimizely optimizely = Optimizely.builder()
+            .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        userContext.fetchQualifiedSegments((Boolean isFetchSuccessful) -> {
+            assertFalse(isFetchSuccessful);
+            countDownLatch.countDown();
+        });
+
+        countDownLatch.await();
+        assertEquals(Collections.emptyList(), userContext.getQualifiedSegments());
+        logbackVerifier.expectMessage(Level.ERROR, "Audience segments fetch failed (ODP is not enabled).");
     }
 
     @Test
