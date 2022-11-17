@@ -73,24 +73,4 @@ public class ODPManagerBuilderTest {
         odpManager.getSegmentManager().getQualifiedSegments("test-user");
         verify(mockCache).lookup("fs_user_id-$-test-user");
     }
-
-    @Test
-    public void withSegmentCacheSize() {
-        ODPApiManager mockApiManager = mock(ODPApiManager.class);
-        ODPManager odpManager = ODPManager.builder()
-            .withApiManager(mockApiManager)
-            .withSegmentCacheSize(500)
-            .build();
-        assertEquals(Integer.valueOf(500), odpManager.getSegmentManager().getCacheMaxSize());
-    }
-
-    @Test
-    public void withSegmentCacheTimeout() {
-        ODPApiManager mockApiManager = mock(ODPApiManager.class);
-        ODPManager odpManager = ODPManager.builder()
-            .withApiManager(mockApiManager)
-            .withSegmentCacheTimeout(53)
-            .build();
-        assertEquals(Integer.valueOf(53), odpManager.getSegmentManager().getCacheTimeoutSeconds());
-    }
 }
