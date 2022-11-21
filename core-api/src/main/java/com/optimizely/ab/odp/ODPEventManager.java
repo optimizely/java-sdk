@@ -52,12 +52,11 @@ public class ODPEventManager {
     //      because `LinkedBlockingQueue` itself is thread safe.
     private final BlockingQueue<Object> eventQueue = new LinkedBlockingQueue<>();
 
-    public ODPEventManager(@Nonnull ODPConfig odpConfig, @Nonnull ODPApiManager apiManager) {
-        this(odpConfig, apiManager, null, null, null);
+    public ODPEventManager(@Nonnull ODPApiManager apiManager) {
+        this(apiManager, null, null, null);
     }
 
-    public ODPEventManager(@Nonnull ODPConfig odpConfig, @Nonnull ODPApiManager apiManager, @Nullable Integer batchSize, @Nullable Integer queueSize, @Nullable Integer flushInterval) {
-        this.odpConfig = odpConfig;
+    public ODPEventManager(@Nonnull ODPApiManager apiManager, @Nullable Integer batchSize, @Nullable Integer queueSize, @Nullable Integer flushInterval) {
         this.apiManager = apiManager;
         this.batchSize = (batchSize != null && batchSize > 1) ? batchSize : DEFAULT_BATCH_SIZE;
         this.queueSize = queueSize != null ? queueSize : DEFAULT_QUEUE_SIZE;
@@ -65,23 +64,33 @@ public class ODPEventManager {
     }
 
     public void start() {
+        if (eventDispatcherThread == null) {
+            eventDispatcherThread = new EventDispatcherThread();
+        }
+        if (!isRunning) {
+            eventDispatcherThread.start();
+        }
         isRunning = true;
-        eventDispatcherThread = new EventDispatcherThread();
-        eventDispatcherThread.start();
     }
 
-    public void updateSettings(ODPConfig odpConfig) {
-        if (!this.odpConfig.equals(odpConfig) && eventQueue.offer(new FlushEvent(this.odpConfig))) {
-            this.odpConfig = odpConfig;
+    public void updateSettings(ODPConfig newConfig) {
+        if (odpConfig == null || (!odpConfig.equals(newConfig) && eventQueue.offer(new FlushEvent(odpConfig)))) {
+            odpConfig = newConfig;
         }
     }
 
-    public void identifyUser(@Nullable String vuid, String userId) {
+    public void identifyUser(String userId) {
+        identifyUser(null, userId);
+    }
+
+    public void identifyUser(@Nullable String vuid, @Nullable String userId) {
         Map<String, String> identifiers = new HashMap<>();
         if (vuid != null) {
             identifiers.put(ODPUserKey.VUID.getKeyString(), vuid);
         }
-        identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
+        if (userId != null) {
+            identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
+        }
         ODPEvent event = new ODPEvent("fullstack", "client_initialized", identifiers, null);
         sendEvent(event);
     }
@@ -111,7 +120,7 @@ public class ODPEventManager {
             return;
         }
 
-        if (!odpConfig.isReady()) {
+        if (odpConfig == null || !odpConfig.isReady()) {
             logger.debug("Unable to Process ODP Event. ODPConfig is not ready.");
             return;
         }
@@ -184,10 +193,15 @@ public class ODPEventManager {
                 }
             }
 
+            isRunning = false;
             logger.debug("Exiting ODP Event Dispatcher Thread.");
         }
 
         private void flush(ODPConfig odpConfig) {
+            if (currentBatch.size() == 0) {
+                return;
+            }
+
             if (odpConfig.isReady()) {
                 String payload = ODPJsonSerializerFactory.getSerializer().serializeEvents(currentBatch);
                 String endpoint = odpConfig.getApiHost() + EVENT_URL_PATH;

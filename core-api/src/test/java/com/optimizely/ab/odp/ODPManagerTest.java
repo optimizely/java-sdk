@@ -22,6 +22,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -48,15 +50,15 @@ public class ODPManagerTest {
 
     @Test
     public void shouldStartEventManagerWhenODPManagerIsInitialized() {
-        ODPConfig config = new ODPConfig("test-key", "test-host");
-        new ODPManager(config, mockSegmentManager, mockEventManager);
+        ODPManager.builder().withSegmentManager(mockSegmentManager).withEventManager(mockEventManager).build();
+
         verify(mockEventManager, times(1)).start();
     }
 
     @Test
     public void shouldStopEventManagerWhenCloseIsCalled() {
-        ODPConfig config = new ODPConfig("test-key", "test-host");
-        ODPManager odpManager = new ODPManager(config, mockSegmentManager, mockEventManager);
+        ODPManager odpManager = ODPManager.builder().withSegmentManager(mockSegmentManager).withEventManager(mockEventManager).build();
+        odpManager.updateSettings("test-key", "test-host", Collections.emptySet());
 
         // Stop is not called in the default flow.
         verify(mockEventManager, times(0)).stop();
@@ -69,15 +71,15 @@ public class ODPManagerTest {
     @Test
     public void shouldUseNewSettingsInEventManagerWhenODPConfigIsUpdated() throws InterruptedException {
         Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(200);
-        ODPConfig config = new ODPConfig("test-key", "test-host", Arrays.asList("segment1", "segment2"));
-        ODPManager odpManager = new ODPManager(config, mockApiManager);
+        ODPManager odpManager = ODPManager.builder().withApiManager(mockApiManager).build();
+        odpManager.updateSettings("test-host", "test-key", new HashSet<>(Arrays.asList("segment1", "segment2")));
 
         odpManager.getEventManager().identifyUser("vuid", "fsuid");
         Thread.sleep(2000);
         verify(mockApiManager, times(1))
             .sendEvents(eq("test-key"), eq("test-host/v3/events"), any());
 
-        odpManager.updateSettings("test-host-updated", "test-key-updated", Arrays.asList("segment1"));
+        odpManager.updateSettings("test-host-updated", "test-key-updated", new HashSet<>(Arrays.asList("segment1")));
         odpManager.getEventManager().identifyUser("vuid", "fsuid");
         Thread.sleep(1200);
         verify(mockApiManager, times(1))
@@ -86,16 +88,16 @@ public class ODPManagerTest {
 
     @Test
     public void shouldUseNewSettingsInSegmentManagerWhenODPConfigIsUpdated() {
-        Mockito.when(mockApiManager.fetchQualifiedSegments(anyString(), anyString(), anyString(), anyString(), anyList()))
+        Mockito.when(mockApiManager.fetchQualifiedSegments(anyString(), anyString(), anyString(), anyString(), anySet()))
             .thenReturn(API_RESPONSE);
-        ODPConfig config = new ODPConfig("test-key", "test-host", Arrays.asList("segment1", "segment2"));
-        ODPManager odpManager = new ODPManager(config, mockApiManager);
+        ODPManager odpManager = ODPManager.builder().withApiManager(mockApiManager).build();
+        odpManager.updateSettings("test-host", "test-key", new HashSet<>(Arrays.asList("segment1", "segment2")));
 
         odpManager.getSegmentManager().getQualifiedSegments("test-id");
         verify(mockApiManager, times(1))
             .fetchQualifiedSegments(eq("test-key"), eq("test-host/v3/graphql"), any(), any(), any());
 
-        odpManager.updateSettings("test-host-updated", "test-key-updated", Arrays.asList("segment1"));
+        odpManager.updateSettings("test-host-updated", "test-key-updated", new HashSet<>(Arrays.asList("segment1")));
         odpManager.getSegmentManager().getQualifiedSegments("test-id");
         verify(mockApiManager, times(1))
             .fetchQualifiedSegments(eq("test-key-updated"), eq("test-host-updated/v3/graphql"), any(), any(), any());
@@ -103,21 +105,19 @@ public class ODPManagerTest {
 
     @Test
     public void shouldGetEventManager() {
-        ODPConfig config = new ODPConfig("test-key", "test-host");
-        ODPManager odpManager = new ODPManager(config, mockSegmentManager, mockEventManager);
+        ODPManager odpManager = ODPManager.builder().withSegmentManager(mockSegmentManager).withEventManager(mockEventManager).build();
         assertNotNull(odpManager.getEventManager());
 
-        odpManager = new ODPManager(config, mockApiManager);
+        odpManager = ODPManager.builder().withApiManager(mockApiManager).build();
         assertNotNull(odpManager.getEventManager());
     }
 
     @Test
     public void shouldGetSegmentManager() {
-        ODPConfig config = new ODPConfig("test-key", "test-host");
-        ODPManager odpManager = new ODPManager(config, mockSegmentManager, mockEventManager);
+        ODPManager odpManager = ODPManager.builder().withSegmentManager(mockSegmentManager).withEventManager(mockEventManager).build();
         assertNotNull(odpManager.getSegmentManager());
 
-        odpManager = new ODPManager(config, mockApiManager);
+        odpManager = ODPManager.builder().withApiManager(mockApiManager).build();
         assertNotNull(odpManager.getSegmentManager());
     }
 }
