@@ -19,6 +19,7 @@ package com.optimizely.ab;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -78,6 +79,7 @@ public class OptimizelyHttpClient implements Closeable {
         // force-close the connection after this idle time (with 0, eviction is disabled by default)
         long evictConnectionIdleTimePeriod = 0;
         TimeUnit evictConnectionIdleTimeUnit = TimeUnit.MILLISECONDS;
+        private int timeoutMillis = HttpClientUtils.CONNECTION_TIMEOUT_MS;
 
         private Builder() {
 
@@ -103,6 +105,11 @@ public class OptimizelyHttpClient implements Closeable {
             this.evictConnectionIdleTimeUnit = maxIdleTimeUnit;
             return this;
         }
+        
+        public Builder setTimeoutMillis(int timeoutMillis) {
+            this.timeoutMillis = timeoutMillis;
+            return this;
+        }
 
         public OptimizelyHttpClient build() {
             PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager();
@@ -111,7 +118,7 @@ public class OptimizelyHttpClient implements Closeable {
             poolingHttpClientConnectionManager.setValidateAfterInactivity(validateAfterInactivity);
 
             HttpClientBuilder builder = HttpClients.custom()
-                .setDefaultRequestConfig(HttpClientUtils.DEFAULT_REQUEST_CONFIG)
+                .setDefaultRequestConfig(HttpClientUtils.getDefaultRequestConfigWithTimeout(timeoutMillis))
                 .setConnectionManager(poolingHttpClientConnectionManager)
                 .disableCookieManagement()
                 .useSystemProperties();
