@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely
+ *    Copyright 2019, 2022 Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,13 +19,14 @@ package com.optimizely.ab;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -38,6 +39,8 @@ import java.util.concurrent.TimeUnit;
  * TODO abstract out interface and move into core?
  */
 public class OptimizelyHttpClient implements Closeable {
+
+    private static final Logger logger = LoggerFactory.getLogger(OptimizelyHttpClient.class);
 
     private final CloseableHttpClient httpClient;
 
@@ -122,6 +125,8 @@ public class OptimizelyHttpClient implements Closeable {
                 .setConnectionManager(poolingHttpClientConnectionManager)
                 .disableCookieManagement()
                 .useSystemProperties();
+
+            logger.debug("Creating HttpClient with timeout: " + timeoutMillis);
 
             if (evictConnectionIdleTimePeriod > 0) {
                 builder.evictIdleConnections(evictConnectionIdleTimePeriod, evictConnectionIdleTimeUnit);
