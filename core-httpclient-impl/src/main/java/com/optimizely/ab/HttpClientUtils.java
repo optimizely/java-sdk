@@ -23,9 +23,11 @@ import org.apache.http.client.config.RequestConfig;
  */
 public final class HttpClientUtils {
 
-    private static final int CONNECTION_TIMEOUT_MS = 10000;
-    private static final int CONNECTION_REQUEST_TIMEOUT_MS = 5000;
-    private static final int SOCKET_TIMEOUT_MS = 10000;
+    public static final int CONNECTION_TIMEOUT_MS = 10000;
+    public static final int CONNECTION_REQUEST_TIMEOUT_MS = 5000;
+    public static final int SOCKET_TIMEOUT_MS = 10000;
+
+    private static RequestConfig requestConfigWithTimeout;
 
     private HttpClientUtils() {
     }
@@ -35,6 +37,17 @@ public final class HttpClientUtils {
         .setConnectionRequestTimeout(CONNECTION_REQUEST_TIMEOUT_MS)
         .setSocketTimeout(SOCKET_TIMEOUT_MS)
         .build();
+
+    public static RequestConfig getDefaultRequestConfigWithTimeout(int timeoutMillis) {
+        if (requestConfigWithTimeout == null) {
+            requestConfigWithTimeout = RequestConfig.custom()
+                .setConnectTimeout(timeoutMillis)
+                .setConnectionRequestTimeout(CONNECTION_REQUEST_TIMEOUT_MS)
+                .setSocketTimeout(SOCKET_TIMEOUT_MS)
+                .build();
+        }
+        return  requestConfigWithTimeout;
+    }
 
     public static OptimizelyHttpClient getDefaultHttpClient() {
         return OptimizelyHttpClient.builder().build();

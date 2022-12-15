@@ -33,15 +33,27 @@ import java.util.Set;
 public class DefaultODPApiManager implements ODPApiManager {
     private static final Logger logger = LoggerFactory.getLogger(DefaultODPApiManager.class);
 
-    private final OptimizelyHttpClient httpClient;
+    private final OptimizelyHttpClient httpClientSegments;
+    private final OptimizelyHttpClient httpClientEvents;
 
     public DefaultODPApiManager() {
         this(OptimizelyHttpClient.builder().build());
     }
 
+    public DefaultODPApiManager(int segmentFetchTimeoutMillis, int eventDispatchTimeoutMillis) {
+        httpClientSegments = OptimizelyHttpClient.builder().setTimeoutMillis(segmentFetchTimeoutMillis).build();
+        if (segmentFetchTimeoutMillis == eventDispatchTimeoutMillis) {
+            // If the timeouts are same, single httpClient can be used for both.
+            httpClientEvents = httpClientSegments;
+        } else {
+            httpClientEvents = OptimizelyHttpClient.builder().setTimeoutMillis(eventDispatchTimeoutMillis).build();
+        }
+    }
+
     @VisibleForTesting
     DefaultODPApiManager(OptimizelyHttpClient httpClient) {
-        this.httpClient = httpClient;
+        this.httpClientSegments = httpClient;
+        this.httpClientEvents = httpClient;
     }
 
     @VisibleForTesting
@@ -150,7 +162,7 @@ public class DefaultODPApiManager implements ODPApiManager {
 
         CloseableHttpResponse response = null;
         try {
-            response = httpClient.execute(request);
+            response = httpClientSegments.execute(request);
         } catch (IOException e) {
             logger.error("Error retrieving response from ODP service", e);
             return null;
@@ -211,7 +223,7 @@ public class DefaultODPApiManager implements ODPApiManager {
 
         CloseableHttpResponse response = null;
         try {
-            response = httpClient.execute(request);
+            response = httpClientEvents.execute(request);
         } catch (IOException e) {
             logger.error("Error retrieving response from event request", e);
             return 0;

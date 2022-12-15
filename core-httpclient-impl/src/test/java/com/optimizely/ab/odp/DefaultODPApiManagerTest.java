@@ -28,7 +28,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -128,5 +127,21 @@ public class DefaultODPApiManagerTest {
         ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient);
         apiManager.sendEvents("testKey", "testEndpoint", "[]]");
         logbackVerifier.expectMessage(Level.ERROR, "ODP event send failed (Response code: 400, null)");
+    }
+
+    @Test
+    public void apiTimeouts() {
+        // Default timeout is 10 seconds
+        new DefaultODPApiManager();
+        logbackVerifier.expectMessage(Level.DEBUG, "Creating HttpClient with timeout: 10000", 1);
+
+        // Same timeouts result in single httpclient
+        new DefaultODPApiManager(2222, 2222);
+        logbackVerifier.expectMessage(Level.DEBUG, "Creating HttpClient with timeout: 2222", 1);
+
+        // Different timeouts result in different HttpClients
+        new DefaultODPApiManager(3333, 4444);
+        logbackVerifier.expectMessage(Level.DEBUG, "Creating HttpClient with timeout: 3333", 1);
+        logbackVerifier.expectMessage(Level.DEBUG, "Creating HttpClient with timeout: 4444", 1);
     }
 }
