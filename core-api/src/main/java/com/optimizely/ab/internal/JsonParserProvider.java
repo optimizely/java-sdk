@@ -64,7 +64,7 @@ public enum JsonParserProvider {
                 continue;
             }
 
-            logger.info("using json parser: {}", parser.className);
+            logger.debug("using json parser: {}", parser.className);
             return parser;
         }
 
