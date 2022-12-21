@@ -1709,7 +1709,7 @@ public class OptimizelyUserContextTest {
         });
 
         countDownLatch.await();
-        assertEquals(Collections.emptyList(), userContext.getQualifiedSegments());
+        assertEquals(null, userContext.getQualifiedSegments());
         logbackVerifier.expectMessage(Level.ERROR, "Audience segments fetch failed (ODP is not enabled).");
     }
 

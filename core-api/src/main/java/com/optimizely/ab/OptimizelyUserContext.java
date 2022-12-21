@@ -76,7 +76,9 @@ public class OptimizelyUserContext {
             this.forcedDecisionsMap = new ConcurrentHashMap<>(forcedDecisionsMap);
         }
 
-        this.qualifiedSegments = Collections.synchronizedList( qualifiedSegments == null ? new LinkedList<>(): qualifiedSegments);
+        if (qualifiedSegments != null) {
+            this.qualifiedSegments = Collections.synchronizedList(new LinkedList<>(qualifiedSegments));
+        }
 
         if (shouldIdentifyUser == null || shouldIdentifyUser) {
             optimizely.identifyUser(userId);
@@ -109,6 +111,10 @@ public class OptimizelyUserContext {
      * @return boolean Is user qualified for a segment.
      */
     public boolean isQualifiedFor(@Nonnull String segment) {
+        if (qualifiedSegments == null) {
+            return false;
+        }
+
         return qualifiedSegments.contains(segment);
     }
 
@@ -293,8 +299,14 @@ public class OptimizelyUserContext {
     }
 
     public void setQualifiedSegments(List<String> qualifiedSegments) {
-        this.qualifiedSegments.clear();
-        this.qualifiedSegments.addAll(qualifiedSegments);
+        if (qualifiedSegments == null) {
+            this.qualifiedSegments = null;
+        } else if (this.qualifiedSegments == null) {
+            this.qualifiedSegments = Collections.synchronizedList(new LinkedList<>(qualifiedSegments));
+        } else {
+            this.qualifiedSegments.clear();
+            this.qualifiedSegments.addAll(qualifiedSegments);
+        }
     }
 
     /**
@@ -315,9 +327,7 @@ public class OptimizelyUserContext {
      */
     public Boolean fetchQualifiedSegments(@Nonnull List<ODPSegmentOption> segmentOptions) {
         List<String> segments = optimizely.fetchQualifiedSegments(userId, segmentOptions);
-        if (segments != null) {
-            setQualifiedSegments(segments);
-        }
+        setQualifiedSegments(segments);
         return segments != null;
     }
 
@@ -332,9 +342,7 @@ public class OptimizelyUserContext {
      */
     public void fetchQualifiedSegments(ODPSegmentCallback callback, List<ODPSegmentOption> segmentOptions) {
         optimizely.fetchQualifiedSegments(userId, segments -> {
-            if (segments != null) {
-                setQualifiedSegments(segments);
-            }
+            setQualifiedSegments(segments);
             callback.onCompleted(segments != null);
         }, segmentOptions);
     }
