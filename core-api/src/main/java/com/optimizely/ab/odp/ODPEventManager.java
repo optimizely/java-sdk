@@ -91,7 +91,7 @@ public class ODPEventManager {
         if (userId != null) {
             identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
         }
-        ODPEvent event = new ODPEvent("fullstack", "client_initialized", identifiers, null);
+        ODPEvent event = new ODPEvent("fullstack", "identified", identifiers, null);
         sendEvent(event);
     }
 

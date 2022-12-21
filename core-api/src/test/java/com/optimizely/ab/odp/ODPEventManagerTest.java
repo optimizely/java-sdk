@@ -204,7 +204,7 @@ public class ODPEventManagerTest {
         for (int i = 0; i < events.length(); i++) {
             JSONObject event = events.getJSONObject(i);
             assertEquals("fullstack", event.getString("type"));
-            assertEquals("client_initialized", event.getString("action"));
+            assertEquals("identified", event.getString("action"));
             assertEquals("the-vuid-" + i, event.getJSONObject("identifiers").getString("vuid"));
             assertEquals("the-fs-user-id-" + i, event.getJSONObject("identifiers").getString("fs_user_id"));
             assertEquals("sdk", event.getJSONObject("data").getString("data_source_type"));
