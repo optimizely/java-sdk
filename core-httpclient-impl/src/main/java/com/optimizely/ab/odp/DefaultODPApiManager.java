@@ -27,30 +27,45 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.List;
+import java.util.Iterator;
+import java.util.Set;
 
 public class DefaultODPApiManager implements ODPApiManager {
     private static final Logger logger = LoggerFactory.getLogger(DefaultODPApiManager.class);
 
-    private final OptimizelyHttpClient httpClient;
+    private final OptimizelyHttpClient httpClientSegments;
+    private final OptimizelyHttpClient httpClientEvents;
 
     public DefaultODPApiManager() {
         this(OptimizelyHttpClient.builder().build());
     }
 
-    @VisibleForTesting
-    DefaultODPApiManager(OptimizelyHttpClient httpClient) {
-        this.httpClient = httpClient;
+    public DefaultODPApiManager(int segmentFetchTimeoutMillis, int eventDispatchTimeoutMillis) {
+        httpClientSegments = OptimizelyHttpClient.builder().setTimeoutMillis(segmentFetchTimeoutMillis).build();
+        if (segmentFetchTimeoutMillis == eventDispatchTimeoutMillis) {
+            // If the timeouts are same, single httpClient can be used for both.
+            httpClientEvents = httpClientSegments;
+        } else {
+            httpClientEvents = OptimizelyHttpClient.builder().setTimeoutMillis(eventDispatchTimeoutMillis).build();
+        }
     }
 
     @VisibleForTesting
-    String getSegmentsStringForRequest(List<String> segmentsList) {
+    DefaultODPApiManager(OptimizelyHttpClient httpClient) {
+        this.httpClientSegments = httpClient;
+        this.httpClientEvents = httpClient;
+    }
+
+    @VisibleForTesting
+    String getSegmentsStringForRequest(Set<String> segmentsList) {
+
         StringBuilder segmentsString = new StringBuilder();
+        Iterator<String> segmentsListIterator = segmentsList.iterator();
         for (int i = 0; i < segmentsList.size(); i++) {
             if (i > 0) {
                 segmentsString.append(", ");
             }
-            segmentsString.append("\\\"").append(segmentsList.get(i)).append("\\\"");
+            segmentsString.append("\"").append(segmentsListIterator.next()).append("\"");
         }
         return segmentsString.toString();
     }
@@ -129,10 +144,14 @@ public class DefaultODPApiManager implements ODPApiManager {
      }
     */
     @Override
-    public String fetchQualifiedSegments(String apiKey, String apiEndpoint, String userKey, String userValue, List<String> segmentsToCheck) {
+    public String fetchQualifiedSegments(String apiKey, String apiEndpoint, String userKey, String userValue, Set<String> segmentsToCheck) {
         HttpPost request = new HttpPost(apiEndpoint);
         String segmentsString = getSegmentsStringForRequest(segmentsToCheck);
-        String requestPayload = String.format("{\"query\": \"query {customer(%s: \\\"%s\\\") {audiences(subset: [%s]) {edges {node {name state}}}}}\"}", userKey, userValue, segmentsString);
+
+        String query = String.format("query($userId: String, $audiences: [String]) {customer(%s: $userId) {audiences(subset: $audiences) {edges {node {name state}}}}}", userKey);
+        String variables = String.format("{\"userId\": \"%s\", \"audiences\": [%s]}", userValue, segmentsString);
+        String requestPayload = String.format("{\"query\": \"%s\", \"variables\": %s}", query, variables);
+
         try {
             request.setEntity(new StringEntity(requestPayload));
         } catch (UnsupportedEncodingException e) {
@@ -143,7 +162,7 @@ public class DefaultODPApiManager implements ODPApiManager {
 
         CloseableHttpResponse response = null;
         try {
-            response = httpClient.execute(request);
+            response = httpClientSegments.execute(request);
         } catch (IOException e) {
             logger.error("Error retrieving response from ODP service", e);
             return null;
@@ -204,7 +223,7 @@ public class DefaultODPApiManager implements ODPApiManager {
 
         CloseableHttpResponse response = null;
         try {
-            response = httpClient.execute(request);
+            response = httpClientEvents.execute(request);
         } catch (IOException e) {
             logger.error("Error retrieving response from event request", e);
             return 0;

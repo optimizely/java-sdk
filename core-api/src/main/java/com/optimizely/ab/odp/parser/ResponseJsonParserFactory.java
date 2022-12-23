@@ -43,7 +43,7 @@ public class ResponseJsonParserFactory {
                 jsonParser = new JsonSimpleParser();
                 break;
         }
-        logger.info("Using " + parserProvider.toString() + " parser");
+        logger.debug("Using " + parserProvider.toString() + " parser");
         return jsonParser;
     }
 }

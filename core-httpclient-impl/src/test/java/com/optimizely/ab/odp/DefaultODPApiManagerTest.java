@@ -28,8 +28,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
@@ -64,33 +64,33 @@ public class DefaultODPApiManagerTest {
     @Test
     public void generateCorrectSegmentsStringWhenListHasOneItem() {
         DefaultODPApiManager apiManager = new DefaultODPApiManager();
-        String expected = "\\\"only_segment\\\"";
-        String actual = apiManager.getSegmentsStringForRequest(Arrays.asList("only_segment"));
+        String expected = "\"only_segment\"";
+        String actual = apiManager.getSegmentsStringForRequest(new HashSet<>(Arrays.asList("only_segment")));
         assertEquals(expected, actual);
     }
 
     @Test
     public void generateCorrectSegmentsStringWhenListHasMultipleItems() {
         DefaultODPApiManager apiManager = new DefaultODPApiManager();
-        String expected = "\\\"segment_1\\\", \\\"segment_2\\\", \\\"segment_3\\\"";
-        String actual = apiManager.getSegmentsStringForRequest(Arrays.asList("segment_1", "segment_2", "segment_3"));
+        String expected = "\"segment_1\", \"segment_3\", \"segment_2\"";
+        String actual = apiManager.getSegmentsStringForRequest(new HashSet<>(Arrays.asList("segment_1", "segment_2", "segment_3")));
         assertEquals(expected, actual);
     }
 
     @Test
     public void generateEmptyStringWhenGivenListIsEmpty() {
         DefaultODPApiManager apiManager = new DefaultODPApiManager();
-        String actual = apiManager.getSegmentsStringForRequest(new ArrayList<>());
+        String actual = apiManager.getSegmentsStringForRequest(new HashSet<>());
         assertEquals("", actual);
     }
 
     @Test
     public void generateCorrectRequestBody() throws Exception {
         ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient);
-        apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", Arrays.asList("segment_1", "segment_2"));
+        apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", new HashSet<>(Arrays.asList("segment_1", "segment_2")));
         verify(mockHttpClient, times(1)).execute(any(HttpPost.class));
 
-        String expectedResponse = "{\"query\": \"query {customer(fs_user_id: \\\"test_user\\\") {audiences(subset: [\\\"segment_1\\\", \\\"segment_2\\\"]) {edges {node {name state}}}}}\"}";
+        String expectedResponse = "{\"query\": \"query($userId: String, $audiences: [String]) {customer(fs_user_id: $userId) {audiences(subset: $audiences) {edges {node {name state}}}}}\", \"variables\": {\"userId\": \"test_user\", \"audiences\": [\"segment_1\", \"segment_2\"]}}";
         ArgumentCaptor<HttpPost> request = ArgumentCaptor.forClass(HttpPost.class);
         verify(mockHttpClient).execute(request.capture());
         assertEquals(expectedResponse, EntityUtils.toString(request.getValue().getEntity()));
@@ -99,7 +99,7 @@ public class DefaultODPApiManagerTest {
     @Test
     public void returnResponseStringWhenStatusIs200() throws Exception {
         ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient);
-        String responseString = apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", Arrays.asList("segment_1", "segment_2"));
+        String responseString = apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", new HashSet<>(Arrays.asList("segment_1", "segment_2")));
         verify(mockHttpClient, times(1)).execute(any(HttpPost.class));
         assertEquals(validResponse, responseString);
     }
@@ -108,7 +108,7 @@ public class DefaultODPApiManagerTest {
     public void returnNullWhenStatusIsNot200AndLogError() throws Exception {
         setupHttpClient(500);
         ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient);
-        String responseString = apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", Arrays.asList("segment_1", "segment_2"));
+        String responseString = apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", new HashSet<>(Arrays.asList("segment_1", "segment_2")));
         verify(mockHttpClient, times(1)).execute(any(HttpPost.class));
         logbackVerifier.expectMessage(Level.ERROR, "Unexpected response from ODP server, Response code: 500, null");
         assertNull(responseString);
@@ -127,5 +127,21 @@ public class DefaultODPApiManagerTest {
         ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient);
         apiManager.sendEvents("testKey", "testEndpoint", "[]]");
         logbackVerifier.expectMessage(Level.ERROR, "ODP event send failed (Response code: 400, null)");
+    }
+
+    @Test
+    public void apiTimeouts() {
+        // Default timeout is 10 seconds
+        new DefaultODPApiManager();
+        logbackVerifier.expectMessage(Level.DEBUG, "Creating HttpClient with timeout: 10000", 1);
+
+        // Same timeouts result in single httpclient
+        new DefaultODPApiManager(2222, 2222);
+        logbackVerifier.expectMessage(Level.DEBUG, "Creating HttpClient with timeout: 2222", 1);
+
+        // Different timeouts result in different HttpClients
+        new DefaultODPApiManager(3333, 4444);
+        logbackVerifier.expectMessage(Level.DEBUG, "Creating HttpClient with timeout: 3333", 1);
+        logbackVerifier.expectMessage(Level.DEBUG, "Creating HttpClient with timeout: 4444", 1);
     }
 }

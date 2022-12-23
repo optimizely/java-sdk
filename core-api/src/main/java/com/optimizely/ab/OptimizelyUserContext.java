@@ -16,7 +16,9 @@
  */
 package com.optimizely.ab;
 
-import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.odp.ODPManager;
+import com.optimizely.ab.odp.ODPSegmentCallback;
+import com.optimizely.ab.odp.ODPSegmentOption;
 import com.optimizely.ab.optimizelydecision.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +56,15 @@ public class OptimizelyUserContext {
                                  @Nonnull Map<String, ?> attributes,
                                  @Nullable Map<String, OptimizelyForcedDecision> forcedDecisionsMap,
                                  @Nullable List<String> qualifiedSegments) {
+        this(optimizely, userId, attributes, forcedDecisionsMap, qualifiedSegments, true);
+    }
+
+    public OptimizelyUserContext(@Nonnull Optimizely optimizely,
+                                 @Nonnull String userId,
+                                 @Nonnull Map<String, ?> attributes,
+                                 @Nullable Map<String, OptimizelyForcedDecision> forcedDecisionsMap,
+                                 @Nullable List<String> qualifiedSegments,
+                                 @Nullable Boolean shouldIdentifyUser) {
         this.optimizely = optimizely;
         this.userId = userId;
         if (attributes != null) {
@@ -66,6 +77,10 @@ public class OptimizelyUserContext {
         }
 
         this.qualifiedSegments = Collections.synchronizedList( qualifiedSegments == null ? new LinkedList<>(): qualifiedSegments);
+
+        if (shouldIdentifyUser == null || shouldIdentifyUser) {
+            optimizely.identifyUser(userId);
+        }
     }
 
     public OptimizelyUserContext(@Nonnull Optimizely optimizely, @Nonnull String userId) {
@@ -85,7 +100,7 @@ public class OptimizelyUserContext {
     }
 
     public OptimizelyUserContext copy() {
-        return new OptimizelyUserContext(optimizely, userId, attributes, forcedDecisionsMap, qualifiedSegments);
+        return new OptimizelyUserContext(optimizely, userId, attributes, forcedDecisionsMap, qualifiedSegments, false);
     }
 
     /**
@@ -282,6 +297,60 @@ public class OptimizelyUserContext {
         this.qualifiedSegments.addAll(qualifiedSegments);
     }
 
+    /**
+     * Fetch all qualified segments for the user context.
+     * <p>
+     * The segments fetched will be saved and can be accessed at any time by calling {@link #getQualifiedSegments()}.
+     */
+    public Boolean fetchQualifiedSegments() {
+        return fetchQualifiedSegments(Collections.emptyList());
+    }
+
+    /**
+     * Fetch all qualified segments for the user context.
+     * <p>
+     * The segments fetched will be saved and can be accessed at any time by calling {@link #getQualifiedSegments()}.
+     *
+     * @param segmentOptions A set of options for fetching qualified segments.
+     */
+    public Boolean fetchQualifiedSegments(@Nonnull List<ODPSegmentOption> segmentOptions) {
+        List<String> segments = optimizely.fetchQualifiedSegments(userId, segmentOptions);
+        if (segments != null) {
+            setQualifiedSegments(segments);
+        }
+        return segments != null;
+    }
+
+    /**
+     * Fetch all qualified segments for the user context in a non-blocking manner. This method will fetch segments
+     * in a separate thread and invoke the provided callback when results are available.
+     * <p>
+     * The segments fetched will be saved and can be accessed at any time by calling {@link #getQualifiedSegments()}.
+     *
+     * @param callback A callback to invoke when results are available.
+     * @param segmentOptions A set of options for fetching qualified segments.
+     */
+    public void fetchQualifiedSegments(ODPSegmentCallback callback, List<ODPSegmentOption> segmentOptions) {
+        optimizely.fetchQualifiedSegments(userId, segments -> {
+            if (segments != null) {
+                setQualifiedSegments(segments);
+            }
+            callback.onCompleted(segments != null);
+        }, segmentOptions);
+    }
+
+    /**
+     * Fetch all qualified segments for the user context in a non-blocking manner. This method will fetch segments
+     * in a separate thread and invoke the provided callback when results are available.
+     * <p>
+     * The segments fetched will be saved and can be accessed at any time by calling {@link #getQualifiedSegments()}.
+     *
+     * @param callback A callback to invoke when results are available.
+     */
+    public void fetchQualifiedSegments(ODPSegmentCallback callback) {
+        fetchQualifiedSegments(callback, Collections.emptyList());
+    }
+
     // Utils
 
     @Override
@@ -309,5 +378,4 @@ public class OptimizelyUserContext {
             ", attributes='" + attributes + '\'' +
             '}';
     }
-
 }

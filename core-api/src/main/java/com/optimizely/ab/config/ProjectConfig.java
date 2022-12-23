@@ -24,6 +24,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * ProjectConfig is an interface capturing the experiment, variation and feature definitions.
@@ -68,6 +69,8 @@ public interface ProjectConfig {
     List<Group> getGroups();
 
     List<Experiment> getExperiments();
+
+    Set<String> getAllSegments();
 
     List<Experiment> getExperimentsForEventKey(String eventKey);
 

@@ -23,6 +23,9 @@ import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.odp.DefaultODPApiManager;
+import com.optimizely.ab.odp.ODPApiManager;
+import com.optimizely.ab.odp.ODPManager;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -319,10 +322,16 @@ public final class OptimizelyFactory {
             .withNotificationCenter(notificationCenter)
             .build();
 
+        ODPApiManager defaultODPApiManager = new DefaultODPApiManager();
+        ODPManager odpManager = ODPManager.builder()
+            .withApiManager(defaultODPApiManager)
+            .build();
+
         return Optimizely.builder()
             .withEventProcessor(eventProcessor)
             .withConfigManager(configManager)
             .withNotificationCenter(notificationCenter)
+            .withODPManager(odpManager)
             .build();
     }
 }

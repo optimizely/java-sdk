@@ -17,17 +17,20 @@ package com.optimizely.ab.odp;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.beans.Transient;
 import java.util.Collections;
 import java.util.Map;
 
 public class ODPEvent {
+    public static final String EVENT_TYPE_FULLSTACK = "fullstack";
+
     private String type;
     private String action;
     private Map<String, String > identifiers;
     private Map<String, Object> data;
 
-    public ODPEvent(@Nonnull String type, @Nonnull String action, @Nullable Map<String, String> identifiers, @Nullable Map<String, Object> data) {
-        this.type = type;
+    public ODPEvent(@Nullable String type, @Nonnull String action, @Nullable Map<String, String> identifiers, @Nullable Map<String, Object> data) {
+        this.type = type == null ? EVENT_TYPE_FULLSTACK : type;
         this.action = action;
         this.identifiers = identifiers != null ? identifiers : Collections.emptyMap();
         this.data = data != null ? data : Collections.emptyMap();
@@ -63,5 +66,22 @@ public class ODPEvent {
 
     public void setData(Map<String, Object> data) {
         this.data = data;
+    }
+
+    @Transient
+    public Boolean isDataValid() {
+        for (Object entry: this.data.values()) {
+            if (
+                !( entry instanceof String
+                || entry instanceof Integer
+                || entry instanceof Long
+                || entry instanceof Boolean
+                || entry instanceof Float
+                || entry instanceof Double
+                || entry == null)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

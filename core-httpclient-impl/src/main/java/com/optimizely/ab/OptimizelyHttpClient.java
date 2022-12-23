@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely
+ *    Copyright 2019, 2022 Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -37,6 +39,8 @@ import java.util.concurrent.TimeUnit;
  * TODO abstract out interface and move into core?
  */
 public class OptimizelyHttpClient implements Closeable {
+
+    private static final Logger logger = LoggerFactory.getLogger(OptimizelyHttpClient.class);
 
     private final CloseableHttpClient httpClient;
 
@@ -78,6 +82,7 @@ public class OptimizelyHttpClient implements Closeable {
         // force-close the connection after this idle time (with 0, eviction is disabled by default)
         long evictConnectionIdleTimePeriod = 0;
         TimeUnit evictConnectionIdleTimeUnit = TimeUnit.MILLISECONDS;
+        private int timeoutMillis = HttpClientUtils.CONNECTION_TIMEOUT_MS;
 
         private Builder() {
 
@@ -103,6 +108,11 @@ public class OptimizelyHttpClient implements Closeable {
             this.evictConnectionIdleTimeUnit = maxIdleTimeUnit;
             return this;
         }
+        
+        public Builder setTimeoutMillis(int timeoutMillis) {
+            this.timeoutMillis = timeoutMillis;
+            return this;
+        }
 
         public OptimizelyHttpClient build() {
             PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager();
@@ -111,10 +121,12 @@ public class OptimizelyHttpClient implements Closeable {
             poolingHttpClientConnectionManager.setValidateAfterInactivity(validateAfterInactivity);
 
             HttpClientBuilder builder = HttpClients.custom()
-                .setDefaultRequestConfig(HttpClientUtils.DEFAULT_REQUEST_CONFIG)
+                .setDefaultRequestConfig(HttpClientUtils.getDefaultRequestConfigWithTimeout(timeoutMillis))
                 .setConnectionManager(poolingHttpClientConnectionManager)
                 .disableCookieManagement()
                 .useSystemProperties();
+
+            logger.debug("Creating HttpClient with timeout: " + timeoutMillis);
 
             if (evictConnectionIdleTimePeriod > 0) {
                 builder.evictIdleConnections(evictConnectionIdleTimePeriod, evictConnectionIdleTimeUnit);
