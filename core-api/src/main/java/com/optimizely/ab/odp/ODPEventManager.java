@@ -68,7 +68,13 @@ public class ODPEventManager {
             eventDispatcherThread = new EventDispatcherThread();
         }
         if (!isRunning) {
-            eventDispatcherThread.start();
+            final ThreadFactory threadFactory = Executors.defaultThreadFactory();
+            ExecutorService executor = Executors.newSingleThreadExecutor(runnable -> {
+                Thread thread = threadFactory.newThread(runnable);
+                thread.setDaemon(true);
+                return thread;
+            });
+            executor.submit(eventDispatcherThread);
         }
         isRunning = true;
     }
@@ -159,7 +165,7 @@ public class ODPEventManager {
                     if (currentBatch.size() > 0) {
                         nextEvent = eventQueue.poll(nextFlushTime - new Date().getTime(), TimeUnit.MILLISECONDS);
                     } else {
-                        nextEvent = eventQueue.poll();
+                        nextEvent = eventQueue.take();
                     }
 
                     if (nextEvent == null) {
