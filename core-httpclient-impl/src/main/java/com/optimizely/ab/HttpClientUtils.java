@@ -39,13 +39,11 @@ public final class HttpClientUtils {
         .build();
 
     public static RequestConfig getDefaultRequestConfigWithTimeout(int timeoutMillis) {
-        if (requestConfigWithTimeout == null) {
-            requestConfigWithTimeout = RequestConfig.custom()
-                .setConnectTimeout(timeoutMillis)
-                .setConnectionRequestTimeout(CONNECTION_REQUEST_TIMEOUT_MS)
-                .setSocketTimeout(SOCKET_TIMEOUT_MS)
-                .build();
-        }
+        requestConfigWithTimeout = RequestConfig.custom()
+            .setConnectTimeout(timeoutMillis)
+            .setConnectionRequestTimeout(CONNECTION_REQUEST_TIMEOUT_MS)
+            .setSocketTimeout(timeoutMillis)
+            .build();
         return  requestConfigWithTimeout;
     }
 

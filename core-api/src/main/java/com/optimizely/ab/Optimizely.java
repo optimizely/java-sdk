@@ -122,7 +122,7 @@ public class Optimizely implements AutoCloseable {
         this.defaultDecideOptions = defaultDecideOptions;
         this.odpManager = odpManager;
 
-        if (odpManager != null) {
+        if (odpManager != null && odpManager.getEventManager() != null) {
             odpManager.getEventManager().start();
             if (getProjectConfig() != null) {
                 updateODPSettings();
@@ -1439,7 +1439,9 @@ public class Optimizely implements AutoCloseable {
     public List<String> fetchQualifiedSegments(String userId, @Nonnull List<ODPSegmentOption> segmentOptions) {
         if (odpManager != null) {
             synchronized (odpManager) {
-                return odpManager.getSegmentManager().getQualifiedSegments(userId, segmentOptions);
+                return odpManager.getSegmentManager() != null ?
+                    odpManager.getSegmentManager().getQualifiedSegments(userId, segmentOptions)
+                    : null;
             }
         }
         logger.error("Audience segments fetch failed (ODP is not enabled).");
@@ -1447,7 +1449,7 @@ public class Optimizely implements AutoCloseable {
     }
 
     public void fetchQualifiedSegments(String userId, ODPSegmentManager.ODPSegmentFetchCallback callback, List<ODPSegmentOption> segmentOptions) {
-        if (odpManager == null) {
+        if (odpManager == null || odpManager.getSegmentManager() == null) {
             logger.error("Audience segments fetch failed (ODP is not enabled).");
             callback.onCompleted(null);
         } else {
@@ -1461,7 +1463,7 @@ public class Optimizely implements AutoCloseable {
     }
 
     public void sendODPEvent(@Nullable String type, @Nonnull String action, @Nullable Map<String, String> identifiers, @Nullable Map<String, Object> data) {
-        if (odpManager != null) {
+        if (odpManager != null && odpManager.getEventManager() != null) {
             ODPEvent event = new ODPEvent(type, action, identifiers, data);
             odpManager.getEventManager().sendEvent(event);
         } else {
@@ -1471,7 +1473,7 @@ public class Optimizely implements AutoCloseable {
 
     public void identifyUser(@Nonnull String userId) {
         ODPManager odpManager = getODPManager();
-        if (odpManager != null) {
+        if (odpManager != null && odpManager.getEventManager() != null) {
             odpManager.getEventManager().identifyUser(userId);
         }
     }
