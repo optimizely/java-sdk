@@ -36,18 +36,9 @@ public class ODPManager implements AutoCloseable {
     }
 
     private ODPManager(@Nonnull ODPSegmentManager segmentManager, @Nonnull ODPEventManager eventManager) {
-        this(segmentManager, eventManager, false);
-    }
-
-    private ODPManager(@Nonnull ODPSegmentManager segmentManager, @Nonnull ODPEventManager eventManager, boolean disable) {
-        if (!disable) {
-            this.segmentManager = segmentManager;
-            this.eventManager = eventManager;
-            this.eventManager.start();
-        } else {
-            this.segmentManager = null;
-            this.eventManager = null;
-        }
+        this.segmentManager = segmentManager;
+        this.eventManager = eventManager;
+        this.eventManager.start();
     }
 
     public ODPSegmentManager getSegmentManager() {
@@ -86,7 +77,6 @@ public class ODPManager implements AutoCloseable {
         private Integer cacheSize;
         private Integer cacheTimeoutSeconds;
         private Cache<List<String>> cacheImpl;
-        private boolean disable;
 
         /**
          * Provide a custom {@link ODPManager} instance which makes http calls to fetch segments and send events.
@@ -166,15 +156,7 @@ public class ODPManager implements AutoCloseable {
             return this;
         }
 
-        public Builder withOdpDisabled(Boolean disable) {
-            this.disable = disable;
-            return this;
-        }
-
         public ODPManager build() {
-            if (disable) {
-                return null;
-            }
             if ((segmentManager == null || eventManager == null) && apiManager == null) {
                 logger.warn("ApiManager instance is needed when using default EventManager or SegmentManager");
                 return null;
@@ -197,7 +179,7 @@ public class ODPManager implements AutoCloseable {
                 }
             }
 
-            if (eventManager == null && !disable) {
+            if (eventManager == null) {
                 eventManager = new ODPEventManager(apiManager);
             }
 
