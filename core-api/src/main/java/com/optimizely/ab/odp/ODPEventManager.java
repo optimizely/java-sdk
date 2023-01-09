@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2022, Optimizely
+ *    Copyright 2022-2023, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -53,14 +53,14 @@ public class ODPEventManager {
     private final BlockingQueue<Object> eventQueue = new LinkedBlockingQueue<>();
 
     public ODPEventManager(@Nonnull ODPApiManager apiManager) {
-        this(apiManager, null, null, null);
+        this(apiManager, null, null);
     }
 
-    public ODPEventManager(@Nonnull ODPApiManager apiManager, @Nullable Integer batchSize, @Nullable Integer queueSize, @Nullable Integer flushInterval) {
+    public ODPEventManager(@Nonnull ODPApiManager apiManager, @Nullable Integer queueSize, @Nullable Integer flushInterval) {
         this.apiManager = apiManager;
-        this.batchSize = (batchSize != null && batchSize > 1) ? batchSize : DEFAULT_BATCH_SIZE;
         this.queueSize = queueSize != null ? queueSize : DEFAULT_QUEUE_SIZE;
         this.flushInterval = (flushInterval != null && flushInterval > 0) ? flushInterval : DEFAULT_FLUSH_INTERVAL;
+        this.batchSize = (flushInterval != null && flushInterval == 0) ? 1 : DEFAULT_BATCH_SIZE;
     }
 
     public void start() {

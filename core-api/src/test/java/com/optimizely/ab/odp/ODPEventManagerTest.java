@@ -96,23 +96,23 @@ public class ODPEventManagerTest {
     public void dispatchEventsWithCorrectPayload() throws InterruptedException {
         Mockito.reset(mockApiManager);
         Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(202);
-        int batchSize = 2;
+        int flushInterval = 0;
         ODPConfig odpConfig = new ODPConfig("key", "http://www.odp-host.com", null);
-        ODPEventManager eventManager = new ODPEventManager(mockApiManager, batchSize, null, null);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager, null, flushInterval);
         eventManager.updateSettings(odpConfig);
         eventManager.start();
         for (int i = 0; i < 6; i++) {
             eventManager.sendEvent(getEvent(i));
         }
         Thread.sleep(500);
-        Mockito.verify(mockApiManager, times(3)).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), payloadCaptor.capture());
+        Mockito.verify(mockApiManager, times(6)).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), payloadCaptor.capture());
         List<String> payloads = payloadCaptor.getAllValues();
 
         for (int i = 0; i < payloads.size(); i++) {
             JSONArray events = new JSONArray(payloads.get(i));
-            assertEquals(batchSize, events.length());
+            assertEquals(1, events.length());
             for (int j = 0; j < events.length(); j++) {
-                int id = (batchSize * i) + j;
+                int id = (1 * i) + j;
                 JSONObject event = events.getJSONObject(j);
                 assertEquals("test-type-" + id , event.getString("type"));
                 assertEquals("test-action-" + id , event.getString("action"));
@@ -186,9 +186,9 @@ public class ODPEventManagerTest {
     public void prepareCorrectPayloadForIdentifyUser() throws InterruptedException {
         Mockito.reset(mockApiManager);
         Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(202);
-        int batchSize = 2;
+        int flushInterval = 0;
         ODPConfig odpConfig = new ODPConfig("key", "http://www.odp-host.com", null);
-        ODPEventManager eventManager = new ODPEventManager(mockApiManager, batchSize, null, null);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager, null, flushInterval);
         eventManager.updateSettings(odpConfig);
         eventManager.start();
         for (int i = 0; i < 2; i++) {
@@ -196,17 +196,17 @@ public class ODPEventManagerTest {
         }
 
         Thread.sleep(1500);
-        Mockito.verify(mockApiManager, times(1)).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), payloadCaptor.capture());
+        Mockito.verify(mockApiManager, times(2)).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), payloadCaptor.capture());
 
         String payload = payloadCaptor.getValue();
         JSONArray events = new JSONArray(payload);
-        assertEquals(batchSize, events.length());
+        assertEquals(1, events.length());
         for (int i = 0; i < events.length(); i++) {
             JSONObject event = events.getJSONObject(i);
             assertEquals("fullstack", event.getString("type"));
             assertEquals("identified", event.getString("action"));
-            assertEquals("the-vuid-" + i, event.getJSONObject("identifiers").getString("vuid"));
-            assertEquals("the-fs-user-id-" + i, event.getJSONObject("identifiers").getString("fs_user_id"));
+            assertEquals("the-vuid-" + (i + 1), event.getJSONObject("identifiers").getString("vuid"));
+            assertEquals("the-fs-user-id-" + (i + 1), event.getJSONObject("identifiers").getString("fs_user_id"));
             assertEquals("sdk", event.getJSONObject("data").getString("data_source_type"));
         }
     }
