@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.odp;
 
+import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
 import com.optimizely.ab.event.internal.ClientEngineInfo;
 import com.optimizely.ab.odp.serializer.ODPJsonSerializerFactory;
@@ -38,6 +39,8 @@ public class ODPEventManager {
     private final int queueSize;
     private final int batchSize;
     private final int flushInterval;
+    @Nonnull private Map<String, Object> userCommonData = Collections.emptyMap();
+    @Nonnull private Map<String, String> userCommonIdentifiers = Collections.emptyMap();
 
     private Boolean isRunning = false;
 
@@ -61,6 +64,16 @@ public class ODPEventManager {
         this.batchSize = (batchSize != null && batchSize > 1) ? batchSize : DEFAULT_BATCH_SIZE;
         this.queueSize = queueSize != null ? queueSize : DEFAULT_QUEUE_SIZE;
         this.flushInterval = (flushInterval != null && flushInterval > 0) ? flushInterval : DEFAULT_FLUSH_INTERVAL;
+    }
+
+    // these user-provided common data are included in all ODP events in addition to the SDK-generated common data.
+    public void setUserCommonData(@Nullable Map<String, Object> commonData) {
+        if (commonData != null) this.userCommonData = commonData;
+    }
+
+    // these user-provided common identifiers are included in all ODP events in addition to the SDK-generated identifiers.
+    public void setUserCommonIdentifiers(@Nullable Map<String, String> commonIdentifiers) {
+        if (commonIdentifiers != null) this.userCommonIdentifiers = commonIdentifiers;
     }
 
     public void start() {
@@ -107,17 +120,33 @@ public class ODPEventManager {
             return;
         }
         event.setData(augmentCommonData(event.getData()));
+        event.setIdentifiers(augmentCommonIdentifiers(event.getIdentifiers()));
         processEvent(event);
     }
 
-    private Map<String, Object> augmentCommonData(Map<String, Object> sourceData) {
+    @VisibleForTesting
+    Map<String, Object> augmentCommonData(Map<String, Object> sourceData) {
+        // priority: sourceData > userCommonData > sdkCommonData
+
         Map<String, Object> data = new HashMap<>();
         data.put("idempotence_id", UUID.randomUUID().toString());
         data.put("data_source_type", "sdk");
         data.put("data_source", ClientEngineInfo.getClientEngine().getClientEngineValue());
         data.put("data_source_version", BuildVersionInfo.getClientVersion());
+
+        data.putAll(userCommonData);
         data.putAll(sourceData);
         return data;
+    }
+
+    @VisibleForTesting
+    Map<String, String> augmentCommonIdentifiers(Map<String, String> sourceIdentifiers) {
+        // priority: sourceIdentifiers > userCommonIdentifiers
+
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.putAll(userCommonIdentifiers);
+        identifiers.putAll(sourceIdentifiers);
+        return identifiers;
     }
 
     private void processEvent(ODPEvent event) {

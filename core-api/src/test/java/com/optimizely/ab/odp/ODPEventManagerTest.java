@@ -255,6 +255,157 @@ public class ODPEventManagerTest {
         assertFalse(event.isDataValid());
     }
 
+    @Test
+    public void validateAugmentCommonData() {
+        Map<String, Object> sourceData = new HashMap<>();
+        sourceData.put("k1", "source-1");
+        sourceData.put("k2", "source-2");
+        Map<String, Object> userCommonData = new HashMap<>();
+        userCommonData.put("k3", "common-1");
+        userCommonData.put("k4", "common-2");
+
+        Mockito.reset(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.setUserCommonData(userCommonData);
+
+        Map<String, Object> merged = eventManager.augmentCommonData(sourceData);
+
+        // event-sourceData
+        assertEquals(merged.get("k1"), "source-1");
+        assertEquals(merged.get("k2"), "source-2");
+        // userCommonData
+        assertEquals(merged.get("k3"), "common-1");
+        assertEquals(merged.get("k4"), "common-2");
+        // sdk-generated common data
+        assertNotNull(merged.get("idempotence_id"));
+        assertEquals(merged.get("data_source_type"), "sdk");
+        assertNotNull(merged.get("data_source"));
+        assertNotNull(merged.get("data_source_version"));
+
+        assertEquals(merged.size(), 8);
+    }
+
+    @Test
+    public void validateAugmentCommonData_keyConflicts1() {
+        Map<String, Object> sourceData = new HashMap<>();
+        sourceData.put("k1", "source-1");
+        sourceData.put("k2", "source-2");
+        Map<String, Object> userCommonData = new HashMap<>();
+        userCommonData.put("k1", "common-1");
+        userCommonData.put("k2", "common-2");
+
+        Mockito.reset(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.setUserCommonData(userCommonData);
+
+        Map<String, Object> merged = eventManager.augmentCommonData(sourceData);
+
+        // event-sourceData overrides userCommonData
+        assertEquals(merged.get("k1"), "source-1");
+        assertEquals(merged.get("k2"), "source-2");
+        // sdk-generated common data
+        assertNotNull(merged.get("idempotence_id"));
+        assertEquals(merged.get("data_source_type"), "sdk");
+        assertNotNull(merged.get("data_source"));
+        assertNotNull(merged.get("data_source_version"));
+
+        assertEquals(merged.size(), 6);
+    }
+
+    @Test
+    public void validateAugmentCommonData_keyConflicts2() {
+        Map<String, Object> sourceData = new HashMap<>();
+        sourceData.put("data_source_type", "source-1");
+        Map<String, Object> userCommonData = new HashMap<>();
+        userCommonData.put("data_source_type", "common-1");
+
+        Mockito.reset(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.setUserCommonData(userCommonData);
+
+        Map<String, Object> merged = eventManager.augmentCommonData(sourceData);
+
+        // event-sourceData overrides userCommonData and sdk-generated common data
+        assertEquals(merged.get("data_source_type"), "source-1");
+        // sdk-generated common data
+        assertNotNull(merged.get("idempotence_id"));
+        assertNotNull(merged.get("data_source"));
+        assertNotNull(merged.get("data_source_version"));
+
+        assertEquals(merged.size(), 4);
+    }
+
+    @Test
+    public void validateAugmentCommonData_keyConflicts3() {
+        Map<String, Object> sourceData = new HashMap<>();
+        sourceData.put("k1", "source-1");
+        Map<String, Object> userCommonData = new HashMap<>();
+        userCommonData.put("data_source_type", "common-1");
+
+        Mockito.reset(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.setUserCommonData(userCommonData);
+
+        Map<String, Object> merged = eventManager.augmentCommonData(sourceData);
+
+        // userCommonData overrides sdk-generated common data
+        assertEquals(merged.get("data_source_type"), "common-1");
+        assertEquals(merged.get("k1"), "source-1");
+        // sdk-generated common data
+        assertNotNull(merged.get("idempotence_id"));
+        assertNotNull(merged.get("data_source"));
+        assertNotNull(merged.get("data_source_version"));
+
+        assertEquals(merged.size(), 5);
+    }
+
+    @Test
+    public void validateAugmentCommonIdentifiers() {
+        Map<String, String> sourceIdentifiers = new HashMap<>();
+        sourceIdentifiers.put("k1", "source-1");
+        sourceIdentifiers.put("k2", "source-2");
+        Map<String, String> userCommonIdentifiers = new HashMap<>();
+        userCommonIdentifiers.put("k3", "common-1");
+        userCommonIdentifiers.put("k4", "common-2");
+
+        Mockito.reset(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.setUserCommonIdentifiers(userCommonIdentifiers);
+
+        Map<String, String> merged = eventManager.augmentCommonIdentifiers(sourceIdentifiers);
+
+        // event-sourceIdentifiers
+        assertEquals(merged.get("k1"), "source-1");
+        assertEquals(merged.get("k2"), "source-2");
+        // userCommonIdentifiers
+        assertEquals(merged.get("k3"), "common-1");
+        assertEquals(merged.get("k4"), "common-2");
+
+        assertEquals(merged.size(), 4);
+    }
+
+    @Test
+    public void validateAugmentCommonIdentifiers_keyConflicts() {
+        Map<String, String> sourceIdentifiers = new HashMap<>();
+        sourceIdentifiers.put("k1", "source-1");
+        sourceIdentifiers.put("k2", "source-2");
+        Map<String, String> userCommonIdentifiers = new HashMap<>();
+        userCommonIdentifiers.put("k1", "common-1");
+        userCommonIdentifiers.put("k2", "common-2");
+
+        Mockito.reset(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.setUserCommonIdentifiers(userCommonIdentifiers);
+
+        Map<String, String> merged = eventManager.augmentCommonIdentifiers(sourceIdentifiers);
+
+        // event-sourceIdentifiers overrides userCommonIdentifiers
+        assertEquals(merged.get("k1"), "source-1");
+        assertEquals(merged.get("k2"), "source-2");
+
+        assertEquals(merged.size(), 2);
+    }
+
     private ODPEvent getEvent(int id) {
         Map<String, String> identifiers = new HashMap<>();
         identifiers.put("identifier1", "value1-" + id);

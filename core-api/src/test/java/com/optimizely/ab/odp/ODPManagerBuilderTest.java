@@ -19,9 +19,7 @@ package com.optimizely.ab.odp;
 import com.optimizely.ab.internal.Cache;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -73,4 +71,25 @@ public class ODPManagerBuilderTest {
         odpManager.getSegmentManager().getQualifiedSegments("test-user");
         verify(mockCache).lookup("fs_user_id-$-test-user");
     }
+
+    @Test
+    public void withUserCommonDataAndCommonIdentifiers() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("k1", "v1");
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("k2", "v2");
+
+        ODPEventManager mockEventManager = mock(ODPEventManager.class);
+        ODPSegmentManager mockSegmentManager = mock(ODPSegmentManager.class);
+        ODPManager odpManager = ODPManager.builder()
+            .withUserCommonData(data)
+            .withUserCommonIdentifiers(identifiers)
+            .withEventManager(mockEventManager)
+            .withSegmentManager(mockSegmentManager)
+            .build();
+
+        verify(mockEventManager).setUserCommonData(eq(data));
+        verify(mockEventManager).setUserCommonIdentifiers(eq(identifiers));
+    }
+
 }

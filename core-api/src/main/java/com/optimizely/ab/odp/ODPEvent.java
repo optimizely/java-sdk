@@ -26,7 +26,7 @@ public class ODPEvent {
 
     private String type;
     private String action;
-    private Map<String, String > identifiers;
+    private Map<String, String> identifiers;
     private Map<String, Object> data;
 
     public ODPEvent(@Nullable String type, @Nonnull String action, @Nullable Map<String, String> identifiers, @Nullable Map<String, Object> data) {

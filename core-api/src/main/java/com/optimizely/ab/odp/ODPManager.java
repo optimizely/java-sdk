@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class ODPManager implements AutoCloseable {
@@ -77,6 +78,8 @@ public class ODPManager implements AutoCloseable {
         private Integer cacheSize;
         private Integer cacheTimeoutSeconds;
         private Cache<List<String>> cacheImpl;
+        private Map<String, Object> userCommonData;
+        private Map<String, String> userCommonIdentifiers;
 
         /**
          * Provide a custom {@link ODPManager} instance which makes http calls to fetch segments and send events.
@@ -156,6 +159,32 @@ public class ODPManager implements AutoCloseable {
             return this;
         }
 
+        /**
+         * Provide an optional group of user data that should be included in all ODP events.
+         *
+         * Note that this is in addition to the default data that is automatically included in all ODP events by this SDK (sdk-name, sdk-version, etc).
+         *
+         * @param commonData A key-value set of common user data.
+         * @return ODPManager builder
+         */
+        public Builder withUserCommonData(@Nonnull Map<String, Object> commonData) {
+            this.userCommonData = commonData;
+            return this;
+        }
+
+        /**
+         * Provide an optional group of identifiers that should be included in all ODP events.
+         *
+         * Note that this is in addition to the identifiers that is automatically included in all ODP events by this SDK.
+         *
+         * @param commonData A key-value set of common identifiers.
+         * @return ODPManager builder
+         */
+        public Builder withUserCommonIdentifiers(@Nonnull Map<String, String> commonIdentifiers) {
+            this.userCommonIdentifiers = commonIdentifiers;
+            return this;
+        }
+
         public ODPManager build() {
             if ((segmentManager == null || eventManager == null) && apiManager == null) {
                 logger.warn("ApiManager instance is needed when using default EventManager or SegmentManager");
@@ -182,6 +211,8 @@ public class ODPManager implements AutoCloseable {
             if (eventManager == null) {
                 eventManager = new ODPEventManager(apiManager);
             }
+            eventManager.setUserCommonData(userCommonData);
+            eventManager.setUserCommonIdentifiers(userCommonIdentifiers);
 
             return new ODPManager(segmentManager, eventManager);
         }
