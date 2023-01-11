@@ -164,7 +164,7 @@ public class ODPManager implements AutoCloseable {
          *
          * Note that this is in addition to the default data that is automatically included in all ODP events by this SDK (sdk-name, sdk-version, etc).
          *
-         * @param commonData A key-value set of common user data.
+         * @param commonData A key-value map of common user data.
          * @return ODPManager builder
          */
         public Builder withUserCommonData(@Nonnull Map<String, Object> commonData) {
@@ -177,7 +177,7 @@ public class ODPManager implements AutoCloseable {
          *
          * Note that this is in addition to the identifiers that is automatically included in all ODP events by this SDK.
          *
-         * @param commonData A key-value set of common identifiers.
+         * @param commonIdentifiers A key-value map of common identifiers.
          * @return ODPManager builder
          */
         public Builder withUserCommonIdentifiers(@Nonnull Map<String, String> commonIdentifiers) {

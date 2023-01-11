@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab;
 
+import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.odp.ODPManager;
 import com.optimizely.ab.odp.ODPSegmentCallback;
 import com.optimizely.ab.odp.ODPSegmentOption;
@@ -313,6 +314,8 @@ public class OptimizelyUserContext {
      * Fetch all qualified segments for the user context.
      * <p>
      * The segments fetched will be saved and can be accessed at any time by calling {@link #getQualifiedSegments()}.
+     *
+     * @return a boolean value for fetch success or failure.
      */
     public Boolean fetchQualifiedSegments() {
         return fetchQualifiedSegments(Collections.emptyList());
@@ -324,6 +327,7 @@ public class OptimizelyUserContext {
      * The segments fetched will be saved and can be accessed at any time by calling {@link #getQualifiedSegments()}.
      *
      * @param segmentOptions A set of options for fetching qualified segments.
+     * @return a boolean value for fetch success or failure.
      */
     public Boolean fetchQualifiedSegments(@Nonnull List<ODPSegmentOption> segmentOptions) {
         List<String> segments = optimizely.fetchQualifiedSegments(userId, segmentOptions);

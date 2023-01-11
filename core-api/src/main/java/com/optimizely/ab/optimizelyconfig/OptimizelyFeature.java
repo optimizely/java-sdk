@@ -63,6 +63,8 @@ public class OptimizelyFeature implements IdKeyMapped {
 
     /**
      * @deprecated use {@link #getExperimentRules()} and {@link #getDeliveryRules()} instead
+     *
+     * @return a map of ExperimentKey to OptimizelyExperiment
      */
     @Deprecated
     public Map<String, OptimizelyExperiment> getExperimentsMap() {
