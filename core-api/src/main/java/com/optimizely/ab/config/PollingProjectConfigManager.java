@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config;
 
+import com.optimizely.ab.internal.NotificationRegistry;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.notification.UpdateConfigNotification;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
@@ -109,6 +110,7 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         currentProjectConfig.set(projectConfig);
         currentOptimizelyConfig.set(new OptimizelyConfigService(projectConfig).getConfig());
         countDownLatch.countDown();
+        NotificationRegistry.getNotificationCenter(projectConfig.getSdkKey()).send(SIGNAL);
         notificationCenter.send(SIGNAL);
     }
 

@@ -271,5 +271,13 @@ public class PollingProjectConfigManagerTest {
         public void release() {
             countDownLatch.countDown();
         }
+
+        @Override
+        public String getSDKKey() {
+            if (projectConfig == null) {
+                return "";
+            }
+            return projectConfig.getSdkKey();
+        }
     }
 }

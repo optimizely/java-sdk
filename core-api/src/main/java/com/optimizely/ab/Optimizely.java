@@ -27,6 +27,7 @@ import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.*;
 import com.optimizely.ab.event.internal.*;
 import com.optimizely.ab.event.internal.payload.EventBatch;
+import com.optimizely.ab.internal.NotificationRegistry;
 import com.optimizely.ab.notification.*;
 import com.optimizely.ab.odp.*;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
@@ -127,7 +128,12 @@ public class Optimizely implements AutoCloseable {
             if (getProjectConfig() != null) {
                 updateODPSettings();
             }
-            addUpdateConfigNotificationHandler(configNotification -> { updateODPSettings(); });
+            if (projectConfigManager != null) {
+                NotificationRegistry.getNotificationCenter(projectConfigManager.getSDKKey()).
+                    addNotificationHandler(UpdateConfigNotification.class,
+                        configNotification -> { updateODPSettings(); });
+            }
+
         }
     }
 
@@ -153,6 +159,7 @@ public class Optimizely implements AutoCloseable {
         tryClose(eventProcessor);
         tryClose(eventHandler);
         tryClose(projectConfigManager);
+        NotificationRegistry.clearNotificationCenterRegistry();
         if (odpManager != null) {
             tryClose(odpManager);
         }
