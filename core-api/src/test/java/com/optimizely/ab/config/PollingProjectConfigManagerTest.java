@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019-2021, Optimizely and contributors
+ *    Copyright 2019-2021, 2023, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config;
 
+import com.optimizely.ab.internal.NotificationRegistry;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.notification.UpdateConfigNotification;
 import org.junit.After;
@@ -95,12 +96,14 @@ public class PollingProjectConfigManagerTest {
         testProjectConfigManager.release();
         TimeUnit.MILLISECONDS.sleep(PROJECT_CONFIG_DELAY);
         assertEquals(projectConfig, testProjectConfigManager.getConfig());
+        assertEquals(projectConfig.getSdkKey(), testProjectConfigManager.getSDKKey());
     }
 
     @Test
     public void testBlockingGetConfigWithDefault() throws Exception {
         testProjectConfigManager.setConfig(projectConfig);
         assertEquals(projectConfig, testProjectConfigManager.getConfig());
+        assertEquals(projectConfig.getSdkKey(), testProjectConfigManager.getSDKKey());
     }
 
     @Test
@@ -124,6 +127,7 @@ public class PollingProjectConfigManagerTest {
         testProjectConfigManager.close();
         assertFalse(testProjectConfigManager.isRunning());
         assertEquals(projectConfig, testProjectConfigManager.getConfig());
+        assertEquals(projectConfig.getSdkKey(), testProjectConfigManager.getSDKKey());
     }
 
     @Test
@@ -210,11 +214,17 @@ public class PollingProjectConfigManagerTest {
 
     @Test
     public void testUpdateConfigNotificationGetsTriggered() throws InterruptedException {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(2);
+        NotificationCenter registryDefaultNotificationCenter = NotificationRegistry.getNotificationCenter("ValidProjectConfigV4");
+        NotificationCenter userNotificationCenter = testProjectConfigManager.getNotificationCenter();
+        assertNotEquals(registryDefaultNotificationCenter, userNotificationCenter);
+        
         testProjectConfigManager.getNotificationCenter()
             .<UpdateConfigNotification>getNotificationManager(UpdateConfigNotification.class)
             .addHandler(message -> {countDownLatch.countDown();});
-
+        NotificationRegistry.getNotificationCenter("ValidProjectConfigV4")
+            .<UpdateConfigNotification>getNotificationManager(UpdateConfigNotification.class)
+            .addHandler(message -> {countDownLatch.countDown();});
         assertTrue(countDownLatch.await(500, TimeUnit.MILLISECONDS));
     }
 
