@@ -81,7 +81,7 @@ public class ODPManagerBuilderTest {
 
         ODPEventManager mockEventManager = mock(ODPEventManager.class);
         ODPSegmentManager mockSegmentManager = mock(ODPSegmentManager.class);
-        ODPManager odpManager = ODPManager.builder()
+        ODPManager.builder()
             .withUserCommonData(data)
             .withUserCommonIdentifiers(identifiers)
             .withEventManager(mockEventManager)
