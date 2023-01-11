@@ -17,6 +17,7 @@
 package com.optimizely.ab.internal;
 
 import com.optimizely.ab.notification.NotificationCenter;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -24,6 +25,8 @@ import static org.junit.Assert.assertEquals;
 
 
 public class NotificationRegistryTest {
+
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     @Test
     public void getSameNotificationcenterWhenSDKkeyIsNull() {
         String sdkKey = null;
@@ -40,6 +43,7 @@ public class NotificationRegistryTest {
         assertEquals(notificationCenter1, notificationCenter2);
     }
 
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     @Test
     public void getSameNotificationcenterWhenSDKkeyIsNullAndAnotherIsEmpty() {
         String sdkKey1 = "";
