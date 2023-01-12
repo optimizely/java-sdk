@@ -278,8 +278,7 @@ public class OptimizelyFactoryTest {
     @Test
     public void newDefaultInstanceWithProjectConfigAndNotificationCenterAndEventHandler() {
         NotificationCenter notificationCenter = new NotificationCenter();
-        optimizely = OptimizelyFactory.newDefaultInstance(() -> null, notificationCenter, logEvent -> {
-        });
+        optimizely = OptimizelyFactory.newDefaultInstance(() -> null, notificationCenter, logEvent -> {});
         assertFalse(optimizely.isValid());
         assertEquals(notificationCenter, optimizely.getNotificationCenter());
     }
