@@ -17,7 +17,6 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.config.HttpProjectConfigManager;
-import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.ProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
 import com.optimizely.ab.event.BatchEventProcessor;
@@ -223,17 +222,7 @@ public final class OptimizelyFactory {
     public static Optimizely newDefaultInstance(String sdkKey) {
         if (sdkKey == null) {
             logger.error("Must provide an sdkKey, returning non-op Optimizely client");
-            return newDefaultInstance(new ProjectConfigManager() {
-                @Override
-                public ProjectConfig getConfig() {
-                    return null;
-                }
-
-                @Override
-                public String getSDKKey() {
-                    return null;
-                }
-            });
+            return newDefaultInstance(() -> null);
         }
 
         return newDefaultInstance(sdkKey, null);

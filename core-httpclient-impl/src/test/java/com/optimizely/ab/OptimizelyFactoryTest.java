@@ -19,8 +19,6 @@ package com.optimizely.ab;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.optimizely.ab.config.HttpProjectConfigManager;
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.config.ProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
 import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.internal.PropertyUtils;
@@ -265,34 +263,14 @@ public class OptimizelyFactoryTest {
 
     @Test
     public void newDefaultInstanceWithProjectConfig() throws Exception {
-        optimizely = OptimizelyFactory.newDefaultInstance(new ProjectConfigManager() {
-            @Override
-            public ProjectConfig getConfig() {
-                return null;
-            }
-
-            @Override
-            public String getSDKKey() {
-                return null;
-            }
-        });
+        optimizely = OptimizelyFactory.newDefaultInstance(() -> null);
         assertFalse(optimizely.isValid());
     }
 
     @Test
     public void newDefaultInstanceWithProjectConfigAndNotificationCenter() throws Exception {
         NotificationCenter notificationCenter = new NotificationCenter();
-        optimizely = OptimizelyFactory.newDefaultInstance(new ProjectConfigManager() {
-            @Override
-            public ProjectConfig getConfig() {
-                return null;
-            }
-
-            @Override
-            public String getSDKKey() {
-                return null;
-            }
-        }, notificationCenter);
+        optimizely = OptimizelyFactory.newDefaultInstance(() -> null, notificationCenter);
         assertFalse(optimizely.isValid());
         assertEquals(notificationCenter, optimizely.getNotificationCenter());
     }
@@ -300,17 +278,7 @@ public class OptimizelyFactoryTest {
     @Test
     public void newDefaultInstanceWithProjectConfigAndNotificationCenterAndEventHandler() {
         NotificationCenter notificationCenter = new NotificationCenter();
-        optimizely = OptimizelyFactory.newDefaultInstance(new ProjectConfigManager() {
-            @Override
-            public ProjectConfig getConfig() {
-                return null;
-            }
-
-            @Override
-            public String getSDKKey() {
-                return null;
-            }
-        }, notificationCenter, logEvent -> {
+        optimizely = OptimizelyFactory.newDefaultInstance(() -> null, notificationCenter, logEvent -> {
         });
         assertFalse(optimizely.isValid());
         assertEquals(notificationCenter, optimizely.getNotificationCenter());
