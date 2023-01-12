@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -211,8 +212,8 @@ public class ODPManager implements AutoCloseable {
             if (eventManager == null) {
                 eventManager = new ODPEventManager(apiManager);
             }
-            eventManager.setUserCommonData(userCommonData);
-            eventManager.setUserCommonIdentifiers(userCommonIdentifiers);
+            eventManager.setUserCommonData(userCommonData != null ?  userCommonData : Collections.emptyMap());
+            eventManager.setUserCommonIdentifiers(userCommonIdentifiers != null ? userCommonIdentifiers : Collections.emptyMap());
 
             return new ODPManager(segmentManager, eventManager);
         }

@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2022, Optimizely
+ *    Copyright 2022-2023, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,6 +17,9 @@
 package com.optimizely.ab.odp;
 
 import ch.qos.logback.classic.Level;
+import com.optimizely.ab.event.internal.BuildVersionInfo;
+import com.optimizely.ab.event.internal.ClientEngineInfo;
+import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.internal.LogbackVerifier;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -30,10 +33,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -253,6 +253,36 @@ public class ODPEventManagerTest {
 
         data.put("RandomObject", new Object());
         assertFalse(event.isDataValid());
+    }
+
+    @Test
+    public void validateEventCommonData() {
+        Map<String, Object> sourceData = new HashMap<>();
+        sourceData.put("k1", "v1");
+
+        Mockito.reset(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        Map<String, Object> merged = eventManager.augmentCommonData(sourceData);
+
+        assertEquals(merged.get("k1"), "v1");
+        assertTrue(merged.get("idempotence_id").toString().length() > 16);
+        assertEquals(merged.get("data_source_type"), "sdk");
+        assertEquals(merged.get("data_source"), "java-sdk");
+        assertTrue(merged.get("data_source_version").toString().length() > 0);
+        assertEquals(merged.size(), 5);
+
+        // when clientInfo is overriden (android-sdk):
+        
+        ClientEngineInfo.setClientEngine(EventBatch.ClientEngine.ANDROID_SDK);
+        BuildVersionInfo.setClientVersion("1.2.3");
+        merged = eventManager.augmentCommonData(sourceData);
+
+        assertEquals(merged.get("k1"), "v1");
+        assertTrue(merged.get("idempotence_id").toString().length() > 16);
+        assertEquals(merged.get("data_source_type"), "sdk");
+        assertEquals(merged.get("data_source"), "android-sdk");
+        assertEquals(merged.get("data_source_version"), "1.2.3");
+        assertEquals(merged.size(), 5);
     }
 
     @Test
