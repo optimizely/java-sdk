@@ -27,11 +27,6 @@ public class AtomicProjectConfigManager implements ProjectConfigManager {
         return projectConfigReference.get();
     }
 
-    @Override
-    public String getSDKKey() {
-        return "";
-    }
-
     public void setConfig(ProjectConfig projectConfig) {
         projectConfigReference.set(projectConfig);
     }

@@ -24,6 +24,8 @@ public interface ProjectConfigManager {
      */
     ProjectConfig getConfig();
 
-    String getSDKKey();
+    default String getSDKKey() {
+        return null;
+    }
 }
 

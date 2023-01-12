@@ -30,16 +30,16 @@ public class NotificationRegistryTest {
     @Test
     public void getSameNotificationcenterWhenSDKkeyIsNull() {
         String sdkKey = null;
-        NotificationCenter notificationCenter1 = NotificationRegistry.getNotificationCenter(sdkKey);
-        NotificationCenter notificationCenter2 = NotificationRegistry.getNotificationCenter(sdkKey);
+        NotificationCenter notificationCenter1 = NotificationRegistry.getInternalNotificationCenter(sdkKey);
+        NotificationCenter notificationCenter2 = NotificationRegistry.getInternalNotificationCenter(sdkKey);
         assertEquals(notificationCenter1, notificationCenter2);
     }
 
     @Test
     public void getSameNotificationcenterWhenSDKkeyIsSameButNotNull() {
         String sdkKey = "testSDkKey";
-        NotificationCenter notificationCenter1 = NotificationRegistry.getNotificationCenter(sdkKey);
-        NotificationCenter notificationCenter2 = NotificationRegistry.getNotificationCenter(sdkKey);
+        NotificationCenter notificationCenter1 = NotificationRegistry.getInternalNotificationCenter(sdkKey);
+        NotificationCenter notificationCenter2 = NotificationRegistry.getInternalNotificationCenter(sdkKey);
         assertEquals(notificationCenter1, notificationCenter2);
     }
 
@@ -48,8 +48,8 @@ public class NotificationRegistryTest {
     public void getSameNotificationcenterWhenSDKkeyIsNullAndAnotherIsEmpty() {
         String sdkKey1 = "";
         String sdkKey2 = null;
-        NotificationCenter notificationCenter1 = NotificationRegistry.getNotificationCenter(sdkKey1);
-        NotificationCenter notificationCenter2 = NotificationRegistry.getNotificationCenter(sdkKey2);
+        NotificationCenter notificationCenter1 = NotificationRegistry.getInternalNotificationCenter(sdkKey1);
+        NotificationCenter notificationCenter2 = NotificationRegistry.getInternalNotificationCenter(sdkKey2);
         assertEquals(notificationCenter1, notificationCenter2);
     }
 
@@ -57,17 +57,17 @@ public class NotificationRegistryTest {
     public void getDifferentNotificationcenterWhenSDKkeyIsNotSame() {
         String sdkKey1 = "testSDkKey1";
         String sdkKey2 = "testSDkKey2";
-        NotificationCenter notificationCenter1 = NotificationRegistry.getNotificationCenter(sdkKey1);
-        NotificationCenter notificationCenter2 = NotificationRegistry.getNotificationCenter(sdkKey2);
+        NotificationCenter notificationCenter1 = NotificationRegistry.getInternalNotificationCenter(sdkKey1);
+        NotificationCenter notificationCenter2 = NotificationRegistry.getInternalNotificationCenter(sdkKey2);
         Assert.assertNotEquals(notificationCenter1, notificationCenter2);
     }
 
     @Test
     public void clearRegistryNotificationcenterClearsOldNotificationCenter() {
         String sdkKey1 = "testSDkKey1";
-        NotificationCenter notificationCenter1 = NotificationRegistry.getNotificationCenter(sdkKey1);
+        NotificationCenter notificationCenter1 = NotificationRegistry.getInternalNotificationCenter(sdkKey1);
         NotificationRegistry.clearNotificationCenterRegistry();
-        NotificationCenter notificationCenter2 = NotificationRegistry.getNotificationCenter(sdkKey1);
+        NotificationCenter notificationCenter2 = NotificationRegistry.getInternalNotificationCenter(sdkKey1);
 
         Assert.assertNotEquals(notificationCenter1, notificationCenter2);
     }

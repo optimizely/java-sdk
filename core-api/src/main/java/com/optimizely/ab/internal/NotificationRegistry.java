@@ -29,7 +29,7 @@ public class NotificationRegistry {
     {
     }
 
-    public static NotificationCenter getNotificationCenter(@Nonnull String sdkKey)
+    public static NotificationCenter getInternalNotificationCenter(@Nonnull String sdkKey)
     {
         if (sdkKey == null) {
             sdkKey = "";

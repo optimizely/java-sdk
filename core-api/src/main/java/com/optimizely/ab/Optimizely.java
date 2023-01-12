@@ -129,7 +129,7 @@ public class Optimizely implements AutoCloseable {
                 updateODPSettings();
             }
             if (projectConfigManager != null) {
-                NotificationRegistry.getNotificationCenter(projectConfigManager.getSDKKey()).
+                NotificationRegistry.getInternalNotificationCenter(projectConfigManager.getSDKKey()).
                     addNotificationHandler(UpdateConfigNotification.class,
                         configNotification -> { updateODPSettings(); });
             }

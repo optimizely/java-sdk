@@ -215,14 +215,14 @@ public class PollingProjectConfigManagerTest {
     @Test
     public void testUpdateConfigNotificationGetsTriggered() throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(2);
-        NotificationCenter registryDefaultNotificationCenter = NotificationRegistry.getNotificationCenter("ValidProjectConfigV4");
+        NotificationCenter registryDefaultNotificationCenter = NotificationRegistry.getInternalNotificationCenter("ValidProjectConfigV4");
         NotificationCenter userNotificationCenter = testProjectConfigManager.getNotificationCenter();
         assertNotEquals(registryDefaultNotificationCenter, userNotificationCenter);
         
         testProjectConfigManager.getNotificationCenter()
             .<UpdateConfigNotification>getNotificationManager(UpdateConfigNotification.class)
             .addHandler(message -> {countDownLatch.countDown();});
-        NotificationRegistry.getNotificationCenter("ValidProjectConfigV4")
+        NotificationRegistry.getInternalNotificationCenter("ValidProjectConfigV4")
             .<UpdateConfigNotification>getNotificationManager(UpdateConfigNotification.class)
             .addHandler(message -> {countDownLatch.countDown();});
         assertTrue(countDownLatch.await(500, TimeUnit.MILLISECONDS));
@@ -285,7 +285,7 @@ public class PollingProjectConfigManagerTest {
         @Override
         public String getSDKKey() {
             if (projectConfig == null) {
-                return "";
+                return null;
             }
             return projectConfig.getSdkKey();
         }
