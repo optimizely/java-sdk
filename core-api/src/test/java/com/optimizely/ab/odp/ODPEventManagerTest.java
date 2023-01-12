@@ -271,8 +271,8 @@ public class ODPEventManagerTest {
         assertTrue(merged.get("data_source_version").toString().length() > 0);
         assertEquals(merged.size(), 5);
 
-        // when clientInfo is overriden (android-sdk):
-        
+        // when clientInfo is overridden (android-sdk):
+
         ClientEngineInfo.setClientEngine(EventBatch.ClientEngine.ANDROID_SDK);
         BuildVersionInfo.setClientVersion("1.2.3");
         merged = eventManager.augmentCommonData(sourceData);
@@ -283,6 +283,9 @@ public class ODPEventManagerTest {
         assertEquals(merged.get("data_source"), "android-sdk");
         assertEquals(merged.get("data_source_version"), "1.2.3");
         assertEquals(merged.size(), 5);
+
+        // restore the default value for other tests
+        ClientEngineInfo.setClientEngine(ClientEngineInfo.DEFAULT);
     }
 
     @Test
