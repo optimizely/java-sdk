@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2016-2023, Optimizely, Inc. and contributors                   *
+ * Copyright 2016-2022, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -4505,13 +4505,13 @@ public class OptimizelyTest {
 
     @Test
     public void testGetNotificationCenter() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(new TestProjectConfigManager()).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
         assertEquals(optimizely.notificationCenter, optimizely.getNotificationCenter());
     }
 
     @Test
     public void testAddTrackNotificationHandler() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(new TestProjectConfigManager()).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
         NotificationManager<TrackNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(TrackNotification.class);
 
@@ -4521,7 +4521,7 @@ public class OptimizelyTest {
 
     @Test
     public void testAddDecisionNotificationHandler() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(new TestProjectConfigManager()).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
         NotificationManager<DecisionNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(DecisionNotification.class);
 
@@ -4531,7 +4531,7 @@ public class OptimizelyTest {
 
     @Test
     public void testAddUpdateConfigNotificationHandler() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(new TestProjectConfigManager()).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
         NotificationManager<UpdateConfigNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(UpdateConfigNotification.class);
 
@@ -4541,7 +4541,7 @@ public class OptimizelyTest {
 
     @Test
     public void testAddLogEventNotificationHandler() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(new TestProjectConfigManager()).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
         NotificationManager<LogEvent> manager = optimizely.getNotificationCenter()
             .getNotificationManager(LogEvent.class);
 
@@ -4781,17 +4781,5 @@ public class OptimizelyTest {
         Mockito.verify(mockODPEventManager, times(1)).identifyUser("the-user");
     }
 
-    public static class TestProjectConfigManager implements ProjectConfigManager {
-
-        @Override
-        public ProjectConfig getConfig() {
-            return null;
-        }
-
-        @Override
-        public String getSDKKey() {
-            return null;
-        }
-    }
 }
 
