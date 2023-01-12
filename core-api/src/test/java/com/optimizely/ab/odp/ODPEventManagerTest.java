@@ -284,8 +284,9 @@ public class ODPEventManagerTest {
         assertEquals(merged.get("data_source_version"), "1.2.3");
         assertEquals(merged.size(), 5);
 
-        // restore the default value for other tests
+        // restore the default values for other tests
         ClientEngineInfo.setClientEngine(ClientEngineInfo.DEFAULT);
+        BuildVersionInfo.setClientVersion(BuildVersionInfo.VERSION);
     }
 
     @Test
