@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2021-2022, Optimizely and contributors
+ *    Copyright 2021-2023, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -1751,7 +1751,7 @@ public class OptimizelyUserContextTest {
         });
 
         countDownLatch.await();
-        assertEquals(Collections.emptyList(), userContext.getQualifiedSegments());
+        assertEquals(null, userContext.getQualifiedSegments());
         logbackVerifier.expectMessage(Level.ERROR, "Audience segments fetch failed (ODP is not enabled).");
     }
 
