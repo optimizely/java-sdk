@@ -22,39 +22,38 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 
 public class NotificationRegistryTest {
 
     @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     @Test
-    public void getSameNotificationcenterWhenSDKkeyIsNull() {
+    public void getNullNotificationCenterWhenSDKeyIsNull() {
         String sdkKey = null;
-        NotificationCenter notificationCenter1 = NotificationRegistry.getInternalNotificationCenter(sdkKey);
-        NotificationCenter notificationCenter2 = NotificationRegistry.getInternalNotificationCenter(sdkKey);
-        assertEquals(notificationCenter1, notificationCenter2);
+        NotificationCenter notificationCenter = NotificationRegistry.getInternalNotificationCenter(sdkKey);
+        assertNull(notificationCenter);
     }
 
     @Test
-    public void getSameNotificationcenterWhenSDKkeyIsSameButNotNull() {
+    public void getSameNotificationCenterWhenSDKKeyIsSameButNotNull() {
         String sdkKey = "testSDkKey";
         NotificationCenter notificationCenter1 = NotificationRegistry.getInternalNotificationCenter(sdkKey);
         NotificationCenter notificationCenter2 = NotificationRegistry.getInternalNotificationCenter(sdkKey);
         assertEquals(notificationCenter1, notificationCenter2);
     }
 
-    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     @Test
-    public void getSameNotificationcenterWhenSDKkeyIsNullAndAnotherIsEmpty() {
+    public void getSameNotificationCenterWhenSDKKeyIsEmpty() {
         String sdkKey1 = "";
-        String sdkKey2 = null;
+        String sdkKey2 = "";
         NotificationCenter notificationCenter1 = NotificationRegistry.getInternalNotificationCenter(sdkKey1);
         NotificationCenter notificationCenter2 = NotificationRegistry.getInternalNotificationCenter(sdkKey2);
         assertEquals(notificationCenter1, notificationCenter2);
     }
 
     @Test
-    public void getDifferentNotificationcenterWhenSDKkeyIsNotSame() {
+    public void getDifferentNotificationCenterWhenSDKKeyIsNotSame() {
         String sdkKey1 = "testSDkKey1";
         String sdkKey2 = "testSDkKey2";
         NotificationCenter notificationCenter1 = NotificationRegistry.getInternalNotificationCenter(sdkKey1);
@@ -63,12 +62,23 @@ public class NotificationRegistryTest {
     }
 
     @Test
-    public void clearRegistryNotificationcenterClearsOldNotificationCenter() {
+    public void clearRegistryNotificationCenterClearsOldNotificationCenter() {
         String sdkKey1 = "testSDkKey1";
         NotificationCenter notificationCenter1 = NotificationRegistry.getInternalNotificationCenter(sdkKey1);
-        NotificationRegistry.clearNotificationCenterRegistry();
+        NotificationRegistry.clearNotificationCenterRegistry(sdkKey1);
         NotificationCenter notificationCenter2 = NotificationRegistry.getInternalNotificationCenter(sdkKey1);
 
         Assert.assertNotEquals(notificationCenter1, notificationCenter2);
+    }
+
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
+    @Test
+    public void clearRegistryNotificationCenterWillNotCauseExceptionIfPassedNullSDkKey() {
+        String sdkKey1 = "testSDkKey1";
+        NotificationCenter notificationCenter1 = NotificationRegistry.getInternalNotificationCenter(sdkKey1);
+        NotificationRegistry.clearNotificationCenterRegistry(null);
+        NotificationCenter notificationCenter2 = NotificationRegistry.getInternalNotificationCenter(sdkKey1);
+
+        Assert.assertEquals(notificationCenter1, notificationCenter2);
     }
 }

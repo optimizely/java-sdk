@@ -110,7 +110,9 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         currentProjectConfig.set(projectConfig);
         currentOptimizelyConfig.set(new OptimizelyConfigService(projectConfig).getConfig());
         countDownLatch.countDown();
-        NotificationRegistry.getInternalNotificationCenter(projectConfig.getSdkKey()).send(SIGNAL);
+        if (projectConfig.getSdkKey() != null) {
+            NotificationRegistry.getInternalNotificationCenter(projectConfig.getSdkKey()).send(SIGNAL);
+        }
         notificationCenter.send(SIGNAL);
     }
 

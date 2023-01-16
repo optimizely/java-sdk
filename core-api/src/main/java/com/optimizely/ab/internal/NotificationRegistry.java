@@ -31,22 +31,22 @@ public class NotificationRegistry {
 
     public static NotificationCenter getInternalNotificationCenter(@Nonnull String sdkKey)
     {
-        if (sdkKey == null) {
-            sdkKey = "";
-        }
-
-        NotificationCenter notificationCenter;
-        if (_notificationCenters.containsKey(sdkKey)) {
-            notificationCenter = _notificationCenters.get(sdkKey);
-        } else {
-            notificationCenter = new NotificationCenter();
-            _notificationCenters.put(sdkKey, notificationCenter);
+        NotificationCenter notificationCenter = null;
+        if (sdkKey != null) {
+            if (_notificationCenters.containsKey(sdkKey)) {
+                notificationCenter = _notificationCenters.get(sdkKey);
+            } else {
+                notificationCenter = new NotificationCenter();
+                _notificationCenters.put(sdkKey, notificationCenter);
+            }
         }
         return notificationCenter;
     }
 
-    public static void clearNotificationCenterRegistry() {
-        _notificationCenters.clear();
+    public static void clearNotificationCenterRegistry(@Nonnull String sdkKey) {
+        if (sdkKey != null) {
+            _notificationCenters.remove(sdkKey);
+        }
     }
 
 }
