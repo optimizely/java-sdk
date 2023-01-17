@@ -212,8 +212,8 @@ public class ODPManager implements AutoCloseable {
             if (eventManager == null) {
                 eventManager = new ODPEventManager(apiManager);
             }
-            eventManager.setUserCommonData(userCommonData != null ?  userCommonData : Collections.emptyMap());
-            eventManager.setUserCommonIdentifiers(userCommonIdentifiers != null ? userCommonIdentifiers : Collections.emptyMap());
+            eventManager.setUserCommonData(userCommonData);
+            eventManager.setUserCommonIdentifiers(userCommonIdentifiers);
 
             return new ODPManager(segmentManager, eventManager);
         }

@@ -67,13 +67,13 @@ public class ODPEventManager {
     }
 
     // these user-provided common data are included in all ODP events in addition to the SDK-generated common data.
-    public void setUserCommonData(@Nonnull Map<String, Object> commonData) {
-        this.userCommonData = commonData;
+    public void setUserCommonData(@Nullable Map<String, Object> commonData) {
+        if (commonData != null) this.userCommonData = commonData;
     }
 
     // these user-provided common identifiers are included in all ODP events in addition to the SDK-generated identifiers.
-    public void setUserCommonIdentifiers(@Nonnull Map<String, String> commonIdentifiers) {
-        this.userCommonIdentifiers = commonIdentifiers;
+    public void setUserCommonIdentifiers(@Nullable Map<String, String> commonIdentifiers) {
+        if (commonIdentifiers != null) this.userCommonIdentifiers = commonIdentifiers;
     }
 
     public void start() {
