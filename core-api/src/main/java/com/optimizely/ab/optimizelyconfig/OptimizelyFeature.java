@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2020-2021, Optimizely, Inc. and contributors                        *
+ * Copyright 2020-2021, 2023, Optimizely, Inc. and contributors             *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -63,6 +63,8 @@ public class OptimizelyFeature implements IdKeyMapped {
 
     /**
      * @deprecated use {@link #getExperimentRules()} and {@link #getDeliveryRules()} instead
+     *
+     * @return a map of ExperimentKey to OptimizelyExperiment
      */
     @Deprecated
     public Map<String, OptimizelyExperiment> getExperimentsMap() {

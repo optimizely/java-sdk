@@ -23,6 +23,8 @@ import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.event.internal.BuildVersionInfo;
+import com.optimizely.ab.event.internal.ClientEngineInfo;
+import com.optimizely.ab.event.internal.payload.Event;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.odp.ODPEventManager;
 import com.optimizely.ab.odp.ODPManager;
@@ -241,6 +243,10 @@ public class OptimizelyBuilderTest {
         verify(eventHandler, timeout(5000)).dispatchEvent(argument.capture());
         assertEquals(argument.getValue().getEventBatch().getClientName(), "android-sdk");
         assertEquals(argument.getValue().getEventBatch().getClientVersion(), "1.2.3");
+
+        // restore the default values for other tests
+        ClientEngineInfo.setClientEngine(ClientEngineInfo.DEFAULT);
+        BuildVersionInfo.setClientVersion(BuildVersionInfo.VERSION);
     }
 
     @Test
