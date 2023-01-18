@@ -86,6 +86,16 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
     protected abstract ProjectConfig poll();
 
     /**
+     * Access to current cached project configuration, This is to make sure that config returns without any wait, even if it is null.
+     *
+     * @return {@link ProjectConfig}
+     */
+    @Override
+    public ProjectConfig getCachedConfig() {
+        return currentProjectConfig.get();
+    }
+
+    /**
      * Only allow the ProjectConfig to be set to a non-null value, if and only if the value has not already been set.
      * @param projectConfig
      */

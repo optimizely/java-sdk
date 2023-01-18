@@ -24,6 +24,14 @@ public interface ProjectConfigManager {
      */
     ProjectConfig getConfig();
 
+    /**
+     * Implementations of this method should not block until a datafile is available, instead return current cached project configuration.
+     *
+     * NOTE: To use ODP segments, implementation of this function is required to return current project configuration.
+     * @return ProjectConfig
+     */
+    default ProjectConfig getCachedConfig() { return null; }
+
     default String getSDKKey() {
         return null;
     }

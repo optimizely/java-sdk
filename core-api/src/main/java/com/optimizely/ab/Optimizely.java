@@ -125,10 +125,10 @@ public class Optimizely implements AutoCloseable {
 
         if (odpManager != null) {
             odpManager.getEventManager().start();
-            if (!(projectConfigManager instanceof PollingProjectConfigManager)) {
+            if (projectConfigManager.getCachedConfig() != null) {
                 updateODPSettings();
             }
-            if (projectConfigManager != null && projectConfigManager.getSDKKey() != null) {
+            if (projectConfigManager.getSDKKey() != null) {
                 NotificationRegistry.getInternalNotificationCenter(projectConfigManager.getSDKKey()).
                     addNotificationHandler(UpdateConfigNotification.class,
                         configNotification -> { updateODPSettings(); });
@@ -1485,8 +1485,8 @@ public class Optimizely implements AutoCloseable {
     }
 
     private void updateODPSettings() {
-        if (odpManager != null && getProjectConfig() != null) {
-            ProjectConfig projectConfig = getProjectConfig();
+        ProjectConfig projectConfig = projectConfigManager.getCachedConfig();
+        if (odpManager != null && projectConfig != null) {
             odpManager.updateSettings(projectConfig.getHostForODP(), projectConfig.getPublicKeyForODP(), projectConfig.getAllSegments());
         }
     }
