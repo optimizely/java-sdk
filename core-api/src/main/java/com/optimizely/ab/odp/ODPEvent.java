@@ -1,5 +1,5 @@
 /**
- *    Copyright 2022, Optimizely Inc. and contributors
+ *    Copyright 2022-2023, Optimizely Inc. and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ public class ODPEvent {
 
     private String type;
     private String action;
-    private Map<String, String > identifiers;
+    private Map<String, String> identifiers;
     private Map<String, Object> data;
 
     public ODPEvent(@Nullable String type, @Nonnull String action, @Nullable Map<String, String> identifiers, @Nullable Map<String, Object> data) {

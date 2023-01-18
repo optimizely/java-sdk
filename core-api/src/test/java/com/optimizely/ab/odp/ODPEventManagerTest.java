@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2022, Optimizely
+ *    Copyright 2022-2023, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,6 +17,9 @@
 package com.optimizely.ab.odp;
 
 import ch.qos.logback.classic.Level;
+import com.optimizely.ab.event.internal.BuildVersionInfo;
+import com.optimizely.ab.event.internal.ClientEngineInfo;
+import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.internal.LogbackVerifier;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -30,10 +33,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -96,23 +96,23 @@ public class ODPEventManagerTest {
     public void dispatchEventsWithCorrectPayload() throws InterruptedException {
         Mockito.reset(mockApiManager);
         Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(202);
-        int batchSize = 2;
+        int flushInterval = 0;
         ODPConfig odpConfig = new ODPConfig("key", "http://www.odp-host.com", null);
-        ODPEventManager eventManager = new ODPEventManager(mockApiManager, batchSize, null, null);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager, null, flushInterval);
         eventManager.updateSettings(odpConfig);
         eventManager.start();
         for (int i = 0; i < 6; i++) {
             eventManager.sendEvent(getEvent(i));
         }
         Thread.sleep(500);
-        Mockito.verify(mockApiManager, times(3)).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), payloadCaptor.capture());
+        Mockito.verify(mockApiManager, times(6)).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), payloadCaptor.capture());
         List<String> payloads = payloadCaptor.getAllValues();
 
         for (int i = 0; i < payloads.size(); i++) {
             JSONArray events = new JSONArray(payloads.get(i));
-            assertEquals(batchSize, events.length());
+            assertEquals(1, events.length());
             for (int j = 0; j < events.length(); j++) {
-                int id = (batchSize * i) + j;
+                int id = (1 * i) + j;
                 JSONObject event = events.getJSONObject(j);
                 assertEquals("test-type-" + id , event.getString("type"));
                 assertEquals("test-action-" + id , event.getString("action"));
@@ -186,9 +186,9 @@ public class ODPEventManagerTest {
     public void prepareCorrectPayloadForIdentifyUser() throws InterruptedException {
         Mockito.reset(mockApiManager);
         Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(202);
-        int batchSize = 2;
+        int flushInterval = 0;
         ODPConfig odpConfig = new ODPConfig("key", "http://www.odp-host.com", null);
-        ODPEventManager eventManager = new ODPEventManager(mockApiManager, batchSize, null, null);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager, null, flushInterval);
         eventManager.updateSettings(odpConfig);
         eventManager.start();
         for (int i = 0; i < 2; i++) {
@@ -196,17 +196,17 @@ public class ODPEventManagerTest {
         }
 
         Thread.sleep(1500);
-        Mockito.verify(mockApiManager, times(1)).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), payloadCaptor.capture());
+        Mockito.verify(mockApiManager, times(2)).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), payloadCaptor.capture());
 
         String payload = payloadCaptor.getValue();
         JSONArray events = new JSONArray(payload);
-        assertEquals(batchSize, events.length());
+        assertEquals(1, events.length());
         for (int i = 0; i < events.length(); i++) {
             JSONObject event = events.getJSONObject(i);
             assertEquals("fullstack", event.getString("type"));
             assertEquals("identified", event.getString("action"));
-            assertEquals("the-vuid-" + i, event.getJSONObject("identifiers").getString("vuid"));
-            assertEquals("the-fs-user-id-" + i, event.getJSONObject("identifiers").getString("fs_user_id"));
+            assertEquals("the-vuid-" + (i + 1), event.getJSONObject("identifiers").getString("vuid"));
+            assertEquals("the-fs-user-id-" + (i + 1), event.getJSONObject("identifiers").getString("fs_user_id"));
             assertEquals("sdk", event.getJSONObject("data").getString("data_source_type"));
         }
     }
@@ -253,6 +253,191 @@ public class ODPEventManagerTest {
 
         data.put("RandomObject", new Object());
         assertFalse(event.isDataValid());
+    }
+
+    @Test
+    public void validateEventCommonData() {
+        Map<String, Object> sourceData = new HashMap<>();
+        sourceData.put("k1", "v1");
+
+        Mockito.reset(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        Map<String, Object> merged = eventManager.augmentCommonData(sourceData);
+
+        assertEquals(merged.get("k1"), "v1");
+        assertTrue(merged.get("idempotence_id").toString().length() > 16);
+        assertEquals(merged.get("data_source_type"), "sdk");
+        assertEquals(merged.get("data_source"), "java-sdk");
+        assertTrue(merged.get("data_source_version").toString().length() > 0);
+        assertEquals(merged.size(), 5);
+
+        // when clientInfo is overridden (android-sdk):
+
+        ClientEngineInfo.setClientEngine(EventBatch.ClientEngine.ANDROID_SDK);
+        BuildVersionInfo.setClientVersion("1.2.3");
+        merged = eventManager.augmentCommonData(sourceData);
+
+        assertEquals(merged.get("k1"), "v1");
+        assertTrue(merged.get("idempotence_id").toString().length() > 16);
+        assertEquals(merged.get("data_source_type"), "sdk");
+        assertEquals(merged.get("data_source"), "android-sdk");
+        assertEquals(merged.get("data_source_version"), "1.2.3");
+        assertEquals(merged.size(), 5);
+
+        // restore the default values for other tests
+        ClientEngineInfo.setClientEngine(ClientEngineInfo.DEFAULT);
+        BuildVersionInfo.setClientVersion(BuildVersionInfo.VERSION);
+    }
+
+    @Test
+    public void validateAugmentCommonData() {
+        Map<String, Object> sourceData = new HashMap<>();
+        sourceData.put("k1", "source-1");
+        sourceData.put("k2", "source-2");
+        Map<String, Object> userCommonData = new HashMap<>();
+        userCommonData.put("k3", "common-1");
+        userCommonData.put("k4", "common-2");
+
+        Mockito.reset(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.setUserCommonData(userCommonData);
+
+        Map<String, Object> merged = eventManager.augmentCommonData(sourceData);
+
+        // event-sourceData
+        assertEquals(merged.get("k1"), "source-1");
+        assertEquals(merged.get("k2"), "source-2");
+        // userCommonData
+        assertEquals(merged.get("k3"), "common-1");
+        assertEquals(merged.get("k4"), "common-2");
+        // sdk-generated common data
+        assertNotNull(merged.get("idempotence_id"));
+        assertEquals(merged.get("data_source_type"), "sdk");
+        assertNotNull(merged.get("data_source"));
+        assertNotNull(merged.get("data_source_version"));
+
+        assertEquals(merged.size(), 8);
+    }
+
+    @Test
+    public void validateAugmentCommonData_keyConflicts1() {
+        Map<String, Object> sourceData = new HashMap<>();
+        sourceData.put("k1", "source-1");
+        sourceData.put("k2", "source-2");
+        Map<String, Object> userCommonData = new HashMap<>();
+        userCommonData.put("k1", "common-1");
+        userCommonData.put("k2", "common-2");
+
+        Mockito.reset(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.setUserCommonData(userCommonData);
+
+        Map<String, Object> merged = eventManager.augmentCommonData(sourceData);
+
+        // event-sourceData overrides userCommonData
+        assertEquals(merged.get("k1"), "source-1");
+        assertEquals(merged.get("k2"), "source-2");
+        // sdk-generated common data
+        assertNotNull(merged.get("idempotence_id"));
+        assertEquals(merged.get("data_source_type"), "sdk");
+        assertNotNull(merged.get("data_source"));
+        assertNotNull(merged.get("data_source_version"));
+
+        assertEquals(merged.size(), 6);
+    }
+
+    @Test
+    public void validateAugmentCommonData_keyConflicts2() {
+        Map<String, Object> sourceData = new HashMap<>();
+        sourceData.put("data_source_type", "source-1");
+        Map<String, Object> userCommonData = new HashMap<>();
+        userCommonData.put("data_source_type", "common-1");
+
+        Mockito.reset(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.setUserCommonData(userCommonData);
+
+        Map<String, Object> merged = eventManager.augmentCommonData(sourceData);
+
+        // event-sourceData overrides userCommonData and sdk-generated common data
+        assertEquals(merged.get("data_source_type"), "source-1");
+        // sdk-generated common data
+        assertNotNull(merged.get("idempotence_id"));
+        assertNotNull(merged.get("data_source"));
+        assertNotNull(merged.get("data_source_version"));
+
+        assertEquals(merged.size(), 4);
+    }
+
+    @Test
+    public void validateAugmentCommonData_keyConflicts3() {
+        Map<String, Object> sourceData = new HashMap<>();
+        sourceData.put("k1", "source-1");
+        Map<String, Object> userCommonData = new HashMap<>();
+        userCommonData.put("data_source_type", "common-1");
+
+        Mockito.reset(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.setUserCommonData(userCommonData);
+
+        Map<String, Object> merged = eventManager.augmentCommonData(sourceData);
+
+        // userCommonData overrides sdk-generated common data
+        assertEquals(merged.get("data_source_type"), "common-1");
+        assertEquals(merged.get("k1"), "source-1");
+        // sdk-generated common data
+        assertNotNull(merged.get("idempotence_id"));
+        assertNotNull(merged.get("data_source"));
+        assertNotNull(merged.get("data_source_version"));
+
+        assertEquals(merged.size(), 5);
+    }
+
+    @Test
+    public void validateAugmentCommonIdentifiers() {
+        Map<String, String> sourceIdentifiers = new HashMap<>();
+        sourceIdentifiers.put("k1", "source-1");
+        sourceIdentifiers.put("k2", "source-2");
+        Map<String, String> userCommonIdentifiers = new HashMap<>();
+        userCommonIdentifiers.put("k3", "common-1");
+        userCommonIdentifiers.put("k4", "common-2");
+
+        Mockito.reset(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.setUserCommonIdentifiers(userCommonIdentifiers);
+
+        Map<String, String> merged = eventManager.augmentCommonIdentifiers(sourceIdentifiers);
+
+        // event-sourceIdentifiers
+        assertEquals(merged.get("k1"), "source-1");
+        assertEquals(merged.get("k2"), "source-2");
+        // userCommonIdentifiers
+        assertEquals(merged.get("k3"), "common-1");
+        assertEquals(merged.get("k4"), "common-2");
+
+        assertEquals(merged.size(), 4);
+    }
+
+    @Test
+    public void validateAugmentCommonIdentifiers_keyConflicts() {
+        Map<String, String> sourceIdentifiers = new HashMap<>();
+        sourceIdentifiers.put("k1", "source-1");
+        sourceIdentifiers.put("k2", "source-2");
+        Map<String, String> userCommonIdentifiers = new HashMap<>();
+        userCommonIdentifiers.put("k1", "common-1");
+        userCommonIdentifiers.put("k2", "common-2");
+
+        Mockito.reset(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        eventManager.setUserCommonIdentifiers(userCommonIdentifiers);
+
+        Map<String, String> merged = eventManager.augmentCommonIdentifiers(sourceIdentifiers);
+
+        // event-sourceIdentifiers overrides userCommonIdentifiers
+        assertEquals(merged.get("k1"), "source-1");
+        assertEquals(merged.get("k2"), "source-2");
+
+        assertEquals(merged.size(), 2);
     }
 
     private ODPEvent getEvent(int id) {
