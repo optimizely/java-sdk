@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019-2020, Optimizely
+ *    Copyright 2019-2020, 2023, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ package com.optimizely.ab;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.optimizely.ab.config.HttpProjectConfigManager;
+import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.ProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
 import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.internal.PropertyUtils;
@@ -260,17 +262,28 @@ public class OptimizelyFactoryTest {
         optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString, "auth-token", httpClient);
         assertTrue(optimizely.isValid());
     }
+    public ProjectConfigManager projectConfigManagerReturningNull = new ProjectConfigManager() {
+        @Override
+        public ProjectConfig getConfig() {
+            return null;
+        }
+
+        @Override
+        public ProjectConfig getCachedConfig() {
+            return null;
+        }
+    };
 
     @Test
     public void newDefaultInstanceWithProjectConfig() throws Exception {
-        optimizely = OptimizelyFactory.newDefaultInstance(() -> null);
+        optimizely = OptimizelyFactory.newDefaultInstance(projectConfigManagerReturningNull);
         assertFalse(optimizely.isValid());
     }
 
     @Test
     public void newDefaultInstanceWithProjectConfigAndNotificationCenter() throws Exception {
         NotificationCenter notificationCenter = new NotificationCenter();
-        optimizely = OptimizelyFactory.newDefaultInstance(() -> null, notificationCenter);
+        optimizely = OptimizelyFactory.newDefaultInstance(projectConfigManagerReturningNull, notificationCenter);
         assertFalse(optimizely.isValid());
         assertEquals(notificationCenter, optimizely.getNotificationCenter());
     }
@@ -278,7 +291,7 @@ public class OptimizelyFactoryTest {
     @Test
     public void newDefaultInstanceWithProjectConfigAndNotificationCenterAndEventHandler() {
         NotificationCenter notificationCenter = new NotificationCenter();
-        optimizely = OptimizelyFactory.newDefaultInstance(() -> null, notificationCenter, logEvent -> {});
+        optimizely = OptimizelyFactory.newDefaultInstance(projectConfigManagerReturningNull, notificationCenter, logEvent -> {});
         assertFalse(optimizely.isValid());
         assertEquals(notificationCenter, optimizely.getNotificationCenter());
     }

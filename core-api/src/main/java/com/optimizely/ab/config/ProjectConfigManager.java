@@ -30,7 +30,7 @@ public interface ProjectConfigManager {
      * NOTE: To use ODP segments, implementation of this function is required to return current project configuration.
      * @return ProjectConfig
      */
-    default ProjectConfig getCachedConfig() { return null; }
+    ProjectConfig getCachedConfig();
 
     default String getSDKKey() {
         return null;

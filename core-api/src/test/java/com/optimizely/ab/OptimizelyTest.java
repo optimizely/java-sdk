@@ -119,6 +119,18 @@ public class OptimizelyTest {
     public OptimizelyRule optimizelyBuilder = new OptimizelyRule();
     public EventHandlerRule eventHandler = new EventHandlerRule();
 
+    public ProjectConfigManager projectConfigManagerReturningNull = new ProjectConfigManager() {
+        @Override
+        public ProjectConfig getConfig() {
+            return null;
+        }
+
+        @Override
+        public ProjectConfig getCachedConfig() {
+            return null;
+        }
+    };
+
     @Rule
     @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
     public RuleChain ruleChain = RuleChain.outerRule(thrown)
@@ -4505,13 +4517,13 @@ public class OptimizelyTest {
 
     @Test
     public void testGetNotificationCenter() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(projectConfigManagerReturningNull).build();
         assertEquals(optimizely.notificationCenter, optimizely.getNotificationCenter());
     }
 
     @Test
     public void testAddTrackNotificationHandler() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(projectConfigManagerReturningNull).build();
         NotificationManager<TrackNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(TrackNotification.class);
 
@@ -4521,7 +4533,7 @@ public class OptimizelyTest {
 
     @Test
     public void testAddDecisionNotificationHandler() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(projectConfigManagerReturningNull).build();
         NotificationManager<DecisionNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(DecisionNotification.class);
 
@@ -4531,7 +4543,7 @@ public class OptimizelyTest {
 
     @Test
     public void testAddUpdateConfigNotificationHandler() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(projectConfigManagerReturningNull).build();
         NotificationManager<UpdateConfigNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(UpdateConfigNotification.class);
 
@@ -4541,7 +4553,7 @@ public class OptimizelyTest {
 
     @Test
     public void testAddLogEventNotificationHandler() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(projectConfigManagerReturningNull).build();
         NotificationManager<LogEvent> manager = optimizely.getNotificationCenter()
             .getNotificationManager(LogEvent.class);
 
