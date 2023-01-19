@@ -233,6 +233,11 @@ public final class OptimizelyFactory {
                 public ProjectConfig getCachedConfig() {
                     return null;
                 }
+
+                @Override
+                public String getSDKKey() {
+                    return null;
+                }
             });
         }
 

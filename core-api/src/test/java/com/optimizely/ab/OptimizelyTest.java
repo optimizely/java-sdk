@@ -129,6 +129,11 @@ public class OptimizelyTest {
         public ProjectConfig getCachedConfig() {
             return null;
         }
+
+        @Override
+        public String getSDKKey() {
+            return null;
+        }
     };
 
     @Rule

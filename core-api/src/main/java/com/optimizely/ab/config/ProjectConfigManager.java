@@ -32,8 +32,12 @@ public interface ProjectConfigManager {
      */
     ProjectConfig getCachedConfig();
 
-    default String getSDKKey() {
-        return null;
-    }
+    /**
+     * Implementations of this method should return SDK key. If there is no SDKKey then it should return null.
+     *
+     * NOTE: To update ODP segments configuration via polling, it is required to return sdkKey.
+     * @return String
+     */
+    String getSDKKey();
 }
 

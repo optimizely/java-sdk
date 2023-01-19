@@ -272,6 +272,11 @@ public class OptimizelyFactoryTest {
         public ProjectConfig getCachedConfig() {
             return null;
         }
+
+        @Override
+        public String getSDKKey() {
+            return null;
+        }
     };
 
     @Test
