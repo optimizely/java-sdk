@@ -179,7 +179,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         private String datafile;
         private String url;
         private String datafileAccessToken = null;
-        private String format = "https://cdn.optimizely.com/datafiles/%s.json";
+        private String format = "http://localhost:3001/datafiles/%s.json";
         private String authFormat = "https://config.optimizely.com/datafiles/auth/%s.json";
         private OptimizelyHttpClient httpClient;
         private NotificationCenter notificationCenter;
@@ -366,7 +366,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                 blockingTimeoutUnit,
                 notificationCenter,
                 sdkKey);
-
+            httpProjectManager.setSdkKey(sdkKey);
             if (datafile != null) {
                 try {
                     ProjectConfig projectConfig = HttpProjectConfigManager.parseProjectConfig(datafile);
