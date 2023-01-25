@@ -57,6 +57,7 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
 
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
 
+    private volatile String sdkKey;
     private volatile boolean started;
     private ScheduledFuture<?> scheduledFuture;
 
@@ -120,8 +121,9 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         currentProjectConfig.set(projectConfig);
         currentOptimizelyConfig.set(new OptimizelyConfigService(projectConfig).getConfig());
         countDownLatch.countDown();
-        if (projectConfig.getSdkKey() != null) {
-            NotificationRegistry.getInternalNotificationCenter(projectConfig.getSdkKey()).send(SIGNAL);
+
+        if (sdkKey != null) {
+            NotificationRegistry.getInternalNotificationCenter(sdkKey).send(SIGNAL);
         }
         notificationCenter.send(SIGNAL);
     }
@@ -201,6 +203,10 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         stop();
         scheduledExecutorService.shutdownNow();
         started = false;
+    }
+
+    protected void setSdkKey(String sdkKey) {
+        this.sdkKey = sdkKey;
     }
 
     public boolean isRunning() {
