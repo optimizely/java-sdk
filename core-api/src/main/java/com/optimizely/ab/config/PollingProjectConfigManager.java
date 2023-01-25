@@ -169,6 +169,11 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         return currentOptimizelyConfig.get();
     }
 
+    @Override
+    public String getSDKKey() {
+        return this.sdkKey;
+    }
+
     public synchronized void start() {
         if (started) {
             logger.warn("Manager already started.");

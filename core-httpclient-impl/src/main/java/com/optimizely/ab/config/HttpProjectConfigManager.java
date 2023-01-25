@@ -65,7 +65,6 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     private final URI uri;
     private final String datafileAccessToken;
     private String datafileLastModified;
-    private String sdkKey;
 
     private HttpProjectConfigManager(long period,
                                      TimeUnit timeUnit,
@@ -74,13 +73,11 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                                      String datafileAccessToken,
                                      long blockingTimeoutPeriod,
                                      TimeUnit blockingTimeoutUnit,
-                                     NotificationCenter notificationCenter,
-                                     String sdkKey) {
+                                     NotificationCenter notificationCenter) {
         super(period, timeUnit, blockingTimeoutPeriod, blockingTimeoutUnit, notificationCenter);
         this.httpClient = httpClient;
         this.uri = URI.create(url);
         this.datafileAccessToken = datafileAccessToken;
-        this.sdkKey = sdkKey;
     }
 
     public URI getUri() {
@@ -168,11 +165,6 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
     public static Builder builder() {
         return new Builder();
-    }
-
-    @Override
-    public String getSDKKey() {
-        return this.sdkKey;
     }
 
     public static class Builder {
@@ -364,8 +356,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                 datafileAccessToken,
                 blockingTimeoutPeriod,
                 blockingTimeoutUnit,
-                notificationCenter,
-                sdkKey);
+                notificationCenter);
             httpProjectManager.setSdkKey(sdkKey);
             if (datafile != null) {
                 try {
