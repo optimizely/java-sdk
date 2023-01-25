@@ -129,6 +129,7 @@ public class HttpProjectConfigManagerTest {
 
         projectConfigManager = builder()
             .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("custom-sdkKey")
             .withUrl(expected)
             .build();
 

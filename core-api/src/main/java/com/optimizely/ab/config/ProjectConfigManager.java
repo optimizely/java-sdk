@@ -16,6 +16,8 @@
  */
 package com.optimizely.ab.config;
 
+import javax.annotation.Nullable;
+
 public interface ProjectConfigManager {
     /**
      * Implementations of this method should block until a datafile is available.
@@ -26,10 +28,12 @@ public interface ProjectConfigManager {
 
     /**
      * Implementations of this method should not block until a datafile is available, instead return current cached project configuration.
+     * return null if ProjectConfig is not ready at the moment.
      *
      * NOTE: To use ODP segments, implementation of this function is required to return current project configuration.
      * @return ProjectConfig
      */
+    @Nullable
     ProjectConfig getCachedConfig();
 
     /**
@@ -38,6 +42,7 @@ public interface ProjectConfigManager {
      * NOTE: To update ODP segments configuration via polling, it is required to return sdkKey.
      * @return String
      */
+    @Nullable
     String getSDKKey();
 }
 
