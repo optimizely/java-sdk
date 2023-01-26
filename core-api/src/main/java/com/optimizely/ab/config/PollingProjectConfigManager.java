@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019-2020, Optimizely and contributors
+ *    Copyright 2019-2020, 2023, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config;
 
+import com.optimizely.ab.internal.NotificationRegistry;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.notification.UpdateConfigNotification;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
@@ -56,6 +57,7 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
 
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
 
+    private volatile String sdkKey;
     private volatile boolean started;
     private ScheduledFuture<?> scheduledFuture;
 
@@ -85,6 +87,16 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
     protected abstract ProjectConfig poll();
 
     /**
+     * Access to current cached project configuration, This is to make sure that config returns without any wait, even if it is null.
+     *
+     * @return {@link ProjectConfig}
+     */
+    @Override
+    public ProjectConfig getCachedConfig() {
+        return currentProjectConfig.get();
+    }
+
+    /**
      * Only allow the ProjectConfig to be set to a non-null value, if and only if the value has not already been set.
      * @param projectConfig
      */
@@ -109,6 +121,13 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         currentProjectConfig.set(projectConfig);
         currentOptimizelyConfig.set(new OptimizelyConfigService(projectConfig).getConfig());
         countDownLatch.countDown();
+
+        if (sdkKey == null) {
+            sdkKey = projectConfig.getSdkKey();
+        }
+        if (sdkKey != null) {
+            NotificationRegistry.getInternalNotificationCenter(sdkKey).send(SIGNAL);
+        }
         notificationCenter.send(SIGNAL);
     }
 
@@ -150,6 +169,11 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         return currentOptimizelyConfig.get();
     }
 
+    @Override
+    public String getSDKKey() {
+        return this.sdkKey;
+    }
+
     public synchronized void start() {
         if (started) {
             logger.warn("Manager already started.");
@@ -187,6 +211,10 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         stop();
         scheduledExecutorService.shutdownNow();
         started = false;
+    }
+
+    protected void setSdkKey(String sdkKey) {
+        this.sdkKey = sdkKey;
     }
 
     public boolean isRunning() {

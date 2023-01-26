@@ -332,11 +332,10 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                     .withEvictIdleConnections(evictConnectionIdleTimePeriod, evictConnectionIdleTimeUnit)
                     .build();
             }
-
+            if (sdkKey == null) {
+                throw new NullPointerException("sdkKey cannot be null");
+            }
             if (url == null) {
-                if (sdkKey == null) {
-                    throw new NullPointerException("sdkKey cannot be null");
-                }
 
                 if (datafileAccessToken == null) {
                     url = String.format(format, sdkKey);
@@ -358,7 +357,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                 blockingTimeoutPeriod,
                 blockingTimeoutUnit,
                 notificationCenter);
-
+            httpProjectManager.setSdkKey(sdkKey);
             if (datafile != null) {
                 try {
                     ProjectConfig projectConfig = HttpProjectConfigManager.parseProjectConfig(datafile);

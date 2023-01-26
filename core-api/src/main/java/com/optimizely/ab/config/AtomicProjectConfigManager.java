@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely and contributors
+ *    Copyright 2019, 2023, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,6 +25,21 @@ public class AtomicProjectConfigManager implements ProjectConfigManager {
     @Override
     public ProjectConfig getConfig() {
         return projectConfigReference.get();
+    }
+
+    /**
+     * Access to current cached project configuration.
+     *
+     * @return {@link ProjectConfig}
+     */
+    @Override
+    public ProjectConfig getCachedConfig() {
+        return projectConfigReference.get();
+    }
+
+    @Override
+    public String getSDKKey() {
+        return null;
     }
 
     public void setConfig(ProjectConfig projectConfig) {

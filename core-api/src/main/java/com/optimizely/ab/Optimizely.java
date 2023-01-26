@@ -27,6 +27,7 @@ import com.optimizely.ab.error.NoOpErrorHandler;
 import com.optimizely.ab.event.*;
 import com.optimizely.ab.event.internal.*;
 import com.optimizely.ab.event.internal.payload.EventBatch;
+import com.optimizely.ab.internal.NotificationRegistry;
 import com.optimizely.ab.notification.*;
 import com.optimizely.ab.odp.*;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
@@ -124,10 +125,15 @@ public class Optimizely implements AutoCloseable {
 
         if (odpManager != null) {
             odpManager.getEventManager().start();
-            if (getProjectConfig() != null) {
+            if (projectConfigManager.getCachedConfig() != null) {
                 updateODPSettings();
             }
-            addUpdateConfigNotificationHandler(configNotification -> { updateODPSettings(); });
+            if (projectConfigManager.getSDKKey() != null) {
+                NotificationRegistry.getInternalNotificationCenter(projectConfigManager.getSDKKey()).
+                    addNotificationHandler(UpdateConfigNotification.class,
+                        configNotification -> { updateODPSettings(); });
+            }
+
         }
     }
 
@@ -153,6 +159,8 @@ public class Optimizely implements AutoCloseable {
         tryClose(eventProcessor);
         tryClose(eventHandler);
         tryClose(projectConfigManager);
+        notificationCenter.clearAllNotificationListeners();
+        NotificationRegistry.clearNotificationCenterRegistry(projectConfigManager.getSDKKey());
         if (odpManager != null) {
             tryClose(odpManager);
         }
@@ -1477,8 +1485,8 @@ public class Optimizely implements AutoCloseable {
     }
 
     private void updateODPSettings() {
-        if (odpManager != null && getProjectConfig() != null) {
-            ProjectConfig projectConfig = getProjectConfig();
+        ProjectConfig projectConfig = projectConfigManager.getCachedConfig();
+        if (odpManager != null && projectConfig != null) {
             odpManager.updateSettings(projectConfig.getHostForODP(), projectConfig.getPublicKeyForODP(), projectConfig.getAllSegments());
         }
     }

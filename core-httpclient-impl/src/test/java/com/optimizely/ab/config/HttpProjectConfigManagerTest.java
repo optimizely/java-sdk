@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019, Optimizely
+ *    Copyright 2019, 2023, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -129,6 +129,7 @@ public class HttpProjectConfigManagerTest {
 
         projectConfigManager = builder()
             .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("custom-sdkKey")
             .withUrl(expected)
             .build();
 
@@ -207,6 +208,7 @@ public class HttpProjectConfigManagerTest {
             .withOptimizelyHttpClient(mockHttpClient)
             .withSdkKey("sdk-key")
             .build(true);
+        assertEquals("sdk-key", projectConfigManager.getSDKKey());
     }
 
     @Test

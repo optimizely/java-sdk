@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2016-2022, Optimizely, Inc. and contributors                   *
+ * Copyright 2016-2023, Optimizely, Inc. and contributors                   *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -118,6 +118,23 @@ public class OptimizelyTest {
     public LogbackVerifier logbackVerifier = new LogbackVerifier();
     public OptimizelyRule optimizelyBuilder = new OptimizelyRule();
     public EventHandlerRule eventHandler = new EventHandlerRule();
+
+    public ProjectConfigManager projectConfigManagerReturningNull = new ProjectConfigManager() {
+        @Override
+        public ProjectConfig getConfig() {
+            return null;
+        }
+
+        @Override
+        public ProjectConfig getCachedConfig() {
+            return null;
+        }
+
+        @Override
+        public String getSDKKey() {
+            return null;
+        }
+    };
 
     @Rule
     @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
@@ -4505,13 +4522,13 @@ public class OptimizelyTest {
 
     @Test
     public void testGetNotificationCenter() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(projectConfigManagerReturningNull).build();
         assertEquals(optimizely.notificationCenter, optimizely.getNotificationCenter());
     }
 
     @Test
     public void testAddTrackNotificationHandler() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(projectConfigManagerReturningNull).build();
         NotificationManager<TrackNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(TrackNotification.class);
 
@@ -4521,7 +4538,7 @@ public class OptimizelyTest {
 
     @Test
     public void testAddDecisionNotificationHandler() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(projectConfigManagerReturningNull).build();
         NotificationManager<DecisionNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(DecisionNotification.class);
 
@@ -4531,7 +4548,7 @@ public class OptimizelyTest {
 
     @Test
     public void testAddUpdateConfigNotificationHandler() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(projectConfigManagerReturningNull).build();
         NotificationManager<UpdateConfigNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(UpdateConfigNotification.class);
 
@@ -4541,7 +4558,7 @@ public class OptimizelyTest {
 
     @Test
     public void testAddLogEventNotificationHandler() {
-        Optimizely optimizely = optimizelyBuilder.withConfigManager(() -> null).build();
+        Optimizely optimizely = optimizelyBuilder.withConfigManager(projectConfigManagerReturningNull).build();
         NotificationManager<LogEvent> manager = optimizely.getNotificationCenter()
             .getNotificationManager(LogEvent.class);
 
@@ -4711,24 +4728,6 @@ public class OptimizelyTest {
 
         verify(mockODPEventManager).start();
         verify(mockODPManager, times(1)).updateSettings(any(), any(), any());
-    }
-
-    @Test
-    public void updateODPManagerWhenConfigUpdates() throws IOException {
-        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
-        ODPManager mockODPManager = mock(ODPManager.class);
-        NotificationCenter mockNotificationCenter = mock(NotificationCenter.class);
-
-        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
-        Optimizely.builder()
-            .withDatafile(validConfigJsonV4())
-            .withNotificationCenter(mockNotificationCenter)
-            .withODPManager(mockODPManager)
-            .build();
-
-        verify(mockODPManager, times(1)).updateSettings(any(), any(), any());
-
-        Mockito.verify(mockNotificationCenter, times(1)).addNotificationHandler(any(), any());
     }
 
     @Test

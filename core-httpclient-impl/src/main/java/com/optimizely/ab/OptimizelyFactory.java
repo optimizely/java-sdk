@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019-2021, Optimizely
+ *    Copyright 2019-2021, 2023, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.config.HttpProjectConfigManager;
+import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.ProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
 import com.optimizely.ab.event.BatchEventProcessor;
@@ -222,7 +223,22 @@ public final class OptimizelyFactory {
     public static Optimizely newDefaultInstance(String sdkKey) {
         if (sdkKey == null) {
             logger.error("Must provide an sdkKey, returning non-op Optimizely client");
-            return newDefaultInstance(() -> null);
+            return newDefaultInstance(new ProjectConfigManager() {
+                @Override
+                public ProjectConfig getConfig() {
+                    return null;
+                }
+
+                @Override
+                public ProjectConfig getCachedConfig() {
+                    return null;
+                }
+
+                @Override
+                public String getSDKKey() {
+                    return null;
+                }
+            });
         }
 
         return newDefaultInstance(sdkKey, null);
