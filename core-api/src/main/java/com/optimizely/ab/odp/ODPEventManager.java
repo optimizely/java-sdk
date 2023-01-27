@@ -125,7 +125,7 @@ public class ODPEventManager {
     }
 
     @VisibleForTesting
-    Map<String, Object> augmentCommonData(Map<String, Object> sourceData) {
+    protected Map<String, Object> augmentCommonData(Map<String, Object> sourceData) {
         // priority: sourceData > userCommonData > sdkCommonData
 
         Map<String, Object> data = new HashMap<>();
@@ -140,7 +140,7 @@ public class ODPEventManager {
     }
 
     @VisibleForTesting
-    Map<String, String> augmentCommonIdentifiers(Map<String, String> sourceIdentifiers) {
+    protected Map<String, String> augmentCommonIdentifiers(Map<String, String> sourceIdentifiers) {
         // priority: sourceIdentifiers > userCommonIdentifiers
 
         Map<String, String> identifiers = new HashMap<>();
