@@ -185,7 +185,7 @@ public class DefaultODPApiManager implements ODPApiManager {
         } catch (Exception e) {
             logger.error("Audience segments fetch failed (Error Parsing Response)");
             logger.debug(e.getMessage());
-        }finally {
+        } finally {
             closeHttpResponse(response);
         }
         return null;
