@@ -15,10 +15,11 @@
  */
 package com.optimizely.ab.odp;
 
+import java.util.List;
 import java.util.Set;
 
 public interface ODPApiManager {
-    String fetchQualifiedSegments(String apiKey, String apiEndpoint, String userKey, String userValue, Set<String> segmentsToCheck);
+    List<String> fetchQualifiedSegments(String apiKey, String apiEndpoint, String userKey, String userValue, Set<String> segmentsToCheck);
 
     Integer sendEvents(String apiKey, String apiEndpoint, String eventPayload);
 }

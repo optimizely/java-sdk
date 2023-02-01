@@ -24,13 +24,14 @@ import org.mockito.Mockito;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
 public class ODPManagerTest {
-    private static final String API_RESPONSE = "{\"data\":{\"customer\":{\"audiences\":{\"edges\":[{\"node\":{\"name\":\"segment1\",\"state\":\"qualified\"}},{\"node\":{\"name\":\"segment2\",\"state\":\"qualified\"}}]}}}}";
+    private static final List<String> API_RESPONSE = Arrays.asList(new String[]{"segment1", "segment2"});
 
     @Mock
     ODPApiManager mockApiManager;
