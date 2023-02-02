@@ -193,8 +193,20 @@ public class DefaultODPApiManager implements ODPApiManager {
 
     /*
     eventPayload Format
-
-
+    [
+      {
+        "action": "identified",
+        "identifiers": {"vuid": <vuid>, "fs_user_id": <userId>, ....},
+        "data": {“source”: <source sdk>, ....},
+        "type": " fullstack "
+      },
+      {
+        "action": "client_initialized",
+        "identifiers": {"vuid": <vuid>, ....},
+        "data": {“source”: <source sdk>, ....},
+        "type": "fullstack"
+      }
+    ]
     Returns:
     1. null, When there was a non-recoverable error and no retry is needed.
     2. 0 If an unexpected error occurred and retrying can be useful.
