@@ -1,5 +1,5 @@
 /**
- *    Copyright 2022, Optimizely Inc. and contributors
+ *    Copyright 2022-2023, Optimizely Inc. and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 public class DefaultODPApiManagerTest {
-    private static final List<String> validResponse = Arrays.asList(new String[]{"has_email", "has_email_opted_in"});
+    private static final List<String> validResponse = Arrays.asList(new String[] {"has_email", "has_email_opted_in"});
     private static final String validRequestResponse = "{\"data\":{\"customer\":{\"audiences\":{\"edges\":[{\"node\":{\"name\":\"has_email\",\"state\":\"qualified\"}},{\"node\":{\"name\":\"has_email_opted_in\",\"state\":\"qualified\"}}]}}}}";
 
     @Rule
