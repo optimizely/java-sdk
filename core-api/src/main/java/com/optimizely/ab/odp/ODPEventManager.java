@@ -107,8 +107,12 @@ public class ODPEventManager {
         if (vuid != null) {
             identifiers.put(ODPUserKey.VUID.getKeyString(), vuid);
         }
-        if (userId != null && !isVuid(userId)) {
-            identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
+        if (userId != null) {
+            if (isVuid(userId)) {
+                        identifiers.put(ODPUserKey.VUID.getKeyString(), userId);
+            } else {
+                        identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
+            }
         }
         ODPEvent event = new ODPEvent("fullstack", "identified", identifiers, null);
         sendEvent(event);
