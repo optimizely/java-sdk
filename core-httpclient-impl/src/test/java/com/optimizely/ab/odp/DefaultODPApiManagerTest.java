@@ -1,5 +1,5 @@
 /**
- *    Copyright 2022, Optimizely Inc. and contributors
+ *    Copyright 2022-2023, Optimizely Inc. and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -30,13 +30,15 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 public class DefaultODPApiManagerTest {
-    private static final String validResponse = "{\"data\":{\"customer\":{\"audiences\":{\"edges\":[{\"node\":{\"name\":\"has_email\",\"state\":\"qualified\"}},{\"node\":{\"name\":\"has_email_opted_in\",\"state\":\"qualified\"}}]}}}}";
+    private static final List<String> validResponse = Arrays.asList(new String[] {"has_email", "has_email_opted_in"});
+    private static final String validRequestResponse = "{\"data\":{\"customer\":{\"audiences\":{\"edges\":[{\"node\":{\"name\":\"has_email\",\"state\":\"qualified\"}},{\"node\":{\"name\":\"has_email_opted_in\",\"state\":\"qualified\"}}]}}}}";
 
     @Rule
     public LogbackVerifier logbackVerifier = new LogbackVerifier();
@@ -55,7 +57,7 @@ public class DefaultODPApiManagerTest {
 
         when(statusLine.getStatusCode()).thenReturn(statusCode);
         when(httpResponse.getStatusLine()).thenReturn(statusLine);
-        when(httpResponse.getEntity()).thenReturn(new StringEntity(validResponse));
+        when(httpResponse.getEntity()).thenReturn(new StringEntity(validRequestResponse));
 
         when(mockHttpClient.execute(any(HttpPost.class)))
             .thenReturn(httpResponse);
@@ -99,19 +101,19 @@ public class DefaultODPApiManagerTest {
     @Test
     public void returnResponseStringWhenStatusIs200() throws Exception {
         ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient);
-        String responseString = apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", new HashSet<>(Arrays.asList("segment_1", "segment_2")));
+        List<String> response = apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", new HashSet<>(Arrays.asList("segment_1", "segment_2")));
         verify(mockHttpClient, times(1)).execute(any(HttpPost.class));
-        assertEquals(validResponse, responseString);
+        assertEquals(validResponse, response);
     }
 
     @Test
     public void returnNullWhenStatusIsNot200AndLogError() throws Exception {
         setupHttpClient(500);
         ODPApiManager apiManager = new DefaultODPApiManager(mockHttpClient);
-        String responseString = apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", new HashSet<>(Arrays.asList("segment_1", "segment_2")));
+        List<String> response = apiManager.fetchQualifiedSegments("key", "endPoint", "fs_user_id", "test_user", new HashSet<>(Arrays.asList("segment_1", "segment_2")));
         verify(mockHttpClient, times(1)).execute(any(HttpPost.class));
         logbackVerifier.expectMessage(Level.ERROR, "Unexpected response from ODP server, Response code: 500, null");
-        assertNull(responseString);
+        assertNull(response);
     }
 
     @Test

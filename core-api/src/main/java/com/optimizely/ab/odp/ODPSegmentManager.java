@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2022, Optimizely
+ *    Copyright 2022-2023, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -89,16 +89,7 @@ public class ODPSegmentManager {
 
         logger.debug("ODP Cache Miss. Making a call to ODP Server.");
 
-        ResponseJsonParser parser = ResponseJsonParserFactory.getParser();
-        String qualifiedSegmentsResponse = apiManager.fetchQualifiedSegments(odpConfig.getApiKey(), odpConfig.getApiHost() + SEGMENT_URL_PATH, userKey.getKeyString(), userValue, odpConfig.getAllSegments());
-        try {
-            qualifiedSegments = parser.parseQualifiedSegments(qualifiedSegmentsResponse);
-        } catch (Exception e) {
-            logger.error("Audience segments fetch failed (Error Parsing Response)");
-            logger.debug(e.getMessage());
-            qualifiedSegments = null;
-        }
-
+        qualifiedSegments = apiManager.fetchQualifiedSegments(odpConfig.getApiKey(), odpConfig.getApiHost() + SEGMENT_URL_PATH, userKey.getKeyString(), userValue, odpConfig.getAllSegments());
         if (qualifiedSegments != null && !options.contains(ODPSegmentOption.IGNORE_CACHE)) {
             segmentsCache.save(cacheKey, qualifiedSegments);
         }

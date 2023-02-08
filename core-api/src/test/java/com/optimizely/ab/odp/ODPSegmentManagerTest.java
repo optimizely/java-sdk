@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2022, Optimizely
+ *    Copyright 2022-2023, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ public class ODPSegmentManagerTest {
     @Mock
     ODPApiManager mockApiManager;
 
-    private static final String API_RESPONSE = "{\"data\":{\"customer\":{\"audiences\":{\"edges\":[{\"node\":{\"name\":\"segment1\",\"state\":\"qualified\"}},{\"node\":{\"name\":\"segment2\",\"state\":\"qualified\"}}]}}}}";
+    private static final List<String> API_RESPONSE = Arrays.asList(new String[]{"segment1", "segment2"});
 
     @Before
     public void setup() {

@@ -1,5 +1,5 @@
 /**
- *    Copyright 2022, Optimizely Inc. and contributors
+ *    Copyright 2022-2023, Optimizely Inc. and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package com.optimizely.ab.odp;
 
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.odp.parser.ResponseJsonParser;
+import com.optimizely.ab.odp.parser.ResponseJsonParserFactory;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -28,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 public class DefaultODPApiManager implements ODPApiManager {
@@ -144,7 +147,7 @@ public class DefaultODPApiManager implements ODPApiManager {
      }
     */
     @Override
-    public String fetchQualifiedSegments(String apiKey, String apiEndpoint, String userKey, String userValue, Set<String> segmentsToCheck) {
+    public List<String> fetchQualifiedSegments(String apiKey, String apiEndpoint, String userKey, String userValue, Set<String> segmentsToCheck) {
         HttpPost request = new HttpPost(apiEndpoint);
         String segmentsString = getSegmentsStringForRequest(segmentsToCheck);
 
@@ -174,11 +177,14 @@ public class DefaultODPApiManager implements ODPApiManager {
             closeHttpResponse(response);
             return null;
         }
-
+        ResponseJsonParser parser = ResponseJsonParserFactory.getParser();
         try {
-            return EntityUtils.toString(response.getEntity());
+            return parser.parseQualifiedSegments(EntityUtils.toString(response.getEntity()));
         } catch (IOException e) {
             logger.error("Error converting ODP segments response to string", e);
+        } catch (Exception e) {
+            logger.error("Audience segments fetch failed (Error Parsing Response)");
+            logger.debug(e.getMessage());
         } finally {
             closeHttpResponse(response);
         }
@@ -201,7 +207,6 @@ public class DefaultODPApiManager implements ODPApiManager {
         "type": "fullstack"
       }
     ]
-
     Returns:
     1. null, When there was a non-recoverable error and no retry is needed.
     2. 0 If an unexpected error occurred and retrying can be useful.

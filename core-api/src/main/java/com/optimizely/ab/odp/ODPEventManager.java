@@ -108,7 +108,11 @@ public class ODPEventManager {
             identifiers.put(ODPUserKey.VUID.getKeyString(), vuid);
         }
         if (userId != null) {
-            identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
+            if (isVuid(userId)) {
+                        identifiers.put(ODPUserKey.VUID.getKeyString(), userId);
+            } else {
+                        identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
+            }
         }
         ODPEvent event = new ODPEvent("fullstack", "identified", identifiers, null);
         sendEvent(event);
@@ -125,7 +129,7 @@ public class ODPEventManager {
     }
 
     @VisibleForTesting
-    Map<String, Object> augmentCommonData(Map<String, Object> sourceData) {
+    protected Map<String, Object> augmentCommonData(Map<String, Object> sourceData) {
         // priority: sourceData > userCommonData > sdkCommonData
 
         Map<String, Object> data = new HashMap<>();
@@ -140,13 +144,17 @@ public class ODPEventManager {
     }
 
     @VisibleForTesting
-    Map<String, String> augmentCommonIdentifiers(Map<String, String> sourceIdentifiers) {
+    protected Map<String, String> augmentCommonIdentifiers(Map<String, String> sourceIdentifiers) {
         // priority: sourceIdentifiers > userCommonIdentifiers
 
         Map<String, String> identifiers = new HashMap<>();
         identifiers.putAll(userCommonIdentifiers);
         identifiers.putAll(sourceIdentifiers);
         return identifiers;
+    }
+
+    private boolean isVuid(String userId) {
+        return userId.startsWith("vuid_");
     }
 
     private void processEvent(ODPEvent event) {
