@@ -398,4 +398,20 @@ public class ODPSegmentManagerTest {
 
         logbackVerifier.expectMessage(Level.DEBUG, "No Segments are used in the project, Not Fetching segments. Returning empty list");
     }
+
+    @Test
+    public void getQualifiedSegmentsWithUserId() {
+        ODPSegmentManager segmentManager = spy(new ODPSegmentManager(mockApiManager, mockCache));
+        segmentManager.getQualifiedSegments("test-user");
+        verify(segmentManager).getQualifiedSegments(ODPUserKey.FS_USER_ID, "test-user", Collections.emptyList());
+    }
+
+    @Test
+    public void getQualifiedSegmentsWithVuid() {
+        ODPSegmentManager segmentManager = spy(new ODPSegmentManager(mockApiManager, mockCache));
+        segmentManager.getQualifiedSegments("vuid_123");
+        // SDK will convert userId to vuid when userId has a valid vuid format.
+        verify(segmentManager).getQualifiedSegments(ODPUserKey.VUID, "vuid_123", Collections.emptyList());
+    }
+
 }

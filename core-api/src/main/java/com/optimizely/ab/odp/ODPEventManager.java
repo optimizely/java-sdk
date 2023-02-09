@@ -108,10 +108,10 @@ public class ODPEventManager {
             identifiers.put(ODPUserKey.VUID.getKeyString(), vuid);
         }
         if (userId != null) {
-            if (isVuid(userId)) {
-                        identifiers.put(ODPUserKey.VUID.getKeyString(), userId);
+            if (ODPManager.isVuid(userId)) {
+                identifiers.put(ODPUserKey.VUID.getKeyString(), userId);
             } else {
-                        identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
+                identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
             }
         }
         ODPEvent event = new ODPEvent("fullstack", "identified", identifiers, null);
@@ -151,10 +151,6 @@ public class ODPEventManager {
         identifiers.putAll(userCommonIdentifiers);
         identifiers.putAll(sourceIdentifiers);
         return identifiers;
-    }
-
-    private boolean isVuid(String userId) {
-        return userId.startsWith("vuid_");
     }
 
     private void processEvent(ODPEvent event) {

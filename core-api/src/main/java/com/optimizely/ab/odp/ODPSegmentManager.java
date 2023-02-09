@@ -52,11 +52,15 @@ public class ODPSegmentManager {
         this.segmentsCache = new DefaultLRUCache<>(cacheSize, cacheTimeoutSeconds);
     }
 
-    public List<String> getQualifiedSegments(String fsUserId) {
-        return getQualifiedSegments(ODPUserKey.FS_USER_ID, fsUserId, Collections.emptyList());
+    public List<String> getQualifiedSegments(String userId) {
+        return getQualifiedSegments(userId, Collections.emptyList());
     }
-    public List<String> getQualifiedSegments(String fsUserId, List<ODPSegmentOption> options) {
-        return getQualifiedSegments(ODPUserKey.FS_USER_ID, fsUserId, options);
+    public List<String> getQualifiedSegments(String userId, List<ODPSegmentOption> options) {
+        if (ODPManager.isVuid(userId)) {
+            return getQualifiedSegments(ODPUserKey.VUID, userId, options);
+        } else {
+            return getQualifiedSegments(ODPUserKey.FS_USER_ID, userId, options);
+        }
     }
 
     public List<String> getQualifiedSegments(ODPUserKey userKey, String userValue) {
