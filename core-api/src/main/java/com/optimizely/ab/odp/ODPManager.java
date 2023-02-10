@@ -68,6 +68,10 @@ public class ODPManager implements AutoCloseable {
         eventManager.stop();
     }
 
+    public static boolean isVuid(String userId) {
+        return userId.startsWith("vuid_");
+    }
+
     public static Builder builder() {
         return new Builder();
     }

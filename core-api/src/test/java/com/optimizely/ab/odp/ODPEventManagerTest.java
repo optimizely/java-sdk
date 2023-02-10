@@ -212,6 +212,64 @@ public class ODPEventManagerTest {
     }
 
     @Test
+    public void identifyUserWithVuidAndUserId() throws InterruptedException {
+        ODPEventManager eventManager = spy(new ODPEventManager(mockApiManager));
+        ArgumentCaptor<ODPEvent> captor = ArgumentCaptor.forClass(ODPEvent.class);
+
+        eventManager.identifyUser("vuid_123", "test-user");
+        verify(eventManager, times(1)).sendEvent(captor.capture());
+
+        ODPEvent event = captor.getValue();
+        Map<String, String> identifiers = event.getIdentifiers();
+        assertEquals(identifiers.size(), 2);
+        assertEquals(identifiers.get("vuid"), "vuid_123");
+        assertEquals(identifiers.get("fs_user_id"), "test-user");
+    }
+
+    @Test
+    public void identifyUserWithVuidOnly() throws InterruptedException {
+        ODPEventManager eventManager = spy(new ODPEventManager(mockApiManager));
+        ArgumentCaptor<ODPEvent> captor = ArgumentCaptor.forClass(ODPEvent.class);
+
+        eventManager.identifyUser("vuid_123", null);
+        verify(eventManager, times(1)).sendEvent(captor.capture());
+
+        ODPEvent event = captor.getValue();
+        Map<String, String> identifiers = event.getIdentifiers();
+        assertEquals(identifiers.size(), 1);
+        assertEquals(identifiers.get("vuid"), "vuid_123");
+    }
+
+    @Test
+    public void identifyUserWithUserIdOnly() throws InterruptedException {
+        ODPEventManager eventManager = spy(new ODPEventManager(mockApiManager));
+        ArgumentCaptor<ODPEvent> captor = ArgumentCaptor.forClass(ODPEvent.class);
+
+        eventManager.identifyUser(null, "test-user");
+        verify(eventManager, times(1)).sendEvent(captor.capture());
+
+        ODPEvent event = captor.getValue();
+        Map<String, String> identifiers = event.getIdentifiers();
+        assertEquals(identifiers.size(), 1);
+        assertEquals(identifiers.get("fs_user_id"), "test-user");
+    }
+
+    @Test
+    public void identifyUserWithVuidAsUserId() throws InterruptedException {
+        ODPEventManager eventManager = spy(new ODPEventManager(mockApiManager));
+        ArgumentCaptor<ODPEvent> captor = ArgumentCaptor.forClass(ODPEvent.class);
+
+        eventManager.identifyUser(null, "vuid_123");
+        verify(eventManager, times(1)).sendEvent(captor.capture());
+
+        ODPEvent event = captor.getValue();
+        Map<String, String> identifiers = event.getIdentifiers();
+        assertEquals(identifiers.size(), 1);
+        // SDK will convert userId to vuid when userId has a valid vuid format.
+        assertEquals(identifiers.get("vuid"), "vuid_123");
+    }
+
+    @Test
     public void applyUpdatedODPConfigWhenAvailable() throws InterruptedException {
         Mockito.reset(mockApiManager);
         Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(202);

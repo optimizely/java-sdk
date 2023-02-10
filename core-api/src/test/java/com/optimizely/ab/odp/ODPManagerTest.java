@@ -121,4 +121,12 @@ public class ODPManagerTest {
         odpManager = ODPManager.builder().withApiManager(mockApiManager).build();
         assertNotNull(odpManager.getSegmentManager());
     }
+
+    @Test
+    public void isVuid() {
+        assertTrue(ODPManager.isVuid("vuid_123"));
+        assertFalse(ODPManager.isVuid("vuid123"));
+        assertFalse(ODPManager.isVuid("any_123"));
+        assertFalse(ODPManager.isVuid(""));
+    }
 }
