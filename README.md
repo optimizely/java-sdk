@@ -1,7 +1,6 @@
 # Optimizely Java SDK
 
 [![Build Status](https://travis-ci.org/optimizely/java-sdk.svg?branch=master)](https://travis-ci.org/optimizely/java-sdk)
-
 [![Apache 2.0](https://img.shields.io/badge/license-APACHE%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 This repository houses the Java SDK for use with Optimizely Feature Experimentation and Optimizely Full Stack (legacy).
@@ -22,6 +21,12 @@ Java 8 or higher versions.
 
 The Java SDK is distributed through Maven Central and is created with source and target compatibility of Java 1.8. The `core-api` and `httpclient` packages are [optimizely-sdk-core-api](https://mvnrepository.com/artifact/com.optimizely.ab/core-api) and [optimizely-sdk-httpclient](https://mvnrepository.com/artifact/com.optimizely.ab/core-httpclient-impl), respectively.
 
+
+`core-api` requires [org.slf4j:slf4j-api:1.7.16](https://mvnrepository.com/artifact/org.slf4j/slf4j-api/1.7.16) and a supported JSON parser.
+We currently integrate with [Jackson](https://github.com/FasterXML/jackson), [GSON](https://github.com/google/gson), [json.org](http://www.json.org), and [json-simple](https://code.google.com/archive/p/json-simple); if any of those packages are available at runtime, they will be used by `core-api`. If none of those packages are already provided in your project's classpath, one will need to be added. 
+
+`core-httpclient-impl` is an optional dependency that implements the event dispatcher and requires [org.apache.httpcomponents:httpclient:4.5.2](https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient/4.5.2).
+
 ---
 
 **NOTE**
@@ -31,44 +36,21 @@ Optimizely previously distributed the Java SDK through Bintray/JCenter. But, as 
 ---
 
 ```
-
 repositories {
-
   mavenCentral()
-
   jcenter()
-
 }
-
- 
 
 dependencies {
-
   compile 'com.optimizely.ab:core-api:{VERSION}'
-
   compile 'com.optimizely.ab:core-httpclient-impl:{VERSION}'
-
-  // The SDK integrates with multiple JSON parsers, here we use
-
-  // Jackson.
-
+  // The SDK integrates with multiple JSON parsers, here we use Jackson.
   compile 'com.fasterxml.jackson.core:jackson-core:2.7.1'
-
   compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.1'
-
   compile 'com.fasterxml.jackson.core:jackson-databind:2.7.1'
-
 }
-
 ```
 
-### Dependencies
-
-`core-api` requires [org.slf4j:slf4j-api:1.7.16](https://mvnrepository.com/artifact/org.slf4j/slf4j-api/1.7.16) and a supported JSON parser.
-
-We currently integrate with [Jackson](https://github.com/FasterXML/jackson), [GSON](https://github.com/google/gson), [json.org](http://www.json.org), and [json-simple](https://code.google.com/archive/p/json-simple); if any of those packages are available at runtime, they will be used by `core-api`. If none of those packages are already provided in your project's classpath, one will need to be added. 
-
-`core-httpclient-impl` is an optional dependency that implements the event dispatcher and requires [org.apache.httpcomponents:httpclient:4.5.2](https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient/4.5.2).
 
 ## Use the Java SDK
 
