@@ -3,12 +3,8 @@
 ## [3.10.3]
 March 10th, 2023
 
-We updated our README.md and other non-functional code to reflect that this SDK supports both Optimizely Feature Experimentation and Optimizely Full Stack ([#506](https://github.com/optimizely/java-sdk/pull/506)).
-
 ### Fixes
-
-- For some audience condition matchers (semantic-version, le, or ge), SDK logs WARNING messages when the attribute value is missing. This is fixed down to the DEBUG level to be consistent with other condition matchers ([#463](https://github.com/optimizely/java-sdk/pull/463)).
-- Add an option to specify the client-engine version (android-sdk, etc) in the Optimizely builder ([#466](https://github.com/optimizely/java-sdk/pull/466)).
+We updated our README.md and other non-functional code to reflect that this SDK supports both Optimizely Feature Experimentation and Optimizely Full Stack ([#506](https://github.com/optimizely/java-sdk/pull/506)).
 
 ## [3.10.2]
 March 17th, 2022
