@@ -1,5 +1,11 @@
 # Optimizely Java X SDK Changelog
 
+## [3.10.3]
+March 10th, 2023
+
+### Fixes
+We updated our README.md and other non-functional code to reflect that this SDK supports both Optimizely Feature Experimentation and Optimizely Full Stack ([#506](https://github.com/optimizely/java-sdk/pull/506)).
+
 ## [3.10.2]
 March 17th, 2022
 
