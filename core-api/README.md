@@ -1,7 +1,7 @@
 # Java SDK Core API
-This package contains the core APIs and interfaces for the Optimizely Full Stack API in Java.
+This package contains the core APIs and interfaces for the Optimizely Feature Experimentation API in Java.
 
-Full product documentation is in the [Optimizely developers documentation](https://docs.developers.optimizely.com/full-stack/docs/welcome).
+Full product documentation is in the [Optimizely developers documentation](https://docs.developers.optimizely.com/experimentation/v4.0.0-full-stack/docs/welcome).
 
 ## Installation
 
@@ -22,7 +22,7 @@ compile 'com.optimizely.ab:core-api:{VERSION}'
 
 ## Optimizely
 [`Optimizely`](https://github.com/optimizely/java-sdk/blob/master/core-api/src/main/java/com/optimizely/ab/Optimizely.java)
-provides top level API access to the Full Stack project.
+provides top level API access to the Feature Experimentation project.
 
 ### Usage
 ```Java

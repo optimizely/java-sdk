@@ -223,7 +223,7 @@ def customizePom(pom, title) {
 
             name title
             url 'https://github.com/optimizely/java-sdk'
-            description 'The Java SDK for Optimizely Full Stack (feature flag management for product development teams)'
+            description 'The Java SDK for Optimizely Feature Experimentation, Optimizely Full Stack (legacy), and Optimizely Rollouts'
             licenses {
                 license {
                     name 'The Apache Software License, Version 2.0'
