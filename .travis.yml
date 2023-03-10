@@ -35,7 +35,7 @@ stages:
   - 'Source Clear'
   - 'Lint markdown files'
   - 'Integration tests'
-  - 'Full stack production tests'
+  - 'Production tests'
   - 'Test'
   - 'Publish'
   - 'Snapshot'
@@ -66,7 +66,7 @@ jobs:
       after_success: travis_terminate 0
 
     - <<: *integrationtest
-      stage: 'Full stack production tests'
+      stage: 'Production tests'
       env:
         SDK=java
         SDK_BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
