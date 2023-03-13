@@ -84,4 +84,10 @@ public class ODPEvent {
         }
         return true;
     }
+
+    @Transient
+    public Boolean isIdentifiersValid() {
+        return !identifiers.isEmpty();
+    }
+
 }
