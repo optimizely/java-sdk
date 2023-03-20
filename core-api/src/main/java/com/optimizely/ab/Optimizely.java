@@ -1474,10 +1474,10 @@ public class Optimizely implements AutoCloseable {
      *
      * @param type the event type (default = "fullstack").
      * @param action the event action name.
-     * @param identifiers a dictionary for identifiers. The caller must provide at least one key-value pair.
+     * @param identifiers a dictionary for identifiers. The caller must provide at least one key-value pair unless non-empty common identifiers have been set already with {@link ODPManager.Builder#withUserCommonIdentifiers(Map) }.
      * @param data a dictionary for associated data. The default event data will be added to this data before sending to the ODP server.
      */
-    public void sendODPEvent(@Nullable String type, @Nonnull String action, @Nullable Map<String, String> identifiers, @Nullable Map<String, Object> data) {
+    public void sendODPEvent(@Nullable String type, @Nonnull String action, @Nonnull Map<String, String> identifiers, @Nullable Map<String, Object> data) {
         if (odpManager != null) {
             ODPEvent event = new ODPEvent(type, action, identifiers, data);
             odpManager.getEventManager().sendEvent(event);

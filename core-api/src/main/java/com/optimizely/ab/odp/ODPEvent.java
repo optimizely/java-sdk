@@ -24,10 +24,10 @@ import java.util.Map;
 public class ODPEvent {
     public static final String EVENT_TYPE_FULLSTACK = "fullstack";
 
-    private String type;
-    private String action;
-    private Map<String, String> identifiers;
-    private Map<String, Object> data;
+    @Nonnull private String type;
+    @Nonnull private String action;
+    @Nonnull private Map<String, String> identifiers;
+    @Nonnull private Map<String, Object> data;
 
     public ODPEvent(@Nullable String type, @Nonnull String action, @Nullable Map<String, String> identifiers, @Nullable Map<String, Object> data) {
         this.type = type == null ? EVENT_TYPE_FULLSTACK : type;
