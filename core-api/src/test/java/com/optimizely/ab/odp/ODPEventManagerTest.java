@@ -61,7 +61,7 @@ public class ODPEventManagerTest {
         ODPConfig odpConfig = new ODPConfig("key", "host", null);
         ODPEventManager eventManager = new ODPEventManager(mockApiManager);
         eventManager.updateSettings(odpConfig);
-        ODPEvent event = new ODPEvent("test-type", "test-action", Collections.emptyMap(), Collections.emptyMap());
+        ODPEvent event = new ODPEvent("test-type", "test-action", Collections.singletonMap("any-key", "any-value"), Collections.emptyMap());
         eventManager.sendEvent(event);
         logbackVerifier.expectMessage(Level.WARN, "Failed to Process ODP Event. ODPEventManager is not running");
     }
@@ -72,7 +72,7 @@ public class ODPEventManagerTest {
         ODPEventManager eventManager = new ODPEventManager(mockApiManager);
         eventManager.updateSettings(odpConfig);
         eventManager.start();
-        ODPEvent event = new ODPEvent("test-type", "test-action", Collections.emptyMap(), Collections.emptyMap());
+        ODPEvent event = new ODPEvent("test-type", "test-action", Collections.singletonMap("any-key", "any-value"), Collections.emptyMap());
         eventManager.sendEvent(event);
         logbackVerifier.expectMessage(Level.DEBUG, "Unable to Process ODP Event. ODPConfig is not ready.");
     }
@@ -90,6 +90,21 @@ public class ODPEventManagerTest {
         }
         Thread.sleep(1500);
         Mockito.verify(mockApiManager, times(3)).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), any());
+    }
+
+    @Test
+    public void logAndDiscardEventWhenIdentifiersEmpty()  throws InterruptedException {
+        int flushInterval = 0;
+        ODPConfig odpConfig = new ODPConfig("key", "http://www.odp-host.com", null);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager, null, flushInterval);
+        eventManager.updateSettings(odpConfig);
+        eventManager.start();
+
+        ODPEvent event = new ODPEvent("test-type", "test-action", Collections.emptyMap(), Collections.emptyMap());
+        eventManager.sendEvent(event);
+        Thread.sleep(500);
+        Mockito.verify(mockApiManager, never()).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), any());
+        logbackVerifier.expectMessage(Level.ERROR, "ODP event send failed (event identifiers must have at least one key-value pair)");
     }
 
     @Test

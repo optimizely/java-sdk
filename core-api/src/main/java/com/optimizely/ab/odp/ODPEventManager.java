@@ -119,12 +119,19 @@ public class ODPEventManager {
     }
 
     public void sendEvent(ODPEvent event) {
-        if (!event.isDataValid()) {
-            logger.error("ODP event send failed (ODP data is not valid)");
-            return;
-        }
         event.setData(augmentCommonData(event.getData()));
         event.setIdentifiers(augmentCommonIdentifiers(event.getIdentifiers()));
+
+        if (!event.isIdentifiersValid()) {
+            logger.error("ODP event send failed (event identifiers must have at least one key-value pair)");
+            return;
+        }
+
+        if (!event.isDataValid()) {
+            logger.error("ODP event send failed (event data is not valid)");
+            return;
+        }
+
         processEvent(event);
     }
 
