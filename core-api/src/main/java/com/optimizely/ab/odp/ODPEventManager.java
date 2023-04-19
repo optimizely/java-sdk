@@ -268,7 +268,9 @@ public class ODPEventManager {
         }
 
         public void signalStop() {
-            eventQueue.offer(SHUTDOWN_SIGNAL);
+            if (!eventQueue.offer(SHUTDOWN_SIGNAL)) {
+                logger.error("Failed to Process Shutdown odp Event. Event Queue is not accepting any more events");
+            }
         }
     }
 
