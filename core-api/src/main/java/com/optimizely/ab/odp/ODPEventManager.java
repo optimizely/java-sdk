@@ -35,6 +35,7 @@ public class ODPEventManager {
     private static final int DEFAULT_FLUSH_INTERVAL = 1000;
     private static final int MAX_RETRIES = 3;
     private static final String EVENT_URL_PATH = "/v3/events";
+    private static final Object SHUTDOWN_SIGNAL = new Object();
 
     private final int queueSize;
     private final int batchSize;
@@ -188,8 +189,6 @@ public class ODPEventManager {
 
     private class EventDispatcherThread extends Thread {
 
-        private volatile boolean shouldStop = false;
-
         private final List<ODPEvent> currentBatch = new ArrayList<>();
 
         private long nextFlushTime = new Date().getTime();
@@ -198,7 +197,7 @@ public class ODPEventManager {
         public void run() {
             while (true) {
                 try {
-                    Object nextEvent;
+                    Object nextEvent = null;
 
                     // If batch has events, set the timeout to remaining time for flush interval,
                     //      otherwise wait for the new event indefinitely
@@ -213,9 +212,6 @@ public class ODPEventManager {
                         if (!currentBatch.isEmpty()) {
                             flush();
                         }
-                        if (shouldStop) {
-                            break;
-                        }
                         continue;
                     }
 
@@ -228,7 +224,11 @@ public class ODPEventManager {
                         // Batch starting, create a new flush time
                         nextFlushTime = new Date().getTime() + flushInterval;
                     }
-
+                    if (nextEvent == SHUTDOWN_SIGNAL) {
+                        flush();
+                        logger.info("Received shutdown signal.");
+                        break;
+                    }
                     currentBatch.add((ODPEvent) nextEvent);
 
                     if (currentBatch.size() >= batchSize) {
@@ -268,7 +268,7 @@ public class ODPEventManager {
         }
 
         public void signalStop() {
-            shouldStop = true;
+            eventQueue.offer(SHUTDOWN_SIGNAL);
         }
     }
 
