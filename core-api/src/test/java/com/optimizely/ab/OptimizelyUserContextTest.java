@@ -1628,6 +1628,8 @@ public class OptimizelyUserContextTest {
         Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
 
         Optimizely optimizely = Optimizely.builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
             .withODPManager(mockODPManager)
             .build();
 
@@ -1665,6 +1667,8 @@ public class OptimizelyUserContextTest {
     @Test
     public void fetchQualifiedSegmentsError() {
         Optimizely optimizely = Optimizely.builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
             .build();
         OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
 
@@ -1689,6 +1693,8 @@ public class OptimizelyUserContextTest {
         Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
 
         Optimizely optimizely = Optimizely.builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
             .withODPManager(mockODPManager)
             .build();
 
@@ -1720,6 +1726,8 @@ public class OptimizelyUserContextTest {
     @Test
     public void fetchQualifiedSegmentsAsyncError() throws InterruptedException {
         Optimizely optimizely = Optimizely.builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
             .build();
 
         OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
@@ -1796,6 +1804,8 @@ public class OptimizelyUserContextTest {
         Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
 
         Optimizely optimizely = Optimizely.builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
             .withODPManager(mockODPManager)
             .build();
 

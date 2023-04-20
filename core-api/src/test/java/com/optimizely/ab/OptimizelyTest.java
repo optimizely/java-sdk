@@ -4733,6 +4733,7 @@ public class OptimizelyTest {
     @Test
     public void sendODPEvent() {
         ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
         ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
         ODPManager mockODPManager = mock(ODPManager.class);
 
@@ -4792,7 +4793,7 @@ public class OptimizelyTest {
     @Test
     public void sendODPEventError() {
         ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
-
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
         Optimizely optimizely = Optimizely.builder()
             .withConfigManager(mockProjectConfigManager)
             .build();
@@ -4812,6 +4813,7 @@ public class OptimizelyTest {
     @Test
     public void identifyUser() {
         ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
         ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
         ODPManager mockODPManager = mock(ODPManager.class);
 
