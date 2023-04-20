@@ -30,7 +30,7 @@ public class ODPEvent {
     @Nonnull private Map<String, Object> data;
 
     public ODPEvent(@Nullable String type, @Nonnull String action, @Nullable Map<String, String> identifiers, @Nullable Map<String, Object> data) {
-        this.type = type == null ? EVENT_TYPE_FULLSTACK : type;
+        this.type = type == null || type.trim().isEmpty() ? EVENT_TYPE_FULLSTACK : type;
         this.action = action;
         this.identifiers = identifiers != null ? identifiers : Collections.emptyMap();
         this.data = data != null ? data : Collections.emptyMap();
