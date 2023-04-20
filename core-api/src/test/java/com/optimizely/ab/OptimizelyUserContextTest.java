@@ -1641,6 +1641,28 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
+    public void fetchQualifiedSegmentsErrorWhenConfigIsInvalid() {
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(null);
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPSegmentManager mockODPSegmentManager = mock(ODPSegmentManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withODPManager(mockODPManager)
+            .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+
+        assertFalse(userContext.fetchQualifiedSegments());
+        logbackVerifier.expectMessage(Level.ERROR, "Optimizely instance is not valid, failing fetchQualifiedSegments call.");
+    }
+
+    @Test
     public void fetchQualifiedSegmentsError() {
         Optimizely optimizely = Optimizely.builder()
             .build();
@@ -1711,6 +1733,57 @@ public class OptimizelyUserContextTest {
         countDownLatch.await();
         assertEquals(null, userContext.getQualifiedSegments());
         logbackVerifier.expectMessage(Level.ERROR, "Audience segments fetch failed (ODP is not enabled).");
+    }
+
+    @Test
+    public void fetchQualifiedSegmentsAsyncErrorWhenConfigIsInvalid() throws InterruptedException {
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(null);
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPSegmentManager mockODPSegmentManager = mock(ODPSegmentManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withODPManager(mockODPManager)
+            .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        userContext.fetchQualifiedSegments((Boolean isFetchSuccessful) -> {
+            assertFalse(isFetchSuccessful);
+            countDownLatch.countDown();
+        });
+
+        countDownLatch.await();
+        assertEquals(null, userContext.getQualifiedSegments());
+        logbackVerifier.expectMessage(Level.ERROR, "Optimizely instance is not valid, failing fetchQualifiedSegments call.");
+    }
+
+    @Test
+    public void identifyUserErrorWhenConfigIsInvalid() {
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPSegmentManager mockODPSegmentManager = mock(ODPSegmentManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(null);
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withODPManager(mockODPManager)
+            .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+        verify(mockODPEventManager, never()).identifyUser("test-user");
+        Mockito.reset(mockODPEventManager);
+
+        logbackVerifier.expectMessage(Level.ERROR, "Optimizely instance is not valid, failing identifyUser call.");
     }
 
     @Test

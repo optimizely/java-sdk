@@ -4763,6 +4763,33 @@ public class OptimizelyTest {
     }
 
     @Test
+    public void sendODPEventInvalidConfig() {
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(null);
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withODPManager(mockODPManager)
+            .build();
+
+        verify(mockODPEventManager).start();
+
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("id1", "value1");
+        identifiers.put("id2", "value2");
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("sdk", "java");
+        data.put("revision", 52);
+
+        optimizely.sendODPEvent("fullstack", "identify", identifiers, data);
+        logbackVerifier.expectMessage(Level.ERROR, "Optimizely instance is not valid, failing sendODPEvent call.");
+    }
+
+    @Test
     public void sendODPEventError() {
         ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
 
