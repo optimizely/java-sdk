@@ -1479,8 +1479,7 @@ public class Optimizely implements AutoCloseable {
      */
     public void sendODPEvent(@Nullable String type, @Nonnull String action, @Nullable Map<String, String> identifiers, @Nullable Map<String, Object> data) {
         if (odpManager != null) {
-            if (action == null || action.trim().isEmpty())
-            {
+            if (action == null || action.trim().isEmpty()) {
                 logger.error("ODP action is not valid (cannot be empty).");
                 return;
             }
