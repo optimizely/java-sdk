@@ -1787,7 +1787,7 @@ public class OptimizelyUserContextTest {
             .withODPManager(mockODPManager)
             .build();
 
-        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+        optimizely.createUserContext("test-user");
         verify(mockODPEventManager, never()).identifyUser("test-user");
         Mockito.reset(mockODPEventManager);
 
