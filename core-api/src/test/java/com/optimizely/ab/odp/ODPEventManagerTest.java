@@ -228,6 +228,73 @@ public class ODPEventManagerTest {
     }
 
     @Test
+    public void preparePayloadForIdentifyUserWithVariationsOfFsUserId() throws InterruptedException {
+        Mockito.reset(mockApiManager);
+        Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(202);
+        int flushInterval = 1;
+        ODPConfig odpConfig = new ODPConfig("key", "http://www.odp-host.com", null);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager, null, flushInterval);
+        eventManager.updateSettings(odpConfig);
+        eventManager.start();
+        ODPEvent event1 = new ODPEvent("fullstack",
+            "identified",
+            new HashMap<String, String>() {{
+                put("fs-user-id", "123");
+            }}, null);
+
+        ODPEvent event2 = new ODPEvent("fullstack",
+            "identified",
+            new HashMap<String, String>() {{
+                put("FS-user-ID", "123");
+            }}, null);
+
+        ODPEvent event3 = new ODPEvent("fullstack",
+            "identified",
+            new HashMap<String, String>() {{
+                put("FS_USER_ID", "123");
+                put("fs.user.id", "456");
+            }}, null);
+
+        ODPEvent event4 = new ODPEvent("fullstack",
+            "identified",
+            new HashMap<String, String>() {{
+                put("fs_user_id", "123");
+                put("fsuserid", "456");
+            }}, null);
+        List<Map<String, String>> expectedIdentifiers = new ArrayList<Map<String, String>>() {{
+            add(new HashMap<String, String>() {{
+                put("fs_user_id", "123");
+            }});
+            add(new HashMap<String, String>() {{
+                put("fs_user_id", "123");
+            }});
+            add(new HashMap<String, String>() {{
+                put("fs_user_id", "123");
+                put("fs.user.id", "456");
+            }});
+            add(new HashMap<String, String>() {{
+                put("fs_user_id", "123");
+                put("fsuserid", "456");
+            }});
+        }};
+        eventManager.sendEvent(event1);
+        eventManager.sendEvent(event2);
+        eventManager.sendEvent(event3);
+        eventManager.sendEvent(event4);
+
+        Thread.sleep(1500);
+        Mockito.verify(mockApiManager, times(1)).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), payloadCaptor.capture());
+
+        String payload = payloadCaptor.getValue();
+        JSONArray events = new JSONArray(payload);
+        assertEquals(4, events.length());
+        for (int i = 0; i < events.length(); i++) {
+            JSONObject event = events.getJSONObject(i);
+            assertEquals(event.getJSONObject("identifiers").toMap(), expectedIdentifiers.get(i));
+        }
+    }
+
+    @Test
     public void identifyUserWithVuidAndUserId() throws InterruptedException {
         ODPEventManager eventManager = spy(new ODPEventManager(mockApiManager));
         ArgumentCaptor<ODPEvent> captor = ArgumentCaptor.forClass(ODPEvent.class);
