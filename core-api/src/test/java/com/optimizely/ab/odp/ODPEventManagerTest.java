@@ -182,18 +182,19 @@ public class ODPEventManagerTest {
 
     @Test
     public void shouldFlushAllScheduledEventsBeforeStopping() throws InterruptedException {
+        int flushInterval = 20000;
         Mockito.reset(mockApiManager);
         Mockito.when(mockApiManager.sendEvents(any(), any(), any())).thenReturn(202);
         ODPConfig odpConfig = new ODPConfig("key", "http://www.odp-host.com", null);
-        ODPEventManager eventManager = new ODPEventManager(mockApiManager);
+        ODPEventManager eventManager = new ODPEventManager(mockApiManager, null, flushInterval);
         eventManager.updateSettings(odpConfig);
         eventManager.start();
-        for (int i = 0; i < 25; i++) {
+        for (int i = 0; i < 8; i++) {
             eventManager.sendEvent(getEvent(i));
         }
         eventManager.stop();
         Thread.sleep(1500);
-        Mockito.verify(mockApiManager, times(3)).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), any());
+        Mockito.verify(mockApiManager, times(1)).sendEvents(eq("key"), eq("http://www.odp-host.com/v3/events"), any());
         logbackVerifier.expectMessage(Level.DEBUG, "Exiting ODP Event Dispatcher Thread.");
     }
 
