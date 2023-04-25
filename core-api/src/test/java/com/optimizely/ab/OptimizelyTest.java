@@ -4733,6 +4733,7 @@ public class OptimizelyTest {
     @Test
     public void sendODPEvent() {
         ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
         ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
         ODPManager mockODPManager = mock(ODPManager.class);
 
@@ -4760,6 +4761,33 @@ public class OptimizelyTest {
         assertEquals("identify", eventArgument.getValue().getAction());
         assertEquals(identifiers, eventArgument.getValue().getIdentifiers());
         assertEquals(data, eventArgument.getValue().getData());
+    }
+
+    @Test
+    public void sendODPEventInvalidConfig() {
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(null);
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withODPManager(mockODPManager)
+            .build();
+
+        verify(mockODPEventManager).start();
+
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("id1", "value1");
+        identifiers.put("id2", "value2");
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("sdk", "java");
+        data.put("revision", 52);
+
+        optimizely.sendODPEvent("fullstack", "identify", identifiers, data);
+        logbackVerifier.expectMessage(Level.ERROR, "Optimizely instance is not valid, failing sendODPEvent call.");
     }
 
     @Test
@@ -4887,7 +4915,7 @@ public class OptimizelyTest {
     @Test
     public void sendODPEventError() {
         ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
-
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
         Optimizely optimizely = Optimizely.builder()
             .withConfigManager(mockProjectConfigManager)
             .build();
@@ -4907,6 +4935,7 @@ public class OptimizelyTest {
     @Test
     public void identifyUser() {
         ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
         ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
         ODPManager mockODPManager = mock(ODPManager.class);
 

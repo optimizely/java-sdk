@@ -1445,6 +1445,11 @@ public class Optimizely implements AutoCloseable {
     }
 
     public List<String> fetchQualifiedSegments(String userId, @Nonnull List<ODPSegmentOption> segmentOptions) {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing fetchQualifiedSegments call.");
+            return null;
+        }
         if (odpManager != null) {
             synchronized (odpManager) {
                 return odpManager.getSegmentManager().getQualifiedSegments(userId, segmentOptions);
@@ -1455,6 +1460,12 @@ public class Optimizely implements AutoCloseable {
     }
 
     public void fetchQualifiedSegments(String userId, ODPSegmentManager.ODPSegmentFetchCallback callback, List<ODPSegmentOption> segmentOptions) {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing fetchQualifiedSegments call.");
+            callback.onCompleted(null);
+            return;
+        }
         if (odpManager == null) {
             logger.error("Audience segments fetch failed (ODP is not enabled).");
             callback.onCompleted(null);
@@ -1478,6 +1489,11 @@ public class Optimizely implements AutoCloseable {
      * @param data a dictionary for associated data. The default event data will be added to this data before sending to the ODP server.
      */
     public void sendODPEvent(@Nullable String type, @Nonnull String action, @Nullable Map<String, String> identifiers, @Nullable Map<String, Object> data) {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing sendODPEvent call.");
+            return;
+        }
         if (odpManager != null) {
             if (action == null || action.trim().isEmpty()) {
                 logger.error("ODP action is not valid (cannot be empty).");
@@ -1492,6 +1508,11 @@ public class Optimizely implements AutoCloseable {
     }
 
     public void identifyUser(@Nonnull String userId) {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing identifyUser call.");
+            return;
+        }
         ODPManager odpManager = getODPManager();
         if (odpManager != null) {
             odpManager.getEventManager().identifyUser(userId);
