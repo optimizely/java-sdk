@@ -4791,6 +4791,128 @@ public class OptimizelyTest {
     }
 
     @Test
+    @SuppressFBWarnings(value = "NP_NONNULL_PARAM_VIOLATION", justification = "Testing nullness contract violation")
+    public void sendODPEventErrorNullAction() {
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withODPManager(mockODPManager)
+            .build();
+
+        verify(mockODPEventManager).start();
+
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("id1", "value1");
+        identifiers.put("id2", "value2");
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("sdk", "java");
+        data.put("revision", 52);
+
+        optimizely.sendODPEvent("fullstack", null, identifiers, data);
+        logbackVerifier.expectMessage(Level.ERROR, "ODP action is not valid (cannot be empty).");
+    }
+
+    @Test
+    public void sendODPEventErrorEmptyAction() {
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withODPManager(mockODPManager)
+            .build();
+
+        verify(mockODPEventManager).start();
+
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("id1", "value1");
+        identifiers.put("id2", "value2");
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("sdk", "java");
+        data.put("revision", 52);
+
+        optimizely.sendODPEvent("fullstack", "", identifiers, data);
+        logbackVerifier.expectMessage(Level.ERROR, "ODP action is not valid (cannot be empty).");
+    }
+
+    @Test
+    @SuppressFBWarnings(value = "NP_NONNULL_PARAM_VIOLATION", justification = "Testing nullness contract violation")
+    public void sendODPEventNullType() {
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withODPManager(mockODPManager)
+            .build();
+
+        verify(mockODPEventManager).start();
+
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("id1", "value1");
+        identifiers.put("id2", "value2");
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("sdk", "java");
+        data.put("revision", 52);
+
+        optimizely.sendODPEvent(null, "identify", identifiers, data);
+        ArgumentCaptor<ODPEvent> eventArgument = ArgumentCaptor.forClass(ODPEvent.class);
+        verify(mockODPEventManager).sendEvent(eventArgument.capture());
+
+        assertEquals("fullstack", eventArgument.getValue().getType());
+        assertEquals("identify", eventArgument.getValue().getAction());
+        assertEquals(identifiers, eventArgument.getValue().getIdentifiers());
+        assertEquals(data, eventArgument.getValue().getData());
+    }
+
+    @Test
+    public void sendODPEventEmptyType() {
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .withODPManager(mockODPManager)
+            .build();
+
+        verify(mockODPEventManager).start();
+
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("id1", "value1");
+        identifiers.put("id2", "value2");
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("sdk", "java");
+        data.put("revision", 52);
+
+        optimizely.sendODPEvent("", "identify", identifiers, data);
+        ArgumentCaptor<ODPEvent> eventArgument = ArgumentCaptor.forClass(ODPEvent.class);
+        verify(mockODPEventManager).sendEvent(eventArgument.capture());
+
+        assertEquals("fullstack", eventArgument.getValue().getType());
+        assertEquals("identify", eventArgument.getValue().getAction());
+        assertEquals(identifiers, eventArgument.getValue().getIdentifiers());
+        assertEquals(data, eventArgument.getValue().getData());
+    }
+
+    @Test
     public void sendODPEventError() {
         ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
         Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);

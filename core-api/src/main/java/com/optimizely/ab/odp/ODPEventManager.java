@@ -35,6 +35,10 @@ public class ODPEventManager {
     private static final int DEFAULT_FLUSH_INTERVAL = 1000;
     private static final int MAX_RETRIES = 3;
     private static final String EVENT_URL_PATH = "/v3/events";
+    private static final List<String> FS_USER_ID_MATCHES = new ArrayList<>(Arrays.asList(
+        ODPUserKey.FS_USER_ID.getKeyString(),
+        ODPUserKey.FS_USER_ID_ALIAS.getKeyString()
+    ));
     private static final Object SHUTDOWN_SIGNAL = new Object();
 
     private final int queueSize;
@@ -121,7 +125,7 @@ public class ODPEventManager {
 
     public void sendEvent(ODPEvent event) {
         event.setData(augmentCommonData(event.getData()));
-        event.setIdentifiers(augmentCommonIdentifiers(event.getIdentifiers()));
+        event.setIdentifiers(convertCriticalIdentifiers(augmentCommonIdentifiers(event.getIdentifiers())));
 
         if (!event.isIdentifiersValid()) {
             logger.error("ODP event send failed (event identifiers must have at least one key-value pair)");
@@ -132,6 +136,7 @@ public class ODPEventManager {
             logger.error("ODP event send failed (event data is not valid)");
             return;
         }
+
 
         processEvent(event);
     }
@@ -158,6 +163,27 @@ public class ODPEventManager {
         Map<String, String> identifiers = new HashMap<>();
         identifiers.putAll(userCommonIdentifiers);
         identifiers.putAll(sourceIdentifiers);
+
+        return identifiers;
+    }
+
+    private static Map<String, String> convertCriticalIdentifiers(Map<String, String> identifiers) {
+
+        if (identifiers.containsKey(ODPUserKey.FS_USER_ID.getKeyString())) {
+            return identifiers;
+        }
+
+        List<Map.Entry<String, String>> identifiersList = new ArrayList<>(identifiers.entrySet());
+
+        for (Map.Entry<String, String> kvp : identifiersList) {
+
+            if (FS_USER_ID_MATCHES.contains(kvp.getKey().toLowerCase())) {
+                identifiers.remove(kvp.getKey());
+                identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), kvp.getValue());
+                break;
+            }
+        }
+
         return identifiers;
     }
 

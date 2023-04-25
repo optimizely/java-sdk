@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2022, Optimizely
+ *    Copyright 2022-2023, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,7 +20,9 @@ public enum ODPUserKey {
 
     VUID("vuid"),
 
-    FS_USER_ID("fs_user_id");
+    FS_USER_ID("fs_user_id"),
+
+    FS_USER_ID_ALIAS("fs-user-id");
 
     private final String keyString;
 
