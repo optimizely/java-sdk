@@ -137,7 +137,8 @@ public class DefaultODPApiManager implements ODPApiManager {
              "customer"
            ],
            "extensions": {
-             "classification": "InvalidIdentifierException"
+             "code": "INVALID_IDENTIFIER_EXCEPTION",
+             "classification": "DataFetchingException"
            }
          }
        ],

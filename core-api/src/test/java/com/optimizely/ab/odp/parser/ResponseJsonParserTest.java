@@ -1,5 +1,5 @@
 /**
- *    Copyright 2022, Optimizely Inc. and contributors
+ *    Copyright 2022-2023, Optimizely Inc. and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -84,7 +84,7 @@ public class ResponseJsonParserTest {
 
     @Test
     public void returnNullAndLogCorrectErrorWhenErrorResponseIsReturned() {
-        String responseToParse = "{\"errors\":[{\"message\":\"Exception while fetching data (/customer) : java.lang.RuntimeException: could not resolve _fs_user_id = wrong_id\",\"locations\":[{\"line\":2,\"column\":3}],\"path\":[\"customer\"],\"extensions\":{\"classification\":\"InvalidIdentifierException\"}}],\"data\":{\"customer\":null}}";
+        String responseToParse = "{\"errors\":[{\"message\":\"Exception while fetching data (/customer) : java.lang.RuntimeException: could not resolve _fs_user_id = wrong_id\",\"locations\":[{\"line\":2,\"column\":3}],\"path\":[\"customer\"],\"extensions\":{\"code\":\"INVALID_IDENTIFIER_EXCEPTION\", \"classification\":\"DataFetchingException\"}}],\"data\":{\"customer\":null}}";
         List<String> parsedSegments =  jsonParser.parseQualifiedSegments(responseToParse);
         logbackVerifier.expectMessage(Level.ERROR, "Exception while fetching data (/customer) : java.lang.RuntimeException: could not resolve _fs_user_id = wrong_id");
         assertEquals(null, parsedSegments);
