@@ -94,6 +94,7 @@ public class ResponseJsonParserTest {
     public void returnNullAndLogNoErrorWhenErrorResponseIsReturnedButCodeKeyIsNotPresent() {
         String responseToParse = "{\"errors\":[{\"message\":\"Exception while fetching data (/customer) : java.lang.RuntimeException: could not resolve _fs_user_id = wrong_id\",\"locations\":[{\"line\":2,\"column\":3}],\"path\":[\"customer\"],\"extensions\":{\"classification\":\"DataFetchingException\"}}],\"data\":{\"customer\":null}}";
         List<String> parsedSegments =  jsonParser.parseQualifiedSegments(responseToParse);
+        logbackVerifier.expectMessage(Level.ERROR, "Audience segments fetch failed (DataFetchingException)");
         assertEquals(null, parsedSegments);
     }
 

@@ -40,8 +40,8 @@ public class JacksonParser implements ResponseJsonParser {
             if (root.has("errors")) {
                 JsonNode errors = root.path("errors");
                 JsonNode extensions = errors.get(0).path("extensions");
-                if (extensions != null && extensions.has("code")) {
-                    if (extensions.path("code").asText().equals("INVALID_IDENTIFIER_EXCEPTION")) {
+                if (extensions != null) {
+                    if (extensions.has("code") && extensions.path("code").asText().equals("INVALID_IDENTIFIER_EXCEPTION")) {
                         logger.warn("Audience segments fetch failed (invalid identifier)");
                     } else {
                         String errorMessage = extensions.has("classification") ? extensions.path("classification").asText() : "decode error";

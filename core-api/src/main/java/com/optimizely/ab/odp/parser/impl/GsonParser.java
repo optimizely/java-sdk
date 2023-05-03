@@ -36,8 +36,8 @@ public class GsonParser implements ResponseJsonParser {
             if (root.has("errors")) {
                 JsonArray errors = root.getAsJsonArray("errors");
                 JsonObject extensions = errors.get(0).getAsJsonObject().get("extensions").getAsJsonObject();
-                if (extensions != null && extensions.has("code")) {
-                    if (extensions.get("code").getAsString().equals("INVALID_IDENTIFIER_EXCEPTION")) {
+                if (extensions != null) {
+                    if (extensions.has("code") && extensions.get("code").getAsString().equals("INVALID_IDENTIFIER_EXCEPTION")) {
                         logger.warn("Audience segments fetch failed (invalid identifier)");
                     } else {
                         String errorMessage = extensions.get("classification") == null ? "decode error" : extensions.get("classification").getAsString();

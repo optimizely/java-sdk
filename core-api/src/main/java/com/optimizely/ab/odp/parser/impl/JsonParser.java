@@ -37,8 +37,8 @@ public class JsonParser implements ResponseJsonParser {
             if (root.has("errors")) {
                 JSONArray errors = root.getJSONArray("errors");
                 JSONObject extensions = errors.getJSONObject(0).getJSONObject("extensions");
-                if (extensions != null && extensions.has("code")) {
-                    if (extensions.getString("code").equals("INVALID_IDENTIFIER_EXCEPTION")) {
+                if (extensions != null) {
+                    if (extensions.has("code") && extensions.getString("code").equals("INVALID_IDENTIFIER_EXCEPTION")) {
                         logger.warn("Audience segments fetch failed (invalid identifier)");
                     } else {
                         String errorMessage = extensions.has("classification") ?

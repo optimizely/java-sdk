@@ -39,8 +39,8 @@ public class JsonSimpleParser implements ResponseJsonParser {
             if (root.containsKey("errors")) {
                 JSONArray errors = (JSONArray) root.get("errors");
                 JSONObject extensions = (JSONObject) ((JSONObject) errors.get(0)).get("extensions");
-                if (extensions != null && extensions.containsKey("code")) {
-                    if (extensions.get("code").equals("INVALID_IDENTIFIER_EXCEPTION")) {
+                if (extensions != null) {
+                    if (extensions.containsKey("code") && extensions.get("code").equals("INVALID_IDENTIFIER_EXCEPTION")) {
                         logger.warn("Audience segments fetch failed (invalid identifier)");
                     } else {
                         String errorMessage = extensions.get("classification") == null ? "decode error" : (String) extensions.get("classification");
