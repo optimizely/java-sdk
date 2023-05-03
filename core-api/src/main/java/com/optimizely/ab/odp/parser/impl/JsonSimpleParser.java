@@ -1,5 +1,5 @@
 /**
- *    Copyright 2022, Optimizely Inc. and contributors
+ *    Copyright 2022-2023, Optimizely Inc. and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -36,17 +36,17 @@ public class JsonSimpleParser implements ResponseJsonParser {
         JSONObject root = null;
         try {
             root = (JSONObject) parser.parse(responseJson);
-
             if (root.containsKey("errors")) {
                 JSONArray errors = (JSONArray) root.get("errors");
-                StringBuilder logMessage = new StringBuilder();
-                for (int i = 0; i < errors.size(); i++) {
-                    if (i > 0) {
-                        logMessage.append(", ");
+                JSONObject extensions = (JSONObject) ((JSONObject) errors.get(0)).get("extensions");
+                if (extensions != null) {
+                    if (extensions.containsKey("code") && extensions.get("code").equals("INVALID_IDENTIFIER_EXCEPTION")) {
+                        logger.warn("Audience segments fetch failed (invalid identifier)");
+                    } else {
+                        String errorMessage = extensions.get("classification") == null ? "decode error" : (String) extensions.get("classification");
+                        logger.error("Audience segments fetch failed (" + errorMessage + ")");
                     }
-                    logMessage.append((String)((JSONObject) errors.get(i)).get("message"));
                 }
-                logger.error(logMessage.toString());
                 return null;
             }
 

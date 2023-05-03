@@ -1,5 +1,5 @@
 /**
- *    Copyright 2022, Optimizely Inc. and contributors
+ *    Copyright 2022-2023, Optimizely Inc. and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -35,15 +35,17 @@ public class JsonParser implements ResponseJsonParser {
             JSONObject root = new JSONObject(responseJson);
 
             if (root.has("errors")) {
-                JSONArray errors =  root.getJSONArray("errors");
-                StringBuilder logMessage = new StringBuilder();
-                for (int i = 0; i < errors.length(); i++) {
-                    if (i > 0) {
-                        logMessage.append(", ");
+                JSONArray errors = root.getJSONArray("errors");
+                JSONObject extensions = errors.getJSONObject(0).getJSONObject("extensions");
+                if (extensions != null) {
+                    if (extensions.has("code") && extensions.getString("code").equals("INVALID_IDENTIFIER_EXCEPTION")) {
+                        logger.warn("Audience segments fetch failed (invalid identifier)");
+                    } else {
+                        String errorMessage = extensions.has("classification") ?
+                            extensions.getString("classification") : "decode error";
+                        logger.error("Audience segments fetch failed (" + errorMessage + ")");
                     }
-                    logMessage.append(errors.getJSONObject(i).getString("message"));
                 }
-                logger.error(logMessage.toString());
                 return null;
             }
 
