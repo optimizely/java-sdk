@@ -1,5 +1,5 @@
 /**
- *    Copyright 2022, Optimizely Inc. and contributors
+ *    Copyright 2022-2023, Optimizely Inc. and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -34,15 +34,16 @@ public class GsonParser implements ResponseJsonParser {
             JsonObject root = JsonParser.parseString(responseJson).getAsJsonObject();
 
             if (root.has("errors")) {
-                JsonArray errors =  root.getAsJsonArray("errors");
-                StringBuilder logMessage = new StringBuilder();
-                for (int i = 0; i < errors.size(); i++) {
-                    if (i > 0) {
-                        logMessage.append(", ");
+                JsonArray errors = root.getAsJsonArray("errors");
+                JsonObject extensions = errors.get(0).getAsJsonObject().get("extensions").getAsJsonObject();
+                if (extensions != null && extensions.has("code")) {
+                    if (extensions.get("code").getAsString().equals("INVALID_IDENTIFIER_EXCEPTION")) {
+                        logger.warn("Audience segments fetch failed (invalid identifier)");
+                    } else {
+                        String errorMessage = extensions.get("classification") == null ? "decode error" : extensions.get("classification").getAsString();
+                        logger.error("Audience segments fetch failed (" + errorMessage + ")");
                     }
-                    logMessage.append(errors.get(i).getAsJsonObject().get("message").getAsString());
                 }
-                logger.error(logMessage.toString());
                 return null;
             }
 

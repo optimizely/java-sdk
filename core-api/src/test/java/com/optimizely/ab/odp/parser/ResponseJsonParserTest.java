@@ -86,7 +86,31 @@ public class ResponseJsonParserTest {
     public void returnNullAndLogCorrectErrorWhenErrorResponseIsReturned() {
         String responseToParse = "{\"errors\":[{\"message\":\"Exception while fetching data (/customer) : java.lang.RuntimeException: could not resolve _fs_user_id = wrong_id\",\"locations\":[{\"line\":2,\"column\":3}],\"path\":[\"customer\"],\"extensions\":{\"code\":\"INVALID_IDENTIFIER_EXCEPTION\", \"classification\":\"DataFetchingException\"}}],\"data\":{\"customer\":null}}";
         List<String> parsedSegments =  jsonParser.parseQualifiedSegments(responseToParse);
-        logbackVerifier.expectMessage(Level.ERROR, "Exception while fetching data (/customer) : java.lang.RuntimeException: could not resolve _fs_user_id = wrong_id");
+        logbackVerifier.expectMessage(Level.WARN, "Audience segments fetch failed (invalid identifier)");
         assertEquals(null, parsedSegments);
     }
+
+    @Test
+    public void returnNullAndLogNoErrorWhenErrorResponseIsReturnedButCodeKeyIsNotPresent() {
+        String responseToParse = "{\"errors\":[{\"message\":\"Exception while fetching data (/customer) : java.lang.RuntimeException: could not resolve _fs_user_id = wrong_id\",\"locations\":[{\"line\":2,\"column\":3}],\"path\":[\"customer\"],\"extensions\":{\"classification\":\"DataFetchingException\"}}],\"data\":{\"customer\":null}}";
+        List<String> parsedSegments =  jsonParser.parseQualifiedSegments(responseToParse);
+        assertEquals(null, parsedSegments);
+    }
+
+    @Test
+    public void returnNullAndLogCorrectErrorWhenErrorResponseIsReturnedButCodeValueIsNotInvalidIdentifierException() {
+        String responseToParse = "{\"errors\":[{\"message\":\"Exception while fetching data (/customer) : java.lang.RuntimeException: could not resolve _fs_user_id = wrong_id\",\"locations\":[{\"line\":2,\"column\":3}],\"path\":[\"customer\"],\"extensions\":{\"code\":\"OTHER_EXCEPTIONS\", \"classification\":\"DataFetchingException\"}}],\"data\":{\"customer\":null}}";
+        List<String> parsedSegments =  jsonParser.parseQualifiedSegments(responseToParse);
+        logbackVerifier.expectMessage(Level.ERROR, "Audience segments fetch failed (DataFetchingException)");
+        assertEquals(null, parsedSegments);
+    }
+
+    @Test
+    public void returnNullAndLogCorrectErrorWhenErrorResponseIsReturnedButCodeValueIsNotInvalidIdentifierExceptionNullClassification() {
+        String responseToParse = "{\"errors\":[{\"message\":\"Exception while fetching data (/customer) : java.lang.RuntimeException: could not resolve _fs_user_id = wrong_id\",\"locations\":[{\"line\":2,\"column\":3}],\"path\":[\"customer\"],\"extensions\":{\"code\":\"OTHER_EXCEPTIONS\"}}],\"data\":{\"customer\":null}}";
+        List<String> parsedSegments =  jsonParser.parseQualifiedSegments(responseToParse);
+        logbackVerifier.expectMessage(Level.ERROR, "Audience segments fetch failed (decode error)");
+        assertEquals(null, parsedSegments);
+    }
+
 }
