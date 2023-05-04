@@ -1,7 +1,7 @@
 # Optimizely Java X SDK Changelog
 
 ## [4.0.0-beta]
-May 4th, 2023
+May 5th, 2023
 
 ### New Features 
 The 4.0.0-beta release introduces a new primary feature, [Advanced Audience Targeting]( https://docs.developers.optimizely.com/feature-experimentation/docs/optimizely-data-platform-advanced-audience-targeting) 
@@ -56,7 +56,7 @@ For details, refer to our documentation pages:
 - [Send Optimizely Data Platform data using Advanced Audience Targeting](https://docs.developers.optimizely.com/feature-experimentation/docs/send-odp-data-using-advanced-audience-targeting-java)
 
 ### Breaking Changes
-- `OdpManager` in the SDK is enabled by default. Unless an ODP account is integrated into the Optimizely projects, most `OdpManager` functions will be ignored. If needed, `OdpManager` can be disabled when `OptimizelyClient` is instantiated.
+- `OdpManager` in the SDK is enabled by default, if initialized using OptimizelyFactory. Unless an ODP account is integrated into the Optimizely projects, most `OdpManager` functions will be ignored. If needed, `OdpManager` to be disabled initialize `OptimizelyClient` without passing `OdpManager`.
 - `ProjectConfigManager` interface additions + implementing class updates
 
 ## [3.10.3]
