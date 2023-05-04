@@ -15,21 +15,7 @@ enabled through integration with [Optimizely Data Platform (ODP)](https://docs.d
 [#487](https://github.com/optimizely/java-sdk/pull/487),
 [#489](https://github.com/optimizely/java-sdk/pull/489),
 [#490](https://github.com/optimizely/java-sdk/pull/490),
-[#494](https://github.com/optimizely/java-sdk/pull/494),
-[#495](https://github.com/optimizely/java-sdk/pull/495),
-[#496](https://github.com/optimizely/java-sdk/pull/496),
-[#497](https://github.com/optimizely/java-sdk/pull/497),
-[#498](https://github.com/optimizely/java-sdk/pull/498),
-[#500](https://github.com/optimizely/java-sdk/pull/500),
-[#501](https://github.com/optimizely/java-sdk/pull/501),
-[#502](https://github.com/optimizely/java-sdk/pull/502),
-[#503](https://github.com/optimizely/java-sdk/pull/503),
-[#504](https://github.com/optimizely/java-sdk/pull/504),
-[#509](https://github.com/optimizely/java-sdk/pull/509),
-[#511](https://github.com/optimizely/java-sdk/pull/511),
-[#512](https://github.com/optimizely/java-sdk/pull/512),
-[#513](https://github.com/optimizely/java-sdk/pull/513),
-[#514](https://github.com/optimizely/java-sdk/pull/514)
+[#494](https://github.com/optimizely/java-sdk/pull/494)
 ). 
 
 You can use ODP, a high-performance [Customer Data Platform (CDP)]( https://www.optimizely.com/optimization-glossary/customer-data-platform/), to easily create complex 
@@ -57,7 +43,7 @@ For details, refer to our documentation pages:
 
 ### Breaking Changes
 - `OdpManager` in the SDK is enabled by default, if initialized using OptimizelyFactory. Unless an ODP account is integrated into the Optimizely projects, most `OdpManager` functions will be ignored. If needed, `OdpManager` to be disabled initialize `OptimizelyClient` without passing `OdpManager`.
-- `ProjectConfigManager` interface additions + implementing class updates
+- `ProjectConfigManager` interface additions + implementing class updates, which includes implementing `getCachedConfig()` and `getSDKKey()` methods. 
 
 ## [3.10.3]
 March 13th, 2023
