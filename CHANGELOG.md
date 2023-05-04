@@ -43,7 +43,7 @@ For details, refer to our documentation pages:
 
 ### Breaking Changes
 - `OdpManager` in the SDK is enabled by default, if initialized using OptimizelyFactory. Unless an ODP account is integrated into the Optimizely projects, most `OdpManager` functions will be ignored. If needed, `OdpManager` to be disabled initialize `OptimizelyClient` without passing `OdpManager`.
-- `ProjectConfigManager` interface additions + implementing class updates, which includes implementing `getCachedConfig()` and `getSDKKey()` methods. 
+- `ProjectConfigManager` interface has been changed to add 2 more methods `getCachedConfig()` and `getSDKKey()`. Custom ProjectConfigManager should implement these new methods. See `PollingProjectConfigManager` for reference. This change is required to support ODPManager updated on datafile download [#501](https://github.com/optimizely/java-sdk/pull/501).
 
 ## [3.10.3]
 March 13th, 2023
