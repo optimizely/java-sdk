@@ -119,6 +119,8 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
             .withMaxTotalConnections(maxConnections)
             .withMaxPerRoute(connectionsPerRoute)
             .withValidateAfterInactivity(validateAfter)
+            // infrequent event discards observed. staled connections force-closed after a long idle time.
+            .withEvictIdleConnections(1L, TimeUnit.MINUTES)
             .build();
 
         this.workerExecutor = new ThreadPoolExecutor(numWorkers, numWorkers,
