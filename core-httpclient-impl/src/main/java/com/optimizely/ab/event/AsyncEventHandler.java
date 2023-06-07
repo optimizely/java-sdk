@@ -109,6 +109,8 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
                              long closeTimeout,
                              TimeUnit closeTimeoutUnit) {
 
+
+        
         queueCapacity       = validateInput("queueCapacity", queueCapacity, DEFAULT_QUEUE_CAPACITY);
         numWorkers          = validateInput("numWorkers", numWorkers, DEFAULT_NUM_WORKERS);
         maxConnections      = validateInput("maxConnections", maxConnections, DEFAULT_MAX_CONNECTIONS);
