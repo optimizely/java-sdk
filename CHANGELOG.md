@@ -1,5 +1,11 @@
 # Optimizely Java X SDK Changelog
 
+## [3.10.4]
+June 8th, 2023
+
+### Fixes
+- Fix intermittent logx event dispatch failures possibly caused by reusing stale connections. Add `evictIdleConnections` (1min) to `OptimizelyHttpClient` in `AsyncEventHandler` to force close persistent connections after 1min idle time ([#518](https://github.com/optimizely/java-sdk/pull/518)).
+
 ## [3.10.3]
 March 13th, 2023
 
