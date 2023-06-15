@@ -17,8 +17,12 @@
 package com.optimizely.ab.event.internal;
 
 import com.optimizely.ab.event.internal.payload.EventBatch;
+import com.optimizely.ab.notification.DecisionNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * ClientEngineInfo is a utility to globally get and set the ClientEngine used in
@@ -28,9 +32,34 @@ import org.slf4j.LoggerFactory;
 public class ClientEngineInfo {
     private static final Logger logger = LoggerFactory.getLogger(ClientEngineInfo.class);
 
+    public static final String DEFAULT_NAME = "java-sdk";
+    private static String clientEngineName = DEFAULT_NAME;
+
+    public static void setClientEngineName(@Nullable String name) {
+        if (name == null || name.isEmpty()) {
+            logger.warn("ClientEngineName cannot be empty, defaulting to {}", ClientEngineInfo.clientEngineName);
+            return;
+        }
+        ClientEngineInfo.clientEngineName = name;
+    }
+
+    @Nonnull
+    public static String getClientEngineName() {
+        return clientEngineName;
+    }
+
+    private ClientEngineInfo() {
+    }
+
+    @Deprecated
     public static final EventBatch.ClientEngine DEFAULT = EventBatch.ClientEngine.JAVA_SDK;
+    @Deprecated
     private static EventBatch.ClientEngine clientEngine = DEFAULT;
 
+    /**
+     * @deprecated in favor of {@link #setClientEngineName(String)} which can set with arbitrary client names.
+     */
+    @Deprecated
     public static void setClientEngine(EventBatch.ClientEngine clientEngine) {
         if (clientEngine == null) {
             logger.warn("ClientEngine cannot be null, defaulting to {}", ClientEngineInfo.clientEngine.getClientEngineValue());
@@ -41,10 +70,12 @@ public class ClientEngineInfo {
         ClientEngineInfo.clientEngine = clientEngine;
     }
 
+    /**
+     * @deprecated in favor of {@link #getClientEngineName()}.
+     */
+    @Deprecated
     public static EventBatch.ClientEngine getClientEngine() {
         return clientEngine;
     }
 
-    private ClientEngineInfo() {
-    }
 }

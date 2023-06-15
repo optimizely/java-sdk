@@ -1637,6 +1637,16 @@ public class Optimizely implements AutoCloseable {
          * @param clientVersion the client SDK version.
          * @return An Optimizely builder
          */
+        public Builder withClientInfo(String clientEngineName, String clientVersion) {
+            ClientEngineInfo.setClientEngineName(clientEngineName);
+            BuildVersionInfo.setClientVersion(clientVersion);
+            return this;
+        }
+
+        /**
+         * @deprecated in favor of {@link withClientInfo(String, String)} which can set with arbitrary client names.
+         */
+        @Deprecated
         public Builder withClientInfo(EventBatch.ClientEngine clientEngine, String clientVersion) {
             ClientEngineInfo.setClientEngine(clientEngine);
             BuildVersionInfo.setClientVersion(clientVersion);

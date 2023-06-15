@@ -24,6 +24,8 @@ import com.optimizely.ab.event.internal.BuildVersionInfo;
 import java.util.List;
 
 public class EventBatch {
+
+    @Deprecated
     public enum ClientEngine {
         JAVA_SDK("java-sdk"),
         ANDROID_SDK("android-sdk"),

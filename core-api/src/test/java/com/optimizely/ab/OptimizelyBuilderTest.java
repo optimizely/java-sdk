@@ -224,7 +224,6 @@ public class OptimizelyBuilderTest {
 
         reset(eventHandler);
         optimizely = Optimizely.builder(validConfigJsonV4(), eventHandler)
-            .withClientInfo(null, null)
             .build();
         optimizely.track("basic_event", "tester");
 
@@ -245,8 +244,8 @@ public class OptimizelyBuilderTest {
         assertEquals(argument.getValue().getEventBatch().getClientVersion(), "1.2.3");
 
         // restore the default values for other tests
-        ClientEngineInfo.setClientEngine(ClientEngineInfo.DEFAULT);
-        BuildVersionInfo.setClientVersion(BuildVersionInfo.VERSION);
+        ClientEngineInfo.setClientEngineName(ClientEngineInfo.DEFAULT_NAME);
+        BuildVersionInfo.setClientVersion(BuildVersionInfo.DEFAULT_VERSION);
     }
 
     @Test

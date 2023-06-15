@@ -148,7 +148,7 @@ public class ODPEventManager {
         Map<String, Object> data = new HashMap<>();
         data.put("idempotence_id", UUID.randomUUID().toString());
         data.put("data_source_type", "sdk");
-        data.put("data_source", ClientEngineInfo.getClientEngine().getClientEngineValue());
+        data.put("data_source", ClientEngineInfo.getClientEngineName());
         data.put("data_source_version", BuildVersionInfo.getClientVersion());
 
         data.putAll(userCommonData);
