@@ -1633,7 +1633,7 @@ public class Optimizely implements AutoCloseable {
         /**
          * Override the SDK name and version (for client SDKs like android-sdk wrapping the core java-sdk) to be included in events.
          *
-         * @param clientEngine the client engine type.
+         * @param clientEngineName the client engine name ("java-sdk", "android-sdk", "flutter-sdk", etc.).
          * @param clientVersion the client SDK version.
          * @return An Optimizely builder
          */
