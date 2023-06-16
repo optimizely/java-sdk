@@ -68,6 +68,7 @@ public class ClientEngineInfo {
 
         logger.info("Setting Optimizely client engine to {}", clientEngine.getClientEngineValue());
         ClientEngineInfo.clientEngine = clientEngine;
+        ClientEngineInfo.clientEngineName = clientEngine.getClientEngineValue();
     }
 
     /**
