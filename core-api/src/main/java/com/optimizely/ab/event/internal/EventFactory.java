@@ -72,7 +72,7 @@ public class EventFactory {
             ProjectConfig projectConfig = userContext.getProjectConfig();
 
             builder
-                .setClientName(ClientEngineInfo.getClientEngine().getClientEngineValue())
+                .setClientName(ClientEngineInfo.getClientEngineName())
                 .setClientVersion(BuildVersionInfo.getClientVersion())
                 .setAccountId(projectConfig.getAccountId())
                 .setAnonymizeIp(projectConfig.getAnonymizeIP())

@@ -87,7 +87,7 @@ public class EventFactoryTest {
 
     @After
     public void tearDown() {
-        ClientEngineInfo.setClientEngine(EventBatch.ClientEngine.JAVA_SDK);
+        ClientEngineInfo.setClientEngineName(ClientEngineInfo.DEFAULT_NAME);
     }
 
     /**
@@ -554,7 +554,7 @@ public class EventFactoryTest {
      */
     @Test
     public void createImpressionEventAndroidClientEngineClientVersion() throws Exception {
-        ClientEngineInfo.setClientEngine(EventBatch.ClientEngine.ANDROID_SDK);
+        ClientEngineInfo.setClientEngineName("android-sdk");
         ProjectConfig projectConfig = validProjectConfigV2();
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
@@ -566,7 +566,7 @@ public class EventFactoryTest {
             userId, attributeMap);
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
-        assertThat(impression.getClientName(), is(EventBatch.ClientEngine.ANDROID_SDK.getClientEngineValue()));
+        assertThat(impression.getClientName(), is("android-sdk"));
 //        assertThat(impression.getClientVersion(), is("0.0.0"));
     }
 
@@ -577,7 +577,7 @@ public class EventFactoryTest {
     @Test
     public void createImpressionEventAndroidTVClientEngineClientVersion() throws Exception {
         String clientVersion = "0.0.0";
-        ClientEngineInfo.setClientEngine(EventBatch.ClientEngine.ANDROID_TV_SDK);
+        ClientEngineInfo.setClientEngineName("android-tv-sdk");
         ProjectConfig projectConfig = validProjectConfigV2();
         Experiment activatedExperiment = projectConfig.getExperiments().get(0);
         Variation bucketedVariation = activatedExperiment.getVariations().get(0);
@@ -589,7 +589,7 @@ public class EventFactoryTest {
             userId, attributeMap);
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
-        assertThat(impression.getClientName(), is(EventBatch.ClientEngine.ANDROID_TV_SDK.getClientEngineValue()));
+        assertThat(impression.getClientName(), is("android-tv-sdk"));
 //        assertThat(impression.getClientVersion(), is(clientVersion));
     }
 
@@ -816,7 +816,7 @@ public class EventFactoryTest {
      */
     @Test
     public void createConversionEventAndroidClientEngineClientVersion() throws Exception {
-        ClientEngineInfo.setClientEngine(EventBatch.ClientEngine.ANDROID_SDK);
+        ClientEngineInfo.setClientEngineName("android-sdk");
         Attribute attribute = validProjectConfig.getAttributes().get(0);
         EventType eventType = validProjectConfig.getEventTypes().get(0);
 
@@ -838,7 +838,7 @@ public class EventFactoryTest {
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
-        assertThat(conversion.getClientName(), is(EventBatch.ClientEngine.ANDROID_SDK.getClientEngineValue()));
+        assertThat(conversion.getClientName(), is("android-sdk"));
 //        assertThat(conversion.getClientVersion(), is("0.0.0"));
     }
 
@@ -849,7 +849,7 @@ public class EventFactoryTest {
     @Test
     public void createConversionEventAndroidTVClientEngineClientVersion() throws Exception {
         String clientVersion = "0.0.0";
-        ClientEngineInfo.setClientEngine(EventBatch.ClientEngine.ANDROID_TV_SDK);
+        ClientEngineInfo.setClientEngineName("android-tv-sdk");
         ProjectConfig projectConfig = validProjectConfigV2();
         Attribute attribute = projectConfig.getAttributes().get(0);
         EventType eventType = projectConfig.getEventTypes().get(0);
@@ -873,7 +873,7 @@ public class EventFactoryTest {
         
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
-        assertThat(conversion.getClientName(), is(EventBatch.ClientEngine.ANDROID_TV_SDK.getClientEngineValue()));
+        assertThat(conversion.getClientName(), is("android-tv-sdk"));
 //        assertThat(conversion.getClientVersion(), is(clientVersion));
     }
 

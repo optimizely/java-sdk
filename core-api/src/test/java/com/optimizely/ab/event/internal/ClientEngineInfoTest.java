@@ -26,19 +26,21 @@ public class ClientEngineInfoTest {
 
     @After
     public void tearDown() throws Exception {
-        ClientEngineInfo.setClientEngine(ClientEngineInfo.DEFAULT);
+        ClientEngineInfo.setClientEngineName(ClientEngineInfo.DEFAULT_NAME);
     }
 
     @Test
     public void testSetAndGetClientEngine() {
-        for (EventBatch.ClientEngine expected: EventBatch.ClientEngine.values()) {
-            ClientEngineInfo.setClientEngine(expected);
-            assertEquals(expected, ClientEngineInfo.getClientEngine());
-        }
-    }
+        // default "java-sdk" name
+        assertEquals("java-sdk", ClientEngineInfo.getClientEngineName());
 
-    @Test
-    public void testDefaultValue() {
-        assertEquals(ClientEngineInfo.DEFAULT, ClientEngineInfo.getClientEngine());
+        ClientEngineInfo.setClientEngineName(null);
+        assertEquals("java-sdk", ClientEngineInfo.getClientEngineName());
+
+        ClientEngineInfo.setClientEngineName("");
+        assertEquals("java-sdk", ClientEngineInfo.getClientEngineName());
+
+        ClientEngineInfo.setClientEngineName("test-name");
+        assertEquals("test-name", ClientEngineInfo.getClientEngineName());
     }
 }
