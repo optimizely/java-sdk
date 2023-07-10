@@ -37,9 +37,9 @@ public final class BuildVersionInfo {
     @Deprecated
     public final static String VERSION = readVersionNumber();
 
+    public final static String DEFAULT_VERSION = readVersionNumber();
     // can be overridden by other wrapper client (android-sdk, etc)
-
-    private static String clientVersion = readVersionNumber();
+    private static String clientVersion = DEFAULT_VERSION;
 
     public static void setClientVersion(String version) {
         if (version == null || version.isEmpty()) {
