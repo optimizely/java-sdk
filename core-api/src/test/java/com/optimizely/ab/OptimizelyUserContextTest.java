@@ -1724,6 +1724,53 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
+    public void fetchQualifiedSegmentsAsyncWithVUID() throws InterruptedException {
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPSegmentManager mockODPSegmentManager = mock(ODPSegmentManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        doAnswer(
+            invocation -> {
+                ODPSegmentManager.ODPSegmentFetchCallback callback = invocation.getArgumentAt(1, ODPSegmentManager.ODPSegmentFetchCallback.class);
+                callback.onCompleted(Arrays.asList("segment1", "segment2"));
+                return null;
+            }
+        ).when(mockODPSegmentManager).getQualifiedSegments(any(), (ODPSegmentManager.ODPSegmentFetchCallback) any(), any());
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .withODPManager(mockODPManager)
+            .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("vuid_f6db3d60ba3a493d8e41bc995bb");
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        userContext.fetchQualifiedSegments((Boolean isFetchSuccessful) -> {
+            assertTrue(isFetchSuccessful);
+            countDownLatch.countDown();
+        });
+
+        countDownLatch.await();
+        verify(mockODPSegmentManager).getQualifiedSegments(eq("vuid_f6db3d60ba3a493d8e41bc995bb"), any(ODPSegmentManager.ODPSegmentFetchCallback.class), eq(Collections.emptyList()));
+        assertEquals(Arrays.asList("segment1", "segment2"), userContext.getQualifiedSegments());
+
+        // reset qualified segments
+        userContext.setQualifiedSegments(Collections.emptyList());
+        CountDownLatch countDownLatch2 = new CountDownLatch(1);
+        userContext.fetchQualifiedSegments((Boolean isFetchSuccessful) -> {
+            assertTrue(isFetchSuccessful);
+            countDownLatch2.countDown();
+        }, Collections.singletonList(ODPSegmentOption.RESET_CACHE));
+
+        countDownLatch2.await();
+        verify(mockODPSegmentManager).getQualifiedSegments(eq("vuid_f6db3d60ba3a493d8e41bc995bb"), any(ODPSegmentManager.ODPSegmentFetchCallback.class), eq(Collections.singletonList(ODPSegmentOption.RESET_CACHE)));
+        assertEquals(Arrays.asList("segment1", "segment2"), userContext.getQualifiedSegments());
+    }
+
+    @Test
     public void fetchQualifiedSegmentsAsyncError() throws InterruptedException {
         Optimizely optimizely = Optimizely.builder()
             .withDatafile(datafile)
