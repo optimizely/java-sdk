@@ -75,7 +75,7 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         this.blockingTimeoutPeriod = blockingTimeoutPeriod;
         this.blockingTimeoutUnit = blockingTimeoutUnit;
         this.notificationCenter = notificationCenter;
-        if (TimeUnit.MILLISECONDS.convert(period, this.timeUnit) < 30) {
+        if (TimeUnit.SECONDS.convert(period, this.timeUnit) < 30) {
             logger.warn("Polling intervals below 30 seconds are not recommended.");
         }
         final ThreadFactory threadFactory = Executors.defaultThreadFactory();

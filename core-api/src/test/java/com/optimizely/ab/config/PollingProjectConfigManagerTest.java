@@ -239,6 +239,8 @@ public class PollingProjectConfigManagerTest {
 
     @Test
     public void testSettingUpLowerPollingPeriodResultsInWarning() throws InterruptedException {
+        long pollingPeriod = 29;
+        new TestProjectConfigManager(projectConfig, pollingPeriod, TimeUnit.SECONDS, pollingPeriod / 2, TimeUnit.SECONDS, new NotificationCenter());
         logbackVerifier.expectMessage(Level.WARN, "Polling intervals below 30 seconds are not recommended.");
     }
 
@@ -271,7 +273,11 @@ public class PollingProjectConfigManagerTest {
         }
 
         private TestProjectConfigManager(ProjectConfig projectConfig, long blockPeriod, NotificationCenter notificationCenter) {
-            super(POLLING_PERIOD, POLLING_UNIT, blockPeriod, POLLING_UNIT, notificationCenter);
+            this(projectConfig, POLLING_PERIOD, POLLING_UNIT, blockPeriod, POLLING_UNIT, notificationCenter);
+        }
+
+        private TestProjectConfigManager(ProjectConfig projectConfig, long pollingPeriod, TimeUnit pollingUnit, long blockPeriod, TimeUnit blockingUnit, NotificationCenter notificationCenter) {
+            super(pollingPeriod, pollingUnit, blockPeriod, blockingUnit, notificationCenter);
             this.projectConfig = projectConfig;
         }
 
