@@ -16,13 +16,15 @@
  */
 package com.optimizely.ab.config;
 
+import ch.qos.logback.classic.Level;
+import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.internal.NotificationRegistry;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.notification.UpdateConfigNotification;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.junit.*;
+import org.junit.rules.ExpectedException;
+import org.junit.rules.RuleChain;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -41,6 +43,13 @@ public class PollingProjectConfigManagerTest {
     private static final TimeUnit POLLING_UNIT = TimeUnit.MILLISECONDS;
     private static final int PROJECT_CONFIG_DELAY = 100;
 
+    public ExpectedException thrown = ExpectedException.none();
+    public LogbackVerifier logbackVerifier = new LogbackVerifier();
+
+    @Rule
+    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
+    public RuleChain ruleChain = RuleChain.outerRule(thrown)
+        .around(logbackVerifier);
     private TestProjectConfigManager testProjectConfigManager;
     private ProjectConfig projectConfig;
 
@@ -229,6 +238,13 @@ public class PollingProjectConfigManagerTest {
     }
 
     @Test
+    public void testSettingUpLowerPollingPeriodResultsInWarning() throws InterruptedException {
+        long pollingPeriod = 29;
+        new TestProjectConfigManager(projectConfig, pollingPeriod, TimeUnit.SECONDS, pollingPeriod / 2, TimeUnit.SECONDS, new NotificationCenter());
+        logbackVerifier.expectMessage(Level.WARN, "Polling intervals below 30 seconds are not recommended.");
+    }
+
+    @Test
     public void testUpdateConfigNotificationDoesNotResultInDeadlock() throws Exception {
         NotificationCenter notificationCenter = new NotificationCenter();
 
@@ -257,7 +273,11 @@ public class PollingProjectConfigManagerTest {
         }
 
         private TestProjectConfigManager(ProjectConfig projectConfig, long blockPeriod, NotificationCenter notificationCenter) {
-            super(POLLING_PERIOD, POLLING_UNIT, blockPeriod, POLLING_UNIT, notificationCenter);
+            this(projectConfig, POLLING_PERIOD, POLLING_UNIT, blockPeriod, POLLING_UNIT, notificationCenter);
+        }
+
+        private TestProjectConfigManager(ProjectConfig projectConfig, long pollingPeriod, TimeUnit pollingUnit, long blockPeriod, TimeUnit blockingUnit, NotificationCenter notificationCenter) {
+            super(pollingPeriod, pollingUnit, blockPeriod, blockingUnit, notificationCenter);
             this.projectConfig = projectConfig;
         }
 
