@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2019,2021, Optimizely
+ *    Copyright 2019, 2021, 2023, Optimizely
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,18 +16,15 @@
  */
 package com.optimizely.ab.config;
 
-import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
-import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
 import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,6 +143,16 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         }
 
         return null;
+    }
+
+    @Override
+    public synchronized void close() {
+        super.close();
+        try {
+            httpClient.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @VisibleForTesting
