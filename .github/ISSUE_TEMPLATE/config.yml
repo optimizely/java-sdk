@@ -1,1 +1,5 @@
-.github/ISSUE_TEMPLATE/config.yml
+blank_issues_enabled: false
+contact_links:
+  - name: 💡Feature Requests
+    url: https://feedback.optimizely.com/
+    about: Feedback requesting a new feature can be shared here.
