@@ -9,6 +9,9 @@ August 28th, 2023
 - Fix to support arbitrary client names to be included in logx and odp events ([#524](https://github.com/optimizely/java-sdk/pull/524)).
 - Add evict timeout to logx connections ([#518](https://github.com/optimizely/java-sdk/pull/518)).
 
+### Functionality Enhancements
+- Update Github Issue Templates ([#531](https://github.com/optimizely/java-sdk/pull/531))
+
 
 ## [3.10.4]
 June 8th, 2023
