@@ -1,14 +1,16 @@
 apply plugin: 'java'
 
 dependencies {
-    compile project(':core-api')
-    compile project(':core-httpclient-impl')
+    implementation project(':core-api')
+    implementation project(':core-httpclient-impl')
 
-    compile group: 'com.google.code.gson', name: 'gson', version: gsonVersion
-    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: httpClientVersion
-    compile group: 'org.slf4j', name: 'slf4j-simple', version: slf4jVersion
+    implementation group: 'com.google.code.gson', name: 'gson', version: gsonVersion
+    implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: httpClientVersion
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4jVersion
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: log4jVersion
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: log4jVersion
 
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testImplementation group: 'junit', name: 'junit', version: junitVersion
 }
 
 task runExample(type: JavaExec) {
