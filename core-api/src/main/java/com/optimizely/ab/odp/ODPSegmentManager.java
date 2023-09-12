@@ -110,12 +110,16 @@ public class ODPSegmentManager {
         getQualifiedSegments(userKey, userValue, callback, Collections.emptyList());
     }
 
-    public void getQualifiedSegments(String fsUserId, ODPSegmentFetchCallback callback, List<ODPSegmentOption> segmentOptions) {
-        getQualifiedSegments(ODPUserKey.FS_USER_ID, fsUserId, callback, segmentOptions);
+    public void getQualifiedSegments(String userId, ODPSegmentFetchCallback callback, List<ODPSegmentOption> options) {
+        if (ODPManager.isVuid(userId)) {
+            getQualifiedSegments(ODPUserKey.VUID, userId, callback, options);
+        } else {
+            getQualifiedSegments(ODPUserKey.FS_USER_ID, userId, callback, options);
+        }
     }
 
-    public void getQualifiedSegments(String fsUserId, ODPSegmentFetchCallback callback) {
-        getQualifiedSegments(ODPUserKey.FS_USER_ID, fsUserId, callback, Collections.emptyList());
+    public void getQualifiedSegments(String userId, ODPSegmentFetchCallback callback) {
+        getQualifiedSegments(userId, callback, Collections.emptyList());
     }
 
     private String getCacheKey(String userKey, String userValue) {
