@@ -56,7 +56,7 @@ public class Example {
 
     public static void main(String[] args) throws InterruptedException {
         Optimizely optimizely = OptimizelyFactory.newDefaultInstance("BX9Y3bTa4YErpHZEMpAwHm");
-
+        
         Example example = new Example(optimizely);
         Random random = new Random();
 
