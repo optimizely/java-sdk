@@ -68,7 +68,7 @@ public class OptimizelyConfigServiceTest {
                 Collections.<Variation>emptyList(), Collections.<String, String>emptyMap(), Collections.<TrafficAllocation>emptyList()
             )
         );
-        
+
         ProjectConfig projectConfig = mock(ProjectConfig.class);
         OptimizelyConfigService optimizelyConfigService = new OptimizelyConfigService(projectConfig);
         when(projectConfig.getExperiments()).thenReturn(experiments);
