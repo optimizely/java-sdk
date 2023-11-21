@@ -15,22 +15,28 @@
  ***************************************************************************/
 package com.optimizely.ab.optimizelyconfig;
 
+import ch.qos.logback.classic.Level;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.internal.LogbackVerifier;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.*;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class OptimizelyConfigServiceTest {
 
     private ProjectConfig projectConfig;
     private OptimizelyConfigService optimizelyConfigService;
     private OptimizelyConfig expectedConfig;
+
+    @Rule
+    public LogbackVerifier logbackVerifier = new LogbackVerifier();
 
     @Before
     public void initialize() {
@@ -44,6 +50,33 @@ public class OptimizelyConfigServiceTest {
         Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfigService.getExperimentsMap();
         assertEquals(optimizelyExperimentMap.size(), 2);
         assertEquals(expectedConfig.getExperimentsMap(), optimizelyExperimentMap);
+    }
+
+    @Test
+    public void testGetExperimentsMapWithDuplicateKeys() {
+        List<Experiment> experiments = Arrays.asList(
+            new Experiment(
+                "first",
+                "duplicate_key",
+                null, null, Collections.<String>emptyList(), null,
+                Collections.<Variation>emptyList(), Collections.<String, String>emptyMap(), Collections.<TrafficAllocation>emptyList()
+            ),
+            new Experiment(
+                "second",
+                "duplicate_key",
+                null, null, Collections.<String>emptyList(), null,
+                Collections.<Variation>emptyList(), Collections.<String, String>emptyMap(), Collections.<TrafficAllocation>emptyList()
+            )
+        );
+        
+        ProjectConfig projectConfig = mock(ProjectConfig.class);
+        OptimizelyConfigService optimizelyConfigService = new OptimizelyConfigService(projectConfig);
+        when(projectConfig.getExperiments()).thenReturn(experiments);
+
+        Map<String, OptimizelyExperiment> optimizelyExperimentMap = optimizelyConfigService.getExperimentsMap();
+        assertEquals("Duplicate keys should be overwritten", optimizelyExperimentMap.size(), 1);
+        assertEquals("Duplicate keys should be overwritten", optimizelyExperimentMap.get("duplicate_key").getId(), "second");
+        logbackVerifier.expectMessage(Level.WARN, "Duplicate experiment keys found in datafile: duplicate_key");
     }
 
     @Test
