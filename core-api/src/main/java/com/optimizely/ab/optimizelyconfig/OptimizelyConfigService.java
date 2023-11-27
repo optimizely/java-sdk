@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2020-2021, Optimizely, Inc. and contributors                        *
+ * Copyright 2020-2021, 2023, Optimizely, Inc. and contributors             *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -18,6 +18,8 @@ package com.optimizely.ab.optimizelyconfig;
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.audience.Audience;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -30,6 +32,8 @@ public class OptimizelyConfigService {
     private Map<String, String> audiencesMap;
     private Map<String, List<FeatureVariable>> featureIdToVariablesMap = new HashMap<>();
     private Map<String, OptimizelyExperiment> experimentMapByExperimentId = new HashMap<>();
+
+    private static final Logger logger = LoggerFactory.getLogger(OptimizelyConfigService.class);
 
     public OptimizelyConfigService(ProjectConfig projectConfig) {
         this.projectConfig = projectConfig;
@@ -124,6 +128,11 @@ public class OptimizelyConfigService {
                 getVariationsMap(experiment.getVariations(), experiment.getId(), null),
                 experiment.serializeConditions(this.audiencesMap)
             );
+
+            if (featureExperimentMap.containsKey(experiment.getKey())) {
+                // continue with this warning, so the later experiment will be used.
+                logger.warn("Duplicate experiment keys found in datafile: {}", experiment.getKey());
+            }
 
             featureExperimentMap.put(experiment.getKey(), optimizelyExperiment);
             experimentMapByExperimentId.put(experiment.getId(), optimizelyExperiment);
