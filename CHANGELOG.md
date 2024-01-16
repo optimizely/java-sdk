@@ -1,5 +1,12 @@
 # Optimizely Java X SDK Changelog
 
+## [4.0.0]
+January 16th, 2024
+
+### New Features 
+The 4.0.0 release introduces a new primary feature, [Advanced Audience Targeting]( https://docs.developers.optimizely.com/feature-experimentation/docs/optimizely-data-platform-advanced-audience-targeting) enabled through integration with [Optimizely Data Platform (ODP)](https://docs.developers.optimizely.com/optimizely-data-platform/docs).
+
+
 ## [4.0.0-beta2]
 August 28th, 2023
 
