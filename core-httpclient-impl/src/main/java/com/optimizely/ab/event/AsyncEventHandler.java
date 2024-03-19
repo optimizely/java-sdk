@@ -21,6 +21,8 @@ import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
 
 import com.optimizely.ab.internal.PropertyUtils;
+import java.util.concurrent.ThreadFactory;
+import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
@@ -108,6 +110,17 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
                              int validateAfter,
                              long closeTimeout,
                              TimeUnit closeTimeoutUnit) {
+        this(queueCapacity, numWorkers, maxConnections, connectionsPerRoute, validateAfter, closeTimeout, closeTimeoutUnit, null);
+    }
+
+    public AsyncEventHandler(int queueCapacity,
+                             int numWorkers,
+                             int maxConnections,
+                             int connectionsPerRoute,
+                             int validateAfter,
+                             long closeTimeout,
+                             TimeUnit closeTimeoutUnit,
+                             @Nullable ThreadFactory threadFactory) {
 
         queueCapacity       = validateInput("queueCapacity", queueCapacity, DEFAULT_QUEUE_CAPACITY);
         numWorkers          = validateInput("numWorkers", numWorkers, DEFAULT_NUM_WORKERS);
@@ -123,10 +136,17 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
             .withEvictIdleConnections(1L, TimeUnit.MINUTES)
             .build();
 
+        NamedThreadFactory namedThreadFactory;
+        if (threadFactory == null) {
+            namedThreadFactory = new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true);
+        } else {
+            namedThreadFactory = new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true, threadFactory);
+        }
+
         this.workerExecutor = new ThreadPoolExecutor(numWorkers, numWorkers,
-            0L, TimeUnit.MILLISECONDS,
-            new ArrayBlockingQueue<>(queueCapacity),
-            new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true));
+                                                     0L, TimeUnit.MILLISECONDS,
+                                                     new ArrayBlockingQueue<>(queueCapacity),
+                                                     namedThreadFactory);
 
         this.closeTimeout = closeTimeout;
         this.closeTimeoutUnit = closeTimeoutUnit;

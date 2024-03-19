@@ -35,6 +35,7 @@ import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
 import com.optimizely.ab.optimizelydecision.*;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
+import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,6 +101,8 @@ public class Optimizely implements AutoCloseable {
 
     @Nullable
     private final ODPManager odpManager;
+
+    private final ReentrantLock lock = new ReentrantLock();
 
     private Optimizely(@Nonnull EventHandler eventHandler,
                        @Nonnull EventProcessor eventProcessor,
@@ -1451,8 +1454,11 @@ public class Optimizely implements AutoCloseable {
             return null;
         }
         if (odpManager != null) {
-            synchronized (odpManager) {
+            lock.lock();
+            try {
                 return odpManager.getSegmentManager().getQualifiedSegments(userId, segmentOptions);
+            } finally {
+                lock.unlock();
             }
         }
         logger.error("Audience segments fetch failed (ODP is not enabled).");

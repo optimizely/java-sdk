@@ -18,6 +18,7 @@ package com.optimizely.ab.odp;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ODPConfig {
 
@@ -26,6 +27,8 @@ public class ODPConfig {
     private String apiHost;
 
     private Set<String> allSegments;
+
+    private final ReentrantLock lock = new ReentrantLock();
 
     public ODPConfig(String apiKey, String apiHost, Set<String> allSegments) {
         this.apiKey = apiKey;
@@ -37,46 +40,91 @@ public class ODPConfig {
         this(apiKey, apiHost, Collections.emptySet());
     }
 
-    public synchronized Boolean isReady() {
-        return !(
-            this.apiKey == null || this.apiKey.isEmpty()
-            || this.apiHost == null || this.apiHost.isEmpty()
-        );
+    public Boolean isReady() {
+        lock.lock();
+        try {
+            return !(
+                this.apiKey == null || this.apiKey.isEmpty()
+                    || this.apiHost == null || this.apiHost.isEmpty()
+            );
+        } finally {
+            lock.unlock();
+        }
     }
 
-    public synchronized Boolean hasSegments() {
-        return allSegments != null && !allSegments.isEmpty();
+    public Boolean hasSegments() {
+        lock.lock();
+        try {
+            return allSegments != null && !allSegments.isEmpty();
+        } finally {
+            lock.unlock();
+        }
     }
 
-    public synchronized void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
+    public void setApiKey(String apiKey) {
+        lock.lock();
+        try {
+            this.apiKey = apiKey;
+        } finally {
+            lock.unlock();
+        }
     }
 
-    public synchronized void setApiHost(String apiHost) {
-        this.apiHost = apiHost;
+    public void setApiHost(String apiHost) {
+        lock.lock();
+        try {
+            this.apiHost = apiHost;
+        } finally {
+            lock.unlock();
+        }
     }
 
-    public synchronized String getApiKey() {
-        return apiKey;
+    public String getApiKey() {
+        lock.lock();
+        try {
+            return apiKey;
+        } finally {
+            lock.unlock();
+        }
     }
 
-    public synchronized String getApiHost() {
-        return apiHost;
+    public String getApiHost() {
+        lock.lock();
+        try {
+            return apiHost;
+        } finally {
+            lock.unlock();
+        }
     }
 
-    public synchronized Set<String> getAllSegments() {
-        return allSegments;
+    public Set<String> getAllSegments() {
+        lock.lock();
+        try {
+            return allSegments;
+        } finally {
+            lock.unlock();
+        }
     }
 
-    public synchronized void setAllSegments(Set<String> allSegments) {
-        this.allSegments = allSegments;
+    public void setAllSegments(Set<String> allSegments) {
+        lock.lock();
+        try {
+            this.allSegments = allSegments;
+        } finally {
+            lock.unlock();
+        }
     }
 
     public Boolean equals(ODPConfig toCompare) {
         return getApiHost().equals(toCompare.getApiHost()) && getApiKey().equals(toCompare.getApiKey()) && getAllSegments().equals(toCompare.allSegments);
     }
 
-    public synchronized ODPConfig getClone() {
-        return new ODPConfig(apiKey, apiHost, allSegments);
+    public ODPConfig getClone() {
+        lock.lock();
+        try {
+            return new ODPConfig(apiKey, apiHost, allSegments);
+        } finally {
+            lock.unlock();
+        }
     }
 }
