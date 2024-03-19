@@ -21,6 +21,7 @@ import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.UserEvent;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
+import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +68,7 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
 
     private Future<?> future;
     private boolean isStarted = false;
+    private final ReentrantLock lock = new ReentrantLock();
 
     private BatchEventProcessor(BlockingQueue<Object> eventQueue, EventHandler eventHandler, Integer batchSize, Long flushInterval, Long timeoutMillis, ExecutorService executor, NotificationCenter notificationCenter) {
         this.eventHandler = eventHandler;
@@ -78,15 +80,20 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
         this.executor = executor;
     }
 
-    public synchronized void start() {
-        if (isStarted) {
-            logger.info("Executor already started.");
-            return;
-        }
+    public void start() {
+        lock.lock();
+        try {
+            if (isStarted) {
+                logger.info("Executor already started.");
+                return;
+            }
 
-        isStarted = true;
-        EventConsumer runnable = new EventConsumer();
-        future = executor.submit(runnable);
+            isStarted = true;
+            EventConsumer runnable = new EventConsumer();
+            future = executor.submit(runnable);
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override

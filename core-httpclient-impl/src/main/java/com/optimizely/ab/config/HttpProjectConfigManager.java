@@ -21,6 +21,9 @@ import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.locks.ReentrantLock;
+import javax.annotation.Nullable;
 import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -62,6 +65,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     private final URI uri;
     private final String datafileAccessToken;
     private String datafileLastModified;
+    private final ReentrantLock lock = new ReentrantLock();
 
     private HttpProjectConfigManager(long period,
                                      TimeUnit timeUnit,
@@ -70,8 +74,9 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                                      String datafileAccessToken,
                                      long blockingTimeoutPeriod,
                                      TimeUnit blockingTimeoutUnit,
-                                     NotificationCenter notificationCenter) {
-        super(period, timeUnit, blockingTimeoutPeriod, blockingTimeoutUnit, notificationCenter);
+                                     NotificationCenter notificationCenter,
+                                     @Nullable ThreadFactory threadFactory) {
+        super(period, timeUnit, blockingTimeoutPeriod, blockingTimeoutUnit, notificationCenter, threadFactory);
         this.httpClient = httpClient;
         this.uri = URI.create(url);
         this.datafileAccessToken = datafileAccessToken;
@@ -146,12 +151,17 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     }
 
     @Override
-    public synchronized void close() {
-        super.close();
+    public void close() {
+        lock.lock();
         try {
-            httpClient.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            super.close();
+            try {
+                httpClient.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -193,6 +203,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         // force-close the persistent connection after this idle time
         long evictConnectionIdleTimePeriod = PropertyUtils.getLong(CONFIG_EVICT_DURATION, DEFAULT_EVICT_DURATION);
         TimeUnit evictConnectionIdleTimeUnit = PropertyUtils.getEnum(CONFIG_EVICT_UNIT, TimeUnit.class, DEFAULT_EVICT_UNIT);
+        ThreadFactory threadFactory = null;
 
         public Builder withDatafile(String datafile) {
             this.datafile = datafile;
@@ -302,6 +313,11 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
             return this;
         }
 
+        public Builder withThreadFactory(ThreadFactory threadFactory) {
+            this.threadFactory = threadFactory;
+            return this;
+        }
+
         /**
          * HttpProjectConfigManager.Builder that builds and starts a HttpProjectConfigManager.
          * This is the default builder which will block until a config is available.
@@ -363,7 +379,8 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                 datafileAccessToken,
                 blockingTimeoutPeriod,
                 blockingTimeoutUnit,
-                notificationCenter);
+                notificationCenter,
+                threadFactory);
             httpProjectManager.setSdkKey(sdkKey);
             if (datafile != null) {
                 try {

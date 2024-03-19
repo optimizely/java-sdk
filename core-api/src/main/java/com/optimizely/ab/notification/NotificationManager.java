@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.notification;
 
+import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +37,7 @@ public class NotificationManager<T> {
 
     private final Map<Integer, NotificationHandler<T>> handlers = Collections.synchronizedMap(new LinkedHashMap<>());
     private final AtomicInteger counter;
+    private final ReentrantLock lock = new ReentrantLock();
 
     public NotificationManager() {
         this(new AtomicInteger());
@@ -48,13 +50,16 @@ public class NotificationManager<T> {
     public int addHandler(NotificationHandler<T> newHandler) {
 
         // Prevent registering a duplicate listener.
-        synchronized (handlers) {
+        lock.lock();
+        try {
             for (NotificationHandler<T> handler : handlers.values()) {
                 if (handler.equals(newHandler)) {
                     logger.warn("Notification listener was already added");
                     return -1;
                 }
             }
+        } finally {
+            lock.unlock();
         }
 
         int notificationId = counter.incrementAndGet();
@@ -64,7 +69,8 @@ public class NotificationManager<T> {
     }
 
     public void send(final T message) {
-        synchronized (handlers) {
+        lock.lock();
+        try {
             for (Map.Entry<Integer, NotificationHandler<T>> handler: handlers.entrySet()) {
                 try {
                     handler.getValue().handle(message);
@@ -72,6 +78,8 @@ public class NotificationManager<T> {
                     logger.warn("Catching exception sending notification for class: {}, handler: {}", message.getClass(), handler.getKey());
                 }
             }
+        } finally {
+            lock.unlock();
         }
     }
 
