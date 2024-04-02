@@ -27,7 +27,6 @@ import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.odp.DefaultODPApiManager;
 import com.optimizely.ab.odp.ODPManager;
-import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.After;
@@ -272,7 +271,7 @@ public class OptimizelyFactoryTest {
         assert(doesUseCustomHttpClient(odpApiManager.httpClientEvents, customHttpClient));
     }
 
-    boolean doesUseCustomHttpClient(OptimizelyHttpClient optimizelyHttpClient, HttpClient customHttpClient) {
+    boolean doesUseCustomHttpClient(OptimizelyHttpClient optimizelyHttpClient, CloseableHttpClient customHttpClient) {
         if (optimizelyHttpClient == null) {
             return false;
         }

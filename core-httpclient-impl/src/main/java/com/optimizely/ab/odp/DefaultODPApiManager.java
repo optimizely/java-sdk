@@ -15,12 +15,8 @@
  */
 package com.optimizely.ab.odp;
 
-import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
-import com.optimizely.ab.config.HttpProjectConfigManager;
-import com.optimizely.ab.event.AsyncEventHandler;
-import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.odp.parser.ResponseJsonParser;
 import com.optimizely.ab.odp.parser.ResponseJsonParserFactory;
 import org.apache.http.StatusLine;
@@ -37,7 +33,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 public class DefaultODPApiManager implements ODPApiManager {
     private static final Logger logger = LoggerFactory.getLogger(DefaultODPApiManager.class);
@@ -61,13 +56,13 @@ public class DefaultODPApiManager implements ODPApiManager {
         }
     }
 
-    public DefaultODPApiManager(@Nullable OptimizelyHttpClient httpClient) {
-        OptimizelyHttpClient customHttpClient = httpClient;
+    public DefaultODPApiManager(@Nullable OptimizelyHttpClient customHttpClient) {
+        OptimizelyHttpClient httpClient = customHttpClient;
         if (httpClient == null) {
-            customHttpClient = OptimizelyHttpClient.builder().build();
+            httpClient = OptimizelyHttpClient.builder().build();
         }
-        this.httpClientSegments = customHttpClient;
-        this.httpClientEvents = customHttpClient;
+        this.httpClientSegments = httpClient;
+        this.httpClientEvents = httpClient;
     }
 
     @VisibleForTesting

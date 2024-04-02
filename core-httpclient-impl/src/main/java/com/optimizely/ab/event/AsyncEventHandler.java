@@ -20,7 +20,6 @@ import com.optimizely.ab.NamedThreadFactory;
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
 
-import com.optimizely.ab.config.HttpProjectConfigManager;
 import com.optimizely.ab.internal.PropertyUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;

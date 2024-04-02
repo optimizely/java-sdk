@@ -16,13 +16,11 @@
  */
 package com.optimizely.ab.odp;
 
-import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.internal.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
