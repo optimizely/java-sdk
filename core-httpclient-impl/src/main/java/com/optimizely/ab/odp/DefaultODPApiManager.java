@@ -15,8 +15,12 @@
  */
 package com.optimizely.ab.odp;
 
+import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.config.HttpProjectConfigManager;
+import com.optimizely.ab.event.AsyncEventHandler;
+import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.odp.parser.ResponseJsonParser;
 import com.optimizely.ab.odp.parser.ResponseJsonParserFactory;
 import org.apache.http.StatusLine;
@@ -27,11 +31,13 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class DefaultODPApiManager implements ODPApiManager {
     private static final Logger logger = LoggerFactory.getLogger(DefaultODPApiManager.class);
@@ -40,7 +46,7 @@ public class DefaultODPApiManager implements ODPApiManager {
     private final OptimizelyHttpClient httpClientEvents;
 
     public DefaultODPApiManager() {
-        this(OptimizelyHttpClient.builder().build());
+        this(null);
     }
 
     public DefaultODPApiManager(int segmentFetchTimeoutMillis, int eventDispatchTimeoutMillis) {
@@ -53,10 +59,13 @@ public class DefaultODPApiManager implements ODPApiManager {
         }
     }
 
-    @VisibleForTesting
-    DefaultODPApiManager(OptimizelyHttpClient httpClient) {
-        this.httpClientSegments = httpClient;
-        this.httpClientEvents = httpClient;
+    public DefaultODPApiManager(@Nullable OptimizelyHttpClient httpClient) {
+        OptimizelyHttpClient customHttpClient = httpClient;
+        if (httpClient == null) {
+            customHttpClient = OptimizelyHttpClient.builder().build();
+        }
+        this.httpClientSegments = customHttpClient;
+        this.httpClientEvents = customHttpClient;
     }
 
     @VisibleForTesting
