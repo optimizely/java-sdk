@@ -25,12 +25,11 @@ import com.optimizely.ab.event.AsyncEventHandler;
 import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
-import org.apache.http.HttpHost;
-import org.apache.http.conn.routing.HttpRoutePlanner;
+import com.optimizely.ab.odp.DefaultODPApiManager;
+import com.optimizely.ab.odp.ODPManager;
+import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -247,21 +246,39 @@ public class OptimizelyFactoryTest {
 
     @Test
     public void newDefaultInstanceWithDatafileAccessTokenAndCustomHttpClient() throws Exception {
-        // Add custom Proxy and Port here
-        int port = 443;
-        String proxyHostName = "someProxy.com";
-        HttpHost proxyHost = new HttpHost(proxyHostName, port);
+        CloseableHttpClient customHttpClient = HttpClients.custom().build();
 
-        HttpRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxyHost);
-
-        HttpClientBuilder clientBuilder = HttpClients.custom();
-        clientBuilder = clientBuilder.setRoutePlanner(routePlanner);
-
-        CloseableHttpClient httpClient = clientBuilder.build();
         String datafileString = Resources.toString(Resources.getResource("valid-project-config-v4.json"), Charsets.UTF_8);
-        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString, "auth-token", httpClient);
+        optimizely = OptimizelyFactory.newDefaultInstance("sdk-key", datafileString, "auth-token", customHttpClient);
         assertTrue(optimizely.isValid());
+
+        // HttpProjectConfigManager should be using the customHttpClient
+
+        HttpProjectConfigManager projectConfigManager = (HttpProjectConfigManager) optimizely.projectConfigManager;
+        assert(doesUseCustomHttpClient(projectConfigManager.httpClient, customHttpClient));
+
+        // AsyncEventHandler should be using the customHttpClient
+
+        BatchEventProcessor eventProcessor = (BatchEventProcessor) optimizely.eventProcessor;
+        AsyncEventHandler eventHandler = (AsyncEventHandler)eventProcessor.eventHandler;
+        assert(doesUseCustomHttpClient(eventHandler.httpClient, customHttpClient));
+
+        // ODPManager should be using the customHttpClient
+
+        ODPManager odpManager = optimizely.getODPManager();
+        assert odpManager != null;
+        DefaultODPApiManager odpApiManager = (DefaultODPApiManager) odpManager.getEventManager().apiManager;
+        assert(doesUseCustomHttpClient(odpApiManager.httpClientSegments, customHttpClient));
+        assert(doesUseCustomHttpClient(odpApiManager.httpClientEvents, customHttpClient));
     }
+
+    boolean doesUseCustomHttpClient(OptimizelyHttpClient optimizelyHttpClient, HttpClient customHttpClient) {
+        if (optimizelyHttpClient == null) {
+            return false;
+        }
+        return optimizelyHttpClient.getHttpClient() == customHttpClient;
+    }
+
     public ProjectConfigManager projectConfigManagerReturningNull = new ProjectConfigManager() {
         @Override
         public ProjectConfig getConfig() {

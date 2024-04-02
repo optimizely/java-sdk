@@ -22,14 +22,9 @@ import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -38,7 +33,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import static com.optimizely.ab.event.AsyncEventHandler.builder;

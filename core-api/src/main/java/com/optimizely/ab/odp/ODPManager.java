@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.odp;
 
+import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.internal.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.odp;
 
+import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.internal.Cache;
 import com.optimizely.ab.internal.DefaultLRUCache;
 import com.optimizely.ab.odp.parser.ResponseJsonParser;
@@ -31,8 +32,8 @@ public class ODPSegmentManager {
     private static final Logger logger = LoggerFactory.getLogger(ODPSegmentManager.class);
 
     private static final String SEGMENT_URL_PATH = "/v3/graphql";
-
-    private final ODPApiManager apiManager;
+    @VisibleForTesting
+    public final ODPApiManager apiManager;
 
     private volatile ODPConfig odpConfig;
 

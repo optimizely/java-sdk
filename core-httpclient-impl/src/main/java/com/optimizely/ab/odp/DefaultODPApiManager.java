@@ -42,8 +42,10 @@ import java.util.concurrent.TimeUnit;
 public class DefaultODPApiManager implements ODPApiManager {
     private static final Logger logger = LoggerFactory.getLogger(DefaultODPApiManager.class);
 
-    private final OptimizelyHttpClient httpClientSegments;
-    private final OptimizelyHttpClient httpClientEvents;
+    @VisibleForTesting
+    public final OptimizelyHttpClient httpClientSegments;
+    @VisibleForTesting
+    public final OptimizelyHttpClient httpClientEvents;
 
     public DefaultODPApiManager() {
         this(null);

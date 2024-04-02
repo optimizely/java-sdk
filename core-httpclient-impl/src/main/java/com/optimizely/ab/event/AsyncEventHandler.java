@@ -30,7 +30,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +44,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
 
 /**
  * {@link EventHandler} implementation that queues events and has a separate pool of threads responsible
@@ -67,7 +67,8 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(AsyncEventHandler.class);
     private static final ProjectConfigResponseHandler EVENT_RESPONSE_HANDLER = new ProjectConfigResponseHandler();
 
-    private final OptimizelyHttpClient httpClient;
+    @VisibleForTesting
+    public final OptimizelyHttpClient httpClient;
     private final ExecutorService workerExecutor;
 
     private final long closeTimeout;

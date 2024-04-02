@@ -41,7 +41,6 @@ import java.util.concurrent.TimeUnit;
 public class OptimizelyHttpClient implements Closeable {
 
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyHttpClient.class);
-
     private final CloseableHttpClient httpClient;
 
     OptimizelyHttpClient(CloseableHttpClient httpClient) {
