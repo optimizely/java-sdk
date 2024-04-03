@@ -136,12 +136,7 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
             .withEvictIdleConnections(1L, TimeUnit.MINUTES)
             .build();
 
-        NamedThreadFactory namedThreadFactory;
-        if (threadFactory == null) {
-            namedThreadFactory = new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true);
-        } else {
-            namedThreadFactory = new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true, threadFactory);
-        }
+        NamedThreadFactory namedThreadFactory = new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true, threadFactory);
 
         this.workerExecutor = new ThreadPoolExecutor(numWorkers, numWorkers,
                                                      0L, TimeUnit.MILLISECONDS,

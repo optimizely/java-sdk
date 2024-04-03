@@ -47,7 +47,7 @@ public class NamedThreadFactory implements ThreadFactory {
     public NamedThreadFactory(String nameFormat, boolean daemon, ThreadFactory backingThreadFactory) {
         this.nameFormat = nameFormat;
         this.daemon = daemon;
-        this.backingThreadFactory = backingThreadFactory;
+        this.backingThreadFactory = backingThreadFactory != null ? backingThreadFactory :  Executors.defaultThreadFactory();
     }
 
     @Override
