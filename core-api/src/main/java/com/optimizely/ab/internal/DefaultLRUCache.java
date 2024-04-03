@@ -19,10 +19,11 @@ package com.optimizely.ab.internal;
 import com.optimizely.ab.annotations.VisibleForTesting;
 
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DefaultLRUCache<T> implements Cache<T> {
 
-    private final Object lock = new Object();
+    private final ReentrantLock lock = new ReentrantLock();
 
     private final Integer maxSize;
 
@@ -51,8 +52,11 @@ public class DefaultLRUCache<T> implements Cache<T> {
             return;
         }
 
-        synchronized (lock) {
+        lock.lock();
+        try {
             linkedHashMap.put(key, new CacheEntity(value));
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -62,7 +66,8 @@ public class DefaultLRUCache<T> implements Cache<T> {
             return null;
         }
 
-        synchronized (lock) {
+        lock.lock();
+        try {
             if (linkedHashMap.containsKey(key)) {
                 CacheEntity entity = linkedHashMap.get(key);
                 Long nowMs = new Date().getTime();
@@ -75,12 +80,17 @@ public class DefaultLRUCache<T> implements Cache<T> {
                 linkedHashMap.remove(key);
             }
             return null;
+        } finally {
+            lock.unlock();
         }
     }
 
     public void reset() {
-        synchronized (lock) {
+        lock.lock();
+        try {
             linkedHashMap.clear();
+        } finally {
+            lock.unlock();
         }
     }
 

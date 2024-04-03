@@ -28,7 +28,7 @@ public class NamedThreadFactory implements ThreadFactory {
     private final String nameFormat;
     private final boolean daemon;
 
-    private final ThreadFactory backingThreadFactory = Executors.defaultThreadFactory();
+    private final ThreadFactory backingThreadFactory;
     private final AtomicLong threadCount = new AtomicLong(0);
 
     /**
@@ -36,8 +36,18 @@ public class NamedThreadFactory implements ThreadFactory {
      * @param daemon     whether the threads created should be {@link Thread#daemon}s or not
      */
     public NamedThreadFactory(String nameFormat, boolean daemon) {
+        this(nameFormat, daemon, null);
+    }
+
+    /**
+     * @param nameFormat           the thread name format which should include a string placeholder for the thread number
+     * @param daemon               whether the threads created should be {@link Thread#daemon}s or not
+     * @param backingThreadFactory the backing {@link ThreadFactory} to use for creating threads
+     */
+    public NamedThreadFactory(String nameFormat, boolean daemon, ThreadFactory backingThreadFactory) {
         this.nameFormat = nameFormat;
         this.daemon = daemon;
+        this.backingThreadFactory = backingThreadFactory != null ? backingThreadFactory :  Executors.defaultThreadFactory();
     }
 
     @Override

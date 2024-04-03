@@ -21,6 +21,8 @@ import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
 
 import com.optimizely.ab.internal.PropertyUtils;
+import java.util.concurrent.ThreadFactory;
+import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
@@ -117,6 +119,7 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
             validateAfter,
             closeTimeout,
             closeTimeoutUnit,
+            null,
             null);
     }
 
@@ -127,7 +130,8 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
                              int validateAfter,
                              long closeTimeout,
                              TimeUnit closeTimeoutUnit,
-                             @Nullable OptimizelyHttpClient httpClient) {
+                             @Nullable OptimizelyHttpClient httpClient,
+                             @Nullable ThreadFactory threadFactory) {
         if (httpClient != null) {
             this.httpClient = httpClient;
         } else {
@@ -145,10 +149,12 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
         queueCapacity       = validateInput("queueCapacity", queueCapacity, DEFAULT_QUEUE_CAPACITY);
         numWorkers          = validateInput("numWorkers", numWorkers, DEFAULT_NUM_WORKERS);
+
+        NamedThreadFactory namedThreadFactory = new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true, threadFactory);
         this.workerExecutor = new ThreadPoolExecutor(numWorkers, numWorkers,
-            0L, TimeUnit.MILLISECONDS,
-            new ArrayBlockingQueue<>(queueCapacity),
-            new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true));
+                                                     0L, TimeUnit.MILLISECONDS,
+                                                     new ArrayBlockingQueue<>(queueCapacity),
+                                                     namedThreadFactory);
 
         this.closeTimeout = closeTimeout;
         this.closeTimeoutUnit = closeTimeoutUnit;
@@ -366,7 +372,8 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
                 validateAfterInactivity,
                 closeTimeout,
                 closeTimeoutUnit,
-                httpClient
+                httpClient,
+                null
             );
         }
     }
