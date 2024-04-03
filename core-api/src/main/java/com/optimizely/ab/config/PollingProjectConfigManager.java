@@ -22,6 +22,8 @@ import com.optimizely.ab.notification.UpdateConfigNotification;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
+import java.util.concurrent.locks.ReentrantLock;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +62,7 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
     private volatile String sdkKey;
     private volatile boolean started;
     private ScheduledFuture<?> scheduledFuture;
+    private ReentrantLock lock = new ReentrantLock();
 
     public PollingProjectConfigManager(long period, TimeUnit timeUnit)  {
         this(period, timeUnit, Long.MAX_VALUE, TimeUnit.MILLISECONDS, new NotificationCenter());
@@ -70,6 +73,15 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
     }
 
     public PollingProjectConfigManager(long period, TimeUnit timeUnit, long blockingTimeoutPeriod, TimeUnit blockingTimeoutUnit, NotificationCenter notificationCenter)  {
+        this(period, timeUnit, blockingTimeoutPeriod, blockingTimeoutUnit, notificationCenter, null);
+    }
+
+    public PollingProjectConfigManager(long period,
+                                       TimeUnit timeUnit,
+                                       long blockingTimeoutPeriod,
+                                       TimeUnit blockingTimeoutUnit,
+                                       NotificationCenter notificationCenter,
+                                       @Nullable ThreadFactory customThreadFactory)  {
         this.period = period;
         this.timeUnit = timeUnit;
         this.blockingTimeoutPeriod = blockingTimeoutPeriod;
@@ -78,7 +90,7 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         if (TimeUnit.SECONDS.convert(period, this.timeUnit) < 30) {
             logger.warn("Polling intervals below 30 seconds are not recommended.");
         }
-        final ThreadFactory threadFactory = Executors.defaultThreadFactory();
+        final ThreadFactory threadFactory = customThreadFactory != null ? customThreadFactory : Executors.defaultThreadFactory();
         this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = threadFactory.newThread(runnable);
             thread.setDaemon(true);
@@ -176,43 +188,58 @@ public abstract class PollingProjectConfigManager implements ProjectConfigManage
         return this.sdkKey;
     }
 
-    public synchronized void start() {
-        if (started) {
-            logger.warn("Manager already started.");
-            return;
-        }
+    public void start() {
+        lock.lock();
+        try {
+            if (started) {
+                logger.warn("Manager already started.");
+                return;
+            }
 
-        if (scheduledExecutorService.isShutdown()) {
-            logger.warn("Not starting. Already in shutdown.");
-            return;
-        }
+            if (scheduledExecutorService.isShutdown()) {
+                logger.warn("Not starting. Already in shutdown.");
+                return;
+            }
 
-        Runnable runnable = new ProjectConfigFetcher();
-        scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(runnable, 0, period, timeUnit);
-        started = true;
+            Runnable runnable = new ProjectConfigFetcher();
+            scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(runnable, 0, period, timeUnit);
+            started = true;
+        } finally {
+            lock.unlock();
+        }
     }
 
-    public synchronized void stop() {
-        if (!started) {
-            logger.warn("Not pausing. Manager has not been started.");
-            return;
-        }
+    public void stop() {
+        lock.lock();
+        try {
+            if (!started) {
+                logger.warn("Not pausing. Manager has not been started.");
+                return;
+            }
 
-        if (scheduledExecutorService.isShutdown()) {
-            logger.warn("Not pausing. Already in shutdown.");
-            return;
-        }
+            if (scheduledExecutorService.isShutdown()) {
+                logger.warn("Not pausing. Already in shutdown.");
+                return;
+            }
 
-        logger.info("pausing project watcher");
-        scheduledFuture.cancel(true);
-        started = false;
+            logger.info("pausing project watcher");
+            scheduledFuture.cancel(true);
+            started = false;
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
-    public synchronized void close() {
-        stop();
-        scheduledExecutorService.shutdownNow();
-        started = false;
+    public void close() {
+        lock.lock();
+        try {
+            stop();
+            scheduledExecutorService.shutdownNow();
+            started = false;
+        } finally {
+            lock.unlock();
+        }
     }
 
     protected void setSdkKey(String sdkKey) {

@@ -59,16 +59,25 @@ public class ODPEventManager {
     // The eventQueue needs to be thread safe. We are not doing anything extra for thread safety here
     //      because `LinkedBlockingQueue` itself is thread safe.
     private final BlockingQueue<Object> eventQueue = new LinkedBlockingQueue<>();
+    private ThreadFactory threadFactory;
 
     public ODPEventManager(@Nonnull ODPApiManager apiManager) {
         this(apiManager, null, null);
     }
 
     public ODPEventManager(@Nonnull ODPApiManager apiManager, @Nullable Integer queueSize, @Nullable Integer flushInterval) {
+        this(apiManager, queueSize, flushInterval, null);
+    }
+
+    public ODPEventManager(@Nonnull ODPApiManager apiManager,
+                           @Nullable Integer queueSize,
+                           @Nullable Integer flushInterval,
+                           @Nullable ThreadFactory threadFactory) {
         this.apiManager = apiManager;
         this.queueSize = queueSize != null ? queueSize : DEFAULT_QUEUE_SIZE;
         this.flushInterval = (flushInterval != null && flushInterval > 0) ? flushInterval : DEFAULT_FLUSH_INTERVAL;
         this.batchSize = (flushInterval != null && flushInterval == 0) ? 1 : DEFAULT_BATCH_SIZE;
+        this.threadFactory = threadFactory != null ? threadFactory : Executors.defaultThreadFactory();
     }
 
     // these user-provided common data are included in all ODP events in addition to the SDK-generated common data.
@@ -86,7 +95,6 @@ public class ODPEventManager {
             eventDispatcherThread = new EventDispatcherThread();
         }
         if (!isRunning) {
-            final ThreadFactory threadFactory = Executors.defaultThreadFactory();
             ExecutorService executor = Executors.newSingleThreadExecutor(runnable -> {
                 Thread thread = threadFactory.newThread(runnable);
                 thread.setDaemon(true);
