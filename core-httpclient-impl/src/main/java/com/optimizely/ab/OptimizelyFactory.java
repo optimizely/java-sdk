@@ -309,9 +309,7 @@ public final class OptimizelyFactory {
 
         return newDefaultInstance(configManager, notificationCenter, eventHandler, odpApiManager);
     }
-
-
-
+    
     /**
      * Returns a new Optimizely instance based on preset configuration.
      * EventHandler - {@link AsyncEventHandler}
