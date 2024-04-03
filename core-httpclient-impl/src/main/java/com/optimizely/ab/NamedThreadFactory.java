@@ -36,7 +36,7 @@ public class NamedThreadFactory implements ThreadFactory {
      * @param daemon     whether the threads created should be {@link Thread#daemon}s or not
      */
     public NamedThreadFactory(String nameFormat, boolean daemon) {
-        this(nameFormat, daemon, Executors.defaultThreadFactory());
+        this(nameFormat, daemon, null);
     }
 
     /**
