@@ -119,6 +119,30 @@ public class AsyncEventHandlerTest {
     }
 
     @Test
+    public void testBuilderWithCustomHttpClient() {
+        OptimizelyHttpClient customHttpClient = OptimizelyHttpClient.builder().build();
+
+        AsyncEventHandler eventHandler = builder()
+            .withOptimizelyHttpClient(customHttpClient)
+            .withMaxTotalConnections(1)
+            .withMaxPerRoute(2)
+            .withCloseTimeout(10, TimeUnit.SECONDS)
+            .build();
+
+        assert eventHandler.httpClient == customHttpClient;
+    }
+
+    @Test
+    public void testBuilderWithDefaultHttpClient() {
+        AsyncEventHandler eventHandler = builder()
+            .withMaxTotalConnections(3)
+            .withMaxPerRoute(4)
+            .withCloseTimeout(10, TimeUnit.SECONDS)
+            .build();
+        assert(eventHandler.httpClient != null);
+    }
+
+    @Test
     public void testInvalidQueueCapacity() {
         AsyncEventHandler.Builder builder = builder();
         int expected = builder.queueCapacity;
