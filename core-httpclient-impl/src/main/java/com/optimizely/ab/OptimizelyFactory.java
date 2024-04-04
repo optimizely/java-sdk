@@ -279,23 +279,37 @@ public final class OptimizelyFactory {
      * @param customHttpClient  Customizable CloseableHttpClient to build OptimizelyHttpClient.
      * @return A new Optimizely instance
      */
-    public static Optimizely newDefaultInstance(String sdkKey, String fallback, String datafileAccessToken, CloseableHttpClient customHttpClient) {
+    public static Optimizely newDefaultInstance(
+        String sdkKey,
+        String fallback,
+        String datafileAccessToken,
+        CloseableHttpClient customHttpClient
+    ) {
+        OptimizelyHttpClient optimizelyHttpClient = customHttpClient == null ? null : new OptimizelyHttpClient(customHttpClient);
+
         NotificationCenter notificationCenter = new NotificationCenter();
-        OptimizelyHttpClient optimizelyHttpClient = new OptimizelyHttpClient(customHttpClient);
-        HttpProjectConfigManager.Builder builder;
-        builder = HttpProjectConfigManager.builder()
+
+        HttpProjectConfigManager.Builder builder = HttpProjectConfigManager.builder()
             .withDatafile(fallback)
             .withNotificationCenter(notificationCenter)
-            .withOptimizelyHttpClient(customHttpClient == null ? null : optimizelyHttpClient)
+            .withOptimizelyHttpClient(optimizelyHttpClient)
             .withSdkKey(sdkKey);
 
         if (datafileAccessToken != null) {
             builder.withDatafileAccessToken(datafileAccessToken);
         }
 
-        return newDefaultInstance(builder.build(), notificationCenter);
-    }
+        ProjectConfigManager configManager = builder.build();
 
+        EventHandler eventHandler = AsyncEventHandler.builder()
+            .withOptimizelyHttpClient(optimizelyHttpClient)
+            .build();
+
+        ODPApiManager odpApiManager = new DefaultODPApiManager(optimizelyHttpClient);
+
+        return newDefaultInstance(configManager, notificationCenter, eventHandler, odpApiManager);
+    }
+    
     /**
      * Returns a new Optimizely instance based on preset configuration.
      * EventHandler - {@link AsyncEventHandler}
@@ -329,6 +343,19 @@ public final class OptimizelyFactory {
      * @return A new Optimizely instance
      * */
     public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler) {
+        return newDefaultInstance(configManager, notificationCenter, eventHandler, null);
+    }
+
+    /**
+     * Returns a new Optimizely instance based on preset configuration.
+     *
+     * @param configManager      The {@link ProjectConfigManager} supplied to Optimizely instance.
+     * @param notificationCenter The {@link ProjectConfigManager} supplied to Optimizely instance.
+     * @param eventHandler       The {@link EventHandler} supplied to Optimizely instance.
+     * @param odpApiManager      The {@link ODPApiManager} supplied to Optimizely instance.
+     * @return A new Optimizely instance
+     * */
+    public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler, ODPApiManager odpApiManager) {
         if (notificationCenter == null) {
             notificationCenter = new NotificationCenter();
         }
@@ -338,9 +365,8 @@ public final class OptimizelyFactory {
             .withNotificationCenter(notificationCenter)
             .build();
 
-        ODPApiManager defaultODPApiManager = new DefaultODPApiManager();
         ODPManager odpManager = ODPManager.builder()
-            .withApiManager(defaultODPApiManager)
+            .withApiManager(odpApiManager != null ? odpApiManager : new DefaultODPApiManager())
             .build();
 
         return Optimizely.builder()

@@ -78,7 +78,6 @@ public class Optimizely implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(Optimizely.class);
 
     final DecisionService decisionService;
-    @VisibleForTesting
     @Deprecated
     final EventHandler eventHandler;
     @VisibleForTesting
@@ -88,7 +87,8 @@ public class Optimizely implements AutoCloseable {
 
     public final List<OptimizelyDecideOption> defaultDecideOptions;
 
-    private final ProjectConfigManager projectConfigManager;
+    @VisibleForTesting
+    final ProjectConfigManager projectConfigManager;
 
     @Nullable
     private final OptimizelyConfigManager optimizelyConfigManager;

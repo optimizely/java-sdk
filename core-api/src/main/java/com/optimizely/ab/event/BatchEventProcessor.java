@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.event;
 
+import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.UserEvent;
@@ -58,7 +59,8 @@ public class BatchEventProcessor implements EventProcessor, AutoCloseable {
     private static final Object FLUSH_SIGNAL    = new Object();
 
     private final BlockingQueue<Object> eventQueue;
-    private final EventHandler eventHandler;
+    @VisibleForTesting
+    public final EventHandler eventHandler;
 
     final int batchSize;
     final long flushInterval;

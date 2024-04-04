@@ -61,7 +61,8 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpProjectConfigManager.class);
 
-    private final OptimizelyHttpClient httpClient;
+    @VisibleForTesting
+    public final OptimizelyHttpClient httpClient;
     private final URI uri;
     private final String datafileAccessToken;
     private String datafileLastModified;

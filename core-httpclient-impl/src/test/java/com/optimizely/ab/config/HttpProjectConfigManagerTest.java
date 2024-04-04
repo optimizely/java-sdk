@@ -20,7 +20,6 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.optimizely.ab.OptimizelyHttpClient;
 import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
@@ -44,7 +43,6 @@ import static com.optimizely.ab.config.HttpProjectConfigManager.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)

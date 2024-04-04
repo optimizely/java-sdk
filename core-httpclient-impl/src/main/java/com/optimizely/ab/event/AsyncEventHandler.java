@@ -45,6 +45,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
 
 /**
  * {@link EventHandler} implementation that queues events and has a separate pool of threads responsible
@@ -67,7 +68,8 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(AsyncEventHandler.class);
     private static final ProjectConfigResponseHandler EVENT_RESPONSE_HANDLER = new ProjectConfigResponseHandler();
 
-    private final OptimizelyHttpClient httpClient;
+    @VisibleForTesting
+    public final OptimizelyHttpClient httpClient;
     private final ExecutorService workerExecutor;
 
     private final long closeTimeout;
@@ -110,7 +112,15 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
                              int validateAfter,
                              long closeTimeout,
                              TimeUnit closeTimeoutUnit) {
-        this(queueCapacity, numWorkers, maxConnections, connectionsPerRoute, validateAfter, closeTimeout, closeTimeoutUnit, null);
+        this(queueCapacity,
+            numWorkers,
+            maxConnections,
+            connectionsPerRoute,
+            validateAfter,
+            closeTimeout,
+            closeTimeoutUnit,
+            null,
+            null);
     }
 
     public AsyncEventHandler(int queueCapacity,
@@ -120,24 +130,27 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
                              int validateAfter,
                              long closeTimeout,
                              TimeUnit closeTimeoutUnit,
+                             @Nullable OptimizelyHttpClient httpClient,
                              @Nullable ThreadFactory threadFactory) {
+        if (httpClient != null) {
+            this.httpClient = httpClient;
+        } else {
+            maxConnections = validateInput("maxConnections", maxConnections, DEFAULT_MAX_CONNECTIONS);
+            connectionsPerRoute = validateInput("connectionsPerRoute", connectionsPerRoute, DEFAULT_MAX_PER_ROUTE);
+            validateAfter = validateInput("validateAfter", validateAfter, DEFAULT_VALIDATE_AFTER_INACTIVITY);
+            this.httpClient = OptimizelyHttpClient.builder()
+                .withMaxTotalConnections(maxConnections)
+                .withMaxPerRoute(connectionsPerRoute)
+                .withValidateAfterInactivity(validateAfter)
+                // infrequent event discards observed. staled connections force-closed after a long idle time.
+                .withEvictIdleConnections(1L, TimeUnit.MINUTES)
+                .build();
+        }
 
         queueCapacity       = validateInput("queueCapacity", queueCapacity, DEFAULT_QUEUE_CAPACITY);
         numWorkers          = validateInput("numWorkers", numWorkers, DEFAULT_NUM_WORKERS);
-        maxConnections      = validateInput("maxConnections", maxConnections, DEFAULT_MAX_CONNECTIONS);
-        connectionsPerRoute = validateInput("connectionsPerRoute", connectionsPerRoute, DEFAULT_MAX_PER_ROUTE);
-        validateAfter       = validateInput("validateAfter", validateAfter, DEFAULT_VALIDATE_AFTER_INACTIVITY);
-
-        this.httpClient = OptimizelyHttpClient.builder()
-            .withMaxTotalConnections(maxConnections)
-            .withMaxPerRoute(connectionsPerRoute)
-            .withValidateAfterInactivity(validateAfter)
-            // infrequent event discards observed. staled connections force-closed after a long idle time.
-            .withEvictIdleConnections(1L, TimeUnit.MINUTES)
-            .build();
 
         NamedThreadFactory namedThreadFactory = new NamedThreadFactory("optimizely-event-dispatcher-thread-%s", true, threadFactory);
-
         this.workerExecutor = new ThreadPoolExecutor(numWorkers, numWorkers,
                                                      0L, TimeUnit.MILLISECONDS,
                                                      new ArrayBlockingQueue<>(queueCapacity),
@@ -302,6 +315,7 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
         int validateAfterInactivity = PropertyUtils.getInteger(CONFIG_VALIDATE_AFTER_INACTIVITY, DEFAULT_VALIDATE_AFTER_INACTIVITY);
         private long closeTimeout = Long.MAX_VALUE;
         private TimeUnit closeTimeoutUnit = TimeUnit.MILLISECONDS;
+        private OptimizelyHttpClient httpClient;
 
         public Builder withQueueCapacity(int queueCapacity) {
             if (queueCapacity <= 0) {
@@ -344,6 +358,11 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
             return this;
         }
 
+        public Builder withOptimizelyHttpClient(OptimizelyHttpClient httpClient) {
+            this.httpClient = httpClient;
+            return this;
+        }
+
         public AsyncEventHandler build() {
             return new AsyncEventHandler(
                 queueCapacity,
@@ -352,7 +371,9 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
                 maxPerRoute,
                 validateAfterInactivity,
                 closeTimeout,
-                closeTimeoutUnit
+                closeTimeoutUnit,
+                httpClient,
+                null
             );
         }
     }

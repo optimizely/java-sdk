@@ -53,8 +53,8 @@ public class ODPEventManager {
     //      needs to see the change immediately.
     private volatile ODPConfig odpConfig;
     private EventDispatcherThread eventDispatcherThread;
-
-    private final ODPApiManager apiManager;
+    @VisibleForTesting
+    public final ODPApiManager apiManager;
 
     // The eventQueue needs to be thread safe. We are not doing anything extra for thread safety here
     //      because `LinkedBlockingQueue` itself is thread safe.

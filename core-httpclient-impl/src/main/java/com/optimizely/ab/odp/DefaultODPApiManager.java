@@ -27,6 +27,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
@@ -36,11 +37,13 @@ import java.util.Set;
 public class DefaultODPApiManager implements ODPApiManager {
     private static final Logger logger = LoggerFactory.getLogger(DefaultODPApiManager.class);
 
-    private final OptimizelyHttpClient httpClientSegments;
-    private final OptimizelyHttpClient httpClientEvents;
+    @VisibleForTesting
+    public final OptimizelyHttpClient httpClientSegments;
+    @VisibleForTesting
+    public final OptimizelyHttpClient httpClientEvents;
 
     public DefaultODPApiManager() {
-        this(OptimizelyHttpClient.builder().build());
+        this(null);
     }
 
     public DefaultODPApiManager(int segmentFetchTimeoutMillis, int eventDispatchTimeoutMillis) {
@@ -53,8 +56,11 @@ public class DefaultODPApiManager implements ODPApiManager {
         }
     }
 
-    @VisibleForTesting
-    DefaultODPApiManager(OptimizelyHttpClient httpClient) {
+    public DefaultODPApiManager(@Nullable OptimizelyHttpClient customHttpClient) {
+        OptimizelyHttpClient httpClient = customHttpClient;
+        if (httpClient == null) {
+            httpClient = OptimizelyHttpClient.builder().build();
+        }
         this.httpClientSegments = httpClient;
         this.httpClientEvents = httpClient;
     }
