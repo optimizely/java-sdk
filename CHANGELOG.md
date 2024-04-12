@@ -1,5 +1,13 @@
 # Optimizely Java X SDK Changelog
 
+## [4.1.0]
+April 12th, 2024
+
+### New Features
+* OptimizelyFactory method for injecting customHttpClient is fixed to share the customHttpClient for all modules using httpClient (HttpProjectConfigManager, AsyncEventHander, ODPManager) ([#542](https://github.com/optimizely/java-sdk/pull/542)).
+* A custom ThreadFactory can be injected to support virtual threads (Loom) ([#540](https://github.com/optimizely/java-sdk/pull/540)).
+
+
 ## [4.0.0]
 January 16th, 2024
 
