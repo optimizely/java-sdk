@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.event;
 
+import com.optimizely.ab.HttpClientUtils;
 import com.optimizely.ab.NamedThreadFactory;
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.annotations.VisibleForTesting;
@@ -31,6 +32,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +47,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.CheckForNull;
-import javax.annotation.Nullable;
 
 /**
  * {@link EventHandler} implementation that queues events and has a separate pool of threads responsible
@@ -61,9 +62,7 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
     public static final int DEFAULT_QUEUE_CAPACITY = 10000;
     public static final int DEFAULT_NUM_WORKERS = 2;
-    public static final int DEFAULT_MAX_CONNECTIONS = 200;
-    public static final int DEFAULT_MAX_PER_ROUTE = 20;
-    public static final int DEFAULT_VALIDATE_AFTER_INACTIVITY = 5000;
+
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncEventHandler.class);
     private static final ProjectConfigResponseHandler EVENT_RESPONSE_HANDLER = new ProjectConfigResponseHandler();
@@ -135,15 +134,17 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
         if (httpClient != null) {
             this.httpClient = httpClient;
         } else {
-            maxConnections = validateInput("maxConnections", maxConnections, DEFAULT_MAX_CONNECTIONS);
-            connectionsPerRoute = validateInput("connectionsPerRoute", connectionsPerRoute, DEFAULT_MAX_PER_ROUTE);
-            validateAfter = validateInput("validateAfter", validateAfter, DEFAULT_VALIDATE_AFTER_INACTIVITY);
+            maxConnections = validateInput("maxConnections", maxConnections, HttpClientUtils.DEFAULT_MAX_CONNECTIONS);
+            connectionsPerRoute = validateInput("connectionsPerRoute", connectionsPerRoute, HttpClientUtils.DEFAULT_MAX_PER_ROUTE);
+            validateAfter = validateInput("validateAfter", validateAfter, HttpClientUtils.DEFAULT_VALIDATE_AFTER_INACTIVITY);
             this.httpClient = OptimizelyHttpClient.builder()
                 .withMaxTotalConnections(maxConnections)
                 .withMaxPerRoute(connectionsPerRoute)
                 .withValidateAfterInactivity(validateAfter)
                 // infrequent event discards observed. staled connections force-closed after a long idle time.
                 .withEvictIdleConnections(1L, TimeUnit.MINUTES)
+                // enable retry on POST
+                .withRetryHandler(new DefaultHttpRequestRetryHandler(3, true))
                 .build();
         }
 
@@ -310,9 +311,9 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
 
         int queueCapacity = PropertyUtils.getInteger(CONFIG_QUEUE_CAPACITY, DEFAULT_QUEUE_CAPACITY);
         int numWorkers = PropertyUtils.getInteger(CONFIG_NUM_WORKERS, DEFAULT_NUM_WORKERS);
-        int maxTotalConnections = PropertyUtils.getInteger(CONFIG_MAX_CONNECTIONS, DEFAULT_MAX_CONNECTIONS);
-        int maxPerRoute = PropertyUtils.getInteger(CONFIG_MAX_PER_ROUTE, DEFAULT_MAX_PER_ROUTE);
-        int validateAfterInactivity = PropertyUtils.getInteger(CONFIG_VALIDATE_AFTER_INACTIVITY, DEFAULT_VALIDATE_AFTER_INACTIVITY);
+        int maxTotalConnections = PropertyUtils.getInteger(CONFIG_MAX_CONNECTIONS, HttpClientUtils.DEFAULT_MAX_CONNECTIONS);
+        int maxPerRoute = PropertyUtils.getInteger(CONFIG_MAX_PER_ROUTE, HttpClientUtils.DEFAULT_MAX_PER_ROUTE);
+        int validateAfterInactivity = PropertyUtils.getInteger(CONFIG_VALIDATE_AFTER_INACTIVITY, HttpClientUtils.DEFAULT_VALIDATE_AFTER_INACTIVITY);
         private long closeTimeout = Long.MAX_VALUE;
         private TimeUnit closeTimeoutUnit = TimeUnit.MILLISECONDS;
         private OptimizelyHttpClient httpClient;

@@ -17,11 +17,15 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.HttpClientUtils;
+
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -73,15 +77,17 @@ public class OptimizelyHttpClient implements Closeable {
         // The following static values are public so that they can be tweaked if necessary.
         // These are the recommended settings for http protocol.  https://hc.apache.org/httpcomponents-client-ga/tutorial/html/connmgmt.html
         // The maximum number of connections allowed across all routes.
-        private int maxTotalConnections = 200;
+        int maxTotalConnections = HttpClientUtils.DEFAULT_MAX_CONNECTIONS;
         // The maximum number of connections allowed for a route
-        private int maxPerRoute = 20;
+        int maxPerRoute = HttpClientUtils.DEFAULT_MAX_PER_ROUTE;
         // Defines period of inactivity in milliseconds after which persistent connections must be re-validated prior to being leased to the consumer.
-        private int validateAfterInactivity = 5000;
+        int validateAfterInactivity = HttpClientUtils.DEFAULT_VALIDATE_AFTER_INACTIVITY;
         // force-close the connection after this idle time (with 0, eviction is disabled by default)
         long evictConnectionIdleTimePeriod = 0;
+        HttpRequestRetryHandler customRetryHandler = null;
         TimeUnit evictConnectionIdleTimeUnit = TimeUnit.MILLISECONDS;
         private int timeoutMillis = HttpClientUtils.CONNECTION_TIMEOUT_MS;
+
 
         private Builder() {
 
@@ -107,6 +113,12 @@ public class OptimizelyHttpClient implements Closeable {
             this.evictConnectionIdleTimeUnit = maxIdleTimeUnit;
             return this;
         }
+
+        // customize retryHandler (DefaultHttpRequestRetryHandler will be used by default)
+        public Builder withRetryHandler(HttpRequestRetryHandler retryHandler) {
+            this.customRetryHandler = retryHandler;
+            return this;
+        }
         
         public Builder setTimeoutMillis(int timeoutMillis) {
             this.timeoutMillis = timeoutMillis;
@@ -124,6 +136,9 @@ public class OptimizelyHttpClient implements Closeable {
                 .setConnectionManager(poolingHttpClientConnectionManager)
                 .disableCookieManagement()
                 .useSystemProperties();
+            if (customRetryHandler != null) {
+                builder.setRetryHandler(customRetryHandler);
+            }
 
             logger.debug("Creating HttpClient with timeout: " + timeoutMillis);
 
