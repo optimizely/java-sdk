@@ -81,6 +81,8 @@ public class OptimizelyHttpClient implements Closeable {
         // The maximum number of connections allowed for a route
         int maxPerRoute = HttpClientUtils.DEFAULT_MAX_PER_ROUTE;
         // Defines period of inactivity in milliseconds after which persistent connections must be re-validated prior to being leased to the consumer.
+        // If this is too long, it's expected to see more requests dropped on staled connections (dropped by the server or networks).
+        // We can configure retries (POST for AsyncEventDispatcher) to cover the staled connections.
         int validateAfterInactivity = HttpClientUtils.DEFAULT_VALIDATE_AFTER_INACTIVITY;
         // force-close the connection after this idle time (with 0, eviction is disabled by default)
         long evictConnectionIdleTimePeriod = 0;

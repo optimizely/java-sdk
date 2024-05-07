@@ -16,27 +16,37 @@
  */
 package com.optimizely.ab;
 
-import io.javalin.Javalin;
-import org.apache.http.NoHttpResponseException;
+import org.apache.http.HttpException;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.protocol.HttpContext;
 import org.junit.*;
+import org.mockserver.integration.ClientAndServer;
+import org.mockserver.model.ConnectionOptions;
+import org.mockserver.model.HttpError;
+import org.mockserver.model.HttpRequest;
+import org.mockserver.model.HttpResponse;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.optimizely.ab.OptimizelyHttpClient.builder;
 import static java.util.concurrent.TimeUnit.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockserver.model.HttpForward.forward;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.*;
+import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.verify.VerificationTimes.exactly;
 
 public class OptimizelyHttpClientTest {
     @Before
@@ -111,74 +121,72 @@ public class OptimizelyHttpClientTest {
     }
 
     @Test
-    public void testRetries() throws IOException {
-        // Javalin intercepts before proxy, so host and port should be set correct here
-        String host = "http://localhost";
-        int port = 8000;
-        Javalin app = Javalin.create().start(port);
-        int maxFailures = 2;
+    public void testRetriesWithCustomRetryHandler() throws IOException {
 
-        AtomicInteger callTimes = new AtomicInteger();
-        app.get("/", ctx -> {
-            callTimes.addAndGet(1);
-            int count = callTimes.get();
-            if (count < maxFailures) {
-                throw new NoHttpResponseException("TESTING CONNECTION FAILURE");
-            } else {
-                ctx.status(200).result("Success");
+        // [NOTE] Request retries are all handled inside HttpClient. Not easy for unit test.
+        //  - "DefaultHttpRetryHandler" in HttpClient retries only with special types of Exceptions
+        //    like "NoHttpResponseException", etc.
+        //    Other exceptions (SocketTimeout, ProtocolException, etc.) all ignored.
+        //  - Not easy to force the specific exception type in the low-level.
+        //  - This test just validates custom retry handler injected ok by validating the number of retries.
+
+        class CustomRetryHandler implements HttpRequestRetryHandler {
+            private final int maxRetries;
+
+            public CustomRetryHandler(int maxRetries) {
+                this.maxRetries = maxRetries;
             }
-        });
 
-        OptimizelyHttpClient optimizelyHttpClient = spy(OptimizelyHttpClient.builder().build());
-        optimizelyHttpClient.execute(new HttpGet(host + ":" + String.valueOf(port)));
-        assertEquals(3, callTimes.get());
-    }
-
-    @Test
-    public void testRetriesWithCustom() throws IOException {
-        // Javalin intercepts before proxy, so host and port should be set correct here
-        String host = "http://localhost";
-        int port = 8000;
-        Javalin app = Javalin.create().start(port);
-        int maxFailures = 2;
-
-        AtomicInteger callTimes = new AtomicInteger();
-        app.get("/", ctx -> {
-            callTimes.addAndGet(1);
-            int count = callTimes.get();
-            if (count < maxFailures) {
-//                throw new NoHttpResponseException("TESTING CONNECTION FAILURE");
-                throw new IOException("TESTING CONNECTION FAILURE");
-
-//                ctx.status(500).result("TESTING Server Error");
-            } else {
-                ctx.status(200).result("Success");
+            @Override
+            public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
+                // override to retry for any type of exceptions
+                return executionCount < maxRetries;
             }
-        });
+        }
 
-        HttpRequestRetryHandler retryHandler = new DefaultHttpRequestRetryHandler(3, true);
-        OptimizelyHttpClient optimizelyHttpClient = spy(OptimizelyHttpClient.builder().withRetryHandler(retryHandler).build());
+        int port = 9999;
+        ClientAndServer mockServer;
+        int retryCount;
 
-        optimizelyHttpClient.execute(new HttpGet(host + ":" + String.valueOf(port)));
-        assertEquals(3, callTimes.get());
+        // default httpclient (retries enabled by default, but no retry for timeout connection)
+
+        mockServer = ClientAndServer.startClientAndServer(port);
+        mockServer
+            .when(request().withMethod("GET").withPath("/"))
+            .error(HttpError.error());
+
+        OptimizelyHttpClient clientDefault = OptimizelyHttpClient.builder()
+            .setTimeoutMillis(100)
+            .build();
+
+        try {
+            clientDefault.execute(new HttpGet("http://localhost:" + port));
+            fail();
+        } catch (Exception e) {
+            retryCount = mockServer.retrieveRecordedRequests(request()).length;
+            assertEquals(1, retryCount);
+        }
+        mockServer.stop();
+
+        // httpclient with custom retry handler (5 times retries for any request)
+
+        mockServer = ClientAndServer.startClientAndServer(port);
+        mockServer
+            .when(request().withMethod("GET").withPath("/"))
+            .error(HttpError.error());
+
+        OptimizelyHttpClient clientWithRetries = OptimizelyHttpClient.builder()
+            .withRetryHandler(new CustomRetryHandler(5))
+            .setTimeoutMillis(100)
+            .build();
+
+        try {
+            clientWithRetries.execute(new HttpGet("http://localhost:" + port));
+            fail();
+        } catch (Exception e) {
+            retryCount = mockServer.retrieveRecordedRequests(request()).length;
+            assertEquals(5, retryCount);
+        }
+        mockServer.stop();
     }
-
-//
-//    @Test
-//    public void testRetriesWithCustom() throws IOException {
-//        CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
-//        CloseableHttpResponse response = mock(CloseableHttpResponse.class);
-//
-//        HttpRequestRetryHandler mockRetryHandler = spy(new DefaultHttpRequestRetryHandler(3, true));
-//        when(mockRetryHandler.retryRequest(any(), any(), any())).thenReturn(true);
-//
-//        OptimizelyHttpClient optimizelyHttpClient = OptimizelyHttpClient.builder().withRetryHandler(mockRetryHandler).build();
-//        try {
-//            optimizelyHttpClient.execute(new HttpGet("https://example.com"));
-//        } catch(Exception e) {
-//            assert(e instanceof IOException);
-//        }
-//        verify(mockRetryHandler, times(3)).retryRequest(any(), any(), any());
-// }
-
 }

@@ -143,7 +143,7 @@ public class AsyncEventHandler implements EventHandler, AutoCloseable {
                 .withValidateAfterInactivity(validateAfter)
                 // infrequent event discards observed. staled connections force-closed after a long idle time.
                 .withEvictIdleConnections(1L, TimeUnit.MINUTES)
-                // enable retry on POST
+                // enable retry on event POST (default: retry on GET only)
                 .withRetryHandler(new DefaultHttpRequestRetryHandler(3, true))
                 .build();
         }

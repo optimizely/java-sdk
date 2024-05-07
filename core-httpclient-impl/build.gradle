@@ -1,14 +1,9 @@
 dependencies {
-    compile project(':core-api')
-
+    implementation project(':core-api')
     compileOnly group: 'com.google.code.gson', name: 'gson', version: gsonVersion
+    implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: httpClientVersion
 
-    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: httpClientVersion
-
-    testImplementation 'io.javalin:javalin:3.13.10'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
-    testImplementation 'io.rest-assured:rest-assured:4.4.0'
+    testImplementation 'org.mock-server:mockserver-netty:5.15.0'
 }
 
 task exhaustiveTest {
