@@ -94,21 +94,22 @@ configure(publishedProjects) {
     }
 
     dependencies {
-        compile group: 'commons-codec', name: 'commons-codec', version: commonCodecVersion
+        implementation group: 'commons-codec', name: 'commons-codec', version: commonCodecVersion
 
-        testCompile group: 'junit', name: 'junit', version: junitVersion
-        testCompile group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
-        testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: hamcrestVersion
-        testCompile group: 'com.google.guava', name: 'guava', version: guavaVersion
+        testImplementation group: 'junit', name: 'junit', version: junitVersion
+        testImplementation group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
+        testImplementation group: 'org.hamcrest', name: 'hamcrest-all', version: hamcrestVersion
+        testImplementation group: 'com.google.guava', name: 'guava', version: guavaVersion
 
         // logging dependencies (logback)
-        testCompile group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
-        testCompile group: 'ch.qos.logback', name: 'logback-core', version: logbackVersion
+        testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
+        testImplementation group: 'ch.qos.logback', name: 'logback-core', version: logbackVersion
+        testImplementation 'org.mock-server:mockserver-netty:5.1.1'
 
-        testCompile group: 'com.google.code.gson', name: 'gson', version: gsonVersion
-        testCompile group: 'org.json', name: 'json', version: jsonVersion
-        testCompile group: 'com.googlecode.json-simple', name: 'json-simple', version: jsonSimpleVersion
-        testCompile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
+        testImplementation group: 'com.google.code.gson', name: 'gson', version: gsonVersion
+        testImplementation group: 'org.json', name: 'json', version: jsonVersion
+        testImplementation group: 'com.googlecode.json-simple', name: 'json-simple', version: jsonSimpleVersion
+        testImplementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
     }
 
     def docTitle = "Optimizely Java SDK"

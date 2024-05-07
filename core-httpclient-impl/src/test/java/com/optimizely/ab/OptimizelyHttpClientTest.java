@@ -64,7 +64,7 @@ public class OptimizelyHttpClientTest {
     @Test
     public void testDefaultConfiguration() {
         OptimizelyHttpClient.Builder builder = builder();
-        assertEquals(builder.validateAfterInactivity, 5000);
+        assertEquals(builder.validateAfterInactivity, 1000);
         assertEquals(builder.maxTotalConnections, 200);
         assertEquals(builder.maxPerRoute, 20);
         assertNull(builder.customRetryHandler);
