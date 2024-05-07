@@ -51,11 +51,6 @@ public class ODPEventManagerTest {
     @Captor
     ArgumentCaptor<String> payloadCaptor;
 
-    @Before
-    public void setup() {
-        mockApiManager = mock(ODPApiManager.class);
-    }
-
     @Test
     public void logAndDiscardEventWhenEventManagerIsNotRunning() {
         ODPConfig odpConfig = new ODPConfig("key", "host", null);
