@@ -1,5 +1,13 @@
 # Optimizely Java X SDK Changelog
 
+
+## [3.10.5]
+May 8th, 2024
+
+### Fixes
+- Fix logx events discarded for staled connections with httpclient connection pooling ([#545](https://github.com/optimizely/java-sdk/pull/545)).
+
+
 ## [4.1.0]
 April 12th, 2024
 
