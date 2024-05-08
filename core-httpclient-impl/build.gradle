@@ -1,9 +1,8 @@
 dependencies {
     compile project(':core-api')
-
     compileOnly group: 'com.google.code.gson', name: 'gson', version: gsonVersion
-
     compile group: 'org.apache.httpcomponents', name: 'httpclient', version: httpClientVersion
+    testCompile 'org.mock-server:mockserver-netty:5.1.1'
 }
 
 task exhaustiveTest {

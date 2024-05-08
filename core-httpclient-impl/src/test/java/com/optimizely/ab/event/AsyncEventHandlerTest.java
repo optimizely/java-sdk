@@ -124,6 +124,7 @@ public class AsyncEventHandlerTest {
 
         AsyncEventHandler eventHandler = builder()
             .withOptimizelyHttpClient(customHttpClient)
+            // these params will be ignored when customHttpClient is injected
             .withMaxTotalConnections(1)
             .withMaxPerRoute(2)
             .withCloseTimeout(10, TimeUnit.SECONDS)
@@ -134,6 +135,17 @@ public class AsyncEventHandlerTest {
 
     @Test
     public void testBuilderWithDefaultHttpClient() {
+        AsyncEventHandler.Builder builder = builder();
+        assertEquals(builder.validateAfterInactivity, 1000);
+        assertEquals(builder.maxTotalConnections, 200);
+        assertEquals(builder.maxPerRoute, 20);
+
+        AsyncEventHandler eventHandler = builder.build();
+        assert(eventHandler.httpClient != null);
+    }
+
+    @Test
+    public void testBuilderWithDefaultHttpClientAndCustomParams() {
         AsyncEventHandler eventHandler = builder()
             .withMaxTotalConnections(3)
             .withMaxPerRoute(4)

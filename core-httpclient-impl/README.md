@@ -107,23 +107,23 @@ The number of workers determines the number of threads the thread pool uses.
 The following builder methods can be used to custom configure the `AsyncEventHandler`.
 
 |Method Name|Default Value|Description|
-|---|---|---|
+|---|---|-----------------------------------------------|
 |`withQueueCapacity(int)`|10000|Queue size for pending logEvents|
 |`withNumWorkers(int)`|2|Number of worker threads|
 |`withMaxTotalConnections(int)`|200|Maximum number of connections|
 |`withMaxPerRoute(int)`|20|Maximum number of connections per route|
-|`withValidateAfterInactivity(int)`|5000|Time to maintain idol connections (in milliseconds)|
+|`withValidateAfterInactivity(int)`|1000|Time to maintain idle connections (in milliseconds)|
 
 ### Advanced configuration
 The following properties can be set to override the default configuration.
 
 |Property Name|Default Value|Description|
-|---|---|---|
+|---|---|-----------------------------------------------|
 |**async.event.handler.queue.capacity**|10000|Queue size for pending logEvents|
 |**async.event.handler.num.workers**|2|Number of worker threads|
 |**async.event.handler.max.connections**|200|Maximum number of connections|
 |**async.event.handler.event.max.per.route**|20|Maximum number of connections per route|
-|**async.event.handler.validate.after**|5000|Time to maintain idol connections (in milliseconds)|
+|**async.event.handler.validate.after**|1000|Time to maintain idle connections (in milliseconds)|
 
 ## HttpProjectConfigManager
 

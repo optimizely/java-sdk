@@ -26,7 +26,9 @@ public final class HttpClientUtils {
     public static final int CONNECTION_TIMEOUT_MS = 10000;
     public static final int CONNECTION_REQUEST_TIMEOUT_MS = 5000;
     public static final int SOCKET_TIMEOUT_MS = 10000;
-
+    public static final int DEFAULT_VALIDATE_AFTER_INACTIVITY = 1000;
+    public static final int DEFAULT_MAX_CONNECTIONS = 200;
+    public static final int DEFAULT_MAX_PER_ROUTE = 20;
     private static RequestConfig requestConfigWithTimeout;
 
     private HttpClientUtils() {
