@@ -1,7 +1,7 @@
 # Optimizely Java X SDK Changelog
 
 
-## [3.10.5]
+## [4.1.1]
 May 8th, 2024
 
 ### Fixes
