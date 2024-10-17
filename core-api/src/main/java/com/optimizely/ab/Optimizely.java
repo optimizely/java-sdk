@@ -1193,111 +1193,111 @@ public class Optimizely implements AutoCloseable {
         return new OptimizelyUserContext(this, userId, attributes, Collections.EMPTY_MAP, null, false);
     }
 
-    OptimizelyDecision decide(@Nonnull OptimizelyUserContext user,
-                              @Nonnull String key,
-                              @Nonnull List<OptimizelyDecideOption> options) {
-
-        ProjectConfig projectConfig = getProjectConfig();
-        if (projectConfig == null) {
-            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
-        }
-
-        FeatureFlag flag = projectConfig.getFeatureKeyMapping().get(key);
-        if (flag == null) {
-            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.FLAG_KEY_INVALID.reason(key));
-        }
-
-        String userId = user.getUserId();
-        Map<String, Object> attributes = user.getAttributes();
-        Boolean decisionEventDispatched = false;
-        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
-        DecisionReasons decisionReasons = DefaultDecisionReasons.newInstance(allOptions);
-
-        Map<String, ?> copiedAttributes = new HashMap<>(attributes);
-        FeatureDecision flagDecision;
-
-        // Check Forced Decision
-        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flag.getKey(), null);
-        DecisionResponse<Variation> forcedDecisionVariation = decisionService.validatedForcedDecision(optimizelyDecisionContext, projectConfig, user);
-        decisionReasons.merge(forcedDecisionVariation.getReasons());
-        if (forcedDecisionVariation.getResult() != null) {
-            flagDecision = new FeatureDecision(null, forcedDecisionVariation.getResult(), FeatureDecision.DecisionSource.FEATURE_TEST);
-        } else {
-            // Regular decision
-            DecisionResponse<FeatureDecision> decisionVariation = decisionService.getVariationForFeature(
-                flag,
-                user,
-                projectConfig,
-                allOptions);
-            flagDecision = decisionVariation.getResult();
-            decisionReasons.merge(decisionVariation.getReasons());
-        }
-
-        Boolean flagEnabled = false;
-        if (flagDecision.variation != null) {
-            if (flagDecision.variation.getFeatureEnabled()) {
-                flagEnabled = true;
-            }
-        }
-        logger.info("Feature \"{}\" is enabled for user \"{}\"? {}", key, userId, flagEnabled);
-
-        Map<String, Object> variableMap = new HashMap<>();
-        if (!allOptions.contains(OptimizelyDecideOption.EXCLUDE_VARIABLES)) {
-            DecisionResponse<Map<String, Object>> decisionVariables = getDecisionVariableMap(
-                flag,
-                flagDecision.variation,
-                flagEnabled);
-            variableMap = decisionVariables.getResult();
-            decisionReasons.merge(decisionVariables.getReasons());
-        }
-        OptimizelyJSON optimizelyJSON = new OptimizelyJSON(variableMap);
-
-        FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
-        if (flagDecision.decisionSource != null) {
-            decisionSource = flagDecision.decisionSource;
-        }
-
-        List<String> reasonsToReport = decisionReasons.toReport();
-        String variationKey = flagDecision.variation != null ? flagDecision.variation.getKey() : null;
-        // TODO: add ruleKey values when available later. use a copy of experimentKey until then.
-        //       add to event metadata as well (currently set to experimentKey)
-        String ruleKey = flagDecision.experiment != null ? flagDecision.experiment.getKey() : null;
-
-        if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
-            decisionEventDispatched = sendImpression(
-                projectConfig,
-                flagDecision.experiment,
-                userId,
-                copiedAttributes,
-                flagDecision.variation,
-                key,
-                decisionSource.toString(),
-                flagEnabled);
-        }
-
-        DecisionNotification decisionNotification = DecisionNotification.newFlagDecisionNotificationBuilder()
-            .withUserId(userId)
-            .withAttributes(copiedAttributes)
-            .withFlagKey(key)
-            .withEnabled(flagEnabled)
-            .withVariables(variableMap)
-            .withVariationKey(variationKey)
-            .withRuleKey(ruleKey)
-            .withReasons(reasonsToReport)
-            .withDecisionEventDispatched(decisionEventDispatched)
-            .build();
-        notificationCenter.send(decisionNotification);
-
-        return new OptimizelyDecision(
-            variationKey,
-            flagEnabled,
-            optimizelyJSON,
-            ruleKey,
-            key,
-            user,
-            reasonsToReport);
-    }
-
+//    OptimizelyDecision decide(@Nonnull OptimizelyUserContext user,
+//                              @Nonnull String key,
+//                              @Nonnull List<OptimizelyDecideOption> options) {
+//
+//        ProjectConfig projectConfig = getProjectConfig();
+//        if (projectConfig == null) {
+//            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
+//        }
+//
+//        FeatureFlag flag = projectConfig.getFeatureKeyMapping().get(key);
+//        if (flag == null) {
+//            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.FLAG_KEY_INVALID.reason(key));
+//        }
+//
+//        String userId = user.getUserId();
+//        Map<String, Object> attributes = user.getAttributes();
+//        Boolean decisionEventDispatched = false;
+//        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
+//        DecisionReasons decisionReasons = DefaultDecisionReasons.newInstance(allOptions);
+//
+//        Map<String, ?> copiedAttributes = new HashMap<>(attributes);
+//        FeatureDecision flagDecision;
+//
+//        // Check Forced Decision
+//        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flag.getKey(), null);
+//        DecisionResponse<Variation> forcedDecisionVariation = decisionService.validatedForcedDecision(optimizelyDecisionContext, projectConfig, user);
+//        decisionReasons.merge(forcedDecisionVariation.getReasons());
+//        if (forcedDecisionVariation.getResult() != null) {
+//            flagDecision = new FeatureDecision(null, forcedDecisionVariation.getResult(), FeatureDecision.DecisionSource.FEATURE_TEST);
+//        } else {
+//            // Regular decision
+//            DecisionResponse<FeatureDecision> decisionVariation = decisionService.getVariationForFeature(
+//                flag,
+//                user,
+//                projectConfig,
+//                allOptions);
+//            flagDecision = decisionVariation.getResult();
+//            decisionReasons.merge(decisionVariation.getReasons());
+//        }
+//
+//        Boolean flagEnabled = false;
+//        if (flagDecision.variation != null) {
+//            if (flagDecision.variation.getFeatureEnabled()) {
+//                flagEnabled = true;
+//            }
+//        }
+//        logger.info("Feature \"{}\" is enabled for user \"{}\"? {}", key, userId, flagEnabled);
+//
+//        Map<String, Object> variableMap = new HashMap<>();
+//        if (!allOptions.contains(OptimizelyDecideOption.EXCLUDE_VARIABLES)) {
+//            DecisionResponse<Map<String, Object>> decisionVariables = getDecisionVariableMap(
+//                flag,
+//                flagDecision.variation,
+//                flagEnabled);
+//            variableMap = decisionVariables.getResult();
+//            decisionReasons.merge(decisionVariables.getReasons());
+//        }
+//        OptimizelyJSON optimizelyJSON = new OptimizelyJSON(variableMap);
+//
+//        FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
+//        if (flagDecision.decisionSource != null) {
+//            decisionSource = flagDecision.decisionSource;
+//        }
+//
+//        List<String> reasonsToReport = decisionReasons.toReport();
+//        String variationKey = flagDecision.variation != null ? flagDecision.variation.getKey() : null;
+//        // TODO: add ruleKey values when available later. use a copy of experimentKey until then.
+//        //       add to event metadata as well (currently set to experimentKey)
+//        String ruleKey = flagDecision.experiment != null ? flagDecision.experiment.getKey() : null;
+//
+//        if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
+//            decisionEventDispatched = sendImpression(
+//                projectConfig,
+//                flagDecision.experiment,
+//                userId,
+//                copiedAttributes,
+//                flagDecision.variation,
+//                key,
+//                decisionSource.toString(),
+//                flagEnabled);
+//        }
+//
+//        DecisionNotification decisionNotification = DecisionNotification.newFlagDecisionNotificationBuilder()
+//            .withUserId(userId)
+//            .withAttributes(copiedAttributes)
+//            .withFlagKey(key)
+//            .withEnabled(flagEnabled)
+//            .withVariables(variableMap)
+//            .withVariationKey(variationKey)
+//            .withRuleKey(ruleKey)
+//            .withReasons(reasonsToReport)
+//            .withDecisionEventDispatched(decisionEventDispatched)
+//            .build();
+//        notificationCenter.send(decisionNotification);
+//
+//        return new OptimizelyDecision(
+//            variationKey,
+//            flagEnabled,
+//            optimizelyJSON,
+//            ruleKey,
+//            key,
+//            user,
+//            reasonsToReport);
+//    }
+//
     Optional<FeatureDecision> getForcedDecision(@Nonnull String flagKey,
                                                 @Nonnull DecisionReasons decisionReasons,
                                                 @Nonnull ProjectConfig projectConfig,
@@ -1312,46 +1312,123 @@ public class Optimizely implements AutoCloseable {
 
         return Optional.empty();
     }
-    
-    OptimizelyDecision decideInternal(@Nonnull OptimizelyUserContext user,
+
+    // TODO: UPS refactor cleanup
+    OptimizelyDecision decide(@Nonnull OptimizelyUserContext user,
                               @Nonnull String key,
                               @Nonnull List<OptimizelyDecideOption> options) {
+        return decideForKeys(user, Arrays.asList(key), options).get(key);
 
-        ProjectConfig projectConfig = getProjectConfig();
-        if (projectConfig == null) {
-            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
-        }
+//        ProjectConfig projectConfig = getProjectConfig();
+//        if (projectConfig == null) {
+//            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
+//        }
+//
+//        FeatureFlag flag = projectConfig.getFeatureKeyMapping().get(key);
+//        if (flag == null) {
+//            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.FLAG_KEY_INVALID.reason(key));
+//        }
+//
+//        String userId = user.getUserId();
+//        Map<String, Object> attributes = user.getAttributes();
+//        Boolean decisionEventDispatched = false;
+//        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
+//        DecisionReasons decisionReasons = DefaultDecisionReasons.newInstance(allOptions);
+//
+//        Map<String, ?> copiedAttributes = new HashMap<>(attributes);
+//        FeatureDecision flagDecision;
+//
+//        // Check Forced Decision
+//        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flag.getKey(), null);
+//        DecisionResponse<Variation> forcedDecisionVariation = decisionService.validatedForcedDecision(optimizelyDecisionContext, projectConfig, user);
+//        decisionReasons.merge(forcedDecisionVariation.getReasons());
+//        if (forcedDecisionVariation.getResult() != null) {
+//            flagDecision = new FeatureDecision(null, forcedDecisionVariation.getResult(), FeatureDecision.DecisionSource.FEATURE_TEST);
+//        } else {
+//            // Regular decision
+//            DecisionResponse<FeatureDecision> decisionVariation = decisionService.getVariationForFeature(
+//                flag,
+//                user,
+//                projectConfig,
+//                allOptions);
+//            flagDecision = decisionVariation.getResult();
+//            decisionReasons.merge(decisionVariation.getReasons());
+//        }
+//
+//        Boolean flagEnabled = false;
+//        if (flagDecision.variation != null) {
+//            if (flagDecision.variation.getFeatureEnabled()) {
+//                flagEnabled = true;
+//            }
+//        }
+//        logger.info("Feature \"{}\" is enabled for user \"{}\"? {}", key, userId, flagEnabled);
+//
+//        Map<String, Object> variableMap = new HashMap<>();
+//        if (!allOptions.contains(OptimizelyDecideOption.EXCLUDE_VARIABLES)) {
+//            DecisionResponse<Map<String, Object>> decisionVariables = getDecisionVariableMap(
+//                flag,
+//                flagDecision.variation,
+//                flagEnabled);
+//            variableMap = decisionVariables.getResult();
+//            decisionReasons.merge(decisionVariables.getReasons());
+//        }
+//        OptimizelyJSON optimizelyJSON = new OptimizelyJSON(variableMap);
+//
+//        FeatureDecision.DecisionSource decisionSource = FeatureDecision.DecisionSource.ROLLOUT;
+//        if (flagDecision.decisionSource != null) {
+//            decisionSource = flagDecision.decisionSource;
+//        }
+//
+//        List<String> reasonsToReport = decisionReasons.toReport();
+//        String variationKey = flagDecision.variation != null ? flagDecision.variation.getKey() : null;
+//        // TODO: add ruleKey values when available later. use a copy of experimentKey until then.
+//        //       add to event metadata as well (currently set to experimentKey)
+//        String ruleKey = flagDecision.experiment != null ? flagDecision.experiment.getKey() : null;
+//
+//        if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
+//            decisionEventDispatched = sendImpression(
+//                projectConfig,
+//                flagDecision.experiment,
+//                userId,
+//                copiedAttributes,
+//                flagDecision.variation,
+//                key,
+//                decisionSource.toString(),
+//                flagEnabled);
+//        }
+//
+//        DecisionNotification decisionNotification = DecisionNotification.newFlagDecisionNotificationBuilder()
+//            .withUserId(userId)
+//            .withAttributes(copiedAttributes)
+//            .withFlagKey(key)
+//            .withEnabled(flagEnabled)
+//            .withVariables(variableMap)
+//            .withVariationKey(variationKey)
+//            .withRuleKey(ruleKey)
+//            .withReasons(reasonsToReport)
+//            .withDecisionEventDispatched(decisionEventDispatched)
+//            .build();
+//        notificationCenter.send(decisionNotification);
+//
+//        return new OptimizelyDecision(
+//            variationKey,
+//            flagEnabled,
+//            optimizelyJSON,
+//            ruleKey,
+//            key,
+//            user,
+//            reasonsToReport);
+    }
 
-        FeatureFlag flag = projectConfig.getFeatureKeyMapping().get(key);
-        if (flag == null) {
-            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.FLAG_KEY_INVALID.reason(key));
-        }
-
+    private OptimizelyDecision createOptimizelyDecision(
+        OptimizelyUserContext user,
+        String flagKey,
+        FeatureDecision flagDecision,
+        DecisionReasons decisionReasons,
+        List<OptimizelyDecideOption> allOptions,
+        ProjectConfig projectConfig
+    ) {
         String userId = user.getUserId();
-        Map<String, Object> attributes = user.getAttributes();
-        Boolean decisionEventDispatched = false;
-        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
-        DecisionReasons decisionReasons = DefaultDecisionReasons.newInstance(allOptions);
-
-        Map<String, ?> copiedAttributes = new HashMap<>(attributes);
-        FeatureDecision flagDecision;
-
-        // Check Forced Decision
-        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flag.getKey(), null);
-        DecisionResponse<Variation> forcedDecisionVariation = decisionService.validatedForcedDecision(optimizelyDecisionContext, projectConfig, user);
-        decisionReasons.merge(forcedDecisionVariation.getReasons());
-        if (forcedDecisionVariation.getResult() != null) {
-            flagDecision = new FeatureDecision(null, forcedDecisionVariation.getResult(), FeatureDecision.DecisionSource.FEATURE_TEST);
-        } else {
-            // Regular decision
-            DecisionResponse<FeatureDecision> decisionVariation = decisionService.getVariationForFeature(
-                flag,
-                user,
-                projectConfig,
-                allOptions);
-            flagDecision = decisionVariation.getResult();
-            decisionReasons.merge(decisionVariation.getReasons());
-        }
 
         Boolean flagEnabled = false;
         if (flagDecision.variation != null) {
@@ -1359,12 +1436,12 @@ public class Optimizely implements AutoCloseable {
                 flagEnabled = true;
             }
         }
-        logger.info("Feature \"{}\" is enabled for user \"{}\"? {}", key, userId, flagEnabled);
+        logger.info("Feature \"{}\" is enabled for user \"{}\"? {}", flagKey, userId, flagEnabled);
 
         Map<String, Object> variableMap = new HashMap<>();
         if (!allOptions.contains(OptimizelyDecideOption.EXCLUDE_VARIABLES)) {
             DecisionResponse<Map<String, Object>> decisionVariables = getDecisionVariableMap(
-                flag,
+                projectConfig.getFeatureKeyMapping().get(flagKey),
                 flagDecision.variation,
                 flagEnabled);
             variableMap = decisionVariables.getResult();
@@ -1383,6 +1460,12 @@ public class Optimizely implements AutoCloseable {
         //       add to event metadata as well (currently set to experimentKey)
         String ruleKey = flagDecision.experiment != null ? flagDecision.experiment.getKey() : null;
 
+
+        Boolean decisionEventDispatched = false;
+
+        Map<String, Object> attributes = user.getAttributes();
+        Map<String, ?> copiedAttributes = new HashMap<>(attributes);
+
         if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
             decisionEventDispatched = sendImpression(
                 projectConfig,
@@ -1390,7 +1473,7 @@ public class Optimizely implements AutoCloseable {
                 userId,
                 copiedAttributes,
                 flagDecision.variation,
-                key,
+                flagKey,
                 decisionSource.toString(),
                 flagEnabled);
         }
@@ -1398,7 +1481,7 @@ public class Optimizely implements AutoCloseable {
         DecisionNotification decisionNotification = DecisionNotification.newFlagDecisionNotificationBuilder()
             .withUserId(userId)
             .withAttributes(copiedAttributes)
-            .withFlagKey(key)
+            .withFlagKey(flagKey)
             .withEnabled(flagEnabled)
             .withVariables(variableMap)
             .withVariationKey(variationKey)
@@ -1413,12 +1496,13 @@ public class Optimizely implements AutoCloseable {
             flagEnabled,
             optimizelyJSON,
             ruleKey,
-            key,
+            flagKey,
             user,
             reasonsToReport);
     }
-    
-    Map<String, OptimizelyDecision> decideForKeysInternal(@Nonnull OptimizelyUserContext user,
+
+    // TODO: UPS refactor cleanup
+    Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
                                                   @Nonnull List<String> keys,
                                                   @Nonnull List<OptimizelyDecideOption> options) {
         Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
@@ -1439,7 +1523,7 @@ public class Optimizely implements AutoCloseable {
         Map<String, FeatureDecision> flagDecisions = new HashMap<>();
         Map<String, DecisionReasons> decisionReasonsMap = new HashMap<>();
 
-        List<String> keysWithoutForcedDecision = new ArrayList<>();
+        List<FeatureFlag> flagsWithoutForcedDecision = new ArrayList<>();
 
         for (String key : keys) {
             FeatureFlag flag = projectConfig.getFeatureKeyMapping().get(key);
@@ -1455,41 +1539,58 @@ public class Optimizely implements AutoCloseable {
             if (forcedDecision.isPresent()) {
                 flagDecisions.put(key, forcedDecision.get());
             } else {
-                keysWithoutForcedDecision.add(key);
+                flagsWithoutForcedDecision.add(flag);
             }
-            // OptimizelyDecision decision = decide(user, key, options);
-            // if (!allOptions.contains(OptimizelyDecideOption.ENABLED_FLAGS_ONLY) || decision.getEnabled()) {
-            //     decisionMap.put(key, decision);
-            // }
+        }
+
+        List<DecisionResponse<FeatureDecision>> decisionList =
+            decisionService.getVariationsForFeatureList(flagsWithoutForcedDecision, user, projectConfig, allOptions);
+
+        for (int i = 0; i < flagsWithoutForcedDecision.size(); i++) {
+            DecisionResponse<FeatureDecision> decision = decisionList.get(i);
+            String flagKey = flagsWithoutForcedDecision.get(i).getKey();
+            flagDecisions.put(flagKey, decision.getResult());
+            decisionReasonsMap.get(flagKey).merge(decision.getReasons());
+        }
+
+        for (Map.Entry<String, FeatureDecision> entry: flagDecisions.entrySet()) {
+            String key = entry.getKey();
+            FeatureDecision flagDecision = entry.getValue();
+            DecisionReasons decisionReasons = decisionReasonsMap.get((key));
+
+            OptimizelyDecision optimizelyDecision = createOptimizelyDecision(
+                user, key, flagDecision, decisionReasons, allOptions, projectConfig
+            );
+            decisionMap.put(key, optimizelyDecision);
         }
 
         return decisionMap;
     }
     
-    Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
-                                                  @Nonnull List<String> keys,
-                                                  @Nonnull List<OptimizelyDecideOption> options) {
-        Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
-
-        ProjectConfig projectConfig = getProjectConfig();
-        if (projectConfig == null) {
-            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
-            return decisionMap;
-        }
-
-        if (keys.isEmpty()) return decisionMap;
-
-        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
-
-        for (String key : keys) {
-            OptimizelyDecision decision = decide(user, key, options);
-            if (!allOptions.contains(OptimizelyDecideOption.ENABLED_FLAGS_ONLY) || decision.getEnabled()) {
-                decisionMap.put(key, decision);
-            }
-        }
-
-        return decisionMap;
-    }
+//    Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
+//                                                  @Nonnull List<String> keys,
+//                                                  @Nonnull List<OptimizelyDecideOption> options) {
+//        Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
+//
+//        ProjectConfig projectConfig = getProjectConfig();
+//        if (projectConfig == null) {
+//            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
+//            return decisionMap;
+//        }
+//
+//        if (keys.isEmpty()) return decisionMap;
+//
+//        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
+//
+//        for (String key : keys) {
+//            OptimizelyDecision decision = decide(user, key, options);
+//            if (!allOptions.contains(OptimizelyDecideOption.ENABLED_FLAGS_ONLY) || decision.getEnabled()) {
+//                decisionMap.put(key, decision);
+//            }
+//        }
+//
+//        return decisionMap;
+//    }
 
     Map<String, OptimizelyDecision> decideAll(@Nonnull OptimizelyUserContext user,
                                               @Nonnull List<OptimizelyDecideOption> options) {
