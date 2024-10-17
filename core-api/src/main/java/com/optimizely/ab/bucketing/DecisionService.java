@@ -549,6 +549,8 @@ public class DecisionService {
             decision = new Decision(variationId);
         }
         userProfile.experimentBucketMap.put(experimentId, decision);
+        logger.info("Updated variation \"{}\" of experiment \"{}\" for user \"{}\".",
+            variationId, experimentId, userProfile.userId);
     }
 
     /**

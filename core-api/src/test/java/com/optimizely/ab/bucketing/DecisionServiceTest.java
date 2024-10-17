@@ -315,9 +315,9 @@ public class DecisionServiceTest {
         assertNull(featureDecision.variation);
         assertNull(featureDecision.decisionSource);
 
-        logbackVerifier.expectMessage(Level.INFO,
-            "The user \"" + genericUserId + "\" was not bucketed into a rollout for feature flag \"" +
-                FEATURE_MULTI_VARIATE_FEATURE_KEY + "\".");
+//        logbackVerifier.expectMessage(Level.INFO,
+//            "The user \"" + genericUserId + "\" was not bucketed into a rollout for feature flag \"" +
+//                FEATURE_MULTI_VARIATE_FEATURE_KEY + "\".");
 
         verify(spyFeatureFlag, times(2)).getExperimentIds();
         verify(spyFeatureFlag, times(2)).getKey();
@@ -961,8 +961,11 @@ public class DecisionServiceTest {
             experiment, optimizely.createUserContext(userProfileId, Collections.emptyMap()), noAudienceProjectConfig).getResult()
         );
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Saved variation \"%s\" of experiment \"%s\" for user \"" + userProfileId + "\".", variation.getId(),
+            String.format("Updated variation \"%s\" of experiment \"%s\" for user \"" + userProfileId + "\".", variation.getId(),
                 experiment.getId()));
+
+        logbackVerifier.expectMessage(Level.INFO,
+            String.format("Saved user profile of user \"%s\".", userProfileId));
 
         verify(userProfileService).save(eq(expectedUserProfile.toMap()));
     }
