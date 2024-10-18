@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2017-2022, Optimizely, Inc. and contributors                   *
+ * Copyright 2017-2022, 2024, Optimizely, Inc. and contributors             *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -203,31 +203,6 @@ public class DecisionService {
                                                                     @Nonnull OptimizelyUserContext user,
                                                                     @Nonnull ProjectConfig projectConfig,
                                                                     @Nonnull List<OptimizelyDecideOption> options) {
-//        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
-//
-//        DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options);
-//        reasons.merge(decisionVariationResponse.getReasons());
-//
-//        FeatureDecision decision = decisionVariationResponse.getResult();
-//        if (decision != null) {
-//            return new DecisionResponse(decision, reasons);
-//        }
-//
-//        DecisionResponse<FeatureDecision> decisionFeatureResponse = getVariationForFeatureInRollout(featureFlag, user, projectConfig);
-//        reasons.merge(decisionFeatureResponse.getReasons());
-//        decision = decisionFeatureResponse.getResult();
-//
-//        String message;
-//        if (decision.variation == null) {
-//            message = reasons.addInfo("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
-//                user.getUserId(), featureFlag.getKey());
-//        } else {
-//            message = reasons.addInfo("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
-//                user.getUserId(), featureFlag.getKey());
-//        }
-//        logger.info(message);
-//
-//        return new DecisionResponse(decision, reasons);
         return getVariationsForFeatureList(Arrays.asList(featureFlag), user, projectConfig, options).get(0);
     }
 
@@ -329,30 +304,6 @@ public class DecisionService {
         }
 
         return decisions;
-
-//        DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options);
-//        reasons.merge(decisionVariationResponse.getReasons());
-//
-//        FeatureDecision decision = decisionVariationResponse.getResult();
-//        if (decision != null) {
-//            return new DecisionResponse(decision, reasons);
-//        }
-
-//        DecisionResponse<FeatureDecision> decisionFeatureResponse = getVariationForFeatureInRollout(featureFlag, user, projectConfig);
-//        reasons.merge(decisionFeatureResponse.getReasons());
-//        decision = decisionFeatureResponse.getResult();
-//
-//        String message;
-//        if (decision.variation == null) {
-//            message = reasons.addInfo("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
-//                user.getUserId(), featureFlag.getKey());
-//        } else {
-//            message = reasons.addInfo("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
-//                user.getUserId(), featureFlag.getKey());
-//        }
-//        logger.info(message);
-//
-//        return new DecisionResponse(decision, reasons);
     }
 
     @Nonnull
@@ -788,7 +739,7 @@ public class DecisionService {
     }
 
 
-    public DecisionResponse<Variation> getVariationFromExperimentRule(@Nonnull ProjectConfig projectConfig,
+    private DecisionResponse<Variation> getVariationFromExperimentRule(@Nonnull ProjectConfig projectConfig,
                                                                       @Nonnull String flagKey,
                                                                       @Nonnull Experiment rule,
                                                                       @Nonnull OptimizelyUserContext user,
