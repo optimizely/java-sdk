@@ -491,6 +491,9 @@ public class DecisionServiceTest {
         );
     }
 
+    //========== getVariationForFeatureList tests ==========//
+
+
     //========== getVariationForFeatureInRollout tests ==========//
 
     /**

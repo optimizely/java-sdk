@@ -45,6 +45,7 @@ import javax.annotation.concurrent.ThreadSafe;
 
 import java.io.Closeable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.optimizely.ab.internal.SafetyUtils.tryClose;
 
@@ -1211,10 +1212,15 @@ public class Optimizely implements AutoCloseable {
                               @Nonnull String key,
                               @Nonnull List<OptimizelyDecideOption> options) {
         ProjectConfig projectConfig = getProjectConfig();
+        List<OptimizelyDecideOption> filteredOptions = options.stream()
+            .filter(opt -> opt != OptimizelyDecideOption.ENABLED_FLAGS_ONLY)
+            .collect(Collectors.toList());
+
         if (projectConfig == null) {
             return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
         }
-        return decideForKeys(user, Arrays.asList(key), options).get(key);
+
+        return decideForKeys(user, Arrays.asList(key), filteredOptions).get(key);
     }
 
     private OptimizelyDecision createOptimizelyDecision(
