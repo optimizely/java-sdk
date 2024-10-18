@@ -1324,12 +1324,16 @@ public class Optimizely implements AutoCloseable {
 
         List<FeatureFlag> flagsWithoutForcedDecision = new ArrayList<>();
 
+        List<String> validKeys = new ArrayList<>();
+
         for (String key : keys) {
             FeatureFlag flag = projectConfig.getFeatureKeyMapping().get(key);
             if (flag == null) {
                 decisionMap.put(key, OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.FLAG_KEY_INVALID.reason(key)));
                 continue;
             }
+
+            validKeys.add(key);
 
             DecisionReasons decisionReasons = DefaultDecisionReasons.newInstance(allOptions);
             Optional<FeatureDecision> forcedDecision = getForcedDecision(key, decisionReasons, projectConfig, user);
@@ -1352,9 +1356,21 @@ public class Optimizely implements AutoCloseable {
             decisionReasonsMap.get(flagKey).merge(decision.getReasons());
         }
 
-        for (Map.Entry<String, FeatureDecision> entry: flagDecisions.entrySet()) {
-            String key = entry.getKey();
-            FeatureDecision flagDecision = entry.getValue();
+//        for (Map.Entry<String, FeatureDecision> entry: flagDecisions.entrySet()) {
+//            String key = entry.getKey();
+//            FeatureDecision flagDecision = entry.getValue();
+//            DecisionReasons decisionReasons = decisionReasonsMap.get((key));
+//
+//            OptimizelyDecision optimizelyDecision = createOptimizelyDecision(
+//                user, key, flagDecision, decisionReasons, allOptions, projectConfig
+//            );
+//
+//            if (!allOptions.contains(OptimizelyDecideOption.ENABLED_FLAGS_ONLY) || optimizelyDecision.getEnabled()) {
+//                decisionMap.put(key, optimizelyDecision);
+//            }
+//        }
+        for (String key: validKeys) {
+            FeatureDecision flagDecision = flagDecisions.get(key);
             DecisionReasons decisionReasons = decisionReasonsMap.get((key));
 
             OptimizelyDecision optimizelyDecision = createOptimizelyDecision(
