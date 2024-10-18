@@ -24,6 +24,7 @@ import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.LogbackVerifier;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
 import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Before;
@@ -297,7 +298,9 @@ public class DecisionServiceTest {
             any(Experiment.class),
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
-            anyObject()
+            anyObject(),
+            anyObject(),
+            any(DecisionReasons.class)
         );
         // do not bucket to any rollouts
         doReturn(DecisionResponse.responseNoReasons(new FeatureDecision(null, null, null))).when(decisionService).getVariationForFeatureInRollout(
@@ -315,9 +318,9 @@ public class DecisionServiceTest {
         assertNull(featureDecision.variation);
         assertNull(featureDecision.decisionSource);
 
-//        logbackVerifier.expectMessage(Level.INFO,
-//            "The user \"" + genericUserId + "\" was not bucketed into a rollout for feature flag \"" +
-//                FEATURE_MULTI_VARIATE_FEATURE_KEY + "\".");
+        logbackVerifier.expectMessage(Level.INFO,
+            "The user \"" + genericUserId + "\" was not bucketed into a rollout for feature flag \"" +
+                FEATURE_MULTI_VARIATE_FEATURE_KEY + "\".");
 
         verify(spyFeatureFlag, times(2)).getExperimentIds();
         verify(spyFeatureFlag, times(2)).getKey();
@@ -381,7 +384,9 @@ public class DecisionServiceTest {
             eq(featureExperiment),
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
-            anyObject()
+            anyObject(),
+            anyObject(),
+            any(DecisionReasons.class)
         );
 
         // return variation for rollout
@@ -413,7 +418,9 @@ public class DecisionServiceTest {
             any(Experiment.class),
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
-            anyObject()
+            anyObject(),
+            anyObject(),
+            any(DecisionReasons.class)
         );
     }
 
@@ -438,7 +445,9 @@ public class DecisionServiceTest {
             eq(featureExperiment),
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
-            anyObject()
+            anyObject(),
+            anyObject(),
+            any(DecisionReasons.class)
         );
 
         // return variation for rollout
@@ -470,7 +479,9 @@ public class DecisionServiceTest {
             any(Experiment.class),
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
-            anyObject()
+            anyObject(),
+            anyObject(),
+            any(DecisionReasons.class)
         );
 
         logbackVerifier.expectMessage(

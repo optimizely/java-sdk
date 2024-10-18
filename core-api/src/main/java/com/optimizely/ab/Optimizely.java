@@ -1317,6 +1317,10 @@ public class Optimizely implements AutoCloseable {
     OptimizelyDecision decide(@Nonnull OptimizelyUserContext user,
                               @Nonnull String key,
                               @Nonnull List<OptimizelyDecideOption> options) {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
+        }
         return decideForKeys(user, Arrays.asList(key), options).get(key);
 
 //        ProjectConfig projectConfig = getProjectConfig();
@@ -1509,15 +1513,12 @@ public class Optimizely implements AutoCloseable {
 
         ProjectConfig projectConfig = getProjectConfig();
         if (projectConfig == null) {
-            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
+            logger.error("Optimizely instance is not valid, failing decideForKeys call.");
             return decisionMap;
         }
 
         if (keys.isEmpty()) return decisionMap;
 
-        String userId = user.getUserId();
-        Map<String, Object> attributes = user.getAttributes();
-        Boolean decisionEventDispatched = false;
         List<OptimizelyDecideOption> allOptions = getAllOptions(options);
 
         Map<String, FeatureDecision> flagDecisions = new HashMap<>();
@@ -1561,7 +1562,10 @@ public class Optimizely implements AutoCloseable {
             OptimizelyDecision optimizelyDecision = createOptimizelyDecision(
                 user, key, flagDecision, decisionReasons, allOptions, projectConfig
             );
-            decisionMap.put(key, optimizelyDecision);
+
+            if (!allOptions.contains(OptimizelyDecideOption.ENABLED_FLAGS_ONLY) || optimizelyDecision.getEnabled()) {
+                decisionMap.put(key, optimizelyDecision);
+            }
         }
 
         return decisionMap;
