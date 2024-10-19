@@ -493,6 +493,30 @@ public class DecisionServiceTest {
 
     //========== getVariationForFeatureList tests ==========//
 
+    @Test
+    public void getVariationsForFeatureListBatchesUpsLoadAndSave() throws Exception {
+        Bucketer bucketer = new Bucketer();
+        ErrorHandler mockErrorHandler = mock(ErrorHandler.class);
+        UserProfileService mockUserProfileService = mock(UserProfileService.class);
+
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, mockUserProfileService);
+
+        FeatureFlag featureFlag1 = FEATURE_FLAG_MULTI_VARIATE_FEATURE;
+        FeatureFlag featureFlag2 = FEATURE_FLAG_MULTI_VARIATE_FUTURE_FEATURE;
+        FeatureFlag featureFlag3 = FEATURE_FLAG_MUTEX_GROUP_FEATURE;
+
+        List<DecisionResponse<FeatureDecision>> decisions = decisionService.getVariationsForFeatureList(
+            Arrays.asList(featureFlag1, featureFlag2, featureFlag3),
+            optimizely.createUserContext(genericUserId),
+            v4ProjectConfig,
+            new ArrayList<>()
+        );
+
+        assertEquals(decisions.size(), 3);
+        verify(mockUserProfileService, times(1)).lookup(genericUserId);
+        verify(mockUserProfileService, times(1)).save(anyObject());
+    }
+
 
     //========== getVariationForFeatureInRollout tests ==========//
 

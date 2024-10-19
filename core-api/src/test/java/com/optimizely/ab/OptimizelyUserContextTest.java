@@ -20,7 +20,9 @@ import ch.qos.logback.classic.Level;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.optimizely.ab.bucketing.FeatureDecision;
+import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.bucketing.UserProfileService;
+import com.optimizely.ab.bucketing.UserProfileUtils;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.event.EventHandler;
@@ -369,7 +371,7 @@ public class OptimizelyUserContextTest {
 
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
         Map<String, OptimizelyDecision> decisions = user.decideAll();
-        assertTrue(decisions.size() == 3);
+        assertEquals(decisions.size(), 3);
 
         assertEquals(
             decisions.get(flagKey1),
@@ -419,6 +421,39 @@ public class OptimizelyUserContextTest {
 
         assertEquals(sentEvents.get(2).getExperimentKey(), "");
         assertEquals(sentEvents.get(2).getUserContext().getUserId(), userId);
+    }
+
+    @Test
+    public void decideForKeys_ups_batching() throws Exception {
+        UserProfileService ups = mock(UserProfileService.class);
+
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withUserProfileService(ups)
+            .build();
+
+        String flagKey1 = "feature_1";
+        String flagKey2 = "feature_2";
+        String flagKey3 = "feature_3";
+        Map<String, Object> attributes = Collections.singletonMap("gender", "f");
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
+        Map<String, OptimizelyDecision> decisions = user.decideForKeys(Arrays.asList(
+            flagKey1, flagKey2, flagKey3
+        ));
+
+        assertEquals(decisions.size(), 3);
+
+        ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+
+
+        verify(ups, times(1)).lookup(userId);
+        verify(ups, times(1)).save(argumentCaptor.capture());
+
+        Map<String, Object> savedUps = argumentCaptor.getValue();
+        UserProfile savedProfile = UserProfileUtils.convertMapToUserProfile(savedUps);
+
+        assertEquals(savedProfile.userId, userId);
     }
 
     @Test
