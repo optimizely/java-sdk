@@ -132,8 +132,7 @@ public class DecisionService {
 
             if (variation != null) {
                 if (userProfileTracker != null) {
-                    updateUserProfile(experiment, variation, userProfileTracker.userProfile);
-                    userProfileTracker.profileUpdated = true;
+                    userProfileTracker.updateUserProfile(experiment, variation);
                 } else {
                     logger.debug("This decision will not be saved since the UserProfileService is null.");
                 }
@@ -233,13 +232,31 @@ public class DecisionService {
         return  userProfile;
     }
 
-    static class UserProfileTracker {
+    class UserProfileTracker {
         public UserProfile userProfile;
         public boolean profileUpdated;
 
         UserProfileTracker(UserProfile userProfile, boolean profileUpdated) {
             this.userProfile = userProfile;
             this.profileUpdated = profileUpdated;
+        }
+
+        void updateUserProfile(@Nonnull Experiment experiment,
+                               @Nonnull Variation variation) {
+
+            String experimentId = experiment.getId();
+            String variationId = variation.getId();
+            Decision decision;
+            if (userProfile.experimentBucketMap.containsKey(experimentId)) {
+                decision = userProfile.experimentBucketMap.get(experimentId);
+                decision.variationId = variationId;
+            } else {
+                decision = new Decision(variationId);
+            }
+            userProfile.experimentBucketMap.put(experimentId, decision);
+            profileUpdated = true;
+            logger.info("Updated variation \"{}\" of experiment \"{}\" for user \"{}\".",
+                variationId, experimentId, userProfile.userId);
         }
     }
 
@@ -493,31 +510,6 @@ public class DecisionService {
             logger.info(message);
             return new DecisionResponse(null, reasons);
         }
-    }
-
-    /**
-     * Save a {@link Variation} of an {@link Experiment} for a user in the {@link UserProfileService}.
-     *
-     * @param experiment  The experiment the user was buck
-     * @param variation   The Variation to save.
-     * @param userProfile A {@link UserProfile} instance of the user information.
-     */
-    void updateUserProfile(@Nonnull Experiment experiment,
-                       @Nonnull Variation variation,
-                       @Nonnull UserProfile userProfile) {
-
-        String experimentId = experiment.getId();
-        String variationId = variation.getId();
-        Decision decision;
-        if (userProfile.experimentBucketMap.containsKey(experimentId)) {
-            decision = userProfile.experimentBucketMap.get(experimentId);
-            decision.variationId = variationId;
-        } else {
-            decision = new Decision(variationId);
-        }
-        userProfile.experimentBucketMap.put(experimentId, decision);
-        logger.info("Updated variation \"{}\" of experiment \"{}\" for user \"{}\".",
-            variationId, experimentId, userProfile.userId);
     }
 
     /**
