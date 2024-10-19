@@ -457,6 +457,34 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
+    public void decideAll_ups_batching() throws Exception {
+        UserProfileService ups = mock(UserProfileService.class);
+
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withUserProfileService(ups)
+            .build();
+
+        Map<String, Object> attributes = Collections.singletonMap("gender", "f");
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
+        Map<String, OptimizelyDecision> decisions = user.decideAll();
+
+        assertEquals(decisions.size(), 3);
+
+        ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+
+
+        verify(ups, times(1)).lookup(userId);
+        verify(ups, times(1)).save(argumentCaptor.capture());
+
+        Map<String, Object> savedUps = argumentCaptor.getValue();
+        UserProfile savedProfile = UserProfileUtils.convertMapToUserProfile(savedUps);
+
+        assertEquals(savedProfile.userId, userId);
+    }
+
+    @Test
     public void decideAll_allFlags_enabledFlagsOnly() {
         String flagKey1 = "feature_1";
         OptimizelyJSON variablesExpected1 = optimizely.getAllFeatureVariables(flagKey1, userId);
