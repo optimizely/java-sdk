@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2017-2022, Optimizely, Inc. and contributors                   *
+ * Copyright 2017-2022, 2024, Optimizely, Inc. and contributors             *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -24,6 +24,7 @@ import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.LogbackVerifier;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
 import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Before;
@@ -297,7 +298,9 @@ public class DecisionServiceTest {
             any(Experiment.class),
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
-            anyObject()
+            anyObject(),
+            anyObject(),
+            any(DecisionReasons.class)
         );
         // do not bucket to any rollouts
         doReturn(DecisionResponse.responseNoReasons(new FeatureDecision(null, null, null))).when(decisionService).getVariationForFeatureInRollout(
@@ -381,7 +384,9 @@ public class DecisionServiceTest {
             eq(featureExperiment),
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
-            anyObject()
+            anyObject(),
+            anyObject(),
+            any(DecisionReasons.class)
         );
 
         // return variation for rollout
@@ -413,7 +418,9 @@ public class DecisionServiceTest {
             any(Experiment.class),
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
-            anyObject()
+            anyObject(),
+            anyObject(),
+            any(DecisionReasons.class)
         );
     }
 
@@ -438,7 +445,9 @@ public class DecisionServiceTest {
             eq(featureExperiment),
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
-            anyObject()
+            anyObject(),
+            anyObject(),
+            any(DecisionReasons.class)
         );
 
         // return variation for rollout
@@ -470,7 +479,9 @@ public class DecisionServiceTest {
             any(Experiment.class),
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
-            anyObject()
+            anyObject(),
+            anyObject(),
+            any(DecisionReasons.class)
         );
 
         logbackVerifier.expectMessage(
@@ -744,27 +755,6 @@ public class DecisionServiceTest {
     }
 
     @Test
-    public void getVariationFromExperimentRuleTest() {
-        int index = 3;
-        Experiment experiment = ROLLOUT_2.getExperiments().get(index);
-        Variation expectedVariation = null;
-        for (Variation variation : experiment.getVariations()) {
-            if (variation.getKey().equals("3137445031")) {
-                expectedVariation = variation;
-            }
-        }
-        DecisionResponse<Variation> decisionResponse = decisionService.getVariationFromExperimentRule(
-            v4ProjectConfig,
-            FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(),
-            experiment,
-            optimizely.createUserContext(genericUserId, Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE)),
-            Collections.emptyList()
-        );
-
-        assertEquals(expectedVariation, decisionResponse.getResult());
-    }
-
-    @Test
     public void validatedForcedDecisionWithRuleKey() {
         String userId = "testUser1";
         String ruleKey = "2637642575";
@@ -961,8 +951,11 @@ public class DecisionServiceTest {
             experiment, optimizely.createUserContext(userProfileId, Collections.emptyMap()), noAudienceProjectConfig).getResult()
         );
         logbackVerifier.expectMessage(Level.INFO,
-            String.format("Saved variation \"%s\" of experiment \"%s\" for user \"" + userProfileId + "\".", variation.getId(),
+            String.format("Updated variation \"%s\" of experiment \"%s\" for user \"" + userProfileId + "\".", variation.getId(),
                 experiment.getId()));
+
+        logbackVerifier.expectMessage(Level.INFO,
+            String.format("Saved user profile of user \"%s\".", userProfileId));
 
         verify(userProfileService).save(eq(expectedUserProfile.toMap()));
     }
