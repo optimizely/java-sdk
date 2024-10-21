@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2017-2022, Optimizely, Inc. and contributors                   *
+ * Copyright 2017-2022, 2024, Optimizely, Inc. and contributors             *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -78,21 +78,16 @@ public class DecisionService {
         this.userProfileService = userProfileService;
     }
 
-    /**
-     * Get a {@link Variation} of an {@link Experiment} for a user to be allocated into.
-     *
-     * @param experiment         The Experiment the user will be bucketed into.
-     * @param user               The current OptimizelyUserContext
-     * @param projectConfig      The current projectConfig
-     * @param options            An array of decision options
-     * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
-     */
     @Nonnull
     public DecisionResponse<Variation> getVariation(@Nonnull Experiment experiment,
                                                     @Nonnull OptimizelyUserContext user,
                                                     @Nonnull ProjectConfig projectConfig,
-                                                    @Nonnull List<OptimizelyDecideOption> options) {
-        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+                                                    @Nonnull List<OptimizelyDecideOption> options,
+                                                    @Nullable UserProfileTracker userProfileTracker,
+                                                    @Nullable DecisionReasons reasons) {
+        if (reasons == null) {
+            reasons = DefaultDecisionReasons.newInstance();
+        }
 
         if (!ExperimentUtils.isExperimentActive(experiment)) {
             String message = reasons.addInfo("Experiment \"%s\" is not running.", experiment.getKey());
@@ -116,39 +111,13 @@ public class DecisionService {
             return new DecisionResponse(variation, reasons);
         }
 
-        // fetch the user profile map from the user profile service
-        boolean ignoreUPS = options.contains(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE);
-        UserProfile userProfile = null;
-
-        if (userProfileService != null && !ignoreUPS) {
-            try {
-                Map<String, Object> userProfileMap = userProfileService.lookup(user.getUserId());
-                if (userProfileMap == null) {
-                    String message = reasons.addInfo("We were unable to get a user profile map from the UserProfileService.");
-                    logger.info(message);
-                } else if (UserProfileUtils.isValidUserProfileMap(userProfileMap)) {
-                    userProfile = UserProfileUtils.convertMapToUserProfile(userProfileMap);
-                } else {
-                    String message = reasons.addInfo("The UserProfileService returned an invalid map.");
-                    logger.warn(message);
-                }
-            } catch (Exception exception) {
-                String message = reasons.addInfo(exception.getMessage());
-                logger.error(message);
-                errorHandler.handleError(new OptimizelyRuntimeException(exception));
-            }
-
-            // check if user exists in user profile
-            if (userProfile != null) {
-                decisionVariation = getStoredVariation(experiment, userProfile, projectConfig);
-                reasons.merge(decisionVariation.getReasons());
-                variation = decisionVariation.getResult();
-                // return the stored variation if it exists
-                if (variation != null) {
-                    return new DecisionResponse(variation, reasons);
-                }
-            } else { // if we could not find a user profile, make a new one
-                userProfile = new UserProfile(user.getUserId(), new HashMap<String, Decision>());
+        if (userProfileTracker != null) {
+            decisionVariation = getStoredVariation(experiment, userProfileTracker.userProfile, projectConfig);
+            reasons.merge(decisionVariation.getReasons());
+            variation = decisionVariation.getResult();
+            // return the stored variation if it exists
+            if (variation != null) {
+                return new DecisionResponse(variation, reasons);
             }
         }
 
@@ -162,8 +131,8 @@ public class DecisionService {
             variation = decisionVariation.getResult();
 
             if (variation != null) {
-                if (userProfileService != null && !ignoreUPS) {
-                    saveVariation(experiment, variation, userProfile);
+                if (userProfileTracker != null) {
+                    userProfileTracker.updateUserProfile(experiment, variation);
                 } else {
                     logger.debug("This decision will not be saved since the UserProfileService is null.");
                 }
@@ -175,6 +144,41 @@ public class DecisionService {
         String message = reasons.addInfo("User \"%s\" does not meet conditions to be in experiment \"%s\".", user.getUserId(), experiment.getKey());
         logger.info(message);
         return new DecisionResponse(null, reasons);
+    }
+
+    /**
+     * Get a {@link Variation} of an {@link Experiment} for a user to be allocated into.
+     *
+     * @param experiment         The Experiment the user will be bucketed into.
+     * @param user               The current OptimizelyUserContext
+     * @param projectConfig      The current projectConfig
+     * @param options            An array of decision options
+     * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
+     */
+    @Nonnull
+    public DecisionResponse<Variation> getVariation(@Nonnull Experiment experiment,
+                                                    @Nonnull OptimizelyUserContext user,
+                                                    @Nonnull ProjectConfig projectConfig,
+                                                    @Nonnull List<OptimizelyDecideOption> options) {
+        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+
+        // fetch the user profile map from the user profile service
+        boolean ignoreUPS = options.contains(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE);
+//        UserProfile userProfile = null;
+        UserProfileTracker userProfileTracker = null;
+
+        if (userProfileService != null && !ignoreUPS) {
+            UserProfile userProfile = getUserProfile(user.getUserId(), reasons);
+            userProfileTracker = new UserProfileTracker(userProfile, false);
+        }
+
+
+        DecisionResponse<Variation> response = getVariation(experiment, user, projectConfig, options, userProfileTracker, reasons);
+
+        if(userProfileService != null && !ignoreUPS && userProfileTracker.profileUpdated) {
+            saveUserProfile(userProfileTracker.userProfile);
+        }
+        return response;
     }
 
     @Nonnull
@@ -198,31 +202,125 @@ public class DecisionService {
                                                                     @Nonnull OptimizelyUserContext user,
                                                                     @Nonnull ProjectConfig projectConfig,
                                                                     @Nonnull List<OptimizelyDecideOption> options) {
-        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+        return getVariationsForFeatureList(Arrays.asList(featureFlag), user, projectConfig, options).get(0);
+    }
 
-        DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options);
-        reasons.merge(decisionVariationResponse.getReasons());
+    private UserProfile getUserProfile(String userId, DecisionReasons reasons) {
+        UserProfile userProfile = null;
 
-        FeatureDecision decision = decisionVariationResponse.getResult();
-        if (decision != null) {
-            return new DecisionResponse(decision, reasons);
+        try {
+            Map<String, Object> userProfileMap = userProfileService.lookup(userId);
+            if (userProfileMap == null) {
+                String message = reasons.addInfo("We were unable to get a user profile map from the UserProfileService.");
+                logger.info(message);
+            } else if (UserProfileUtils.isValidUserProfileMap(userProfileMap)) {
+                userProfile = UserProfileUtils.convertMapToUserProfile(userProfileMap);
+            } else {
+                String message = reasons.addInfo("The UserProfileService returned an invalid map.");
+                logger.warn(message);
+            }
+        } catch (Exception exception) {
+            String message = reasons.addInfo(exception.getMessage());
+            logger.error(message);
+            errorHandler.handleError(new OptimizelyRuntimeException(exception));
         }
 
-        DecisionResponse<FeatureDecision> decisionFeatureResponse = getVariationForFeatureInRollout(featureFlag, user, projectConfig);
-        reasons.merge(decisionFeatureResponse.getReasons());
-        decision = decisionFeatureResponse.getResult();
-
-        String message;
-        if (decision.variation == null) {
-            message = reasons.addInfo("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
-                user.getUserId(), featureFlag.getKey());
-        } else {
-            message = reasons.addInfo("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
-                user.getUserId(), featureFlag.getKey());
+        if (userProfile == null) {
+            userProfile = new UserProfile(userId, new HashMap<String, Decision>());
         }
-        logger.info(message);
 
-        return new DecisionResponse(decision, reasons);
+        return  userProfile;
+    }
+
+    static class UserProfileTracker {
+        public UserProfile userProfile;
+        public boolean profileUpdated;
+
+        UserProfileTracker(UserProfile userProfile, boolean profileUpdated) {
+            this.userProfile = userProfile;
+            this.profileUpdated = profileUpdated;
+        }
+
+        void updateUserProfile(@Nonnull Experiment experiment,
+                               @Nonnull Variation variation) {
+
+            String experimentId = experiment.getId();
+            String variationId = variation.getId();
+            Decision decision;
+            if (userProfile.experimentBucketMap.containsKey(experimentId)) {
+                decision = userProfile.experimentBucketMap.get(experimentId);
+                decision.variationId = variationId;
+            } else {
+                decision = new Decision(variationId);
+            }
+            userProfile.experimentBucketMap.put(experimentId, decision);
+            profileUpdated = true;
+            logger.info("Updated variation \"{}\" of experiment \"{}\" for user \"{}\".",
+                variationId, experimentId, userProfile.userId);
+        }
+    }
+
+    /**
+     * Get the variations the user is bucketed into for the the list of feature flags
+     *
+     * @param featureFlags        The feature flag list the user wants to access.
+     * @param user                The current OptimizelyuserContext
+     * @param projectConfig       The current projectConfig
+     * @param options             An array of decision options
+     * @return A {@link DecisionResponse} including a {@link FeatureDecision} and the decision reasons
+     */
+    @Nonnull
+    public  List<DecisionResponse<FeatureDecision>> getVariationsForFeatureList(@Nonnull List<FeatureFlag> featureFlags,
+                                                                    @Nonnull OptimizelyUserContext user,
+                                                                    @Nonnull ProjectConfig projectConfig,
+                                                                    @Nonnull List<OptimizelyDecideOption> options) {
+        DecisionReasons upsReasons = DefaultDecisionReasons.newInstance();
+
+        boolean ignoreUPS = options.contains(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE);
+        UserProfileTracker userProfileTracker = null;
+
+        if (userProfileService != null && !ignoreUPS) {
+            UserProfile userProfile = getUserProfile(user.getUserId(), upsReasons);
+            userProfileTracker = new UserProfileTracker(userProfile, false);
+        }
+
+        List<DecisionResponse<FeatureDecision>> decisions = new ArrayList<>();
+
+        for (FeatureFlag featureFlag: featureFlags) {
+            DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+            reasons.merge(upsReasons);
+
+            DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options, userProfileTracker);
+            reasons.merge(decisionVariationResponse.getReasons());
+
+            FeatureDecision decision = decisionVariationResponse.getResult();
+            if (decision != null) {
+                decisions.add(new DecisionResponse(decision, reasons));
+                continue;
+            }
+
+            DecisionResponse<FeatureDecision> decisionFeatureResponse = getVariationForFeatureInRollout(featureFlag, user, projectConfig);
+            reasons.merge(decisionFeatureResponse.getReasons());
+            decision = decisionFeatureResponse.getResult();
+
+            String message;
+            if (decision.variation == null) {
+                message = reasons.addInfo("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
+                    user.getUserId(), featureFlag.getKey());
+            } else {
+                message = reasons.addInfo("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
+                    user.getUserId(), featureFlag.getKey());
+            }
+            logger.info(message);
+
+            decisions.add(new DecisionResponse(decision, reasons));
+        }
+
+        if (userProfileService != null && !ignoreUPS && userProfileTracker.profileUpdated) {
+            saveUserProfile(userProfileTracker.userProfile);
+        }
+
+        return decisions;
     }
 
     @Nonnull
@@ -244,13 +342,15 @@ public class DecisionService {
     DecisionResponse<FeatureDecision> getVariationFromExperiment(@Nonnull ProjectConfig projectConfig,
                                                                  @Nonnull FeatureFlag featureFlag,
                                                                  @Nonnull OptimizelyUserContext user,
-                                                                 @Nonnull List<OptimizelyDecideOption> options) {
+                                                                 @Nonnull List<OptimizelyDecideOption> options,
+                                                                 @Nullable UserProfileTracker userProfileTracker) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
         if (!featureFlag.getExperimentIds().isEmpty()) {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
 
-                DecisionResponse<Variation> decisionVariation = getVariationFromExperimentRule(projectConfig, featureFlag.getKey(), experiment, user, options);
+                DecisionResponse<Variation> decisionVariation =
+                    getVariationFromExperimentRule(projectConfig, featureFlag.getKey(), experiment, user, options, userProfileTracker);
                 reasons.merge(decisionVariation.getReasons());
                 Variation variation = decisionVariation.getResult();
 
@@ -448,6 +548,22 @@ public class DecisionService {
         }
     }
 
+    void saveUserProfile(@Nonnull UserProfile userProfile) {
+        if (userProfileService == null) {
+            return;
+        }
+
+        try {
+            userProfileService.save(userProfile.toMap());
+            logger.info("Saved user profile of user \"{}\".",
+                userProfile.userId);
+        } catch (Exception exception) {
+            logger.warn("Failed to save user profile of user \"{}\".",
+                userProfile.userId);
+            errorHandler.handleError(new OptimizelyRuntimeException(exception));
+        }
+    }
+
     /**
      * Get the bucketingId of a user if a bucketingId exists in attributes, or else default to userId.
      *
@@ -615,11 +731,12 @@ public class DecisionService {
     }
 
 
-    public DecisionResponse<Variation> getVariationFromExperimentRule(@Nonnull ProjectConfig projectConfig,
+    private DecisionResponse<Variation> getVariationFromExperimentRule(@Nonnull ProjectConfig projectConfig,
                                                                       @Nonnull String flagKey,
                                                                       @Nonnull Experiment rule,
                                                                       @Nonnull OptimizelyUserContext user,
-                                                                      @Nonnull List<OptimizelyDecideOption> options) {
+                                                                      @Nonnull List<OptimizelyDecideOption> options,
+                                                                      @Nullable UserProfileTracker userProfileTracker) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         String ruleKey = rule != null ? rule.getKey() : null;
@@ -634,7 +751,7 @@ public class DecisionService {
             return new DecisionResponse(variation, reasons);
         }
         //regular decision
-        DecisionResponse<Variation> decisionResponse = getVariation(rule, user, projectConfig, options);
+        DecisionResponse<Variation> decisionResponse = getVariation(rule, user, projectConfig, options, userProfileTracker, null);
         reasons.merge(decisionResponse.getReasons());
 
         variation = decisionResponse.getResult();

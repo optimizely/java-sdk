@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2021-2023, Optimizely and contributors
+ *    Copyright 2021-2024, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,10 +20,15 @@ import ch.qos.logback.classic.Level;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.optimizely.ab.bucketing.FeatureDecision;
+import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.bucketing.UserProfileService;
+import com.optimizely.ab.bucketing.UserProfileUtils;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
+import com.optimizely.ab.event.EventHandler;
+import com.optimizely.ab.event.EventProcessor;
 import com.optimizely.ab.event.ForwardingEventProcessor;
+import com.optimizely.ab.event.internal.ImpressionEvent;
 import com.optimizely.ab.event.internal.payload.DecisionMetadata;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.notification.NotificationCenter;
@@ -37,7 +42,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -345,9 +353,11 @@ public class OptimizelyUserContextTest {
 
     @Test
     public void decideAll_allFlags() {
+        EventProcessor mockEventProcessor = mock(EventProcessor.class);
+
         optimizely = new Optimizely.Builder()
             .withDatafile(datafile)
-            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .withEventProcessor(mockEventProcessor)
             .build();
 
         String flagKey1 = "feature_1";
@@ -361,8 +371,7 @@ public class OptimizelyUserContextTest {
 
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
         Map<String, OptimizelyDecision> decisions = user.decideAll();
-
-        assertTrue(decisions.size() == 3);
+        assertEquals(decisions.size(), 3);
 
         assertEquals(
             decisions.get(flagKey1),
@@ -395,9 +404,84 @@ public class OptimizelyUserContextTest {
                 user,
                 Collections.emptyList()));
 
-        eventHandler.expectImpression("10390977673", "10389729780", userId, attributes);
-        eventHandler.expectImpression("10420810910", "10418551353", userId, attributes);
-        eventHandler.expectImpression(null, "", userId, attributes);
+        ArgumentCaptor<ImpressionEvent> argumentCaptor = ArgumentCaptor.forClass(ImpressionEvent.class);
+        verify(mockEventProcessor, times(3)).process(argumentCaptor.capture());
+
+        List<ImpressionEvent> sentEvents = argumentCaptor.getAllValues();
+        assertEquals(sentEvents.size(), 3);
+
+        assertEquals(sentEvents.get(0).getExperimentKey(), "exp_with_audience");
+        assertEquals(sentEvents.get(0).getVariationKey(), "a");
+        assertEquals(sentEvents.get(0).getUserContext().getUserId(), userId);
+
+
+        assertEquals(sentEvents.get(1).getExperimentKey(), "exp_no_audience");
+        assertEquals(sentEvents.get(1).getVariationKey(), "variation_with_traffic");
+        assertEquals(sentEvents.get(1).getUserContext().getUserId(), userId);
+
+        assertEquals(sentEvents.get(2).getExperimentKey(), "");
+        assertEquals(sentEvents.get(2).getUserContext().getUserId(), userId);
+    }
+
+    @Test
+    public void decideForKeys_ups_batching() throws Exception {
+        UserProfileService ups = mock(UserProfileService.class);
+
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withUserProfileService(ups)
+            .build();
+
+        String flagKey1 = "feature_1";
+        String flagKey2 = "feature_2";
+        String flagKey3 = "feature_3";
+        Map<String, Object> attributes = Collections.singletonMap("gender", "f");
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
+        Map<String, OptimizelyDecision> decisions = user.decideForKeys(Arrays.asList(
+            flagKey1, flagKey2, flagKey3
+        ));
+
+        assertEquals(decisions.size(), 3);
+
+        ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+
+
+        verify(ups, times(1)).lookup(userId);
+        verify(ups, times(1)).save(argumentCaptor.capture());
+
+        Map<String, Object> savedUps = argumentCaptor.getValue();
+        UserProfile savedProfile = UserProfileUtils.convertMapToUserProfile(savedUps);
+
+        assertEquals(savedProfile.userId, userId);
+    }
+
+    @Test
+    public void decideAll_ups_batching() throws Exception {
+        UserProfileService ups = mock(UserProfileService.class);
+
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withUserProfileService(ups)
+            .build();
+
+        Map<String, Object> attributes = Collections.singletonMap("gender", "f");
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
+        Map<String, OptimizelyDecision> decisions = user.decideAll();
+
+        assertEquals(decisions.size(), 3);
+
+        ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+
+
+        verify(ups, times(1)).lookup(userId);
+        verify(ups, times(1)).save(argumentCaptor.capture());
+
+        Map<String, Object> savedUps = argumentCaptor.getValue();
+        UserProfile savedProfile = UserProfileUtils.convertMapToUserProfile(savedUps);
+
+        assertEquals(savedProfile.userId, userId);
     }
 
     @Test
