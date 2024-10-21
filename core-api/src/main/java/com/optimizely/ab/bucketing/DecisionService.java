@@ -232,7 +232,7 @@ public class DecisionService {
         return  userProfile;
     }
 
-    class UserProfileTracker {
+    static class UserProfileTracker {
         public UserProfile userProfile;
         public boolean profileUpdated;
 
@@ -261,12 +261,12 @@ public class DecisionService {
     }
 
     /**
-     * Get the variation the user is bucketed into for the FeatureFlag
+     * Get the variations the user is bucketed into for the the list of feature flags
      *
      * @param featureFlags        The feature flag list the user wants to access.
-     * @param user               The current OptimizelyuserContext
-     * @param projectConfig      The current projectConfig
-     * @param options            An array of decision options
+     * @param user                The current OptimizelyuserContext
+     * @param projectConfig       The current projectConfig
+     * @param options             An array of decision options
      * @return A {@link DecisionResponse} including a {@link FeatureDecision} and the decision reasons
      */
     @Nonnull
