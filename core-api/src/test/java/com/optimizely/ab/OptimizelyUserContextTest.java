@@ -408,17 +408,17 @@ public class OptimizelyUserContextTest {
         List<ImpressionEvent> sentEvents = argumentCaptor.getAllValues();
         assertEquals(sentEvents.size(), 3);
 
-        assertEquals(sentEvents.get(2).getExperimentKey(), "exp_with_audience");
-        assertEquals(sentEvents.get(2).getVariationKey(), "a");
-        assertEquals(sentEvents.get(2).getUserContext().getUserId(), userId);
+        assertEquals(sentEvents.get(0).getExperimentKey(), "exp_with_audience");
+        assertEquals(sentEvents.get(0).getVariationKey(), "a");
+        assertEquals(sentEvents.get(0).getUserContext().getUserId(), userId);
 
 
         assertEquals(sentEvents.get(1).getExperimentKey(), "exp_no_audience");
         assertEquals(sentEvents.get(1).getVariationKey(), "variation_with_traffic");
         assertEquals(sentEvents.get(1).getUserContext().getUserId(), userId);
 
-        assertEquals(sentEvents.get(0).getExperimentKey(), "");
-        assertEquals(sentEvents.get(0).getUserContext().getUserId(), userId);
+        assertEquals(sentEvents.get(2).getExperimentKey(), "");
+        assertEquals(sentEvents.get(2).getUserContext().getUserId(), userId);
     }
 
     @Test
