@@ -1212,15 +1212,15 @@ public class Optimizely implements AutoCloseable {
                               @Nonnull String key,
                               @Nonnull List<OptimizelyDecideOption> options) {
         ProjectConfig projectConfig = getProjectConfig();
-        List<OptimizelyDecideOption> filteredOptions = options.stream()
-            .filter(opt -> opt != OptimizelyDecideOption.ENABLED_FLAGS_ONLY)
-            .collect(Collectors.toList());
-
         if (projectConfig == null) {
             return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
         }
 
-        return decideForKeys(user, Arrays.asList(key), filteredOptions).get(key);
+        List<OptimizelyDecideOption> filteredOptions = getAllOptions(options).stream()
+            .filter(opt -> opt != OptimizelyDecideOption.ENABLED_FLAGS_ONLY)
+            .collect(Collectors.toList());
+
+        return decideForKeys(user, Arrays.asList(key), filteredOptions, true).get(key);
     }
 
     private OptimizelyDecision createOptimizelyDecision(
@@ -1305,8 +1305,15 @@ public class Optimizely implements AutoCloseable {
     }
 
     Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
+                                                          @Nonnull List<String> keys,
+                                                          @Nonnull List<OptimizelyDecideOption> options) {
+        return decideForKeys(user, keys, options, false);
+    }
+
+    private Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
                                                   @Nonnull List<String> keys,
-                                                  @Nonnull List<OptimizelyDecideOption> options) {
+                                                  @Nonnull List<OptimizelyDecideOption> options,
+                                                  boolean ignoreDefaultOptions) {
         Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
 
         ProjectConfig projectConfig = getProjectConfig();
@@ -1317,7 +1324,7 @@ public class Optimizely implements AutoCloseable {
 
         if (keys.isEmpty()) return decisionMap;
 
-        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
+        List<OptimizelyDecideOption> allOptions = ignoreDefaultOptions ? options: getAllOptions(options);
 
         Map<String, FeatureDecision> flagDecisions = new HashMap<>();
         Map<String, DecisionReasons> decisionReasonsMap = new HashMap<>();
@@ -1356,19 +1363,6 @@ public class Optimizely implements AutoCloseable {
             decisionReasonsMap.get(flagKey).merge(decision.getReasons());
         }
 
-//        for (Map.Entry<String, FeatureDecision> entry: flagDecisions.entrySet()) {
-//            String key = entry.getKey();
-//            FeatureDecision flagDecision = entry.getValue();
-//            DecisionReasons decisionReasons = decisionReasonsMap.get((key));
-//
-//            OptimizelyDecision optimizelyDecision = createOptimizelyDecision(
-//                user, key, flagDecision, decisionReasons, allOptions, projectConfig
-//            );
-//
-//            if (!allOptions.contains(OptimizelyDecideOption.ENABLED_FLAGS_ONLY) || optimizelyDecision.getEnabled()) {
-//                decisionMap.put(key, optimizelyDecision);
-//            }
-//        }
         for (String key: validKeys) {
             FeatureDecision flagDecision = flagDecisions.get(key);
             DecisionReasons decisionReasons = decisionReasonsMap.get((key));
