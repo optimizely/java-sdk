@@ -419,6 +419,9 @@ public class DecisionService {
         return new DecisionResponse(null, reasons);
     }
 
+
+    // TODO: Logically, it makes sense to move this method to UserProfileTracker. But some tests are also calling this
+    // method, requiring us to refactor those tests as well. We'll look to refactor this later.
     /**
      * Get the {@link Variation} that has been stored for the user in the {@link UserProfileService} implementation.
      *
