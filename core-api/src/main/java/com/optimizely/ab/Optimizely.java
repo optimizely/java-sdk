@@ -1193,21 +1193,6 @@ public class Optimizely implements AutoCloseable {
         return new OptimizelyUserContext(this, userId, attributes, Collections.EMPTY_MAP, null, false);
     }
 
-    Optional<FeatureDecision> getForcedDecision(@Nonnull String flagKey,
-                                                @Nonnull DecisionReasons decisionReasons,
-                                                @Nonnull ProjectConfig projectConfig,
-                                                @Nonnull OptimizelyUserContext user) {
-
-        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
-        DecisionResponse<Variation> forcedDecisionVariation = decisionService.validatedForcedDecision(optimizelyDecisionContext, projectConfig, user);
-        decisionReasons.merge(forcedDecisionVariation.getReasons());
-        if (forcedDecisionVariation.getResult() != null) {
-            return Optional.of(new FeatureDecision(null, forcedDecisionVariation.getResult(), FeatureDecision.DecisionSource.FEATURE_TEST));
-        }
-
-        return Optional.empty();
-    }
-
     OptimizelyDecision decide(@Nonnull OptimizelyUserContext user,
                               @Nonnull String key,
                               @Nonnull List<OptimizelyDecideOption> options) {
@@ -1343,11 +1328,15 @@ public class Optimizely implements AutoCloseable {
             validKeys.add(key);
 
             DecisionReasons decisionReasons = DefaultDecisionReasons.newInstance(allOptions);
-            Optional<FeatureDecision> forcedDecision = getForcedDecision(key, decisionReasons, projectConfig, user);
             decisionReasonsMap.put(key, decisionReasons);
 
-            if (forcedDecision.isPresent()) {
-                flagDecisions.put(key, forcedDecision.get());
+            OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(key, null);
+            DecisionResponse<Variation> forcedDecisionVariation = decisionService.validatedForcedDecision(optimizelyDecisionContext, projectConfig, user);
+            decisionReasons.merge(forcedDecisionVariation.getReasons());
+
+            if (forcedDecisionVariation.getResult() != null) {
+                flagDecisions.put(key,
+                    new FeatureDecision(null, forcedDecisionVariation.getResult(), FeatureDecision.DecisionSource.FEATURE_TEST));
             } else {
                 flagsWithoutForcedDecision.add(flag);
             }

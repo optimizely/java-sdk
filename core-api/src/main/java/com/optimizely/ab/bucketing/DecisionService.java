@@ -78,6 +78,17 @@ public class DecisionService {
         this.userProfileService = userProfileService;
     }
 
+    /**
+     * Get a {@link Variation} of an {@link Experiment} for a user to be allocated into.
+     *
+     * @param experiment           The Experiment the user will be bucketed into.
+     * @param user                 The current OptimizelyUserContext
+     * @param projectConfig        The current projectConfig
+     * @param options              An array of decision options
+     * @param userProfileTracker   tracker for reading and updating user profile of the user
+     * @param reasons              Decision reasons
+     * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
+     */
     @Nonnull
     public DecisionResponse<Variation> getVariation(@Nonnull Experiment experiment,
                                                     @Nonnull OptimizelyUserContext user,
@@ -164,19 +175,17 @@ public class DecisionService {
 
         // fetch the user profile map from the user profile service
         boolean ignoreUPS = options.contains(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE);
-//        UserProfile userProfile = null;
         UserProfileTracker userProfileTracker = null;
 
         if (userProfileService != null && !ignoreUPS) {
-            UserProfile userProfile = getUserProfile(user.getUserId(), reasons);
-            userProfileTracker = new UserProfileTracker(userProfile, false);
+            userProfileTracker = new UserProfileTracker(user.getUserId());
+            userProfileTracker.loadUserProfile(reasons);
         }
-
 
         DecisionResponse<Variation> response = getVariation(experiment, user, projectConfig, options, userProfileTracker, reasons);
 
-        if(userProfileService != null && !ignoreUPS && userProfileTracker.profileUpdated) {
-            saveUserProfile(userProfileTracker.userProfile);
+        if(userProfileService != null && !ignoreUPS) {
+            userProfileTracker.saveUserProfile();
         }
         return response;
     }
@@ -205,45 +214,42 @@ public class DecisionService {
         return getVariationsForFeatureList(Arrays.asList(featureFlag), user, projectConfig, options).get(0);
     }
 
-    private UserProfile getUserProfile(String userId, DecisionReasons reasons) {
-        UserProfile userProfile = null;
+    class UserProfileTracker {
+        private UserProfile userProfile;
+        private boolean profileUpdated;
+        private String userId;
 
-        try {
-            Map<String, Object> userProfileMap = userProfileService.lookup(userId);
-            if (userProfileMap == null) {
-                String message = reasons.addInfo("We were unable to get a user profile map from the UserProfileService.");
-                logger.info(message);
-            } else if (UserProfileUtils.isValidUserProfileMap(userProfileMap)) {
-                userProfile = UserProfileUtils.convertMapToUserProfile(userProfileMap);
-            } else {
-                String message = reasons.addInfo("The UserProfileService returned an invalid map.");
-                logger.warn(message);
+        UserProfileTracker(String userId) {
+            this.userId = userId;
+            this.profileUpdated = false;
+            this.userProfile = null;
+        }
+
+        public void loadUserProfile(DecisionReasons reasons) {
+            try {
+                Map<String, Object> userProfileMap = userProfileService.lookup(userId);
+                if (userProfileMap == null) {
+                    String message = reasons.addInfo("We were unable to get a user profile map from the UserProfileService.");
+                    logger.info(message);
+                } else if (UserProfileUtils.isValidUserProfileMap(userProfileMap)) {
+                    userProfile = UserProfileUtils.convertMapToUserProfile(userProfileMap);
+                } else {
+                    String message = reasons.addInfo("The UserProfileService returned an invalid map.");
+                    logger.warn(message);
+                }
+            } catch (Exception exception) {
+                String message = reasons.addInfo(exception.getMessage());
+                logger.error(message);
+                errorHandler.handleError(new OptimizelyRuntimeException(exception));
             }
-        } catch (Exception exception) {
-            String message = reasons.addInfo(exception.getMessage());
-            logger.error(message);
-            errorHandler.handleError(new OptimizelyRuntimeException(exception));
+
+            if (userProfile == null) {
+                userProfile = new UserProfile(userId, new HashMap<String, Decision>());
+            }
         }
 
-        if (userProfile == null) {
-            userProfile = new UserProfile(userId, new HashMap<String, Decision>());
-        }
-
-        return  userProfile;
-    }
-
-    static class UserProfileTracker {
-        public UserProfile userProfile;
-        public boolean profileUpdated;
-
-        UserProfileTracker(UserProfile userProfile, boolean profileUpdated) {
-            this.userProfile = userProfile;
-            this.profileUpdated = profileUpdated;
-        }
-
-        void updateUserProfile(@Nonnull Experiment experiment,
+        public void updateUserProfile(@Nonnull Experiment experiment,
                                @Nonnull Variation variation) {
-
             String experimentId = experiment.getId();
             String variationId = variation.getId();
             Decision decision;
@@ -258,10 +264,27 @@ public class DecisionService {
             logger.info("Updated variation \"{}\" of experiment \"{}\" for user \"{}\".",
                 variationId, experimentId, userProfile.userId);
         }
+
+        public void saveUserProfile() {
+            // if there were no updates, no need to save
+            if (!this.profileUpdated) {
+                return;
+            }
+
+            try {
+                userProfileService.save(userProfile.toMap());
+                logger.info("Saved user profile of user \"{}\".",
+                    userProfile.userId);
+            } catch (Exception exception) {
+                logger.warn("Failed to save user profile of user \"{}\".",
+                    userProfile.userId);
+                errorHandler.handleError(new OptimizelyRuntimeException(exception));
+            }
+        }
     }
 
     /**
-     * Get the variations the user is bucketed into for the the list of feature flags
+     * Get the variations the user is bucketed into for the list of feature flags
      *
      * @param featureFlags        The feature flag list the user wants to access.
      * @param user                The current OptimizelyuserContext
@@ -280,8 +303,8 @@ public class DecisionService {
         UserProfileTracker userProfileTracker = null;
 
         if (userProfileService != null && !ignoreUPS) {
-            UserProfile userProfile = getUserProfile(user.getUserId(), upsReasons);
-            userProfileTracker = new UserProfileTracker(userProfile, false);
+            userProfileTracker = new UserProfileTracker(user.getUserId());
+            userProfileTracker.loadUserProfile(upsReasons);
         }
 
         List<DecisionResponse<FeatureDecision>> decisions = new ArrayList<>();
@@ -316,8 +339,8 @@ public class DecisionService {
             decisions.add(new DecisionResponse(decision, reasons));
         }
 
-        if (userProfileService != null && !ignoreUPS && userProfileTracker.profileUpdated) {
-            saveUserProfile(userProfileTracker.userProfile);
+        if (userProfileService != null && !ignoreUPS) {
+            userProfileTracker.saveUserProfile();
         }
 
         return decisions;
@@ -545,22 +568,6 @@ public class DecisionService {
                     variationId, experimentId, userProfile.userId);
                 errorHandler.handleError(new OptimizelyRuntimeException(exception));
             }
-        }
-    }
-
-    void saveUserProfile(@Nonnull UserProfile userProfile) {
-        if (userProfileService == null) {
-            return;
-        }
-
-        try {
-            userProfileService.save(userProfile.toMap());
-            logger.info("Saved user profile of user \"{}\".",
-                userProfile.userId);
-        } catch (Exception exception) {
-            logger.warn("Failed to save user profile of user \"{}\".",
-                userProfile.userId);
-            errorHandler.handleError(new OptimizelyRuntimeException(exception));
         }
     }
 
