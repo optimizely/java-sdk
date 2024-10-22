@@ -1201,11 +1201,10 @@ public class Optimizely implements AutoCloseable {
             return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
         }
 
-        List<OptimizelyDecideOption> filteredOptions = getAllOptions(options).stream()
-            .filter(opt -> opt != OptimizelyDecideOption.ENABLED_FLAGS_ONLY)
-            .collect(Collectors.toList());
+        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
+        allOptions.remove(OptimizelyDecideOption.ENABLED_FLAGS_ONLY);
 
-        return decideForKeys(user, Arrays.asList(key), filteredOptions, true).get(key);
+        return decideForKeys(user, Arrays.asList(key), allOptions, true).get(key);
     }
 
     private OptimizelyDecision createOptimizelyDecision(
