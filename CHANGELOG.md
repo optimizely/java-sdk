@@ -1,7 +1,7 @@
 # Optimizely Java X SDK Changelog
 
 ## [4.2.0]
-November 5th, 2024
+November 6th, 2024
 
 ### New Features
 * Batch UPS lookup and save calls in decideAll and decideForKeys methods ([#549](https://github.com/optimizely/java-sdk/pull/549)).
