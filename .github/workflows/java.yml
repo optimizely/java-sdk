@@ -51,7 +51,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jdk: [8, 9]
+        jdk: [17, 20]
         optimizely_default_parser: [GSON_CONFIG_PARSER, JACKSON_CONFIG_PARSER, JSON_CONFIG_PARSER, JSON_SIMPLE_CONFIG_PARSER]
     steps:
       - name: checkout
