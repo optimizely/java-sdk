@@ -1,8 +1,9 @@
 dependencies {
-    compile project(':core-api')
-    compileOnly group: 'com.google.code.gson', name: 'gson', version: gsonVersion
-    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: httpClientVersion
-    testCompile 'org.mock-server:mockserver-netty:5.1.1'
+    implementation project(':core-api')
+    implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: httpClientVersion
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
+    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: findbugsJsrVersion
+    testImplementation 'org.mock-server:mockserver-netty:5.1.1'
 }
 
 task exhaustiveTest {
