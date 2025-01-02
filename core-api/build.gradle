@@ -1,9 +1,10 @@
 dependencies {
-    compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: jacksonVersion
-
-    compile group: 'com.google.code.findbugs', name: 'annotations', version: findbugsAnnotationVersion
-    compile group: 'com.google.code.findbugs', name: 'jsr305', version: findbugsJsrVersion
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: jacksonVersion
+    implementation group: 'com.google.code.findbugs', name: 'annotations', version: findbugsAnnotationVersion
+    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: findbugsJsrVersion
+    testImplementation group: 'junit', name: 'junit', version: junitVersion
+    testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
 
     // an assortment of json parsers
     compileOnly group: 'com.google.code.gson', name: 'gson', version: gsonVersion, optional
@@ -11,6 +12,11 @@ dependencies {
     compileOnly group: 'com.googlecode.json-simple', name: 'json-simple', version: jsonSimpleVersion, optional
     compileOnly group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion, optional
 }
+
+tasks.named('processJmhResources') {
+    duplicatesStrategy = DuplicatesStrategy.WARN
+}
+
 
 test {
     useJUnit {
@@ -23,6 +29,7 @@ task exhaustiveTest(type: Test) {
         includeCategories 'com.optimizely.ab.categories.ExhaustiveTest'
     }
 }
+
 
 task generateVersionFile {
     // add the build version information into a file that'll go into the distribution
