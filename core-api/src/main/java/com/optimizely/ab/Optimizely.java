@@ -20,44 +20,80 @@ import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfileService;
-import com.optimizely.ab.config.*;
+import com.optimizely.ab.config.AtomicProjectConfigManager;
+import com.optimizely.ab.config.DatafileProjectConfig;
+import com.optimizely.ab.config.EventType;
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.FeatureFlag;
+import com.optimizely.ab.config.FeatureVariable;
+import com.optimizely.ab.config.FeatureVariableUsageInstance;
+import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.ProjectConfigManager;
+import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.parser.ConfigParseException;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.error.NoOpErrorHandler;
-import com.optimizely.ab.event.*;
-import com.optimizely.ab.event.internal.*;
+import com.optimizely.ab.event.EventHandler;
+import com.optimizely.ab.event.EventProcessor;
+import com.optimizely.ab.event.ForwardingEventProcessor;
+import com.optimizely.ab.event.LogEvent;
+import com.optimizely.ab.event.NoopEventHandler;
+import com.optimizely.ab.event.internal.BuildVersionInfo;
+import com.optimizely.ab.event.internal.ClientEngineInfo;
+import com.optimizely.ab.event.internal.EventFactory;
+import com.optimizely.ab.event.internal.UserEvent;
+import com.optimizely.ab.event.internal.UserEventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 import com.optimizely.ab.internal.NotificationRegistry;
-import com.optimizely.ab.notification.*;
-import com.optimizely.ab.odp.*;
+import com.optimizely.ab.notification.ActivateNotification;
+import com.optimizely.ab.notification.DecisionNotification;
+import com.optimizely.ab.notification.FeatureTestSourceInfo;
+import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.notification.NotificationHandler;
+import com.optimizely.ab.notification.RolloutSourceInfo;
+import com.optimizely.ab.notification.SourceInfo;
+import com.optimizely.ab.notification.TrackNotification;
+import com.optimizely.ab.notification.UpdateConfigNotification;
+import com.optimizely.ab.odp.ODPEvent;
+import com.optimizely.ab.odp.ODPManager;
+import com.optimizely.ab.odp.ODPSegmentManager;
+import com.optimizely.ab.odp.ODPSegmentOption;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
-import com.optimizely.ab.optimizelydecision.*;
+import com.optimizely.ab.optimizelydecision.DecisionMessage;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.DecisionResponse;
+import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
-import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
-
 import java.io.Closeable;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.optimizely.ab.internal.SafetyUtils.tryClose;
 
 /**
  * Top-level container class for Optimizely functionality.
  * Thread-safe, so can be created as a singleton and safely passed around.
- *
+ * <p>
  * Example instantiation:
  * <pre>
  *     Optimizely optimizely = Optimizely.builder(projectWatcher, eventHandler).build();
  * </pre>
- *
+ * <p>
  * To activate an experiment and perform variation specific processing:
  * <pre>
  *     Variation variation = optimizely.activate(experimentKey, userId, attributes);
@@ -136,7 +172,9 @@ public class Optimizely implements AutoCloseable {
             if (projectConfigManager.getSDKKey() != null) {
                 NotificationRegistry.getInternalNotificationCenter(projectConfigManager.getSDKKey()).
                     addNotificationHandler(UpdateConfigNotification.class,
-                        configNotification -> { updateODPSettings(); });
+                        configNotification -> {
+                            updateODPSettings();
+                        });
             }
 
         }
@@ -635,6 +673,53 @@ public class Optimizely implements AutoCloseable {
     }
 
     /**
+     * Get the Long value of the specified variable in the feature.
+     *
+     * @param featureKey  The unique key of the feature.
+     * @param variableKey The unique key of the variable.
+     * @param userId      The ID of the user.
+     * @return The Integer value of the integer single variable feature.
+     * Null if the feature or variable could not be found.
+     */
+    @Nullable
+    public Long getFeatureVariableLong(@Nonnull String featureKey,
+                                       @Nonnull String variableKey,
+                                       @Nonnull String userId) {
+        return getFeatureVariableLong(featureKey, variableKey, userId, Collections.emptyMap());
+    }
+
+    /**
+     * Get the Integer value of the specified variable in the feature.
+     *
+     * @param featureKey  The unique key of the feature.
+     * @param variableKey The unique key of the variable.
+     * @param userId      The ID of the user.
+     * @param attributes  The user's attributes.
+     * @return The Integer value of the integer single variable feature.
+     * Null if the feature or variable could not be found.
+     */
+    @Nullable
+    public Long getFeatureVariableLong(@Nonnull String featureKey,
+                                       @Nonnull String variableKey,
+                                       @Nonnull String userId,
+                                       @Nonnull Map<String, ?> attributes) {
+        try {
+            return getFeatureVariableValueForType(
+                featureKey,
+                variableKey,
+                userId,
+                attributes,
+                FeatureVariable.INTEGER_TYPE
+            );
+
+        } catch (Exception exception) {
+            logger.error("NumberFormatException while trying to parse value as Long. {}", String.valueOf(exception));
+        }
+
+        return null;
+    }
+
+    /**
      * Get the String value of the specified variable in the feature.
      *
      * @param featureKey  The unique key of the feature.
@@ -828,8 +913,13 @@ public class Optimizely implements AutoCloseable {
                     try {
                         return Integer.parseInt(variableValue);
                     } catch (NumberFormatException exception) {
-                        logger.error("NumberFormatException while trying to parse \"" + variableValue +
-                            "\" as Integer. " + exception.toString());
+                        try {
+                            return Long.parseLong(variableValue);
+                        } catch (NumberFormatException longException) {
+                            logger.error("NumberFormatException while trying to parse \"{}\" as Integer. {}",
+                                variableValue,
+                                exception.toString());
+                        }
                     }
                     break;
                 case FeatureVariable.JSON_TYPE:
@@ -845,11 +935,10 @@ public class Optimizely implements AutoCloseable {
     /**
      * Get the values of all variables in the feature.
      *
-     * @param featureKey  The unique key of the feature.
-     * @param userId      The ID of the user.
+     * @param featureKey The unique key of the feature.
+     * @param userId     The ID of the user.
      * @return An OptimizelyJSON instance for all variable values.
      * Null if the feature could not be found.
-     *
      */
     @Nullable
     public OptimizelyJSON getAllFeatureVariables(@Nonnull String featureKey,
@@ -860,12 +949,11 @@ public class Optimizely implements AutoCloseable {
     /**
      * Get the values of all variables in the feature.
      *
-     * @param featureKey  The unique key of the feature.
-     * @param userId      The ID of the user.
-     * @param attributes  The user's attributes.
+     * @param featureKey The unique key of the feature.
+     * @param userId     The ID of the user.
+     * @param attributes The user's attributes.
      * @return An OptimizelyJSON instance for all variable values.
      * Null if the feature could not be found.
-     *
      */
     @Nullable
     public OptimizelyJSON getAllFeatureVariables(@Nonnull String featureKey,
@@ -949,7 +1037,6 @@ public class Optimizely implements AutoCloseable {
      * @param attributes The user's attributes.
      * @return List of the feature keys that are enabled for the user if the userId is empty it will
      * return Empty List.
-     *
      */
     public List<String> getEnabledFeatures(@Nonnull String userId, @Nonnull Map<String, ?> attributes) {
         List<String> enabledFeaturesList = new ArrayList();
@@ -1164,10 +1251,10 @@ public class Optimizely implements AutoCloseable {
 
     /**
      * Create a context of the user for which decision APIs will be called.
-     *
+     * <p>
      * A user context will be created successfully even when the SDK is not fully configured yet.
      *
-     * @param userId The user ID to be used for bucketing.
+     * @param userId      The user ID to be used for bucketing.
      * @param attributes: A map of attribute names to current user attribute values.
      * @return An OptimizelyUserContext associated with this OptimizelyClient.
      */
@@ -1289,15 +1376,15 @@ public class Optimizely implements AutoCloseable {
     }
 
     Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
-                                                          @Nonnull List<String> keys,
-                                                          @Nonnull List<OptimizelyDecideOption> options) {
+                                                  @Nonnull List<String> keys,
+                                                  @Nonnull List<OptimizelyDecideOption> options) {
         return decideForKeys(user, keys, options, false);
     }
 
     private Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
-                                                  @Nonnull List<String> keys,
-                                                  @Nonnull List<OptimizelyDecideOption> options,
-                                                  boolean ignoreDefaultOptions) {
+                                                          @Nonnull List<String> keys,
+                                                          @Nonnull List<OptimizelyDecideOption> options,
+                                                          boolean ignoreDefaultOptions) {
         Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
 
         ProjectConfig projectConfig = getProjectConfig();
@@ -1308,7 +1395,7 @@ public class Optimizely implements AutoCloseable {
 
         if (keys.isEmpty()) return decisionMap;
 
-        List<OptimizelyDecideOption> allOptions = ignoreDefaultOptions ? options: getAllOptions(options);
+        List<OptimizelyDecideOption> allOptions = ignoreDefaultOptions ? options : getAllOptions(options);
 
         Map<String, FeatureDecision> flagDecisions = new HashMap<>();
         Map<String, DecisionReasons> decisionReasonsMap = new HashMap<>();
@@ -1351,7 +1438,7 @@ public class Optimizely implements AutoCloseable {
             decisionReasonsMap.get(flagKey).merge(decision.getReasons());
         }
 
-        for (String key: validKeys) {
+        for (String key : validKeys) {
             FeatureDecision flagDecision = flagDecisions.get(key);
             DecisionReasons decisionReasons = decisionReasonsMap.get((key));
 
@@ -1484,9 +1571,9 @@ public class Optimizely implements AutoCloseable {
     /**
      * Convenience method for adding NotificationHandlers
      *
-     * @param clazz The class of NotificationHandler
+     * @param clazz   The class of NotificationHandler
      * @param handler NotificationHandler handler
-     * @param <T> This is the type parameter
+     * @param <T>     This is the type parameter
      * @return A handler Id (greater than 0 if succeeded)
      */
     public <T> int addNotificationHandler(Class<T> clazz, NotificationHandler<T> handler) {
@@ -1535,10 +1622,10 @@ public class Optimizely implements AutoCloseable {
     /**
      * Send an event to the ODP server.
      *
-     * @param type the event type (default = "fullstack").
-     * @param action the event action name.
+     * @param type        the event type (default = "fullstack").
+     * @param action      the event action name.
      * @param identifiers a dictionary for identifiers. The caller must provide at least one key-value pair unless non-empty common identifiers have been set already with {@link ODPManager.Builder#withUserCommonIdentifiers(Map) }.
-     * @param data a dictionary for associated data. The default event data will be added to this data before sending to the ODP server.
+     * @param data        a dictionary for associated data. The default event data will be added to this data before sending to the ODP server.
      */
     public void sendODPEvent(@Nullable String type, @Nonnull String action, @Nullable Map<String, String> identifiers, @Nullable Map<String, Object> data) {
         ProjectConfig projectConfig = getProjectConfig();
@@ -1586,7 +1673,7 @@ public class Optimizely implements AutoCloseable {
      * {@link Builder#withDatafile(java.lang.String)} and
      * {@link Builder#withEventHandler(com.optimizely.ab.event.EventHandler)}
      * respectively.
-     *
+     * <p>
      * Example:
      * <pre>
      *     Optimizely optimizely = Optimizely.builder()
@@ -1595,7 +1682,7 @@ public class Optimizely implements AutoCloseable {
      *         .build();
      * </pre>
      *
-     * @param datafile  A datafile
+     * @param datafile     A datafile
      * @param eventHandler An EventHandler
      * @return An Optimizely builder
      */
@@ -1644,7 +1731,8 @@ public class Optimizely implements AutoCloseable {
             this.datafile = datafile;
         }
 
-        public Builder() { }
+        public Builder() {
+        }
 
         public Builder withErrorHandler(ErrorHandler errorHandler) {
             this.errorHandler = errorHandler;
@@ -1686,7 +1774,7 @@ public class Optimizely implements AutoCloseable {
          * Override the SDK name and version (for client SDKs like android-sdk wrapping the core java-sdk) to be included in events.
          *
          * @param clientEngineName the client engine name ("java-sdk", "android-sdk", "flutter-sdk", etc.).
-         * @param clientVersion the client SDK version.
+         * @param clientVersion    the client SDK version.
          * @return An Optimizely builder
          */
         public Builder withClientInfo(String clientEngineName, String clientVersion) {

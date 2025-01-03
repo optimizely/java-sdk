@@ -266,6 +266,19 @@ public class ValidProjectConfigV4 {
         FeatureVariable.INTEGER_TYPE,
         null
     );
+    private static final String FEATURE_SINGLE_VARIABLE_LONG_ID = "964006971";
+    public static final String FEATURE_SINGLE_VARIABLE_LONG_KEY = "long_single_variable_feature";
+    private static final String VARIABLE_LONG_VARIABLE_ID = "4339640697";
+    public static final String VARIABLE_LONG_VARIABLE_KEY = "long_variable";
+    private static final String VARIABLE_LONG_DEFAULT_VALUE = "379993881340";
+    private static final FeatureVariable VARIABLE_LONG_VARIABLE = new FeatureVariable(
+        VARIABLE_LONG_VARIABLE_ID,
+        VARIABLE_LONG_VARIABLE_KEY,
+        VARIABLE_LONG_DEFAULT_VALUE,
+        null,
+        FeatureVariable.INTEGER_TYPE,
+        null
+    );
     private static final String FEATURE_SINGLE_VARIABLE_BOOLEAN_ID = "2591051011";
     public static final String FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY = "boolean_single_variable_feature";
     private static final String VARIABLE_BOOLEAN_VARIABLE_ID = "3974680341";

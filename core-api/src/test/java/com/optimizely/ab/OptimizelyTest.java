@@ -1101,7 +1101,7 @@ public class OptimizelyTest {
      * (i.e., not in the config) is passed through.
      * <p>
      * In this case, the track event call should not remove the unknown attribute from the given map but should go on and track the event successfully.
-     *
+     * <p>
      * TODO: Is this a dupe?? Also not sure the intent of the test since the attributes are stripped by the EventFactory
      */
     @Test
@@ -1569,8 +1569,7 @@ public class OptimizelyTest {
         final String testType,
         final String testUserId,
         final Map<String, ?> testUserAttributes,
-        final Map<String, ?> testDecisionInfo)
-    {
+        final Map<String, ?> testDecisionInfo) {
         return decisionNotification -> {
             assertEquals(decisionNotification.getType(), testType);
             assertEquals(decisionNotification.getUserId(), testUserId);
@@ -1609,10 +1608,10 @@ public class OptimizelyTest {
 
         int notificationId = optimizely.notificationCenter.<DecisionNotification>getNotificationManager(DecisionNotification.class)
             .addHandler(
-            getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString(),
-                userId,
-                testUserAttributes,
-                testDecisionInfoMap));
+                getDecisionListener(NotificationCenter.DecisionNotificationType.FEATURE_TEST.toString(),
+                    userId,
+                    testUserAttributes,
+                    testDecisionInfoMap));
 
         // activate the experiment
         Variation actualVariation = optimizely.activate(activatedExperiment.getKey(), userId, null);
@@ -1752,7 +1751,8 @@ public class OptimizelyTest {
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class)
         );
-        int notificationId = optimizely.addDecisionNotificationHandler( decisionNotification -> { });
+        int notificationId = optimizely.addDecisionNotificationHandler(decisionNotification -> {
+        });
 
         List<String> featureFlags = optimizely.getEnabledFeatures(genericUserId, Collections.emptyMap());
         assertTrue(featureFlags.isEmpty());
@@ -2012,10 +2012,10 @@ public class OptimizelyTest {
                 testDecisionInfoMap));
 
         assertEquals(optimizely.getFeatureVariableString(
-            validFeatureKey,
-            validVariableKey,
-            testUserId,
-            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+                validFeatureKey,
+                validVariableKey,
+                testUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             expectedValue);
 
         // Verify that listener being called
@@ -2062,10 +2062,10 @@ public class OptimizelyTest {
                 testDecisionInfoMap));
 
         assertEquals(optimizely.getFeatureVariableString(
-            validFeatureKey,
-            validVariableKey,
-            userID,
-            null),
+                validFeatureKey,
+                validVariableKey,
+                userID,
+                null),
             expectedValue);
 
         // Verify that listener being called
@@ -2109,10 +2109,10 @@ public class OptimizelyTest {
                 testDecisionInfoMap));
 
         assertEquals(optimizely.getFeatureVariableString(
-            validFeatureKey,
-            validVariableKey,
-            genericUserId,
-            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+                validFeatureKey,
+                validVariableKey,
+                genericUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             expectedValue);
 
         // Verify that listener being called
@@ -2156,10 +2156,10 @@ public class OptimizelyTest {
                 testDecisionInfoMap));
 
         assertEquals(optimizely.getFeatureVariableBoolean(
-            validFeatureKey,
-            validVariableKey,
-            genericUserId,
-            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+                validFeatureKey,
+                validVariableKey,
+                genericUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             expectedValue);
 
         // Verify that listener being called
@@ -2201,12 +2201,14 @@ public class OptimizelyTest {
                 testUserAttributes,
                 testDecisionInfoMap));
 
-        assertEquals((long) optimizely.getFeatureVariableInteger(
-            validFeatureKey,
-            validVariableKey,
-            genericUserId,
-            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
-            (long) expectedValue);
+        assertEquals(
+            expectedValue,
+            (long) optimizely.getFeatureVariableInteger(
+                validFeatureKey,
+                validVariableKey,
+                genericUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE))
+        );
 
         // Verify that listener being called
         assertTrue(isListenerCalled);
@@ -2251,10 +2253,10 @@ public class OptimizelyTest {
                 testDecisionInfoMap));
 
         assertEquals(optimizely.getFeatureVariableDouble(
-            validFeatureKey,
-            validVariableKey,
-            genericUserId,
-            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_SLYTHERIN_VALUE)),
+                validFeatureKey,
+                validVariableKey,
+                genericUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_SLYTHERIN_VALUE)),
             Math.PI, 2);
 
         // Verify that listener being called
@@ -2453,7 +2455,7 @@ public class OptimizelyTest {
         assertTrue(isListenerCalled);
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
-    
+
     /**
      * Verify that the {@link Optimizely#activate(String, String, Map<String, String>)} call
      * correctly builds an endpoint url and request params
@@ -2526,7 +2528,7 @@ public class OptimizelyTest {
      * com.optimizely.ab.notification.NotificationListener)} properly used
      * and the listener is
      * added and notified when an experiment is activated.
-     *
+     * <p>
      * Feels redundant with the above tests
      */
     @SuppressWarnings("unchecked")
@@ -2572,7 +2574,7 @@ public class OptimizelyTest {
     /**
      * Verify that {@link com.optimizely.ab.notification.NotificationCenter} properly
      * calls and the listener is removed and no longer notified when an experiment is activated.
-     *
+     * <p>
      * TODO move this to NotificationCenter.
      */
     @SuppressWarnings("unchecked")
@@ -2619,7 +2621,7 @@ public class OptimizelyTest {
      * Verify that {@link com.optimizely.ab.notification.NotificationCenter}
      * clearAllListerners removes all listeners
      * and no longer notified when an experiment is activated.
-     *
+     * <p>
      * TODO Should be part of NotificationCenter tests.
      */
     @SuppressWarnings("unchecked")
@@ -2741,7 +2743,7 @@ public class OptimizelyTest {
     //======== Feature Accessor Tests ========//
 
     /**
-     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}
+     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}
      * returns null and logs a message
      * when it is called with a feature key that has no corresponding feature in the datafile.
      */
@@ -2770,7 +2772,7 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}
+     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}
      * returns null and logs a message
      * when the feature key is valid, but no variable could be found for the variable key in the feature.
      */
@@ -2796,7 +2798,7 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}
+     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}
      * returns null when the variable's type does not match the type with which it was attempted to be accessed.
      */
     @Test
@@ -2825,7 +2827,7 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}
+     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}
      * returns the String default value of a feature variable
      * when the feature is not attached to an experiment or a rollout.
      */
@@ -2866,7 +2868,7 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}
+     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}
      * returns the String default value for a feature variable
      * when the feature is attached to an experiment and no rollout, but the user is excluded from the experiment.
      */
@@ -2910,7 +2912,7 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}
+     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}
      * is called when the variation is not null and feature enabled is false
      * returns the default variable value
      */
@@ -2964,10 +2966,10 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.build();
 
         assertEquals(optimizely.getFeatureVariableString(
-            validFeatureKey,
-            validVariableKey,
-            testUserId,
-            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+                validFeatureKey,
+                validVariableKey,
+                testUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             expectedValue);
 
         logbackVerifier.expectMessage(
@@ -2994,10 +2996,10 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.build();
 
         assertEquals(optimizely.getFeatureVariableString(
-            validFeatureKey,
-            validVariableKey,
-            userID,
-            null),
+                validFeatureKey,
+                validVariableKey,
+                userID,
+                null),
             expectedValue);
     }
 
@@ -3017,10 +3019,10 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.build();
 
         assertEquals(optimizely.getFeatureVariableString(
-            validFeatureKey,
-            validVariableKey,
-            genericUserId,
-            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+                validFeatureKey,
+                validVariableKey,
+                genericUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             expectedValue);
     }
 
@@ -3040,10 +3042,10 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.build();
 
         assertEquals(optimizely.getFeatureVariableBoolean(
-            validFeatureKey,
-            validVariableKey,
-            genericUserId,
-            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
+                validFeatureKey,
+                validVariableKey,
+                genericUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
             expectedValue);
     }
 
@@ -3062,12 +3064,39 @@ public class OptimizelyTest {
 
         Optimizely optimizely = optimizelyBuilder.build();
 
-        assertEquals((long) optimizely.getFeatureVariableInteger(
-            validFeatureKey,
-            validVariableKey,
-            genericUserId,
-            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE)),
-            (long) expectedValue);
+        assertEquals(
+            expectedValue,
+            (int) optimizely.getFeatureVariableInteger(
+                validFeatureKey,
+                validVariableKey,
+                genericUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE))
+        );
+    }
+
+    /**
+     * Verify that the {@link Optimizely#getFeatureVariableInteger(String, String, String, Map)}
+     * is called when feature is in rollout and feature enabled is true
+     * return rollout variable value
+     */
+    @Test
+    public void getFeatureVariableLongUserInRollOutFeatureOn() {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+
+        final String validFeatureKey = FEATURE_SINGLE_VARIABLE_INTEGER_KEY;
+        String validVariableKey = VARIABLE_INTEGER_VARIABLE_KEY;
+        int expectedValue = 7;
+
+        Optimizely optimizely = optimizelyBuilder.build();
+
+        assertEquals(
+            expectedValue,
+            (int) optimizely.getFeatureVariableInteger(
+                validFeatureKey,
+                validVariableKey,
+                genericUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_GRYFFINDOR_VALUE))
+        );
     }
 
     /**
@@ -3085,15 +3114,15 @@ public class OptimizelyTest {
         Optimizely optimizely = optimizelyBuilder.build();
 
         assertEquals(optimizely.getFeatureVariableDouble(
-            validFeatureKey,
-            validVariableKey,
-            genericUserId,
-            Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_SLYTHERIN_VALUE)),
+                validFeatureKey,
+                validVariableKey,
+                genericUserId,
+                Collections.singletonMap(ATTRIBUTE_HOUSE_KEY, AUDIENCE_SLYTHERIN_VALUE)),
             Math.PI, 2);
     }
 
     /**
-     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}
+     * Verify {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}
      * returns the default value for the feature variable
      * when there is no variable usage present for the variation the user is bucketed into.
      */
@@ -4161,6 +4190,18 @@ public class OptimizelyTest {
     }
 
     /**
+     * Verify that {@link Optimizely#convertStringToType(String, String)}
+     * is able to parse Long.
+     */
+    @Test
+    public void convertStringToTypeIntegerReturnsLongCorrectly() throws NumberFormatException {
+        String longValue = "8949425362117";
+
+        Optimizely optimizely = optimizelyBuilder.build();
+        assertEquals(Long.valueOf(longValue), optimizely.convertStringToType(longValue, FeatureVariable.INTEGER_TYPE));
+    }
+
+    /**
      * Verify {@link Optimizely#getFeatureVariableInteger(String, String, String)}
      * calls through to {@link Optimizely#getFeatureVariableInteger(String, String, String, Map)}
      * and returns null
@@ -4234,7 +4275,7 @@ public class OptimizelyTest {
      * Verify {@link Optimizely#getFeatureVariableInteger(String, String, String)}
      * calls through to {@link Optimizely#getFeatureVariableInteger(String, String, String, Map)}
      * and both return the parsed Integer value from the value returned from
-     * {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, FeatureVariable.VariableType)}.
+     * {@link Optimizely#getFeatureVariableValueForType(String, String, String, Map, String)}.
      */
     @Test
     public void getFeatureVariableIntegerReturnsWhatInternalReturns() throws Exception {
@@ -4333,8 +4374,8 @@ public class OptimizelyTest {
         assertEquals(json.toMap().get("k1"), "s1");
         assertEquals(json.toMap().get("k2"), 103.5);
         assertEquals(json.toMap().get("k3"), false);
-        assertEquals(((Map)json.toMap().get("k4")).get("kk1"), "ss1");
-        assertEquals(((Map)json.toMap().get("k4")).get("kk2"), true);
+        assertEquals(((Map) json.toMap().get("k4")).get("kk1"), "ss1");
+        assertEquals(((Map) json.toMap().get("k4")).get("kk2"), true);
 
         assertEquals(json.getValue("k1", String.class), "s1");
         assertEquals(json.getValue("k4.kk2", Boolean.class), true);
@@ -4368,15 +4409,15 @@ public class OptimizelyTest {
         assertEquals(json.toMap().get("k1"), "v1");
         assertEquals(json.toMap().get("k2"), 3.5);
         assertEquals(json.toMap().get("k3"), true);
-        assertEquals(((Map)json.toMap().get("k4")).get("kk1"), "vv1");
-        assertEquals(((Map)json.toMap().get("k4")).get("kk2"), false);
+        assertEquals(((Map) json.toMap().get("k4")).get("kk1"), "vv1");
+        assertEquals(((Map) json.toMap().get("k4")).get("kk2"), false);
 
         assertEquals(json.getValue("k1", String.class), "v1");
         assertEquals(json.getValue("k4.kk2", Boolean.class), false);
     }
 
     /**
-     * Verify that the {@link Optimizely#getAllFeatureVariables(String,String, Map)}
+     * Verify that the {@link Optimizely#getAllFeatureVariables(String, String, Map)}
      * is called when feature is in experiment and feature enabled is true
      * returns variable value
      */
@@ -4398,12 +4439,12 @@ public class OptimizelyTest {
 
         assertEquals(json.toMap().get("first_letter"), "F");
         assertEquals(json.toMap().get("rest_of_name"), "red");
-        Map subMap = (Map)json.toMap().get("json_patched");
+        Map subMap = (Map) json.toMap().get("json_patched");
         assertEquals(subMap.get("k1"), "s1");
         assertEquals(subMap.get("k2"), 103.5);
         assertEquals(subMap.get("k3"), false);
-        assertEquals(((Map)subMap.get("k4")).get("kk1"), "ss1");
-        assertEquals(((Map)subMap.get("k4")).get("kk2"), true);
+        assertEquals(((Map) subMap.get("k4")).get("kk1"), "ss1");
+        assertEquals(((Map) subMap.get("k4")).get("kk2"), true);
 
         assertEquals(json.getValue("first_letter", String.class), "F");
         assertEquals(json.getValue("json_patched.k1", String.class), "s1");
@@ -4435,12 +4476,12 @@ public class OptimizelyTest {
 
         assertEquals(json.toMap().get("first_letter"), "H");
         assertEquals(json.toMap().get("rest_of_name"), "arry");
-        Map subMap = (Map)json.toMap().get("json_patched");
+        Map subMap = (Map) json.toMap().get("json_patched");
         assertEquals(subMap.get("k1"), "v1");
         assertEquals(subMap.get("k2"), 3.5);
         assertEquals(subMap.get("k3"), true);
-        assertEquals(((Map)subMap.get("k4")).get("kk1"), "vv1");
-        assertEquals(((Map)subMap.get("k4")).get("kk2"), false);
+        assertEquals(((Map) subMap.get("k4")).get("kk1"), "vv1");
+        assertEquals(((Map) subMap.get("k4")).get("kk2"), false);
 
         assertEquals(json.getValue("first_letter", String.class), "H");
         assertEquals(json.getValue("json_patched.k1", String.class), "v1");
@@ -4448,7 +4489,7 @@ public class OptimizelyTest {
     }
 
     /**
-     * Verify {@link Optimizely#getAllFeatureVariables(String,String, Map)} with invalid parameters
+     * Verify {@link Optimizely#getAllFeatureVariables(String, String, Map)} with invalid parameters
      */
     @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     @Test
@@ -4532,7 +4573,8 @@ public class OptimizelyTest {
         NotificationManager<TrackNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(TrackNotification.class);
 
-        int notificationId = optimizely.addTrackNotificationHandler(message -> {});
+        int notificationId = optimizely.addTrackNotificationHandler(message -> {
+        });
         assertTrue(manager.remove(notificationId));
     }
 
@@ -4542,7 +4584,8 @@ public class OptimizelyTest {
         NotificationManager<DecisionNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(DecisionNotification.class);
 
-        int notificationId = optimizely.addDecisionNotificationHandler(message -> {});
+        int notificationId = optimizely.addDecisionNotificationHandler(message -> {
+        });
         assertTrue(manager.remove(notificationId));
     }
 
@@ -4552,7 +4595,8 @@ public class OptimizelyTest {
         NotificationManager<UpdateConfigNotification> manager = optimizely.getNotificationCenter()
             .getNotificationManager(UpdateConfigNotification.class);
 
-        int notificationId = optimizely.addUpdateConfigNotificationHandler(message -> {});
+        int notificationId = optimizely.addUpdateConfigNotificationHandler(message -> {
+        });
         assertTrue(manager.remove(notificationId));
     }
 
@@ -4562,7 +4606,8 @@ public class OptimizelyTest {
         NotificationManager<LogEvent> manager = optimizely.getNotificationCenter()
             .getNotificationManager(LogEvent.class);
 
-        int notificationId = optimizely.addLogEventNotificationHandler(message -> {});
+        int notificationId = optimizely.addLogEventNotificationHandler(message -> {
+        });
         assertTrue(manager.remove(notificationId));
     }
 
