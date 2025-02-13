@@ -171,7 +171,6 @@ License (Apache 2.0): [https://github.com/apache/httpcomponents-client/blob/mast
 - Python - https://github.com/optimizely/python-sdk
 
 - React - https://github.com/optimizely/react-sdk
-- 
 
 - Ruby - https://github.com/optimizely/ruby-sdk
 
