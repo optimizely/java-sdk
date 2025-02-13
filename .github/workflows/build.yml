@@ -6,6 +6,9 @@ on:
       action:
         required: true
         type: string
+      travis_tag:
+        required: true
+        type: string
     secrets:
       MAVEN_SIGNING_KEY_BASE64:
         required: true
