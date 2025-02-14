@@ -6,7 +6,7 @@ on:
       action:
         required: true
         type: string
-      travis_tag:
+      github_tag:
         required: true
         type: string
     secrets:
