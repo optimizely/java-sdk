@@ -94,7 +94,7 @@ jobs:
           
   publish:
     if: startsWith(github.ref, 'refs/tags/')
-    uses: optimizely/java-sdk/.github/workflows/build.yml@master
+    uses: optimizely/java-sdk/.github/workflows/build.yml@revert-558-muzahid/remove-travis-doc
     with:
       action: ship
       travis_tag: ${GITHUB_REF#refs/*/}
@@ -106,7 +106,7 @@ jobs:
 
   snapshot:
     if: ${{ github.event.inputs.SNAPSHOT == 'true' && github.event_name == 'workflow_dispatch' }}
-    uses: optimizely/java-sdk/.github/workflows/build.yml@master
+    uses: optimizely/java-sdk/.github/workflows/build.yml@revert-558-muzahid/remove-travis-doc
     with:
       action: ship
       travis_tag: BB-SNAPSHOT
