@@ -38,7 +38,7 @@ jobs:
       
   fullstack_production_suite:
     if: ${{ startsWith(github.ref, 'refs/tags/') != true && github.event.inputs.SNAPSHOT != 'true' }}
-    uses: optimizely/java-sdk/.github/workflows/integration_test.yml@master
+    uses: optimizely/java-sdk/.github/workflows/integration_test.yml@mnoman/fsc-gitaction-test
     with:
       FULLSTACK_TEST_REPO: ProdTesting
     secrets:
