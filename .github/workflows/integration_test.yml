@@ -17,8 +17,8 @@ jobs:
       with:
         # You should create a personal access token and store it in your repository
         token: ${{ secrets.CI_USER_TOKEN }}
-        repository: 'optimizely/travisci-tools'
-        path: 'home/runner/travisci-tools'
+        repository: 'optimizely/ci-helper-tools'
+        path: 'home/runner/ci-helper-tools'
         ref: 'master'
     - name: set SDK Branch if PR
       env: 
@@ -50,4 +50,4 @@ jobs:
         HOME: 'home/runner'
       run: |
         echo "$GITHUB_CONTEXT"
-        home/runner/travisci-tools/trigger-script-with-status-update.sh
+        home/runner/ci-helper-tools/trigger-script-with-status-update.sh
