@@ -31,13 +31,13 @@ jobs:
   
   integration_tests:
     if: ${{ startsWith(github.ref, 'refs/tags/') != true && github.event.inputs.SNAPSHOT != 'true' }}
-    uses: optimizely/java-sdk/.github/workflows/integration_test.yml@muzahidul-opti-patch-1
+    uses: optimizely/java-sdk/.github/workflows/integration_test.yml@master
     secrets:
       CI_USER_TOKEN: ${{ secrets.CI_USER_TOKEN }}
       
   fullstack_production_suite:
     if: ${{ startsWith(github.ref, 'refs/tags/') != true && github.event.inputs.SNAPSHOT != 'true' }}
-    uses: optimizely/java-sdk/.github/workflows/integration_test.yml@muzahidul-opti-patch-1
+    uses: optimizely/java-sdk/.github/workflows/integration_test.yml@master
     with:
       FULLSTACK_TEST_REPO: ProdTesting
     secrets:
@@ -92,7 +92,7 @@ jobs:
           
   publish:
     if: startsWith(github.ref, 'refs/tags/')
-    uses: optimizely/java-sdk/.github/workflows/build.yml@muzahidul-opti-patch-1
+    uses: optimizely/java-sdk/.github/workflows/build.yml@master
     with:
       action: ship
       github_tag: ${GITHUB_REF#refs/*/}
@@ -104,7 +104,7 @@ jobs:
 
   snapshot:
     if: ${{ github.event.inputs.SNAPSHOT == 'true' && github.event_name == 'workflow_dispatch' }}
-    uses: optimizely/java-sdk/.github/workflows/build.yml@muzahidul-opti-patch-1
+    uses: optimizely/java-sdk/.github/workflows/build.yml@master
     with:
       action: ship
       github_tag: BB-SNAPSHOT
