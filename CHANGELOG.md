@@ -1,5 +1,11 @@
 # Optimizely Java X SDK Changelog
 
+## [4.2.1]
+Feb 19th, 2025
+
+### Fixes
+- Fix big integer conversion ([#556](https://github.com/optimizely/java-sdk/pull/556)).
+
 ## [4.2.0]
 November 6th, 2024
 
