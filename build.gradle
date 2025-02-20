@@ -24,7 +24,7 @@ allprojects {
 allprojects {
     group = 'com.optimizely.ab'
 
-    def travis_defined_version = System.getenv('TRAVIS_TAG')
+    def travis_defined_version = System.getenv('GITHUB_TAG')
     if (travis_defined_version != null) {
         version = travis_defined_version
     }
