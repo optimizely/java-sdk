@@ -92,7 +92,7 @@ jobs:
           
   publish:
     if: startsWith(github.ref, 'refs/tags/')
-    uses: optimizely/java-sdk/.github/workflows/build.yml@muzahid/fix-tag
+    uses: optimizely/java-sdk/.github/workflows/build.yml@master
     with:
       action: ship
       github_tag: ${GITHUB_REF#refs/*/}
