@@ -24,6 +24,7 @@ import com.optimizely.ab.notification.NotificationCenter;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.http.*;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -309,6 +310,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
             return this;
         }
 
+        @SuppressFBWarnings("EI_EXPOSE_REP2")
         public Builder withNotificationCenter(NotificationCenter notificationCenter) {
             this.notificationCenter = notificationCenter;
             return this;
