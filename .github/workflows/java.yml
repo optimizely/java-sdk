@@ -83,8 +83,8 @@ jobs:
       - name: Check on failures
         if: always() && steps.unit_tests.outcome != 'success'
         run: |
-          cat /home/runner/java-sdk/core-api/build/reports/findbugs/main.html
-          cat /home/runner/java-sdk/core-api/build/reports/findbugs/test.html
+          cat /Users/runner/work/java-sdk/core-api/build/reports/spotbugs/main.html
+          cat /Users/runner/work/java-sdk/core-api/build/reports/spotbugs/test.html
       - name: Check on success
         if: always() && steps.unit_tests.outcome == 'success'
         run: |

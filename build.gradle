@@ -4,7 +4,7 @@ plugins {
     id 'me.champeau.gradle.jmh' version '0.5.3'
     id 'nebula.optional-base' version '3.2.0'
     id 'com.github.hierynomus.license' version '0.16.1'
-    id 'com.github.spotbugs' version "4.5.0"
+    id 'com.github.spotbugs' version "6.0.14"
     id 'maven-publish'
 }
 
@@ -73,6 +73,7 @@ configure(publishedProjects) {
 
     spotbugs {
         spotbugsJmh.enabled = false
+        reportLevel = com.github.spotbugs.snom.Confidence.valueOf('HIGH')
     }
 
     test {

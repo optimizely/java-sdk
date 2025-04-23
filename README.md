@@ -70,7 +70,7 @@ You can run all unit tests with:
 
 ### Checking for bugs
 
-We utilize [FindBugs](http://findbugs.sourceforge.net/) to identify possible bugs in the SDK. To run the check:
+We utilize [SpotBugs](https://spotbugs.github.io/) to identify possible bugs in the SDK. To run the check:
 
 ```
 
