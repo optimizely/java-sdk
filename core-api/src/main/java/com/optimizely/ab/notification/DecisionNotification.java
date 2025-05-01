@@ -97,9 +97,12 @@ public final class DecisionNotification {
     public static class ExperimentDecisionNotificationBuilder {
         public final static String EXPERIMENT_KEY = "experimentKey";
         public final static String VARIATION_KEY = "variationKey";
+        public final static String EXPERIMENT_ID = "experimentId";
+        public final static String VARIATION_ID = "variationId";
 
         private String type;
         private String experimentKey;
+        private String experimentId;
         private Variation variation;
         private String userId;
         private Map<String, ?> attributes;
@@ -130,6 +133,11 @@ public final class DecisionNotification {
             return this;
         }
 
+        public ExperimentDecisionNotificationBuilder withExperimentId(Variation experimentId) {
+            this.experimentId = experimentId;
+            return this;
+        }
+
         public DecisionNotification build() {
             if (type == null) {
                 throw new OptimizelyRuntimeException("type not set");
@@ -141,7 +149,9 @@ public final class DecisionNotification {
 
             decisionInfo = new HashMap<>();
             decisionInfo.put(EXPERIMENT_KEY, experimentKey);
+            decisionInfo.put(EXPERIMENT_ID, experimentId);
             decisionInfo.put(VARIATION_KEY, variation != null ? variation.getKey() : null);
+            decisionInfo.put(VARIATION_ID, variation != null ? variation.getId() : null);
 
             return new DecisionNotification(
                 type,
@@ -364,6 +374,8 @@ public final class DecisionNotification {
         public final static String RULE_KEY = "ruleKey";
         public final static String REASONS = "reasons";
         public final static String DECISION_EVENT_DISPATCHED = "decisionEventDispatched";
+        public final static String EXPERIMENT_ID = "experimentId";
+        public final static String VARIATION_ID = "variationId";
 
         private String flagKey;
         private Boolean enabled;
@@ -374,6 +386,8 @@ public final class DecisionNotification {
         private String ruleKey;
         private List<String> reasons;
         private Boolean decisionEventDispatched;
+        private String experimentId;
+        private String variationId;
 
         private Map<String, Object> decisionInfo;
 
@@ -422,6 +436,16 @@ public final class DecisionNotification {
             return this;
         }
 
+        public FlagDecisionNotificationBuilder withExperimentId(String experimentId) {
+            this.experimentId = experimentId;
+            return this;
+        }
+
+        public FlagDecisionNotificationBuilder withVariationId(String variationId) {
+            this.variationId = variationId;
+            return this;
+        }
+
         public DecisionNotification build() {
             if (flagKey == null) {
                 throw new OptimizelyRuntimeException("flagKey not set");
@@ -439,6 +463,8 @@ public final class DecisionNotification {
                 put(RULE_KEY, ruleKey);
                 put(REASONS, reasons);
                 put(DECISION_EVENT_DISPATCHED, decisionEventDispatched);
+                put(EXPERIMENT_ID, experimentId);
+                put(VARIATION_ID, variationId);
             }};
 
             return new DecisionNotification(
