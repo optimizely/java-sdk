@@ -103,6 +103,7 @@ public final class DecisionNotification {
         private String type;
         private String experimentKey;
         private String experimentId;
+        private String variationId;
         private Variation variation;
         private String userId;
         private Map<String, ?> attributes;
@@ -138,6 +139,11 @@ public final class DecisionNotification {
             return this;
         }
 
+        public ExperimentDecisionNotificationBuilder withVariationId(String variationId) {
+            this.variationId = variationId;
+            return this;
+        }
+
         public DecisionNotification build() {
             if (type == null) {
                 throw new OptimizelyRuntimeException("type not set");
@@ -151,7 +157,7 @@ public final class DecisionNotification {
             decisionInfo.put(EXPERIMENT_KEY, experimentKey);
             decisionInfo.put(EXPERIMENT_ID, experimentId);
             decisionInfo.put(VARIATION_KEY, variation != null ? variation.getKey() : null);
-            decisionInfo.put(VARIATION_ID, variation != null ? variation.getId() : null);
+            decisionInfo.put(VARIATION_ID, variationId);
 
             return new DecisionNotification(
                 type,
