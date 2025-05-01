@@ -133,7 +133,7 @@ public final class DecisionNotification {
             return this;
         }
 
-        public ExperimentDecisionNotificationBuilder withExperimentId(Variation experimentId) {
+        public ExperimentDecisionNotificationBuilder withExperimentId(String experimentId) {
             this.experimentId = experimentId;
             return this;
         }
