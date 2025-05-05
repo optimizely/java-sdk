@@ -1095,8 +1095,6 @@ public class Optimizely implements AutoCloseable {
             .withExperimentKey(experiment.getKey())
             .withVariation(variation)
             .withType(notificationType)
-            .withExperimentId(experiment.getId())
-            .withVariationId(variation.getId())
             .build();
 
         notificationCenter.send(decisionNotification);
@@ -1305,6 +1303,8 @@ public class Optimizely implements AutoCloseable {
         ProjectConfig projectConfig
     ) {
         String userId = user.getUserId();
+        String experimentId = null;
+        String variationId = null;
 
         Boolean flagEnabled = false;
         if (flagDecision.variation != null) {
@@ -1338,8 +1338,8 @@ public class Optimizely implements AutoCloseable {
 
 
         Boolean decisionEventDispatched = false;
-        String experimentId = flagDecision.experiment != null ? flagDecision.experiment.getId() : null;
-        String variationId = flagDecision.variation != null ? flagDecision.variation.getId() : null;
+        experimentId = flagDecision.experiment != null ? flagDecision.experiment.getId() : null;
+        variationId = flagDecision.variation != null ? flagDecision.variation.getId() : null;
 
         Map<String, Object> attributes = user.getAttributes();
         Map<String, ?> copiedAttributes = new HashMap<>(attributes);
