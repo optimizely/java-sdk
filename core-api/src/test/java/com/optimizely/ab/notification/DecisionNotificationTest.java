@@ -134,7 +134,7 @@ public class DecisionNotificationTest {
 
     @Test
     public void testToString() {
-        assertEquals("DecisionNotification{type='ab-test', userId='userID', attributes={user=attr}, decisionInfo={experimentKey=experimentKey, variationKey=null, experimentId='1234567', variationId='1234567'}}", experimentDecisionNotification.toString());
+        assertEquals("DecisionNotification{type='ab-test', userId='userID', attributes={user=attr}, decisionInfo={experimentKey=experimentKey, variationKey=null, experimentId=1234567, variationId=1234567}}", experimentDecisionNotification.toString());
         assertEquals("DecisionNotification{type='feature', userId='userID', attributes={user=attr}, decisionInfo={featureEnabled=false, sourceInfo={experimentKey=featureTest, variationKey=featureTestVariation}, source=feature-test, featureKey=featureKey}}", featureDecisionNotification.toString());
         assertEquals("DecisionNotification{type='feature-variable', userId='userID', attributes={user=attr}, decisionInfo={variableType=string, featureEnabled=true, sourceInfo={}, variableValue=null, variableKey=featureVariableKey, source=rollout, featureKey=featureKey}}", featureVariableDecisionNotification.toString());
     }
