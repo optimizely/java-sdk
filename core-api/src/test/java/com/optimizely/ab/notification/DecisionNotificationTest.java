@@ -37,7 +37,6 @@ public class DecisionNotificationTest {
 
     private static final Boolean FEATURE_ENABLED = Boolean.FALSE;
     private static final String EXPERIMENT_KEY = "experimentKey";
-    private static final String EXPERIMENT_ID = "1234567";
     private static final String FEATURE_KEY = "featureKey";
     private static final String FEATURE_VARIABLE_KEY = "featureVariableKey";
     private static final String FEATURE_TEST = "featureTest";
@@ -45,7 +44,6 @@ public class DecisionNotificationTest {
     private static final String USER_ID = "userID";
     private static final Map<String, String> USER_ATTRIBUTES = Collections.singletonMap("user", "attr");
     private static final Variation VARIATION = mock(Variation.class);
-    private static final String VARIATION_ID = "1234567";
 
     private FeatureTestSourceInfo featureTestSourceInfo;
     private RolloutSourceInfo rolloutSourceInfo;
@@ -60,8 +58,6 @@ public class DecisionNotificationTest {
             .withAttributes(USER_ATTRIBUTES)
             .withExperimentKey(EXPERIMENT_KEY)
             .withVariation(VARIATION)
-            .withExperimentId(EXPERIMENT_ID)
-            .withVariationId(VARIATION_ID)
             .withType(NotificationCenter.DecisionNotificationType.AB_TEST.toString())
             .build();
         featureTestSourceInfo = new FeatureTestSourceInfo(FEATURE_TEST, FEATURE_TEST_VARIATION);
@@ -111,8 +107,6 @@ public class DecisionNotificationTest {
         HashMap<String, String> expectedExperimentDecisionInfo = new HashMap<>();
         expectedExperimentDecisionInfo.put(DecisionNotification.ExperimentDecisionNotificationBuilder.EXPERIMENT_KEY, EXPERIMENT_KEY);
         expectedExperimentDecisionInfo.put(DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_KEY, VARIATION.getKey());
-        expectedExperimentDecisionInfo.put(DecisionNotification.ExperimentDecisionNotificationBuilder.EXPERIMENT_ID, EXPERIMENT_ID);
-        expectedExperimentDecisionInfo.put(DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_ID, VARIATION_ID);
         assertEquals(expectedExperimentDecisionInfo, experimentDecisionNotification.getDecisionInfo());
 
         // Assert for Feature's DecisionInfo
