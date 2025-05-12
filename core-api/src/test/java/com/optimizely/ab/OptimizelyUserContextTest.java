@@ -707,6 +707,8 @@ public class OptimizelyUserContextTest {
         OptimizelyJSON variables = optimizely.getAllFeatureVariables(flagKey, userId);
         String ruleKey = "exp_no_audience";
         List<String> reasons = Collections.emptyList();
+        String experimentId = "10420810910";
+        String variationId = "10418551353";
 
         final Map<String, Object> testDecisionInfoMap = new HashMap<>();
         testDecisionInfoMap.put(FLAG_KEY, flagKey);
@@ -715,6 +717,8 @@ public class OptimizelyUserContextTest {
         testDecisionInfoMap.put(VARIABLES, variables.toMap());
         testDecisionInfoMap.put(RULE_KEY, ruleKey);
         testDecisionInfoMap.put(REASONS, reasons);
+        testDecisionInfoMap.put(EXPERIMENT_ID, experimentId);
+        testDecisionInfoMap.put(VARIATION_ID, variationId);
 
         Map<String, Object> attributes = Collections.singletonMap("gender", "f");
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
