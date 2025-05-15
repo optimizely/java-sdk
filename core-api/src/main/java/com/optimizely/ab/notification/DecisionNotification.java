@@ -364,8 +364,6 @@ public final class DecisionNotification {
         public final static String RULE_KEY = "ruleKey";
         public final static String REASONS = "reasons";
         public final static String DECISION_EVENT_DISPATCHED = "decisionEventDispatched";
-        public final static String EXPERIMENT_ID = "experimentId";
-        public final static String VARIATION_ID = "variationId";
 
         private String flagKey;
         private Boolean enabled;
@@ -376,8 +374,6 @@ public final class DecisionNotification {
         private String ruleKey;
         private List<String> reasons;
         private Boolean decisionEventDispatched;
-        private String experimentId;
-        private String variationId;
 
         private Map<String, Object> decisionInfo;
 
@@ -426,16 +422,6 @@ public final class DecisionNotification {
             return this;
         }
 
-        public FlagDecisionNotificationBuilder withExperimentId(String experimentId) {
-            this.experimentId = experimentId;
-            return this;
-        }
-
-        public FlagDecisionNotificationBuilder withVariationId(String variationId) {
-            this.variationId = variationId;
-            return this;
-        }
-
         public DecisionNotification build() {
             if (flagKey == null) {
                 throw new OptimizelyRuntimeException("flagKey not set");
@@ -453,8 +439,6 @@ public final class DecisionNotification {
                 put(RULE_KEY, ruleKey);
                 put(REASONS, reasons);
                 put(DECISION_EVENT_DISPATCHED, decisionEventDispatched);
-                put(EXPERIMENT_ID, experimentId);
-                put(VARIATION_ID, variationId);
             }};
 
             return new DecisionNotification(
