@@ -102,6 +102,17 @@ jobs:
       MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
       MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
 
+  demo_job:
+      if: ${{github.event_name == 'workflow_dispatch' }}
+      uses: optimizely/java-sdk/.github/workflows/build.yml@master
+      with:
+        action: ship
+      secrets:
+        MAVEN_SIGNING_KEY_BASE64: ${{ secrets.MAVEN_SIGNING_KEY_BASE64 }}
+        MAVEN_SIGNING_PASSPHRASE: ${{ secrets.MAVEN_SIGNING_PASSPHRASE }}
+        MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+        MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+
   snapshot:
     if: ${{ github.event.inputs.SNAPSHOT == 'true' && github.event_name == 'workflow_dispatch' }}
     uses: optimizely/java-sdk/.github/workflows/build.yml@master
