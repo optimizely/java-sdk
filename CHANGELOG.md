@@ -1,5 +1,11 @@
 # Optimizely Java X SDK Changelog
 
+## [4.2.2]
+May 28th, 2025
+
+### Fixes
+- Added experimentId and variationId to decision notification ([#569](https://github.com/optimizely/java-sdk/pull/569)).
+
 ## [4.2.1]
 Feb 19th, 2025
 
