@@ -37,4 +37,3 @@ jobs:
         MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
         MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
       run: GITHUB_TAG=${{ inputs.github_tag }} ./gradlew ${{ inputs.action }}
-      
