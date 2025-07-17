@@ -43,7 +43,6 @@ public class Holdout implements ExperimentCore {
     private final String id;
     private final String key;
     private final String status;
-    private final String layerId;
     private final String groupId;
 
     private final List<String> audienceIds;
@@ -54,6 +53,9 @@ public class Holdout implements ExperimentCore {
     private final Map<String, Variation> variationKeyToVariationMap;
     private final Map<String, Variation> variationIdToVariationMap;
     private final Map<String, String> userIdToVariationKeyMap;
+    // Not necessary for HO
+    private final String layerId = "";
+
 
     public enum HoldoutStatus {
         RUNNING("Running"),
@@ -73,27 +75,25 @@ public class Holdout implements ExperimentCore {
     }
 
     @VisibleForTesting
-    public Holdout(String id, String key, String layerId) {
-        this(id, key, null, layerId, Collections.emptyList(), null, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList(), "");
+    public Holdout(String id, String key) {
+        this(id, key, null, Collections.emptyList(), null, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList(), "");
     }
 
     @JsonCreator
     public Holdout(@JsonProperty("id") String id,
                       @JsonProperty("key") String key,
                       @JsonProperty("status") String status,
-                      @JsonProperty("layerId") String layerId,
                       @JsonProperty("audienceIds") List<String> audienceIds,
                       @JsonProperty("audienceConditions") Condition audienceConditions,
                       @JsonProperty("variations") List<Variation> variations,
                       @JsonProperty("forcedVariations") Map<String, String> userIdToVariationKeyMap,
                       @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation) {
-        this(id, key, status, layerId, audienceIds, audienceConditions, variations, userIdToVariationKeyMap, trafficAllocation, "");
+        this(id, key, status, audienceIds, audienceConditions, variations, userIdToVariationKeyMap, trafficAllocation, "");
     }
 
     public Holdout(@Nonnull String id,
                       @Nonnull String key,
                       @Nullable String status,
-                      @Nullable String layerId,
                       @Nonnull List<String> audienceIds,
                       @Nullable Condition audienceConditions,
                       @Nonnull List<Variation> variations,
@@ -103,7 +103,6 @@ public class Holdout implements ExperimentCore {
         this.id = id;
         this.key = key;
         this.status = status == null ? HoldoutStatus.DRAFT.toString() : status;
-        this.layerId = layerId;
         this.audienceIds = Collections.unmodifiableList(audienceIds);
         this.audienceConditions = audienceConditions;
         this.variations = Collections.unmodifiableList(variations);
