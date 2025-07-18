@@ -57,6 +57,13 @@ final public class JsonSimpleConfigParser implements ConfigParser {
 
             List<Experiment> experiments = parseExperiments((JSONArray) rootObject.get("experiments"));
 
+            List<Holdout> holdouts;
+            if (rootObject.containsKey("holdouts")) {
+                holdouts = parseHoldouts((JSONArray) rootObject.get("holdouts"));
+            } else {
+                holdouts = Collections.emptyList();
+            }
+
             List<Attribute> attributes;
             attributes = parseAttributes((JSONArray) rootObject.get("attributes"));
 
@@ -111,6 +118,7 @@ final public class JsonSimpleConfigParser implements ConfigParser {
                 typedAudiences,
                 events,
                 experiments,
+                holdouts,
                 featureFlags,
                 groups,
                 rollouts,
@@ -171,6 +179,65 @@ final public class JsonSimpleConfigParser implements ConfigParser {
         }
 
         return experiments;
+    }
+
+
+    private List<Holdout> parseHoldouts(JSONArray holdoutJson) {
+        return parseHoldouts(holdoutJson, "");
+    }
+
+    private List<Holdout> parseHoldouts(JSONArray holdoutJson, String groupId) {
+        List<Holdout> holdouts = new ArrayList<Holdout>(holdoutJson.size());
+
+        for (Object obj : holdoutJson) {
+            JSONObject hoObject = (JSONObject) obj;
+            String id = (String) hoObject.get("id");
+            String key = (String) hoObject.get("key");
+            String status = (String) hoObject.get("status");
+
+            JSONArray audienceIdsJson = (JSONArray) hoObject.get("audienceIds");
+            List<String> audienceIds = new ArrayList<String>(audienceIdsJson.size());
+
+            for (Object audienceIdObj : audienceIdsJson) {
+                audienceIds.add((String) audienceIdObj);
+            }
+
+            Condition conditions = null;
+            if (hoObject.containsKey("audienceConditions")) {
+                Object jsonCondition = hoObject.get("audienceConditions");
+                try {
+                    conditions = ConditionUtils.<AudienceIdCondition>parseConditions(AudienceIdCondition.class, jsonCondition);
+                } catch (Exception e) {
+                    // unable to parse conditions.
+                    Logger.getAnonymousLogger().log(Level.ALL, "problem parsing audience conditions", e);
+                }
+            }
+            // parse the child objects
+            List<Variation> variations = parseVariations((JSONArray) hoObject.get("variations"));
+            Map<String, String> userIdToVariationKeyMap =
+                parseForcedVariations((JSONObject) hoObject.get("forcedVariations"));
+            List<TrafficAllocation> trafficAllocations =
+                parseTrafficAllocation((JSONArray) hoObject.get("trafficAllocation"));
+
+            List<String> includedFlags;
+            if (hoObject.containsKey("includedFlags")) {
+                includedFlags = new ArrayList<String>((JSONArray) hoObject.get("includedFlags"));
+            } else {
+                includedFlags = Collections.emptyList();
+            }
+
+            List<String> excludedFlags;
+            if (hoObject.containsKey("excludedFlags")) {
+                excludedFlags = new ArrayList<String>((JSONArray) hoObject.get("excludedFlags"));
+            } else {
+                excludedFlags = Collections.emptyList();
+            }
+
+            holdouts.add(new Holdout(id, key, status, audienceIds, conditions, variations, userIdToVariationKeyMap,
+                trafficAllocations, includedFlags, excludedFlags, groupId));
+        }
+
+        return holdouts;
     }
 
     private List<String> parseExperimentIds(JSONArray experimentIdsJsonArray) {
