@@ -165,6 +165,10 @@ public class Holdout implements ExperimentCore {
         return trafficAllocation;
     }
 
+    public List<String> getIncludedFlags() { return includedFlags; }
+
+    public List<String> getExcludedFlags() { return excludedFlags; }
+
     public String getGroupId() {
         return groupId;
     }

@@ -70,6 +70,8 @@ public interface ProjectConfig {
 
     List<Experiment> getExperiments();
 
+    List<Holdout > getHoldouts();
+
     Set<String> getAllSegments();
 
     List<Experiment> getExperimentsForEventKey(String eventKey);

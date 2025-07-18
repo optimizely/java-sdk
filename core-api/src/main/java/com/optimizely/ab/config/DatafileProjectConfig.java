@@ -70,6 +70,7 @@ public class DatafileProjectConfig implements ProjectConfig {
     private final List<Audience> typedAudiences;
     private final List<EventType> events;
     private final List<Experiment> experiments;
+    private final List<Holdout> holdouts;
     private final List<FeatureFlag> featureFlags;
     private final List<Group> groups;
     private final List<Rollout> rollouts;
@@ -94,6 +95,8 @@ public class DatafileProjectConfig implements ProjectConfig {
 
     // other mappings
     private final Map<String, Experiment> variationIdToExperimentMapping;
+
+    private final HoldoutConfig holdoutConfig;
 
     private String datafile;
 
@@ -124,6 +127,34 @@ public class DatafileProjectConfig implements ProjectConfig {
             eventType,
             experiments,
             null,
+            null,
+            groups,
+            null,
+            null
+        );
+    }
+
+    // v3 constructor
+    public DatafileProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
+                                 List<Experiment> experiments, List<Holdout> holdouts, List<Attribute> attributes, List<EventType> eventType,
+                                 List<Audience> audiences, boolean anonymizeIP) {
+        this(
+            accountId,
+            anonymizeIP,
+            false,
+            null,
+            projectId,
+            revision,
+            null,
+            null,
+            version,
+            attributes,
+            audiences,
+            null,
+            eventType,
+            experiments,
+            holdouts,
+            null,
             groups,
             null,
             null
@@ -145,6 +176,7 @@ public class DatafileProjectConfig implements ProjectConfig {
                                  List<Audience> typedAudiences,
                                  List<EventType> events,
                                  List<Experiment> experiments,
+                                 List<Holdout> holdouts,
                                  List<FeatureFlag> featureFlags,
                                  List<Group> groups,
                                  List<Rollout> rollouts,
@@ -186,6 +218,12 @@ public class DatafileProjectConfig implements ProjectConfig {
         allExperiments.addAll(experiments);
         allExperiments.addAll(aggregateGroupExperiments(groups));
         this.experiments = Collections.unmodifiableList(allExperiments);
+        if (holdouts == null) {
+            this.holdouts = Collections.emptyList();
+        }  else {
+            this.holdouts = Collections.unmodifiableList(holdouts);
+        }
+        this.holdoutConfig = new HoldoutConfig(this.holdouts);
 
         String publicKeyForODP = "";
         String hostForODP = "";
@@ -433,6 +471,10 @@ public class DatafileProjectConfig implements ProjectConfig {
     public List<Experiment> getExperiments() {
         return experiments;
     }
+
+    @Override
+    public List<Holdout> getHoldouts() {
+        return holdoutConfig.getAllHoldouts(); }
 
     @Override
     public Set<String> getAllSegments() {
