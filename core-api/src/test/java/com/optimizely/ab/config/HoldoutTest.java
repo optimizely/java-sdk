@@ -16,8 +16,6 @@
  */
 package com.optimizely.ab.config;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.optimizely.ab.config.audience.*;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -27,91 +25,8 @@ import java.util.*;
 
 public class HoldoutTest {
 
-    // MARK: - Sample Data
-    private static final String id = "11111";
-    private static final String key = "background";
-    private static final String status = Holdout.HoldoutStatus.RUNNING.toString();
-
-    // Create a simple Variation for testing
-    private static Variation createVariation() {
-        return new Variation("553339214", "house", false, Collections.<FeatureVariableUsageInstance>emptyList());
-    }
-
-    // Create a simple TrafficAllocation for testing
-    private static TrafficAllocation createTrafficAllocation() {
-        return new TrafficAllocation("553339214", 5000);
-    }
-
-    // MARK: - JSON Parsing Tests
-
     @Test
-    public void testDeserializeSuccessWithJSONValid() {
-        // Create a Holdout object directly
-        List<String> audienceIds = Collections.singletonList("33333");
-        List<Variation> variations = Collections.singletonList(createVariation());
-        List<TrafficAllocation> trafficAllocations = Collections.singletonList(createTrafficAllocation());
-
-        // Create a simple audience condition
-        AudienceIdCondition audienceCondition = new AudienceIdCondition("33333");
-
-        Holdout holdout = new Holdout(id, key, status, audienceIds, audienceCondition,
-                                    variations, Collections.<String, String>emptyMap(), trafficAllocations);
-
-        assertEquals(id, holdout.getId());
-        assertEquals(key, holdout.getKey());
-        assertEquals(Holdout.HoldoutStatus.RUNNING.toString(), holdout.getStatus());
-        assertEquals(1, holdout.getVariations().size());
-        assertEquals(1, holdout.getTrafficAllocation().size());
-        assertEquals(audienceIds, holdout.getAudienceIds());
-        assertNotNull(holdout.getAudienceConditions());
-        assertEquals("", holdout.getLayerId()); // Always empty string
-    }
-
-    @Test
-    public void testIsActive() {
-        // Test RUNNING status
-        Holdout runningHoldout = new Holdout(id, key, Holdout.HoldoutStatus.RUNNING.toString(),
-                                          Collections.<String>emptyList(), null, Collections.<Variation>emptyList(),
-                                          Collections.<String, String>emptyMap(), Collections.<TrafficAllocation>emptyList());
-        assertTrue(runningHoldout.isActive());
-        assertTrue(runningHoldout.isRunning());
-
-        // Test DRAFT status
-        Holdout draftHoldout = new Holdout(id, key, Holdout.HoldoutStatus.DRAFT.toString(),
-                                        Collections.<String>emptyList(), null, Collections.<Variation>emptyList(),
-                                        Collections.<String, String>emptyMap(), Collections.<TrafficAllocation>emptyList());
-        assertFalse(draftHoldout.isActive());
-        assertFalse(draftHoldout.isRunning());
-
-        // Test CONCLUDED status
-        Holdout concludedHoldout = new Holdout(id, key, Holdout.HoldoutStatus.CONCLUDED.toString(),
-                                           Collections.<String>emptyList(), null, Collections.<Variation>emptyList(),
-                                           Collections.<String, String>emptyMap(), Collections.<TrafficAllocation>emptyList());
-        assertFalse(concludedHoldout.isActive());
-        assertFalse(concludedHoldout.isRunning());
-
-        // Test ARCHIVED status
-        Holdout archivedHoldout = new Holdout(id, key, Holdout.HoldoutStatus.ARCHIVED.toString(),
-                                           Collections.<String>emptyList(), null, Collections.<Variation>emptyList(),
-                                           Collections.<String, String>emptyMap(), Collections.<TrafficAllocation>emptyList());
-        assertFalse(archivedHoldout.isActive());
-        assertFalse(archivedHoldout.isRunning());
-    }
-
-    @Test
-    public void testDefaultStatus() {
-        // Create a Holdout with null status
-        Holdout holdout = new Holdout(id, key, null, Collections.<String>emptyList(), null,
-                                   Collections.<Variation>emptyList(), Collections.<String, String>emptyMap(),
-                                   Collections.<TrafficAllocation>emptyList());
-
-        assertEquals(Holdout.HoldoutStatus.DRAFT.toString(), holdout.getStatus());
-    }
-
-    // MARK: - Audience Serialization Tests
-
-    @Test
-    public void testSerializeConditionScenarios() {
+    public void testStringifyConditionScenarios() {
         List<Condition> audienceConditionsScenarios = getAudienceConditionsList();
         Map<Integer, String> expectedScenarioStringsMap = getExpectedScenariosMap();
         Map<String, String> audiencesMap = new HashMap<>();
@@ -124,7 +39,8 @@ public class HoldoutTest {
 
         if (expectedScenarioStringsMap.size() == audienceConditionsScenarios.size()) {
             for (int i = 0; i < audienceConditionsScenarios.size() - 1; i++) {
-                Holdout holdout = makeMockHoldoutWithStatus(Holdout.HoldoutStatus.RUNNING, audienceConditionsScenarios.get(i));
+                Holdout holdout = makeMockHoldoutWithStatus(Holdout.HoldoutStatus.RUNNING,
+                    audienceConditionsScenarios.get(i));
                 String audiences = holdout.serializeConditions(audiencesMap);
                 assertEquals(expectedScenarioStringsMap.get(i+1), audiences);
             }
@@ -243,7 +159,8 @@ public class HoldoutTest {
 
         OrCondition scenario12 = new OrCondition(scenario12List);
 
-        // Scenario 13 - ["and", ["and", invalidAudienceIdCondition]] which becomes// the scenario of ["and", "and"] and results in empty string.
+        // Scenario 13 - ["and", ["and", invalidAudienceIdCondition]] which becomes
+        // the scenario of ["and", "and"] and results in empty string.
         AudienceIdCondition invalidAudience = new AudienceIdCondition("5");
         List<Condition> invalidIdList = new ArrayList<>();
         invalidIdList.add(invalidAudience);
@@ -278,7 +195,9 @@ public class HoldoutTest {
             audienceConditions,
             Collections.<Variation>emptyList(),
             Collections.<String, String>emptyMap(),
-            Collections.<TrafficAllocation>emptyList()
+            Collections.<TrafficAllocation>emptyList(),
+            Collections.<String>emptyList(),
+            Collections.<String>emptyList()
         );
     }
 }

@@ -49,6 +49,8 @@ public class Holdout implements ExperimentCore {
     private final Condition<AudienceIdCondition> audienceConditions;
     private final List<Variation> variations;
     private final List<TrafficAllocation> trafficAllocation;
+    private final List<String> includedFlags;
+    private final List<String> excludedFlags;
 
     private final Map<String, Variation> variationKeyToVariationMap;
     private final Map<String, Variation> variationIdToVariationMap;
@@ -76,7 +78,7 @@ public class Holdout implements ExperimentCore {
 
     @VisibleForTesting
     public Holdout(String id, String key) {
-        this(id, key, null, Collections.emptyList(), null, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList(), "");
+        this(id, key, null, Collections.emptyList(), null, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), "");
     }
 
     @JsonCreator
@@ -87,8 +89,10 @@ public class Holdout implements ExperimentCore {
                       @JsonProperty("audienceConditions") Condition audienceConditions,
                       @JsonProperty("variations") List<Variation> variations,
                       @JsonProperty("forcedVariations") Map<String, String> userIdToVariationKeyMap,
-                      @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation) {
-        this(id, key, status, audienceIds, audienceConditions, variations, userIdToVariationKeyMap, trafficAllocation, "");
+                      @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation,
+                      @JsonProperty("includedFlags") List<String> includedFlags,
+                      @JsonProperty("excludedFlags") List<String> excludedFlags) {
+        this(id, key, status, audienceIds, audienceConditions, variations, userIdToVariationKeyMap, trafficAllocation, includedFlags, excludedFlags, "");
     }
 
     public Holdout(@Nonnull String id,
@@ -99,14 +103,18 @@ public class Holdout implements ExperimentCore {
                       @Nonnull List<Variation> variations,
                       @Nonnull Map<String, String> userIdToVariationKeyMap,
                       @Nonnull List<TrafficAllocation> trafficAllocation,
+                      @Nullable List<String> includedFlags,
+                      @Nullable List<String> excludedFlags,
                       @Nonnull String groupId) {
         this.id = id;
         this.key = key;
-        this.status = status == null ? HoldoutStatus.DRAFT.toString() : status;
+        this.status = status == null ? HoldoutStatus.RUNNING.toString() : status;
         this.audienceIds = Collections.unmodifiableList(audienceIds);
         this.audienceConditions = audienceConditions;
         this.variations = Collections.unmodifiableList(variations);
         this.trafficAllocation = Collections.unmodifiableList(trafficAllocation);
+        this.includedFlags = includedFlags == null ? Collections.emptyList() : Collections.unmodifiableList(includedFlags);
+        this.excludedFlags = excludedFlags == null ? Collections.emptyList() : Collections.unmodifiableList(excludedFlags);
         this.groupId = groupId;
         this.userIdToVariationKeyMap = userIdToVariationKeyMap;
         this.variationKeyToVariationMap = ProjectConfigUtils.generateNameMapping(variations);
