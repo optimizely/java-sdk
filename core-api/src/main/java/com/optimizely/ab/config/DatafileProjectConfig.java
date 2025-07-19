@@ -70,7 +70,6 @@ public class DatafileProjectConfig implements ProjectConfig {
     private final List<Audience> typedAudiences;
     private final List<EventType> events;
     private final List<Experiment> experiments;
-    private final List<Holdout> holdouts;
     private final List<FeatureFlag> featureFlags;
     private final List<Group> groups;
     private final List<Rollout> rollouts;
@@ -218,12 +217,12 @@ public class DatafileProjectConfig implements ProjectConfig {
         allExperiments.addAll(experiments);
         allExperiments.addAll(aggregateGroupExperiments(groups));
         this.experiments = Collections.unmodifiableList(allExperiments);
+
         if (holdouts == null) {
-            this.holdouts = Collections.emptyList();
+            this.holdoutConfig = new HoldoutConfig();
         }  else {
-            this.holdouts = Collections.unmodifiableList(holdouts);
+            this.holdoutConfig = new HoldoutConfig(holdouts);
         }
-        this.holdoutConfig = new HoldoutConfig(this.holdouts);
 
         String publicKeyForODP = "";
         String hostForODP = "";
@@ -473,8 +472,7 @@ public class DatafileProjectConfig implements ProjectConfig {
     }
 
     @Override
-    public List<Holdout> getHoldouts() {
-        return holdoutConfig.getAllHoldouts(); }
+    public List<Holdout> getHoldouts() { return holdoutConfig.getAllHoldouts(); }
 
     @Override
     public Set<String> getAllSegments() {

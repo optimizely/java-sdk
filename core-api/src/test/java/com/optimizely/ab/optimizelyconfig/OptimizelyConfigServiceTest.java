@@ -333,6 +333,7 @@ public class OptimizelyConfigServiceTest {
                     )
                 )
             ),
+            null,
             asList(
                 new FeatureFlag(
                     "4195505407",

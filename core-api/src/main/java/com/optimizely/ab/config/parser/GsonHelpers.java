@@ -169,8 +169,6 @@ final class GsonHelpers {
 
         // parse the child objects
         List<Variation> variations = parseVariations(holdoutJson.getAsJsonArray("variations"), context);
-        Map<String, String> userIdToVariationKeyMap =
-            parseForcedVariations(holdoutJson.getAsJsonObject("forcedVariations"));
         List<TrafficAllocation> trafficAllocations =
             parseTrafficAllocation(holdoutJson.getAsJsonArray("trafficAllocation"));
 
@@ -190,8 +188,7 @@ final class GsonHelpers {
             }
         }
 
-        return new Holdout(id, key, status, audienceIds, conditions, variations, userIdToVariationKeyMap,
-            trafficAllocations, includedFlags, excludedFlags, groupId);
+        return new Holdout(id, key, status, audienceIds, conditions, variations, trafficAllocations, includedFlags, excludedFlags, groupId);
     }
 
     static Holdout parseHoldout(JsonObject holdoutJson, JsonDeserializationContext context) {

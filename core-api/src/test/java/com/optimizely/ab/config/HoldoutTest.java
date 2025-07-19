@@ -16,12 +16,21 @@
  */
 package com.optimizely.ab.config;
 
-import com.optimizely.ab.config.audience.*;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import java.io.IOException;
-import java.util.*;
+import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+
+import com.optimizely.ab.config.audience.AndCondition;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
+import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.config.audience.EmptyCondition;
+import com.optimizely.ab.config.audience.NotCondition;
+import com.optimizely.ab.config.audience.OrCondition;
 
 public class HoldoutTest {
 
@@ -194,7 +203,6 @@ public class HoldoutTest {
             Collections.<String>emptyList(),
             audienceConditions,
             Collections.<Variation>emptyList(),
-            Collections.<String, String>emptyMap(),
             Collections.<TrafficAllocation>emptyList(),
             Collections.<String>emptyList(),
             Collections.<String>emptyList()

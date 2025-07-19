@@ -204,8 +204,7 @@ final public class JsonConfigParser implements ConfigParser {
 
             // parse the child objects
             List<Variation> variations = parseVariations(holdoutObject.getJSONArray("variations"));
-            Map<String, String> userIdToVariationKeyMap =
-                parseForcedVariations(holdoutObject.getJSONObject("forcedVariations"));
+
             List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation(holdoutObject.getJSONArray("trafficAllocation"));
 
@@ -235,7 +234,7 @@ final public class JsonConfigParser implements ConfigParser {
                 excludedFlags = Collections.emptyList();
             }
 
-            holdouts.add(new Holdout(id, key, status, audienceIds, conditions, variations, userIdToVariationKeyMap,
+            holdouts.add(new Holdout(id, key, status, audienceIds, conditions, variations,
                 trafficAllocations, includedFlags, excludedFlags, groupId));
         }
 

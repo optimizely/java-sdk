@@ -214,8 +214,7 @@ final public class JsonSimpleConfigParser implements ConfigParser {
             }
             // parse the child objects
             List<Variation> variations = parseVariations((JSONArray) hoObject.get("variations"));
-            Map<String, String> userIdToVariationKeyMap =
-                parseForcedVariations((JSONObject) hoObject.get("forcedVariations"));
+
             List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation((JSONArray) hoObject.get("trafficAllocation"));
 
@@ -233,7 +232,7 @@ final public class JsonSimpleConfigParser implements ConfigParser {
                 excludedFlags = Collections.emptyList();
             }
 
-            holdouts.add(new Holdout(id, key, status, audienceIds, conditions, variations, userIdToVariationKeyMap,
+            holdouts.add(new Holdout(id, key, status, audienceIds, conditions, variations,
                 trafficAllocations, includedFlags, excludedFlags, groupId));
         }
 

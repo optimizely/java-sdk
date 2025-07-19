@@ -54,7 +54,6 @@ public class Holdout implements ExperimentCore {
 
     private final Map<String, Variation> variationKeyToVariationMap;
     private final Map<String, Variation> variationIdToVariationMap;
-    private final Map<String, String> userIdToVariationKeyMap;
     // Not necessary for HO
     private final String layerId = "";
 
@@ -78,7 +77,7 @@ public class Holdout implements ExperimentCore {
 
     @VisibleForTesting
     public Holdout(String id, String key) {
-        this(id, key, null, Collections.emptyList(), null, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), "");
+        this(id, key, null, Collections.emptyList(), null, Collections.emptyList(), Collections.emptyList(), null, null, "");
     }
 
     @JsonCreator
@@ -88,11 +87,10 @@ public class Holdout implements ExperimentCore {
                       @JsonProperty("audienceIds") List<String> audienceIds,
                       @JsonProperty("audienceConditions") Condition audienceConditions,
                       @JsonProperty("variations") List<Variation> variations,
-                      @JsonProperty("forcedVariations") Map<String, String> userIdToVariationKeyMap,
                       @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation,
                       @JsonProperty("includedFlags") List<String> includedFlags,
                       @JsonProperty("excludedFlags") List<String> excludedFlags) {
-        this(id, key, status, audienceIds, audienceConditions, variations, userIdToVariationKeyMap, trafficAllocation, includedFlags, excludedFlags, "");
+        this(id, key, status, audienceIds, audienceConditions, variations, trafficAllocation, includedFlags, excludedFlags, "");
     }
 
     public Holdout(@Nonnull String id,
@@ -101,7 +99,6 @@ public class Holdout implements ExperimentCore {
                       @Nonnull List<String> audienceIds,
                       @Nullable Condition audienceConditions,
                       @Nonnull List<Variation> variations,
-                      @Nonnull Map<String, String> userIdToVariationKeyMap,
                       @Nonnull List<TrafficAllocation> trafficAllocation,
                       @Nullable List<String> includedFlags,
                       @Nullable List<String> excludedFlags,
@@ -116,7 +113,6 @@ public class Holdout implements ExperimentCore {
         this.includedFlags = includedFlags == null ? Collections.emptyList() : Collections.unmodifiableList(includedFlags);
         this.excludedFlags = excludedFlags == null ? Collections.emptyList() : Collections.unmodifiableList(excludedFlags);
         this.groupId = groupId;
-        this.userIdToVariationKeyMap = userIdToVariationKeyMap;
         this.variationKeyToVariationMap = ProjectConfigUtils.generateNameMapping(variations);
         this.variationIdToVariationMap = ProjectConfigUtils.generateIdMapping(variations);
     }
@@ -157,10 +153,6 @@ public class Holdout implements ExperimentCore {
         return variationIdToVariationMap;
     }
 
-    public Map<String, String> getUserIdToVariationKeyMap() {
-        return userIdToVariationKeyMap;
-    }
-
     public List<TrafficAllocation> getTrafficAllocation() {
         return trafficAllocation;
     }
@@ -192,7 +184,6 @@ public class Holdout implements ExperimentCore {
             ", audienceConditions=" + audienceConditions +
             ", variations=" + variations +
             ", variationKeyToVariationMap=" + variationKeyToVariationMap +
-            ", userIdToVariationKeyMap=" + userIdToVariationKeyMap +
             ", trafficAllocation=" + trafficAllocation +
             '}';
     }

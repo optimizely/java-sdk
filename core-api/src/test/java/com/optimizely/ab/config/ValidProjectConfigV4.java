@@ -20,6 +20,7 @@ import com.optimizely.ab.config.audience.AndCondition;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
+import com.optimizely.ab.config.audience.EmptyCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
 
@@ -488,6 +489,11 @@ public class ValidProjectConfigV4 {
         VARIATION_BASIC_EXPERIMENT_VARIATION_A_KEY,
         Collections.<FeatureVariableUsageInstance>emptyList()
     );
+    private static final Variation VARIATION_HOLDOUT_VARIATION_OFF = new Variation(
+        "$opt_dummy_variation_id",
+        "ho_off_key",
+        false
+    );
     private static final String VARIATION_BASIC_EXPERIMENT_VARIATION_B_ID = "3433458314";
     private static final String VARIATION_BASIC_EXPERIMENT_VARIATION_B_KEY = "B";
     private static final Variation VARIATION_BASIC_EXPERIMENT_VARIATION_B = new Variation(
@@ -528,6 +534,25 @@ public class ValidProjectConfigV4 {
                 10000
             )
         )
+    );
+    private static final Holdout HOLDOUT_BASIC_HOLDOUT = new Holdout(
+        "10075323428",
+        "basic_holdout",
+        Holdout.HoldoutStatus.RUNNING.toString(),
+        Collections.<String>emptyList(),
+        null,
+        DatafileProjectConfigTestUtils.createListOfObjects(
+            VARIATION_HOLDOUT_VARIATION_OFF
+        ),
+        DatafileProjectConfigTestUtils.createListOfObjects(
+            new TrafficAllocation(
+                "327323",
+                100
+            )
+        ),
+        Collections.<String>emptyList(),
+        Collections.<String>emptyList(),
+        ""
     );
     private static final String LAYER_TYPEDAUDIENCE_EXPERIMENT_ID = "1630555627";
     private static final String EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_ID = "1323241597";
@@ -1461,6 +1486,105 @@ public class ValidProjectConfigV4 {
             typedAudiences,
             events,
             experiments,
+            null,
+            featureFlags,
+            groups,
+            rollouts,
+            integrations
+        );
+    }
+
+    public static ProjectConfig generateValidProjectConfigV4_holdout() {
+
+        // list attributes
+        List<Attribute> attributes = new ArrayList<Attribute>();
+        attributes.add(ATTRIBUTE_HOUSE);
+        attributes.add(ATTRIBUTE_NATIONALITY);
+        attributes.add(ATTRIBUTE_OPT);
+        attributes.add(ATTRIBUTE_BOOLEAN);
+        attributes.add(ATTRIBUTE_INTEGER);
+        attributes.add(ATTRIBUTE_DOUBLE);
+        attributes.add(ATTRIBUTE_EMPTY);
+
+        // list audiences
+        List<Audience> audiences = new ArrayList<Audience>();
+        audiences.add(AUDIENCE_GRYFFINDOR);
+        audiences.add(AUDIENCE_SLYTHERIN);
+        audiences.add(AUDIENCE_ENGLISH_CITIZENS);
+        audiences.add(AUDIENCE_WITH_MISSING_VALUE);
+
+        List<Audience> typedAudiences = new ArrayList<Audience>();
+        typedAudiences.add(TYPED_AUDIENCE_BOOL);
+        typedAudiences.add(TYPED_AUDIENCE_EXACT_INT);
+        typedAudiences.add(TYPED_AUDIENCE_INT);
+        typedAudiences.add(TYPED_AUDIENCE_DOUBLE);
+        typedAudiences.add(TYPED_AUDIENCE_GRYFFINDOR);
+        typedAudiences.add(TYPED_AUDIENCE_SLYTHERIN);
+        typedAudiences.add(TYPED_AUDIENCE_ENGLISH_CITIZENS);
+        typedAudiences.add(AUDIENCE_WITH_MISSING_VALUE);
+
+        // list events
+        List<EventType> events = new ArrayList<EventType>();
+        events.add(EVENT_BASIC_EVENT);
+        events.add(EVENT_PAUSED_EXPERIMENT);
+        events.add(EVENT_LAUNCHED_EXPERIMENT_ONLY);
+
+        // list experiments
+        List<Experiment> experiments = new ArrayList<Experiment>();
+        experiments.add(EXPERIMENT_BASIC_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_LEAF_EXPERIMENT);
+        experiments.add(EXPERIMENT_MULTIVARIATE_EXPERIMENT);
+        experiments.add(EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT);
+        experiments.add(EXPERIMENT_PAUSED_EXPERIMENT);
+        experiments.add(EXPERIMENT_LAUNCHED_EXPERIMENT);
+        experiments.add(EXPERIMENT_WITH_MALFORMED_AUDIENCE);
+
+        // list holdouts
+        List<Holdout> holdouts = new ArrayList<Holdout>();
+        holdouts.add(HOLDOUT_BASIC_HOLDOUT);
+
+        // list featureFlags
+        List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>();
+        featureFlags.add(FEATURE_FLAG_BOOLEAN_FEATURE);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_DOUBLE);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_INTEGER);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_BOOLEAN);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_STRING);
+        featureFlags.add(FEATURE_FLAG_MULTI_VARIATE_FEATURE);
+        featureFlags.add(FEATURE_FLAG_MULTI_VARIATE_FUTURE_FEATURE);
+        featureFlags.add(FEATURE_FLAG_MUTEX_GROUP_FEATURE);
+
+        List<Group> groups = new ArrayList<Group>();
+        groups.add(GROUP_1);
+        groups.add(GROUP_2);
+
+        // list rollouts
+        List<Rollout> rollouts = new ArrayList<Rollout>();
+        rollouts.add(ROLLOUT_1);
+        rollouts.add(ROLLOUT_2);
+        rollouts.add(ROLLOUT_3);
+
+        List<Integration> integrations = new ArrayList<>();
+        integrations.add(odpIntegration);
+
+        return new DatafileProjectConfig(
+            ACCOUNT_ID,
+            ANONYMIZE_IP,
+            SEND_FLAG_DECISIONS,
+            BOT_FILTERING,
+            PROJECT_ID,
+            REVISION,
+            SDK_KEY,
+            ENVIRONMENT_KEY,
+            VERSION,
+            attributes,
+            audiences,
+            typedAudiences,
+            events,
+            experiments,
+            holdouts,
             featureFlags,
             groups,
             rollouts,

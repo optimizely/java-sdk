@@ -42,7 +42,7 @@ public class Variation implements IdKeyMapped {
     private final Map<String, FeatureVariableUsageInstance> variableIdToFeatureVariableUsageInstanceMap;
 
     public Variation(String id, String key) {
-        this(id, key, null);
+        this(id, key, false, null);
     }
 
     public Variation(String id,
@@ -50,6 +50,13 @@ public class Variation implements IdKeyMapped {
                      List<FeatureVariableUsageInstance> featureVariableUsageInstances) {
         this(id, key, false, featureVariableUsageInstances);
     }
+
+    public Variation(String id,
+                     String key,
+                     Boolean featureEnabled) {
+        this(id, key, featureEnabled, null);
+    }
+
 
     @JsonCreator
     public Variation(@JsonProperty("id") String id,
