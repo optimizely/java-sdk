@@ -156,7 +156,6 @@ final class GsonHelpers {
     static Holdout parseHoldout(JsonObject holdoutJson, String groupId, JsonDeserializationContext context) {
         String id = holdoutJson.get("id").getAsString();
         String key = holdoutJson.get("key").getAsString();
-        JsonElement holdoutStatusJson = holdoutJson.get("status");
         String status = holdoutJson.get("status").getAsString();
 
         JsonArray audienceIdsJson = holdoutJson.getAsJsonArray("audienceIds");
