@@ -477,12 +477,12 @@
   "holdouts": [
     {
       "audienceIds": [],
-      "id": "10075323428",
-      "key": "basic_holdout",
+      "id": "1007532345428",
+      "key": "holdout_zero_traffic",
       "status": "Running",
       "trafficAllocation": [
         {
-          "endOfRange": 100,
+          "endOfRange": 0,
           "entityId": "327323"
         }
       ],
@@ -492,6 +492,93 @@
           "id": "$opt_dummy_variation_id",
           "key": "ho_off_key"
         }
+      ]
+    },
+    {
+      "audienceIds": [],
+      "id": "1007543323427",
+      "key": "holdout_included_flags",
+      "status": "Running",
+      "trafficAllocation": [
+        {
+          "endOfRange": 2000,
+          "entityId": "327323"
+        }
+      ],
+      "variations": [
+        {
+          "featureEnabled": false,
+          "id": "$opt_dummy_variation_id",
+          "key": "ho_off_key"
+        }
+      ],
+      "includedFlags": [
+        "4195505407",
+        "3926744821",
+        "3281420120"
+      ]
+    },
+    {
+      "audienceIds": [],
+      "id": "10075323428",
+      "key": "basic_holdout",
+      "status": "Running",
+      "trafficAllocation": [
+        {
+          "endOfRange": 500,
+          "entityId": "327323"
+        }
+      ],
+      "variations": [
+        {
+          "featureEnabled": false,
+          "id": "$opt_dummy_variation_id",
+          "key": "ho_off_key"
+        }
+      ]
+    },
+    {
+      "id": "10075323429",
+      "key": "typed_audience_holdout",
+      "status": "Running",
+      "trafficAllocation": [
+        {
+          "endOfRange": 1000,
+          "entityId": "327323"
+        }
+      ],
+      "variations": [
+        {
+          "featureEnabled": false,
+          "id": "$opt_dummy_variation_id",
+          "key": "ho_off_key"
+        }
+      ],
+      "audienceIds": ["3468206643", "3468206644", "3468206646", "3468206645"],
+      "audienceConditions" : ["or", "3468206643", "3468206644", "3468206646", "3468206645" ],
+    },
+    {
+      "audienceIds": [],
+      "id": "100753234214",
+      "key": "holdout_excluded_flags",
+      "status": "Running",
+      "trafficAllocation": [
+        {
+          "endOfRange": 1500,
+          "entityId": "327323"
+        }
+      ],
+      "variations": [
+        {
+          "featureEnabled": false,
+          "id": "$opt_dummy_variation_id",
+          "key": "ho_off_key"
+        }
+      ],
+      "excludedFlags": [
+        "2591051011",
+        "2079378557",
+        "3263342226"
       ]
     }
   ],

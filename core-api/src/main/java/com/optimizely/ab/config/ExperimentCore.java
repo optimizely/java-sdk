@@ -39,7 +39,6 @@ public interface ExperimentCore extends IdKeyMapped {
     List<TrafficAllocation> getTrafficAllocation();
     Map<String, Variation> getVariationKeyToVariationMap();
     Map<String, Variation> getVariationIdToVariationMap();
-    Map<String, String> getUserIdToVariationKeyMap();
     
     default String serializeConditions(Map<String, String> audiencesMap) {
         Condition condition = this.getAudienceConditions();
