@@ -65,7 +65,7 @@ public class HoldoutConfig {
      * Updates internal mappings of holdouts including the id map, global list,
      * and per-flag inclusion/exclusion maps.
      */
-    public void updateHoldoutMapping() {
+    private void updateHoldoutMapping() {
         holdoutIdMap.clear();
         for (Holdout holdout : allHoldouts) {
             holdoutIdMap.put(holdout.getId(), holdout);
@@ -159,14 +159,4 @@ public class HoldoutConfig {
     public List<Holdout> getAllHoldouts() {
         return Collections.unmodifiableList(allHoldouts);
     }
-
-    /**
-     * Returns the global holdouts (those that apply to all flags by default).
-     *
-     * @return An unmodifiable list of global holdouts
-     */
-    public List<Holdout> getGlobal() {
-        return Collections.unmodifiableList(global);
-    }
-
 }

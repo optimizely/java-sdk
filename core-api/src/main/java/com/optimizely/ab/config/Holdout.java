@@ -14,19 +14,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
 package com.optimizely.ab.config;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.optimizely.ab.annotations.VisibleForTesting;
-import com.optimizely.ab.config.audience.AndCondition;
-import com.optimizely.ab.config.audience.AudienceIdCondition;
-import com.optimizely.ab.config.audience.Condition;
-import com.optimizely.ab.config.audience.EmptyCondition;
-import com.optimizely.ab.config.audience.NotCondition;
-import com.optimizely.ab.config.audience.OrCondition;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +23,13 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.config.audience.AudienceIdCondition;
+import com.optimizely.ab.config.audience.Condition;
 
 @Immutable
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -56,7 +51,6 @@ public class Holdout implements ExperimentCore {
     private final Map<String, Variation> variationIdToVariationMap;
     // Not necessary for HO
     private final String layerId = "";
-
 
     public enum HoldoutStatus {
         RUNNING("Running"),
@@ -82,27 +76,27 @@ public class Holdout implements ExperimentCore {
 
     @JsonCreator
     public Holdout(@JsonProperty("id") String id,
-                      @JsonProperty("key") String key,
-                      @JsonProperty("status") String status,
-                      @JsonProperty("audienceIds") List<String> audienceIds,
-                      @JsonProperty("audienceConditions") Condition audienceConditions,
-                      @JsonProperty("variations") List<Variation> variations,
-                      @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation,
-                      @JsonProperty("includedFlags") List<String> includedFlags,
-                      @JsonProperty("excludedFlags") List<String> excludedFlags) {
+            @JsonProperty("key") String key,
+            @JsonProperty("status") String status,
+            @JsonProperty("audienceIds") List<String> audienceIds,
+            @JsonProperty("audienceConditions") Condition audienceConditions,
+            @JsonProperty("variations") List<Variation> variations,
+            @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation,
+            @JsonProperty("includedFlags") List<String> includedFlags,
+            @JsonProperty("excludedFlags") List<String> excludedFlags) {
         this(id, key, status, audienceIds, audienceConditions, variations, trafficAllocation, includedFlags, excludedFlags, "");
     }
 
     public Holdout(@Nonnull String id,
-                      @Nonnull String key,
-                      @Nullable String status,
-                      @Nonnull List<String> audienceIds,
-                      @Nullable Condition audienceConditions,
-                      @Nonnull List<Variation> variations,
-                      @Nonnull List<TrafficAllocation> trafficAllocation,
-                      @Nullable List<String> includedFlags,
-                      @Nullable List<String> excludedFlags,
-                      @Nonnull String groupId) {
+            @Nonnull String key,
+            @Nullable String status,
+            @Nonnull List<String> audienceIds,
+            @Nullable Condition audienceConditions,
+            @Nonnull List<Variation> variations,
+            @Nonnull List<TrafficAllocation> trafficAllocation,
+            @Nullable List<String> includedFlags,
+            @Nullable List<String> excludedFlags,
+            @Nonnull String groupId) {
         this.id = id;
         this.key = key;
         this.status = status == null ? HoldoutStatus.RUNNING.toString() : status;
@@ -157,9 +151,13 @@ public class Holdout implements ExperimentCore {
         return trafficAllocation;
     }
 
-    public List<String> getIncludedFlags() { return includedFlags; }
+    public List<String> getIncludedFlags() {
+        return includedFlags;
+    }
 
-    public List<String> getExcludedFlags() { return excludedFlags; }
+    public List<String> getExcludedFlags() {
+        return excludedFlags;
+    }
 
     public String getGroupId() {
         return groupId;
@@ -175,16 +173,16 @@ public class Holdout implements ExperimentCore {
 
     @Override
     public String toString() {
-        return "Holdout {" +
-            "id='" + id + '\'' +
-            ", key='" + key + '\'' +
-            ", groupId='" + groupId + '\'' +
-            ", status='" + status + '\'' +
-            ", audienceIds=" + audienceIds +
-            ", audienceConditions=" + audienceConditions +
-            ", variations=" + variations +
-            ", variationKeyToVariationMap=" + variationKeyToVariationMap +
-            ", trafficAllocation=" + trafficAllocation +
-            '}';
+        return "Holdout {"
+                + "id='" + id + '\''
+                + ", key='" + key + '\''
+                + ", groupId='" + groupId + '\''
+                + ", status='" + status + '\''
+                + ", audienceIds=" + audienceIds
+                + ", audienceConditions=" + audienceConditions
+                + ", variations=" + variations
+                + ", variationKeyToVariationMap=" + variationKeyToVariationMap
+                + ", trafficAllocation=" + trafficAllocation
+                + '}';
     }
 }
