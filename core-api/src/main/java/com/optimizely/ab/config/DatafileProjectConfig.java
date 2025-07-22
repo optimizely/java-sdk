@@ -133,33 +133,6 @@ public class DatafileProjectConfig implements ProjectConfig {
         );
     }
 
-    // v3 constructor
-    public DatafileProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
-                                 List<Experiment> experiments, List<Holdout> holdouts, List<Attribute> attributes, List<EventType> eventType,
-                                 List<Audience> audiences, boolean anonymizeIP) {
-        this(
-            accountId,
-            anonymizeIP,
-            false,
-            null,
-            projectId,
-            revision,
-            null,
-            null,
-            version,
-            attributes,
-            audiences,
-            null,
-            eventType,
-            experiments,
-            holdouts,
-            null,
-            groups,
-            null,
-            null
-        );
-    }
-
     // v4 constructor
     public DatafileProjectConfig(String accountId,
                                  boolean anonymizeIP,
