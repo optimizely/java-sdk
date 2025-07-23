@@ -16,15 +16,16 @@
  */
 package com.optimizely.ab.config;
 
-import com.optimizely.ab.config.audience.Audience;
-import com.optimizely.ab.error.ErrorHandler;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import com.optimizely.ab.config.audience.Audience;
+import com.optimizely.ab.error.ErrorHandler;
 
 /**
  * ProjectConfig is an interface capturing the experiment, variation and feature definitions.
@@ -71,6 +72,10 @@ public interface ProjectConfig {
     List<Experiment> getExperiments();
 
     List<Holdout > getHoldouts();
+
+    List<Holdout> getHoldoutForFlag(@Nonnull String id);
+
+    Holdout getHoldout(@Nonnull String id);
 
     Set<String> getAllSegments();
 

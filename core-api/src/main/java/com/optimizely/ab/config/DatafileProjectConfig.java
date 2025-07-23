@@ -445,7 +445,19 @@ public class DatafileProjectConfig implements ProjectConfig {
     }
 
     @Override
-    public List<Holdout> getHoldouts() { return holdoutConfig.getAllHoldouts(); }
+    public List<Holdout> getHoldouts() { 
+        return holdoutConfig.getAllHoldouts(); 
+    }
+
+    @Override
+    public List<Holdout> getHoldoutForFlag(@Nonnull String id) {
+        return holdoutConfig.getHoldoutForFlag(id);
+    }
+
+    @Override   
+    public Holdout getHoldout(@Nonnull String id) {
+        return holdoutConfig.getHoldout(id);
+    }
 
     @Override
     public Set<String> getAllSegments() {
