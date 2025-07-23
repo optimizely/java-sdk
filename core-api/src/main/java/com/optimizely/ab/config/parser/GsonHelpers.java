@@ -153,7 +153,7 @@ final class GsonHelpers {
         return parseExperiment(experimentJson, "", context);
     }
 
-    static Holdout parseHoldout(JsonObject holdoutJson, String groupId, JsonDeserializationContext context) {
+    static Holdout parseHoldout(JsonObject holdoutJson, JsonDeserializationContext context) {
         String id = holdoutJson.get("id").getAsString();
         String key = holdoutJson.get("key").getAsString();
         String status = holdoutJson.get("status").getAsString();
@@ -187,11 +187,7 @@ final class GsonHelpers {
             }
         }
 
-        return new Holdout(id, key, status, audienceIds, conditions, variations, trafficAllocations, includedFlags, excludedFlags, groupId);
-    }
-
-    static Holdout parseHoldout(JsonObject holdoutJson, JsonDeserializationContext context) {
-        return parseHoldout(holdoutJson, "", context);
+        return new Holdout(id, key, status, audienceIds, conditions, variations, trafficAllocations, includedFlags, excludedFlags);
     }
 
     static FeatureFlag parseFeatureFlag(JsonObject featureFlagJson, JsonDeserializationContext context) {

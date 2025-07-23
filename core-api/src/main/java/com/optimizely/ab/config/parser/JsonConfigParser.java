@@ -173,12 +173,8 @@ final public class JsonConfigParser implements ConfigParser {
 
         return experiments;
     }
-
+    
     private List<Holdout> parseHoldouts(JSONArray holdoutJson) {
-        return parseHoldouts(holdoutJson, "");
-    }
-
-    private List<Holdout> parseHoldouts(JSONArray holdoutJson, String groupId) {
         List<Holdout> holdouts = new ArrayList<Holdout>(holdoutJson.length());
 
         for (int i = 0; i < holdoutJson.length(); i++) {
@@ -235,7 +231,7 @@ final public class JsonConfigParser implements ConfigParser {
             }
 
             holdouts.add(new Holdout(id, key, status, audienceIds, conditions, variations,
-                trafficAllocations, includedFlags, excludedFlags, groupId));
+                trafficAllocations, includedFlags, excludedFlags));
         }
 
         return holdouts;

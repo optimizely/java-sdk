@@ -38,8 +38,7 @@ public class Holdout implements ExperimentCore {
     private final String id;
     private final String key;
     private final String status;
-    private final String groupId;
-
+    
     private final List<String> audienceIds;
     private final Condition<AudienceIdCondition> audienceConditions;
     private final List<Variation> variations;
@@ -71,44 +70,31 @@ public class Holdout implements ExperimentCore {
 
     @VisibleForTesting
     public Holdout(String id, String key) {
-        this(id, key, null, Collections.emptyList(), null, Collections.emptyList(), Collections.emptyList(), null, null, "");
+        this(id, key, "Running", Collections.emptyList(), null, Collections.emptyList(), Collections.emptyList(), null, null);
     }
 
+    // Keep only this constructor and add @JsonCreator to it
     @JsonCreator
-    public Holdout(@JsonProperty("id") String id,
-            @JsonProperty("key") String key,
-            @JsonProperty("status") String status,
-            @JsonProperty("audienceIds") List<String> audienceIds,
-            @JsonProperty("audienceConditions") Condition audienceConditions,
-            @JsonProperty("variations") List<Variation> variations,
-            @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation,
-            @JsonProperty("includedFlags") List<String> includedFlags,
-            @JsonProperty("excludedFlags") List<String> excludedFlags) {
-        this(id, key, status, audienceIds, audienceConditions, variations, trafficAllocation, includedFlags, excludedFlags, "");
-    }
-
-    public Holdout(@Nonnull String id,
-            @Nonnull String key,
-            @Nullable String status,
-            @Nonnull List<String> audienceIds,
-            @Nullable Condition audienceConditions,
-            @Nonnull List<Variation> variations,
-            @Nonnull List<TrafficAllocation> trafficAllocation,
-            @Nullable List<String> includedFlags,
-            @Nullable List<String> excludedFlags,
-            @Nonnull String groupId) {
+    public Holdout(@JsonProperty("id") @Nonnull String id,
+            @JsonProperty("key") @Nonnull String key,
+            @JsonProperty("status") @Nonnull String status,
+            @JsonProperty("audienceIds") @Nonnull List<String> audienceIds,
+            @JsonProperty("audienceConditions") @Nullable Condition audienceConditions,
+            @JsonProperty("variations") @Nonnull List<Variation> variations,
+            @JsonProperty("trafficAllocation") @Nonnull List<TrafficAllocation> trafficAllocation,
+            @JsonProperty("includedFlags") @Nullable List<String> includedFlags,
+            @JsonProperty("excludedFlags") @Nullable List<String> excludedFlags) {
         this.id = id;
         this.key = key;
-        this.status = status == null ? HoldoutStatus.RUNNING.toString() : status;
-        this.audienceIds = Collections.unmodifiableList(audienceIds);
+        this.status = status;
+        this.audienceIds = audienceIds;
         this.audienceConditions = audienceConditions;
-        this.variations = Collections.unmodifiableList(variations);
-        this.trafficAllocation = Collections.unmodifiableList(trafficAllocation);
+        this.variations = variations;
+        this.trafficAllocation = trafficAllocation;
         this.includedFlags = includedFlags == null ? Collections.emptyList() : Collections.unmodifiableList(includedFlags);
         this.excludedFlags = excludedFlags == null ? Collections.emptyList() : Collections.unmodifiableList(excludedFlags);
-        this.groupId = groupId;
-        this.variationKeyToVariationMap = ProjectConfigUtils.generateNameMapping(variations);
-        this.variationIdToVariationMap = ProjectConfigUtils.generateIdMapping(variations);
+        this.variationKeyToVariationMap = ProjectConfigUtils.generateNameMapping(this.variations);
+        this.variationIdToVariationMap = ProjectConfigUtils.generateIdMapping(this.variations);
     }
 
     public String getId() {
@@ -151,16 +137,16 @@ public class Holdout implements ExperimentCore {
         return trafficAllocation;
     }
 
+    public String getGroupId() {
+        return "";
+    }
+
     public List<String> getIncludedFlags() {
         return includedFlags;
     }
 
     public List<String> getExcludedFlags() {
         return excludedFlags;
-    }
-
-    public String getGroupId() {
-        return groupId;
     }
 
     public boolean isActive() {
@@ -176,7 +162,6 @@ public class Holdout implements ExperimentCore {
         return "Holdout {"
                 + "id='" + id + '\''
                 + ", key='" + key + '\''
-                + ", groupId='" + groupId + '\''
                 + ", status='" + status + '\''
                 + ", audienceIds=" + audienceIds
                 + ", audienceConditions=" + audienceConditions

@@ -42,14 +42,14 @@ public class HoldoutConfigTest {
         globalHoldout = new Holdout("global1", "global_holdout");
 
         // Holdout with included flags
-        includedHoldout = new Holdout("included1", "included_holdout", null,
+        includedHoldout = new Holdout("included1", "included_holdout", "Running",
                 Collections.emptyList(), null, Collections.emptyList(),
-                Collections.emptyList(), Arrays.asList("flag1", "flag2"), null, "");
+                Collections.emptyList(), Arrays.asList("flag1", "flag2"), null);
 
         // Global holdout with excluded flags
-        excludedHoldout = new Holdout("excluded1", "excluded_holdout", null,
+        excludedHoldout = new Holdout("excluded1", "excluded_holdout", "Running",
                 Collections.emptyList(), null, Collections.emptyList(),
-                Collections.emptyList(), null, Arrays.asList("flag3"), "");
+                Collections.emptyList(), null, Arrays.asList("flag3"));
 
         // Another global holdout for testing
         mixedHoldout = new Holdout("mixed1", "mixed_holdout");
@@ -210,9 +210,9 @@ public class HoldoutConfigTest {
     @Test
     public void testHoldoutWithBothIncludedAndExcluded() {
         // Create a holdout with both included and excluded flags (included takes precedence)
-        Holdout bothHoldout = new Holdout("both1", "both_holdout", null,
+        Holdout bothHoldout = new Holdout("both1", "both_holdout", "Running",
                 Collections.emptyList(), null, Collections.emptyList(),
-                Collections.emptyList(), Arrays.asList("flag1"), Arrays.asList("flag2"), "");
+                Collections.emptyList(), Arrays.asList("flag1"), Arrays.asList("flag2"));
         
         List<Holdout> holdouts = Arrays.asList(globalHoldout, bothHoldout);
         HoldoutConfig config = new HoldoutConfig(holdouts);

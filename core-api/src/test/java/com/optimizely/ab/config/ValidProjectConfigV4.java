@@ -551,8 +551,7 @@ public class ValidProjectConfigV4 {
             )
         ),
         null,
-        null,
-        ""
+        null
     );
 
     private static final Holdout HOLDOUT_ZERO_TRAFFIC_HOLDOUT = new Holdout(
@@ -571,8 +570,7 @@ public class ValidProjectConfigV4 {
                 )
             ),
             null,
-            null,
-            ""
+            null
     );
 
     private static final Holdout HOLDOUT_INCLUDED_FLAGS_HOLDOUT = new Holdout(
@@ -595,8 +593,7 @@ public class ValidProjectConfigV4 {
                 "3926744821",
                 "3281420120"
             ),
-            null,
-            ""
+            null
     );
 
     private static final Holdout HOLDOUT_EXCLUDED_FLAGS_HOLDOUT = new Holdout(
@@ -619,8 +616,7 @@ public class ValidProjectConfigV4 {
                 "2591051011",
                 "2079378557",
                 "3263342226"
-            ),
-            ""
+            )
     );
 
     private static final Holdout HOLDOUT_TYPEDAUDIENCE_HOLDOUT = new Holdout(
@@ -644,8 +640,7 @@ public class ValidProjectConfigV4 {
                 )
             ),
             Collections.<String>emptyList(),
-            Collections.<String>emptyList(),
-            ""
+            Collections.<String>emptyList()
     );
     private static final String LAYER_TYPEDAUDIENCE_EXPERIMENT_ID = "1630555627";
     private static final String EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_ID = "1323241597";
