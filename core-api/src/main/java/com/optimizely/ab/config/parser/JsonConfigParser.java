@@ -93,11 +93,20 @@ final public class JsonConfigParser implements ConfigParser {
                     sendFlagDecisions = rootObject.getBoolean("sendFlagDecisions");
             }
 
+            ProjectConfig.Region region = ProjectConfig.Region.US; // Default to US
+            if (rootObject.has("region")) {
+                String regionString = rootObject.getString("region");
+                if ("EU".equalsIgnoreCase(regionString)) {
+                    region = ProjectConfig.Region.EU;
+                }
+            }
+
             return new DatafileProjectConfig(
                 accountId,
                 anonymizeIP,
                 sendFlagDecisions,
                 botFiltering,
+                region,
                 projectId,
                 revision,
                 sdkKey,
