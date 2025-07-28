@@ -21,7 +21,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- * Tests for EventEndpoints class
+ * Tests for EventEndpoints class to test event endpoints
  */
 public class EventEndpointsTest {
 
