@@ -40,6 +40,7 @@ public class ValidProjectConfigV4 {
     private static final String ENVIRONMENT_KEY = "production";
     private static final String VERSION = "4";
     private static final Boolean SEND_FLAG_DECISIONS = true;
+    private static final ProjectConfig.Region REGION = ProjectConfig.Region.US;
 
     // attributes
     private static final String ATTRIBUTE_HOUSE_ID = "553339214";
@@ -1451,6 +1452,7 @@ public class ValidProjectConfigV4 {
             ANONYMIZE_IP,
             SEND_FLAG_DECISIONS,
             BOT_FILTERING,
+            REGION,
             PROJECT_ID,
             REVISION,
             SDK_KEY,

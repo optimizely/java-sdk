@@ -50,7 +50,7 @@ public class ForwardingEventProcessorTest {
         eventProcessor = new ForwardingEventProcessor(logEvent -> {
             assertNotNull(logEvent.getEventBatch());
             assertEquals(logEvent.getRequestMethod(), LogEvent.RequestMethod.POST);
-            assertEquals(logEvent.getEndpointUrl(), EventFactory.EVENT_ENDPOINT);
+            assertEquals(logEvent.getEndpointUrl(), EventEndpoints.getDefaultEndpoint());
             atomicBoolean.set(true);
         }, notificationCenter);
     }
