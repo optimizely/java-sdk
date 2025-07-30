@@ -21,8 +21,10 @@ package com.optimizely.ab.config;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
@@ -37,7 +39,7 @@ public class HoldoutConfig {
     private Map<String, Holdout> holdoutIdMap;
     private Map<String, List<Holdout>> flagHoldoutsMap;
     private Map<String, List<Holdout>> includedHoldouts;
-    private Map<String, List<Holdout>> excludedHoldouts;
+    private Map<String, Set<Holdout>> excludedHoldouts;
 
     /**
      * Initializes a new HoldoutConfig with an empty list of holdouts.
@@ -93,7 +95,7 @@ public class HoldoutConfig {
                 global.add(holdout);
 
                 for (String flagId : holdout.getExcludedFlags()) {
-                    excludedHoldouts.computeIfAbsent(flagId, k -> new ArrayList<>()).add(holdout);
+                    excludedHoldouts.computeIfAbsent(flagId, k -> new HashSet<>()).add(holdout);
                 }
             }
         }
@@ -119,7 +121,7 @@ public class HoldoutConfig {
 
         // Prioritize global holdouts first
         List<Holdout> activeHoldouts = new ArrayList<>();
-        List<Holdout> excluded = excludedHoldouts.getOrDefault(id, Collections.emptyList());
+        Set<Holdout> excluded = excludedHoldouts.getOrDefault(id, Collections.emptySet()); 
 
         if (!excluded.isEmpty()) {
             for (Holdout holdout : global) {
