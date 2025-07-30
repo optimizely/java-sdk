@@ -997,7 +997,7 @@ public class EventFactoryTest {
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
-        // verify payload information
+        // verify payload information ,
         assertThat(conversion.getVisitors().get(0).getVisitorId(), is(userId));
         assertThat((double) conversion.getVisitors().get(0).getSnapshots().get(0).getEvents().get(0).getTimestamp(), closeTo((double) System.currentTimeMillis(), 1000.0));
         assertThat(conversion.getProjectId(), is(validProjectConfig.getProjectId()));
