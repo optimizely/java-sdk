@@ -16,6 +16,29 @@
  */
 package com.optimizely.ab.config.parser;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.nullFeatureEnabledConfigJsonV4;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigHoldoutJsonV4;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV2;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV3;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV4;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV2;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV3;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV4;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV4_holdout;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.verifyProjectConfig;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.FeatureVariable;
 import com.optimizely.ab.config.ProjectConfig;
@@ -24,27 +47,8 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.UserAttribute;
 import com.optimizely.ab.internal.ConditionUtils;
 import com.optimizely.ab.internal.InvalidAudienceCondition;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.nullFeatureEnabledConfigJsonV4;
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV2;
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV4;
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV2;
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV3;
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV3;
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV4;
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.verifyProjectConfig;
-import static org.junit.Assert.*;
 
 /**
  * Tests for {@link JsonSimpleConfigParser}.
@@ -80,6 +84,15 @@ public class JsonSimpleConfigParserTest {
 
         verifyProjectConfig(actual, expected);
     }
+
+   @Test
+   public void parseProjectConfigWithHoldouts() throws Exception {
+       JsonSimpleConfigParser parser = new JsonSimpleConfigParser();
+       ProjectConfig actual = parser.parseProjectConfig(validConfigHoldoutJsonV4());
+       ProjectConfig expected = validProjectConfigV4_holdout();
+
+       verifyProjectConfig(actual, expected);
+   }
 
     @Test
     public void parseNullFeatureEnabledProjectConfigV4() throws Exception {

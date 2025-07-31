@@ -46,6 +46,13 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
         List<Attribute> attributes = JacksonHelpers.arrayNodeToList(node.get("attributes"), Attribute.class, codec);
         List<EventType> events = JacksonHelpers.arrayNodeToList(node.get("events"), EventType.class, codec);
 
+        List<Holdout> holdouts;
+        if (node.has("holdouts")) {
+             holdouts = JacksonHelpers.arrayNodeToList(node.get("holdouts"), Holdout.class, codec);
+        } else {
+            holdouts = Collections.emptyList();
+        }
+
         List<Audience> audiences = Collections.emptyList();
         if (node.has("audiences")) {
             audiences = JacksonHelpers.arrayNodeToList(node.get("audiences"), Audience.class, codec);
@@ -103,6 +110,7 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
             (List<Audience>) (List<? extends Audience>) typedAudiences,
             events,
             experiments,
+            holdouts,
             featureFlags,
             groups,
             rollouts,

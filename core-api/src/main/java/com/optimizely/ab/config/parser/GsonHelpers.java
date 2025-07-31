@@ -25,7 +25,9 @@ import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.Holdout;
 import com.optimizely.ab.config.Experiment.ExperimentStatus;
+import com.optimizely.ab.config.Holdout.HoldoutStatus;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.FeatureVariable;
 import com.optimizely.ab.config.FeatureVariableUsageInstance;
@@ -149,6 +151,43 @@ final class GsonHelpers {
 
     static Experiment parseExperiment(JsonObject experimentJson, JsonDeserializationContext context) {
         return parseExperiment(experimentJson, "", context);
+    }
+
+    static Holdout parseHoldout(JsonObject holdoutJson, JsonDeserializationContext context) {
+        String id = holdoutJson.get("id").getAsString();
+        String key = holdoutJson.get("key").getAsString();
+        String status = holdoutJson.get("status").getAsString();
+
+        JsonArray audienceIdsJson = holdoutJson.getAsJsonArray("audienceIds");
+        List<String> audienceIds = new ArrayList<>(audienceIdsJson.size());
+        for (JsonElement audienceIdObj : audienceIdsJson) {
+            audienceIds.add(audienceIdObj.getAsString());
+        }
+
+        Condition conditions = parseAudienceConditions(holdoutJson);
+
+        // parse the child objects
+        List<Variation> variations = parseVariations(holdoutJson.getAsJsonArray("variations"), context);
+        List<TrafficAllocation> trafficAllocations =
+            parseTrafficAllocation(holdoutJson.getAsJsonArray("trafficAllocation"));
+
+        List<String> includedFlags = new ArrayList<>();
+        if (holdoutJson.has("includedFlags")) {
+            JsonArray includedIdsJson = holdoutJson.getAsJsonArray("includedFlags");
+            for (JsonElement hoIdObj : includedIdsJson) {
+                includedFlags.add(hoIdObj.getAsString());
+            }
+        }
+
+        List<String> excludedFlags = new ArrayList<>();
+        if (holdoutJson.has("excludedFlags")) {
+            JsonArray excludedIdsJson = holdoutJson.getAsJsonArray("excludedFlags");
+            for (JsonElement hoIdObj : excludedIdsJson) {
+                excludedFlags.add(hoIdObj.getAsString());
+            }
+        }
+
+        return new Holdout(id, key, status, audienceIds, conditions, variations, trafficAllocations, includedFlags, excludedFlags);
     }
 
     static FeatureFlag parseFeatureFlag(JsonObject featureFlagJson, JsonDeserializationContext context) {
