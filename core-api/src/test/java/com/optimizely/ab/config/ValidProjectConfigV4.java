@@ -1668,6 +1668,7 @@ public class ValidProjectConfigV4 {
             ANONYMIZE_IP,
             SEND_FLAG_DECISIONS,
             BOT_FILTERING,
+            REGION,
             PROJECT_ID,
             REVISION,
             SDK_KEY,
