@@ -63,7 +63,7 @@ public class DatafileProjectConfig implements ProjectConfig {
     private final boolean anonymizeIP;
     private final boolean sendFlagDecisions;
     private final Boolean botFiltering;
-    private final Region region;
+    private final String region;
     private final String hostForODP;
     private final String publicKeyForODP;
     private final List<Attribute> attributes;
@@ -103,14 +103,14 @@ public class DatafileProjectConfig implements ProjectConfig {
     // v2 constructor
     public DatafileProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
                                  List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
-                                 List<Audience> audiences, Region region) {
+                                 List<Audience> audiences, String region) {
         this(accountId, projectId, version, revision, groups, experiments, attributes, eventType, audiences, false, region);
     }
 
     // v3 constructor
     public DatafileProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
                                  List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
-                                 List<Audience> audiences, boolean anonymizeIP, Region region) {
+                                 List<Audience> audiences, boolean anonymizeIP, String region) {
         this(
             accountId,
             anonymizeIP,
@@ -140,7 +140,7 @@ public class DatafileProjectConfig implements ProjectConfig {
                                  boolean anonymizeIP,
                                  boolean sendFlagDecisions,
                                  Boolean botFiltering,
-                                 Region region,
+                                 String region,
                                  String projectId,
                                  String revision,
                                  String sdkKey,
@@ -165,7 +165,7 @@ public class DatafileProjectConfig implements ProjectConfig {
         this.anonymizeIP = anonymizeIP;
         this.sendFlagDecisions = sendFlagDecisions;
         this.botFiltering = botFiltering;
-        this.region = region != null ? region : Region.US;
+        this.region = region != null ? region : "US";
 
         this.attributes = Collections.unmodifiableList(attributes);
         this.audiences = Collections.unmodifiableList(audiences);
@@ -439,7 +439,7 @@ public class DatafileProjectConfig implements ProjectConfig {
     }
 
     @Override
-    public Region getRegion() {
+    public String getRegion() {
         return region;
     }
 

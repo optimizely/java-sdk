@@ -95,10 +95,10 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
             }
         }
 
-        ProjectConfig.Region region = ProjectConfig.Region.US;
+        String region = "US";
 
         if (node.hasNonNull("region")) {
-            region = ProjectConfig.Region.valueOf(node.get("region").asText());
+            region = node.get("region").textValue();
         }
 
         return new DatafileProjectConfig(

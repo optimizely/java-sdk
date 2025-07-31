@@ -212,7 +212,7 @@ public class OptimizelyConfigServiceTest {
             true,
             true,
             true,
-            ProjectConfig.Region.US,
+            "US",
             "3918735994",
             "1480511547",
             "ValidProjectConfigV4",

@@ -16,7 +16,6 @@
  */
 package com.optimizely.ab.event.internal;
 
-import com.optimizely.ab.config.ProjectConfig.Region;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,11 +25,11 @@ import java.util.Map;
  */
 public class EventEndpoints {
     
-    private static final Map<Region, String> LOGX_ENDPOINTS = new HashMap<>();
+    private static final Map<String, String> LOGX_ENDPOINTS = new HashMap<>();
     
     static {
-        LOGX_ENDPOINTS.put(Region.US, "https://logx.optimizely.com/v1/events");
-        LOGX_ENDPOINTS.put(Region.EU, "https://eu.logx.optimizely.com/v1/events");
+        LOGX_ENDPOINTS.put("US", "https://logx.optimizely.com/v1/events");
+        LOGX_ENDPOINTS.put("EU", "https://eu.logx.optimizely.com/v1/events");
     }
     
     /**
@@ -40,9 +39,9 @@ public class EventEndpoints {
      * @param region the region for which to get the endpoint
      * @return the endpoint URL for the specified region, or US endpoint if region is null
      */
-    public static String getEndpointForRegion(Region region) {
+    public static String getEndpointForRegion(String region) {
         if (region == null) {
-            return LOGX_ENDPOINTS.get(Region.US);
+            return LOGX_ENDPOINTS.get("US");
         }
         return LOGX_ENDPOINTS.get(region);
     }
@@ -53,6 +52,6 @@ public class EventEndpoints {
      * @return the default endpoint URL
      */
     public static String getDefaultEndpoint() {
-        return LOGX_ENDPOINTS.get(Region.US);
+        return LOGX_ENDPOINTS.get("US");
     }
 }

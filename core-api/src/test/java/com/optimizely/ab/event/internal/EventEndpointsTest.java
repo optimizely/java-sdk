@@ -16,7 +16,6 @@
  */
 package com.optimizely.ab.event.internal;
 
-import com.optimizely.ab.config.ProjectConfig.Region;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -27,13 +26,13 @@ public class EventEndpointsTest {
 
     @Test
     public void testGetEndpointForUSRegion() {
-        String endpoint = EventEndpoints.getEndpointForRegion(Region.US);
+        String endpoint = EventEndpoints.getEndpointForRegion("US");
         assertEquals("https://logx.optimizely.com/v1/events", endpoint);
     }
 
     @Test
     public void testGetEndpointForEURegion() {
-        String endpoint = EventEndpoints.getEndpointForRegion(Region.EU);
+        String endpoint = EventEndpoints.getEndpointForRegion("EU");
         assertEquals("https://eu.logx.optimizely.com/v1/events", endpoint);
     }
 
@@ -54,7 +53,7 @@ public class EventEndpointsTest {
         // Test that both null region and default endpoint return the same US endpoint
         String nullRegionEndpoint = EventEndpoints.getEndpointForRegion(null);
         String defaultEndpoint = EventEndpoints.getDefaultEndpoint();
-        String usEndpoint = EventEndpoints.getEndpointForRegion(Region.US);
+        String usEndpoint = EventEndpoints.getEndpointForRegion("US");
         
         assertEquals("All should return US endpoint", usEndpoint, nullRegionEndpoint);
         assertEquals("All should return US endpoint", usEndpoint, defaultEndpoint);

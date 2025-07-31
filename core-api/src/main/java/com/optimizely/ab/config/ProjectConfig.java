@@ -143,20 +143,6 @@ public interface ProjectConfig {
         }
     }
 
-    public enum Region {
-        US("US"), EU("EU");
 
-        private final String region;
-
-        Region(String region) {
-            this.region = region;
-        }
-
-        @Override
-        public String toString() {
-            return region;
-        }
-    }
-
-    Region getRegion();
+    String getRegion();
 }
