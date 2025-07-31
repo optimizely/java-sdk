@@ -34,17 +34,13 @@ import java.util.Map;
  */
 @Immutable
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Experiment implements IdKeyMapped {
+public class Experiment implements ExperimentCore {
 
     private final String id;
     private final String key;
     private final String status;
     private final String layerId;
     private final String groupId;
-
-    private final String AND = "AND";
-    private final String OR = "OR";
-    private final String NOT = "NOT";
 
     private final List<String> audienceIds;
     private final Condition<AudienceIdCondition> audienceConditions;
@@ -174,98 +170,6 @@ public class Experiment implements IdKeyMapped {
 
     public boolean isLaunched() {
         return status.equals(ExperimentStatus.LAUNCHED.toString());
-    }
-
-    public String serializeConditions(Map<String, String> audiencesMap) {
-        Condition condition = this.audienceConditions;
-        return condition instanceof EmptyCondition ? "" : this.serialize(condition, audiencesMap);
-    }
-
-    private String getNameFromAudienceId(String audienceId, Map<String, String> audiencesMap) {
-        StringBuilder audienceName = new StringBuilder();
-        if (audiencesMap != null && audiencesMap.get(audienceId) != null) {
-            audienceName.append("\"" + audiencesMap.get(audienceId) + "\"");
-        } else {
-            audienceName.append("\"" + audienceId + "\"");
-        }
-        return audienceName.toString();
-    }
-
-    private String getOperandOrAudienceId(Condition condition, Map<String, String> audiencesMap) {
-        if (condition != null) {
-            if (condition instanceof AudienceIdCondition) {
-                return this.getNameFromAudienceId(condition.getOperandOrId(), audiencesMap);
-            } else {
-                return condition.getOperandOrId();
-            }
-        } else {
-            return "";
-        }
-    }
-
-    public String serialize(Condition condition, Map<String, String> audiencesMap) {
-        StringBuilder stringBuilder = new StringBuilder();
-        List<Condition> conditions;
-
-        String operand = this.getOperandOrAudienceId(condition, audiencesMap);
-        switch (operand){
-            case (AND):
-                conditions = ((AndCondition<?>) condition).getConditions();
-                stringBuilder.append(this.getNameOrNextCondition(operand, conditions, audiencesMap));
-                break;
-            case (OR):
-                conditions = ((OrCondition<?>) condition).getConditions();
-                stringBuilder.append(this.getNameOrNextCondition(operand, conditions, audiencesMap));
-                break;
-            case (NOT):
-                stringBuilder.append(operand + " ");
-                Condition notCondition = ((NotCondition<?>) condition).getCondition();
-                if (notCondition instanceof AudienceIdCondition) {
-                    stringBuilder.append(serialize(notCondition, audiencesMap));
-                } else {
-                    stringBuilder.append("(" + serialize(notCondition, audiencesMap) + ")");
-                }
-                break;
-            default:
-                stringBuilder.append(operand);
-                break;
-        }
-
-        return stringBuilder.toString();
-    }
-
-    public String getNameOrNextCondition(String operand, List<Condition> conditions, Map<String, String> audiencesMap) {
-        StringBuilder stringBuilder = new StringBuilder();
-        int index = 0;
-        if (conditions.isEmpty()) {
-            return "";
-        } else if (conditions.size() == 1) {
-            return serialize(conditions.get(0), audiencesMap);
-        } else {
-            for (Condition con : conditions) {
-                index++;
-                if (index + 1 <= conditions.size()) {
-                    if (con instanceof AudienceIdCondition) {
-                        String audienceName = this.getNameFromAudienceId(((AudienceIdCondition<?>) con).getAudienceId(),
-                            audiencesMap);
-                        stringBuilder.append( audienceName + " ");
-                    } else {
-                        stringBuilder.append("(" + serialize(con, audiencesMap) + ") ");
-                    }
-                    stringBuilder.append(operand);
-                    stringBuilder.append(" ");
-                } else {
-                    if (con instanceof AudienceIdCondition) {
-                        String audienceName = this.getNameFromAudienceId(((AudienceIdCondition<?>) con).getAudienceId(),
-                            audiencesMap);
-                        stringBuilder.append(audienceName);
-                    } else {
-                        stringBuilder.append("(" + serialize(con, audiencesMap) + ")");
-                    }
-                }
-            }
-        }
-        return stringBuilder.toString();
     }
 
     @Override

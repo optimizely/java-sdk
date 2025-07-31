@@ -51,6 +51,8 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
         }.getType();
         Type experimentsType = new TypeToken<List<Experiment>>() {
         }.getType();
+        Type holdoutsType = new TypeToken<List<Holdout>>() {
+        }.getType();
         Type attributesType = new TypeToken<List<Attribute>>() {
         }.getType();
         Type eventsType = new TypeToken<List<EventType>>() {
@@ -63,6 +65,13 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
         List<Group> groups = context.deserialize(jsonObject.get("groups").getAsJsonArray(), groupsType);
         List<Experiment> experiments =
             context.deserialize(jsonObject.get("experiments").getAsJsonArray(), experimentsType);
+
+        List<Holdout> holdouts;
+        if (jsonObject.has("holdouts")) {
+            holdouts = context.deserialize(jsonObject.get("holdouts").getAsJsonArray(), holdoutsType);
+        } else {
+            holdouts = Collections.emptyList();
+        }
 
         List<Attribute> attributes;
         attributes = context.deserialize(jsonObject.get("attributes"), attributesType);
@@ -134,6 +143,7 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
             typedAudiences,
             events,
             experiments,
+            holdouts,
             featureFlags,
             groups,
             rollouts,

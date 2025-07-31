@@ -96,6 +96,8 @@ public class DatafileProjectConfig implements ProjectConfig {
     // other mappings
     private final Map<String, Experiment> variationIdToExperimentMapping;
 
+    private final HoldoutConfig holdoutConfig;
+
     private String datafile;
 
     // v2 constructor
@@ -126,6 +128,7 @@ public class DatafileProjectConfig implements ProjectConfig {
             eventType,
             experiments,
             null,
+            null,
             groups,
             null,
             null
@@ -148,6 +151,7 @@ public class DatafileProjectConfig implements ProjectConfig {
                                  List<Audience> typedAudiences,
                                  List<EventType> events,
                                  List<Experiment> experiments,
+                                 List<Holdout> holdouts,
                                  List<FeatureFlag> featureFlags,
                                  List<Group> groups,
                                  List<Rollout> rollouts,
@@ -190,6 +194,12 @@ public class DatafileProjectConfig implements ProjectConfig {
         allExperiments.addAll(experiments);
         allExperiments.addAll(aggregateGroupExperiments(groups));
         this.experiments = Collections.unmodifiableList(allExperiments);
+
+        if (holdouts == null) {
+            this.holdoutConfig = new HoldoutConfig();
+        }  else {
+            this.holdoutConfig = new HoldoutConfig(holdouts);
+        }
 
         String publicKeyForODP = "";
         String hostForODP = "";
@@ -441,6 +451,21 @@ public class DatafileProjectConfig implements ProjectConfig {
     @Override
     public List<Experiment> getExperiments() {
         return experiments;
+    }
+
+    @Override
+    public List<Holdout> getHoldouts() { 
+        return holdoutConfig.getAllHoldouts(); 
+    }
+
+    @Override
+    public List<Holdout> getHoldoutForFlag(@Nonnull String id) {
+        return holdoutConfig.getHoldoutForFlag(id);
+    }
+
+    @Override   
+    public Holdout getHoldout(@Nonnull String id) {
+        return holdoutConfig.getHoldout(id);
     }
 
     @Override

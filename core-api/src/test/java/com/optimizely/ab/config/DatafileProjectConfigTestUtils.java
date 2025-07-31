@@ -16,6 +16,26 @@
  */
 package com.optimizely.ab.config;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import static java.util.Arrays.asList;
+import java.util.Collections;
+import static java.util.Collections.singletonList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.optimizely.ab.config.audience.AndCondition;
@@ -24,25 +44,6 @@ import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.config.audience.NotCondition;
 import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.config.audience.UserAttribute;
-
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 
 /**
  * Helper class that provides common functionality and resources for testing {@link DatafileProjectConfig}.
@@ -382,9 +383,14 @@ public final class DatafileProjectConfigTestUtils {
     }
 
     private static final ProjectConfig VALID_PROJECT_CONFIG_V4 = generateValidProjectConfigV4();
+    private static final ProjectConfig VALID_PROJECT_CONFIG_V4_HOLDOUT = generateValidProjectConfigV4_holdout();
 
     private static ProjectConfig generateValidProjectConfigV4() {
         return ValidProjectConfigV4.generateValidProjectConfigV4();
+    }
+
+    private static ProjectConfig generateValidProjectConfigV4_holdout() {
+        return ValidProjectConfigV4.generateValidProjectConfigV4_holdout();
     }
 
     private DatafileProjectConfigTestUtils() {
@@ -408,6 +414,10 @@ public final class DatafileProjectConfigTestUtils {
 
     public static String validConfigJsonV4() throws IOException {
         return Resources.toString(Resources.getResource("config/valid-project-config-v4.json"), Charsets.UTF_8);
+    }
+
+    public static String validConfigHoldoutJsonV4() throws IOException {
+        return Resources.toString(Resources.getResource("config/holdouts-project-config.json"), Charsets.UTF_8);
     }
 
     public static String nullFeatureEnabledConfigJsonV4()  throws IOException {
@@ -446,6 +456,10 @@ public final class DatafileProjectConfigTestUtils {
         return VALID_PROJECT_CONFIG_V4;
     }
 
+    public static ProjectConfig validProjectConfigV4_holdout() {
+        return VALID_PROJECT_CONFIG_V4_HOLDOUT;
+    }
+
     /**
      * @return the expected {@link DatafileProjectConfig} for the json produced by {@link #invalidProjectConfigV5()}
      */
@@ -471,6 +485,7 @@ public final class DatafileProjectConfigTestUtils {
         verifyAudiences(actual.getTypedAudiences(), expected.getTypedAudiences());
         verifyEvents(actual.getEventTypes(), expected.getEventTypes());
         verifyExperiments(actual.getExperiments(), expected.getExperiments());
+        verifyHoldouts(actual.getHoldouts(), expected.getHoldouts());
         verifyFeatureFlags(actual.getFeatureFlags(), expected.getFeatureFlags());
         verifyGroups(actual.getGroups(), expected.getGroups());
         verifyRollouts(actual.getRollouts(), expected.getRollouts());
@@ -499,6 +514,37 @@ public final class DatafileProjectConfigTestUtils {
             verifyVariations(actualExperiment.getVariations(), expectedExperiment.getVariations());
             verifyTrafficAllocations(actualExperiment.getTrafficAllocation(),
                 expectedExperiment.getTrafficAllocation());
+        }
+    }
+
+    private static void verifyHoldouts(List<Holdout> actual, List<Holdout> expected) {
+        // print the holdouts for debugging BEFORE assertion
+        // System.out.println("Actual holdouts: " + actual);
+        // System.out.println("Expected holdouts: " + expected);
+        // System.out.println("Actual size: " + actual.size());
+        // System.out.println("Expected size: " + expected.size());
+        
+        assertThat(actual.size(), is(expected.size()));
+
+
+        for (int i = 0; i < actual.size(); i++) {
+            Holdout actualHoldout = actual.get(i);
+            Holdout expectedHoldout = expected.get(i);
+
+            assertThat(actualHoldout.getId(), is(expectedHoldout.getId()));
+            assertThat(actualHoldout.getKey(), is(expectedHoldout.getKey()));
+            assertThat(actualHoldout.getGroupId(), is(expectedHoldout.getGroupId()));
+            assertThat(actualHoldout.getStatus(), is(expectedHoldout.getStatus()));
+            assertThat(actualHoldout.getAudienceIds(), is(expectedHoldout.getAudienceIds()));
+            /// debug print audience conditions
+            // System.out.println("Actual audience conditions: " + actualHoldout.getAudienceConditions());
+            // System.out.println("Expected audience conditions: " + expectedHoldout.getAudienceConditions());
+            assertThat(actualHoldout.getAudienceConditions(), is(expectedHoldout.getAudienceConditions()));
+            assertThat(actualHoldout.getIncludedFlags(), is(expectedHoldout.getIncludedFlags()));
+            assertThat(actualHoldout.getExcludedFlags(), is(expectedHoldout.getExcludedFlags()));
+            verifyVariations(actualHoldout.getVariations(), expectedHoldout.getVariations());
+            verifyTrafficAllocations(actualHoldout.getTrafficAllocation(),
+                expectedHoldout.getTrafficAllocation());
         }
     }
 
