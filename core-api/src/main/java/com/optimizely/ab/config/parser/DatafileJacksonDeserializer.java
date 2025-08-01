@@ -95,11 +95,18 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
             }
         }
 
+        String region = "US";
+
+        if (node.hasNonNull("region")) {
+            region = node.get("region").textValue();
+        }
+
         return new DatafileProjectConfig(
             accountId,
             anonymizeIP,
             sendFlagDecisions,
             botFiltering,
+            region,
             projectId,
             revision,
             sdkKey,

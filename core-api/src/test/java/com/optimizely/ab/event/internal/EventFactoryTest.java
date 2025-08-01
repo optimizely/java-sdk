@@ -140,7 +140,7 @@ public class EventFactoryTest {
             userId, attributeMap);
 
         // verify that request endpoint is correct
-        assertThat(impressionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
+        assertThat(impressionEvent.getEndpointUrl(), is(EventEndpoints.getEndpointForRegion(validProjectConfig.getRegion())));
 
         EventBatch eventBatch = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
@@ -207,7 +207,7 @@ public class EventFactoryTest {
             userId, attributeMap);
 
         // verify that request endpoint is correct
-        assertThat(impressionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
+        assertThat(impressionEvent.getEndpointUrl(), is(EventEndpoints.getEndpointForRegion(validProjectConfig.getRegion())));
 
         EventBatch eventBatch = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
@@ -616,7 +616,7 @@ public class EventFactoryTest {
                 eventTagMap);
 
         // verify that the request endpoint is correct
-        assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
+        assertThat(conversionEvent.getEndpointUrl(), is(EventEndpoints.getEndpointForRegion(validProjectConfig.getRegion())));
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
@@ -678,7 +678,7 @@ public class EventFactoryTest {
                 eventTagMap);
 
         // verify that the request endpoint is correct
-        assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
+        assertThat(conversionEvent.getEndpointUrl(), is(EventEndpoints.getEndpointForRegion(validProjectConfig.getRegion())));
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 
@@ -944,7 +944,7 @@ public class EventFactoryTest {
             userId, attributeMap);
 
         // verify that request endpoint is correct
-        assertThat(impressionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
+        assertThat(impressionEvent.getEndpointUrl(), is(EventEndpoints.getEndpointForRegion(validProjectConfig.getRegion())));
 
         EventBatch impression = gson.fromJson(impressionEvent.getBody(), EventBatch.class);
 
@@ -993,7 +993,7 @@ public class EventFactoryTest {
                 eventTagMap);
 
         // verify that the request endpoint is correct
-        assertThat(conversionEvent.getEndpointUrl(), is(EventFactory.EVENT_ENDPOINT));
+        assertThat(conversionEvent.getEndpointUrl(), is(EventEndpoints.getEndpointForRegion(validProjectConfig.getRegion())));
 
         EventBatch conversion = gson.fromJson(conversionEvent.getBody(), EventBatch.class);
 

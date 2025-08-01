@@ -142,4 +142,6 @@ public interface ProjectConfig {
             return version;
         }
     }
+
+    String getRegion();
 }

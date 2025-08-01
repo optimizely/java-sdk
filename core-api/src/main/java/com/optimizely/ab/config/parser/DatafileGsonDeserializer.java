@@ -121,11 +121,18 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
                 sendFlagDecisions = jsonObject.get("sendFlagDecisions").getAsBoolean();
         }
 
+        String region = "US";
+
+        if (jsonObject.has("region")) {
+            region = jsonObject.get("region").getAsString();
+        }
+
         return new DatafileProjectConfig(
             accountId,
             anonymizeIP,
             sendFlagDecisions,
             botFiltering,
+            region,
             projectId,
             revision,
             sdkKey,
