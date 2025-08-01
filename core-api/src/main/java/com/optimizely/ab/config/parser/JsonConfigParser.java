@@ -103,9 +103,6 @@ final public class JsonConfigParser implements ConfigParser {
             String region = "US"; // Default to US
             if (rootObject.has("region")) {
                 String regionString = rootObject.getString("region");
-                if ("EU".equalsIgnoreCase(regionString)) {
-                    region = "EU";
-                }
             }
 
             return new DatafileProjectConfig(

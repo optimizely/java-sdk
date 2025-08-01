@@ -106,9 +106,6 @@ final public class JsonSimpleConfigParser implements ConfigParser {
             String region = "US"; // Default to US
             if (rootObject.containsKey("region")) {
                 String regionString = (String) rootObject.get("region");
-                if ("EU".equalsIgnoreCase(regionString)) {
-                    region = "EU";
-                }
             }
 
             return new DatafileProjectConfig(

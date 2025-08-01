@@ -38,7 +38,7 @@ public class EventEndpointsTest {
 
     @Test
     public void testGetDefaultEndpoint() {
-        String defaultEndpoint = EventEndpoints.getDefaultEndpoint();
+        String defaultEndpoint = EventEndpoints.getEndpointForRegion("US");
         assertEquals("https://logx.optimizely.com/v1/events", defaultEndpoint);
     }
 
@@ -49,10 +49,16 @@ public class EventEndpointsTest {
     }
 
     @Test
+    public void testGetEndpointForInvalidRegion() {
+        String endpoint = EventEndpoints.getEndpointForRegion("ZZ");
+        assertEquals("https://logx.optimizely.com/v1/events", endpoint);
+    }
+
+    @Test
     public void testDefaultBehaviorAlwaysReturnsUS() {
         // Test that both null region and default endpoint return the same US endpoint
         String nullRegionEndpoint = EventEndpoints.getEndpointForRegion(null);
-        String defaultEndpoint = EventEndpoints.getDefaultEndpoint();
+        String defaultEndpoint = EventEndpoints.getEndpointForRegion("US");
         String usEndpoint = EventEndpoints.getEndpointForRegion("US");
         
         assertEquals("All should return US endpoint", usEndpoint, nullRegionEndpoint);

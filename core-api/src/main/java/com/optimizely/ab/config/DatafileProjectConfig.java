@@ -103,20 +103,20 @@ public class DatafileProjectConfig implements ProjectConfig {
     // v2 constructor
     public DatafileProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
                                  List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
-                                 List<Audience> audiences, String region) {
-        this(accountId, projectId, version, revision, groups, experiments, attributes, eventType, audiences, false, region);
+                                 List<Audience> audiences) {
+        this(accountId, projectId, version, revision, groups, experiments, attributes, eventType, audiences, false);
     }
 
     // v3 constructor
     public DatafileProjectConfig(String accountId, String projectId, String version, String revision, List<Group> groups,
                                  List<Experiment> experiments, List<Attribute> attributes, List<EventType> eventType,
-                                 List<Audience> audiences, boolean anonymizeIP, String region) {
+                                 List<Audience> audiences, boolean anonymizeIP) {
         this(
             accountId,
             anonymizeIP,
             false,
             null,
-            region,
+            null,
             projectId,
             revision,
             null,

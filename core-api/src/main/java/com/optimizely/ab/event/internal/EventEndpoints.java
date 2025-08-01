@@ -15,7 +15,6 @@
  *    limitations under the License.
  */
 package com.optimizely.ab.event.internal;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,18 +39,9 @@ public class EventEndpoints {
      * @return the endpoint URL for the specified region, or US endpoint if region is null
      */
     public static String getEndpointForRegion(String region) {
-        if (region == null) {
-            return LOGX_ENDPOINTS.get("US");
+        if (region != null && region.equals("EU")) {
+            return LOGX_ENDPOINTS.get("EU");
         }
-        return LOGX_ENDPOINTS.get(region);
-    }
-    
-    /**
-     * Get the default event endpoint URL (US region).
-     *
-     * @return the default endpoint URL
-     */
-    public static String getDefaultEndpoint() {
         return LOGX_ENDPOINTS.get("US");
     }
 }

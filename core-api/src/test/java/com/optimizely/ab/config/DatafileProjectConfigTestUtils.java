@@ -156,7 +156,7 @@ public final class DatafileProjectConfigTestUtils {
             Collections.<TrafficAllocation>emptyList());
         List<Group> groups = asList(randomPolicyGroup, overlappingPolicyGroup);
 
-        return new DatafileProjectConfig("789", "1234", "2", "42", groups, experiments, attributes, events, audiences, "US");
+        return new DatafileProjectConfig("789", "1234", "2", "42", groups, experiments, attributes, events, audiences);
     }
 
     private static final ProjectConfig NO_AUDIENCE_PROJECT_CONFIG_V2 = generateNoAudienceProjectConfigV2();
@@ -209,7 +209,7 @@ public final class DatafileProjectConfigTestUtils {
         );
 
         return new DatafileProjectConfig("789", "1234", "2", "42", Collections.<Group>emptyList(), experiments, attributes,
-            events, Collections.<Audience>emptyList(), "US");
+            events, Collections.<Audience>emptyList());
     }
 
     private static final ProjectConfig VALID_PROJECT_CONFIG_V3 = generateValidProjectConfigV3();
@@ -326,7 +326,7 @@ public final class DatafileProjectConfigTestUtils {
         List<Group> groups = asList(randomPolicyGroup, overlappingPolicyGroup);
 
         return new DatafileProjectConfig("789", "1234", "3", "42", groups, experiments, attributes, events, audiences,
-            true, "US");
+            true);
     }
 
     private static final ProjectConfig NO_AUDIENCE_PROJECT_CONFIG_V3 = generateNoAudienceProjectConfigV3();
@@ -379,7 +379,7 @@ public final class DatafileProjectConfigTestUtils {
         );
 
         return new DatafileProjectConfig("789", "1234", "3", "42", Collections.<Group>emptyList(), experiments, attributes,
-            events, Collections.<Audience>emptyList(), true, "US");
+            events, Collections.<Audience>emptyList(), true);
     }
 
     private static final ProjectConfig VALID_PROJECT_CONFIG_V4 = generateValidProjectConfigV4();
