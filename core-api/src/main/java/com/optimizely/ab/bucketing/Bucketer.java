@@ -41,7 +41,7 @@ import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
  * identifier.
  * <p>
  * The user identifier <i>must</i> be provided in the first data argument passed to
- * {@link #bucket(Experiment, String, ProjectConfig)} and <i>must</i> be non-null and non-empty.
+ * {@link #bucket(ExperimentCore, String, ProjectConfig)} and <i>must</i> be non-null and non-empty.
  *
  * @see <a href="https://en.wikipedia.org/wiki/MurmurHash">MurmurHash</a>
  */
