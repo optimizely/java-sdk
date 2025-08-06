@@ -16,18 +16,25 @@
  */
 package com.optimizely.ab.bucketing;
 
-import com.optimizely.ab.annotations.VisibleForTesting;
-import com.optimizely.ab.bucketing.internal.MurmurHash3;
-import com.optimizely.ab.config.*;
-import com.optimizely.ab.optimizelydecision.DecisionReasons;
-import com.optimizely.ab.optimizelydecision.DecisionResponse;
-import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
-import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.bucketing.internal.MurmurHash3;
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ExperimentCore;
+import com.optimizely.ab.config.Group;
+import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.TrafficAllocation;
+import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.DecisionResponse;
+import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
 
 /**
  * Default Optimizely bucketing algorithm that evenly distributes users using the Murmur3 hash of some provided
@@ -89,7 +96,7 @@ public class Bucketer {
     }
 
     @Nonnull
-    private DecisionResponse<Variation> bucketToVariation(@Nonnull Experiment experiment,
+    private DecisionResponse<Variation> bucketToVariation(@Nonnull ExperimentCore experiment,
                                                           @Nonnull String bucketingId) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
@@ -130,7 +137,7 @@ public class Bucketer {
      * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
      */
     @Nonnull
-    public DecisionResponse<Variation> bucket(@Nonnull Experiment experiment,
+    public DecisionResponse<Variation> bucket(@Nonnull ExperimentCore experiment,
                                               @Nonnull String bucketingId,
                                               @Nonnull ProjectConfig projectConfig) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();

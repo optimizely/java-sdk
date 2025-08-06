@@ -16,28 +16,30 @@
  */
 package com.optimizely.ab.notification;
 
-import ch.qos.logback.classic.Level;
-import com.optimizely.ab.OptimizelyRuntimeException;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.event.LogEvent;
-import com.optimizely.ab.internal.LogbackVerifier;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
-import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static junit.framework.TestCase.assertNotSame;
-import static junit.framework.TestCase.assertTrue;
+import javax.annotation.Nonnull;
+
+import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import static org.mockito.Mockito.mock;
+
+import com.optimizely.ab.OptimizelyRuntimeException;
+import com.optimizely.ab.config.ExperimentCore;
+import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.event.LogEvent;
+import com.optimizely.ab.internal.LogbackVerifier;
+
+import ch.qos.logback.classic.Level;
+import static junit.framework.TestCase.assertNotSame;
+import static junit.framework.TestCase.assertTrue;
 
 public class NotificationCenterTest {
     private NotificationCenter notificationCenter;
@@ -92,7 +94,7 @@ public class NotificationCenterTest {
     public void testAddActivateNotificationTwice() {
         ActivateNotificationListener listener = new ActivateNotificationListener() {
             @Override
-            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+            public void onActivate(@Nonnull ExperimentCore experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
 
             }
         };
@@ -107,7 +109,7 @@ public class NotificationCenterTest {
     public void testAddActivateNotification() {
         int notificationId = notificationCenter.addActivateNotificationListener(new ActivateNotificationListener() {
             @Override
-            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+            public void onActivate(@Nonnull ExperimentCore experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
 
             }
         });
