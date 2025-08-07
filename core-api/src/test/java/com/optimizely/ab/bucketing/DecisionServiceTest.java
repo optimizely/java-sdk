@@ -1228,4 +1228,29 @@ public class DecisionServiceTest {
         assertNull(decisionService.getForcedVariation(experiment2, "testUser2").getResult());
     }
 
+    @Test
+    public void getVariationForFeatureReturnHoldoutDecisionForGlobalHoldout() {
+        ProjectConfig holdoutProjectConfig = generateValidProjectConfigV4_holdout();
+        
+        Bucketer mockBucketer = new Bucketer();
+        
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
+        
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("$opt_bucketing_id", "ppid160000");
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+            FEATURE_FLAG_BOOLEAN_FEATURE,
+            optimizely.createUserContext("user123", attributes),
+            holdoutProjectConfig
+        ).getResult();
+        
+        assertEquals(VARIATION_HOLDOUT_VARIATION_OFF, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, featureDecision.decisionSource);
+        
+        logbackVerifier.expectMessage(Level.INFO, "User (user123) is in variation (ho_off_key) of holdout (basic_holdout).");
+    }
+    
+
+
+
 }

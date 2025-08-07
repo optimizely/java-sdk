@@ -483,7 +483,7 @@
       "trafficAllocation": [
         {
           "endOfRange": 0,
-          "entityId": "327323"
+          "entityId": "$opt_dummy_variation_id"
         }
       ],
       "variations": [
@@ -502,7 +502,7 @@
       "trafficAllocation": [
         {
           "endOfRange": 2000,
-          "entityId": "327323"
+          "entityId": "$opt_dummy_variation_id"
         }
       ],
       "variations": [
@@ -526,7 +526,7 @@
       "trafficAllocation": [
         {
           "endOfRange": 500,
-          "entityId": "327323"
+          "entityId": "$opt_dummy_variation_id"
         }
       ],
       "variations": [
@@ -544,7 +544,7 @@
       "trafficAllocation": [
         {
           "endOfRange": 1000,
-          "entityId": "327323"
+          "entityId": "$opt_dummy_variation_id"
         }
       ],
       "variations": [
@@ -565,7 +565,7 @@
       "trafficAllocation": [
         {
           "endOfRange": 1500,
-          "entityId": "327323"
+          "entityId": "$opt_dummy_variation_id"
         }
       ],
       "variations": [
