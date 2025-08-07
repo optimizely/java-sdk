@@ -16,12 +16,13 @@
  */
 package com.optimizely.ab.notification;
 
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.event.LogEvent;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
-import java.util.Map;
+
+import com.optimizely.ab.config.ExperimentCore;
+import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.event.LogEvent;
 
 /**
  * ActivateNotificationListenerInterface provides and interface for activate event notification.
@@ -40,7 +41,7 @@ public interface ActivateNotificationListenerInterface {
      * @param variation  - The variation that was returned from activate.
      * @param event      - The impression event that was triggered.
      */
-    public void onActivate(@Nonnull Experiment experiment,
+    public void onActivate(@Nonnull ExperimentCore experiment,
                            @Nonnull String userId,
                            @Nonnull Map<String, ?> attributes,
                            @Nonnull Variation variation,

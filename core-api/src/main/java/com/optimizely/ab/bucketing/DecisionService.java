@@ -240,9 +240,21 @@ public class DecisionService {
 
         List<DecisionResponse<FeatureDecision>> decisions = new ArrayList<>();
 
-        for (FeatureFlag featureFlag: featureFlags) {
+        flagLoop: for (FeatureFlag featureFlag: featureFlags) {
             DecisionReasons reasons = DefaultDecisionReasons.newInstance();
             reasons.merge(upsReasons);
+
+            List<Holdout> holdouts = projectConfig.getHoldoutForFlag(featureFlag.getId());
+            if (!holdouts.isEmpty()) {
+                for (Holdout holdout : holdouts) {
+                    DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
+                    reasons.merge(holdoutDecision.getReasons());
+                    if (holdoutDecision.getResult() != null) {
+                        decisions.add(new DecisionResponse<>(new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT), reasons));
+                        continue flagLoop;
+                    }
+                }
+            }
 
             DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options, userProfileTracker);
             reasons.merge(decisionVariationResponse.getReasons());
@@ -417,6 +429,50 @@ public class DecisionService {
             return new DecisionResponse(forcedVariation, reasons);
         }
         return new DecisionResponse(null, reasons);
+    }
+
+    /**
+     * Determines the variation for a holdout rule.
+     *
+     * @param holdout The holdout rule to evaluate.
+     * @param user The user context.
+     * @param projectConfig The current project configuration.
+     * @return A {@link DecisionResponse} with the variation (if any) and reasons.
+     */
+    @Nonnull
+    DecisionResponse<Variation> getVariationForHoldout(@Nonnull Holdout holdout,
+                                                       @Nonnull OptimizelyUserContext user,
+                                                       @Nonnull ProjectConfig projectConfig) {
+        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+
+        if (!holdout.isActive()) {
+            String message = reasons.addInfo("Holdout \"%s\" is not running.", holdout.getKey());
+            logger.info(message);
+            return new DecisionResponse<>(null, reasons);
+        }
+
+        DecisionResponse<Boolean> decisionMeetAudience = ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, holdout, user, EXPERIMENT, holdout.getKey());
+        reasons.merge(decisionMeetAudience.getReasons());
+
+        if (decisionMeetAudience.getResult()) {
+            String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
+            DecisionResponse<Variation> decisionVariation = bucketer.bucket(holdout, bucketingId, projectConfig);
+            reasons.merge(decisionVariation.getReasons());
+            Variation variation = decisionVariation.getResult();
+
+            if (variation != null) {
+                String message = reasons.addInfo("User (%s) is in variation (%s) of holdout (%s).", user.getUserId(), variation.getKey(), holdout.getKey());
+                logger.info(message);
+            } else {
+                String message = reasons.addInfo("User (%s) is in no holdout variation.", user.getUserId());
+                logger.info(message);
+            }
+            return new DecisionResponse<>(variation, reasons);
+        }
+
+        String message = reasons.addInfo("User (%s) does not meet conditions for holdout (%s).", user.getUserId(), holdout.getKey());
+        logger.info(message);
+        return new DecisionResponse<>(null, reasons);
     }
 
 

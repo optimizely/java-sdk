@@ -16,23 +16,26 @@
  */
 package com.optimizely.ab.event.internal;
 
+import java.util.Map;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.optimizely.ab.bucketing.FeatureDecision;
-import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ExperimentCore;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.internal.payload.DecisionMetadata;
 import com.optimizely.ab.internal.EventTagUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Map;
 
 public class UserEventFactory {
     private static final Logger logger = LoggerFactory.getLogger(UserEventFactory.class);
 
     public static ImpressionEvent createImpressionEvent(@Nonnull ProjectConfig projectConfig,
-                                                        @Nullable Experiment activatedExperiment,
+                                                        @Nullable ExperimentCore activatedExperiment,
                                                         @Nullable Variation variation,
                                                         @Nonnull String userId,
                                                         @Nonnull Map<String, ?> attributes,

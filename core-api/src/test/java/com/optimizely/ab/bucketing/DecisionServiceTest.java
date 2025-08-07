@@ -15,35 +15,86 @@
  ***************************************************************************/
 package com.optimizely.ab.bucketing;
 
-import ch.qos.logback.classic.Level;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMapOf;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import org.mockito.Mock;
+import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+
 import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.OptimizelyDecisionContext;
 import com.optimizely.ab.OptimizelyForcedDecision;
 import com.optimizely.ab.OptimizelyUserContext;
-import com.optimizely.ab.config.*;
+import com.optimizely.ab.config.DatafileProjectConfigTestUtils;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.noAudienceProjectConfigV3;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV3;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV4;
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.FeatureFlag;
+import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.Rollout;
+import com.optimizely.ab.config.TrafficAllocation;
+import com.optimizely.ab.config.ValidProjectConfigV4;
+import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_HOUSE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_NATIONALITY_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_ENGLISH_CITIZENS_VALUE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_GRYFFINDOR_VALUE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_BOOLEAN_FEATURE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_MULTI_VARIATE_FEATURE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_MULTI_VARIATE_FUTURE_FEATURE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_MUTEX_GROUP_FEATURE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_SINGLE_VARIABLE_BOOLEAN;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_SINGLE_VARIABLE_INTEGER;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_MULTI_VARIATE_FEATURE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.HOLDOUT_BASIC_HOLDOUT;
+import static com.optimizely.ab.config.ValidProjectConfigV4.HOLDOUT_EXCLUDED_FLAGS_HOLDOUT;
+import static com.optimizely.ab.config.ValidProjectConfigV4.HOLDOUT_INCLUDED_FLAGS_HOLDOUT;
+import static com.optimizely.ab.config.ValidProjectConfigV4.HOLDOUT_TYPEDAUDIENCE_HOLDOUT;
+import static com.optimizely.ab.config.ValidProjectConfigV4.ROLLOUT_2;
+import static com.optimizely.ab.config.ValidProjectConfigV4.ROLLOUT_3_EVERYONE_ELSE_RULE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.ROLLOUT_3_EVERYONE_ELSE_RULE_ENABLED_VARIATION;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIATION_HOLDOUT_VARIATION_OFF;
+import static com.optimizely.ab.config.ValidProjectConfigV4.generateValidProjectConfigV4_holdout;
+import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.LogbackVerifier;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
 import com.optimizely.ab.optimizelydecision.DecisionResponse;
+
+import ch.qos.logback.classic.Level;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
-
-import java.util.*;
-
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
-import static com.optimizely.ab.config.ValidProjectConfigV4.*;
 import static junit.framework.TestCase.assertEquals;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
 
 public class DecisionServiceTest {
 
@@ -1228,4 +1279,106 @@ public class DecisionServiceTest {
         assertNull(decisionService.getForcedVariation(experiment2, "testUser2").getResult());
     }
 
+    @Test
+    public void getVariationForFeatureReturnHoldoutDecisionForGlobalHoldout() {
+        ProjectConfig holdoutProjectConfig = generateValidProjectConfigV4_holdout();
+        
+        Bucketer mockBucketer = new Bucketer();
+        
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
+        
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("$opt_bucketing_id", "ppid160000");
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+            FEATURE_FLAG_BOOLEAN_FEATURE,
+            optimizely.createUserContext("user123", attributes),
+            holdoutProjectConfig
+        ).getResult();
+
+        assertEquals(HOLDOUT_BASIC_HOLDOUT, featureDecision.experiment);
+        assertEquals(VARIATION_HOLDOUT_VARIATION_OFF, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, featureDecision.decisionSource);
+        
+        logbackVerifier.expectMessage(Level.INFO, "User (user123) is in variation (ho_off_key) of holdout (basic_holdout).");
+    }
+
+    @Test
+    public void includedFlagsHoldoutOnlyAppliestoSpecificFlags() {
+        ProjectConfig holdoutProjectConfig = generateValidProjectConfigV4_holdout();
+
+        Bucketer mockBucketer = new Bucketer();
+
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
+
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("$opt_bucketing_id", "ppid120000");
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+                FEATURE_FLAG_BOOLEAN_FEATURE,
+                optimizely.createUserContext("user123", attributes),
+                holdoutProjectConfig
+        ).getResult();
+
+        assertEquals(HOLDOUT_INCLUDED_FLAGS_HOLDOUT, featureDecision.experiment);
+        assertEquals(VARIATION_HOLDOUT_VARIATION_OFF, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, featureDecision.decisionSource);
+
+        logbackVerifier.expectMessage(Level.INFO, "User (user123) is in variation (ho_off_key) of holdout (holdout_included_flags).");
+    }
+
+    @Test
+    public void excludedFlagsHoldoutAppliesToAllExceptSpecified() {
+        ProjectConfig holdoutProjectConfig = generateValidProjectConfigV4_holdout();
+
+        Bucketer mockBucketer = new Bucketer();
+
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
+
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("$opt_bucketing_id", "ppid300002");
+        FeatureDecision excludedDecision = decisionService.getVariationForFeature(
+                FEATURE_FLAG_SINGLE_VARIABLE_BOOLEAN, // excluded from ho (holdout_excluded_flags)
+                optimizely.createUserContext("user123", attributes),
+                holdoutProjectConfig
+        ).getResult();
+
+        assertNotEquals(FeatureDecision.DecisionSource.HOLDOUT, excludedDecision.decisionSource);
+        
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+                FEATURE_FLAG_SINGLE_VARIABLE_INTEGER, // excluded from ho (holdout_excluded_flags)
+                optimizely.createUserContext("user123", attributes),
+                holdoutProjectConfig
+        ).getResult();
+
+        assertEquals(HOLDOUT_EXCLUDED_FLAGS_HOLDOUT, featureDecision.experiment);
+        assertEquals(VARIATION_HOLDOUT_VARIATION_OFF, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, featureDecision.decisionSource);
+
+        logbackVerifier.expectMessage(Level.INFO, "User (user123) is in variation (ho_off_key) of holdout (holdout_excluded_flags).");
+    }
+
+    @Test
+    public void userMeetsHoldoutAudienceConditions() {
+        ProjectConfig holdoutProjectConfig = generateValidProjectConfigV4_holdout();
+
+        Bucketer mockBucketer = new Bucketer();
+
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
+
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("$opt_bucketing_id", "ppid543400");
+        attributes.put("booleanKey", true);
+        attributes.put("integerKey", 1);
+        
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+                FEATURE_FLAG_BOOLEAN_FEATURE,
+                optimizely.createUserContext("user123", attributes),
+                holdoutProjectConfig
+        ).getResult();
+
+        assertEquals(HOLDOUT_TYPEDAUDIENCE_HOLDOUT, featureDecision.experiment);
+        assertEquals(VARIATION_HOLDOUT_VARIATION_OFF, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, featureDecision.decisionSource);
+
+        logbackVerifier.expectMessage(Level.INFO, "User (user123) is in variation (ho_off_key) of holdout (typed_audience_holdout).");
+    }
 }

@@ -24,6 +24,7 @@ import com.optimizely.ab.config.AtomicProjectConfigManager;
 import com.optimizely.ab.config.DatafileProjectConfig;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ExperimentCore;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.FeatureVariable;
 import com.optimizely.ab.config.FeatureVariableUsageInstance;
@@ -319,7 +320,7 @@ public class Optimizely implements AutoCloseable {
      * @param ruleType           It can either be experiment in case impression event is sent from activate or it's feature-test or rollout
      */
     private boolean sendImpression(@Nonnull ProjectConfig projectConfig,
-                                   @Nullable Experiment experiment,
+                                   @Nullable ExperimentCore experiment,
                                    @Nonnull String userId,
                                    @Nonnull Map<String, ?> filteredAttributes,
                                    @Nullable Variation variation,

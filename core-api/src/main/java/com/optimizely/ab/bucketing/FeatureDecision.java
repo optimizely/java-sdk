@@ -15,17 +15,18 @@
  ***************************************************************************/
 package com.optimizely.ab.bucketing;
 
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.Variation;
-
 import javax.annotation.Nullable;
+
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ExperimentCore;
+import com.optimizely.ab.config.Variation;
 
 public class FeatureDecision {
     /**
      * The {@link Experiment} the Feature is associated with.
      */
     @Nullable
-    public Experiment experiment;
+    public ExperimentCore experiment;
 
     /**
      * The {@link Variation} the user was bucketed into.
@@ -41,7 +42,8 @@ public class FeatureDecision {
 
     public enum DecisionSource {
         FEATURE_TEST("feature-test"),
-        ROLLOUT("rollout");
+        ROLLOUT("rollout"),
+        HOLDOUT("holdout");
 
         private final String key;
 
@@ -62,7 +64,7 @@ public class FeatureDecision {
      * @param variation      The {@link Variation} the user was bucketed into.
      * @param decisionSource The source of the variation.
      */
-    public FeatureDecision(@Nullable Experiment experiment, @Nullable Variation variation,
+    public FeatureDecision(@Nullable ExperimentCore experiment, @Nullable Variation variation,
                            @Nullable DecisionSource decisionSource) {
         this.experiment = experiment;
         this.variation = variation;
