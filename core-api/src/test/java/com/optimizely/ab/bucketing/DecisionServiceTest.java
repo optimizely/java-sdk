@@ -51,7 +51,6 @@ import static org.mockito.Mockito.when;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.OptimizelyDecisionContext;
 import com.optimizely.ab.OptimizelyForcedDecision;
@@ -80,6 +79,7 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_MULTI_VARIAT
 import static com.optimizely.ab.config.ValidProjectConfigV4.HOLDOUT_BASIC_HOLDOUT;
 import static com.optimizely.ab.config.ValidProjectConfigV4.HOLDOUT_EXCLUDED_FLAGS_HOLDOUT;
 import static com.optimizely.ab.config.ValidProjectConfigV4.HOLDOUT_INCLUDED_FLAGS_HOLDOUT;
+import static com.optimizely.ab.config.ValidProjectConfigV4.HOLDOUT_TYPEDAUDIENCE_HOLDOUT;
 import static com.optimizely.ab.config.ValidProjectConfigV4.ROLLOUT_2;
 import static com.optimizely.ab.config.ValidProjectConfigV4.ROLLOUT_3_EVERYONE_ELSE_RULE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.ROLLOUT_3_EVERYONE_ELSE_RULE_ENABLED_VARIATION;
@@ -1354,5 +1354,31 @@ public class DecisionServiceTest {
         assertEquals(FeatureDecision.DecisionSource.HOLDOUT, featureDecision.decisionSource);
 
         logbackVerifier.expectMessage(Level.INFO, "User (user123) is in variation (ho_off_key) of holdout (holdout_excluded_flags).");
+    }
+
+    @Test
+    public void userMeetsHoldoutAudienceConditions() {
+        ProjectConfig holdoutProjectConfig = generateValidProjectConfigV4_holdout();
+
+        Bucketer mockBucketer = new Bucketer();
+
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
+
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("$opt_bucketing_id", "ppid543400");
+        attributes.put("booleanKey", true);
+        attributes.put("integerKey", 1);
+        
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+                FEATURE_FLAG_BOOLEAN_FEATURE,
+                optimizely.createUserContext("user123", attributes),
+                holdoutProjectConfig
+        ).getResult();
+
+        assertEquals(HOLDOUT_TYPEDAUDIENCE_HOLDOUT, featureDecision.experiment);
+        assertEquals(VARIATION_HOLDOUT_VARIATION_OFF, featureDecision.variation);
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, featureDecision.decisionSource);
+
+        logbackVerifier.expectMessage(Level.INFO, "User (user123) is in variation (ho_off_key) of holdout (typed_audience_holdout).");
     }
 }

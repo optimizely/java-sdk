@@ -294,7 +294,7 @@ public class ValidProjectConfigV4 {
         FeatureVariable.BOOLEAN_TYPE,
         null
     );
-    private static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_BOOLEAN = new FeatureFlag(
+    public static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_BOOLEAN = new FeatureFlag(
         FEATURE_SINGLE_VARIABLE_BOOLEAN_ID,
         FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY,
         "",
@@ -574,7 +574,7 @@ public class ValidProjectConfigV4 {
             null
     );
 
-    private static final Holdout HOLDOUT_INCLUDED_FLAGS_HOLDOUT = new Holdout(
+    public static final Holdout HOLDOUT_INCLUDED_FLAGS_HOLDOUT = new Holdout(
             "1007543323427",
             "holdout_included_flags",
             Holdout.HoldoutStatus.RUNNING.toString(),
@@ -597,7 +597,7 @@ public class ValidProjectConfigV4 {
             null
     );
 
-    private static final Holdout HOLDOUT_EXCLUDED_FLAGS_HOLDOUT = new Holdout(
+    public static final Holdout HOLDOUT_EXCLUDED_FLAGS_HOLDOUT = new Holdout(
             "100753234214",
             "holdout_excluded_flags",
             Holdout.HoldoutStatus.RUNNING.toString(),
@@ -620,7 +620,7 @@ public class ValidProjectConfigV4 {
             )
     );
 
-    private static final Holdout HOLDOUT_TYPEDAUDIENCE_HOLDOUT = new Holdout(
+    public static final Holdout HOLDOUT_TYPEDAUDIENCE_HOLDOUT = new Holdout(
             "10075323429",
             "typed_audience_holdout",
             Holdout.HoldoutStatus.RUNNING.toString(),
