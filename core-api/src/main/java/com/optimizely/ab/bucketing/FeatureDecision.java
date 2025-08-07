@@ -17,13 +17,12 @@ package com.optimizely.ab.bucketing;
 
 import javax.annotation.Nullable;
 
-import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ExperimentCore;
 import com.optimizely.ab.config.Variation;
 
 public class FeatureDecision {
     /**
-     * The {@link Experiment} the Feature is associated with.
+     * The {@link ExperimentCore} the Feature is associated with.
      */
     @Nullable
     public ExperimentCore experiment;
@@ -60,7 +59,7 @@ public class FeatureDecision {
     /**
      * Initialize a FeatureDecision object.
      *
-     * @param experiment     The {@link Experiment} the Feature is associated with.
+     * @param experiment     The {@link ExperimentCore} the Feature is associated with.
      * @param variation      The {@link Variation} the user was bucketed into.
      * @param decisionSource The source of the variation.
      */
