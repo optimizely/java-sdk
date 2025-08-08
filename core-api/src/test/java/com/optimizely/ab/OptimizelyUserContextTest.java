@@ -2109,6 +2109,7 @@ public class OptimizelyUserContextTest {
         String userId = "user123";
         Map<String, Object> attrs = new HashMap<>();
         attrs.put("$opt_bucketing_id", "ppid160000");
+        attrs.put("nationality", "English");
         OptimizelyUserContext user = optWithHoldout.createUserContext(userId, attrs);
 
         // include reasons to surface holdout logs in decision reasons if implemented
@@ -2137,7 +2138,7 @@ public class OptimizelyUserContextTest {
             .setVariationKey("ho_off_key")
             .setEnabled(false)
             .build();
-        eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap(), metadata);
+        eventHandler.expectImpression(experimentId, variationId, userId, Collections.singletonMap("nationality", "English"), metadata);
     }
 
     @Test
