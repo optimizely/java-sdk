@@ -15,27 +15,39 @@
  ***************************************************************************/
 package com.optimizely.ab.bucketing;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.optimizely.ab.OptimizelyDecisionContext;
 import com.optimizely.ab.OptimizelyForcedDecision;
 import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.OptimizelyUserContext;
-import com.optimizely.ab.config.*;
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.FeatureFlag;
+import com.optimizely.ab.config.Holdout;
+import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.Rollout;
+import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.error.ErrorHandler;
 import com.optimizely.ab.internal.ControlAttribute;
 import com.optimizely.ab.internal.ExperimentUtils;
+import static com.optimizely.ab.internal.LoggingConstants.LoggingEntityType.EXPERIMENT;
+import static com.optimizely.ab.internal.LoggingConstants.LoggingEntityType.RULE;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
 import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static com.optimizely.ab.internal.LoggingConstants.LoggingEntityType.EXPERIMENT;
-import static com.optimizely.ab.internal.LoggingConstants.LoggingEntityType.RULE;
 
 /**
  * Optimizely's decision service that determines which variation of an experiment the user will be allocated to.
@@ -446,7 +458,7 @@ public class DecisionService {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         if (!holdout.isActive()) {
-            String message = reasons.addInfo("Holdout \"%s\" is not running.", holdout.getKey());
+            String message = reasons.addInfo("Holdout (%s) is not running.", holdout.getKey());
             logger.info(message);
             return new DecisionResponse<>(null, reasons);
         }
@@ -455,6 +467,10 @@ public class DecisionService {
         reasons.merge(decisionMeetAudience.getReasons());
 
         if (decisionMeetAudience.getResult()) {
+            // User meets audience conditions for holdout
+            String audienceMatchMessage = reasons.addInfo("User (%s) meets audience conditions for holdout (%s).", user.getUserId(), holdout.getKey());
+            logger.info(audienceMatchMessage);
+
             String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
             DecisionResponse<Variation> decisionVariation = bucketer.bucket(holdout, bucketingId, projectConfig);
             reasons.merge(decisionVariation.getReasons());
