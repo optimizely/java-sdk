@@ -57,6 +57,9 @@ import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNo
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 public class OptimizelyUserContextTest {
@@ -76,6 +79,8 @@ public class OptimizelyUserContextTest {
     Map<String, FeatureFlag> featureKeyMapping;
     Map<String, Group> groupIdMapping;
 
+    private String holdoutDatafile;
+
     @Before
     public void setUp() throws Exception {
         datafile = Resources.toString(Resources.getResource("config/decide-project-config.json"), Charsets.UTF_8);
@@ -83,6 +88,16 @@ public class OptimizelyUserContextTest {
         optimizely = new Optimizely.Builder()
             .withDatafile(datafile)
             .build();
+    }
+
+    private Optimizely createOptimizelyWithHoldouts() throws Exception {
+        if (holdoutDatafile == null) {
+            holdoutDatafile = com.google.common.io.Resources.toString(
+                com.google.common.io.Resources.getResource("config/holdouts-project-config.json"),
+                com.google.common.base.Charsets.UTF_8
+            );
+        }
+        return new Optimizely.Builder().withDatafile(holdoutDatafile).withEventProcessor(new ForwardingEventProcessor(eventHandler, null)).build();
     }
 
     @Test
@@ -749,7 +764,7 @@ public class OptimizelyUserContextTest {
     public void decideOptions_bypassUPS() throws Exception {
         String flagKey = "feature_2";        // embedding experiment: "exp_no_audience"
         String experimentId = "10420810910";    // "exp_no_audience"
-        String variationId1 = "10418551353";
+        String variationId = "10418551353";
         String variationId2 = "10418510624";
         String variationKey1 = "variation_with_traffic";
         String variationKey2 = "variation_no_traffic";
@@ -1786,6 +1801,8 @@ public class OptimizelyUserContextTest {
             .withODPManager(mockODPManager)
             .build();
 
+
+
         OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -2084,4 +2101,42 @@ public class OptimizelyUserContextTest {
         return callDecideWithIncludeReasons(flagKey, Collections.emptyMap());
     }
 
+    @Test
+    public void decide_holdoutApplied_basic() throws Exception {
+        Optimizely optWithHoldout = createOptimizelyWithHoldouts();
+        // pick a flag that is eligible for basic_holdout. Using boolean_feature from config.
+        String flagKey = "boolean_feature";
+        String userId = "user123";
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("$opt_bucketing_id", "ppid160000");
+        OptimizelyUserContext user = optWithHoldout.createUserContext(userId, attrs);
+
+        // include reasons to surface holdout logs in decision reasons if implemented
+        OptimizelyDecision decision = user.decide(flagKey, Collections.singletonList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertNotNull(decision);
+        assertEquals(flagKey, decision.getFlagKey());
+        // holdout off variation => feature should be disabled
+        assertFalse(decision.getEnabled());
+        // Expect decision source to be holdout (either via metadata map or reasons text)
+        boolean hasHoldoutReason = false;
+        String expectedMString = "User (" + userId + ") is in variation (ho_off_key) of holdout (basic_holdout).";
+        if (decision.getReasons().contains(expectedMString)) {
+            hasHoldoutReason = true;
+        }
+        assertTrue("Expected holdout to influence decision (reason containing 'holdout')", hasHoldoutReason);
+        logbackVerifier.expectMessage(Level.INFO, expectedMString);
+
+        // Impression expectation: Holdout decisions still dispatch an impression with holdout context.
+        String variationId = "$opt_dummy_variation_id"; // from holdouts-project-config.json
+        String experimentId = "10075323428"; // holdout id for basic_holdout
+        DecisionMetadata metadata = new DecisionMetadata.Builder()
+            .setFlagKey(flagKey)
+            .setRuleKey("basic_holdout")
+            .setRuleType("holdout")
+            .setVariationKey("ho_off_key")
+            .setEnabled(false)
+            .build();
+        eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap(), metadata);
+    }
 }
