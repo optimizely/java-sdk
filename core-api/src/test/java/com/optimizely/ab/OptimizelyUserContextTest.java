@@ -57,6 +57,9 @@ import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNo
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 public class OptimizelyUserContextTest {
@@ -2074,4 +2077,188 @@ public class OptimizelyUserContextTest {
         return callDecideWithIncludeReasons(flagKey, Collections.emptyMap());
     }
 
+    private Optimizely createOptimizelyWithHoldouts() throws Exception {
+        String holdoutDatafile = com.google.common.io.Resources.toString(
+            com.google.common.io.Resources.getResource("config/holdouts-project-config.json"),
+            com.google.common.base.Charsets.UTF_8
+        );
+        return new Optimizely.Builder().withDatafile(holdoutDatafile).withEventProcessor(new ForwardingEventProcessor(eventHandler, null)).build();
+    }
+
+    @Test
+    public void decisionNotification_with_holdout() throws Exception {
+        // Use holdouts datafile
+        Optimizely optWithHoldout = createOptimizelyWithHoldouts();
+        String flagKey = "boolean_feature";
+        String userId = "user123";
+        String ruleKey = "basic_holdout";              // holdout rule key
+        String variationKey = "ho_off_key";            // holdout (off) variation key
+        String experimentId = "10075323428";           // holdout experiment id in holdouts-project-config.json
+        String variationId = "$opt_dummy_variation_id";// dummy variation id used for holdout impressions
+        String expectedReason = "User (" + userId + ") is in variation (" + variationKey + ") of holdout (" + ruleKey + ").";
+
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("$opt_bucketing_id", "ppid160000");  // deterministic bucketing into basic_holdout
+        attrs.put("nationality", "English");           // non-reserved attribute should appear in impression & notification
+
+        OptimizelyUserContext user = optWithHoldout.createUserContext(userId, attrs);
+
+        // Register notification handler similar to decisionNotification test
+        isListenerCalled = false;
+        optWithHoldout.addDecisionNotificationHandler(decisionNotification -> {
+            Assert.assertEquals(NotificationCenter.DecisionNotificationType.FLAG.toString(), decisionNotification.getType());
+            Assert.assertEquals(userId, decisionNotification.getUserId());
+
+            Assert.assertEquals(attrs, decisionNotification.getAttributes());
+
+            Map<String, ?> info = decisionNotification.getDecisionInfo();
+            Assert.assertEquals(flagKey, info.get(FLAG_KEY));
+            Assert.assertEquals(variationKey, info.get(VARIATION_KEY));
+            Assert.assertEquals(false, info.get(ENABLED));
+            Assert.assertEquals(ruleKey, info.get(RULE_KEY));
+            Assert.assertEquals(experimentId, info.get(EXPERIMENT_ID));
+            Assert.assertEquals(variationId, info.get(VARIATION_ID));
+            // Variables should be empty because feature is disabled by holdout
+            Assert.assertTrue(((Map<?, ?>) info.get(VARIABLES)).isEmpty());
+            // Event should be dispatched (no DISABLE_DECISION_EVENT option)
+            Assert.assertEquals(true, info.get(DECISION_EVENT_DISPATCHED));
+
+            @SuppressWarnings("unchecked")
+            List<String> reasons = (List<String>) info.get(REASONS);
+            Assert.assertTrue("Expected holdout reason present", reasons.contains(expectedReason));
+            isListenerCalled = true;
+        });
+
+        // Execute decision with INCLUDE_REASONS so holdout reason is present
+        OptimizelyDecision decision = user.decide(flagKey, Collections.singletonList(OptimizelyDecideOption.INCLUDE_REASONS));
+        assertTrue(isListenerCalled);
+
+        // Sanity checks on returned decision
+        assertEquals(variationKey, decision.getVariationKey());
+        assertFalse(decision.getEnabled());
+        assertTrue(decision.getReasons().contains(expectedReason));
+
+        // Impression expectation (nationality only)
+        DecisionMetadata metadata = new DecisionMetadata.Builder()
+                .setFlagKey(flagKey)
+                .setRuleKey(ruleKey)
+                .setRuleType("holdout")
+                .setVariationKey(variationKey)
+                .setEnabled(false)
+                .build();
+        eventHandler.expectImpression(experimentId, variationId, userId, Collections.singletonMap("nationality", "English"), metadata);
+
+        // Log expectation (reuse existing pattern)
+        logbackVerifier.expectMessage(Level.INFO, expectedReason);
+    }
+
+    @Test
+    public void decide_for_keys_with_holdout() throws Exception {
+        Optimizely optWithHoldout = createOptimizelyWithHoldouts();
+        String userId = "user123";
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("$opt_bucketing_id", "ppid160000"); 
+        OptimizelyUserContext user = optWithHoldout.createUserContext(userId, attrs);
+
+        List<String> flagKeys = Arrays.asList(
+            "boolean_feature",                    // previously validated basic_holdout membership
+            "double_single_variable_feature",     // also subject to global/basic holdout
+            "integer_single_variable_feature"     // also subject to global/basic holdout
+        );
+
+        Map<String, OptimizelyDecision> decisions = user.decideForKeys(flagKeys, Collections.singletonList(OptimizelyDecideOption.INCLUDE_REASONS));
+        assertEquals(3, decisions.size());
+
+        String holdoutExperimentId = "10075323428"; // basic_holdout id
+        String variationId = "$opt_dummy_variation_id";
+        String variationKey = "ho_off_key";
+        String expectedReason = "User (" + userId + ") is in variation (" + variationKey + ") of holdout (basic_holdout).";
+
+        for (String flagKey : flagKeys) {
+            OptimizelyDecision d = decisions.get(flagKey);
+            assertNotNull(d);
+            assertEquals(flagKey, d.getFlagKey());
+            assertEquals(variationKey, d.getVariationKey());
+            assertFalse(d.getEnabled());
+            assertTrue("Expected holdout reason for flag " + flagKey, d.getReasons().contains(expectedReason));
+            DecisionMetadata metadata = new DecisionMetadata.Builder()
+                .setFlagKey(flagKey)
+                .setRuleKey("basic_holdout")
+                .setRuleType("holdout")
+                .setVariationKey(variationKey)
+                .setEnabled(false)
+                .build();
+            // attributes map expected empty (reserved $opt_ attribute filtered out)
+            eventHandler.expectImpression(holdoutExperimentId, variationId, userId, Collections.emptyMap(), metadata);
+        }
+
+        // At least one log message confirming holdout membership
+        logbackVerifier.expectMessage(Level.INFO, expectedReason);
+    }
+
+    @Test
+    public void decide_all_with_holdout() throws Exception {
+
+        Optimizely optWithHoldout = createOptimizelyWithHoldouts();
+        String userId = "user123";
+        Map<String, Object> attrs = new HashMap<>();
+        // ppid120000 buckets user into holdout_included_flags
+        attrs.put("$opt_bucketing_id", "ppid120000");
+        OptimizelyUserContext user = optWithHoldout.createUserContext(userId, attrs);
+
+        // All flag keys present in holdouts-project-config.json
+        List<String> allFlagKeys = Arrays.asList(
+                "boolean_feature",
+                "double_single_variable_feature",
+                "integer_single_variable_feature",
+                "boolean_single_variable_feature",
+                "string_single_variable_feature",
+                "multi_variate_feature",
+                "multi_variate_future_feature",
+                "mutex_group_feature"
+        );
+
+        // Flags INCLUDED in holdout_included_flags (only these should be holdout decisions)
+        List<String> includedInHoldout = Arrays.asList(
+                "boolean_feature",
+                "double_single_variable_feature",
+                "integer_single_variable_feature"
+        );
+
+        Map<String, OptimizelyDecision> decisions = user.decideAll(Arrays.asList(
+                OptimizelyDecideOption.INCLUDE_REASONS,
+                OptimizelyDecideOption.DISABLE_DECISION_EVENT
+        ));
+        assertEquals(allFlagKeys.size(), decisions.size());
+
+        String holdoutExperimentId = "1007543323427"; // holdout_included_flags id
+        String variationId = "$opt_dummy_variation_id";
+        String variationKey = "ho_off_key";
+        String expectedReason = "User (" + userId + ") is in variation (" + variationKey + ") of holdout (holdout_included_flags).";
+
+        int holdoutCount = 0;
+        for (String flagKey : allFlagKeys) {
+            OptimizelyDecision d = decisions.get(flagKey);
+            assertNotNull("Missing decision for flag " + flagKey, d);
+            if (includedInHoldout.contains(flagKey)) {
+                // Should be holdout decision
+                assertEquals(variationKey, d.getVariationKey());
+                assertFalse(d.getEnabled());
+                assertTrue("Expected holdout reason for flag " + flagKey, d.getReasons().contains(expectedReason));
+                DecisionMetadata metadata = new DecisionMetadata.Builder()
+                        .setFlagKey(flagKey)
+                        .setRuleKey("holdout_included_flags")
+                        .setRuleType("holdout")
+                        .setVariationKey(variationKey)
+                        .setEnabled(false)
+                        .build();
+                holdoutCount++;
+            } else {
+                // Should NOT be a holdout decision
+                assertFalse("Non-included flag should not have holdout reason: " + flagKey, d.getReasons().contains(expectedReason));
+            }
+        }
+        assertEquals("Expected exactly the included flags to be in holdout", includedInHoldout.size(), holdoutCount);
+        logbackVerifier.expectMessage(Level.INFO, expectedReason);
+    }
 }
