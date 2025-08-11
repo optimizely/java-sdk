@@ -16,13 +16,18 @@
  */
 package com.optimizely.ab.config.parser;
 
+import javax.annotation.Nonnull;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.optimizely.ab.config.*;
+import com.optimizely.ab.config.DatafileProjectConfig;
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.FeatureFlag;
+import com.optimizely.ab.config.Group;
+import com.optimizely.ab.config.Holdout;
+import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.TypedAudience;
-
-import javax.annotation.Nonnull;
 
 /**
  * {@link Gson}-based config parser implementation.
@@ -35,6 +40,7 @@ final public class GsonConfigParser implements ConfigParser {
             .registerTypeAdapter(Audience.class, new AudienceGsonDeserializer())
             .registerTypeAdapter(TypedAudience.class, new AudienceGsonDeserializer())
             .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())
+            .registerTypeAdapter(Holdout.class, new HoldoutGsonDeserializer())
             .registerTypeAdapter(FeatureFlag.class, new FeatureFlagGsonDeserializer())
             .registerTypeAdapter(Group.class, new GroupGsonDeserializer())
             .registerTypeAdapter(DatafileProjectConfig.class, new DatafileGsonDeserializer())

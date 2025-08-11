@@ -42,7 +42,6 @@ import static com.optimizely.ab.internal.AttributesUtil.isValidNumber;
  */
 public class EventFactory {
     private static final Logger logger = LoggerFactory.getLogger(EventFactory.class);
-    public static final String EVENT_ENDPOINT = "https://logx.optimizely.com/v1/events";  // Should be part of the datafile
     private static final String ACTIVATE_EVENT_KEY = "campaign_activated";
 
     public static LogEvent createLogEvent(UserEvent userEvent) {
@@ -52,6 +51,7 @@ public class EventFactory {
     public static LogEvent createLogEvent(List<UserEvent> userEvents) {
         EventBatch.Builder builder = new EventBatch.Builder();
         List<Visitor> visitors = new ArrayList<>(userEvents.size());
+        String eventEndpoint = "https://logx.optimizely.com/v1/events";
 
         for (UserEvent userEvent: userEvents) {
 
@@ -71,6 +71,8 @@ public class EventFactory {
             UserContext userContext = userEvent.getUserContext();
             ProjectConfig projectConfig = userContext.getProjectConfig();
 
+            eventEndpoint = EventEndpoints.getEndpointForRegion(projectConfig.getRegion());
+
             builder
                 .setClientName(ClientEngineInfo.getClientEngineName())
                 .setClientVersion(BuildVersionInfo.getClientVersion())
@@ -85,7 +87,7 @@ public class EventFactory {
         }
 
         builder.setVisitors(visitors);
-        return new LogEvent(LogEvent.RequestMethod.POST, EVENT_ENDPOINT, Collections.emptyMap(), builder.build());
+        return new LogEvent(LogEvent.RequestMethod.POST, eventEndpoint, Collections.emptyMap(), builder.build());
     }
 
     private static Visitor createVisitor(ImpressionEvent impressionEvent) {

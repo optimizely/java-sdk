@@ -2,9 +2,9 @@ plugins {
     id 'com.github.kt3k.coveralls' version '2.12.2'
     id 'jacoco'
     id 'me.champeau.gradle.jmh' version '0.5.3'
-    id 'nebula.optional-base' version '3.2.0'
+    id 'nebula.optional-base' version '3.1.0'
     id 'com.github.hierynomus.license' version '0.16.1'
-    id 'com.github.spotbugs' version "4.5.0"
+    id 'com.github.spotbugs' version "6.0.14"
     id 'maven-publish'
 }
 
@@ -73,6 +73,7 @@ configure(publishedProjects) {
 
     spotbugs {
         spotbugsJmh.enabled = false
+        reportLevel = com.github.spotbugs.snom.Confidence.valueOf('HIGH')
     }
 
     test {
@@ -115,6 +116,7 @@ configure(publishedProjects) {
     configurations.all {
         resolutionStrategy {
             force "junit:junit:${junitVersion}"
+            force 'com.netflix.nebula:nebula-gradle-interop:2.2.2'
         }
     }
 

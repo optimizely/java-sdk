@@ -63,6 +63,7 @@ public class DatafileProjectConfig implements ProjectConfig {
     private final boolean anonymizeIP;
     private final boolean sendFlagDecisions;
     private final Boolean botFiltering;
+    private final String region;
     private final String hostForODP;
     private final String publicKeyForODP;
     private final List<Attribute> attributes;
@@ -95,6 +96,8 @@ public class DatafileProjectConfig implements ProjectConfig {
     // other mappings
     private final Map<String, Experiment> variationIdToExperimentMapping;
 
+    private final HoldoutConfig holdoutConfig;
+
     private String datafile;
 
     // v2 constructor
@@ -113,6 +116,7 @@ public class DatafileProjectConfig implements ProjectConfig {
             anonymizeIP,
             false,
             null,
+            null,
             projectId,
             revision,
             null,
@@ -123,6 +127,7 @@ public class DatafileProjectConfig implements ProjectConfig {
             null,
             eventType,
             experiments,
+            null,
             null,
             groups,
             null,
@@ -135,6 +140,7 @@ public class DatafileProjectConfig implements ProjectConfig {
                                  boolean anonymizeIP,
                                  boolean sendFlagDecisions,
                                  Boolean botFiltering,
+                                 String region,
                                  String projectId,
                                  String revision,
                                  String sdkKey,
@@ -145,6 +151,7 @@ public class DatafileProjectConfig implements ProjectConfig {
                                  List<Audience> typedAudiences,
                                  List<EventType> events,
                                  List<Experiment> experiments,
+                                 List<Holdout> holdouts,
                                  List<FeatureFlag> featureFlags,
                                  List<Group> groups,
                                  List<Rollout> rollouts,
@@ -158,6 +165,7 @@ public class DatafileProjectConfig implements ProjectConfig {
         this.anonymizeIP = anonymizeIP;
         this.sendFlagDecisions = sendFlagDecisions;
         this.botFiltering = botFiltering;
+        this.region = region != null ? region : "US";
 
         this.attributes = Collections.unmodifiableList(attributes);
         this.audiences = Collections.unmodifiableList(audiences);
@@ -186,6 +194,12 @@ public class DatafileProjectConfig implements ProjectConfig {
         allExperiments.addAll(experiments);
         allExperiments.addAll(aggregateGroupExperiments(groups));
         this.experiments = Collections.unmodifiableList(allExperiments);
+
+        if (holdouts == null) {
+            this.holdoutConfig = new HoldoutConfig();
+        }  else {
+            this.holdoutConfig = new HoldoutConfig(holdouts);
+        }
 
         String publicKeyForODP = "";
         String hostForODP = "";
@@ -425,6 +439,11 @@ public class DatafileProjectConfig implements ProjectConfig {
     }
 
     @Override
+    public String getRegion() {
+        return region;
+    }
+
+    @Override
     public List<Group> getGroups() {
         return groups;
     }
@@ -432,6 +451,21 @@ public class DatafileProjectConfig implements ProjectConfig {
     @Override
     public List<Experiment> getExperiments() {
         return experiments;
+    }
+
+    @Override
+    public List<Holdout> getHoldouts() { 
+        return holdoutConfig.getAllHoldouts(); 
+    }
+
+    @Override
+    public List<Holdout> getHoldoutForFlag(@Nonnull String id) {
+        return holdoutConfig.getHoldoutForFlag(id);
+    }
+
+    @Override   
+    public Holdout getHoldout(@Nonnull String id) {
+        return holdoutConfig.getHoldout(id);
     }
 
     @Override
@@ -587,6 +621,7 @@ public class DatafileProjectConfig implements ProjectConfig {
             ", version='" + version + '\'' +
             ", anonymizeIP=" + anonymizeIP +
             ", botFiltering=" + botFiltering +
+            ", region=" + region +
             ", attributes=" + attributes +
             ", audiences=" + audiences +
             ", typedAudiences=" + typedAudiences +

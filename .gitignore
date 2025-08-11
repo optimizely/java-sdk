@@ -25,3 +25,5 @@ classes
 .vagrant
 .DS_Store
 .venv
+
+.vscode/mcp.json
