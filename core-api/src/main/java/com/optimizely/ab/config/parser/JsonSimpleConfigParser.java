@@ -166,8 +166,17 @@ final public class JsonSimpleConfigParser implements ConfigParser {
             List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation((JSONArray) experimentObject.get("trafficAllocation"));
 
-            experiments.add(new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
-                trafficAllocations, groupId));
+            // Add cmab parsing
+            Cmab cmab = null;
+            if (experimentObject.containsKey("cmab")) {
+                JSONObject cmabObject = (JSONObject) experimentObject.get("cmab");
+                if (cmabObject != null) {
+                    cmab = parseCmab(cmabObject);
+                }
+            }
+
+            experiments.add(new Experiment(id, key, status, layerId, audienceIds, conditions, variations, 
+                userIdToVariationKeyMap, trafficAllocations, groupId, cmab));
         }
 
         return experiments;
@@ -396,6 +405,26 @@ final public class JsonSimpleConfigParser implements ConfigParser {
         }
 
         return integrations;
+    }
+
+    private Cmab parseCmab(JSONObject cmabObject) {
+        if (cmabObject == null) {
+            return null;
+        }
+        
+        JSONArray attributeIdsJson = (JSONArray) cmabObject.get("attributeIds");
+        List<String> attributeIds = new ArrayList<>();
+        if (attributeIdsJson != null) {
+            for (Object idObj : attributeIdsJson) {
+                attributeIds.add((String) idObj);
+            }
+        }
+        
+        Object trafficAllocationObj = cmabObject.get("trafficAllocation");
+        int trafficAllocation = trafficAllocationObj != null ? 
+            ((Long) trafficAllocationObj).intValue() : 0;
+
+        return new Cmab(attributeIds, trafficAllocation);
     }
 
     @Override

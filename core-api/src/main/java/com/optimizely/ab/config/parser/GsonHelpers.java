@@ -24,13 +24,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import com.optimizely.ab.bucketing.DecisionService;
-import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.Experiment.ExperimentStatus;
-import com.optimizely.ab.config.FeatureFlag;
-import com.optimizely.ab.config.FeatureVariable;
-import com.optimizely.ab.config.FeatureVariableUsageInstance;
-import com.optimizely.ab.config.TrafficAllocation;
-import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
 import com.optimizely.ab.internal.ConditionUtils;
@@ -118,6 +113,27 @@ final class GsonHelpers {
 
     }
 
+    static Cmab parseCmab(JsonObject cmabJson, JsonDeserializationContext context) {
+        if (cmabJson == null) {
+            return null;
+        }
+
+        JsonArray attributeIdsJson = cmabJson.getAsJsonArray("attributeIds");
+        List<String> attributeIds = new ArrayList<>();
+        if (attributeIdsJson != null) {
+            for (JsonElement attributeIdElement : attributeIdsJson) {
+                attributeIds.add(attributeIdElement.getAsString());
+            }
+        }
+
+        int trafficAllocation = 0;
+        if (cmabJson.has("trafficAllocation")) {
+            trafficAllocation = cmabJson.get("trafficAllocation").getAsInt();
+        }
+
+        return new Cmab(attributeIds, trafficAllocation);
+    }
+
     static Experiment parseExperiment(JsonObject experimentJson, String groupId, JsonDeserializationContext context) {
         String id = experimentJson.get("id").getAsString();
         String key = experimentJson.get("key").getAsString();
@@ -143,8 +159,16 @@ final class GsonHelpers {
         List<TrafficAllocation> trafficAllocations =
             parseTrafficAllocation(experimentJson.getAsJsonArray("trafficAllocation"));
 
+        Cmab cmab = null;
+        if (experimentJson.has("cmab")) {
+            JsonObject cmabJson = experimentJson.getAsJsonObject("cmab");
+            if (cmabJson != null) {
+                cmab = parseCmab(cmabJson, context);
+            }
+        }
+
         return new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
-            trafficAllocations, groupId);
+            trafficAllocations, groupId, cmab);
     }
 
     static Experiment parseExperiment(JsonObject experimentJson, JsonDeserializationContext context) {

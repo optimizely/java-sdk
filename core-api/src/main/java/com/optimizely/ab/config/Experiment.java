@@ -41,6 +41,7 @@ public class Experiment implements IdKeyMapped {
     private final String status;
     private final String layerId;
     private final String groupId;
+    private final Cmab cmab;
 
     private final String AND = "AND";
     private final String OR = "OR";
@@ -75,7 +76,25 @@ public class Experiment implements IdKeyMapped {
 
     @VisibleForTesting
     public Experiment(String id, String key, String layerId) {
-        this(id, key, null, layerId, Collections.emptyList(), null, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList(), "");
+        this(id, key, null, layerId, Collections.emptyList(), null, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList(), "", null);
+    }
+
+    @VisibleForTesting
+    public Experiment(String id, String key, String status, String layerId,
+                      List<String> audienceIds, Condition audienceConditions,
+                      List<Variation> variations, Map<String, String> userIdToVariationKeyMap,
+                      List<TrafficAllocation> trafficAllocation, String groupId) {
+        this(id, key, status, layerId, audienceIds, audienceConditions, variations,
+            userIdToVariationKeyMap, trafficAllocation, groupId, null); // Default cmab=null
+    }
+
+    @VisibleForTesting
+    public Experiment(String id, String key, String status, String layerId,
+                      List<String> audienceIds, Condition audienceConditions,
+                      List<Variation> variations, Map<String, String> userIdToVariationKeyMap,
+                      List<TrafficAllocation> trafficAllocation) {
+        this(id, key, status, layerId, audienceIds, audienceConditions, variations,
+            userIdToVariationKeyMap, trafficAllocation, "", null); // Default groupId="" and cmab=null
     }
 
     @JsonCreator
@@ -87,8 +106,9 @@ public class Experiment implements IdKeyMapped {
                       @JsonProperty("audienceConditions") Condition audienceConditions,
                       @JsonProperty("variations") List<Variation> variations,
                       @JsonProperty("forcedVariations") Map<String, String> userIdToVariationKeyMap,
-                      @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation) {
-        this(id, key, status, layerId, audienceIds, audienceConditions, variations, userIdToVariationKeyMap, trafficAllocation, "");
+                      @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation,
+                      @JsonProperty("cmab") Cmab cmab) {
+        this(id, key, status, layerId, audienceIds, audienceConditions, variations, userIdToVariationKeyMap, trafficAllocation, "", cmab);
     }
 
     public Experiment(@Nonnull String id,
@@ -100,7 +120,8 @@ public class Experiment implements IdKeyMapped {
                       @Nonnull List<Variation> variations,
                       @Nonnull Map<String, String> userIdToVariationKeyMap,
                       @Nonnull List<TrafficAllocation> trafficAllocation,
-                      @Nonnull String groupId) {
+                      @Nonnull String groupId,
+                      @Nullable Cmab cmab) {
         this.id = id;
         this.key = key;
         this.status = status == null ? ExperimentStatus.NOT_STARTED.toString() : status;
@@ -113,6 +134,7 @@ public class Experiment implements IdKeyMapped {
         this.userIdToVariationKeyMap = userIdToVariationKeyMap;
         this.variationKeyToVariationMap = ProjectConfigUtils.generateNameMapping(variations);
         this.variationIdToVariationMap = ProjectConfigUtils.generateIdMapping(variations);
+        this.cmab = cmab;
     }
 
     public String getId() {
@@ -161,6 +183,10 @@ public class Experiment implements IdKeyMapped {
 
     public String getGroupId() {
         return groupId;
+    }
+
+    public Cmab getCmab() {
+        return cmab;
     }
 
     public boolean isActive() {
@@ -281,6 +307,7 @@ public class Experiment implements IdKeyMapped {
             ", variationKeyToVariationMap=" + variationKeyToVariationMap +
             ", userIdToVariationKeyMap=" + userIdToVariationKeyMap +
             ", trafficAllocation=" + trafficAllocation +
+            ", cmab=" + cmab +
             '}';
     }
 }
