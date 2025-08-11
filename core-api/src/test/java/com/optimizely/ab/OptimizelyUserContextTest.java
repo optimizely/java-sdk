@@ -16,59 +16,51 @@
  */
 package com.optimizely.ab;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.junit.Assert;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
+import ch.qos.logback.classic.Level;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfile;
 import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.bucketing.UserProfileUtils;
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.FeatureFlag;
-import com.optimizely.ab.config.Group;
-import com.optimizely.ab.config.ProjectConfig;
-import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_HOUSE_KEY;
-import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_GRYFFINDOR_VALUE;
+import com.optimizely.ab.config.*;
+import com.optimizely.ab.config.parser.ConfigParseException;
+import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.EventProcessor;
 import com.optimizely.ab.event.ForwardingEventProcessor;
 import com.optimizely.ab.event.internal.ImpressionEvent;
 import com.optimizely.ab.event.internal.payload.DecisionMetadata;
 import com.optimizely.ab.internal.LogbackVerifier;
-import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_KEY;
-import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNotificationBuilder.DECISION_EVENT_DISPATCHED;
-import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNotificationBuilder.ENABLED;
-import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNotificationBuilder.EXPERIMENT_ID;
-import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNotificationBuilder.FLAG_KEY;
-import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNotificationBuilder.REASONS;
-import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNotificationBuilder.RULE_KEY;
-import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNotificationBuilder.VARIABLES;
-import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNotificationBuilder.VARIATION_ID;
 import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.odp.*;
+import com.optimizely.ab.optimizelydecision.DecisionMessage;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
+import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.classic.Level;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+
+import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_HOUSE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_GRYFFINDOR_VALUE;
+import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_KEY;
+import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNotificationBuilder.*;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 public class OptimizelyUserContextTest {
+
     @Rule
     public EventHandlerRule eventHandler = new EventHandlerRule();
 
@@ -85,25 +77,13 @@ public class OptimizelyUserContextTest {
     Map<String, FeatureFlag> featureKeyMapping;
     Map<String, Group> groupIdMapping;
 
-    private String holdoutDatafile;
-
     @Before
     public void setUp() throws Exception {
         datafile = Resources.toString(Resources.getResource("config/decide-project-config.json"), Charsets.UTF_8);
 
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .build();
-    }
-
-    private Optimizely createOptimizelyWithHoldouts() throws Exception {
-        if (holdoutDatafile == null) {
-            holdoutDatafile = com.google.common.io.Resources.toString(
-                com.google.common.io.Resources.getResource("config/holdouts-project-config.json"),
-                com.google.common.base.Charsets.UTF_8
-            );
-        }
-        return new Optimizely.Builder().withDatafile(holdoutDatafile).withEventProcessor(new ForwardingEventProcessor(eventHandler, null)).build();
+                .withDatafile(datafile)
+                .build();
     }
 
     @Test
@@ -192,13 +172,12 @@ public class OptimizelyUserContextTest {
     }
 
     // decide
-
     @Test
     public void decide_featureTest() {
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
-            .build();
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
 
         String flagKey = "feature_2";
         String experimentKey = "exp_no_audience";
@@ -219,21 +198,21 @@ public class OptimizelyUserContextTest {
         assertTrue(decision.getReasons().isEmpty());
 
         DecisionMetadata metadata = new DecisionMetadata.Builder()
-            .setFlagKey(flagKey)
-            .setRuleKey(experimentKey)
-            .setRuleType(FeatureDecision.DecisionSource.FEATURE_TEST.toString())
-            .setVariationKey(variationKey)
-            .setEnabled(true)
-            .build();
+                .setFlagKey(flagKey)
+                .setRuleKey(experimentKey)
+                .setRuleType(FeatureDecision.DecisionSource.FEATURE_TEST.toString())
+                .setVariationKey(variationKey)
+                .setEnabled(true)
+                .build();
         eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap(), metadata);
     }
 
     @Test
     public void decide_rollout() {
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
-            .build();
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
 
         String flagKey = "feature_1";
         String experimentKey = "18322080788";
@@ -254,21 +233,21 @@ public class OptimizelyUserContextTest {
         assertTrue(decision.getReasons().isEmpty());
 
         DecisionMetadata metadata = new DecisionMetadata.Builder()
-            .setFlagKey(flagKey)
-            .setRuleKey(experimentKey)
-            .setRuleType(FeatureDecision.DecisionSource.ROLLOUT.toString())
-            .setVariationKey(variationKey)
-            .setEnabled(true)
-            .build();
+                .setFlagKey(flagKey)
+                .setRuleKey(experimentKey)
+                .setRuleType(FeatureDecision.DecisionSource.ROLLOUT.toString())
+                .setVariationKey(variationKey)
+                .setEnabled(true)
+                .build();
         eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap(), metadata);
     }
 
     @Test
     public void decide_nullVariation() {
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
-            .build();
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
 
         String flagKey = "feature_3";
         OptimizelyJSON variablesExpected = new OptimizelyJSON(Collections.emptyMap());
@@ -285,23 +264,22 @@ public class OptimizelyUserContextTest {
         assertTrue(decision.getReasons().isEmpty());
 
         DecisionMetadata metadata = new DecisionMetadata.Builder()
-            .setFlagKey(flagKey)
-            .setRuleKey("")
-            .setRuleType(FeatureDecision.DecisionSource.ROLLOUT.toString())
-            .setVariationKey("")
-            .setEnabled(false)
-            .build();
+                .setFlagKey(flagKey)
+                .setRuleKey("")
+                .setRuleType(FeatureDecision.DecisionSource.ROLLOUT.toString())
+                .setVariationKey("")
+                .setEnabled(false)
+                .build();
         eventHandler.expectImpression(null, "", userId, Collections.emptyMap(), metadata);
     }
 
     // decideAll
-
     @Test
     public void decideAll_oneFlag() {
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
-            .build();
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
 
         String flagKey = "feature_2";
         String experimentKey = "exp_no_audience";
@@ -319,22 +297,22 @@ public class OptimizelyUserContextTest {
         OptimizelyDecision decision = decisions.get(flagKey);
 
         OptimizelyDecision expDecision = new OptimizelyDecision(
-            variationKey,
-            true,
-            variablesExpected,
-            experimentKey,
-            flagKey,
-            user,
-            Collections.emptyList());
+                variationKey,
+                true,
+                variablesExpected,
+                experimentKey,
+                flagKey,
+                user,
+                Collections.emptyList());
         assertEquals(decision, expDecision);
 
         DecisionMetadata metadata = new DecisionMetadata.Builder()
-            .setFlagKey(flagKey)
-            .setRuleKey(experimentKey)
-            .setRuleType(FeatureDecision.DecisionSource.FEATURE_TEST.toString())
-            .setVariationKey(variationKey)
-            .setEnabled(true)
-            .build();
+                .setFlagKey(flagKey)
+                .setRuleKey(experimentKey)
+                .setRuleType(FeatureDecision.DecisionSource.FEATURE_TEST.toString())
+                .setVariationKey(variationKey)
+                .setEnabled(true)
+                .build();
         eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap(), metadata);
     }
 
@@ -353,23 +331,23 @@ public class OptimizelyUserContextTest {
         assertTrue(decisions.size() == 2);
 
         assertEquals(
-            decisions.get(flagKey1),
-            new OptimizelyDecision("a",
-                true,
-                variablesExpected1,
-                "exp_with_audience",
-                flagKey1,
-                user,
-                Collections.emptyList()));
+                decisions.get(flagKey1),
+                new OptimizelyDecision("a",
+                        true,
+                        variablesExpected1,
+                        "exp_with_audience",
+                        flagKey1,
+                        user,
+                        Collections.emptyList()));
         assertEquals(
-            decisions.get(flagKey2),
-            new OptimizelyDecision("variation_with_traffic",
-                true,
-                variablesExpected2,
-                "exp_no_audience",
-                flagKey2,
-                user,
-                Collections.emptyList()));
+                decisions.get(flagKey2),
+                new OptimizelyDecision("variation_with_traffic",
+                        true,
+                        variablesExpected2,
+                        "exp_no_audience",
+                        flagKey2,
+                        user,
+                        Collections.emptyList()));
     }
 
     @Test
@@ -377,9 +355,9 @@ public class OptimizelyUserContextTest {
         EventProcessor mockEventProcessor = mock(EventProcessor.class);
 
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .withEventProcessor(mockEventProcessor)
-            .build();
+                .withDatafile(datafile)
+                .withEventProcessor(mockEventProcessor)
+                .build();
 
         String flagKey1 = "feature_1";
         String flagKey2 = "feature_2";
@@ -395,35 +373,35 @@ public class OptimizelyUserContextTest {
         assertEquals(decisions.size(), 3);
 
         assertEquals(
-            decisions.get(flagKey1),
-            new OptimizelyDecision(
-                "a",
-                true,
-                variablesExpected1,
-                "exp_with_audience",
-                flagKey1,
-                user,
-                Collections.emptyList()));
+                decisions.get(flagKey1),
+                new OptimizelyDecision(
+                        "a",
+                        true,
+                        variablesExpected1,
+                        "exp_with_audience",
+                        flagKey1,
+                        user,
+                        Collections.emptyList()));
         assertEquals(
-            decisions.get(flagKey2),
-            new OptimizelyDecision(
-                "variation_with_traffic",
-                true,
-                variablesExpected2,
-                "exp_no_audience",
-                flagKey2,
-                user,
-                Collections.emptyList()));
+                decisions.get(flagKey2),
+                new OptimizelyDecision(
+                        "variation_with_traffic",
+                        true,
+                        variablesExpected2,
+                        "exp_no_audience",
+                        flagKey2,
+                        user,
+                        Collections.emptyList()));
         assertEquals(
-            decisions.get(flagKey3),
-            new OptimizelyDecision(
-                null,
-                false,
-                variablesExpected3,
-                null,
-                flagKey3,
-                user,
-                Collections.emptyList()));
+                decisions.get(flagKey3),
+                new OptimizelyDecision(
+                        null,
+                        false,
+                        variablesExpected3,
+                        null,
+                        flagKey3,
+                        user,
+                        Collections.emptyList()));
 
         ArgumentCaptor<ImpressionEvent> argumentCaptor = ArgumentCaptor.forClass(ImpressionEvent.class);
         verify(mockEventProcessor, times(3)).process(argumentCaptor.capture());
@@ -434,7 +412,6 @@ public class OptimizelyUserContextTest {
         assertEquals(sentEvents.get(0).getExperimentKey(), "exp_with_audience");
         assertEquals(sentEvents.get(0).getVariationKey(), "a");
         assertEquals(sentEvents.get(0).getUserContext().getUserId(), userId);
-
 
         assertEquals(sentEvents.get(1).getExperimentKey(), "exp_no_audience");
         assertEquals(sentEvents.get(1).getVariationKey(), "variation_with_traffic");
@@ -449,9 +426,9 @@ public class OptimizelyUserContextTest {
         UserProfileService ups = mock(UserProfileService.class);
 
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .withUserProfileService(ups)
-            .build();
+                .withDatafile(datafile)
+                .withUserProfileService(ups)
+                .build();
 
         String flagKey1 = "feature_1";
         String flagKey2 = "feature_2";
@@ -460,13 +437,12 @@ public class OptimizelyUserContextTest {
 
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
         Map<String, OptimizelyDecision> decisions = user.decideForKeys(Arrays.asList(
-            flagKey1, flagKey2, flagKey3
+                flagKey1, flagKey2, flagKey3
         ));
 
         assertEquals(decisions.size(), 3);
 
         ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);
-
 
         verify(ups, times(1)).lookup(userId);
         verify(ups, times(1)).save(argumentCaptor.capture());
@@ -482,9 +458,9 @@ public class OptimizelyUserContextTest {
         UserProfileService ups = mock(UserProfileService.class);
 
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .withUserProfileService(ups)
-            .build();
+                .withDatafile(datafile)
+                .withUserProfileService(ups)
+                .build();
 
         Map<String, Object> attributes = Collections.singletonMap("gender", "f");
 
@@ -494,7 +470,6 @@ public class OptimizelyUserContextTest {
         assertEquals(decisions.size(), 3);
 
         ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);
-
 
         verify(ups, times(1)).lookup(userId);
         verify(ups, times(1)).save(argumentCaptor.capture());
@@ -516,25 +491,24 @@ public class OptimizelyUserContextTest {
         assertTrue(decisions.size() == 2);
 
         assertEquals(
-            decisions.get(flagKey1),
-            new OptimizelyDecision(
-                "a",
-                true,
-                variablesExpected1,
-                "exp_with_audience",
-                flagKey1,
-                user,
-                Collections.emptyList()));
+                decisions.get(flagKey1),
+                new OptimizelyDecision(
+                        "a",
+                        true,
+                        variablesExpected1,
+                        "exp_with_audience",
+                        flagKey1,
+                        user,
+                        Collections.emptyList()));
     }
 
     // trackEvent
-
     @Test
     public void trackEvent() {
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
-            .build();
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
 
         Map<String, Object> attributes = Collections.singletonMap("gender", "f");
         String eventKey = "event1";
@@ -548,9 +522,9 @@ public class OptimizelyUserContextTest {
     @Test
     public void trackEvent_noEventTags() {
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
-            .build();
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
 
         Map<String, Object> attributes = Collections.singletonMap("gender", "f");
         String eventKey = "event1";
@@ -563,9 +537,9 @@ public class OptimizelyUserContextTest {
     @Test
     public void trackEvent_emptyAttributes() {
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
-            .build();
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
 
         String eventKey = "event1";
         Map<String, ?> eventTags = Collections.singletonMap("name", "carrot");
@@ -576,13 +550,12 @@ public class OptimizelyUserContextTest {
     }
 
     // send events
-
     @Test
     public void decide_sendEvent() {
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
-            .build();
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
 
         String flagKey = "feature_2";
         String variationKey = "variation_with_traffic";
@@ -600,9 +573,9 @@ public class OptimizelyUserContextTest {
     @Test
     public void decide_doNotSendEvent_withOption() {
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
-            .build();
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
 
         String flagKey = "feature_2";
 
@@ -617,18 +590,18 @@ public class OptimizelyUserContextTest {
     @Test
     public void decide_sendEvent_featureTest_withSendFlagDecisionsOn() {
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
-            .build();
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
 
         Map<String, Object> attributes = Collections.singletonMap("gender", "f");
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
 
         optimizely.addDecisionNotificationHandler(
-            decisionNotification -> {
-                Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
-                isListenerCalled = true;
-            });
+                decisionNotification -> {
+                    Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
+                    isListenerCalled = true;
+                });
 
         String flagKey = "feature_2";
         String experimentId = "10420810910";
@@ -643,18 +616,18 @@ public class OptimizelyUserContextTest {
     @Test
     public void decide_sendEvent_rollout_withSendFlagDecisionsOn() {
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafile)
-            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
-            .build();
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
 
         Map<String, Object> attributes = Collections.singletonMap("gender", "f");
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
 
         optimizely.addDecisionNotificationHandler(
-            decisionNotification -> {
-                Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
-                isListenerCalled = true;
-            });
+                decisionNotification -> {
+                    Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
+                    isListenerCalled = true;
+                });
 
         String flagKey = "feature_3";
         String experimentId = null;
@@ -670,18 +643,18 @@ public class OptimizelyUserContextTest {
     public void decide_sendEvent_featureTest_withSendFlagDecisionsOff() {
         String datafileWithSendFlagDecisionsOff = datafile.replace("\"sendFlagDecisions\": true", "\"sendFlagDecisions\": false");
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafileWithSendFlagDecisionsOff)
-            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
-            .build();
+                .withDatafile(datafileWithSendFlagDecisionsOff)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
 
         Map<String, Object> attributes = Collections.singletonMap("gender", "f");
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
 
         optimizely.addDecisionNotificationHandler(
-            decisionNotification -> {
-                Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
-                isListenerCalled = true;
-            });
+                decisionNotification -> {
+                    Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
+                    isListenerCalled = true;
+                });
 
         String flagKey = "feature_2";
         String experimentId = "10420810910";
@@ -697,18 +670,18 @@ public class OptimizelyUserContextTest {
     public void decide_sendEvent_rollout_withSendFlagDecisionsOff() {
         String datafileWithSendFlagDecisionsOff = datafile.replace("\"sendFlagDecisions\": true", "\"sendFlagDecisions\": false");
         optimizely = new Optimizely.Builder()
-            .withDatafile(datafileWithSendFlagDecisionsOff)
-            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
-            .build();
+                .withDatafile(datafileWithSendFlagDecisionsOff)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
 
         Map<String, Object> attributes = Collections.singletonMap("gender", "f");
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
 
         optimizely.addDecisionNotificationHandler(
-            decisionNotification -> {
-                Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), false);
-                isListenerCalled = true;
-            });
+                decisionNotification -> {
+                    Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), false);
+                    isListenerCalled = true;
+                });
 
         String flagKey = "feature_3";
         isListenerCalled = false;
@@ -719,7 +692,6 @@ public class OptimizelyUserContextTest {
     }
 
     // notifications
-
     @Test
     public void decisionNotification() {
         String flagKey = "feature_2";
@@ -745,13 +717,13 @@ public class OptimizelyUserContextTest {
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
 
         optimizely.addDecisionNotificationHandler(
-            decisionNotification -> {
-                Assert.assertEquals(decisionNotification.getType(), NotificationCenter.DecisionNotificationType.FLAG.toString());
-                Assert.assertEquals(decisionNotification.getUserId(), userId);
-                Assert.assertEquals(decisionNotification.getAttributes(), attributes);
-                Assert.assertEquals(decisionNotification.getDecisionInfo(), testDecisionInfoMap);
-                isListenerCalled = true;
-            });
+                decisionNotification -> {
+                    Assert.assertEquals(decisionNotification.getType(), NotificationCenter.DecisionNotificationType.FLAG.toString());
+                    Assert.assertEquals(decisionNotification.getUserId(), userId);
+                    Assert.assertEquals(decisionNotification.getAttributes(), attributes);
+                    Assert.assertEquals(decisionNotification.getDecisionInfo(), testDecisionInfoMap);
+                    isListenerCalled = true;
+                });
 
         isListenerCalled = false;
         testDecisionInfoMap.put(DECISION_EVENT_DISPATCHED, true);
@@ -764,181 +736,1342 @@ public class OptimizelyUserContextTest {
         assertTrue(isListenerCalled);
     }
 
+    // options
     @Test
-    public void decide_for_keys_with_holdout() throws Exception {
-        Optimizely optWithHoldout = createOptimizelyWithHoldouts();
-        String userId = "user123";
-        Map<String, Object> attrs = new HashMap<>();
-        attrs.put("$opt_bucketing_id", "ppid160000"); 
-        OptimizelyUserContext user = optWithHoldout.createUserContext(userId, attrs);
+    public void decideOptions_bypassUPS() throws Exception {
+        String flagKey = "feature_2";        // embedding experiment: "exp_no_audience"
+        String experimentId = "10420810910";    // "exp_no_audience"
+        String variationId1 = "10418551353";
+        String variationId2 = "10418510624";
+        String variationKey1 = "variation_with_traffic";
+        String variationKey2 = "variation_no_traffic";
 
-        List<String> flagKeys = Arrays.asList(
-            "boolean_feature",                    // previously validated basic_holdout membership
-            "double_single_variable_feature",     // also subject to global/basic holdout
-            "integer_single_variable_feature"     // also subject to global/basic holdout
-        );
+        UserProfileService ups = mock(UserProfileService.class);
+        when(ups.lookup(userId)).thenReturn(createUserProfileMap(experimentId, variationId2));
 
-        Map<String, OptimizelyDecision> decisions = user.decideForKeys(flagKeys, Collections.singletonList(OptimizelyDecideOption.INCLUDE_REASONS));
-        assertEquals(3, decisions.size());
-
-        String holdoutExperimentId = "10075323428"; // basic_holdout id
-        String variationId = "$opt_dummy_variation_id";
-        String variationKey = "ho_off_key";
-        String expectedReason = "User (" + userId + ") is in variation (" + variationKey + ") of holdout (basic_holdout).";
-
-        for (String flagKey : flagKeys) {
-            OptimizelyDecision d = decisions.get(flagKey);
-            assertNotNull(d);
-            assertEquals(flagKey, d.getFlagKey());
-            assertEquals(variationKey, d.getVariationKey());
-            assertFalse(d.getEnabled());
-            assertTrue("Expected holdout reason for flag " + flagKey, d.getReasons().contains(expectedReason));
-            DecisionMetadata metadata = new DecisionMetadata.Builder()
-                .setFlagKey(flagKey)
-                .setRuleKey("basic_holdout")
-                .setRuleType("holdout")
-                .setVariationKey(variationKey)
-                .setEnabled(false)
+        optimizely = new Optimizely.Builder()
+                .withDatafile(datafile)
+                .withUserProfileService(ups)
                 .build();
-            // attributes map expected empty (reserved $opt_ attribute filtered out)
-            eventHandler.expectImpression(holdoutExperimentId, variationId, userId, Collections.emptyMap(), metadata);
-        }
 
-        // At least one log message confirming holdout membership
-        logbackVerifier.expectMessage(Level.INFO, expectedReason);
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey);
+        // should return variationId2 set by UPS
+        assertEquals(decision.getVariationKey(), variationKey2);
+
+        decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE));
+        // should ignore variationId2 set by UPS and return variationId1
+        assertEquals(decision.getVariationKey(), variationKey1);
+        // also should not save either
+        verify(ups, never()).save(anyObject());
     }
 
     @Test
-    public void decide_all_with_holdout() throws Exception {
+    public void decideOptions_excludeVariables() {
+        String flagKey = "feature_1";
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
 
-        Optimizely optWithHoldout = createOptimizelyWithHoldouts();
-        String userId = "user123";
-        Map<String, Object> attrs = new HashMap<>();
-        // ppid120000 buckets user into holdout_included_flags
-        attrs.put("$opt_bucketing_id", "ppid120000");
-        OptimizelyUserContext user = optWithHoldout.createUserContext(userId, attrs);
+        OptimizelyDecision decision = user.decide(flagKey);
+        assertTrue(decision.getVariables().toMap().size() > 0);
 
-        // All flag keys present in holdouts-project-config.json
-        List<String> allFlagKeys = Arrays.asList(
-            "boolean_feature",
-            "double_single_variable_feature",
-            "integer_single_variable_feature",
-            "boolean_single_variable_feature",
-            "string_single_variable_feature",
-            "multi_variate_feature",
-            "multi_variate_future_feature",
-            "mutex_group_feature"
+        decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.EXCLUDE_VARIABLES));
+        assertTrue(decision.getVariables().toMap().size() == 0);
+    }
+
+    @Test
+    public void decideOptions_includeReasons() {
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+
+        String flagKey = "invalid_key";
+        OptimizelyDecision decision = user.decide(flagKey);
+        assertEquals(decision.getReasons().size(), 1);
+        TestCase.assertEquals(decision.getReasons().get(0), DecisionMessage.FLAG_KEY_INVALID.reason(flagKey));
+
+        decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+        assertEquals(decision.getReasons().size(), 1);
+        assertEquals(decision.getReasons().get(0), DecisionMessage.FLAG_KEY_INVALID.reason(flagKey));
+
+        flagKey = "feature_1";
+        decision = user.decide(flagKey);
+        assertEquals(decision.getReasons().size(), 0);
+
+        decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+        assertTrue(decision.getReasons().size() > 0);
+    }
+
+    public void decideOptions_disableDispatchEvent() {
+        // tested already with decide_doNotSendEvent() above
+    }
+
+    public void decideOptions_enabledFlagsOnly() {
+        // tested already with decideAll_allFlags_enabledFlagsOnly() above
+    }
+
+    @Test
+    public void decideOptions_defaultDecideOptions() {
+        List<OptimizelyDecideOption> options = Arrays.asList(
+                OptimizelyDecideOption.EXCLUDE_VARIABLES
         );
 
-        // Flags INCLUDED in holdout_included_flags (only these should be holdout decisions)
-        List<String> includedInHoldout = Arrays.asList(
-            "boolean_feature",
-            "double_single_variable_feature",
-            "integer_single_variable_feature"
-        );
+        optimizely = Optimizely.builder()
+                .withDatafile(datafile)
+                .withDefaultDecideOptions(options)
+                .build();
 
-        Map<String, OptimizelyDecision> decisions = user.decideAll(Arrays.asList(
-            OptimizelyDecideOption.INCLUDE_REASONS,
-            OptimizelyDecideOption.DISABLE_DECISION_EVENT
+        String flagKey = "feature_1";
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+
+        // should be excluded by DefaultDecideOption
+        OptimizelyDecision decision = user.decide(flagKey);
+        assertTrue(decision.getVariables().toMap().size() == 0);
+
+        decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS, OptimizelyDecideOption.EXCLUDE_VARIABLES));
+        // other options should work as well
+        assertTrue(decision.getReasons().size() > 0);
+        // redundant setting ignored
+        assertTrue(decision.getVariables().toMap().size() == 0);
+    }
+
+    // errors
+    @Test
+    public void decide_sdkNotReady() {
+        String flagKey = "feature_1";
+
+        Optimizely optimizely = new Optimizely.Builder().build();
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey);
+
+        assertNull(decision.getVariationKey());
+        assertFalse(decision.getEnabled());
+        assertTrue(decision.getVariables().isEmpty());
+        assertEquals(decision.getFlagKey(), flagKey);
+        assertEquals(decision.getUserContext(), user);
+
+        assertEquals(decision.getReasons().size(), 1);
+        assertEquals(decision.getReasons().get(0), DecisionMessage.SDK_NOT_READY.reason());
+    }
+
+    @Test
+    public void decide_invalidFeatureKey() {
+        String flagKey = "invalid_key";
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey);
+
+        assertNull(decision.getVariationKey());
+        assertFalse(decision.getEnabled());
+        assertTrue(decision.getVariables().isEmpty());
+        assertEquals(decision.getReasons().size(), 1);
+        assertEquals(decision.getReasons().get(0), DecisionMessage.FLAG_KEY_INVALID.reason(flagKey));
+    }
+
+    @Test
+    public void decideAll_sdkNotReady() {
+        List<String> flagKeys = Arrays.asList("feature_1");
+
+        Optimizely optimizely = new Optimizely.Builder().build();
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        Map<String, OptimizelyDecision> decisions = user.decideForKeys(flagKeys);
+
+        assertEquals(decisions.size(), 0);
+    }
+
+    @Test
+    public void decideAll_errorDecisionIncluded() {
+        String flagKey1 = "feature_2";
+        String flagKey2 = "invalid_key";
+
+        List<String> flagKeys = Arrays.asList(flagKey1, flagKey2);
+        OptimizelyJSON variablesExpected1 = optimizely.getAllFeatureVariables(flagKey1, userId);
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        Map<String, OptimizelyDecision> decisions = user.decideForKeys(flagKeys);
+
+        assertEquals(decisions.size(), 2);
+
+        assertEquals(
+                decisions.get(flagKey1),
+                new OptimizelyDecision(
+                        "variation_with_traffic",
+                        true,
+                        variablesExpected1,
+                        "exp_no_audience",
+                        flagKey1,
+                        user,
+                        Collections.emptyList()));
+        assertEquals(
+                decisions.get(flagKey2),
+                OptimizelyDecision.newErrorDecision(
+                        flagKey2,
+                        user,
+                        DecisionMessage.FLAG_KEY_INVALID.reason(flagKey2)));
+    }
+
+    // reasons (errors)
+    @Test
+    public void decideReasons_sdkNotReady() {
+        String flagKey = "feature_1";
+
+        Optimizely optimizely = new Optimizely.Builder().build();
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey);
+
+        assertEquals(decision.getReasons().size(), 1);
+        assertEquals(decision.getReasons().get(0), DecisionMessage.SDK_NOT_READY.reason());
+    }
+
+    @Test
+    public void decideReasons_featureKeyInvalid() {
+        String flagKey = "invalid_key";
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey);
+
+        assertEquals(decision.getReasons().size(), 1);
+        assertEquals(decision.getReasons().get(0), DecisionMessage.FLAG_KEY_INVALID.reason(flagKey));
+    }
+
+    @Test
+    public void decideReasons_variableValueInvalid() {
+        String flagKey = "feature_1";
+
+        FeatureFlag flag = getSpyFeatureFlag(flagKey);
+        List<FeatureVariable> variables = Arrays.asList(new FeatureVariable("any-id", "any-key", "invalid", null, "integer", null));
+        when(flag.getVariables()).thenReturn(variables);
+        addSpyFeatureFlag(flag);
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey);
+
+        assertEquals(decision.getReasons().get(0), DecisionMessage.VARIABLE_VALUE_INVALID.reason("any-key"));
+    }
+
+    // reasons (infos with includeReasons)
+    @Test
+    public void decideReasons_experimentNotRunning() {
+        String flagKey = "feature_1";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.isActive()).thenReturn(false);
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+                String.format("Experiment \"exp_with_audience\" is not running.")
         ));
-        assertEquals(allFlagKeys.size(), decisions.size());
-
-        String holdoutExperimentId = "1007543323427"; // holdout_included_flags id
-        String variationId = "$opt_dummy_variation_id";
-        String variationKey = "ho_off_key";
-        String expectedReason = "User (" + userId + ") is in variation (" + variationKey + ") of holdout (holdout_included_flags).";
-
-        int holdoutCount = 0;
-        for (String flagKey : allFlagKeys) {
-            OptimizelyDecision d = decisions.get(flagKey);
-            assertNotNull("Missing decision for flag " + flagKey, d);
-            if (includedInHoldout.contains(flagKey)) {
-                // Should be holdout decision
-                assertEquals(variationKey, d.getVariationKey());
-                assertFalse(d.getEnabled());
-                assertTrue("Expected holdout reason for flag " + flagKey, d.getReasons().contains(expectedReason));
-                DecisionMetadata metadata = new DecisionMetadata.Builder()
-                    .setFlagKey(flagKey)
-                    .setRuleKey("holdout_included_flags")
-                    .setRuleType("holdout")
-                    .setVariationKey(variationKey)
-                    .setEnabled(false)
-                    .build();
-                holdoutCount++;
-            } else {
-                // Should NOT be a holdout decision
-                assertFalse("Non-included flag should not have holdout reason: " + flagKey, d.getReasons().contains(expectedReason));
-            }
-        }
-        assertEquals("Expected exactly the included flags to be in holdout", includedInHoldout.size(), holdoutCount);
-        logbackVerifier.expectMessage(Level.INFO, expectedReason);
     }
 
     @Test
-    public void decisionNotification_with_holdout() throws Exception {
-        // Use holdouts datafile
-        Optimizely optWithHoldout = createOptimizelyWithHoldouts();
-        String flagKey = "boolean_feature";
-        String userId = "user123";
-        String ruleKey = "basic_holdout";              // holdout rule key
-        String variationKey = "ho_off_key";            // holdout (off) variation key
-        String experimentId = "10075323428";           // holdout experiment id in holdouts-project-config.json
-        String variationId = "$opt_dummy_variation_id";// dummy variation id used for holdout impressions
-        String expectedReason = "User (" + userId + ") is in variation (" + variationKey + ") of holdout (" + ruleKey + ").";
+    public void decideReasons_gotVariationFromUserProfile() throws Exception {
+        String flagKey = "feature_2";        // embedding experiment: "exp_no_audience"
+        String experimentId = "10420810910";    // "exp_no_audience"
+        String experimentKey = "exp_no_audience";
+        String variationId2 = "10418510624";
+        String variationKey2 = "variation_no_traffic";
 
-        Map<String, Object> attrs = new HashMap<>();
-        attrs.put("$opt_bucketing_id", "ppid160000");  // deterministic bucketing into basic_holdout
-        attrs.put("nationality", "English");           // non-reserved attribute should appear in impression & notification
+        UserProfileService ups = mock(UserProfileService.class);
+        when(ups.lookup(userId)).thenReturn(createUserProfileMap(experimentId, variationId2));
 
-        OptimizelyUserContext user = optWithHoldout.createUserContext(userId, attrs);
+        optimizely = new Optimizely.Builder()
+                .withDatafile(datafile)
+                .withUserProfileService(ups)
+                .build();
 
-        // Register notification handler similar to decisionNotification test
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("Returning previously activated variation \"%s\" of experiment \"%s\" for user \"%s\" from user profile.", variationKey2, experimentKey, userId)
+        ));
+    }
+
+    @Test
+    public void decideReasons_forcedVariationFound() {
+        String flagKey = "feature_1";
+        String variationKey = "b";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getUserIdToVariationKeyMap()).thenReturn(Collections.singletonMap(userId, variationKey));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+                String.format("User \"%s\" is forced in variation \"%s\".", userId, variationKey)
+        ));
+    }
+
+    @Test
+    public void decideReasons_forcedVariationFoundButInvalid() {
+        String flagKey = "feature_1";
+        String variationKey = "invalid-key";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getUserIdToVariationKeyMap()).thenReturn(Collections.singletonMap(userId, variationKey));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+                String.format("Variation \"%s\" is not in the datafile. Not activating user \"%s\".", variationKey, userId)
+        ));
+    }
+
+    @Test
+    public void decideReasons_userMeetsConditionsForTargetingRule() {
+        String flagKey = "feature_1";
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        user.setAttribute("country", "US");
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".", userId, flagKey)
+        ));
+    }
+
+    @Test
+    public void decideReasons_userDoesntMeetConditionsForTargetingRule() {
+        String flagKey = "feature_1";
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        user.setAttribute("country", "CA");
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("User \"%s\" does not meet conditions for targeting rule \"%d\".", userId, 1)
+        ));
+    }
+
+    @Test
+    public void decideReasons_userBucketedIntoTargetingRule() {
+        String flagKey = "feature_1";
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        user.setAttribute("country", "US");
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".", userId, flagKey)
+        ));
+    }
+
+    @Test
+    public void decideReasons_userBucketedIntoEveryoneTargetingRule() {
+        String flagKey = "feature_1";
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        user.setAttribute("country", "KO");
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("User \"%s\" meets conditions for targeting rule \"Everyone Else\".", userId)
+        ));
+    }
+
+    @Test
+    public void decideReasons_userNotBucketedIntoTargetingRule() {
+        String flagKey = "feature_1";
+        String experimentKey = "3332020494";   // experimentKey of rollout[2]
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        user.setAttribute("browser", "safari");
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("User with bucketingId \"%s\" is not in any variation of experiment \"%s\".", userId, experimentKey)
+        ));
+    }
+
+    @Test
+    public void decideReasons_userBucketedIntoVariationInExperiment() {
+        String flagKey = "feature_2";
+        String experimentKey = "exp_no_audience";
+        String variationKey = "variation_with_traffic";
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("User with bucketingId \"%s\" is in variation \"%s\" of experiment \"%s\".", userId, variationKey, experimentKey)
+        ));
+    }
+
+    @Test
+    public void decideReasons_userNotBucketedIntoVariation() {
+        String flagKey = "feature_2";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getTrafficAllocation()).thenReturn(Arrays.asList(new TrafficAllocation("any-id", 0)));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("User with bucketingId \"%s\" is not in any variation of experiment \"exp_no_audience\".", userId)
+        ));
+    }
+
+    @Test
+    public void decideReasons_userBucketedIntoExperimentInGroup() {
+        String flagKey = "feature_3";
+        String experimentId = "10390965532";   // "group_exp_1"
+
+        FeatureFlag flag = getSpyFeatureFlag(flagKey);
+        when(flag.getExperimentIds()).thenReturn(Arrays.asList(experimentId));
+        addSpyFeatureFlag(flag);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+                String.format("User with bucketingId \"tester\" is in experiment \"group_exp_1\" of group 13142870430.")
+        ));
+    }
+
+    @Test
+    public void decideReasons_userNotBucketedIntoExperimentInGroup() {
+        String flagKey = "feature_3";
+        String experimentId = "10420843432";   // "group_exp_2"
+
+        FeatureFlag flag = getSpyFeatureFlag(flagKey);
+        when(flag.getExperimentIds()).thenReturn(Arrays.asList(experimentId));
+        addSpyFeatureFlag(flag);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+                String.format("User with bucketingId \"tester\" is not in experiment \"group_exp_2\" of group 13142870430.")
+        ));
+    }
+
+    @Test
+    public void decideReasons_userNotBucketedIntoAnyExperimentInGroup() {
+        String flagKey = "feature_3";
+        String experimentId = "10390965532";   // "group_exp_1"
+        String groupId = "13142870430";
+
+        FeatureFlag flag = getSpyFeatureFlag(flagKey);
+        when(flag.getExperimentIds()).thenReturn(Arrays.asList(experimentId));
+        addSpyFeatureFlag(flag);
+
+        Group group = getSpyGroup(groupId);
+        when(group.getTrafficAllocation()).thenReturn(Collections.emptyList());
+        addSpyGroup(group);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+                String.format("User with bucketingId \"tester\" is not in any experiment of group 13142870430.")
+        ));
+    }
+
+    @Test
+    public void decideReasons_userNotInExperiment() {
+        String flagKey = "feature_1";
+        String experimentKey = "exp_with_audience";
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("User \"%s\" does not meet conditions to be in experiment \"%s\".", userId, experimentKey)
+        ));
+    }
+
+    @Test
+    public void decideReasons_conditionNoMatchingAudience() throws ConfigParseException {
+        String flagKey = "feature_1";
+        String audienceId = "invalid_id";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+                String.format("Audiences for experiment \"%s\" collectively evaluated to null.", experiment.getKey())
+        ));
+    }
+
+    @Test
+    public void decideReasons_evaluateAttributeInvalidType() {
+        String flagKey = "feature_1";
+        String audienceId = "13389130056";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("country", 25));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("Audiences for experiment \"%s\" collectively evaluated to null.", experiment.getKey())
+        ));
+    }
+
+    @Test
+    public void decideReasons_evaluateAttributeValueOutOfRange() {
+        String flagKey = "feature_1";
+        String audienceId = "age_18";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", (float) Math.pow(2, 54)));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("Audiences for experiment \"%s\" collectively evaluated to null.", experiment.getKey())
+        ));
+    }
+
+    @Test
+    public void decideReasons_userAttributeInvalidType() {
+        String flagKey = "feature_1";
+        String audienceId = "invalid_type";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("Audiences for experiment \"%s\" collectively evaluated to null.", experiment.getKey())
+        ));
+    }
+
+    @Test
+    public void decideReasons_userAttributeInvalidMatch() {
+        String flagKey = "feature_1";
+        String audienceId = "invalid_match";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("Audiences for experiment \"%s\" collectively evaluated to null.", experiment.getKey())
+        ));
+    }
+
+    @Test
+    public void decideReasons_userAttributeNilValue() {
+        String flagKey = "feature_1";
+        String audienceId = "nil_value";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey, Collections.singletonMap("age", 25));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("Audiences for experiment \"%s\" collectively evaluated to null.", experiment.getKey())
+        ));
+    }
+
+    @Test
+    public void decideReasons_missingAttributeValue() {
+        String flagKey = "feature_1";
+        String audienceId = "age_18";
+
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+        OptimizelyDecision decision = callDecideWithIncludeReasons(flagKey);
+
+        assertTrue(decision.getReasons().contains(
+                String.format("Audiences for experiment \"%s\" collectively evaluated to null.", experiment.getKey())
+        ));
+    }
+
+    @Test
+    public void setForcedDecisionWithRuleKeyTest() {
+        String flagKey = "55555";
+        String ruleKey = "77777";
+        String variationKey = "33333";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        String foundVariationKey = optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey();
+        assertEquals(variationKey, foundVariationKey);
+    }
+
+    @Test
+    public void setForcedDecisionsWithRuleKeyTest() {
+        String flagKey = "feature_2";
+        String ruleKey = "exp_no_audience";
+        String ruleKey2 = "88888";
+        String variationKey = "33333";
+        String variationKey2 = "variation_with_traffic";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        OptimizelyDecisionContext optimizelyDecisionContext2 = new OptimizelyDecisionContext(flagKey, ruleKey2);
+        OptimizelyForcedDecision optimizelyForcedDecision2 = new OptimizelyForcedDecision(variationKey2);
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext2, optimizelyForcedDecision2);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+        assertEquals(variationKey2, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext2).getVariationKey());
+
+        // Update first forcedDecision
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision2);
+        assertEquals(variationKey2, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+
+        // Test to confirm decide uses proper FD
+        OptimizelyDecision decision = optimizelyUserContext.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(decision.getReasons().contains(
+                String.format("Variation (%s) is mapped to flag (%s), rule (%s) and user (%s) in the forced decision map.", variationKey2, flagKey, ruleKey, userId)
+        ));
+    }
+
+    @Test
+    public void setForcedDecisionWithoutRuleKeyTest() {
+        String flagKey = "55555";
+        String variationKey = "33333";
+        String updatedVariationKey = "55555";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        OptimizelyForcedDecision updatedOptimizelyForcedDecision = new OptimizelyForcedDecision(updatedVariationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+
+        // Update forcedDecision
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, updatedOptimizelyForcedDecision);
+        assertEquals(updatedVariationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+    }
+
+    @Test
+    public void getForcedVariationWithRuleKey() {
+        String flagKey = "55555";
+        String ruleKey = "77777";
+        String variationKey = "33333";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+    }
+
+    @Test
+    public void failedGetForcedDecisionWithRuleKey() {
+        String flagKey = "55555";
+        String invalidFlagKey = "11";
+        String ruleKey = "77777";
+        String variationKey = "33333";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyDecisionContext invalidOptimizelyDecisionContext = new OptimizelyDecisionContext(invalidFlagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertNull(optimizelyUserContext.getForcedDecision(invalidOptimizelyDecisionContext));
+    }
+
+    @Test
+    public void getForcedVariationWithoutRuleKey() {
+        String flagKey = "55555";
+        String variationKey = "33333";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+    }
+
+    @Test
+    public void failedGetForcedDecisionWithoutRuleKey() {
+        String flagKey = "55555";
+        String invalidFlagKey = "11";
+        String variationKey = "33333";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyDecisionContext invalidOptimizelyDecisionContext = new OptimizelyDecisionContext(invalidFlagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertNull(optimizelyUserContext.getForcedDecision(invalidOptimizelyDecisionContext));
+    }
+
+    @Test
+    public void removeForcedDecisionWithRuleKey() {
+        String flagKey = "55555";
+        String ruleKey = "77777";
+        String variationKey = "33333";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertTrue(optimizelyUserContext.removeForcedDecision(optimizelyDecisionContext));
+    }
+
+    @Test
+    public void removeForcedDecisionWithoutRuleKey() {
+        String flagKey = "55555";
+        String variationKey = "33333";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertTrue(optimizelyUserContext.removeForcedDecision(optimizelyDecisionContext));
+    }
+
+    @Test
+    public void removeForcedDecisionWithNullRuleKeyAfterAddingWithRuleKey() {
+        String flagKey = "flag2";
+        String ruleKey = "default-rollout-3045-20390585493";
+        String variationKey = "variation2";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyDecisionContext optimizelyDecisionContextNonNull = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertFalse(optimizelyUserContext.removeForcedDecision(optimizelyDecisionContextNonNull));
+    }
+
+    @Test
+    public void removeForcedDecisionWithIncorrectFlagKey() {
+        String flagKey = "55555";
+        String variationKey = "variation2";
+        String incorrectFlagKey = "flag1";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyDecisionContext incorrectOptimizelyDecisionContext = new OptimizelyDecisionContext(incorrectFlagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertFalse(optimizelyUserContext.removeForcedDecision(incorrectOptimizelyDecisionContext));
+    }
+
+    @Test
+    public void removeForcedDecisionWithIncorrectFlagKeyButSimilarRuleKey() {
+        String flagKey = "flag2";
+        String incorrectFlagKey = "flag3";
+        String ruleKey = "default-rollout-3045-20390585493";
+        String variationKey = "variation2";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyDecisionContext similarOptimizelyDecisionContext = new OptimizelyDecisionContext(incorrectFlagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertFalse(optimizelyUserContext.removeForcedDecision(similarOptimizelyDecisionContext));
+    }
+
+    @Test
+    public void removeAllForcedDecisions() {
+        String flagKey = "55555";
+        String ruleKey = "77777";
+        String variationKey = "33333";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertTrue(optimizelyUserContext.removeAllForcedDecisions());
+    }
+
+    @Test
+    public void setForcedDecisionsAndCallDecide() {
+        String flagKey = "feature_2";
+        String ruleKey = "exp_no_audience";
+        String variationKey = "variation_with_traffic";
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+
+        // Test to confirm decide uses proper FD
+        OptimizelyDecision decision = optimizelyUserContext.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertNotNull(decision);
+        assertTrue(decision.getReasons().contains(
+                String.format("Variation (%s) is mapped to flag (%s), rule (%s) and user (%s) in the forced decision map.", variationKey, flagKey, ruleKey, userId)
+        ));
+    }
+
+    /**
+     * ****************************************[START DECIDE TESTS WITH FDs]*****************************************
+     */
+    @Test
+    public void setForcedDecisionsAndCallDecideFlagToDecision() {
+        String flagKey = "feature_1";
+        String variationKey = "a";
+
+        optimizely = new Optimizely.Builder()
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
+
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, null);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+
+        optimizely.addDecisionNotificationHandler(
+                decisionNotification -> {
+                    Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
+                    isListenerCalled = true;
+                });
+
         isListenerCalled = false;
-        optWithHoldout.addDecisionNotificationHandler(decisionNotification -> {
-            Assert.assertEquals(NotificationCenter.DecisionNotificationType.FLAG.toString(), decisionNotification.getType());
-            Assert.assertEquals(userId, decisionNotification.getUserId());
 
-            Assert.assertEquals(attrs, decisionNotification.getAttributes());
+        // Test to confirm decide uses proper FD
+        OptimizelyDecision decision = optimizelyUserContext.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
 
-            Map<String, ?> info = decisionNotification.getDecisionInfo();
-            Assert.assertEquals(flagKey, info.get(FLAG_KEY));
-            Assert.assertEquals(variationKey, info.get(VARIATION_KEY));
-            Assert.assertEquals(false, info.get(ENABLED));
-            Assert.assertEquals(ruleKey, info.get(RULE_KEY));
-            Assert.assertEquals(experimentId, info.get(EXPERIMENT_ID));
-            Assert.assertEquals(variationId, info.get(VARIATION_ID));
-            // Variables should be empty because feature is disabled by holdout
-            Assert.assertTrue(((Map<?, ?>) info.get(VARIABLES)).isEmpty());
-            // Event should be dispatched (no DISABLE_DECISION_EVENT option)
-            Assert.assertEquals(true, info.get(DECISION_EVENT_DISPATCHED));
-
-            @SuppressWarnings("unchecked")
-            List<String> reasons = (List<String>) info.get(REASONS);
-            Assert.assertTrue("Expected holdout reason present", reasons.contains(expectedReason));
-            isListenerCalled = true;
-        });
-
-        // Execute decision with INCLUDE_REASONS so holdout reason is present
-        OptimizelyDecision decision = user.decide(flagKey, Collections.singletonList(OptimizelyDecideOption.INCLUDE_REASONS));
         assertTrue(isListenerCalled);
 
-        // Sanity checks on returned decision
-        assertEquals(variationKey, decision.getVariationKey());
-        assertFalse(decision.getEnabled());
-        assertTrue(decision.getReasons().contains(expectedReason));
+        String variationId = "10389729780";
+        String experimentId = "";
 
-        // Impression expectation (nationality only)
         DecisionMetadata metadata = new DecisionMetadata.Builder()
                 .setFlagKey(flagKey)
-                .setRuleKey(ruleKey)
-                .setRuleType("holdout")
+                .setRuleKey("")
+                .setRuleType("feature-test")
                 .setVariationKey(variationKey)
-                .setEnabled(false)
+                .setEnabled(true)
                 .build();
-        eventHandler.expectImpression(experimentId, variationId, userId, Collections.singletonMap("nationality", "English"), metadata);
 
-        // Log expectation (reuse existing pattern)
-        logbackVerifier.expectMessage(Level.INFO, expectedReason);
+        eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap(), metadata);
+
+        assertNotNull(decision);
+        assertTrue(decision.getReasons().contains(
+                String.format("Variation (%s) is mapped to flag (%s) and user (%s) in the forced decision map.", variationKey, flagKey, userId)
+        ));
+    }
+
+    @Test
+    public void setForcedDecisionsAndCallDecideExperimentRuleToDecision() {
+        String flagKey = "feature_1";
+        String ruleKey = "exp_with_audience";
+        String variationKey = "a";
+
+        optimizely = new Optimizely.Builder()
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
+
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+
+        optimizely.addDecisionNotificationHandler(
+                decisionNotification -> {
+                    Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
+                    isListenerCalled = true;
+                });
+
+        isListenerCalled = false;
+
+        // Test to confirm decide uses proper FD
+        OptimizelyDecision decision = optimizelyUserContext.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(isListenerCalled);
+
+        String variationId = "10389729780";
+        String experimentId = "10390977673";
+
+        eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap());
+
+        assertNotNull(decision);
+        assertTrue(decision.getReasons().contains(
+                String.format("Variation (%s) is mapped to flag (%s), rule (%s) and user (%s) in the forced decision map.", variationKey, flagKey, ruleKey, userId)
+        ));
+    }
+
+    @Test
+    public void setForcedDecisionsAndCallDecideDeliveryRuleToDecision() {
+        String flagKey = "feature_1";
+        String ruleKey = "3332020515";
+        String variationKey = "3324490633";
+
+        optimizely = new Optimizely.Builder()
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
+
+        OptimizelyUserContext optimizelyUserContext = new OptimizelyUserContext(
+                optimizely,
+                userId,
+                Collections.emptyMap());
+
+        OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+        OptimizelyForcedDecision optimizelyForcedDecision = new OptimizelyForcedDecision(variationKey);
+        optimizelyUserContext.setForcedDecision(optimizelyDecisionContext, optimizelyForcedDecision);
+        assertEquals(variationKey, optimizelyUserContext.getForcedDecision(optimizelyDecisionContext).getVariationKey());
+
+        optimizely.addDecisionNotificationHandler(
+                decisionNotification -> {
+                    Assert.assertEquals(decisionNotification.getDecisionInfo().get(DECISION_EVENT_DISPATCHED), true);
+                    isListenerCalled = true;
+                });
+
+        isListenerCalled = false;
+
+        // Test to confirm decide uses proper FD
+        OptimizelyDecision decision = optimizelyUserContext.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+
+        assertTrue(isListenerCalled);
+
+        String variationId = "3324490633";
+        String experimentId = "3332020515";
+
+        eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap());
+
+        assertNotNull(decision);
+        assertTrue(decision.getReasons().contains(
+                String.format("Variation (%s) is mapped to flag (%s), rule (%s) and user (%s) in the forced decision map.", variationKey, flagKey, ruleKey, userId)
+        ));
+    }
+
+    /**
+     * ******************************************[END DECIDE TESTS WITH FDs]*****************************************
+     */
+
+    @Test
+    public void fetchQualifiedSegments() {
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPSegmentManager mockODPSegmentManager = mock(ODPSegmentManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .withODPManager(mockODPManager)
+                .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+
+        assertTrue(userContext.fetchQualifiedSegments());
+        verify(mockODPSegmentManager).getQualifiedSegments("test-user", Collections.emptyList());
+
+        assertTrue(userContext.fetchQualifiedSegments(Collections.singletonList(ODPSegmentOption.RESET_CACHE)));
+        verify(mockODPSegmentManager).getQualifiedSegments("test-user", Collections.singletonList(ODPSegmentOption.RESET_CACHE));
+    }
+
+    @Test
+    public void fetchQualifiedSegmentsErrorWhenConfigIsInvalid() {
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(null);
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPSegmentManager mockODPSegmentManager = mock(ODPSegmentManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+                .withConfigManager(mockProjectConfigManager)
+                .withODPManager(mockODPManager)
+                .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+
+        assertFalse(userContext.fetchQualifiedSegments());
+        logbackVerifier.expectMessage(Level.ERROR, "Optimizely instance is not valid, failing fetchQualifiedSegments call.");
+    }
+
+    @Test
+    public void fetchQualifiedSegmentsError() {
+        Optimizely optimizely = Optimizely.builder()
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+
+        assertFalse(userContext.fetchQualifiedSegments());
+        logbackVerifier.expectMessage(Level.ERROR, "Audience segments fetch failed (ODP is not enabled).");
+    }
+
+    @Test
+    public void fetchQualifiedSegmentsAsync() throws InterruptedException {
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPSegmentManager mockODPSegmentManager = mock(ODPSegmentManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        doAnswer(
+                invocation -> {
+                    ODPSegmentManager.ODPSegmentFetchCallback callback = invocation.getArgumentAt(1, ODPSegmentManager.ODPSegmentFetchCallback.class);
+                    callback.onCompleted(Arrays.asList("segment1", "segment2"));
+                    return null;
+                }
+        ).when(mockODPSegmentManager).getQualifiedSegments(any(), (ODPSegmentManager.ODPSegmentFetchCallback) any(), any());
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .withODPManager(mockODPManager)
+                .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        userContext.fetchQualifiedSegments((Boolean isFetchSuccessful) -> {
+            assertTrue(isFetchSuccessful);
+            countDownLatch.countDown();
+        });
+
+        countDownLatch.await();
+        verify(mockODPSegmentManager).getQualifiedSegments(eq("test-user"), any(ODPSegmentManager.ODPSegmentFetchCallback.class), eq(Collections.emptyList()));
+        assertEquals(Arrays.asList("segment1", "segment2"), userContext.getQualifiedSegments());
+
+        // reset qualified segments
+        userContext.setQualifiedSegments(Collections.emptyList());
+        CountDownLatch countDownLatch2 = new CountDownLatch(1);
+        userContext.fetchQualifiedSegments((Boolean isFetchSuccessful) -> {
+            assertTrue(isFetchSuccessful);
+            countDownLatch2.countDown();
+        }, Collections.singletonList(ODPSegmentOption.RESET_CACHE));
+
+        countDownLatch2.await();
+        verify(mockODPSegmentManager).getQualifiedSegments(eq("test-user"), any(ODPSegmentManager.ODPSegmentFetchCallback.class), eq(Collections.singletonList(ODPSegmentOption.RESET_CACHE)));
+        assertEquals(Arrays.asList("segment1", "segment2"), userContext.getQualifiedSegments());
+    }
+
+    @Test
+    public void fetchQualifiedSegmentsAsyncWithVUID() throws InterruptedException {
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPApiManager mockAPIManager = mock(ODPApiManager.class);
+        ODPSegmentManager mockODPSegmentManager = spy(new ODPSegmentManager(mockAPIManager));
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        doAnswer(
+                invocation -> {
+                    ODPSegmentManager.ODPSegmentFetchCallback callback = invocation.getArgumentAt(2, ODPSegmentManager.ODPSegmentFetchCallback.class);
+                    callback.onCompleted(Arrays.asList("segment1", "segment2"));
+                    return null;
+                }
+        ).when(mockODPSegmentManager).getQualifiedSegments(any(), eq("vuid_f6db3d60ba3a493d8e41bc995bb"), (ODPSegmentManager.ODPSegmentFetchCallback) any(), any());
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .withODPManager(mockODPManager)
+                .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("vuid_f6db3d60ba3a493d8e41bc995bb");
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        userContext.fetchQualifiedSegments((Boolean isFetchSuccessful) -> {
+            assertTrue(isFetchSuccessful);
+            countDownLatch.countDown();
+        });
+
+        countDownLatch.await();
+        verify(mockODPSegmentManager).getQualifiedSegments(eq(ODPUserKey.VUID), eq("vuid_f6db3d60ba3a493d8e41bc995bb"), any(ODPSegmentManager.ODPSegmentFetchCallback.class), eq(Collections.emptyList()));
+        assertEquals(Arrays.asList("segment1", "segment2"), userContext.getQualifiedSegments());
+
+        // reset qualified segments
+        userContext.setQualifiedSegments(Collections.emptyList());
+        CountDownLatch countDownLatch2 = new CountDownLatch(1);
+        userContext.fetchQualifiedSegments((Boolean isFetchSuccessful) -> {
+            assertTrue(isFetchSuccessful);
+            countDownLatch2.countDown();
+        }, Collections.singletonList(ODPSegmentOption.RESET_CACHE));
+
+        countDownLatch2.await();
+        verify(mockODPSegmentManager).getQualifiedSegments(eq(ODPUserKey.VUID), eq("vuid_f6db3d60ba3a493d8e41bc995bb"), any(ODPSegmentManager.ODPSegmentFetchCallback.class), eq(Collections.singletonList(ODPSegmentOption.RESET_CACHE)));
+        assertEquals(Arrays.asList("segment1", "segment2"), userContext.getQualifiedSegments());
+    }
+
+    @Test
+    public void fetchQualifiedSegmentsAsyncWithUserID() throws InterruptedException {
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPApiManager mockAPIManager = mock(ODPApiManager.class);
+        ODPSegmentManager mockODPSegmentManager = spy(new ODPSegmentManager(mockAPIManager));
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        doAnswer(
+                invocation -> {
+                    ODPSegmentManager.ODPSegmentFetchCallback callback = invocation.getArgumentAt(2, ODPSegmentManager.ODPSegmentFetchCallback.class);
+                    callback.onCompleted(Arrays.asList("segment1", "segment2"));
+                    return null;
+                }
+        ).when(mockODPSegmentManager).getQualifiedSegments(any(), eq("f6db3d60ba3a493d8e41bc995bb"), (ODPSegmentManager.ODPSegmentFetchCallback) any(), any());
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .withODPManager(mockODPManager)
+                .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("f6db3d60ba3a493d8e41bc995bb");
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        userContext.fetchQualifiedSegments((Boolean isFetchSuccessful) -> {
+            assertTrue(isFetchSuccessful);
+            countDownLatch.countDown();
+        });
+
+        countDownLatch.await();
+        verify(mockODPSegmentManager).getQualifiedSegments(eq(ODPUserKey.FS_USER_ID), eq("f6db3d60ba3a493d8e41bc995bb"), any(ODPSegmentManager.ODPSegmentFetchCallback.class), eq(Collections.emptyList()));
+        assertEquals(Arrays.asList("segment1", "segment2"), userContext.getQualifiedSegments());
+
+        // reset qualified segments
+        userContext.setQualifiedSegments(Collections.emptyList());
+        CountDownLatch countDownLatch2 = new CountDownLatch(1);
+        userContext.fetchQualifiedSegments((Boolean isFetchSuccessful) -> {
+            assertTrue(isFetchSuccessful);
+            countDownLatch2.countDown();
+        }, Collections.singletonList(ODPSegmentOption.RESET_CACHE));
+
+        countDownLatch2.await();
+        verify(mockODPSegmentManager).getQualifiedSegments(eq(ODPUserKey.FS_USER_ID), eq("f6db3d60ba3a493d8e41bc995bb"), any(ODPSegmentManager.ODPSegmentFetchCallback.class), eq(Collections.singletonList(ODPSegmentOption.RESET_CACHE)));
+        assertEquals(Arrays.asList("segment1", "segment2"), userContext.getQualifiedSegments());
+    }
+
+    @Test
+    public void fetchQualifiedSegmentsAsyncError() throws InterruptedException {
+        Optimizely optimizely = Optimizely.builder()
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        userContext.fetchQualifiedSegments((Boolean isFetchSuccessful) -> {
+            assertFalse(isFetchSuccessful);
+            countDownLatch.countDown();
+        });
+
+        countDownLatch.await();
+        assertEquals(null, userContext.getQualifiedSegments());
+        logbackVerifier.expectMessage(Level.ERROR, "Audience segments fetch failed (ODP is not enabled).");
+    }
+
+    @Test
+    public void fetchQualifiedSegmentsAsyncErrorWhenConfigIsInvalid() throws InterruptedException {
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(null);
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPSegmentManager mockODPSegmentManager = mock(ODPSegmentManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+                .withConfigManager(mockProjectConfigManager)
+                .withODPManager(mockODPManager)
+                .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        userContext.fetchQualifiedSegments((Boolean isFetchSuccessful) -> {
+            assertFalse(isFetchSuccessful);
+            countDownLatch.countDown();
+        });
+
+        countDownLatch.await();
+        assertEquals(null, userContext.getQualifiedSegments());
+        logbackVerifier.expectMessage(Level.ERROR, "Optimizely instance is not valid, failing fetchQualifiedSegments call.");
+    }
+
+    @Test
+    public void identifyUserErrorWhenConfigIsInvalid() {
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPSegmentManager mockODPSegmentManager = mock(ODPSegmentManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(null);
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+                .withConfigManager(mockProjectConfigManager)
+                .withODPManager(mockODPManager)
+                .build();
+
+        optimizely.createUserContext("test-user");
+        verify(mockODPEventManager, never()).identifyUser("test-user");
+        Mockito.reset(mockODPEventManager);
+
+        logbackVerifier.expectMessage(Level.ERROR, "Optimizely instance is not valid, failing identifyUser call.");
+    }
+
+    @Test
+    public void identifyUser() {
+        ODPEventManager mockODPEventManager = mock(ODPEventManager.class);
+        ODPSegmentManager mockODPSegmentManager = mock(ODPSegmentManager.class);
+        ODPManager mockODPManager = mock(ODPManager.class);
+
+        Mockito.when(mockODPManager.getEventManager()).thenReturn(mockODPEventManager);
+        Mockito.when(mockODPManager.getSegmentManager()).thenReturn(mockODPSegmentManager);
+
+        Optimizely optimizely = Optimizely.builder()
+                .withDatafile(datafile)
+                .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+                .withODPManager(mockODPManager)
+                .build();
+
+        OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
+        verify(mockODPEventManager).identifyUser("test-user");
+
+        Mockito.reset(mockODPEventManager);
+        OptimizelyUserContext userContextClone = userContext.copy();
+
+        // identifyUser should not be called the new userContext is created through copy
+        verify(mockODPEventManager, never()).identifyUser("test-user");
+
+        assertNotSame(userContextClone, userContext);
+    }
+
+    // utils
+    Map<String, Object> createUserProfileMap(String experimentId, String variationId) {
+        Map<String, Object> userProfileMap = new HashMap<String, Object>();
+        userProfileMap.put(UserProfileService.userIdKey, userId);
+
+        Map<String, String> decisionMap = new HashMap<String, String>(1);
+        decisionMap.put(UserProfileService.variationIdKey, variationId);
+
+        Map<String, Map<String, String>> decisionsMap = new HashMap<String, Map<String, String>>();
+        decisionsMap.put(experimentId, decisionMap);
+        userProfileMap.put(UserProfileService.experimentBucketMapKey, decisionsMap);
+
+        return userProfileMap;
+    }
+
+    void setAudienceForFeatureTest(String flagKey, String audienceId) throws ConfigParseException {
+        Experiment experiment = getSpyExperiment(flagKey);
+        when(experiment.getAudienceIds()).thenReturn(Arrays.asList(audienceId));
+        addSpyExperiment(experiment);
+    }
+
+    Experiment getSpyExperiment(String flagKey) {
+        setMockConfig();
+        String experimentId = config.getFeatureKeyMapping().get(flagKey).getExperimentIds().get(0);
+        return spy(experimentIdMapping.get(experimentId));
+    }
+
+    FeatureFlag getSpyFeatureFlag(String flagKey) {
+        setMockConfig();
+        return spy(config.getFeatureKeyMapping().get(flagKey));
+    }
+
+    Group getSpyGroup(String groupId) {
+        setMockConfig();
+        return spy(groupIdMapping.get(groupId));
+    }
+
+    void addSpyExperiment(Experiment experiment) {
+        experimentIdMapping.put(experiment.getId(), experiment);
+        when(config.getExperimentIdMapping()).thenReturn(experimentIdMapping);
+    }
+
+    void addSpyFeatureFlag(FeatureFlag flag) {
+        featureKeyMapping.put(flag.getKey(), flag);
+        when(config.getFeatureKeyMapping()).thenReturn(featureKeyMapping);
+    }
+
+    void addSpyGroup(Group group) {
+        groupIdMapping.put(group.getId(), group);
+        when(config.getGroupIdMapping()).thenReturn(groupIdMapping);
+    }
+
+    void setMockConfig() {
+        if (config != null) {
+            return;
+        }
+
+        ProjectConfig configReal = null;
+        try {
+            configReal = new DatafileProjectConfig.Builder().withDatafile(datafile).build();
+            config = spy(configReal);
+            optimizely = Optimizely.builder().withConfig(config).build();
+            experimentIdMapping = new HashMap<>(config.getExperimentIdMapping());
+            groupIdMapping = new HashMap<>(config.getGroupIdMapping());
+            featureKeyMapping = new HashMap<>(config.getFeatureKeyMapping());
+        } catch (ConfigParseException e) {
+            fail("ProjectConfig build failed");
+        }
+    }
+
+    OptimizelyDecision callDecideWithIncludeReasons(String flagKey, Map<String, Object> attributes) {
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
+        return user.decide(flagKey, Arrays.asList(OptimizelyDecideOption.INCLUDE_REASONS));
+    }
+
+    OptimizelyDecision callDecideWithIncludeReasons(String flagKey) {
+        return callDecideWithIncludeReasons(flagKey, Collections.emptyMap());
     }
 
 }
