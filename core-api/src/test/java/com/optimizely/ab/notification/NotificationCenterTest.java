@@ -32,7 +32,7 @@ import org.junit.Test;
 import static org.mockito.Mockito.mock;
 
 import com.optimizely.ab.OptimizelyRuntimeException;
-import com.optimizely.ab.config.ExperimentCore;
+import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
 import com.optimizely.ab.internal.LogbackVerifier;
@@ -94,7 +94,7 @@ public class NotificationCenterTest {
     public void testAddActivateNotificationTwice() {
         ActivateNotificationListener listener = new ActivateNotificationListener() {
             @Override
-            public void onActivate(@Nonnull ExperimentCore experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
 
             }
         };
@@ -109,7 +109,7 @@ public class NotificationCenterTest {
     public void testAddActivateNotification() {
         int notificationId = notificationCenter.addActivateNotificationListener(new ActivateNotificationListener() {
             @Override
-            public void onActivate(@Nonnull ExperimentCore experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+            public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
 
             }
         });

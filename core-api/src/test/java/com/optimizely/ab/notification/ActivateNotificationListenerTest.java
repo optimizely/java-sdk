@@ -27,7 +27,6 @@ import org.junit.Test;
 import static org.mockito.Mockito.mock;
 
 import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.ExperimentCore;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
 
@@ -66,7 +65,7 @@ public class ActivateNotificationListenerTest {
     private static class ActivateNotificationHandler extends ActivateNotificationListener {
 
         @Override
-        public void onActivate(@Nonnull ExperimentCore experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
+        public void onActivate(@Nonnull Experiment experiment, @Nonnull String userId, @Nonnull Map<String, ?> attributes, @Nonnull Variation variation, @Nonnull LogEvent event) {
             assertEquals(EXPERIMENT, experiment);
             assertEquals(USER_ID, userId);
             assertEquals(USER_ATTRIBUTES, attributes);

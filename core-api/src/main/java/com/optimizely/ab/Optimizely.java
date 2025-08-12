@@ -345,13 +345,17 @@ public class Optimizely implements AutoCloseable {
         if (experiment != null) {
             logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
         }
+
+        // Legacy API methods only apply to the Experiment type and not to Holdout.
+        boolean isExperimentType = experiment instanceof Experiment;
+        
         // Kept For backwards compatibility.
         // This notification is deprecated and the new DecisionNotifications
         // are sent via their respective method calls.
-        if (notificationCenter.getNotificationManager(ActivateNotification.class).size() > 0) {
+        if (notificationCenter.getNotificationManager(ActivateNotification.class).size() > 0 && isExperimentType) {
             LogEvent impressionEvent = EventFactory.createLogEvent(userEvent);
             ActivateNotification activateNotification = new ActivateNotification(
-                experiment, userId, filteredAttributes, variation, impressionEvent);
+                (Experiment)experiment, userId, filteredAttributes, variation, impressionEvent);
             notificationCenter.send(activateNotification);
         }
         return true;

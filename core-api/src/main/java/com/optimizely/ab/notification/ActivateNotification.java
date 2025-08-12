@@ -19,7 +19,7 @@ package com.optimizely.ab.notification;
 import java.util.Map;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
-import com.optimizely.ab.config.ExperimentCore;
+import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
 
@@ -32,7 +32,7 @@ import com.optimizely.ab.event.LogEvent;
 @Deprecated
 public final class ActivateNotification {
 
-    private final ExperimentCore experiment;
+    private final Experiment experiment;
     private final String userId;
     private final Map<String, ?> attributes;
     private final Variation variation;
@@ -50,7 +50,7 @@ public final class ActivateNotification {
      * @param variation  - The variation that was returned from activate.
      * @param event      - The impression event that was triggered.
      */
-    public ActivateNotification(ExperimentCore experiment, String userId, Map<String, ?> attributes, Variation variation, LogEvent event) {
+    public ActivateNotification(Experiment experiment, String userId, Map<String, ?> attributes, Variation variation, LogEvent event) {
         this.experiment = experiment;
         this.userId = userId;
         this.attributes = attributes;
@@ -58,7 +58,7 @@ public final class ActivateNotification {
         this.event = event;
     }
 
-    public ExperimentCore getExperiment() {
+    public Experiment getExperiment() {
         return experiment;
     }
 

@@ -22,7 +22,6 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 
 import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.ExperimentCore;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
 
@@ -82,7 +81,7 @@ public abstract class ActivateNotificationListener implements NotificationHandle
      * @param variation  - The variation that was returned from activate.
      * @param event      - The impression event that was triggered.
      */
-    public abstract void onActivate(@Nonnull ExperimentCore experiment,
+    public abstract void onActivate(@Nonnull Experiment experiment,
                                     @Nonnull String userId,
                                     @Nonnull Map<String, ?> attributes,
                                     @Nonnull Variation variation,
