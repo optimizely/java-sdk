@@ -161,8 +161,9 @@ final class GsonHelpers {
 
         Cmab cmab = null;
         if (experimentJson.has("cmab")) {
-            JsonObject cmabJson = experimentJson.getAsJsonObject("cmab");
-            if (cmabJson != null) {
+            JsonElement cmabElement = experimentJson.get("cmab");
+            if (!cmabElement.isJsonNull()) {
+                JsonObject cmabJson = cmabElement.getAsJsonObject();
                 cmab = parseCmab(cmabJson, context);
             }
         }
