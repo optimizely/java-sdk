@@ -16,8 +16,17 @@
  */
 package com.optimizely.ab.internal;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Nonnull;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ExperimentCore;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.audience.AudienceIdCondition;
 import com.optimizely.ab.config.audience.Condition;
@@ -25,13 +34,6 @@ import com.optimizely.ab.config.audience.OrCondition;
 import com.optimizely.ab.optimizelydecision.DecisionReasons;
 import com.optimizely.ab.optimizelydecision.DecisionResponse;
 import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public final class ExperimentUtils {
 
@@ -62,7 +64,7 @@ public final class ExperimentUtils {
      */
     @Nonnull
     public static DecisionResponse<Boolean> doesUserMeetAudienceConditions(@Nonnull ProjectConfig projectConfig,
-                                                                           @Nonnull Experiment experiment,
+                                                                           @Nonnull ExperimentCore experiment,
                                                                            @Nonnull OptimizelyUserContext user,
                                                                            @Nonnull String loggingEntityType,
                                                                            @Nonnull String loggingKey) {
@@ -86,7 +88,7 @@ public final class ExperimentUtils {
 
     @Nonnull
     public static DecisionResponse<Boolean> evaluateAudience(@Nonnull ProjectConfig projectConfig,
-                                                             @Nonnull Experiment experiment,
+                                                             @Nonnull ExperimentCore experiment,
                                                              @Nonnull OptimizelyUserContext user,
                                                              @Nonnull String loggingEntityType,
                                                              @Nonnull String loggingKey) {
@@ -118,7 +120,7 @@ public final class ExperimentUtils {
 
     @Nonnull
     public static DecisionResponse<Boolean> evaluateAudienceConditions(@Nonnull ProjectConfig projectConfig,
-                                                                       @Nonnull Experiment experiment,
+                                                                       @Nonnull ExperimentCore experiment,
                                                                        @Nonnull OptimizelyUserContext user,
                                                                        @Nonnull String loggingEntityType,
                                                                        @Nonnull String loggingKey) {

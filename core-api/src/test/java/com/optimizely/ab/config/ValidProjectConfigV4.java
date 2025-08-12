@@ -235,7 +235,7 @@ public class ValidProjectConfigV4 {
     // features
     private static final String FEATURE_BOOLEAN_FEATURE_ID = "4195505407";
     private static final String FEATURE_BOOLEAN_FEATURE_KEY = "boolean_feature";
-    private static final FeatureFlag FEATURE_FLAG_BOOLEAN_FEATURE = new FeatureFlag(
+    public static final FeatureFlag FEATURE_FLAG_BOOLEAN_FEATURE = new FeatureFlag(
         FEATURE_BOOLEAN_FEATURE_ID,
         FEATURE_BOOLEAN_FEATURE_KEY,
         "",
@@ -294,7 +294,7 @@ public class ValidProjectConfigV4 {
         FeatureVariable.BOOLEAN_TYPE,
         null
     );
-    private static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_BOOLEAN = new FeatureFlag(
+    public static final FeatureFlag FEATURE_FLAG_SINGLE_VARIABLE_BOOLEAN = new FeatureFlag(
         FEATURE_SINGLE_VARIABLE_BOOLEAN_ID,
         FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY,
         "",
@@ -490,7 +490,7 @@ public class ValidProjectConfigV4 {
         VARIATION_BASIC_EXPERIMENT_VARIATION_A_KEY,
         Collections.<FeatureVariableUsageInstance>emptyList()
     );
-    private static final Variation VARIATION_HOLDOUT_VARIATION_OFF = new Variation(
+    public static final Variation VARIATION_HOLDOUT_VARIATION_OFF = new Variation(
         "$opt_dummy_variation_id",
         "ho_off_key",
         false
@@ -536,7 +536,7 @@ public class ValidProjectConfigV4 {
             )
         )
     );
-    private static final Holdout HOLDOUT_BASIC_HOLDOUT = new Holdout(
+    public static final Holdout HOLDOUT_BASIC_HOLDOUT = new Holdout(
         "10075323428",
         "basic_holdout",
         Holdout.HoldoutStatus.RUNNING.toString(),
@@ -547,7 +547,7 @@ public class ValidProjectConfigV4 {
         ),
         DatafileProjectConfigTestUtils.createListOfObjects(
             new TrafficAllocation(
-                "327323",
+                "$opt_dummy_variation_id",
                 500
             )
         ),
@@ -566,7 +566,7 @@ public class ValidProjectConfigV4 {
             ),
             DatafileProjectConfigTestUtils.createListOfObjects(
                 new TrafficAllocation(
-                        "327323",
+                        "$opt_dummy_variation_id",
                         0
                 )
             ),
@@ -574,7 +574,7 @@ public class ValidProjectConfigV4 {
             null
     );
 
-    private static final Holdout HOLDOUT_INCLUDED_FLAGS_HOLDOUT = new Holdout(
+    public static final Holdout HOLDOUT_INCLUDED_FLAGS_HOLDOUT = new Holdout(
             "1007543323427",
             "holdout_included_flags",
             Holdout.HoldoutStatus.RUNNING.toString(),
@@ -585,7 +585,7 @@ public class ValidProjectConfigV4 {
             ),
             DatafileProjectConfigTestUtils.createListOfObjects(
                 new TrafficAllocation(
-                        "327323",
+                        "$opt_dummy_variation_id",
                         2000
                 )
             ),
@@ -597,7 +597,7 @@ public class ValidProjectConfigV4 {
             null
     );
 
-    private static final Holdout HOLDOUT_EXCLUDED_FLAGS_HOLDOUT = new Holdout(
+    public static final Holdout HOLDOUT_EXCLUDED_FLAGS_HOLDOUT = new Holdout(
             "100753234214",
             "holdout_excluded_flags",
             Holdout.HoldoutStatus.RUNNING.toString(),
@@ -608,7 +608,7 @@ public class ValidProjectConfigV4 {
             ),
             DatafileProjectConfigTestUtils.createListOfObjects(
                 new TrafficAllocation(
-                        "327323",
+                        "$opt_dummy_variation_id",
                         1500
                 )
             ),
@@ -620,7 +620,7 @@ public class ValidProjectConfigV4 {
             )
     );
 
-    private static final Holdout HOLDOUT_TYPEDAUDIENCE_HOLDOUT = new Holdout(
+    public static final Holdout HOLDOUT_TYPEDAUDIENCE_HOLDOUT = new Holdout(
             "10075323429",
             "typed_audience_holdout",
             Holdout.HoldoutStatus.RUNNING.toString(),
@@ -636,7 +636,7 @@ public class ValidProjectConfigV4 {
             ),
             DatafileProjectConfigTestUtils.createListOfObjects(
                 new TrafficAllocation(
-                    "327323",
+                    "$opt_dummy_variation_id",
                     1000
                 )
             ),

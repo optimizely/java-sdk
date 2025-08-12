@@ -24,6 +24,7 @@ import com.optimizely.ab.config.AtomicProjectConfigManager;
 import com.optimizely.ab.config.DatafileProjectConfig;
 import com.optimizely.ab.config.EventType;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ExperimentCore;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.FeatureVariable;
 import com.optimizely.ab.config.FeatureVariableUsageInstance;
@@ -319,7 +320,7 @@ public class Optimizely implements AutoCloseable {
      * @param ruleType           It can either be experiment in case impression event is sent from activate or it's feature-test or rollout
      */
     private boolean sendImpression(@Nonnull ProjectConfig projectConfig,
-                                   @Nullable Experiment experiment,
+                                   @Nullable ExperimentCore experiment,
                                    @Nonnull String userId,
                                    @Nonnull Map<String, ?> filteredAttributes,
                                    @Nullable Variation variation,
@@ -344,13 +345,17 @@ public class Optimizely implements AutoCloseable {
         if (experiment != null) {
             logger.info("Activating user \"{}\" in experiment \"{}\".", userId, experiment.getKey());
         }
+
+        // Legacy API methods only apply to the Experiment type and not to Holdout.
+        boolean isExperimentType = experiment instanceof Experiment;
+        
         // Kept For backwards compatibility.
         // This notification is deprecated and the new DecisionNotifications
         // are sent via their respective method calls.
-        if (notificationCenter.getNotificationManager(ActivateNotification.class).size() > 0) {
+        if (notificationCenter.getNotificationManager(ActivateNotification.class).size() > 0 && isExperimentType) {
             LogEvent impressionEvent = EventFactory.createLogEvent(userEvent);
             ActivateNotification activateNotification = new ActivateNotification(
-                experiment, userId, filteredAttributes, variation, impressionEvent);
+                (Experiment)experiment, userId, filteredAttributes, variation, impressionEvent);
             notificationCenter.send(activateNotification);
         }
         return true;

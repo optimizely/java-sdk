@@ -17,12 +17,13 @@
 
 package com.optimizely.ab.notification;
 
+import java.util.Map;
+
+import javax.annotation.Nonnull;
+
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
-
-import javax.annotation.Nonnull;
-import java.util.Map;
 
 /**
  * ActivateNotificationListener handles the activate event notification.
