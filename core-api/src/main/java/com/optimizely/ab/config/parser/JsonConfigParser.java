@@ -176,9 +176,7 @@ final public class JsonConfigParser implements ConfigParser {
             Cmab cmab = null;
             if (experimentObject.has("cmab")) {
                 JSONObject cmabObject = experimentObject.optJSONObject("cmab");
-                if (cmabObject != null) {
-                    cmab = parseCmab(cmabObject);
-                }
+                cmab = parseCmab(cmabObject);
             }
 
             experiments.add(new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
