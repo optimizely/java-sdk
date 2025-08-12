@@ -22,4 +22,5 @@ public interface Cache<T> {
     void save(String key, T value);
     T lookup(String key);
     void reset();
+    void remove(String key);
 }

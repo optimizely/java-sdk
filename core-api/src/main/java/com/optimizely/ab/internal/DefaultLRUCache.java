@@ -94,6 +94,19 @@ public class DefaultLRUCache<T> implements Cache<T> {
         }
     }
 
+    public void remove(String key) {
+        if (maxSize == 0) {
+            // Cache is disabled when maxSize = 0
+            return;
+        }
+        lock.lock();
+        try {
+            linkedHashMap.remove(key);
+        } finally {
+            lock.unlock();
+        }
+    }
+
     private class CacheEntity {
         public T value;
         public Long timestamp;
