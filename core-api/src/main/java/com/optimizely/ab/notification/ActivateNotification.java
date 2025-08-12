@@ -16,12 +16,12 @@
  */
 package com.optimizely.ab.notification;
 
+import java.util.Map;
+
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.LogEvent;
-
-import java.util.Map;
 
 /**
  * ActivateNotification supplies notification for AB activatation.

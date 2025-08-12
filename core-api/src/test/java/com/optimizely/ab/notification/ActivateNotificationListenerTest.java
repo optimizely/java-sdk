@@ -16,18 +16,19 @@
  */
 package com.optimizely.ab.notification;
 
-import com.optimizely.ab.config.Experiment;
-import com.optimizely.ab.config.Variation;
-import com.optimizely.ab.event.LogEvent;
-import org.junit.Before;
-import org.junit.Test;
-
-import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import javax.annotation.Nonnull;
+
+import static org.junit.Assert.assertEquals;
+import org.junit.Before;
+import org.junit.Test;
 import static org.mockito.Mockito.mock;
+
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.event.LogEvent;
 
 public class ActivateNotificationListenerTest {
 
