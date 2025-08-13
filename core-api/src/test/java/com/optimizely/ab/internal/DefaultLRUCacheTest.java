@@ -169,4 +169,90 @@ public class DefaultLRUCacheTest {
 
         assertEquals(0, cache.linkedHashMap.size());
     }
+
+    @Test
+    public void testRemoveNonExistentKey() {
+        DefaultLRUCache<Integer> cache = new DefaultLRUCache<>(3, 1000);
+        cache.save("1", 100);
+        cache.save("2", 200);
+
+        cache.remove("3"); // Doesn't exist
+
+        assertEquals(Integer.valueOf(100), cache.lookup("1"));
+        assertEquals(Integer.valueOf(200), cache.lookup("2"));
+    }
+
+    @Test
+    public void testRemoveExistingKey() {
+        DefaultLRUCache<Integer> cache = new DefaultLRUCache<>(3, 1000);
+
+        cache.save("1", 100);
+        cache.save("2", 200);
+        cache.save("3", 300);
+
+        assertEquals(Integer.valueOf(100), cache.lookup("1"));
+        assertEquals(Integer.valueOf(200), cache.lookup("2"));
+        assertEquals(Integer.valueOf(300), cache.lookup("3"));
+
+        cache.remove("2");
+
+        assertEquals(Integer.valueOf(100), cache.lookup("1"));
+        assertNull(cache.lookup("2"));
+        assertEquals(Integer.valueOf(300), cache.lookup("3"));
+    }
+
+    @Test
+    public void testRemoveFromZeroSizedCache() {
+        DefaultLRUCache<Integer> cache = new DefaultLRUCache<>(0, 1000);
+        cache.save("1", 100);
+        cache.remove("1");
+
+        assertNull(cache.lookup("1"));
+    }
+
+    @Test
+    public void testRemoveAndAddBack() {
+        DefaultLRUCache<Integer> cache = new DefaultLRUCache<>(3, 1000);
+        cache.save("1", 100);
+        cache.save("2", 200);
+        cache.save("3", 300);
+
+        cache.remove("2");
+        cache.save("2", 201);
+
+        assertEquals(Integer.valueOf(100), cache.lookup("1"));
+        assertEquals(Integer.valueOf(201), cache.lookup("2"));
+        assertEquals(Integer.valueOf(300), cache.lookup("3"));
+    }
+
+    @Test
+    public void testThreadSafety() throws InterruptedException {
+        int maxSize = 100;
+        DefaultLRUCache<Integer> cache = new DefaultLRUCache<>(maxSize, 1000);
+
+        for (int i = 1; i <= maxSize; i++) {
+            cache.save(String.valueOf(i), i * 100);
+        }
+
+        Thread[] threads = new Thread[maxSize / 2];
+        for (int i = 1; i <= maxSize / 2; i++) {
+            final int key = i;
+            threads[i - 1] = new Thread(() -> cache.remove(String.valueOf(key)));
+            threads[i - 1].start();
+        }
+
+        for (Thread thread : threads) {
+            thread.join();
+        }
+
+        for (int i = 1; i <= maxSize; i++) {
+            if (i <= maxSize / 2) {
+                assertNull(cache.lookup(String.valueOf(i)));
+            } else {
+                assertEquals(Integer.valueOf(i * 100), cache.lookup(String.valueOf(i)));
+            }
+        }
+
+        assertEquals(maxSize / 2, cache.linkedHashMap.size());
+    }
 }
