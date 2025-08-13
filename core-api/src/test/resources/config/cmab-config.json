@@ -1,0 +1,226 @@
+{
+  "version": "4",
+  "sendFlagDecisions": true,
+  "rollouts": [
+    {
+      "experiments": [
+        {
+          "audienceIds": ["13389130056"],
+          "forcedVariations": {},
+          "id": "3332020515",
+          "key": "3332020515",
+          "layerId": "3319450668",
+          "status": "Running",
+          "trafficAllocation": [
+            {
+              "endOfRange": 10000,
+              "entityId": "3324490633"
+            }
+          ],
+          "variations": [
+            {
+              "featureEnabled": true,
+              "id": "3324490633",
+              "key": "3324490633",
+              "variables": []
+            }
+          ]
+        }
+      ],
+      "id": "3319450668"
+    }
+  ],
+  "anonymizeIP": true,
+  "botFiltering": true,
+  "projectId": "10431130345",
+  "variables": [],
+  "featureFlags": [
+      {
+          "experimentIds": ["10390977673"],
+          "id": "4482920077",
+          "key": "feature_1",
+          "rolloutId": "3319450668",
+          "variables": [
+              {
+                  "defaultValue": "42",
+                  "id": "2687470095",
+                  "key": "i_42",
+                  "type": "integer"
+              }
+          ]
+      }
+  ],
+  "experiments": [
+    {
+      "status": "Running",
+      "key": "exp_with_cmab",
+      "layerId": "10420273888",
+      "trafficAllocation": [
+        {
+          "entityId": "10389729780",
+          "endOfRange": 10000
+        }
+      ],
+      "audienceIds": ["13389141123"],
+      "variations": [
+        {
+          "variables": [],
+          "featureEnabled": true,
+          "id": "10389729780",
+          "key": "variation_a"
+        },
+        {
+          "variables": [],
+          "id": "10416523121",
+          "key": "variation_b"
+        }
+      ],
+      "forcedVariations": {},
+      "id": "10390977673",
+      "cmab": {
+        "attributeIds": ["10401066117", "10401066170"],
+        "trafficAllocation": 4000
+      }
+    },
+    {
+      "status": "Running",
+      "key": "exp_without_cmab",
+      "layerId": "10417730432",
+      "trafficAllocation": [
+        {
+          "entityId": "10418551353",
+          "endOfRange": 10000
+        }
+      ],
+      "audienceIds": [],
+      "variations": [
+        {
+          "variables": [],
+          "featureEnabled": true,
+          "id": "10418551353",
+          "key": "variation_with_traffic"
+        },
+        {
+          "variables": [],
+          "featureEnabled": false,
+          "id": "10418510624",
+          "key": "variation_no_traffic"
+        }
+      ],
+      "forcedVariations": {},
+      "id": "10420810910"
+    },
+    {
+      "status": "Running",
+      "key": "exp_with_empty_cmab",
+      "layerId": "10417730433",
+      "trafficAllocation": [],
+      "audienceIds": [],
+      "variations": [
+        {
+          "variables": [],
+          "featureEnabled": true,
+          "id": "10418551354",
+          "key": "variation_empty_cmab"
+        }
+      ],
+      "forcedVariations": {},
+      "id": "10420810911",
+      "cmab": {
+        "attributeIds": [],
+        "trafficAllocation": 2000
+      }
+    },
+    {
+      "status": "Running",
+      "key": "exp_with_null_cmab",
+      "layerId": "10417730434",
+      "trafficAllocation": [
+        {
+          "entityId": "10418551355",
+          "endOfRange": 7500
+        }
+      ],
+      "audienceIds": [],
+      "variations": [
+        {
+          "variables": [],
+          "featureEnabled": true,
+          "id": "10418551355",
+          "key": "variation_null_cmab"
+        }
+      ],
+      "forcedVariations": {},
+      "id": "10420810912",
+      "cmab": null
+    }
+  ],
+  "audiences": [
+      {
+          "id": "13389141123",
+          "conditions": "[\"and\", [\"or\", [\"or\", {\"match\": \"exact\", \"name\": \"gender\", \"type\": \"custom_attribute\", \"value\": \"f\"}]]]",
+          "name": "gender"
+      },
+      {
+          "id": "13389130056",
+          "conditions": "[\"and\", [\"or\", [\"or\", {\"match\": \"exact\", \"name\": \"country\", \"type\": \"custom_attribute\", \"value\": \"US\"}]]]",
+          "name": "US"
+      }
+  ],
+  "groups": [
+      {
+          "policy": "random",
+          "trafficAllocation": [
+              {
+                  "entityId": "10390965532",
+                  "endOfRange": 10000
+              }
+          ],
+          "experiments": [
+              {
+                  "status": "Running",
+                  "key": "group_exp_with_cmab",
+                  "layerId": "10420222423",
+                  "trafficAllocation": [],
+                  "audienceIds": [],
+                  "variations": [
+                      {
+                          "variables": [],
+                          "featureEnabled": false,
+                          "id": "10389752311",
+                          "key": "group_variation_a"
+                      }
+                  ],
+                  "forcedVariations": {},
+                  "id": "10390965532",
+                  "cmab": {
+                    "attributeIds": ["10401066117"],
+                    "trafficAllocation": 6000
+                  }
+              }
+          ],
+          "id": "13142870430"
+      }
+  ],
+  "attributes": [
+      {
+          "id": "10401066117",
+          "key": "gender"
+      },
+      {
+          "id": "10401066170",
+          "key": "age"
+      }
+  ],
+  "accountId": "10367498574",
+  "events": [
+    {
+      "experimentIds": [
+        "10420810910"
+      ],
+      "id": "10404198134",
+      "key": "event1"
+    }
+  ],
+  "revision": "241"
+}

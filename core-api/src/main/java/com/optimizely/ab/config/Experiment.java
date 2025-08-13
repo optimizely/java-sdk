@@ -41,6 +41,7 @@ public class Experiment implements ExperimentCore {
     private final String status;
     private final String layerId;
     private final String groupId;
+    private final Cmab cmab;
 
     private final List<String> audienceIds;
     private final Condition<AudienceIdCondition> audienceConditions;
@@ -71,7 +72,25 @@ public class Experiment implements ExperimentCore {
 
     @VisibleForTesting
     public Experiment(String id, String key, String layerId) {
-        this(id, key, null, layerId, Collections.emptyList(), null, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList(), "");
+        this(id, key, null, layerId, Collections.emptyList(), null, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList(), "", null);
+    }
+
+    @VisibleForTesting
+    public Experiment(String id, String key, String status, String layerId,
+                      List<String> audienceIds, Condition audienceConditions,
+                      List<Variation> variations, Map<String, String> userIdToVariationKeyMap,
+                      List<TrafficAllocation> trafficAllocation, String groupId) {
+        this(id, key, status, layerId, audienceIds, audienceConditions, variations,
+            userIdToVariationKeyMap, trafficAllocation, groupId, null); // Default cmab=null
+    }
+
+    @VisibleForTesting
+    public Experiment(String id, String key, String status, String layerId,
+                      List<String> audienceIds, Condition audienceConditions,
+                      List<Variation> variations, Map<String, String> userIdToVariationKeyMap,
+                      List<TrafficAllocation> trafficAllocation) {
+        this(id, key, status, layerId, audienceIds, audienceConditions, variations,
+            userIdToVariationKeyMap, trafficAllocation, "", null); // Default groupId="" and cmab=null
     }
 
     @JsonCreator
@@ -83,8 +102,9 @@ public class Experiment implements ExperimentCore {
                       @JsonProperty("audienceConditions") Condition audienceConditions,
                       @JsonProperty("variations") List<Variation> variations,
                       @JsonProperty("forcedVariations") Map<String, String> userIdToVariationKeyMap,
-                      @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation) {
-        this(id, key, status, layerId, audienceIds, audienceConditions, variations, userIdToVariationKeyMap, trafficAllocation, "");
+                      @JsonProperty("trafficAllocation") List<TrafficAllocation> trafficAllocation,
+                      @JsonProperty("cmab") Cmab cmab) {
+        this(id, key, status, layerId, audienceIds, audienceConditions, variations, userIdToVariationKeyMap, trafficAllocation, "", cmab);
     }
 
     public Experiment(@Nonnull String id,
@@ -96,7 +116,8 @@ public class Experiment implements ExperimentCore {
                       @Nonnull List<Variation> variations,
                       @Nonnull Map<String, String> userIdToVariationKeyMap,
                       @Nonnull List<TrafficAllocation> trafficAllocation,
-                      @Nonnull String groupId) {
+                      @Nonnull String groupId,
+                      @Nullable Cmab cmab) {
         this.id = id;
         this.key = key;
         this.status = status == null ? ExperimentStatus.NOT_STARTED.toString() : status;
@@ -109,6 +130,7 @@ public class Experiment implements ExperimentCore {
         this.userIdToVariationKeyMap = userIdToVariationKeyMap;
         this.variationKeyToVariationMap = ProjectConfigUtils.generateNameMapping(variations);
         this.variationIdToVariationMap = ProjectConfigUtils.generateIdMapping(variations);
+        this.cmab = cmab;
     }
 
     public String getId() {
@@ -159,6 +181,10 @@ public class Experiment implements ExperimentCore {
         return groupId;
     }
 
+    public Cmab getCmab() {
+        return cmab;
+    }
+
     public boolean isActive() {
         return status.equals(ExperimentStatus.RUNNING.toString()) ||
             status.equals(ExperimentStatus.LAUNCHED.toString());
@@ -185,6 +211,7 @@ public class Experiment implements ExperimentCore {
             ", variationKeyToVariationMap=" + variationKeyToVariationMap +
             ", userIdToVariationKeyMap=" + userIdToVariationKeyMap +
             ", trafficAllocation=" + trafficAllocation +
+            ", cmab=" + cmab +
             '}';
     }
 }

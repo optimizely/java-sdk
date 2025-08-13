@@ -173,8 +173,14 @@ final public class JsonConfigParser implements ConfigParser {
             List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation(experimentObject.getJSONArray("trafficAllocation"));
 
+            Cmab cmab = null;
+            if (experimentObject.has("cmab")) {
+                JSONObject cmabObject = experimentObject.optJSONObject("cmab");
+                cmab = parseCmab(cmabObject);
+            }
+
             experiments.add(new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
-                trafficAllocations, groupId));
+                trafficAllocations, groupId, cmab));
         }
 
         return experiments;
@@ -330,6 +336,23 @@ final public class JsonConfigParser implements ConfigParser {
         }
 
         return trafficAllocation;
+    }
+
+    private Cmab parseCmab(JSONObject cmabObject) {
+        if (cmabObject == null) {
+            return null;
+        }
+
+        JSONArray attributeIdsJson = cmabObject.optJSONArray("attributeIds");
+        List<String> attributeIds = new ArrayList<String>();
+        if (attributeIdsJson != null) {
+            for (int i = 0; i < attributeIdsJson.length(); i++) {
+                attributeIds.add(attributeIdsJson.getString(i));
+            }
+        }
+
+        int trafficAllocation = cmabObject.optInt("trafficAllocation", 0);
+        return new Cmab(attributeIds, trafficAllocation);
     }
 
     private List<Attribute> parseAttributes(JSONArray attributeJson) {
