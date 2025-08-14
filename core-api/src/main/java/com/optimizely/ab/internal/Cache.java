@@ -21,6 +21,4 @@ public interface Cache<T> {
     int DEFAULT_TIMEOUT_SECONDS = 600;
     void save(String key, T value);
     T lookup(String key);
-    void reset();
-    void remove(String key);
 }
