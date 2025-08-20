@@ -24,7 +24,7 @@ public class DefaultCmabClient implements CmabClient {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultCmabClient.class);
     // Update constants to match JS error messages format
-    private static final String CMAB_FETCH_FAILED = "CMAB decision fetch failed with status: %d";
+    private static final String CMAB_FETCH_FAILED = "CMAB decision fetch failed with status: %s";
     private static final String INVALID_CMAB_FETCH_RESPONSE = "Invalid CMAB fetch response";
     private static final Pattern VARIATION_ID_PATTERN = Pattern.compile("\"variation_id\"\\s*:\\s*\"?([^\"\\s,}]+)\"?");
     private static final String CMAB_PREDICTION_ENDPOINT = "https://prediction.cmab.optimizely.com/predict/%s";
@@ -83,8 +83,9 @@ public class DefaultCmabClient implements CmabClient {
             try {
                 request.setEntity(new StringEntity(requestBody, StandardCharsets.UTF_8));
             } catch (Exception e) {
-                logger.error(String.format(CMAB_FETCH_FAILED, e));
-                throw new CompletionException(new RuntimeException(String.format(CMAB_FETCH_FAILED, e)));
+                String errorMsg = String.format(CMAB_FETCH_FAILED, "encoding error");
+                logger.error(errorMsg + " for user: {}", userId, e);
+                throw new CompletionException(new RuntimeException(errorMsg, e));
             }
 
             CloseableHttpResponse response = null;
@@ -94,18 +95,20 @@ public class DefaultCmabClient implements CmabClient {
 
                 int statusCode = response.getStatusLine().getStatusCode();
 
+                // Status code error
                 if (!isSuccessStatusCode(statusCode)) {
-                    logger.error("CMAB fetch failed (Response code: {}) for user: {}", statusCode, userId);
-                    // Status code error (like JS: new OptimizelyError(CMAB_FETCH_FAILED, response.statusCode))
-                    throw new CompletionException(new RuntimeException(String.format(CMAB_FETCH_FAILED, statusCode)));
+                    String errorMsg = String.format(CMAB_FETCH_FAILED, statusCode);
+                    logger.error(errorMsg + " for user: {}", userId);
+                    throw new CompletionException(new RuntimeException(errorMsg));
                 }
 
                 String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
                 logger.debug("CMAB response received for user: {}", userId);
 
                 
+                // Invalid response error
                 if (!validateResponse(responseBody)) {
-                    logger.error(INVALID_CMAB_FETCH_RESPONSE);
+                    logger.error(INVALID_CMAB_FETCH_RESPONSE + " for user: {}", userId);
                     throw new CompletionException(new RuntimeException(INVALID_CMAB_FETCH_RESPONSE));
                 }
 
@@ -115,8 +118,10 @@ public class DefaultCmabClient implements CmabClient {
                 return variationId;
 
             } catch (IOException e) {
-                logger.error(String.format(CMAB_FETCH_FAILED, e));
-                throw new CompletionException(new RuntimeException(String.format(CMAB_FETCH_FAILED, e)));
+                // IO error
+                String errorMsg = String.format(CMAB_FETCH_FAILED, "network error");
+                logger.error(errorMsg + " for user: {}", userId, e);
+                throw new CompletionException(new RuntimeException(errorMsg, e));
             } finally {
                 closeHttpResponse(response);
             }
