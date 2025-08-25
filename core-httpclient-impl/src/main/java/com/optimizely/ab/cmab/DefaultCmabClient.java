@@ -16,16 +16,13 @@
 package com.optimizely.ab.cmab;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.ParseException;
+import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -34,10 +31,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.optimizely.ab.OptimizelyHttpClient;
+import com.optimizely.ab.cmab.client.CmabClient;
+import com.optimizely.ab.cmab.client.CmabClientConfig;
+import com.optimizely.ab.cmab.client.CmabFetchException;
+import com.optimizely.ab.cmab.client.CmabInvalidResponseException;
+import com.optimizely.ab.cmab.client.RetryConfig;
 
 public class DefaultCmabClient implements CmabClient {
-
+    
     private static final Logger logger = LoggerFactory.getLogger(DefaultCmabClient.class);
+    private static final int DEFAULT_TIMEOUT_MS = 10000;
     // Update constants to match JS error messages format
     private static final String CMAB_FETCH_FAILED = "CMAB decision fetch failed with status: %s";
     private static final String INVALID_CMAB_FETCH_RESPONSE = "Invalid CMAB fetch response";
@@ -46,13 +49,11 @@ public class DefaultCmabClient implements CmabClient {
 
     private final OptimizelyHttpClient httpClient;
     private final RetryConfig retryConfig;
-    private final ScheduledExecutorService executorService;
 
-    // Main constructor: HTTP client + retry config
+    // Primary constructor - all others delegate to this
     public DefaultCmabClient(OptimizelyHttpClient httpClient, CmabClientConfig config) {
-        this.httpClient = httpClient != null ? httpClient : OptimizelyHttpClient.builder().build();
         this.retryConfig = config != null ? config.getRetryConfig() : null;
-        this.executorService = Executors.newScheduledThreadPool(2);
+        this.httpClient = httpClient != null ? httpClient : createDefaultHttpClient();
     }
 
     // Constructor with HTTP client only (no retry)
@@ -70,117 +71,110 @@ public class DefaultCmabClient implements CmabClient {
         this(null, CmabClientConfig.withNoRetry());
     }
 
-    public void shutdown() {
-        if (executorService != null && !executorService.isShutdown()) {
-            executorService.shutdown();
-        }
+    // Extract HTTP client creation logic
+    private OptimizelyHttpClient createDefaultHttpClient() {
+        int timeoutMs = (retryConfig != null) ? retryConfig.getMaxTimeoutMs() : DEFAULT_TIMEOUT_MS;
+        return OptimizelyHttpClient.builder().setTimeoutMillis(timeoutMs).build();
     }
 
     @Override
-    public CompletableFuture<String> fetchDecision(String ruleId, String userId, Map<String, Object> attributes, String cmabUuid) {
+    public String fetchDecision(String ruleId, String userId, Map<String, Object> attributes, String cmabUuid) {
         // Implementation will use this.httpClient and this.retryConfig
         String url = String.format(CMAB_PREDICTION_ENDPOINT, ruleId);
         String requestBody = buildRequestJson(userId, ruleId, attributes, cmabUuid);
 
         // Use retry logic if configured, otherwise single request
         if (retryConfig != null && retryConfig.getMaxRetries() > 0) {
-            return doFetchWithRetry(url, requestBody, userId, ruleId, retryConfig.getMaxRetries());
+            return doFetchWithRetry(url, requestBody, retryConfig.getMaxRetries());
         } else {
-            return doFetch(url, requestBody, userId, ruleId);
+            return doFetch(url, requestBody);
         }
     }
 
-    private CompletableFuture<String> doFetch(String url, String requestBody, String userId, String ruleId) {
-        return CompletableFuture.supplyAsync(() -> {
-            HttpPost request = new HttpPost(url);
-            request.setHeader("Content-Type", "application/json");
-
-            try {
-                request.setEntity(new StringEntity(requestBody, StandardCharsets.UTF_8));
-            } catch (Exception e) {
-                String errorMsg = String.format(CMAB_FETCH_FAILED, "encoding error");
-                logger.error(errorMsg + " for user: {}", userId, e);
-                throw new CompletionException(new RuntimeException(errorMsg, e));
+    private String doFetch(String url, String requestBody) {
+        HttpPost request = new HttpPost(url);
+        try {
+            request.setEntity(new StringEntity(requestBody));
+        } catch (UnsupportedEncodingException e) {
+            String errorMessage = String.format(CMAB_FETCH_FAILED, e.getMessage());
+            logger.error(errorMessage);
+            throw new CmabFetchException(errorMessage);
+        }
+        request.setHeader("content-type", "application/json");
+        CloseableHttpResponse response = null;
+        try {
+            response = httpClient.execute(request);
+            
+            if (!isSuccessStatusCode(response.getStatusLine().getStatusCode())) {
+                StatusLine statusLine = response.getStatusLine();
+                String errorMessage = String.format(CMAB_FETCH_FAILED, statusLine.getReasonPhrase());
+                logger.error(errorMessage);
+                throw new CmabFetchException(errorMessage);
             }
 
-            CloseableHttpResponse response = null;
+            String responseBody;
             try {
-                logger.debug("Making CMAB prediction request to: {} for user: {}", url, userId);
-                response = httpClient.execute(request);
+                responseBody = EntityUtils.toString(response.getEntity());
 
-                int statusCode = response.getStatusLine().getStatusCode();
-
-                // Status code error
-                if (!isSuccessStatusCode(statusCode)) {
-                    String errorMsg = String.format(CMAB_FETCH_FAILED, statusCode);
-                    logger.error(errorMsg + " for user: {}", userId);
-                    throw new CompletionException(new RuntimeException(errorMsg));
-                }
-
-                String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-                logger.debug("CMAB response received for user: {}", userId);
-
-                
-                // Invalid response error
                 if (!validateResponse(responseBody)) {
-                    logger.error(INVALID_CMAB_FETCH_RESPONSE + " for user: {}", userId);
-                    throw new CompletionException(new RuntimeException(INVALID_CMAB_FETCH_RESPONSE));
+                    logger.error(INVALID_CMAB_FETCH_RESPONSE);
+                    throw new CmabInvalidResponseException(INVALID_CMAB_FETCH_RESPONSE);
                 }
-
-                String variationId = parseVariationId(responseBody);
-                logger.info("CMAB returned variation '{}' for rule '{}' and user '{}'", variationId, ruleId, userId);
-
-                return variationId;
-
-            } catch (IOException e) {
-                // IO error
-                String errorMsg = String.format(CMAB_FETCH_FAILED, "network error");
-                logger.error(errorMsg + " for user: {}", userId, e);
-                throw new CompletionException(new RuntimeException(errorMsg, e));
-            } finally {
-                closeHttpResponse(response);
+                return parseVariationId(responseBody);
+            } catch (IOException | ParseException e) {
+                logger.error(CMAB_FETCH_FAILED);
+                throw new CmabInvalidResponseException(INVALID_CMAB_FETCH_RESPONSE);
             }
-        });
+            
+        } catch (IOException e) {
+            String errorMessage = String.format(CMAB_FETCH_FAILED, e.getMessage());
+            logger.error(errorMessage);
+            throw new CmabFetchException(errorMessage);
+        } finally {
+            closeHttpResponse(response);
+        }
     }
 
-    private CompletableFuture<String> doFetchWithRetry(String url, String requestBody, String userId, String ruleId, int retriesLeft) {
-        return doFetch(url, requestBody, userId, ruleId)
-            .handle((result, throwable) -> {
-                if (retriesLeft > 0 && shouldRetry(throwable)) {
-                    logger.warn("CMAB fetch failed, retrying... ({} retries left) for user: {}", retriesLeft, userId);
-
-                    // Calculate delay using RetryConfig
-                    int attemptNumber = retryConfig.getMaxRetries() - retriesLeft;
-                    long delay = retryConfig.calculateDelay(attemptNumber);
-
-                    CompletableFuture<String> future = new CompletableFuture<>();
-
-                    // Schedule retry after delay
-                    executorService.schedule(() -> {
-                        doFetchWithRetry(url, requestBody, userId, ruleId, retriesLeft - 1)
-                            .whenComplete((retryResult, retryEx) -> {
-                                if (retryEx != null) {
-                                    future.completeExceptionally(retryEx);
-                                } else {
-                                    future.complete(retryResult);
-                                }
-                            });
-                    }, delay, TimeUnit.MILLISECONDS);
-
-                    return future;
-                } else if (throwable != null) {
-                    logger.error("CMAB fetch failed after all retries for user: {}", userId, throwable);
-                    CompletableFuture<String> failedFuture = new CompletableFuture<>();
-                    failedFuture.completeExceptionally(throwable);
-                    return failedFuture;
-                } else {
-                    // Success case
-                    CompletableFuture<String> successFuture = new CompletableFuture<>();
-                    successFuture.complete(result);
-                    return successFuture;
+    private String doFetchWithRetry(String url, String requestBody, int maxRetries) {
+        double backoff = retryConfig.getBackoffBaseMs();
+        Exception lastException = null;
+        
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                return doFetch(url, requestBody);
+            } catch (CmabFetchException | CmabInvalidResponseException e) {
+                lastException = e;
+                
+                // If this is the last attempt, don't wait - just break and throw
+                if (attempt >= maxRetries) {
+                    break;
                 }
-            })
-            .thenCompose(future -> future); // Flatten the nested CompletableFuture
+                
+                // Log retry attempt
+                logger.info("Retrying CMAB request (attempt: {}) after {} ms...", 
+                        attempt + 1, (int) backoff);
+                
+                try {
+                    Thread.sleep((long) backoff);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    String errorMessage = String.format(CMAB_FETCH_FAILED, "Request interrupted during retry");
+                    logger.error(errorMessage);
+                    throw new CmabFetchException(errorMessage, ie);
+                }
+                
+                // Calculate next backoff using exponential backoff with multiplier
+                backoff = Math.min(
+                    backoff * Math.pow(retryConfig.getBackoffMultiplier(), attempt + 1),
+                    retryConfig.getMaxTimeoutMs()
+                );
+            }
+        }
+        
+        // If we get here, all retries were exhausted
+        String errorMessage = String.format(CMAB_FETCH_FAILED, "Exhausted all retries for CMAB request");
+        logger.error(errorMessage);
+        throw new CmabFetchException(errorMessage, lastException);
     }
     
     private String buildRequestJson(String userId, String ruleId, Map<String, Object> attributes, String cmabUuid) {
@@ -244,21 +238,9 @@ public class DefaultCmabClient implements CmabClient {
         }
     }
 
-    private boolean shouldRetry(Throwable throwable) {
-        if (throwable instanceof CompletionException) {
-            Throwable cause = throwable.getCause();
-            if (cause instanceof IOException) {
-                return true; // Network errors - always retry
-            }
-            if (cause instanceof RuntimeException) {
-                String message = cause.getMessage();
-                // Retry on 5xx server errors (look for "status: 5" in formatted message)
-                if (message != null && message.matches(".*status: 5\\d\\d")) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    private boolean shouldRetry(Exception exception) {
+        return (exception instanceof CmabFetchException) || 
+            (exception instanceof CmabInvalidResponseException);
     }
 
     private String parseVariationIdForValidation(String jsonResponse) {
@@ -276,7 +258,7 @@ public class DefaultCmabClient implements CmabClient {
         if (matcher.find()) {
             return matcher.group(1);
         }
-        throw new RuntimeException("Could not parse variation_id from CMAB response");
+        throw new CmabInvalidResponseException(INVALID_CMAB_FETCH_RESPONSE);
     }
 
     private static void closeHttpResponse(CloseableHttpResponse response) {
@@ -284,7 +266,7 @@ public class DefaultCmabClient implements CmabClient {
             try {
                 response.close();
             } catch (IOException e) {
-                // Ignore close errors
+                logger.warn(e.getLocalizedMessage());
             }
         }
     }

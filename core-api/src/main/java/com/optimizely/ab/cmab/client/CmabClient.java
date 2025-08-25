@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.optimizely.ab.cmab;
+package com.optimizely.ab.cmab.client;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 public interface CmabClient {
     /**
@@ -25,8 +24,8 @@ public interface CmabClient {
      * @param ruleId     The rule/experiment ID
      * @param userId     The user ID
      * @param attributes User attributes
-     * @param cmabUuid   The CMAB UUID
+     * @param cmabUUID   The CMAB UUID
      * @return CompletableFuture containing the variation ID as a String
      */
-    CompletableFuture<String> fetchDecision(String ruleId, String userId, Map<String, Object> attributes, String cmabUuid);
+    String fetchDecision(String ruleId, String userId, Map<String, Object> attributes, String cmabUUID);
 }

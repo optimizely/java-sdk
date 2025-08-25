@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.optimizely.ab.cmab;
+package com.optimizely.ab.cmab.client;
 /**
  * Configuration for retry behavior in CMAB client operations.
  */
@@ -21,15 +21,17 @@ public class RetryConfig {
     private final int maxRetries;
     private final long backoffBaseMs;
     private final double backoffMultiplier;
-
+    private final int maxTimeoutMs;
+    
     /**
      * Creates a RetryConfig with custom retry and backoff settings.
      *
      * @param maxRetries         Maximum number of retry attempts
      * @param backoffBaseMs      Base delay in milliseconds for the first retry
      * @param backoffMultiplier  Multiplier for exponential backoff (e.g., 2.0 for doubling)
+     * @param maxTimeoutMs       Maximum total timeout in milliseconds for all retry attempts
      */
-    public RetryConfig(int maxRetries, long backoffBaseMs, double backoffMultiplier) {
+    public RetryConfig(int maxRetries, long backoffBaseMs, double backoffMultiplier, int maxTimeoutMs) {
         if (maxRetries < 0) {
             throw new IllegalArgumentException("maxRetries cannot be negative");
         }
@@ -39,19 +41,23 @@ public class RetryConfig {
         if (backoffMultiplier < 1.0) {
             throw new IllegalArgumentException("backoffMultiplier must be >= 1.0");
         }
+        if (maxTimeoutMs < 0) {
+            throw new IllegalArgumentException("maxTimeoutMs cannot be negative");
+        }
 
         this.maxRetries = maxRetries;
         this.backoffBaseMs = backoffBaseMs;
         this.backoffMultiplier = backoffMultiplier;
+        this.maxTimeoutMs = maxTimeoutMs;
     }
 
     /**
-     * Creates a RetryConfig with default backoff settings (1 second base, 2x multiplier).
+     * Creates a RetryConfig with default backoff settings and timeout (1 second base, 2x multiplier, 10 second timeout).
      *
      * @param maxRetries Maximum number of retry attempts
      */
     public RetryConfig(int maxRetries) {
-        this(maxRetries, 1000, 2.0); // Default: 1 second base, exponential backoff
+        this(maxRetries, 1000, 2.0, 10000); // Default: 1 second base, exponential backoff, 10 second timeout
     }
 
     /**
@@ -65,7 +71,7 @@ public class RetryConfig {
      * Creates a RetryConfig with no retries (single attempt only).
      */
     public static RetryConfig noRetry() {
-        return new RetryConfig(0);
+        return new RetryConfig(0, 0, 1.0, 0);
     }
 
     public int getMaxRetries() {
@@ -78,6 +84,10 @@ public class RetryConfig {
 
     public double getBackoffMultiplier() {
         return backoffMultiplier;
+    }
+
+    public int getMaxTimeoutMs() {
+        return maxTimeoutMs;
     }
 
     /**
@@ -95,8 +105,8 @@ public class RetryConfig {
 
     @Override
     public String toString() {
-        return String.format("RetryConfig{maxRetries=%d, backoffBaseMs=%d, backoffMultiplier=%.1f}",
-            maxRetries, backoffBaseMs, backoffMultiplier);
+        return String.format("RetryConfig{maxRetries=%d, backoffBaseMs=%d, backoffMultiplier=%.1f, maxTimeoutMs=%d}",
+            maxRetries, backoffBaseMs, backoffMultiplier, maxTimeoutMs);
     }
 
     @Override
@@ -107,6 +117,7 @@ public class RetryConfig {
         RetryConfig that = (RetryConfig) obj;
         return maxRetries == that.maxRetries &&
             backoffBaseMs == that.backoffBaseMs &&
+            maxTimeoutMs == that.maxTimeoutMs &&
             Double.compare(that.backoffMultiplier, backoffMultiplier) == 0;
     }
 
@@ -115,6 +126,7 @@ public class RetryConfig {
         int result = maxRetries;
         result = 31 * result + Long.hashCode(backoffBaseMs);
         result = 31 * result + Double.hashCode(backoffMultiplier);
+        result = 31 * result + Integer.hashCode(maxTimeoutMs);
         return result;
     }
 }
