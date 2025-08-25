@@ -104,7 +104,7 @@ jobs:
 
   snapshot:
     if: ${{ github.event.inputs.SNAPSHOT == 'true' && github.event_name == 'workflow_dispatch' }}
-    uses: optimizely/java-sdk/.github/workflows/build.yml@master
+    uses: optimizely/java-sdk/.github/workflows/build.yml@muzahid/migrate-ossrh-to-maven-central
     with:
       action: ship
       github_tag: BB-SNAPSHOT
