@@ -13,12 +13,9 @@ allprojects {
     apply plugin: 'jacoco'
 
     repositories {
-        jcenter()
+        mavenCentral()
     }
-
-    jacoco {
-        toolVersion = '0.8.7'
-    }
+    jacoco { toolVersion = '0.8.7' }
 }
 
 allprojects {
@@ -48,7 +45,7 @@ configure(publishedProjects) {
     targetCompatibility = 1.8
 
     repositories {
-        jcenter()
+        //jcenter()
         maven {
             url 'https://plugins.gradle.org/m2/'
         }
@@ -139,9 +136,9 @@ configure(publishedProjects) {
             }
             repositories {
                 maven {
-                    // Switched to s01 host (required for newer / migrated projects)
-                    def releaseUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2"
-                    def snapshotUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots"
+                    // Central Portal (Nexus 2 Staging API via new host)
+                    def releaseUrl = "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2"
+                    def snapshotUrl = "https://central.sonatype.com/repository/maven-snapshots/"
                     url = isReleaseVersion ? releaseUrl : snapshotUrl
                     credentials {
                         username System.getenv('MAVEN_CENTRAL_USERNAME')
@@ -257,3 +254,4 @@ def customizePom(pom, title) {
         }
     }
 }
+
