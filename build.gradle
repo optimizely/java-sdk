@@ -139,8 +139,9 @@ configure(publishedProjects) {
             }
             repositories {
                 maven {
-                    def releaseUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-                    def snapshotUrl = "https://oss.sonatype.org/content/repositories/snapshots"
+                    // Switched to s01 host (required for newer / migrated projects)
+                    def releaseUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2"
+                    def snapshotUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots"
                     url = isReleaseVersion ? releaseUrl : snapshotUrl
                     credentials {
                         username System.getenv('MAVEN_CENTRAL_USERNAME')
