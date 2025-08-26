@@ -13,7 +13,10 @@ allprojects {
     apply plugin: 'jacoco'
 
     repositories {
-        jcenter()
+        mavenCentral()
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
     }
 
     jacoco {
@@ -47,12 +50,12 @@ configure(publishedProjects) {
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
-    repositories {
-        jcenter()
-        maven {
-            url 'https://plugins.gradle.org/m2/'
-        }
-    }
+    // repositories {
+    //     // jcenter()
+    //     maven {
+    //         url 'https://plugins.gradle.org/m2/'
+    //     }
+    // }
 
     task sourcesJar(type: Jar, dependsOn: classes) {
         archiveClassifier.set('sources')
@@ -139,8 +142,8 @@ configure(publishedProjects) {
             }
             repositories {
                 maven {
-                    def releaseUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-                    def snapshotUrl = "https://oss.sonatype.org/content/repositories/snapshots"
+                    def releaseUrl = "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2"
+                    def snapshotUrl = "https://central.sonatype.com/repository/maven-snapshots/"
                     url = isReleaseVersion ? releaseUrl : snapshotUrl
                     credentials {
                         username System.getenv('MAVEN_CENTRAL_USERNAME')
