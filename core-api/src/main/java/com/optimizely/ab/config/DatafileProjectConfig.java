@@ -92,6 +92,7 @@ public class DatafileProjectConfig implements ProjectConfig {
     private final Map<String, Group> groupIdMapping;
     private final Map<String, Rollout> rolloutIdMapping;
     private final Map<String, List<String>> experimentFeatureKeyMapping;
+    private final Map<String, Attribute> attributeIdMapping;
 
     // other mappings
     private final Map<String, Experiment> variationIdToExperimentMapping;
@@ -253,6 +254,7 @@ public class DatafileProjectConfig implements ProjectConfig {
         this.experimentIdMapping = ProjectConfigUtils.generateIdMapping(this.experiments);
         this.groupIdMapping = ProjectConfigUtils.generateIdMapping(groups);
         this.rolloutIdMapping = ProjectConfigUtils.generateIdMapping(this.rollouts);
+        this.attributeIdMapping = ProjectConfigUtils.generateIdMapping(this.attributes);
 
         // Generate experiment to featureFlag list mapping to identify if experiment is AB-Test experiment or Feature-Test Experiment.
         this.experimentFeatureKeyMapping = ProjectConfigUtils.generateExperimentFeatureMapping(this.featureFlags);
@@ -537,6 +539,11 @@ public class DatafileProjectConfig implements ProjectConfig {
     @Override
     public Map<String, Attribute> getAttributeKeyMapping() {
         return attributeKeyMapping;
+    }
+
+    @Override
+    public Map<String, Attribute> getAttributeIdMapping() {
+        return this.attributeIdMapping;
     }
 
     @Override
