@@ -6,6 +6,8 @@ plugins {
     id 'com.github.hierynomus.license' version '0.16.1'
     id 'com.github.spotbugs' version "6.0.14"
     id 'maven-publish'
+    id 'signing'
+    id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 }
 
 allprojects {
@@ -140,17 +142,17 @@ configure(publishedProjects) {
                     artifact javadocJar
                 }
             }
-            repositories {
-                maven {
-                    def releaseUrl = "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2"
-                    def snapshotUrl = "https://central.sonatype.com/repository/maven-snapshots/"
-                    url = isReleaseVersion ? releaseUrl : snapshotUrl
-                    credentials {
-                        username System.getenv('MAVEN_CENTRAL_USERNAME')
-                        password System.getenv('MAVEN_CENTRAL_PASSWORD')
-                    }
-                }
-            }
+            // repositories {
+            //     maven {
+            //         def releaseUrl = "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2"
+            //         def snapshotUrl = "https://central.sonatype.com/repository/maven-snapshots/"
+            //         url = isReleaseVersion ? releaseUrl : snapshotUrl
+            //         credentials {
+            //             username System.getenv('MAVEN_CENTRAL_USERNAME')
+            //             password System.getenv('MAVEN_CENTRAL_PASSWORD')
+            //         }
+            //     }
+            // }
         }
 
         signing {
@@ -186,7 +188,18 @@ configure(publishedProjects) {
 }
 
 task ship() {
-    dependsOn(':core-api:ship', ':core-httpclient-impl:ship')
+    dependsOn(':core-httpclient-impl:ship', ':core-api:ship', 'publishToSonatype', 'closeSonatypeStagingRepository')
+}
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri('https://ossrh-staging-api.central.sonatype.com/service/local/'))
+            snapshotRepositoryUrl.set(uri('https://central.sonatype.com/repository/maven-snapshots/'))
+            username = System.getenv('MAVEN_CENTRAL_USERNAME')
+            password = System.getenv('MAVEN_CENTRAL_PASSWORD')
+        }
+    }
 }
 
 task jacocoMerge(type: JacocoMerge) {
