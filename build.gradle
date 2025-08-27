@@ -29,9 +29,9 @@ allprojects {
 allprojects {
     group = 'com.optimizely.ab'
 
-    def travis_defined_version = System.getenv('GITHUB_TAG')
-    if (travis_defined_version != null) {
-        version = travis_defined_version
+    def github_tagged_version = System.getenv('GITHUB_TAG')
+    if (github_tagged_version != null) {
+        version = github_tagged_version
     }
 
     ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
@@ -51,13 +51,6 @@ configure(publishedProjects) {
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
-
-    // repositories {
-    //     // jcenter()
-    //     maven {
-    //         url 'https://plugins.gradle.org/m2/'
-    //     }
-    // }
 
     task sourcesJar(type: Jar, dependsOn: classes) {
         archiveClassifier.set('sources')
@@ -125,7 +118,6 @@ configure(publishedProjects) {
         }
     }
 
-
     def docTitle = "Optimizely Java SDK"
     if (name.equals('core-httpclient-impl')) {
         docTitle = "Optimizely Java SDK: Httpclient"
@@ -142,17 +134,6 @@ configure(publishedProjects) {
                     artifact javadocJar
                 }
             }
-            // repositories {
-            //     maven {
-            //         def releaseUrl = "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2"
-            //         def snapshotUrl = "https://central.sonatype.com/repository/maven-snapshots/"
-            //         url = isReleaseVersion ? releaseUrl : snapshotUrl
-            //         credentials {
-            //             username System.getenv('MAVEN_CENTRAL_USERNAME')
-            //             password System.getenv('MAVEN_CENTRAL_PASSWORD')
-            //         }
-            //     }
-            // }
         }
 
         signing {
@@ -240,7 +221,6 @@ tasks.coveralls {
 }
 
 // standard POM format required by MavenCentral
-
 def customizePom(pom, title) {
     pom.withXml {
         asNode().children().last() + {
