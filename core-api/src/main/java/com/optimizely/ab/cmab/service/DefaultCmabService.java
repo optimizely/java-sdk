@@ -2,6 +2,7 @@ package com.optimizely.ab.cmab.service;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import com.optimizely.ab.internal.DefaultLRUCache;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 
 public class DefaultCmabService implements CmabService {
+
     private final DefaultLRUCache<CmabCacheValue> cmabCache;
     private final CmabClient cmabClient;
     private final Logger logger;
@@ -25,12 +27,44 @@ public class DefaultCmabService implements CmabService {
     public DefaultCmabService(CmabServiceOptions options) {
         this.cmabCache = options.getCmabCache();
         this.cmabClient = options.getCmabClient();
-        this.logger = options.getLogger();  
+        this.logger = options.getLogger();
     }
-    
+
     @Override
     public CmabDecision getDecision(ProjectConfig projectConfig, OptimizelyUserContext userContext, String ruleId, List<OptimizelyDecideOption> options) {
-        return null;
+        options = options == null ? Collections.emptyList() : options;
+        String userId = userContext.getUserId();
+        Map<String, Object> filteredAttributes = filterAttributes(projectConfig, userContext, ruleId);
+
+        if (options.contains(OptimizelyDecideOption.IGNORE_CMAB_CACHE)) {
+            return fetchDecision(ruleId, userId, filteredAttributes);
+        }
+
+        if (options.contains(OptimizelyDecideOption.RESET_CMAB_CACHE)) {
+            cmabCache.reset();
+        }
+
+        String cacheKey = getCacheKey(userContext.getUserId(), ruleId);
+        if (options.contains(OptimizelyDecideOption.INVALIDATE_USER_CMAB_CACHE)) {
+            cmabCache.remove(cacheKey);
+        }
+
+        CmabCacheValue cachedValue = cmabCache.lookup(cacheKey);
+
+        String attributesHash = hashAttributes(filteredAttributes);
+
+        if (cachedValue != null) {
+            if (cachedValue.getAttributesHash().equals(attributesHash)) {
+                return new CmabDecision(cachedValue.getVariationId(), cachedValue.getCmabUuid());
+            } else {
+                cmabCache.remove(cacheKey);
+            }
+        }
+
+        CmabDecision cmabDecision = fetchDecision(ruleId, userId, filteredAttributes);
+        cmabCache.save(cacheKey, new CmabCacheValue(attributesHash, cmabDecision.getVariationId(), cmabDecision.getCmabUUID()));
+
+        return cmabDecision;
     }
 
     private CmabDecision fetchDecision(String ruleId, String userId, Map<String, Object> attributes) {
@@ -42,7 +76,7 @@ public class DefaultCmabService implements CmabService {
     private Map<String, Object> filterAttributes(ProjectConfig projectConfig, OptimizelyUserContext userContext, String ruleId) {
         Map<String, Object> userAttributes = userContext.getAttributes();
         Map<String, Object> filteredAttributes = new HashMap<>();
-        
+
         // Get experiment by rule ID
         Experiment experiment = projectConfig.getExperimentIdMapping().get(ruleId);
         if (experiment == null) {
@@ -51,7 +85,7 @@ public class DefaultCmabService implements CmabService {
             }
             return filteredAttributes;
         }
-        
+
         // Check if experiment has CMAB configuration
         // Add null check for getCmab()
         if (experiment.getCmab() == null) {
@@ -65,8 +99,8 @@ public class DefaultCmabService implements CmabService {
         if (cmabAttributeIds == null || cmabAttributeIds.isEmpty()) {
             return filteredAttributes;
         }
-        
-        Map<String,Attribute> attributeIdMapping = projectConfig.getAttributeIdMapping();
+
+        Map<String, Attribute> attributeIdMapping = projectConfig.getAttributeIdMapping();
         // Add null check for attributeIdMapping
         if (attributeIdMapping == null) {
             if (logger != null) {
@@ -74,7 +108,7 @@ public class DefaultCmabService implements CmabService {
             }
             return filteredAttributes;
         }
-        
+
         // Filter attributes based on CMAB configuration
         for (String attributeId : cmabAttributeIds) {
             Attribute attribute = attributeIdMapping.get(attributeId);
@@ -88,19 +122,19 @@ public class DefaultCmabService implements CmabService {
                 logger.debug("Attribute configuration not found for ID: {}", attributeId);
             }
         }
-        
+
         return filteredAttributes;
     }
 
     private String getCacheKey(String userId, String ruleId) {
         return userId.length() + "-" + userId + "-" + ruleId;
     }
-    
+
     private String hashAttributes(Map<String, Object> attributes) {
         try {
             // Sort attributes to ensure consistent hashing
             TreeMap<String, Object> sortedAttributes = new TreeMap<>(attributes);
-            
+
             // Create a simple string representation
             StringBuilder sb = new StringBuilder();
             sb.append("{");
@@ -118,11 +152,11 @@ public class DefaultCmabService implements CmabService {
                 first = false;
             }
             sb.append("}");
-            
+
             // Generate MD5 hash
             MessageDigest md = MessageDigest.getInstance("MD5");
             byte[] hash = md.digest(sb.toString().getBytes());
-            
+
             // Convert to hex string
             StringBuilder hexString = new StringBuilder();
             for (byte b : hash) {
@@ -133,12 +167,12 @@ public class DefaultCmabService implements CmabService {
                 hexString.append(hex);
             }
             return hexString.toString();
-            
+
         } catch (NoSuchAlgorithmException e) {
             if (logger != null) {
                 logger.warn("Failed to hash attributes", e);
             }
-            return "";
+            throw new RuntimeException("MD5 algorithm not available", e);
         }
     }
 }
