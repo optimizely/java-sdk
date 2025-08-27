@@ -33,6 +33,12 @@ public class DefaultCmabService implements CmabService {
         return null;
     }
 
+    private CmabDecision fetchDecision(String ruleId, String userId, Map<String, Object> attributes) {
+        String cmabUuid = java.util.UUID.randomUUID().toString();
+        String variationId = cmabClient.fetchDecision(ruleId, userId, attributes, cmabUuid);
+        return new CmabDecision(variationId, cmabUuid);
+    }
+
     private Map<String, Object> filterAttributes(ProjectConfig projectConfig, OptimizelyUserContext userContext, String ruleId) {
         Map<String, Object> userAttributes = userContext.getAttributes();
         Map<String, Object> filteredAttributes = new HashMap<>();
@@ -90,9 +96,6 @@ public class DefaultCmabService implements CmabService {
         return userId.length() + "-" + userId + "-" + ruleId;
     }
     
-    /**
-     * Hash attributes using MD5
-     */
     private String hashAttributes(Map<String, Object> attributes) {
         try {
             // Sort attributes to ensure consistent hashing
