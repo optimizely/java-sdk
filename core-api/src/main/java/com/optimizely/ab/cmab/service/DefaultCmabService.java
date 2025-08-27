@@ -1,7 +1,5 @@
 package com.optimizely.ab.cmab.service;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +9,7 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 
 import com.optimizely.ab.OptimizelyUserContext;
+import com.optimizely.ab.bucketing.internal.MurmurHash3;
 import com.optimizely.ab.cmab.client.CmabClient;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.Experiment;
@@ -131,48 +130,41 @@ public class DefaultCmabService implements CmabService {
     }
 
     private String hashAttributes(Map<String, Object> attributes) {
-        try {
-            // Sort attributes to ensure consistent hashing
-            TreeMap<String, Object> sortedAttributes = new TreeMap<>(attributes);
-
-            // Create a simple string representation
-            StringBuilder sb = new StringBuilder();
-            sb.append("{");
-            boolean first = true;
-            for (Map.Entry<String, Object> entry : sortedAttributes.entrySet()) {
-                if (!first) {
-                    sb.append(",");
-                }
-                sb.append("\"").append(entry.getKey()).append("\":");
-                if (entry.getValue() instanceof String) {
-                    sb.append("\"").append(entry.getValue()).append("\"");
-                } else {
-                    sb.append(entry.getValue());
-                }
-                first = false;
-            }
-            sb.append("}");
-
-            // Generate MD5 hash
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] hash = md.digest(sb.toString().getBytes());
-
-            // Convert to hex string
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-            return hexString.toString();
-
-        } catch (NoSuchAlgorithmException e) {
-            if (logger != null) {
-                logger.warn("Failed to hash attributes", e);
-            }
-            throw new RuntimeException("MD5 algorithm not available", e);
+        if (attributes == null || attributes.isEmpty()) {
+            return "empty";
         }
+        
+        // Sort attributes to ensure consistent hashing
+        TreeMap<String, Object> sortedAttributes = new TreeMap<>(attributes);
+
+        // Create a simple string representation
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        boolean first = true;
+        for (Map.Entry<String, Object> entry : sortedAttributes.entrySet()) {
+            if (entry.getKey() == null) continue; // Skip null keys
+            
+            if (!first) {
+                sb.append(",");
+            }
+            sb.append("\"").append(entry.getKey()).append("\":");
+            
+            Object value = entry.getValue();
+            if (value == null) {
+                sb.append("null");
+            } else if (value instanceof String) {
+                sb.append("\"").append(value).append("\"");
+            } else {
+                sb.append(value.toString());
+            }
+            first = false;
+        }
+        sb.append("}");
+
+        String attributesString = sb.toString();
+        int hash = MurmurHash3.murmurhash3_x86_32(attributesString, 0, attributesString.length(), 0);
+        
+        // Convert to hex string to match your existing pattern
+        return Integer.toHexString(hash);
     }
 }
