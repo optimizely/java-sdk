@@ -101,6 +101,8 @@ public interface ProjectConfig {
 
     Map<String, Attribute> getAttributeKeyMapping();
 
+    Map<String, Attribute> getAttributeIdMapping();
+
     Map<String, EventType> getEventNameMapping();
 
     Map<String, Audience> getAudienceIdMapping();
