@@ -6,6 +6,8 @@ plugins {
     id 'com.github.hierynomus.license' version '0.16.1'
     id 'com.github.spotbugs' version "6.0.14"
     id 'maven-publish'
+    id 'signing'
+    id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 }
 
 allprojects {
@@ -13,7 +15,10 @@ allprojects {
     apply plugin: 'jacoco'
 
     repositories {
-        jcenter()
+        mavenCentral()
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
     }
 
     jacoco {
@@ -24,9 +29,9 @@ allprojects {
 allprojects {
     group = 'com.optimizely.ab'
 
-    def travis_defined_version = System.getenv('GITHUB_TAG')
-    if (travis_defined_version != null) {
-        version = travis_defined_version
+    def github_tagged_version = System.getenv('GITHUB_TAG')
+    if (github_tagged_version != null) {
+        version = github_tagged_version
     }
 
     ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
@@ -46,13 +51,6 @@ configure(publishedProjects) {
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
-
-    repositories {
-        jcenter()
-        maven {
-            url 'https://plugins.gradle.org/m2/'
-        }
-    }
 
     task sourcesJar(type: Jar, dependsOn: classes) {
         archiveClassifier.set('sources')
@@ -120,7 +118,6 @@ configure(publishedProjects) {
         }
     }
 
-
     def docTitle = "Optimizely Java SDK"
     if (name.equals('core-httpclient-impl')) {
         docTitle = "Optimizely Java SDK: Httpclient"
@@ -135,17 +132,6 @@ configure(publishedProjects) {
                     from components.java
                     artifact sourcesJar
                     artifact javadocJar
-                }
-            }
-            repositories {
-                maven {
-                    def releaseUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-                    def snapshotUrl = "https://oss.sonatype.org/content/repositories/snapshots"
-                    url = isReleaseVersion ? releaseUrl : snapshotUrl
-                    credentials {
-                        username System.getenv('MAVEN_CENTRAL_USERNAME')
-                        password System.getenv('MAVEN_CENTRAL_PASSWORD')
-                    }
                 }
             }
         }
@@ -183,7 +169,18 @@ configure(publishedProjects) {
 }
 
 task ship() {
-    dependsOn(':core-api:ship', ':core-httpclient-impl:ship')
+    dependsOn(':core-httpclient-impl:ship', ':core-api:ship', 'publishToSonatype', 'closeSonatypeStagingRepository')
+}
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri('https://ossrh-staging-api.central.sonatype.com/service/local/'))
+            snapshotRepositoryUrl.set(uri('https://central.sonatype.com/repository/maven-snapshots/'))
+            username = System.getenv('MAVEN_CENTRAL_USERNAME')
+            password = System.getenv('MAVEN_CENTRAL_PASSWORD')
+        }
+    }
 }
 
 task jacocoMerge(type: JacocoMerge) {
@@ -224,7 +221,6 @@ tasks.coveralls {
 }
 
 // standard POM format required by MavenCentral
-
 def customizePom(pom, title) {
     pom.withXml {
         asNode().children().last() + {
