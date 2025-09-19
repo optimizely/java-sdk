@@ -1885,7 +1885,7 @@ public class Optimizely implements AutoCloseable {
             }
 
             if (decisionService == null) {
-                decisionService = new DecisionService(bucketer, errorHandler, userProfileService);
+                decisionService = new DecisionService(bucketer, errorHandler, userProfileService, cmabService);
             }
 
             if (projectConfig == null && datafile != null && !datafile.isEmpty()) {

@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.optimizely.ab.cmab.service.CmabService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,6 +65,7 @@ public class DecisionService {
     private final Bucketer bucketer;
     private final ErrorHandler errorHandler;
     private final UserProfileService userProfileService;
+    private final CmabService cmabService;
     private static final Logger logger = LoggerFactory.getLogger(DecisionService.class);
 
     /**
@@ -84,10 +86,12 @@ public class DecisionService {
      */
     public DecisionService(@Nonnull Bucketer bucketer,
                            @Nonnull ErrorHandler errorHandler,
-                           @Nullable UserProfileService userProfileService) {
+                           @Nullable UserProfileService userProfileService,
+                           @Nullable CmabService cmabService) {
         this.bucketer = bucketer;
         this.errorHandler = errorHandler;
         this.userProfileService = userProfileService;
+        this.cmabService = cmabService;
     }
 
     /**
