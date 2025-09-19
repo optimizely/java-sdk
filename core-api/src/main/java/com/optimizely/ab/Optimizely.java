@@ -20,6 +20,7 @@ import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfileService;
+import com.optimizely.ab.cmab.service.CmabService;
 import com.optimizely.ab.config.AtomicProjectConfigManager;
 import com.optimizely.ab.config.DatafileProjectConfig;
 import com.optimizely.ab.config.EventType;
@@ -141,7 +142,11 @@ public class Optimizely implements AutoCloseable {
     @Nullable
     private final ODPManager odpManager;
 
+    @Nullable
+    private final CmabService cmabService;
+
     private final ReentrantLock lock = new ReentrantLock();
+
 
     private Optimizely(@Nonnull EventHandler eventHandler,
                        @Nonnull EventProcessor eventProcessor,
@@ -152,8 +157,9 @@ public class Optimizely implements AutoCloseable {
                        @Nullable OptimizelyConfigManager optimizelyConfigManager,
                        @Nonnull NotificationCenter notificationCenter,
                        @Nonnull List<OptimizelyDecideOption> defaultDecideOptions,
-                       @Nullable ODPManager odpManager
-    ) {
+                       @Nullable ODPManager odpManager,
+                       @Nullable CmabService cmabService
+                       ) {
         this.eventHandler = eventHandler;
         this.eventProcessor = eventProcessor;
         this.errorHandler = errorHandler;
@@ -164,6 +170,7 @@ public class Optimizely implements AutoCloseable {
         this.notificationCenter = notificationCenter;
         this.defaultDecideOptions = defaultDecideOptions;
         this.odpManager = odpManager;
+        this.cmabService = cmabService;
 
         if (odpManager != null) {
             odpManager.getEventManager().start();
@@ -1731,6 +1738,7 @@ public class Optimizely implements AutoCloseable {
         private NotificationCenter notificationCenter;
         private List<OptimizelyDecideOption> defaultDecideOptions;
         private ODPManager odpManager;
+        private CmabService cmabService;
 
         // For backwards compatibility
         private AtomicProjectConfigManager fallbackConfigManager = new AtomicProjectConfigManager();
@@ -1842,6 +1850,11 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
+        public Builder withCmabService(CmabService cmabService) {
+            this.cmabService = cmabService;
+            return this;
+        }
+
         // Helper functions for making testing easier
         protected Builder withBucketing(Bucketer bucketer) {
             this.bucketer = bucketer;
@@ -1916,7 +1929,7 @@ public class Optimizely implements AutoCloseable {
                 defaultDecideOptions = Collections.emptyList();
             }
 
-            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, optimizelyConfigManager, notificationCenter, defaultDecideOptions, odpManager);
+            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, optimizelyConfigManager, notificationCenter, defaultDecideOptions, odpManager, cmabService);
         }
     }
 }
