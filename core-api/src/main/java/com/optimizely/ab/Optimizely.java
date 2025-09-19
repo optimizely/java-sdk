@@ -142,7 +142,6 @@ public class Optimizely implements AutoCloseable {
     @Nullable
     private final ODPManager odpManager;
 
-    @Nullable
     private final CmabService cmabService;
 
     private final ReentrantLock lock = new ReentrantLock();
@@ -158,7 +157,7 @@ public class Optimizely implements AutoCloseable {
                        @Nonnull NotificationCenter notificationCenter,
                        @Nonnull List<OptimizelyDecideOption> defaultDecideOptions,
                        @Nullable ODPManager odpManager,
-                       @Nullable CmabService cmabService
+                       @Nonnull CmabService cmabService
                        ) {
         this.eventHandler = eventHandler;
         this.eventProcessor = eventProcessor;
