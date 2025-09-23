@@ -22,18 +22,24 @@ import javax.annotation.Nullable;
 public class DecisionResponse<T> {
     private T result;
     private DecisionReasons reasons;
+    private boolean error;
 
-    public DecisionResponse(@Nullable T result, @Nonnull DecisionReasons reasons) {
+    public DecisionResponse(@Nullable T result, @Nonnull DecisionReasons reasons, @Nonnull boolean error) {
         this.result = result;
         this.reasons = reasons;
+        this.error = error;
     }
 
-    public static <E> DecisionResponse responseNoReasons(@Nullable E result) {
-        return new DecisionResponse(result, DefaultDecisionReasons.newInstance());
+    public DecisionResponse(@Nullable T result, @Nonnull DecisionReasons reasons) {
+        this(result, reasons, false);
     }
 
-    public static DecisionResponse nullNoReasons() {
-        return new DecisionResponse(null, DefaultDecisionReasons.newInstance());
+    public static <E> DecisionResponse<E> responseNoReasons(@Nullable E result) {
+        return new DecisionResponse<>(result, DefaultDecisionReasons.newInstance(), false);
+    }
+
+    public static <E> DecisionResponse<E> nullNoReasons() {
+        return new DecisionResponse<>(null, DefaultDecisionReasons.newInstance(), false);
     }
 
     @Nullable
@@ -44,5 +50,10 @@ public class DecisionResponse<T> {
     @Nonnull
     public DecisionReasons getReasons() {
         return reasons;
+    }
+
+    @Nonnull
+    public boolean isError(){
+        return error;
     }
 }

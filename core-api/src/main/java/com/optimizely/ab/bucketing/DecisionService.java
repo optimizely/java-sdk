@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.optimizely.ab.cmab.service.CmabDecision;
 import com.optimizely.ab.cmab.service.CmabService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -153,9 +154,25 @@ public class DecisionService {
         if (decisionMeetAudience.getResult()) {
             String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
 
-            decisionVariation = bucketer.bucket(experiment, bucketingId, projectConfig);
-            reasons.merge(decisionVariation.getReasons());
-            variation = decisionVariation.getResult();
+            if (isCmabExperiment(experiment)) {
+                DecisionResponse<CmabDecision> cmabDecision = getDecisionForCmabExperiment(projectConfig, experiment, user, bucketingId, options);
+                reasons.merge(cmabDecision.getReasons());
+
+                if (cmabDecision.isError()) {
+                    return new DecisionResponse<>(null, reasons, true);
+                }
+
+                CmabDecision cmabResult = cmabDecision.getResult();
+                if (cmabResult != null) {
+                    String variationId = cmabResult.getVariationId();
+                    variation = experiment.getVariationIdToVariationMap().get(variationId);
+                }
+            } else {
+                // Standard bucketing for non-CMAB experiments
+                decisionVariation = bucketer.bucket(experiment, bucketingId, projectConfig);
+                reasons.merge(decisionVariation.getReasons());
+                variation = decisionVariation.getResult();
+            }
 
             if (variation != null) {
                 if (userProfileTracker != null) {
@@ -863,4 +880,66 @@ public class DecisionService {
         return new DecisionResponse(variationToSkipToEveryoneElsePair, reasons);
     }
 
+    /**
+     * Retrieves a decision for a contextual multi-armed bandit (CMAB)
+     * experiment.
+     *
+     * @param projectConfig Instance of ProjectConfig.
+     * @param experiment The experiment object for which the decision is to be
+     * made.
+     * @param userContext The user context containing user id and attributes.
+     * @param bucketingId The bucketing ID to use for traffic allocation.
+     * @param options Optional list of decide options.
+     * @return A CmabDecisionResult containing error status, result, and
+     * reasons.
+     */
+    private DecisionResponse<CmabDecision> getDecisionForCmabExperiment(@Nonnull ProjectConfig projectConfig,
+                                                                        @Nonnull Experiment experiment,
+                                                                        @Nonnull OptimizelyUserContext userContext,
+                                                                        @Nonnull String bucketingId,
+                                                                        @Nonnull List<OptimizelyDecideOption> options) {
+        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+
+        // Check if user is in CMAB traffic allocation
+        DecisionResponse<String> bucketResponse = bucketer.bucketForCmab(experiment, bucketingId, projectConfig);
+        reasons.merge(bucketResponse.getReasons());
+
+        String bucketedEntityId = bucketResponse.getResult();
+
+        if (bucketedEntityId == null) {
+            String message = String.format("User \"%s\" not in CMAB experiment \"%s\" due to traffic allocation.",
+                    userContext.getUserId(), experiment.getKey());
+            logger.info(message);
+            reasons.addInfo(message);
+
+            return new DecisionResponse<>(null, reasons);
+        }
+
+        // User is in CMAB allocation, proceed to CMAB decision
+        try {
+            CmabDecision cmabDecision = cmabService.getDecision(projectConfig, userContext, experiment.getId(), options);
+
+            return new DecisionResponse<>(cmabDecision, reasons);
+        } catch (Exception e) {
+            String errorMessage = String.format("CMAB fetch failed for experiment \"%s\"", experiment.getKey());
+            reasons.addInfo(errorMessage);
+            logger.error("{} {}", errorMessage, e.getMessage());
+
+            return new DecisionResponse<>(null, reasons);
+        }
+    }
+
+    /**
+     * Checks whether an experiment is a contextual multi-armed bandit (CMAB)
+     * experiment.
+     *
+     * @param experiment The experiment to check
+     * @return true if the experiment is a CMAB experiment, false otherwise
+     */
+    private boolean isCmabExperiment(@Nonnull Experiment experiment) {
+        if (cmabService == null){
+            return false;
+        }
+        return experiment.getCmab() != null;
+    }
 }
