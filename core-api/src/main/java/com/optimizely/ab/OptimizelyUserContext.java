@@ -16,18 +16,23 @@
  */
 package com.optimizely.ab;
 
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.odp.ODPManager;
-import com.optimizely.ab.odp.ODPSegmentCallback;
-import com.optimizely.ab.odp.ODPSegmentOption;
-import com.optimizely.ab.optimizelydecision.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.optimizely.ab.odp.ODPSegmentCallback;
+import com.optimizely.ab.odp.ODPSegmentOption;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
 
 public class OptimizelyUserContext {
     // OptimizelyForcedDecisionsKey mapped to variationKeys
@@ -195,6 +200,73 @@ public class OptimizelyUserContext {
      */
     public Map<String, OptimizelyDecision> decideAll() {
         return decideAll(Collections.emptyList());
+    }
+
+    /**
+     * Returns a decision result ({@link OptimizelyDecision}) for a given flag key and a user context, 
+     * which contains all data required to deliver the flag. This method skips CMAB logic.
+     * @param key A flag key for which a decision will be made.
+     * @param options A list of options for decision-making.
+     * @return A decision result.
+     */
+    public OptimizelyDecision decideWithoutCmab(@Nonnull String key,
+                                                @Nonnull List<OptimizelyDecideOption> options) {
+        return optimizely.decideWithoutCmab(copy(), key, options);
+    }
+
+    /**
+     * Returns a decision result ({@link OptimizelyDecision}) for a given flag key and a user context,
+     * which contains all data required to deliver the flag. This method skips CMAB logic.
+     *
+     * @param key A flag key for which a decision will be made.
+     * @return A decision result.
+     */
+    public OptimizelyDecision decideWithoutCmab(@Nonnull String key) {
+        return decideWithoutCmab(key, Collections.emptyList());
+    }
+
+    /**
+     * Returns a key-map of decision results ({@link OptimizelyDecision}) for multiple flag keys and a user context.
+     * This method skips CMAB logic.
+     * @param keys A list of flag keys for which decisions will be made.
+     * @param options A list of options for decision-making.
+     * @return All decision results mapped by flag keys.
+     */
+    public Map<String, OptimizelyDecision> decideForKeysWithoutCmab(@Nonnull List<String> keys,
+                                                                    @Nonnull List<OptimizelyDecideOption> options) {
+        return optimizely.decideForKeysWithoutCmab(copy(), keys, options);
+    }
+
+    /**
+     * Returns a key-map of decision results for multiple flag keys and a user context.
+     * This method skips CMAB logic.
+     *
+     * @param keys A list of flag keys for which decisions will be made.
+     * @return All decision results mapped by flag keys.
+     */
+    public Map<String, OptimizelyDecision> decideForKeysWithoutCmab(@Nonnull List<String> keys) {
+        return decideForKeysWithoutCmab(keys, Collections.emptyList());
+    }
+
+    /**
+     * Returns a key-map of decision results ({@link OptimizelyDecision}) for all active flag keys.
+     * This method skips CMAB logic.
+     *
+     * @param options A list of options for decision-making.
+     * @return All decision results mapped by flag keys.
+     */
+    public Map<String, OptimizelyDecision> decideAllWithoutCmab(@Nonnull List<OptimizelyDecideOption> options) {
+        return optimizely.decideAllWithoutCmab(copy(), options);
+    }
+
+    /**
+     * Returns a key-map of decision results ({@link OptimizelyDecision}) for all active flag keys.
+     * This method skips CMAB logic.
+     *
+     * @return A dictionary of all decision results, mapped by flag keys.
+     */
+    public Map<String, OptimizelyDecision> decideAllWithoutCmab() {
+        return decideAllWithoutCmab(Collections.emptyList());
     }
 
     /**
