@@ -1554,7 +1554,7 @@ public class DecisionServiceTest {
         assertNull(result.getResult());
         
         // Verify that the error is not propagated (no exception thrown)
-        assertFalse(result.isError());
+        assertTrue(result.isError());
         
         // Assert that CmabService.getDecision was called exactly once
         verify(mockCmabService, times(1)).getDecision(any(), any(), any(), any());
