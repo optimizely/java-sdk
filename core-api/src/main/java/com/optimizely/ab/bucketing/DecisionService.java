@@ -113,7 +113,8 @@ public class DecisionService {
                                                     @Nonnull ProjectConfig projectConfig,
                                                     @Nonnull List<OptimizelyDecideOption> options,
                                                     @Nullable UserProfileTracker userProfileTracker,
-                                                    @Nullable DecisionReasons reasons) {
+                                                    @Nullable DecisionReasons reasons,
+                                                    @Nonnull boolean useCmab) {
         if (reasons == null) {
             reasons = DefaultDecisionReasons.newInstance();
         }
@@ -155,7 +156,7 @@ public class DecisionService {
         if (decisionMeetAudience.getResult()) {
             String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
             String cmabUUID = null;
-            if (isCmabExperiment(experiment)) {
+            if (useCmab && isCmabExperiment(experiment)) {
                 DecisionResponse<CmabDecision> cmabDecision = getDecisionForCmabExperiment(projectConfig, experiment, user, bucketingId, options);
                 reasons.merge(cmabDecision.getReasons());
 
@@ -205,7 +206,8 @@ public class DecisionService {
     public DecisionResponse<Variation> getVariation(@Nonnull Experiment experiment,
                                                     @Nonnull OptimizelyUserContext user,
                                                     @Nonnull ProjectConfig projectConfig,
-                                                    @Nonnull List<OptimizelyDecideOption> options) {
+                                                    @Nonnull List<OptimizelyDecideOption> options,
+                                                    @Nonnull boolean useCmab) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         // fetch the user profile map from the user profile service
@@ -217,7 +219,7 @@ public class DecisionService {
             userProfileTracker.loadUserProfile(reasons, errorHandler);
         }
 
-        DecisionResponse<Variation> response = getVariation(experiment, user, projectConfig, options, userProfileTracker, reasons);
+        DecisionResponse<Variation> response = getVariation(experiment, user, projectConfig, options, userProfileTracker, reasons, useCmab);
 
         if(userProfileService != null && !ignoreUPS) {
             userProfileTracker.saveUserProfile(errorHandler);
@@ -229,7 +231,7 @@ public class DecisionService {
     public DecisionResponse<Variation>  getVariation(@Nonnull Experiment experiment,
                                                      @Nonnull OptimizelyUserContext user,
                                                      @Nonnull ProjectConfig projectConfig) {
-        return getVariation(experiment, user, projectConfig, Collections.emptyList());
+        return getVariation(experiment, user, projectConfig, Collections.emptyList(), true);
     }
 
     /**
@@ -256,6 +258,7 @@ public class DecisionService {
      * @param user                The current OptimizelyuserContext
      * @param projectConfig       The current projectConfig
      * @param options             An array of decision options
+     * @param useCmab             Boolean field that determines whether to use cmab service
      * @return A {@link DecisionResponse} including a {@link FeatureDecision} and the decision reasons
      */
     @Nonnull
@@ -263,6 +266,25 @@ public class DecisionService {
                                                                     @Nonnull OptimizelyUserContext user,
                                                                     @Nonnull ProjectConfig projectConfig,
                                                                     @Nonnull List<OptimizelyDecideOption> options) {
+        return getVariationsForFeatureList(featureFlags, user, projectConfig, options, true);
+    }
+
+    /**
+     * Get the variations the user is bucketed into for the list of feature flags
+     *
+     * @param featureFlags        The feature flag list the user wants to access.
+     * @param user                The current OptimizelyuserContext
+     * @param projectConfig       The current projectConfig
+     * @param options             An array of decision options
+     * @param useCmab             Boolean field that determines whether to use cmab service
+     * @return A {@link DecisionResponse} including a {@link FeatureDecision} and the decision reasons
+     */
+    @Nonnull
+    public  List<DecisionResponse<FeatureDecision>> getVariationsForFeatureList(@Nonnull List<FeatureFlag> featureFlags,
+                                                                    @Nonnull OptimizelyUserContext user,
+                                                                    @Nonnull ProjectConfig projectConfig,
+                                                                    @Nonnull List<OptimizelyDecideOption> options,
+                                                                    @Nonnull boolean useCmab) {
         DecisionReasons upsReasons = DefaultDecisionReasons.newInstance();
 
         boolean ignoreUPS = options.contains(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE);
@@ -291,7 +313,7 @@ public class DecisionService {
                 }
             }
 
-            DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options, userProfileTracker);
+            DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options, userProfileTracker, useCmab);
             reasons.merge(decisionVariationResponse.getReasons());
 
             FeatureDecision decision = decisionVariationResponse.getResult();
@@ -346,14 +368,15 @@ public class DecisionService {
                                                                  @Nonnull FeatureFlag featureFlag,
                                                                  @Nonnull OptimizelyUserContext user,
                                                                  @Nonnull List<OptimizelyDecideOption> options,
-                                                                 @Nullable UserProfileTracker userProfileTracker) {
+                                                                 @Nullable UserProfileTracker userProfileTracker,
+                                                                 @Nonnull boolean useCmab) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
         if (!featureFlag.getExperimentIds().isEmpty()) {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
 
                 DecisionResponse<Variation> decisionVariation =
-                    getVariationFromExperimentRule(projectConfig, featureFlag.getKey(), experiment, user, options, userProfileTracker);
+                    getVariationFromExperimentRule(projectConfig, featureFlag.getKey(), experiment, user, options, userProfileTracker, useCmab);
                 reasons.merge(decisionVariation.getReasons());
                 Variation variation = decisionVariation.getResult();
                 String cmabUUID = decisionVariation.getCmabUUID();
@@ -776,7 +799,8 @@ public class DecisionService {
                                                                       @Nonnull Experiment rule,
                                                                       @Nonnull OptimizelyUserContext user,
                                                                       @Nonnull List<OptimizelyDecideOption> options,
-                                                                      @Nullable UserProfileTracker userProfileTracker) {
+                                                                      @Nullable UserProfileTracker userProfileTracker,
+                                                                      @Nonnull boolean useCmab) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         String ruleKey = rule != null ? rule.getKey() : null;
@@ -791,7 +815,7 @@ public class DecisionService {
             return new DecisionResponse(variation, reasons);
         }
         //regular decision
-        DecisionResponse<Variation> decisionResponse = getVariation(rule, user, projectConfig, options, userProfileTracker, null);
+        DecisionResponse<Variation> decisionResponse = getVariation(rule, user, projectConfig, options, userProfileTracker, null, useCmab);
         reasons.merge(decisionResponse.getReasons());
 
         variation = decisionResponse.getResult();

@@ -34,6 +34,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -359,7 +360,8 @@ public class DecisionServiceTest {
             any(ProjectConfig.class),
             anyObject(),
             anyObject(),
-            any(DecisionReasons.class)
+            any(DecisionReasons.class),
+            anyBoolean()
         );
         // do not bucket to any rollouts
         doReturn(DecisionResponse.responseNoReasons(new FeatureDecision(null, null, null))).when(decisionService).getVariationForFeatureInRollout(
@@ -398,14 +400,16 @@ public class DecisionServiceTest {
             eq(ValidProjectConfigV4.EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1),
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
-            anyObject()
+            anyObject(),
+            anyBoolean()
         );
 
         doReturn(DecisionResponse.responseNoReasons(ValidProjectConfigV4.VARIATION_MUTEX_GROUP_EXP_2_VAR_1)).when(decisionService).getVariation(
             eq(ValidProjectConfigV4.EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2),
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
-            anyObject()
+            anyObject(),
+            anyBoolean()
         );
 
         FeatureDecision featureDecision = decisionService.getVariationForFeature(
@@ -445,7 +449,8 @@ public class DecisionServiceTest {
             any(ProjectConfig.class),
             anyObject(),
             anyObject(),
-            any(DecisionReasons.class)
+            any(DecisionReasons.class),
+            anyBoolean()
         );
 
         // return variation for rollout
@@ -479,7 +484,8 @@ public class DecisionServiceTest {
             any(ProjectConfig.class),
             anyObject(),
             anyObject(),
-            any(DecisionReasons.class)
+            any(DecisionReasons.class),
+            anyBoolean()
         );
     }
 
@@ -506,7 +512,8 @@ public class DecisionServiceTest {
             any(ProjectConfig.class),
             anyObject(),
             anyObject(),
-            any(DecisionReasons.class)
+            any(DecisionReasons.class),
+            anyBoolean()
         );
 
         // return variation for rollout
@@ -540,7 +547,8 @@ public class DecisionServiceTest {
             any(ProjectConfig.class),
             anyObject(),
             anyObject(),
-            any(DecisionReasons.class)
+            any(DecisionReasons.class),
+            anyBoolean()
         );
 
         logbackVerifier.expectMessage(

@@ -1498,6 +1498,151 @@ public class Optimizely implements AutoCloseable {
         return decideForKeys(user, allFlagKeys, options);
     }
 
+    /**
+     * Returns a decision result ({@link OptimizelyDecision}) for a given flag key and a user context,
+     * skipping CMAB logic and using only traditional A/B testing.
+     *
+     * @param user    An OptimizelyUserContext associated with this OptimizelyClient.
+     * @param key     A flag key for which a decision will be made.
+     * @param options A list of options for decision-making.
+     * @return A decision result using traditional A/B testing logic only.
+     */
+    OptimizelyDecision decideWithoutCmab(@Nonnull OptimizelyUserContext user,
+                                        @Nonnull String key,
+                                        @Nonnull List<OptimizelyDecideOption> options) {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
+        }
+
+        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
+        allOptions.remove(OptimizelyDecideOption.ENABLED_FLAGS_ONLY);
+
+        return decideForKeysWithoutCmab(user, Arrays.asList(key), allOptions, true).get(key);
+    }
+
+    /**
+     * Returns decision results for multiple flag keys, skipping CMAB logic and using only traditional A/B testing.
+     *
+     * @param user    An OptimizelyUserContext associated with this OptimizelyClient.
+     * @param keys    A list of flag keys for which decisions will be made.
+     * @param options A list of options for decision-making.
+     * @return All decision results mapped by flag keys, using traditional A/B testing logic only.
+     */
+    Map<String, OptimizelyDecision> decideForKeysWithoutCmab(@Nonnull OptimizelyUserContext user,
+                                                            @Nonnull List<String> keys,
+                                                            @Nonnull List<OptimizelyDecideOption> options) {
+        return decideForKeysWithoutCmab(user, keys, options, false);
+    }
+
+    /**
+     * Returns decision results for all active flag keys, skipping CMAB logic and using only traditional A/B testing.
+     *
+     * @param user    An OptimizelyUserContext associated with this OptimizelyClient.
+     * @param options A list of options for decision-making.
+     * @return All decision results mapped by flag keys, using traditional A/B testing logic only.
+     */
+    Map<String, OptimizelyDecision> decideAllWithoutCmab(@Nonnull OptimizelyUserContext user,
+                                                        @Nonnull List<OptimizelyDecideOption> options) {
+        Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
+
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing decideAllWithoutCmab call.");
+            return decisionMap;
+        }
+
+        List<FeatureFlag> allFlags = projectConfig.getFeatureFlags();
+        List<String> allFlagKeys = new ArrayList<>();
+        for (int i = 0; i < allFlags.size(); i++) allFlagKeys.add(allFlags.get(i).getKey());
+
+        return decideForKeysWithoutCmab(user, allFlagKeys, options);
+    }
+
+    private Map<String, OptimizelyDecision> decideForKeysWithoutCmab(@Nonnull OptimizelyUserContext user,
+                                                                    @Nonnull List<String> keys,
+                                                                    @Nonnull List<OptimizelyDecideOption> options,
+                                                                    boolean ignoreDefaultOptions) {
+        Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
+
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            logger.error("Optimizely instance is not valid, failing decideForKeysWithoutCmab call.");
+            return decisionMap;
+        }
+
+        if (keys.isEmpty()) return decisionMap;
+
+        List<OptimizelyDecideOption> allOptions = ignoreDefaultOptions ? options : getAllOptions(options);
+
+        Map<String, FeatureDecision> flagDecisions = new HashMap<>();
+        Map<String, DecisionReasons> decisionReasonsMap = new HashMap<>();
+
+        List<FeatureFlag> flagsWithoutForcedDecision = new ArrayList<>();
+
+        List<String> validKeys = new ArrayList<>();
+
+        for (String key : keys) {
+            FeatureFlag flag = projectConfig.getFeatureKeyMapping().get(key);
+            if (flag == null) {
+                decisionMap.put(key, OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.FLAG_KEY_INVALID.reason(key)));
+                continue;
+            }
+
+            validKeys.add(key);
+
+            DecisionReasons decisionReasons = DefaultDecisionReasons.newInstance(allOptions);
+            decisionReasonsMap.put(key, decisionReasons);
+
+            OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(key, null);
+            DecisionResponse<Variation> forcedDecisionVariation = decisionService.validatedForcedDecision(optimizelyDecisionContext, projectConfig, user);
+            decisionReasons.merge(forcedDecisionVariation.getReasons());
+            if (forcedDecisionVariation.getResult() != null) {
+                flagDecisions.put(key,
+                    new FeatureDecision(null, forcedDecisionVariation.getResult(), FeatureDecision.DecisionSource.FEATURE_TEST));
+            } else {
+                flagsWithoutForcedDecision.add(flag);
+            }
+        }
+
+        // Use DecisionService method that skips CMAB logic
+        List<DecisionResponse<FeatureDecision>> decisionList =
+            decisionService.getVariationsForFeatureList(flagsWithoutForcedDecision, user, projectConfig, allOptions, false);
+
+        for (int i = 0; i < flagsWithoutForcedDecision.size(); i++) {
+            DecisionResponse<FeatureDecision> decision = decisionList.get(i);
+            boolean error = decision.isError();
+            String flagKey = flagsWithoutForcedDecision.get(i).getKey();
+
+            if (error) {
+                OptimizelyDecision optimizelyDecision = OptimizelyDecision.newErrorDecision(flagKey, user, DecisionMessage.DECISION_ERROR.reason(flagKey));
+                decisionMap.put(flagKey, optimizelyDecision);
+                if (validKeys.contains(flagKey)) {
+                    validKeys.remove(flagKey);
+                }
+            }
+
+            flagDecisions.put(flagKey, decision.getResult());
+            decisionReasonsMap.get(flagKey).merge(decision.getReasons());
+        }
+
+        for (String key : validKeys) {
+            FeatureDecision flagDecision = flagDecisions.get(key);
+            DecisionReasons decisionReasons = decisionReasonsMap.get((key));
+
+            OptimizelyDecision optimizelyDecision = createOptimizelyDecision(
+                user, key, flagDecision, decisionReasons, allOptions, projectConfig
+            );
+
+            if (!allOptions.contains(OptimizelyDecideOption.ENABLED_FLAGS_ONLY) || optimizelyDecision.getEnabled()) {
+                decisionMap.put(key, optimizelyDecision);
+            }
+        }
+
+        return decisionMap;
+    }
+
+
     private List<OptimizelyDecideOption> getAllOptions(List<OptimizelyDecideOption> options) {
         List<OptimizelyDecideOption> copiedOptions = new ArrayList(defaultDecideOptions);
         if (options != null) {
