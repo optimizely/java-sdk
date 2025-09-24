@@ -295,8 +295,10 @@ public class DecisionService {
             reasons.merge(decisionVariationResponse.getReasons());
 
             FeatureDecision decision = decisionVariationResponse.getResult();
+            boolean error = decisionVariationResponse.isError();
+
             if (decision != null) {
-                decisions.add(new DecisionResponse(decision, reasons));
+                decisions.add(new DecisionResponse(decision, reasons, error, decision.cmabUUID));
                 continue;
             }
 
@@ -354,11 +356,13 @@ public class DecisionService {
                     getVariationFromExperimentRule(projectConfig, featureFlag.getKey(), experiment, user, options, userProfileTracker);
                 reasons.merge(decisionVariation.getReasons());
                 Variation variation = decisionVariation.getResult();
-
+                String cmabUUID = decisionVariation.getCmabUUID();
                 if (variation != null) {
                     return new DecisionResponse(
-                        new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST),
-                        reasons);
+                        new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST, cmabUUID),
+                        reasons,
+                        decisionVariation.isError(),
+                        cmabUUID);
                 }
             }
         } else {
@@ -792,7 +796,7 @@ public class DecisionService {
 
         variation = decisionResponse.getResult();
 
-        return new DecisionResponse(variation, reasons);
+        return new DecisionResponse<>(variation, reasons, decisionResponse.isError(), decisionResponse.getCmabUUID());
     }
 
     /**

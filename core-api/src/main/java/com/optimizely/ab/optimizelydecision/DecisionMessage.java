@@ -20,7 +20,8 @@ package com.optimizely.ab.optimizelydecision;
 public enum DecisionMessage {
     SDK_NOT_READY("Optimizely SDK not configured properly yet."),
     FLAG_KEY_INVALID("No flag was found for key \"%s\"."),
-    VARIABLE_VALUE_INVALID("Variable value for key \"%s\" is invalid or wrong type.");
+    VARIABLE_VALUE_INVALID("Variable value for key \"%s\" is invalid or wrong type."),
+    DECISION_ERROR("Decision service error occured for key \"%s\".");
 
     private String format;
 

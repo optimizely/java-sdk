@@ -1450,7 +1450,17 @@ public class Optimizely implements AutoCloseable {
 
         for (int i = 0; i < flagsWithoutForcedDecision.size(); i++) {
             DecisionResponse<FeatureDecision> decision = decisionList.get(i);
+            boolean error = decision.isError();
             String flagKey = flagsWithoutForcedDecision.get(i).getKey();
+
+            if (error) {
+                OptimizelyDecision optimizelyDecision = OptimizelyDecision.newErrorDecision(flagKey, user, DecisionMessage.DECISION_ERROR.reason(flagKey));
+                decisionMap.put(flagKey, optimizelyDecision);
+                if (validKeys.contains(flagKey)) {
+                    validKeys.remove(flagKey);
+                }
+            }
+
             flagDecisions.put(flagKey, decision.getResult());
             decisionReasonsMap.get(flagKey).merge(decision.getReasons());
         }
