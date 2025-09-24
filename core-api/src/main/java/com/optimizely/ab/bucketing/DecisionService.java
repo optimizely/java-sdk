@@ -60,6 +60,7 @@ import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
  *   3. Checking sticky bucketing
  *   4. Checking audience targeting
  *   5. Using Murmurhash3 to bucket the user.
+ *   6. Handling CMAB (Contextual Multi-Armed Bandit) experiments for dynamic variation selection
  */
 public class DecisionService {
 
@@ -153,18 +154,19 @@ public class DecisionService {
         reasons.merge(decisionMeetAudience.getReasons());
         if (decisionMeetAudience.getResult()) {
             String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
-
+            String cmabUUID = null;
             if (isCmabExperiment(experiment)) {
                 DecisionResponse<CmabDecision> cmabDecision = getDecisionForCmabExperiment(projectConfig, experiment, user, bucketingId, options);
                 reasons.merge(cmabDecision.getReasons());
 
                 if (cmabDecision.isError()) {
-                    return new DecisionResponse<>(null, reasons, true);
+                    return new DecisionResponse<>(null, reasons, true, null);
                 }
 
                 CmabDecision cmabResult = cmabDecision.getResult();
                 if (cmabResult != null) {
                     String variationId = cmabResult.getVariationId();
+                    cmabUUID = cmabResult.getCmabUUID();
                     variation = experiment.getVariationIdToVariationMap().get(variationId);
                 }
             } else {
@@ -182,7 +184,7 @@ public class DecisionService {
                 }
             }
 
-            return new DecisionResponse(variation, reasons);
+            return new DecisionResponse<>(variation, reasons, false, cmabUUID);
         }
 
         String message = reasons.addInfo("User \"%s\" does not meet conditions to be in experiment \"%s\".", user.getUserId(), experiment.getKey());

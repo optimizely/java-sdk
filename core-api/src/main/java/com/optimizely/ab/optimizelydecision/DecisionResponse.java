@@ -23,23 +23,25 @@ public class DecisionResponse<T> {
     private T result;
     private DecisionReasons reasons;
     private boolean error;
+    private String cmabUUID;
 
-    public DecisionResponse(@Nullable T result, @Nonnull DecisionReasons reasons, @Nonnull boolean error) {
+    public DecisionResponse(@Nullable T result, @Nonnull DecisionReasons reasons, @Nonnull boolean error, @Nullable String cmabUUID) {
         this.result = result;
         this.reasons = reasons;
         this.error = error;
+        this.cmabUUID = cmabUUID;
     }
 
     public DecisionResponse(@Nullable T result, @Nonnull DecisionReasons reasons) {
-        this(result, reasons, false);
+        this(result, reasons, false, null);
     }
 
     public static <E> DecisionResponse<E> responseNoReasons(@Nullable E result) {
-        return new DecisionResponse<>(result, DefaultDecisionReasons.newInstance(), false);
+        return new DecisionResponse<>(result, DefaultDecisionReasons.newInstance(), false, null);
     }
 
     public static <E> DecisionResponse<E> nullNoReasons() {
-        return new DecisionResponse<>(null, DefaultDecisionReasons.newInstance(), false);
+        return new DecisionResponse<>(null, DefaultDecisionReasons.newInstance(), false, null);
     }
 
     @Nullable
@@ -55,5 +57,10 @@ public class DecisionResponse<T> {
     @Nonnull
     public boolean isError(){
         return error;
+    }
+
+    @Nullable
+    public String getCmabUUID() {
+        return cmabUUID;
     }
 }
