@@ -931,7 +931,7 @@ public class DecisionService {
             reasons.addInfo(errorMessage);
             logger.error("{} {}", errorMessage, e.getMessage());
 
-            return new DecisionResponse<>(null, reasons);
+            return new DecisionResponse<>(null, reasons, true, null);
         }
     }
 
