@@ -85,6 +85,7 @@ public class DecisionService {
      * @param bucketer           Base bucketer to allocate new users to an experiment.
      * @param errorHandler       The error handler of the Optimizely client.
      * @param userProfileService UserProfileService implementation for storing user info.
+     * @param cmabService        Cmab Service for decision making.
      */
     public DecisionService(@Nonnull Bucketer bucketer,
                            @Nonnull ErrorHandler errorHandler,
@@ -200,6 +201,7 @@ public class DecisionService {
      * @param user               The current OptimizelyUserContext
      * @param projectConfig      The current projectConfig
      * @param options            An array of decision options
+     * @param useCmab            Boolean to check if cmab service is to be used.
      * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
      */
     @Nonnull
@@ -258,7 +260,6 @@ public class DecisionService {
      * @param user                The current OptimizelyuserContext
      * @param projectConfig       The current projectConfig
      * @param options             An array of decision options
-     * @param useCmab             Boolean field that determines whether to use cmab service
      * @return A {@link DecisionResponse} including a {@link FeatureDecision} and the decision reasons
      */
     @Nonnull
