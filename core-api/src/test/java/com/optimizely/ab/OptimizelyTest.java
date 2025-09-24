@@ -37,7 +37,10 @@ import com.optimizely.ab.notification.*;
 import com.optimizely.ab.odp.ODPEvent;
 import com.optimizely.ab.odp.ODPEventManager;
 import com.optimizely.ab.odp.ODPManager;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
 import com.optimizely.ab.optimizelydecision.DecisionResponse;
+import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.junit.Before;
@@ -4993,4 +4996,55 @@ public class OptimizelyTest {
         optimizely.identifyUser("the-user");
         Mockito.verify(mockODPEventManager, times(1)).identifyUser("the-user");
     }
+
+    @Test
+    public void testDecideReturnsErrorDecisionWhenDecisionServiceFails() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        
+        // Use the CMAB datafile
+        Optimizely optimizely = Optimizely.builder()
+            .withDatafile(validConfigJsonCMAB())  
+            .withDecisionService(mockDecisionService)
+            .build();
+
+        // Mock decision service to return an error from CMAB
+        DecisionReasons reasons = new DefaultDecisionReasons();
+        FeatureDecision errorFeatureDecision = new FeatureDecision(null, null, FeatureDecision.DecisionSource.ROLLOUT);
+        DecisionResponse<FeatureDecision> errorDecisionResponse = new DecisionResponse<>(
+            errorFeatureDecision,
+            reasons,
+            true,
+            null
+        );
+        
+        // Mock validatedForcedDecision to return no forced decision (but not null!)
+        DecisionResponse<Variation> noForcedDecision = new DecisionResponse<>(null, new DefaultDecisionReasons());
+        when(mockDecisionService.validatedForcedDecision(
+            any(OptimizelyDecisionContext.class),
+            any(ProjectConfig.class),
+            any(OptimizelyUserContext.class)
+        )).thenReturn(noForcedDecision);
+        
+        // Mock getVariationsForFeatureList to return the error decision
+        when(mockDecisionService.getVariationsForFeatureList(
+            any(List.class),
+            any(OptimizelyUserContext.class),
+            any(ProjectConfig.class),
+            any(List.class)
+        )).thenReturn(Arrays.asList(errorDecisionResponse));
+        
+        
+        // Use the feature flag from your CMAB config
+        OptimizelyUserContext userContext = optimizely.createUserContext("test_user");
+        OptimizelyDecision decision = userContext.decide("feature_1"); // This is the feature flag key from cmab-config.json
+        
+        System.out.println("reasons: " + decision.getReasons());
+        // Verify the decision contains the error information
+        assertFalse(decision.getEnabled());
+        assertNull(decision.getVariationKey());
+        assertNull(decision.getRuleKey());
+        assertEquals("feature_1", decision.getFlagKey());
+        assertTrue(decision.getReasons().contains("Decision service error occured for key \"feature_1\"."));
+    }
+
 }
