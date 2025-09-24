@@ -56,6 +56,8 @@ import com.optimizely.ab.OptimizelyDecisionContext;
 import com.optimizely.ab.OptimizelyForcedDecision;
 import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.cmab.service.CmabService;
+import com.optimizely.ab.cmab.service.CmabDecision;
+import com.optimizely.ab.config.Cmab;
 import com.optimizely.ab.config.DatafileProjectConfigTestUtils;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.noAudienceProjectConfigV3;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV3;
@@ -1392,5 +1394,137 @@ public class DecisionServiceTest {
         assertEquals(FeatureDecision.DecisionSource.HOLDOUT, featureDecision.decisionSource);
 
         logbackVerifier.expectMessage(Level.INFO, "User (user123) is in variation (ho_off_key) of holdout (typed_audience_holdout).");
+    }
+    
+    /**
+     * Verify that whitelisted variations take precedence over CMAB service decisions
+     * in CMAB experiments.
+     */
+    @Test
+    public void getVariationCmabExperimentWhitelistedPrecedesCmabService() {
+        // Create a CMAB experiment with whitelisting
+        Experiment cmabExperiment = createMockCmabExperiment();
+        Variation whitelistedVariation = cmabExperiment.getVariations().get(0);
+        
+        // Setup whitelisting for the test user
+        Map<String, String> userIdToVariationKeyMap = new HashMap<>();
+        userIdToVariationKeyMap.put(whitelistedUserId, whitelistedVariation.getKey());
+        
+        // Create mock Cmab object
+        Cmab mockCmab = mock(Cmab.class);
+        
+        // Create experiment with whitelisting and CMAB config
+        Experiment experimentWithWhitelisting = new Experiment(
+            cmabExperiment.getId(),
+            cmabExperiment.getKey(),
+            cmabExperiment.getStatus(),
+            cmabExperiment.getLayerId(),
+            cmabExperiment.getAudienceIds(),
+            cmabExperiment.getAudienceConditions(),
+            cmabExperiment.getVariations(),
+            userIdToVariationKeyMap,
+            cmabExperiment.getTrafficAllocation(),
+            mockCmab // This makes it a CMAB experiment
+        );
+        
+        // Mock CmabService.getDecision to return a different variation (should be ignored)
+        // Note: We don't need to mock anything since the user is whitelisted
+        
+        // Call getVariation
+        DecisionResponse<Variation> result = decisionService.getVariation(
+            experimentWithWhitelisting,
+            optimizely.createUserContext(whitelistedUserId, Collections.emptyMap()),
+            v4ProjectConfig
+        );
+        
+        // Verify whitelisted variation is returned
+        assertEquals(whitelistedVariation, result.getResult());
+
+        // Verify CmabService was never called since user is whitelisted
+        verify(mockCmabService, never()).getDecision(any(), any(), any(), any());
+        
+        // Verify appropriate logging
+        logbackVerifier.expectMessage(Level.INFO, 
+            "User \"" + whitelistedUserId + "\" is forced in variation \"" + 
+            whitelistedVariation.getKey() + "\".");
+    }
+
+    /**
+     * Verify that forced variations take precedence over CMAB service decisions
+     * in CMAB experiments.
+     */
+    @Test
+    public void getVariationCmabExperimentForcedPrecedesCmabService() {
+        // Create a CMAB experiment
+        Experiment cmabExperiment = createMockCmabExperiment();
+        Variation forcedVariation = cmabExperiment.getVariations().get(0);
+        Variation cmabServiceVariation = cmabExperiment.getVariations().get(1);
+        
+        // Create mock Cmab object
+        Cmab mockCmab = mock(Cmab.class);
+        
+        // Create experiment with CMAB config (no whitelisting)
+        Experiment experiment = new Experiment(
+            cmabExperiment.getId(),
+            cmabExperiment.getKey(),
+            cmabExperiment.getStatus(),
+            cmabExperiment.getLayerId(),
+            cmabExperiment.getAudienceIds(),
+            cmabExperiment.getAudienceConditions(),
+            cmabExperiment.getVariations(),
+            Collections.emptyMap(), // No whitelisting
+            cmabExperiment.getTrafficAllocation(),
+            mockCmab // This makes it a CMAB experiment
+        );
+        
+        // Set forced variation for the user
+        decisionService.setForcedVariation(experiment, genericUserId, forcedVariation.getKey());
+        
+        // Mock CmabService.getDecision to return a different variation (should be ignored)
+        CmabDecision mockCmabDecision = mock(CmabDecision.class);
+        when(mockCmabDecision.getVariationId()).thenReturn(cmabServiceVariation.getId());
+        when(mockCmabService.getDecision(any(), any(), any(), any()))
+            .thenReturn(mockCmabDecision);
+        
+        // Call getVariation
+        DecisionResponse<Variation> result = decisionService.getVariation(
+            experiment,
+            optimizely.createUserContext(genericUserId, Collections.emptyMap()),
+            v4ProjectConfig
+        );
+        
+        // Verify forced variation is returned (not CMAB service result)
+        assertEquals(forcedVariation, result.getResult());
+        
+        // Verify CmabService was never called since user has forced variation
+        verify(mockCmabService, never()).getDecision(any(), any(), any(), any());
+    }
+
+    private Experiment createMockCmabExperiment() {
+        List<Variation> variations = Arrays.asList(
+            new Variation("111151", "variation_1"),
+            new Variation("111152", "variation_2")
+        );
+        
+        List<TrafficAllocation> trafficAllocations = Arrays.asList(
+            new TrafficAllocation("111151", 5000),
+            new TrafficAllocation("111152", 10000)
+        );
+        
+        // Mock CMAB configuration
+        Cmab mockCmab = mock(Cmab.class);
+        
+        return new Experiment(
+            "111150",
+            "cmab_experiment",
+            "Running",
+            "111150",
+            Collections.emptyList(), // No audience IDs
+            null, // No audience conditions
+            variations,
+            Collections.emptyMap(), // No whitelisting initially
+            trafficAllocations,
+            mockCmab // This makes it a CMAB experiment
+        );
     }
 }
