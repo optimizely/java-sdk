@@ -57,6 +57,9 @@ import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNo
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 public class OptimizelyUserContextTest {
@@ -2266,5 +2269,459 @@ public class OptimizelyUserContextTest {
         }
         assertEquals("Expected exactly the included flags to be in holdout", includedInHoldout.size(), holdoutCount);
         logbackVerifier.expectMessage(Level.INFO, expectedReason);
+    }
+
+    @Test
+    public void decideWithoutCmab_featureTest() {
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .build();
+
+        String flagKey = "feature_2";
+        String experimentKey = "exp_no_audience";
+        String variationKey = "variation_with_traffic";
+        String experimentId = "10420810910";
+        String variationId = "10418551353";
+        OptimizelyJSON variablesExpected = optimizely.getAllFeatureVariables(flagKey, userId);
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decideWithoutCmab(flagKey);
+
+        assertEquals(decision.getVariationKey(), variationKey);
+        assertTrue(decision.getEnabled());
+        assertEquals(decision.getVariables().toMap(), variablesExpected.toMap());
+        assertEquals(decision.getRuleKey(), experimentKey);
+        assertEquals(decision.getFlagKey(), flagKey);
+        assertEquals(decision.getUserContext(), user);
+        assertTrue(decision.getReasons().isEmpty());
+
+        DecisionMetadata metadata = new DecisionMetadata.Builder()
+            .setFlagKey(flagKey)
+            .setRuleKey(experimentKey)
+            .setRuleType(FeatureDecision.DecisionSource.FEATURE_TEST.toString())
+            .setVariationKey(variationKey)
+            .setEnabled(true)
+            .build();
+        eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap(), metadata);
+    }
+
+    @Test
+    public void decideForKeysWithoutCmab_multipleFlags() {
+        String flagKey1 = "feature_1";
+        String flagKey2 = "feature_2";
+
+        List<String> flagKeys = Arrays.asList(flagKey1, flagKey2);
+        OptimizelyJSON variablesExpected1 = optimizely.getAllFeatureVariables(flagKey1, userId);
+        OptimizelyJSON variablesExpected2 = optimizely.getAllFeatureVariables(flagKey2, userId);
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId, Collections.singletonMap("gender", "f"));
+        Map<String, OptimizelyDecision> decisions = user.decideForKeysWithoutCmab(flagKeys);
+
+        assertEquals(decisions.size(), 2);
+
+        assertEquals(
+            decisions.get(flagKey1),
+            new OptimizelyDecision("a",
+                true,
+                variablesExpected1,
+                "exp_with_audience",
+                flagKey1,
+                user,
+                Collections.emptyList()));
+        assertEquals(
+            decisions.get(flagKey2),
+            new OptimizelyDecision("variation_with_traffic",
+                true,
+                variablesExpected2,
+                "exp_no_audience",
+                flagKey2,
+                user,
+                Collections.emptyList()));
+    }
+
+    @Test
+    public void decideForKeysWithoutCmab_withOptions() {
+        String flagKey1 = "feature_1";
+        String flagKey2 = "feature_2";
+
+        List<String> flagKeys = Arrays.asList(flagKey1, flagKey2);
+        List<OptimizelyDecideOption> options = Arrays.asList(OptimizelyDecideOption.EXCLUDE_VARIABLES);
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId, Collections.singletonMap("gender", "f"));
+        Map<String, OptimizelyDecision> decisions = user.decideForKeysWithoutCmab(flagKeys, options);
+
+        assertEquals(decisions.size(), 2);
+
+        // Both decisions should have empty variables due to EXCLUDE_VARIABLES option
+        OptimizelyDecision decision1 = decisions.get(flagKey1);
+        OptimizelyDecision decision2 = decisions.get(flagKey2);
+
+        assertTrue(decision1.getVariables().toMap().isEmpty());
+        assertTrue(decision2.getVariables().toMap().isEmpty());
+        assertEquals(decision1.getVariationKey(), "a");
+        assertEquals(decision2.getVariationKey(), "variation_with_traffic");
+    }
+
+    @Test
+    public void decideAllWithoutCmab_allFlags() {
+        EventProcessor mockEventProcessor = mock(EventProcessor.class);
+
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withEventProcessor(mockEventProcessor)
+            .build();
+
+        String flagKey1 = "feature_1";
+        String flagKey2 = "feature_2";
+        String flagKey3 = "feature_3";
+        Map<String, Object> attributes = Collections.singletonMap("gender", "f");
+
+        OptimizelyJSON variablesExpected1 = optimizely.getAllFeatureVariables(flagKey1, userId);
+        OptimizelyJSON variablesExpected2 = optimizely.getAllFeatureVariables(flagKey2, userId);
+        OptimizelyJSON variablesExpected3 = new OptimizelyJSON(Collections.emptyMap());
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
+        Map<String, OptimizelyDecision> decisions = user.decideAllWithoutCmab();
+        assertEquals(decisions.size(), 3);
+
+        assertEquals(
+            decisions.get(flagKey1),
+            new OptimizelyDecision(
+                "a",
+                true,
+                variablesExpected1,
+                "exp_with_audience",
+                flagKey1,
+                user,
+                Collections.emptyList()));
+        assertEquals(
+            decisions.get(flagKey2),
+            new OptimizelyDecision(
+                "variation_with_traffic",
+                true,
+                variablesExpected2,
+                "exp_no_audience",
+                flagKey2,
+                user,
+                Collections.emptyList()));
+                assertEquals(
+            decisions.get(flagKey3),
+            new OptimizelyDecision(
+                null,
+                false,
+                variablesExpected3,
+                null,
+                flagKey3,
+                user,
+                Collections.emptyList()));
+
+        ArgumentCaptor<ImpressionEvent> argumentCaptor = ArgumentCaptor.forClass(ImpressionEvent.class);
+        verify(mockEventProcessor, times(3)).process(argumentCaptor.capture());
+
+        List<ImpressionEvent> sentEvents = argumentCaptor.getAllValues();
+        assertEquals(sentEvents.size(), 3);
+
+        assertEquals(sentEvents.get(0).getExperimentKey(), "exp_with_audience");
+        assertEquals(sentEvents.get(0).getVariationKey(), "a");
+        assertEquals(sentEvents.get(0).getUserContext().getUserId(), userId);
+
+        assertEquals(sentEvents.get(1).getExperimentKey(), "exp_no_audience");
+        assertEquals(sentEvents.get(1).getVariationKey(), "variation_with_traffic");
+        assertEquals(sentEvents.get(1).getUserContext().getUserId(), userId);
+
+        assertEquals(sentEvents.get(2).getExperimentKey(), "");
+        assertEquals(sentEvents.get(2).getUserContext().getUserId(), userId);
+    }
+
+    @Test
+    public void decideAllWithoutCmab_withOptions() {
+        String flagKey1 = "feature_1";
+        OptimizelyJSON variablesExpected1 = optimizely.getAllFeatureVariables(flagKey1, userId);
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId, Collections.singletonMap("gender", "f"));
+        Map<String, OptimizelyDecision> decisions = user.decideAllWithoutCmab(Arrays.asList(OptimizelyDecideOption.ENABLED_FLAGS_ONLY));
+
+        assertEquals(decisions.size(), 2); // Only enabled flags
+
+        assertEquals(
+            decisions.get(flagKey1),
+            new OptimizelyDecision(
+                "a",
+                true,
+                variablesExpected1,
+                "exp_with_audience",
+                flagKey1,
+                user,
+                Collections.emptyList()));
+    }
+
+    @Test
+    public void decideAllWithoutCmab_ups_batching() throws Exception {
+        UserProfileService ups = mock(UserProfileService.class);
+
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withUserProfileService(ups)
+            .build();
+
+        Map<String, Object> attributes = Collections.singletonMap("gender", "f");
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
+        Map<String, OptimizelyDecision> decisions = user.decideAllWithoutCmab();
+
+        assertEquals(decisions.size(), 3);
+
+        ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+
+        verify(ups, times(1)).lookup(userId);
+        verify(ups, times(1)).save(argumentCaptor.capture());
+
+        Map<String, Object> savedUps = argumentCaptor.getValue();
+        UserProfile savedProfile = UserProfileUtils.convertMapToUserProfile(savedUps);
+
+        assertEquals(savedProfile.userId, userId);
+    }
+
+    @Test
+    public void decideWithoutCmab_sdkNotReady() {
+        String flagKey = "feature_1";
+
+        Optimizely optimizely = new Optimizely.Builder().build();
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decideWithoutCmab(flagKey);
+
+        assertNull(decision.getVariationKey());
+        assertFalse(decision.getEnabled());
+        assertTrue(decision.getVariables().isEmpty());
+        assertEquals(decision.getFlagKey(), flagKey);
+        assertEquals(decision.getUserContext(), user);
+
+        assertEquals(decision.getReasons().size(), 1);
+        assertEquals(decision.getReasons().get(0), DecisionMessage.SDK_NOT_READY.reason());
+    }
+
+    @Test
+    public void decideForKeysWithoutCmab_sdkNotReady() {
+        List<String> flagKeys = Arrays.asList("feature_1");
+
+        Optimizely optimizely = new Optimizely.Builder().build();
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        Map<String, OptimizelyDecision> decisions = user.decideForKeysWithoutCmab(flagKeys);
+
+        assertEquals(decisions.size(), 0);
+    }
+    @Test
+    public void decideWithoutCmab_bypassUPS() throws Exception {
+        String flagKey = "feature_2";        // embedding experiment: "exp_no_audience"
+        String experimentId = "10420810910";    // "exp_no_audience"
+        String variationId1 = "10418551353";
+        String variationId2 = "10418510624";
+        String variationKey1 = "variation_with_traffic";
+        String variationKey2 = "variation_no_traffic";
+
+        UserProfileService ups = mock(UserProfileService.class);
+        when(ups.lookup(userId)).thenReturn(createUserProfileMap(experimentId, variationId2));
+
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withUserProfileService(ups)
+            .build();
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        OptimizelyDecision decision = user.decideWithoutCmab(flagKey);
+        // should return variationId2 set by UPS
+        assertEquals(decision.getVariationKey(), variationKey2);
+
+        decision = user.decideWithoutCmab(flagKey, Arrays.asList(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE));
+        // should ignore variationId2 set by UPS and return variationId1
+        assertEquals(decision.getVariationKey(), variationKey1);
+        // also should not save either
+        verify(ups, never()).save(anyObject());
+    }
+
+    @Test
+    public void decideAsync_featureTest() throws InterruptedException {
+        optimizely = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .build();
+
+        String flagKey = "feature_2";
+        String experimentKey = "exp_no_audience";
+        String variationKey = "variation_with_traffic";
+        String experimentId = "10420810910";
+        String variationId = "10418551353";
+        OptimizelyJSON variablesExpected = optimizely.getAllFeatureVariables(flagKey, userId);
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        
+        CountDownLatch latch = new CountDownLatch(1);
+        final OptimizelyDecision[] result = new OptimizelyDecision[1];
+        
+        user.decideAsync(flagKey, decision -> {
+            result[0] = decision;
+            latch.countDown();
+        });
+
+        assertTrue(latch.await(1, java.util.concurrent.TimeUnit.SECONDS));
+        OptimizelyDecision decision = result[0];
+
+        assertEquals(decision.getVariationKey(), variationKey);
+        assertTrue(decision.getEnabled());
+        assertEquals(decision.getVariables().toMap(), variablesExpected.toMap());
+        assertEquals(decision.getRuleKey(), experimentKey);
+        assertEquals(decision.getFlagKey(), flagKey);
+        assertEquals(decision.getUserContext(), user);
+        assertTrue(decision.getReasons().isEmpty());
+
+        DecisionMetadata metadata = new DecisionMetadata.Builder()
+            .setFlagKey(flagKey)
+            .setRuleKey(experimentKey)
+            .setRuleType(FeatureDecision.DecisionSource.FEATURE_TEST.toString())
+            .setVariationKey(variationKey)
+            .setEnabled(true)
+            .build();
+        eventHandler.expectImpression(experimentId, variationId, userId, Collections.emptyMap(), metadata);
+    }
+
+    @Test
+    public void decideAsync_sdkNotReady() throws InterruptedException {
+        String flagKey = "feature_1";
+
+        Optimizely optimizely = new Optimizely.Builder().build();
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        
+        CountDownLatch latch = new CountDownLatch(1);
+        final OptimizelyDecision[] result = new OptimizelyDecision[1];
+        
+        user.decideAsync(flagKey, decision -> {
+            result[0] = decision;
+            latch.countDown();
+        });
+
+        assertTrue(latch.await(1, java.util.concurrent.TimeUnit.SECONDS));
+        OptimizelyDecision decision = result[0];
+
+        assertNull(decision.getVariationKey());
+        assertFalse(decision.getEnabled());
+        assertTrue(decision.getVariables().isEmpty());
+        assertEquals(decision.getFlagKey(), flagKey);
+        assertEquals(decision.getUserContext(), user);
+    }
+
+    @Test
+    public void decideForKeysAsync_multipleFlags() throws InterruptedException {
+        String flagKey1 = "feature_1";
+        String flagKey2 = "feature_2";
+
+        List<String> flagKeys = Arrays.asList(flagKey1, flagKey2);
+        OptimizelyJSON variablesExpected1 = optimizely.getAllFeatureVariables(flagKey1, userId);
+        OptimizelyJSON variablesExpected2 = optimizely.getAllFeatureVariables(flagKey2, userId);
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId, Collections.singletonMap("gender", "f"));
+        
+        CountDownLatch latch = new CountDownLatch(1);
+        final Map<String, OptimizelyDecision>[] result = new Map[1];
+        
+        user.decideForKeysAsync(flagKeys, decisions -> {
+            result[0] = decisions;
+            latch.countDown();
+        });
+
+        assertTrue(latch.await(1, java.util.concurrent.TimeUnit.SECONDS));
+        Map<String, OptimizelyDecision> decisions = result[0];
+
+        assertEquals(decisions.size(), 2);
+
+        assertEquals(
+            decisions.get(flagKey1),
+            new OptimizelyDecision("a",
+                true,
+                variablesExpected1,
+                "exp_with_audience",
+                flagKey1,
+                user,
+                Collections.emptyList()));
+        assertEquals(
+            decisions.get(flagKey2),
+            new OptimizelyDecision("variation_with_traffic",
+                true,
+                variablesExpected2,
+                "exp_no_audience",
+                flagKey2,
+                user,
+                Collections.emptyList()));
+    }
+
+    @Test
+    public void decideForKeysAsync_withOptions() throws InterruptedException {
+        String flagKey1 = "feature_1";
+        String flagKey2 = "feature_2";
+
+        List<String> flagKeys = Arrays.asList(flagKey1, flagKey2);
+        List<OptimizelyDecideOption> options = Arrays.asList(OptimizelyDecideOption.EXCLUDE_VARIABLES);
+
+        OptimizelyUserContext user = optimizely.createUserContext(userId, Collections.singletonMap("gender", "f"));
+        
+        CountDownLatch latch = new CountDownLatch(1);
+        final Map<String, OptimizelyDecision>[] result = new Map[1];
+        
+        user.decideForKeysAsync(flagKeys, decisions -> {
+            result[0] = decisions;
+            latch.countDown();
+        }, options);
+
+        assertTrue(latch.await(1, java.util.concurrent.TimeUnit.SECONDS));
+        Map<String, OptimizelyDecision> decisions = result[0];
+
+        assertEquals(decisions.size(), 2);
+
+        // Both decisions should have empty variables due to EXCLUDE_VARIABLES option
+        OptimizelyDecision decision1 = decisions.get(flagKey1);
+        OptimizelyDecision decision2 = decisions.get(flagKey2);
+
+        assertTrue(decision1.getVariables().toMap().isEmpty());
+        assertTrue(decision2.getVariables().toMap().isEmpty());
+        assertEquals(decision1.getVariationKey(), "a");
+        assertEquals(decision2.getVariationKey(), "variation_with_traffic");
+    }
+
+    @Test
+    public void decideForKeysAsync_sdkNotReady() throws InterruptedException {
+        List<String> flagKeys = Arrays.asList("feature_1");
+
+        Optimizely optimizely = new Optimizely.Builder().build();
+        OptimizelyUserContext user = optimizely.createUserContext(userId);
+        
+        CountDownLatch latch = new CountDownLatch(1);
+        final Map<String, OptimizelyDecision>[] result = new Map[1];
+        
+        user.decideForKeysAsync(flagKeys, decisions -> {
+            result[0] = decisions;
+            latch.countDown();
+        });
+
+        assertTrue(latch.await(1, java.util.concurrent.TimeUnit.SECONDS));
+        Map<String, OptimizelyDecision> decisions = result[0];
+
+        assertEquals(decisions.size(), 0);
+    }
+
+    @Test
+    public void decideAllAsync_callback_exception() throws InterruptedException {
+        OptimizelyUserContext user = optimizely.createUserContext(userId, Collections.singletonMap("gender", "f"));
+        
+        CountDownLatch latch = new CountDownLatch(1);
+        final boolean[] callbackExecuted = new boolean[1];
+        
+        user.decideAllAsync(decisions -> {
+            callbackExecuted[0] = true;
+            latch.countDown();
+            throw new RuntimeException("Test exception in callback");
+        });
+
+        assertTrue(latch.await(1, java.util.concurrent.TimeUnit.SECONDS));
+        assertTrue(callbackExecuted[0]);
     }
 }
