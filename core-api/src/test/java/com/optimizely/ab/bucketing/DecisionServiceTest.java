@@ -1500,6 +1500,66 @@ public class DecisionServiceTest {
         verify(mockCmabService, never()).getDecision(any(), any(), any(), any());
     }
 
+    /**
+     * Verify that getVariation handles CMAB service errors gracefully
+     * and falls back appropriately when CmabService throws an exception.
+     */
+    @Test
+    public void getVariationCmabExperimentServiceError() {
+        // Create a CMAB experiment
+        Experiment cmabExperiment = createMockCmabExperiment();
+        
+        // Create mock Cmab object
+        Cmab mockCmab = mock(Cmab.class);
+        when(mockCmab.getTrafficAllocation()).thenReturn(10000); 
+        
+        // Create experiment with CMAB config (no whitelisting, no forced variations)
+        Experiment experiment = new Experiment(
+            cmabExperiment.getId(),
+            cmabExperiment.getKey(),
+            cmabExperiment.getStatus(),
+            cmabExperiment.getLayerId(),
+            cmabExperiment.getAudienceIds(),
+            cmabExperiment.getAudienceConditions(),
+            cmabExperiment.getVariations(),
+            Collections.emptyMap(), // No whitelisting
+            cmabExperiment.getTrafficAllocation(),
+            mockCmab // This makes it a CMAB experiment
+        );
+        
+        Bucketer bucketer = new Bucketer();
+        DecisionService decisionServiceWithMockCmabService = new DecisionService(
+            bucketer,
+            mockErrorHandler, 
+            null, 
+            mockCmabService
+        );
+        
+        // Mock CmabService.getDecision to throw an exception
+        RuntimeException cmabException = new RuntimeException("CMAB service unavailable");
+        when(mockCmabService.getDecision(any(), any(), any(), any()))
+            .thenThrow(cmabException);
+        
+        // Call getVariation
+        DecisionResponse<Variation> result = decisionServiceWithMockCmabService.getVariation(
+            experiment,
+            optimizely.createUserContext(genericUserId, Collections.emptyMap()),
+            v4ProjectConfig
+        );
+        
+        // Verify that the method handles the error gracefully
+        // The result depends on whether the real bucketer allocates the user to CMAB traffic or not
+        // If user is not in CMAB traffic: result should be null
+        // If user is in CMAB traffic but CMAB service fails: result should be null
+        assertNull(result.getResult());
+        
+        // Verify that the error is not propagated (no exception thrown)
+        assertFalse(result.isError());
+        
+        // Assert that CmabService.getDecision was called exactly once
+        verify(mockCmabService, times(1)).getDecision(any(), any(), any(), any());
+    }
+
     private Experiment createMockCmabExperiment() {
         List<Variation> variations = Arrays.asList(
             new Variation("111151", "variation_1"),
