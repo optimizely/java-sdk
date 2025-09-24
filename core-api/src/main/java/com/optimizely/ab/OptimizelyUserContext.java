@@ -31,8 +31,12 @@ import org.slf4j.LoggerFactory;
 
 import com.optimizely.ab.odp.ODPSegmentCallback;
 import com.optimizely.ab.odp.ODPSegmentOption;
+import com.optimizely.ab.optimizelydecision.AsyncDecisionFetcher;
+import com.optimizely.ab.optimizelydecision.AsyncDecisionsFetcher;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecisionCallback;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecisionsCallback;
 
 public class OptimizelyUserContext {
     // OptimizelyForcedDecisionsKey mapped to variationKeys
@@ -267,6 +271,67 @@ public class OptimizelyUserContext {
      */
     public Map<String, OptimizelyDecision> decideAllWithoutCmab() {
         return decideAllWithoutCmab(Collections.emptyList());
+    }
+
+    /**
+     * Returns a decision result asynchronously for a given flag key and a user context.
+     *
+     * @param key A flag key for which a decision will be made.
+     * @param callback A callback to invoke when the decision is available.
+     * @param options A list of options for decision-making.
+     */
+    public void decideAsync(@Nonnull String key,
+                            @Nonnull OptimizelyDecisionCallback callback,
+                            @Nonnull List<OptimizelyDecideOption> options) {
+        AsyncDecisionFetcher fetcher = new AsyncDecisionFetcher(this, key, options, callback);
+        fetcher.start();
+    }
+
+    /**
+     * Returns a decision result asynchronously for a given flag key and a user context.
+     *
+     * @param key A flag key for which a decision will be made.
+     * @param callback A callback to invoke when the decision is available.
+     */
+    public void decideAsync(@Nonnull String key, @Nonnull OptimizelyDecisionCallback callback) {
+        decideAsync(key, callback, Collections.emptyList());
+    }
+
+    /**
+     * Returns decision results asynchronously for multiple flag keys.
+     *
+     * @param keys A list of flag keys for which decisions will be made.
+     * @param callback A callback to invoke when decisions are available.
+     * @param options A list of options for decision-making.
+     */
+    public void decideForKeysAsync(@Nonnull List<String> keys,
+                                   @Nonnull OptimizelyDecisionsCallback callback,
+                                   @Nonnull List<OptimizelyDecideOption> options) {
+        AsyncDecisionsFetcher fetcher = new AsyncDecisionsFetcher(this, keys, options, callback);
+        fetcher.start();
+    }
+
+    /**
+     * Returns decision results asynchronously for multiple flag keys.
+     */
+    public void decideForKeysAsync(@Nonnull List<String> keys, @Nonnull OptimizelyDecisionsCallback callback) {
+        decideForKeysAsync(keys, callback, Collections.emptyList());
+    }
+
+    /**
+     * Returns decision results asynchronously for all active flag keys.
+     */
+    public void decideAllAsync(@Nonnull OptimizelyDecisionsCallback callback,
+                               @Nonnull List<OptimizelyDecideOption> options) {
+        AsyncDecisionsFetcher fetcher = new AsyncDecisionsFetcher(this, null, options, callback, true);
+        fetcher.start();
+    }
+
+    /**
+     * Returns decision results asynchronously for all active flag keys.
+     */
+    public void decideAllAsync(@Nonnull OptimizelyDecisionsCallback callback) {
+        decideAllAsync(callback, Collections.emptyList());
     }
 
     /**
