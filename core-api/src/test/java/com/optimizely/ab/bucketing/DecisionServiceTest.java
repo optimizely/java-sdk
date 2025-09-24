@@ -1560,6 +1560,134 @@ public class DecisionServiceTest {
         verify(mockCmabService, times(1)).getDecision(any(), any(), any(), any());
     }
 
+    /**
+     * Verify that getVariation returns the variation from CMAB service
+     * when user is bucketed into CMAB traffic and service returns a valid decision.
+     */
+    @Test
+    public void getVariationCmabExperimentServiceSuccess() {
+        // Create a CMAB experiment
+        Experiment cmabExperiment = createMockCmabExperiment();
+        Variation expectedVariation = cmabExperiment.getVariations().get(1); // Use second variation
+        
+        // Create mock Cmab object
+        Cmab mockCmab = mock(Cmab.class);
+        when(mockCmab.getTrafficAllocation()).thenReturn(4000);
+        
+        // Create experiment with CMAB config (no whitelisting, no forced variations)
+        Experiment experiment = new Experiment(
+            cmabExperiment.getId(),
+            cmabExperiment.getKey(),
+            cmabExperiment.getStatus(),
+            cmabExperiment.getLayerId(),
+            cmabExperiment.getAudienceIds(),
+            cmabExperiment.getAudienceConditions(),
+            cmabExperiment.getVariations(),
+            Collections.emptyMap(), // No whitelisting
+            cmabExperiment.getTrafficAllocation(),
+            mockCmab // This makes it a CMAB experiment
+        );
+        
+        Bucketer mockBucketer = mock(Bucketer.class);
+        when(mockBucketer.bucketForCmab(any(Experiment.class), anyString(), any(ProjectConfig.class)))
+            .thenReturn(DecisionResponse.responseNoReasons("$"));
+        DecisionService decisionServiceWithMockCmabService = new DecisionService(
+            mockBucketer,
+            mockErrorHandler, 
+            null, 
+            mockCmabService
+        );
+        
+        // Mock CmabService.getDecision to return a valid decision
+        CmabDecision mockCmabDecision = mock(CmabDecision.class);
+        when(mockCmabDecision.getVariationId()).thenReturn(expectedVariation.getId());
+        when(mockCmabService.getDecision(any(), any(), any(), any()))
+            .thenReturn(mockCmabDecision);
+        
+        // Call getVariation
+        DecisionResponse<Variation> result = decisionServiceWithMockCmabService.getVariation(
+            experiment,
+            optimizely.createUserContext(genericUserId, Collections.emptyMap()),
+            v4ProjectConfig
+        );
+        
+        // Verify that CMAB service decision is returned
+        assertEquals(expectedVariation, result.getResult());
+        
+        // Verify that the result is not an error
+        assertFalse(result.isError());
+        
+        // Assert that CmabService.getDecision was called exactly once
+        verify(mockCmabService, times(1)).getDecision(any(), any(), any(), any());
+        
+        // Verify that the correct parameters were passed to CMAB service
+        verify(mockCmabService).getDecision(
+            eq(v4ProjectConfig),
+            any(OptimizelyUserContext.class),
+            eq(experiment.getId()),
+            any(List.class)
+        );
+    }
+
+    /**
+     * Verify that getVariation returns null when user is not bucketed into CMAB traffic
+     * by mocking the bucketer to return null for CMAB allocation.
+     */
+    @Test
+    public void getVariationCmabExperimentUserNotInTrafficAllocation() {
+        // Create a CMAB experiment
+        Experiment cmabExperiment = createMockCmabExperiment();
+        
+        // Create mock Cmab object
+        Cmab mockCmab = mock(Cmab.class);
+        when(mockCmab.getTrafficAllocation()).thenReturn(5000); // 50% traffic allocation
+        
+        // Create experiment with CMAB config (no whitelisting, no forced variations)
+        Experiment experiment = new Experiment(
+            cmabExperiment.getId(),
+            cmabExperiment.getKey(),
+            cmabExperiment.getStatus(),
+            cmabExperiment.getLayerId(),
+            cmabExperiment.getAudienceIds(),
+            cmabExperiment.getAudienceConditions(),
+            cmabExperiment.getVariations(),
+            Collections.emptyMap(), // No whitelisting
+            cmabExperiment.getTrafficAllocation(),
+            mockCmab // This makes it a CMAB experiment
+        );
+        
+        // Mock bucketer to return null for CMAB allocation (user not in CMAB traffic)
+        Bucketer mockBucketer = mock(Bucketer.class);
+        when(mockBucketer.bucketForCmab(any(Experiment.class), anyString(), any(ProjectConfig.class)))
+            .thenReturn(DecisionResponse.nullNoReasons());
+        
+        DecisionService decisionServiceWithMockCmabService = new DecisionService(
+            mockBucketer,
+            mockErrorHandler, 
+            null, 
+            mockCmabService
+        );
+        
+        // Call getVariation
+        DecisionResponse<Variation> result = decisionServiceWithMockCmabService.getVariation(
+            experiment,
+            optimizely.createUserContext(genericUserId, Collections.emptyMap()),
+            v4ProjectConfig
+        );
+        
+        // Verify that no variation is returned (user not in CMAB traffic)
+        assertNull(result.getResult());
+        
+        // Verify that the result is not an error
+        assertFalse(result.isError());
+        
+        // Assert that CmabService.getDecision was never called (user not in CMAB traffic)
+        verify(mockCmabService, never()).getDecision(any(), any(), any(), any());
+        
+        // Verify that bucketer was called for CMAB allocation
+        verify(mockBucketer, times(1)).bucketForCmab(any(Experiment.class), anyString(), any(ProjectConfig.class));
+    }
+
     private Experiment createMockCmabExperiment() {
         List<Variation> variations = Arrays.asList(
             new Variation("111151", "variation_1"),
@@ -1568,7 +1696,7 @@ public class DecisionServiceTest {
         
         List<TrafficAllocation> trafficAllocations = Arrays.asList(
             new TrafficAllocation("111151", 5000),
-            new TrafficAllocation("111152", 10000)
+            new TrafficAllocation("111152", 4000)
         );
         
         // Mock CMAB configuration
