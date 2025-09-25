@@ -213,9 +213,9 @@ public class OptimizelyUserContext {
      * @param options A list of options for decision-making.
      * @return A decision result.
      */
-    public OptimizelyDecision decideWithoutCmab(@Nonnull String key,
+    public OptimizelyDecision decideSync(@Nonnull String key,
                                                 @Nonnull List<OptimizelyDecideOption> options) {
-        return optimizely.decideWithoutCmab(copy(), key, options);
+        return optimizely.decideSync(copy(), key, options);
     }
 
     /**
@@ -225,8 +225,8 @@ public class OptimizelyUserContext {
      * @param key A flag key for which a decision will be made.
      * @return A decision result.
      */
-    public OptimizelyDecision decideWithoutCmab(@Nonnull String key) {
-        return decideWithoutCmab(key, Collections.emptyList());
+    public OptimizelyDecision decideSync(@Nonnull String key) {
+        return decideSync(key, Collections.emptyList());
     }
 
     /**
@@ -236,9 +236,9 @@ public class OptimizelyUserContext {
      * @param options A list of options for decision-making.
      * @return All decision results mapped by flag keys.
      */
-    public Map<String, OptimizelyDecision> decideForKeysWithoutCmab(@Nonnull List<String> keys,
+    public Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull List<String> keys,
                                                                     @Nonnull List<OptimizelyDecideOption> options) {
-        return optimizely.decideForKeysWithoutCmab(copy(), keys, options);
+        return optimizely.decideForKeysSync(copy(), keys, options);
     }
 
     /**
@@ -248,8 +248,8 @@ public class OptimizelyUserContext {
      * @param keys A list of flag keys for which decisions will be made.
      * @return All decision results mapped by flag keys.
      */
-    public Map<String, OptimizelyDecision> decideForKeysWithoutCmab(@Nonnull List<String> keys) {
-        return decideForKeysWithoutCmab(keys, Collections.emptyList());
+    public Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull List<String> keys) {
+        return decideForKeysSync(keys, Collections.emptyList());
     }
 
     /**
@@ -259,8 +259,8 @@ public class OptimizelyUserContext {
      * @param options A list of options for decision-making.
      * @return All decision results mapped by flag keys.
      */
-    public Map<String, OptimizelyDecision> decideAllWithoutCmab(@Nonnull List<OptimizelyDecideOption> options) {
-        return optimizely.decideAllWithoutCmab(copy(), options);
+    public Map<String, OptimizelyDecision> decideAllSync(@Nonnull List<OptimizelyDecideOption> options) {
+        return optimizely.decideAllSync(copy(), options);
     }
 
     /**
@@ -269,8 +269,8 @@ public class OptimizelyUserContext {
      *
      * @return A dictionary of all decision results, mapped by flag keys.
      */
-    public Map<String, OptimizelyDecision> decideAllWithoutCmab() {
-        return decideAllWithoutCmab(Collections.emptyList());
+    public Map<String, OptimizelyDecision> decideAllSync() {
+        return decideAllSync(Collections.emptyList());
     }
 
     /**

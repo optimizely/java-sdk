@@ -2272,7 +2272,7 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
-    public void decideWithoutCmab_featureTest() {
+    public void decideSync_featureTest() {
         optimizely = new Optimizely.Builder()
             .withDatafile(datafile)
             .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
@@ -2286,7 +2286,7 @@ public class OptimizelyUserContextTest {
         OptimizelyJSON variablesExpected = optimizely.getAllFeatureVariables(flagKey, userId);
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        OptimizelyDecision decision = user.decideWithoutCmab(flagKey);
+        OptimizelyDecision decision = user.decideSync(flagKey);
 
         assertEquals(decision.getVariationKey(), variationKey);
         assertTrue(decision.getEnabled());
@@ -2307,7 +2307,7 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
-    public void decideForKeysWithoutCmab_multipleFlags() {
+    public void decideForKeysSync_multipleFlags() {
         String flagKey1 = "feature_1";
         String flagKey2 = "feature_2";
 
@@ -2316,7 +2316,7 @@ public class OptimizelyUserContextTest {
         OptimizelyJSON variablesExpected2 = optimizely.getAllFeatureVariables(flagKey2, userId);
 
         OptimizelyUserContext user = optimizely.createUserContext(userId, Collections.singletonMap("gender", "f"));
-        Map<String, OptimizelyDecision> decisions = user.decideForKeysWithoutCmab(flagKeys);
+        Map<String, OptimizelyDecision> decisions = user.decideForKeysSync(flagKeys);
 
         assertEquals(decisions.size(), 2);
 
@@ -2341,7 +2341,7 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
-    public void decideForKeysWithoutCmab_withOptions() {
+    public void decideForKeysSync_withOptions() {
         String flagKey1 = "feature_1";
         String flagKey2 = "feature_2";
 
@@ -2349,7 +2349,7 @@ public class OptimizelyUserContextTest {
         List<OptimizelyDecideOption> options = Arrays.asList(OptimizelyDecideOption.EXCLUDE_VARIABLES);
 
         OptimizelyUserContext user = optimizely.createUserContext(userId, Collections.singletonMap("gender", "f"));
-        Map<String, OptimizelyDecision> decisions = user.decideForKeysWithoutCmab(flagKeys, options);
+        Map<String, OptimizelyDecision> decisions = user.decideForKeysSync(flagKeys, options);
 
         assertEquals(decisions.size(), 2);
 
@@ -2364,7 +2364,7 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
-    public void decideAllWithoutCmab_allFlags() {
+    public void decideAllSync_allFlags() {
         EventProcessor mockEventProcessor = mock(EventProcessor.class);
 
         optimizely = new Optimizely.Builder()
@@ -2382,7 +2382,7 @@ public class OptimizelyUserContextTest {
         OptimizelyJSON variablesExpected3 = new OptimizelyJSON(Collections.emptyMap());
 
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
-        Map<String, OptimizelyDecision> decisions = user.decideAllWithoutCmab();
+        Map<String, OptimizelyDecision> decisions = user.decideAllSync();
         assertEquals(decisions.size(), 3);
 
         assertEquals(
@@ -2435,12 +2435,12 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
-    public void decideAllWithoutCmab_withOptions() {
+    public void decideAllSync_withOptions() {
         String flagKey1 = "feature_1";
         OptimizelyJSON variablesExpected1 = optimizely.getAllFeatureVariables(flagKey1, userId);
 
         OptimizelyUserContext user = optimizely.createUserContext(userId, Collections.singletonMap("gender", "f"));
-        Map<String, OptimizelyDecision> decisions = user.decideAllWithoutCmab(Arrays.asList(OptimizelyDecideOption.ENABLED_FLAGS_ONLY));
+        Map<String, OptimizelyDecision> decisions = user.decideAllSync(Arrays.asList(OptimizelyDecideOption.ENABLED_FLAGS_ONLY));
 
         assertEquals(decisions.size(), 2); // Only enabled flags
 
@@ -2457,7 +2457,7 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
-    public void decideAllWithoutCmab_ups_batching() throws Exception {
+    public void decideAllSync_ups_batching() throws Exception {
         UserProfileService ups = mock(UserProfileService.class);
 
         optimizely = new Optimizely.Builder()
@@ -2468,7 +2468,7 @@ public class OptimizelyUserContextTest {
         Map<String, Object> attributes = Collections.singletonMap("gender", "f");
 
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
-        Map<String, OptimizelyDecision> decisions = user.decideAllWithoutCmab();
+        Map<String, OptimizelyDecision> decisions = user.decideAllSync();
 
         assertEquals(decisions.size(), 3);
 
@@ -2484,12 +2484,12 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
-    public void decideWithoutCmab_sdkNotReady() {
+    public void decideSync_sdkNotReady() {
         String flagKey = "feature_1";
 
         Optimizely optimizely = new Optimizely.Builder().build();
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        OptimizelyDecision decision = user.decideWithoutCmab(flagKey);
+        OptimizelyDecision decision = user.decideSync(flagKey);
 
         assertNull(decision.getVariationKey());
         assertFalse(decision.getEnabled());
@@ -2502,17 +2502,17 @@ public class OptimizelyUserContextTest {
     }
 
     @Test
-    public void decideForKeysWithoutCmab_sdkNotReady() {
+    public void decideForKeysSync_sdkNotReady() {
         List<String> flagKeys = Arrays.asList("feature_1");
 
         Optimizely optimizely = new Optimizely.Builder().build();
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        Map<String, OptimizelyDecision> decisions = user.decideForKeysWithoutCmab(flagKeys);
+        Map<String, OptimizelyDecision> decisions = user.decideForKeysSync(flagKeys);
 
         assertEquals(decisions.size(), 0);
     }
     @Test
-    public void decideWithoutCmab_bypassUPS() throws Exception {
+    public void decideSync_bypassUPS() throws Exception {
         String flagKey = "feature_2";        // embedding experiment: "exp_no_audience"
         String experimentId = "10420810910";    // "exp_no_audience"
         String variationId1 = "10418551353";
@@ -2529,11 +2529,11 @@ public class OptimizelyUserContextTest {
             .build();
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        OptimizelyDecision decision = user.decideWithoutCmab(flagKey);
+        OptimizelyDecision decision = user.decideSync(flagKey);
         // should return variationId2 set by UPS
         assertEquals(decision.getVariationKey(), variationKey2);
 
-        decision = user.decideWithoutCmab(flagKey, Arrays.asList(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE));
+        decision = user.decideSync(flagKey, Arrays.asList(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE));
         // should ignore variationId2 set by UPS and return variationId1
         assertEquals(decision.getVariationKey(), variationKey1);
         // also should not save either

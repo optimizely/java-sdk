@@ -1507,7 +1507,7 @@ public class Optimizely implements AutoCloseable {
      * @param options A list of options for decision-making.
      * @return A decision result using traditional A/B testing logic only.
      */
-    OptimizelyDecision decideWithoutCmab(@Nonnull OptimizelyUserContext user,
+    OptimizelyDecision decideSync(@Nonnull OptimizelyUserContext user,
                                         @Nonnull String key,
                                         @Nonnull List<OptimizelyDecideOption> options) {
         ProjectConfig projectConfig = getProjectConfig();
@@ -1518,7 +1518,7 @@ public class Optimizely implements AutoCloseable {
         List<OptimizelyDecideOption> allOptions = getAllOptions(options);
         allOptions.remove(OptimizelyDecideOption.ENABLED_FLAGS_ONLY);
 
-        return decideForKeysWithoutCmab(user, Arrays.asList(key), allOptions, true).get(key);
+        return decideForKeysSync(user, Arrays.asList(key), allOptions, true).get(key);
     }
 
     /**
@@ -1529,10 +1529,10 @@ public class Optimizely implements AutoCloseable {
      * @param options A list of options for decision-making.
      * @return All decision results mapped by flag keys, using traditional A/B testing logic only.
      */
-    Map<String, OptimizelyDecision> decideForKeysWithoutCmab(@Nonnull OptimizelyUserContext user,
+    Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull OptimizelyUserContext user,
                                                             @Nonnull List<String> keys,
                                                             @Nonnull List<OptimizelyDecideOption> options) {
-        return decideForKeysWithoutCmab(user, keys, options, false);
+        return decideForKeysSync(user, keys, options, false);
     }
 
     /**
@@ -1542,13 +1542,13 @@ public class Optimizely implements AutoCloseable {
      * @param options A list of options for decision-making.
      * @return All decision results mapped by flag keys, using traditional A/B testing logic only.
      */
-    Map<String, OptimizelyDecision> decideAllWithoutCmab(@Nonnull OptimizelyUserContext user,
+    Map<String, OptimizelyDecision> decideAllSync(@Nonnull OptimizelyUserContext user,
                                                         @Nonnull List<OptimizelyDecideOption> options) {
         Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
 
         ProjectConfig projectConfig = getProjectConfig();
         if (projectConfig == null) {
-            logger.error("Optimizely instance is not valid, failing decideAllWithoutCmab call.");
+            logger.error("Optimizely instance is not valid, failing decideAllSync call.");
             return decisionMap;
         }
 
@@ -1556,10 +1556,10 @@ public class Optimizely implements AutoCloseable {
         List<String> allFlagKeys = new ArrayList<>();
         for (int i = 0; i < allFlags.size(); i++) allFlagKeys.add(allFlags.get(i).getKey());
 
-        return decideForKeysWithoutCmab(user, allFlagKeys, options);
+        return decideForKeysSync(user, allFlagKeys, options);
     }
 
-    private Map<String, OptimizelyDecision> decideForKeysWithoutCmab(@Nonnull OptimizelyUserContext user,
+    private Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull OptimizelyUserContext user,
                                                                     @Nonnull List<String> keys,
                                                                     @Nonnull List<OptimizelyDecideOption> options,
                                                                     boolean ignoreDefaultOptions) {
@@ -1567,7 +1567,7 @@ public class Optimizely implements AutoCloseable {
 
         ProjectConfig projectConfig = getProjectConfig();
         if (projectConfig == null) {
-            logger.error("Optimizely instance is not valid, failing decideForKeysWithoutCmab call.");
+            logger.error("Optimizely instance is not valid, failing decideForKeysSync call.");
             return decisionMap;
         }
 

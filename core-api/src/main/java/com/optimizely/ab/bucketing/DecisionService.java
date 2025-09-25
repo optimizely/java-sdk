@@ -90,7 +90,7 @@ public class DecisionService {
     public DecisionService(@Nonnull Bucketer bucketer,
                            @Nonnull ErrorHandler errorHandler,
                            @Nullable UserProfileService userProfileService,
-                           @Nullable CmabService cmabService) {
+                           @Nonnull CmabService cmabService) {
         this.bucketer = bucketer;
         this.errorHandler = errorHandler;
         this.userProfileService = userProfileService;
