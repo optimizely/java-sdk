@@ -16,22 +16,28 @@
  */
 package com.optimizely.ab.event.internal;
 
+import java.util.Collections;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import org.mockito.runners.MockitoJUnitRunner;
+
 import com.google.common.collect.ImmutableMap;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.Variation;
 import com.optimizely.ab.event.internal.payload.DecisionMetadata;
 import com.optimizely.ab.internal.ReservedEventKey;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-
-import java.util.Collections;
-import java.util.Map;
-
-import static org.junit.Assert.*;
 
 
 @RunWith(MockitoJUnitRunner.class)
@@ -67,7 +73,7 @@ public class UserEventFactoryTest {
     public void setUp() {
         experiment = new Experiment(EXPERIMENT_ID, EXPERIMENT_KEY, LAYER_ID);
         variation = new Variation(VARIATION_ID, VARIATION_KEY);
-        decisionMetadata = new DecisionMetadata("", EXPERIMENT_KEY, "experiment", VARIATION_KEY, true);
+        decisionMetadata = new DecisionMetadata("", EXPERIMENT_KEY, "experiment", VARIATION_KEY, true, null);
     }
 
     @Test
@@ -81,7 +87,8 @@ public class UserEventFactoryTest {
             ATTRIBUTES,
             EXPERIMENT_KEY,
             "rollout",
-            false
+            false,
+            null
         );
         assertNull(actual);
     }
@@ -96,7 +103,8 @@ public class UserEventFactoryTest {
             ATTRIBUTES,
             "",
             "experiment",
-            true
+            true,
+            null
         );
 
         assertTrue(actual.getTimestamp() > 0);
@@ -139,5 +147,103 @@ public class UserEventFactoryTest {
         assertEquals(REVENUE, actual.getRevenue());
         assertEquals(VALUE, actual.getValue());
         assertEquals(TAGS, actual.getTags());
+    }
+    @Test
+    public void createImpressionEventWithCmabUuid() {
+        // Arrange
+        String userId = "testUser";
+        String flagKey = "testFlag";
+        String ruleType = "experiment";
+        boolean enabled = true;
+        String cmabUUID = "test-cmab-uuid-123";
+        Map<String, Object> attributes = Collections.emptyMap();
+        
+        // Create mock objects
+        ProjectConfig mockProjectConfig = mock(ProjectConfig.class);
+        Experiment mockExperiment = mock(Experiment.class);
+        Variation mockVariation = mock(Variation.class);
+        
+        // Setup mock behavior
+        when(mockProjectConfig.getSendFlagDecisions()).thenReturn(true);
+        when(mockExperiment.getLayerId()).thenReturn("layer123");
+        when(mockExperiment.getId()).thenReturn("experiment123");
+        when(mockExperiment.getKey()).thenReturn("experimentKey");
+        when(mockVariation.getKey()).thenReturn("variationKey");
+        when(mockVariation.getId()).thenReturn("variation123");
+        
+        // Act
+        ImpressionEvent result = UserEventFactory.createImpressionEvent(
+            mockProjectConfig,
+            mockExperiment,
+            mockVariation,
+            userId,
+            attributes,
+            flagKey,
+            ruleType,
+            enabled,
+            cmabUUID
+        );
+        
+        // Assert
+        assertNotNull(result);
+        
+        // Verify DecisionMetadata contains cmabUUID
+        DecisionMetadata metadata = result.getMetadata();
+        assertNotNull(metadata);
+        assertEquals(cmabUUID, metadata.getCmabUUID());
+        assertEquals(flagKey, metadata.getFlagKey());
+        assertEquals("experimentKey", metadata.getRuleKey());
+        assertEquals(ruleType, metadata.getRuleType());
+        assertEquals("variationKey", metadata.getVariationKey());
+        assertEquals(enabled, metadata.getEnabled());
+        
+        // Verify other fields
+        assertEquals("layer123", result.getLayerId());
+        assertEquals("experiment123", result.getExperimentId());
+        assertEquals("experimentKey", result.getExperimentKey());
+        assertEquals("variation123", result.getVariationId());
+        assertEquals("variationKey", result.getVariationKey());
+    }
+
+    @Test
+    public void createImpressionEventWithNullCmabUuid() {
+        // Arrange
+        String userId = "testUser";
+        String flagKey = "testFlag";
+        String ruleType = "experiment";
+        boolean enabled = true;
+        String cmabUUID = null;
+        Map<String, Object> attributes = Collections.emptyMap();
+        
+        // Create mock objects (same setup as above)
+        ProjectConfig mockProjectConfig = mock(ProjectConfig.class);
+        Experiment mockExperiment = mock(Experiment.class);
+        Variation mockVariation = mock(Variation.class);
+        
+        when(mockProjectConfig.getSendFlagDecisions()).thenReturn(true);
+        when(mockExperiment.getLayerId()).thenReturn("layer123");
+        when(mockExperiment.getId()).thenReturn("experiment123");
+        when(mockExperiment.getKey()).thenReturn("experimentKey");
+        when(mockVariation.getKey()).thenReturn("variationKey");
+        when(mockVariation.getId()).thenReturn("variation123");
+        
+        // Act
+        ImpressionEvent result = UserEventFactory.createImpressionEvent(
+            mockProjectConfig,
+            mockExperiment,
+            mockVariation,
+            userId,
+            attributes,
+            flagKey,
+            ruleType,
+            enabled,
+            cmabUUID
+        );
+        
+        // Assert
+        assertNotNull(result);
+        DecisionMetadata metadata = result.getMetadata();
+        assertNotNull(metadata);
+        assertNull(metadata.getCmabUUID());
     }
 }

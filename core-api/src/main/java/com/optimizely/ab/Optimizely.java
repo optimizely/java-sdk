@@ -311,7 +311,7 @@ public class Optimizely implements AutoCloseable {
                                 @Nonnull Map<String, ?> filteredAttributes,
                                 @Nonnull Variation variation,
                                 @Nonnull String ruleType) {
-        sendImpression(projectConfig, experiment, userId, filteredAttributes, variation, "", ruleType, true);
+        sendImpression(projectConfig, experiment, userId, filteredAttributes, variation, "", ruleType, true, null);
     }
 
     /**
@@ -324,6 +324,7 @@ public class Optimizely implements AutoCloseable {
      * @param variation          the variation that was returned from activate.
      * @param flagKey            It can either be empty if ruleType is experiment or it's feature key in case ruleType is feature-test or rollout
      * @param ruleType           It can either be experiment in case impression event is sent from activate or it's feature-test or rollout
+     * @param cmabUUID           The cmabUUID if the experiment is a cmab experiment.
      */
     private boolean sendImpression(@Nonnull ProjectConfig projectConfig,
                                    @Nullable ExperimentCore experiment,
@@ -332,7 +333,8 @@ public class Optimizely implements AutoCloseable {
                                    @Nullable Variation variation,
                                    @Nonnull String flagKey,
                                    @Nonnull String ruleType,
-                                   @Nonnull boolean enabled) {
+                                   @Nonnull boolean enabled,
+                                   @Nullable String cmabUUID) {
 
         UserEvent userEvent = UserEventFactory.createImpressionEvent(
             projectConfig,
@@ -342,7 +344,8 @@ public class Optimizely implements AutoCloseable {
             filteredAttributes,
             flagKey,
             ruleType,
-            enabled);
+            enabled,
+            cmabUUID);
 
         if (userEvent == null) {
             return false;
@@ -504,7 +507,7 @@ public class Optimizely implements AutoCloseable {
         if (featureDecision.decisionSource != null) {
             decisionSource = featureDecision.decisionSource;
         }
-
+        String cmabUUID = featureDecision.cmabUUID;
         if (featureDecision.variation != null) {
             // This information is only necessary for feature tests.
             // For rollouts experiments and variations are an implementation detail only.
@@ -526,7 +529,8 @@ public class Optimizely implements AutoCloseable {
             featureDecision.variation,
             featureKey,
             decisionSource.toString(),
-            featureEnabled);
+            featureEnabled,
+            cmabUUID);
 
         DecisionNotification decisionNotification = DecisionNotification.newFeatureDecisionNotificationBuilder()
             .withUserId(userId)
@@ -1355,6 +1359,8 @@ public class Optimizely implements AutoCloseable {
         Map<String, Object> attributes = user.getAttributes();
         Map<String, ?> copiedAttributes = new HashMap<>(attributes);
 
+        String cmabUUID =  flagDecision.cmabUUID;
+
         if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
             decisionEventDispatched = sendImpression(
                 projectConfig,
@@ -1364,7 +1370,8 @@ public class Optimizely implements AutoCloseable {
                 flagDecision.variation,
                 flagKey,
                 decisionSource.toString(),
-                flagEnabled);
+                flagEnabled,
+                cmabUUID);
         }
 
         DecisionNotification decisionNotification = DecisionNotification.newFlagDecisionNotificationBuilder()
