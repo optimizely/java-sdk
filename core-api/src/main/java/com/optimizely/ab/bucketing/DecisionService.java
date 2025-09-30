@@ -381,6 +381,14 @@ public class DecisionService {
                 reasons.merge(decisionVariation.getReasons());
                 Variation variation = decisionVariation.getResult();
                 String cmabUUID = decisionVariation.getCmabUUID();
+                boolean error = decisionVariation.isError();
+                if (error) {
+                    return new DecisionResponse(
+                        new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST, cmabUUID),
+                        reasons,
+                        decisionVariation.isError(),
+                        cmabUUID);
+                }
                 if (variation != null) {
                     return new DecisionResponse(
                         new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST, cmabUUID),
