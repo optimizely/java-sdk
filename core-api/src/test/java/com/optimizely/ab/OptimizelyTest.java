@@ -5044,7 +5044,7 @@ public class OptimizelyTest {
         assertNull(decision.getVariationKey());
         assertNull(decision.getRuleKey());
         assertEquals("feature_1", decision.getFlagKey());
-        assertTrue(decision.getReasons().contains("Decision service error occured for key \"feature_1\"."));
+        assertTrue(decision.getReasons().contains("Failed to fetch CMAB data for experiment exp-cmab."));
     }
 
 }
