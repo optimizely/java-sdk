@@ -62,6 +62,8 @@ public class RetryConfig {
 
     /**
      * Creates a default RetryConfig with 3 retries and exponential backoff.
+     * 
+     * @return Retry config with default settings
      */
     public static RetryConfig defaultConfig() {
         return new RetryConfig(3);
@@ -69,6 +71,8 @@ public class RetryConfig {
 
     /**
      * Creates a RetryConfig with no retries (single attempt only).
+     * 
+     * @return Retry config with no retries
      */
     public static RetryConfig noRetry() {
         return new RetryConfig(0, 0, 1.0, 0);

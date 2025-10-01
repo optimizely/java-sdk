@@ -106,6 +106,7 @@ public class DecisionService {
      * @param options              An array of decision options
      * @param userProfileTracker   tracker for reading and updating user profile of the user
      * @param reasons              Decision reasons
+     * @param useCmab              Boolean flag to determine if cmab service is to be used
      * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
      */
     @Nonnull

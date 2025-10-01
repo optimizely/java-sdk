@@ -566,7 +566,7 @@ public class DecisionServiceTest {
         ErrorHandler mockErrorHandler = mock(ErrorHandler.class);
         UserProfileService mockUserProfileService = mock(UserProfileService.class);
 
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, mockUserProfileService, null);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, mockUserProfileService, mockCmabService);
 
         FeatureFlag featureFlag1 = FEATURE_FLAG_MULTI_VARIATE_FEATURE;
         FeatureFlag featureFlag2 = FEATURE_FLAG_MULTI_VARIATE_FUTURE_FEATURE;
@@ -626,7 +626,7 @@ public class DecisionServiceTest {
             mockBucketer,
             mockErrorHandler,
             null,
-            null
+            mockCmabService
         );
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
@@ -653,7 +653,7 @@ public class DecisionServiceTest {
         Bucketer mockBucketer = mock(Bucketer.class);
         when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class))).thenReturn(DecisionResponse.nullNoReasons());
 
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, null);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
@@ -684,7 +684,7 @@ public class DecisionServiceTest {
             mockBucketer,
             mockErrorHandler,
             null,
-            null
+            mockCmabService
         );
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
@@ -726,7 +726,7 @@ public class DecisionServiceTest {
             mockBucketer,
             mockErrorHandler,
             null,
-            null
+            mockCmabService
         );
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
@@ -767,7 +767,7 @@ public class DecisionServiceTest {
             mockBucketer,
             mockErrorHandler,
             null,
-            null
+            mockCmabService
         );
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
@@ -806,7 +806,7 @@ public class DecisionServiceTest {
         when(mockBucketer.bucket(eq(everyoneElseRule), anyString(), any(ProjectConfig.class))).thenReturn(DecisionResponse.responseNoReasons(everyoneElseVariation));
         when(mockBucketer.bucket(eq(englishCitizensRule), anyString(), any(ProjectConfig.class))).thenReturn(DecisionResponse.responseNoReasons(englishCitizenVariation));
 
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, null);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
@@ -959,7 +959,7 @@ public class DecisionServiceTest {
         when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
         Bucketer bucketer = new Bucketer();
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService, null);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService, mockCmabService);
 
         logbackVerifier.expectMessage(Level.INFO,
             "Returning previously activated variation \"" + variation.getKey() + "\" of experiment \"" + experiment.getKey() + "\""
@@ -985,7 +985,7 @@ public class DecisionServiceTest {
         UserProfile userProfile = new UserProfile(userProfileId, Collections.<String, Decision>emptyMap());
         when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService, null);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService, mockCmabService);
 
         logbackVerifier.expectMessage(Level.INFO, "No previously activated variation of experiment " +
             "\"" + experiment.getKey() + "\" for user \"" + userProfileId + "\" found in user profile.");
@@ -1012,7 +1012,7 @@ public class DecisionServiceTest {
         UserProfileService userProfileService = mock(UserProfileService.class);
         when(userProfileService.lookup(userProfileId)).thenReturn(storedUserProfile.toMap());
 
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService, null);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService, mockCmabService);
 
         logbackVerifier.expectMessage(Level.INFO,
             "User \"" + userProfileId + "\" was previously bucketed into variation with ID \"" + storedVariationId + "\" for " +
@@ -1043,7 +1043,7 @@ public class DecisionServiceTest {
         Bucketer mockBucketer = mock(Bucketer.class);
         when(mockBucketer.bucket(eq(experiment), eq(userProfileId), eq(noAudienceProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(variation));
 
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, userProfileService, null);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, userProfileService, mockCmabService);
 
         assertEquals(variation, decisionService.getVariation(
             experiment, optimizely.createUserContext(userProfileId, Collections.emptyMap()), noAudienceProjectConfig).getResult()
@@ -1105,7 +1105,7 @@ public class DecisionServiceTest {
 
         Bucketer bucketer = mock(Bucketer.class);
         UserProfileService userProfileService = mock(UserProfileService.class);
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService, null);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService, mockCmabService);
 
         when(bucketer.bucket(eq(experiment), eq(userProfileId), eq(noAudienceProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(variation));
         when(userProfileService.lookup(userProfileId)).thenReturn(null);
@@ -1117,7 +1117,7 @@ public class DecisionServiceTest {
     @Test
     public void getVariationBucketingId() throws Exception {
         Bucketer bucketer = mock(Bucketer.class);
-        DecisionService decisionService = spy(new DecisionService(bucketer, mockErrorHandler, null, null));
+        DecisionService decisionService = spy(new DecisionService(bucketer, mockErrorHandler, null, mockCmabService));
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation expectedVariation = experiment.getVariations().get(0);
 
@@ -1152,7 +1152,7 @@ public class DecisionServiceTest {
             bucketer,
             mockErrorHandler,
             null,
-            null
+            mockCmabService
         ));
 
         FeatureDecision expectedFeatureDecision = new FeatureDecision(
@@ -1307,7 +1307,7 @@ public class DecisionServiceTest {
         
         Bucketer mockBucketer = new Bucketer();
         
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, null);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
         
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("$opt_bucketing_id", "ppid160000");
@@ -1353,7 +1353,7 @@ public class DecisionServiceTest {
 
         Bucketer mockBucketer = new Bucketer();
 
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, null);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
 
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("$opt_bucketing_id", "ppid300002");
@@ -1384,7 +1384,7 @@ public class DecisionServiceTest {
 
         Bucketer mockBucketer = new Bucketer();
 
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, null);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
 
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("$opt_bucketing_id", "ppid543400");

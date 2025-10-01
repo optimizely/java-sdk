@@ -313,6 +313,9 @@ public class OptimizelyUserContext {
 
     /**
      * Returns decision results asynchronously for multiple flag keys.
+     * 
+     * @param keys A list of flag keys for which decisions will be made.
+     * @param callback A callback to invoke when decisions are available.
      */
     public void decideForKeysAsync(@Nonnull List<String> keys, @Nonnull OptimizelyDecisionsCallback callback) {
         decideForKeysAsync(keys, callback, Collections.emptyList());
@@ -320,6 +323,9 @@ public class OptimizelyUserContext {
 
     /**
      * Returns decision results asynchronously for all active flag keys.
+     *
+     * @param callback A callback to invoke when decisions are available.
+     * @param options A list of options for decision-making.
      */
     public void decideAllAsync(@Nonnull OptimizelyDecisionsCallback callback,
                                @Nonnull List<OptimizelyDecideOption> options) {
@@ -329,6 +335,8 @@ public class OptimizelyUserContext {
 
     /**
      * Returns decision results asynchronously for all active flag keys.
+     * 
+     * @param callback A callback to invoke when decisions are available.
      */
     public void decideAllAsync(@Nonnull OptimizelyDecisionsCallback callback) {
         decideAllAsync(callback, Collections.emptyList());
