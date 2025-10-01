@@ -5009,7 +5009,7 @@ public class OptimizelyTest {
 
         // Mock decision service to return an error from CMAB
         DecisionReasons reasons = new DefaultDecisionReasons();
-        FeatureDecision errorFeatureDecision = new FeatureDecision(null, null, FeatureDecision.DecisionSource.ROLLOUT);
+        FeatureDecision errorFeatureDecision = new FeatureDecision(new Experiment("123", "exp-cmab", "123"), null, FeatureDecision.DecisionSource.ROLLOUT);
         DecisionResponse<FeatureDecision> errorDecisionResponse = new DecisionResponse<>(
             errorFeatureDecision,
             reasons,
