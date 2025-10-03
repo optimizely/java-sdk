@@ -36,15 +36,13 @@ import com.optimizely.ab.cmab.client.CmabClientConfig;
 import com.optimizely.ab.cmab.client.CmabFetchException;
 import com.optimizely.ab.cmab.client.CmabInvalidResponseException;
 import com.optimizely.ab.cmab.client.RetryConfig;
+import com.optimizely.ab.cmab.client.CmabClientHelper;
 
 public class DefaultCmabClient implements CmabClient {
     
     private static final Logger logger = LoggerFactory.getLogger(DefaultCmabClient.class);
     private static final int DEFAULT_TIMEOUT_MS = 10000;
-    // Update constants to match JS error messages format
-    private static final String CMAB_FETCH_FAILED = "CMAB decision fetch failed with status: %s";
-    private static final String INVALID_CMAB_FETCH_RESPONSE = "Invalid CMAB fetch response";
-    private static final Pattern VARIATION_ID_PATTERN = Pattern.compile("\"variation_id\"\\s*:\\s*\"?([^\"\\s,}]+)\"?");
+
     private static final String CMAB_PREDICTION_ENDPOINT = "https://prediction.cmab.optimizely.com/predict/%s";
 
     private final OptimizelyHttpClient httpClient;
@@ -81,7 +79,7 @@ public class DefaultCmabClient implements CmabClient {
     public String fetchDecision(String ruleId, String userId, Map<String, Object> attributes, String cmabUuid) {
         // Implementation will use this.httpClient and this.retryConfig
         String url = String.format(CMAB_PREDICTION_ENDPOINT, ruleId);
-        String requestBody = buildRequestJson(userId, ruleId, attributes, cmabUuid);
+        String requestBody = CmabClientHelper.buildRequestJson(userId, ruleId, attributes, cmabUuid);
 
         // Use retry logic if configured, otherwise single request
         if (retryConfig != null && retryConfig.getMaxRetries() > 0) {
@@ -96,7 +94,7 @@ public class DefaultCmabClient implements CmabClient {
         try {
             request.setEntity(new StringEntity(requestBody));
         } catch (UnsupportedEncodingException e) {
-            String errorMessage = String.format(CMAB_FETCH_FAILED, e.getMessage());
+            String errorMessage = String.format(CmabClientHelper.CMAB_FETCH_FAILED, e.getMessage());
             logger.error(errorMessage);
             throw new CmabFetchException(errorMessage);
         }
@@ -105,9 +103,9 @@ public class DefaultCmabClient implements CmabClient {
         try {
             response = httpClient.execute(request);
             
-            if (!isSuccessStatusCode(response.getStatusLine().getStatusCode())) {
+            if (!CmabClientHelper.isSuccessStatusCode(response.getStatusLine().getStatusCode())) {
                 StatusLine statusLine = response.getStatusLine();
-                String errorMessage = String.format(CMAB_FETCH_FAILED, statusLine.getReasonPhrase());
+                String errorMessage = String.format(CmabClientHelper.CMAB_FETCH_FAILED, statusLine.getReasonPhrase());
                 logger.error(errorMessage);
                 throw new CmabFetchException(errorMessage);
             }
@@ -116,18 +114,18 @@ public class DefaultCmabClient implements CmabClient {
             try {
                 responseBody = EntityUtils.toString(response.getEntity());
 
-                if (!validateResponse(responseBody)) {
-                    logger.error(INVALID_CMAB_FETCH_RESPONSE);
-                    throw new CmabInvalidResponseException(INVALID_CMAB_FETCH_RESPONSE);
+                if (!CmabClientHelper.validateResponse(responseBody)) {
+                    logger.error(CmabClientHelper.INVALID_CMAB_FETCH_RESPONSE);
+                    throw new CmabInvalidResponseException(CmabClientHelper.INVALID_CMAB_FETCH_RESPONSE);
                 }
-                return parseVariationId(responseBody);
+                return CmabClientHelper.parseVariationId(responseBody);
             } catch (IOException | ParseException e) {
-                logger.error(CMAB_FETCH_FAILED);
-                throw new CmabInvalidResponseException(INVALID_CMAB_FETCH_RESPONSE);
+                logger.error(CmabClientHelper.CMAB_FETCH_FAILED);
+                throw new CmabInvalidResponseException(CmabClientHelper.INVALID_CMAB_FETCH_RESPONSE);
             }
             
         } catch (IOException e) {
-            String errorMessage = String.format(CMAB_FETCH_FAILED, e.getMessage());
+            String errorMessage = String.format(CmabClientHelper.CMAB_FETCH_FAILED, e.getMessage());
             logger.error(errorMessage);
             throw new CmabFetchException(errorMessage);
         } finally {
@@ -158,7 +156,7 @@ public class DefaultCmabClient implements CmabClient {
                     Thread.sleep((long) backoff);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
-                    String errorMessage = String.format(CMAB_FETCH_FAILED, "Request interrupted during retry");
+                    String errorMessage = String.format(CmabClientHelper.CMAB_FETCH_FAILED, "Request interrupted during retry");
                     logger.error(errorMessage);
                     throw new CmabFetchException(errorMessage, ie);
                 }
@@ -172,93 +170,9 @@ public class DefaultCmabClient implements CmabClient {
         }
         
         // If we get here, all retries were exhausted
-        String errorMessage = String.format(CMAB_FETCH_FAILED, "Exhausted all retries for CMAB request");
+        String errorMessage = String.format(CmabClientHelper.CMAB_FETCH_FAILED, "Exhausted all retries for CMAB request");
         logger.error(errorMessage);
         throw new CmabFetchException(errorMessage, lastException);
-    }
-    
-    private String buildRequestJson(String userId, String ruleId, Map<String, Object> attributes, String cmabUuid) {
-        StringBuilder json = new StringBuilder();
-        json.append("{\"instances\":[{");
-        json.append("\"visitorId\":\"").append(escapeJson(userId)).append("\",");
-        json.append("\"experimentId\":\"").append(escapeJson(ruleId)).append("\",");
-        json.append("\"cmabUUID\":\"").append(escapeJson(cmabUuid)).append("\",");
-        json.append("\"attributes\":[");
-
-        boolean first = true;
-        for (Map.Entry<String, Object> entry : attributes.entrySet()) {
-            if (!first) {
-                json.append(",");
-            }
-            json.append("{\"id\":\"").append(escapeJson(entry.getKey())).append("\",");
-            json.append("\"value\":").append(formatJsonValue(entry.getValue())).append(",");
-            json.append("\"type\":\"custom_attribute\"}");
-            first = false;
-        }
-
-        json.append("]}]}");
-        return json.toString();
-    }
-
-    private String escapeJson(String value) {
-        if (value == null) {
-            return "";
-        }
-        return value.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
-    }
-
-    private String formatJsonValue(Object value) {
-        if (value == null) {
-            return "null";
-        } else if (value instanceof String) {
-            return "\"" + escapeJson((String) value) + "\"";
-        } else if (value instanceof Number || value instanceof Boolean) {
-            return value.toString();
-        } else {
-            return "\"" + escapeJson(value.toString()) + "\"";
-        }
-    }
-
-    // Helper methods
-    private boolean isSuccessStatusCode(int statusCode) {
-        return statusCode >= 200 && statusCode < 300;
-    }
-
-    private boolean validateResponse(String responseBody) {
-        try {
-            return responseBody.contains("predictions") && 
-                responseBody.contains("variation_id") &&
-                parseVariationIdForValidation(responseBody) != null;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private boolean shouldRetry(Exception exception) {
-        return (exception instanceof CmabFetchException) || 
-            (exception instanceof CmabInvalidResponseException);
-    }
-
-    private String parseVariationIdForValidation(String jsonResponse) {
-        Matcher matcher = VARIATION_ID_PATTERN.matcher(jsonResponse);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-        return null;
-    }
-
-    private String parseVariationId(String jsonResponse) {
-        // Simple regex to extract variation_id from predictions[0].variation_id
-        Pattern pattern = Pattern.compile("\"predictions\"\\s*:\\s*\\[\\s*\\{[^}]*\"variation_id\"\\s*:\\s*\"?([^\"\\s,}]+)\"?");
-        Matcher matcher = pattern.matcher(jsonResponse);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-        throw new CmabInvalidResponseException(INVALID_CMAB_FETCH_RESPONSE);
     }
 
     private static void closeHttpResponse(CloseableHttpResponse response) {
