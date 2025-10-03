@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import com.optimizely.ab.odp.ODPSegmentCallback;
 import com.optimizely.ab.odp.ODPSegmentOption;
 import com.optimizely.ab.optimizelydecision.AsyncDecisionFetcher;
-import com.optimizely.ab.optimizelydecision.AsyncDecisionsFetcher;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecisionCallback;
@@ -307,7 +306,7 @@ public class OptimizelyUserContext {
     public void decideForKeysAsync(@Nonnull List<String> keys,
                                    @Nonnull OptimizelyDecisionsCallback callback,
                                    @Nonnull List<OptimizelyDecideOption> options) {
-        AsyncDecisionsFetcher fetcher = new AsyncDecisionsFetcher(this, keys, options, callback);
+        AsyncDecisionFetcher fetcher = new AsyncDecisionFetcher(this, keys, options, callback);
         fetcher.start();
     }
 
@@ -329,7 +328,7 @@ public class OptimizelyUserContext {
      */
     public void decideAllAsync(@Nonnull OptimizelyDecisionsCallback callback,
                                @Nonnull List<OptimizelyDecideOption> options) {
-        AsyncDecisionsFetcher fetcher = new AsyncDecisionsFetcher(this, null, options, callback, true);
+        AsyncDecisionFetcher fetcher = new AsyncDecisionFetcher(this, options, callback);
         fetcher.start();
     }
 
