@@ -20,7 +20,10 @@ import com.optimizely.ab.bucketing.Bucketer;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.bucketing.UserProfileService;
+import com.optimizely.ab.cmab.service.CmabCacheValue;
 import com.optimizely.ab.cmab.service.CmabService;
+import com.optimizely.ab.cmab.service.CmabServiceOptions;
+import com.optimizely.ab.cmab.service.DefaultCmabService;
 import com.optimizely.ab.config.AtomicProjectConfigManager;
 import com.optimizely.ab.config.DatafileProjectConfig;
 import com.optimizely.ab.config.EventType;
@@ -46,6 +49,7 @@ import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.UserEvent;
 import com.optimizely.ab.event.internal.UserEventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch;
+import com.optimizely.ab.internal.DefaultLRUCache;
 import com.optimizely.ab.internal.NotificationRegistry;
 import com.optimizely.ab.notification.ActivateNotification;
 import com.optimizely.ab.notification.DecisionNotification;
@@ -70,12 +74,14 @@ import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
+
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,6 +91,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.optimizely.ab.cmab.client.CmabClient;
 import static com.optimizely.ab.internal.SafetyUtils.tryClose;
 
 /**
@@ -1998,8 +2005,13 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
-        public Builder withCmabService(CmabService cmabService) {
-            this.cmabService = cmabService;
+        public Builder withCmabClient(CmabClient cmabClient) {
+            int DEFAULT_MAX_SIZE = 1000;
+            int DEFAULT_CMAB_CACHE_TIMEOUT = 30 * 60 * 1000;
+            DefaultLRUCache<CmabCacheValue> cmabCache = new DefaultLRUCache<>(DEFAULT_MAX_SIZE, DEFAULT_CMAB_CACHE_TIMEOUT);
+            CmabServiceOptions cmabServiceOptions = new CmabServiceOptions(logger, cmabCache, cmabClient);
+            DefaultCmabService defaultCmabService = new DefaultCmabService(cmabServiceOptions);
+            this.cmabService = defaultCmabService;
             return this;
         }
 
@@ -2031,6 +2043,10 @@ public class Optimizely implements AutoCloseable {
 
             if (bucketer == null) {
                 bucketer = new Bucketer();
+            }
+
+            if (cmabService == null) {
+                logger.warn("CMAB service is not initiated. CMAB functionality will not be available.");
             }
 
             if (decisionService == null) {

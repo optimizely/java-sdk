@@ -24,16 +24,12 @@ import org.slf4j.LoggerFactory;
 
 import com.optimizely.ab.cmab.DefaultCmabClient;
 import com.optimizely.ab.cmab.client.CmabClientConfig;
-import com.optimizely.ab.cmab.service.CmabCacheValue;
-import com.optimizely.ab.cmab.service.CmabServiceOptions;
-import com.optimizely.ab.cmab.service.DefaultCmabService;
 import com.optimizely.ab.config.HttpProjectConfigManager;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.ProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
 import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.event.EventHandler;
-import com.optimizely.ab.internal.DefaultLRUCache;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.odp.DefaultODPApiManager;
@@ -377,18 +373,13 @@ public final class OptimizelyFactory {
             .build();
 
         DefaultCmabClient defaultCmabClient = new DefaultCmabClient(CmabClientConfig.withDefaultRetry());
-        int DEFAULT_MAX_SIZE = 1000;
-        int DEFAULT_CMAB_CACHE_TIMEOUT = 30 * 60 * 1000;
-        DefaultLRUCache<CmabCacheValue> cmabCache = new DefaultLRUCache<>(DEFAULT_MAX_SIZE, DEFAULT_CMAB_CACHE_TIMEOUT);
-        CmabServiceOptions cmabServiceOptions = new CmabServiceOptions(logger, cmabCache, defaultCmabClient);
-        DefaultCmabService cmabService = new DefaultCmabService(cmabServiceOptions);
 
         return Optimizely.builder()
             .withEventProcessor(eventProcessor)
             .withConfigManager(configManager)
             .withNotificationCenter(notificationCenter)
             .withODPManager(odpManager)
-            .withCmabService(cmabService)
+            .withCmabClient(defaultCmabClient)
             .build();
     }
 }
