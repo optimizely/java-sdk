@@ -208,6 +208,7 @@ public class OptimizelyUserContext {
     /**
      * Returns a decision result ({@link OptimizelyDecision}) for a given flag key and a user context, 
      * which contains all data required to deliver the flag. This method skips CMAB logic.
+     * backward compatibility support for android sync decisions
      * @param key A flag key for which a decision will be made.
      * @param options A list of options for decision-making.
      * @return A decision result.
@@ -218,19 +219,9 @@ public class OptimizelyUserContext {
     }
 
     /**
-     * Returns a decision result ({@link OptimizelyDecision}) for a given flag key and a user context,
-     * which contains all data required to deliver the flag. This method skips CMAB logic.
-     *
-     * @param key A flag key for which a decision will be made.
-     * @return A decision result.
-     */
-    public OptimizelyDecision decideSync(@Nonnull String key) {
-        return decideSync(key, Collections.emptyList());
-    }
-
-    /**
      * Returns a key-map of decision results ({@link OptimizelyDecision}) for multiple flag keys and a user context.
      * This method skips CMAB logic.
+     * backward compatibility support for android sync decisions
      * @param keys A list of flag keys for which decisions will be made.
      * @param options A list of options for decision-making.
      * @return All decision results mapped by flag keys.
@@ -241,20 +232,9 @@ public class OptimizelyUserContext {
     }
 
     /**
-     * Returns a key-map of decision results for multiple flag keys and a user context.
-     * This method skips CMAB logic.
-     *
-     * @param keys A list of flag keys for which decisions will be made.
-     * @return All decision results mapped by flag keys.
-     */
-    public Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull List<String> keys) {
-        return decideForKeysSync(keys, Collections.emptyList());
-    }
-
-    /**
      * Returns a key-map of decision results ({@link OptimizelyDecision}) for all active flag keys.
      * This method skips CMAB logic.
-     *
+     * backward compatibility support for android sync decisions
      * @param options A list of options for decision-making.
      * @return All decision results mapped by flag keys.
      */
@@ -263,18 +243,8 @@ public class OptimizelyUserContext {
     }
 
     /**
-     * Returns a key-map of decision results ({@link OptimizelyDecision}) for all active flag keys.
-     * This method skips CMAB logic.
-     *
-     * @return A dictionary of all decision results, mapped by flag keys.
-     */
-    public Map<String, OptimizelyDecision> decideAllSync() {
-        return decideAllSync(Collections.emptyList());
-    }
-
-    /**
      * Returns a decision result asynchronously for a given flag key and a user context.
-     *
+     * support for android async decisions
      * @param key A flag key for which a decision will be made.
      * @param callback A callback to invoke when the decision is available.
      * @param options A list of options for decision-making.
@@ -286,19 +256,10 @@ public class OptimizelyUserContext {
         fetcher.start();
     }
 
-    /**
-     * Returns a decision result asynchronously for a given flag key and a user context.
-     *
-     * @param key A flag key for which a decision will be made.
-     * @param callback A callback to invoke when the decision is available.
-     */
-    public void decideAsync(@Nonnull String key, @Nonnull OptimizelyDecisionCallback callback) {
-        decideAsync(key, callback, Collections.emptyList());
-    }
 
     /**
      * Returns decision results asynchronously for multiple flag keys.
-     *
+     * support for android async decisions
      * @param keys A list of flag keys for which decisions will be made.
      * @param callback A callback to invoke when decisions are available.
      * @param options A list of options for decision-making.
@@ -311,18 +272,8 @@ public class OptimizelyUserContext {
     }
 
     /**
-     * Returns decision results asynchronously for multiple flag keys.
-     * 
-     * @param keys A list of flag keys for which decisions will be made.
-     * @param callback A callback to invoke when decisions are available.
-     */
-    public void decideForKeysAsync(@Nonnull List<String> keys, @Nonnull OptimizelyDecisionsCallback callback) {
-        decideForKeysAsync(keys, callback, Collections.emptyList());
-    }
-
-    /**
      * Returns decision results asynchronously for all active flag keys.
-     *
+     * support for android async decisions
      * @param callback A callback to invoke when decisions are available.
      * @param options A list of options for decision-making.
      */
@@ -330,15 +281,6 @@ public class OptimizelyUserContext {
                                @Nonnull List<OptimizelyDecideOption> options) {
         AsyncDecisionFetcher fetcher = new AsyncDecisionFetcher(this, options, callback);
         fetcher.start();
-    }
-
-    /**
-     * Returns decision results asynchronously for all active flag keys.
-     * 
-     * @param callback A callback to invoke when decisions are available.
-     */
-    public void decideAllAsync(@Nonnull OptimizelyDecisionsCallback callback) {
-        decideAllAsync(callback, Collections.emptyList());
     }
 
     /**
