@@ -2562,7 +2562,7 @@ public class OptimizelyUserContextTest {
         user.decideAsync(flagKey, decision -> {
             result[0] = decision;
             latch.countDown();
-        }, null);
+        }, Collections.emptyList());
 
         assertTrue(latch.await(1, java.util.concurrent.TimeUnit.SECONDS));
         OptimizelyDecision decision = result[0];
