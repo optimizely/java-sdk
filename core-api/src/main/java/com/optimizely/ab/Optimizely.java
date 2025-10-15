@@ -1408,7 +1408,8 @@ public class Optimizely implements AutoCloseable {
     private Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
                                                           @Nonnull List<String> keys,
                                                           @Nonnull List<OptimizelyDecideOption> options,
-                                                          boolean ignoreDefaultOptions) {
+                                                          boolean ignoreDefaultOptions,
+                                                          boolean useCmab) {
         Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
 
         ProjectConfig projectConfig = getProjectConfig();
@@ -1453,7 +1454,7 @@ public class Optimizely implements AutoCloseable {
         }
 
         List<DecisionResponse<FeatureDecision>> decisionList =
-            decisionService.getVariationsForFeatureList(flagsWithoutForcedDecision, user, projectConfig, allOptions);
+            decisionService.getVariationsForFeatureList(flagsWithoutForcedDecision, user, projectConfig, allOptions, useCmab);
 
         for (int i = 0; i < flagsWithoutForcedDecision.size(); i++) {
             DecisionResponse<FeatureDecision> decision = decisionList.get(i);
@@ -1490,6 +1491,13 @@ public class Optimizely implements AutoCloseable {
         }
 
         return decisionMap;
+    }
+
+    private Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
+                                                          @Nonnull List<String> keys,
+                                                          @Nonnull List<OptimizelyDecideOption> options,
+                                                          boolean ignoreDefaultOptions) {
+        return decideForKeys(user, keys, options, ignoreDefaultOptions, true);
     }
 
     Map<String, OptimizelyDecision> decideAll(@Nonnull OptimizelyUserContext user,
@@ -1577,73 +1585,7 @@ public class Optimizely implements AutoCloseable {
                                                                     @Nonnull List<String> keys,
                                                                     @Nonnull List<OptimizelyDecideOption> options,
                                                                     boolean ignoreDefaultOptions) {
-        Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
-
-        ProjectConfig projectConfig = getProjectConfig();
-        if (projectConfig == null) {
-            logger.error("Optimizely instance is not valid, failing decideForKeysSync call.");
-            return decisionMap;
-        }
-
-        if (keys.isEmpty()) return decisionMap;
-
-        List<OptimizelyDecideOption> allOptions = ignoreDefaultOptions ? options : getAllOptions(options);
-
-        Map<String, FeatureDecision> flagDecisions = new HashMap<>();
-        Map<String, DecisionReasons> decisionReasonsMap = new HashMap<>();
-
-        List<FeatureFlag> flagsWithoutForcedDecision = new ArrayList<>();
-
-        List<String> validKeys = new ArrayList<>();
-
-        for (String key : keys) {
-            FeatureFlag flag = projectConfig.getFeatureKeyMapping().get(key);
-            if (flag == null) {
-                decisionMap.put(key, OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.FLAG_KEY_INVALID.reason(key)));
-                continue;
-            }
-
-            validKeys.add(key);
-
-            DecisionReasons decisionReasons = DefaultDecisionReasons.newInstance(allOptions);
-            decisionReasonsMap.put(key, decisionReasons);
-
-            OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(key, null);
-            DecisionResponse<Variation> forcedDecisionVariation = decisionService.validatedForcedDecision(optimizelyDecisionContext, projectConfig, user);
-            decisionReasons.merge(forcedDecisionVariation.getReasons());
-            if (forcedDecisionVariation.getResult() != null) {
-                flagDecisions.put(key,
-                    new FeatureDecision(null, forcedDecisionVariation.getResult(), FeatureDecision.DecisionSource.FEATURE_TEST));
-            } else {
-                flagsWithoutForcedDecision.add(flag);
-            }
-        }
-
-        // Use DecisionService method that skips CMAB logic
-        List<DecisionResponse<FeatureDecision>> decisionList =
-            decisionService.getVariationsForFeatureList(flagsWithoutForcedDecision, user, projectConfig, allOptions, false);
-
-        for (int i = 0; i < flagsWithoutForcedDecision.size(); i++) {
-            DecisionResponse<FeatureDecision> decision = decisionList.get(i);
-            String flagKey = flagsWithoutForcedDecision.get(i).getKey();
-            flagDecisions.put(flagKey, decision.getResult());
-            decisionReasonsMap.get(flagKey).merge(decision.getReasons());
-        }
-
-        for (String key : validKeys) {
-            FeatureDecision flagDecision = flagDecisions.get(key);
-            DecisionReasons decisionReasons = decisionReasonsMap.get((key));
-
-            OptimizelyDecision optimizelyDecision = createOptimizelyDecision(
-                user, key, flagDecision, decisionReasons, allOptions, projectConfig
-            );
-
-            if (!allOptions.contains(OptimizelyDecideOption.ENABLED_FLAGS_ONLY) || optimizelyDecision.getEnabled()) {
-                decisionMap.put(key, optimizelyDecision);
-            }
-        }
-
-        return decisionMap;
+        return decideForKeys(user, keys, options, ignoreDefaultOptions, false);
     }
 
 
