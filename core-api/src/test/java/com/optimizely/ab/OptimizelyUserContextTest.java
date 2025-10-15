@@ -2286,7 +2286,7 @@ public class OptimizelyUserContextTest {
         OptimizelyJSON variablesExpected = optimizely.getAllFeatureVariables(flagKey, userId);
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        OptimizelyDecision decision = user.decideSync(flagKey);
+        OptimizelyDecision decision = user.decideSync(flagKey, Collections.emptyList());
 
         assertEquals(decision.getVariationKey(), variationKey);
         assertTrue(decision.getEnabled());
@@ -2316,7 +2316,7 @@ public class OptimizelyUserContextTest {
         OptimizelyJSON variablesExpected2 = optimizely.getAllFeatureVariables(flagKey2, userId);
 
         OptimizelyUserContext user = optimizely.createUserContext(userId, Collections.singletonMap("gender", "f"));
-        Map<String, OptimizelyDecision> decisions = user.decideForKeysSync(flagKeys);
+        Map<String, OptimizelyDecision> decisions = user.decideForKeysSync(flagKeys, Collections.emptyList());
 
         assertEquals(decisions.size(), 2);
 
@@ -2382,7 +2382,7 @@ public class OptimizelyUserContextTest {
         OptimizelyJSON variablesExpected3 = new OptimizelyJSON(Collections.emptyMap());
 
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
-        Map<String, OptimizelyDecision> decisions = user.decideAllSync();
+        Map<String, OptimizelyDecision> decisions = user.decideAllSync(Collections.emptyList());
         assertEquals(decisions.size(), 3);
 
         assertEquals(
@@ -2468,7 +2468,7 @@ public class OptimizelyUserContextTest {
         Map<String, Object> attributes = Collections.singletonMap("gender", "f");
 
         OptimizelyUserContext user = optimizely.createUserContext(userId, attributes);
-        Map<String, OptimizelyDecision> decisions = user.decideAllSync();
+        Map<String, OptimizelyDecision> decisions = user.decideAllSync(Collections.emptyList());
 
         assertEquals(decisions.size(), 3);
 
@@ -2489,7 +2489,7 @@ public class OptimizelyUserContextTest {
 
         Optimizely optimizely = new Optimizely.Builder().build();
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        OptimizelyDecision decision = user.decideSync(flagKey);
+        OptimizelyDecision decision = user.decideSync(flagKey, Collections.emptyList());
 
         assertNull(decision.getVariationKey());
         assertFalse(decision.getEnabled());
@@ -2507,7 +2507,7 @@ public class OptimizelyUserContextTest {
 
         Optimizely optimizely = new Optimizely.Builder().build();
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        Map<String, OptimizelyDecision> decisions = user.decideForKeysSync(flagKeys);
+        Map<String, OptimizelyDecision> decisions = user.decideForKeysSync(flagKeys, Collections.emptyList());
 
         assertEquals(decisions.size(), 0);
     }
@@ -2529,7 +2529,7 @@ public class OptimizelyUserContextTest {
             .build();
 
         OptimizelyUserContext user = optimizely.createUserContext(userId);
-        OptimizelyDecision decision = user.decideSync(flagKey);
+        OptimizelyDecision decision = user.decideSync(flagKey, Collections.emptyList());
         // should return variationId2 set by UPS
         assertEquals(decision.getVariationKey(), variationKey2);
 
@@ -2562,7 +2562,7 @@ public class OptimizelyUserContextTest {
         user.decideAsync(flagKey, decision -> {
             result[0] = decision;
             latch.countDown();
-        });
+        }, null);
 
         assertTrue(latch.await(1, java.util.concurrent.TimeUnit.SECONDS));
         OptimizelyDecision decision = result[0];
@@ -2598,7 +2598,7 @@ public class OptimizelyUserContextTest {
         user.decideAsync(flagKey, decision -> {
             result[0] = decision;
             latch.countDown();
-        });
+        }, Collections.emptyList());
 
         assertTrue(latch.await(1, java.util.concurrent.TimeUnit.SECONDS));
         OptimizelyDecision decision = result[0];
@@ -2627,7 +2627,7 @@ public class OptimizelyUserContextTest {
         user.decideForKeysAsync(flagKeys, decisions -> {
             result[0] = decisions;
             latch.countDown();
-        });
+        }, Collections.emptyList());
 
         assertTrue(latch.await(1, java.util.concurrent.TimeUnit.SECONDS));
         Map<String, OptimizelyDecision> decisions = result[0];
@@ -2700,7 +2700,7 @@ public class OptimizelyUserContextTest {
         user.decideForKeysAsync(flagKeys, decisions -> {
             result[0] = decisions;
             latch.countDown();
-        });
+        },Collections.emptyList());
 
         assertTrue(latch.await(1, java.util.concurrent.TimeUnit.SECONDS));
         Map<String, OptimizelyDecision> decisions = result[0];
@@ -2719,7 +2719,7 @@ public class OptimizelyUserContextTest {
             callbackExecuted[0] = true;
             latch.countDown();
             throw new RuntimeException("Test exception in callback");
-        });
+        }, Collections.emptyList());
 
         assertTrue(latch.await(1, java.util.concurrent.TimeUnit.SECONDS));
         assertTrue(callbackExecuted[0]);
