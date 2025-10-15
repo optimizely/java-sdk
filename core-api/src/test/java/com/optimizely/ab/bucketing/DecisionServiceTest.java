@@ -1527,7 +1527,7 @@ public class DecisionServiceTest {
             cmabExperiment.getKey(),
             cmabExperiment.getStatus(),
             cmabExperiment.getLayerId(),
-            cmabExperiment.getAudienceIds(),
+                       cmabExperiment.getAudienceIds(),
             cmabExperiment.getAudienceConditions(),
             cmabExperiment.getVariations(),
             Collections.emptyMap(), // No whitelisting
@@ -1574,31 +1574,34 @@ public class DecisionServiceTest {
      */
     @Test
     public void getVariationCmabExperimentServiceSuccess() {
-        // Create a CMAB experiment
-        Experiment cmabExperiment = createMockCmabExperiment();
-        Variation expectedVariation = cmabExperiment.getVariations().get(1); // Use second variation
+        // Use an existing experiment from v4ProjectConfig and modify it to be CMAB
+        Experiment baseExperiment = v4ProjectConfig.getExperiments().get(0);
+        Variation expectedVariation = baseExperiment.getVariations().get(0);
         
         // Create mock Cmab object
         Cmab mockCmab = mock(Cmab.class);
-        when(mockCmab.getTrafficAllocation()).thenReturn(4000);
+        when(mockCmab.getTrafficAllocation()).thenReturn(10000); // 100% allocation
         
-        // Create experiment with CMAB config (no whitelisting, no forced variations)
-        Experiment experiment = new Experiment(
-            cmabExperiment.getId(),
-            cmabExperiment.getKey(),
-            cmabExperiment.getStatus(),
-            cmabExperiment.getLayerId(),
-            cmabExperiment.getAudienceIds(),
-            cmabExperiment.getAudienceConditions(),
-            cmabExperiment.getVariations(),
+        // Create CMAB experiment using existing experiment structure
+        Experiment cmabExperiment = new Experiment(
+            baseExperiment.getId(),
+            baseExperiment.getKey(),
+            baseExperiment.getStatus(),
+            baseExperiment.getLayerId(),
+            baseExperiment.getAudienceIds(),
+            baseExperiment.getAudienceConditions(),
+            baseExperiment.getVariations(),
             Collections.emptyMap(), // No whitelisting
-            cmabExperiment.getTrafficAllocation(),
+            baseExperiment.getTrafficAllocation(),
             mockCmab // This makes it a CMAB experiment
         );
         
+        // Mock bucketer to return a variation (user is in CMAB traffic)
+        Variation bucketedVariation = new Variation("$", "$");
         Bucketer mockBucketer = mock(Bucketer.class);
-        when(mockBucketer.bucketForCmab(any(Experiment.class), anyString(), any(ProjectConfig.class)))
-            .thenReturn(DecisionResponse.responseNoReasons("$"));
+        when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), eq(true)))
+            .thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
+        
         DecisionService decisionServiceWithMockCmabService = new DecisionService(
             mockBucketer,
             mockErrorHandler, 
@@ -1606,7 +1609,7 @@ public class DecisionServiceTest {
             mockCmabService
         );
         
-        // Mock CmabService.getDecision to return a valid decision
+        // Mock CmabService.getDecision to return the expected variation ID
         CmabDecision mockCmabDecision = mock(CmabDecision.class);
         when(mockCmabDecision.getVariationId()).thenReturn(expectedVariation.getId());
         when(mockCmabService.getDecision(any(), any(), any(), any()))
@@ -1614,25 +1617,26 @@ public class DecisionServiceTest {
         
         // Call getVariation
         DecisionResponse<Variation> result = decisionServiceWithMockCmabService.getVariation(
-            experiment,
+            cmabExperiment,
             optimizely.createUserContext(genericUserId, Collections.emptyMap()),
             v4ProjectConfig
         );
         
         // Verify that CMAB service decision is returned
+        assertNotNull("Result should not be null", result.getResult());
         assertEquals(expectedVariation, result.getResult());
         
         // Verify that the result is not an error
         assertFalse(result.isError());
         
-        // Assert that CmabService.getDecision was called exactly once
+        // Verify CmabService.getDecision was called
         verify(mockCmabService, times(1)).getDecision(any(), any(), any(), any());
         
         // Verify that the correct parameters were passed to CMAB service
         verify(mockCmabService).getDecision(
             eq(v4ProjectConfig),
             any(OptimizelyUserContext.class),
-            eq(experiment.getId()),
+            eq(cmabExperiment.getId()),
             any(List.class)
         );
     }
@@ -1648,7 +1652,7 @@ public class DecisionServiceTest {
         
         // Create mock Cmab object
         Cmab mockCmab = mock(Cmab.class);
-        when(mockCmab.getTrafficAllocation()).thenReturn(5000); // 50% traffic allocation
+        when(mockCmab.getTrafficAllocation()).thenReturn(5000);
         
         // Create experiment with CMAB config (no whitelisting, no forced variations)
         Experiment experiment = new Experiment(
@@ -1666,7 +1670,7 @@ public class DecisionServiceTest {
         
         // Mock bucketer to return null for CMAB allocation (user not in CMAB traffic)
         Bucketer mockBucketer = mock(Bucketer.class);
-        when(mockBucketer.bucketForCmab(any(Experiment.class), anyString(), any(ProjectConfig.class)))
+        when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), eq(true)))
             .thenReturn(DecisionResponse.nullNoReasons());
         
         DecisionService decisionServiceWithMockCmabService = new DecisionService(
@@ -1693,7 +1697,7 @@ public class DecisionServiceTest {
         verify(mockCmabService, never()).getDecision(any(), any(), any(), any());
         
         // Verify that bucketer was called for CMAB allocation
-        verify(mockBucketer, times(1)).bucketForCmab(any(Experiment.class), anyString(), any(ProjectConfig.class));
+        verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), eq(true));
     }
 
     private Experiment createMockCmabExperiment() {

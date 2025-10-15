@@ -183,6 +183,24 @@ public class Bucketer {
     public DecisionResponse<Variation> bucket(@Nonnull ExperimentCore experiment,
                                               @Nonnull String bucketingId,
                                               @Nonnull ProjectConfig projectConfig) {
+        
+        return bucket(experiment, bucketingId, projectConfig, false);
+    }
+
+    /**
+     * Assign a {@link Variation} of an {@link Experiment} to a user based on hashed value from murmurhash3.
+     *
+     * @param experiment  The Experiment in which the user is to be bucketed.
+     * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
+     * @param projectConfig      The current projectConfig
+     * @param useCmab     boolean flag to decide whether to handle cmab experiments.
+     * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
+     */
+    @Nonnull
+    public DecisionResponse<Variation> bucket(@Nonnull ExperimentCore experiment,
+                                              @Nonnull String bucketingId,
+                                              @Nonnull ProjectConfig projectConfig,
+                                              @Nonnull boolean useCmab) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         // ---------- Bucket User ----------
@@ -215,57 +233,26 @@ public class Bucketer {
             }
         }
 
-        DecisionResponse<Variation> decisionResponse = bucketToVariation(experiment, bucketingId);
-        reasons.merge(decisionResponse.getReasons());
-        return new DecisionResponse<>(decisionResponse.getResult(), reasons);
-    }
-
-    /**
-     * Assign a user to CMAB traffic for an experiment based on hashed value from murmurhash3.
-     * This method handles CMAB (Contextual Multi-Armed Bandit) traffic allocation.
-     *
-     * @param experiment  The CMAB Experiment in which the user is to be bucketed.
-     * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
-     * @param projectConfig The current projectConfig
-     * @return A {@link DecisionResponse} including the entity ID ("$" if bucketed to CMAB, null otherwise) and decision reasons
-     */
-    @Nonnull
-    public DecisionResponse<String> bucketForCmab(@Nonnull Experiment experiment,
-                                                  @Nonnull String bucketingId,
-                                                  @Nonnull ProjectConfig projectConfig) {
-
-        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
-
-        // ---------- Handle Group Logic (same as regular bucket method) ----------
-        String groupId = experiment.getGroupId();
-        if (!groupId.isEmpty()) {
-            Group experimentGroup = projectConfig.getGroupIdMapping().get(groupId);
-
-            if (experimentGroup.getPolicy().equals(Group.RANDOM_POLICY)) {
-                Experiment bucketedExperiment = bucketToExperiment(experimentGroup, bucketingId, projectConfig);
-                if (bucketedExperiment == null) {
-                    String message = reasons.addInfo("User with bucketingId \"%s\" is not in any experiment of group %s.", bucketingId, experimentGroup.getId());
-                    logger.info(message);
+        if (useCmab){
+            if (experiment instanceof Experiment) {
+                DecisionResponse<String> decisionResponse = bucketToEntityForCmab((Experiment) experiment, bucketingId);
+                reasons.merge(decisionResponse.getReasons());
+                String entityId = decisionResponse.getResult();
+                if (entityId==null){
                     return new DecisionResponse<>(null, reasons);
                 }
-
-                if (!bucketedExperiment.getId().equals(experiment.getId())) {
-                    String message = reasons.addInfo("User with bucketingId \"%s\" is not in experiment \"%s\" of group %s.", bucketingId, experiment.getKey(),
-                        experimentGroup.getId());
-                    logger.info(message);
-                    return new DecisionResponse<>(null, reasons);
-                }
-
-                String message = reasons.addInfo("User with bucketingId \"%s\" is in experiment \"%s\" of group %s.", bucketingId, experiment.getKey(),
-                    experimentGroup.getId());
+                Variation variation = new Variation(entityId, entityId); //return dummy variation for cmab
+                return new DecisionResponse<>(variation, reasons);
+            } else {
+                String message = reasons.addInfo("ExperimentCore instance is not of type Experiment, cannot perform CMAB bucketing.");
                 logger.info(message);
+                return new DecisionResponse<>(null, reasons);
             }
+        } else {
+            DecisionResponse<Variation> decisionResponse = bucketToVariation(experiment, bucketingId);
+            reasons.merge(decisionResponse.getReasons());
+            return new DecisionResponse<>(decisionResponse.getResult(), reasons);
         }
-
-        // ---------- Use CMAB-aware bucketToEntity ----------
-        DecisionResponse<String> decisionResponse = bucketToEntityForCmab(experiment, bucketingId);
-        reasons.merge(decisionResponse.getReasons());
-        return new DecisionResponse<>(decisionResponse.getResult(), reasons);
     }
 
     //======== Helper methods ========//

@@ -941,10 +941,12 @@ public class DecisionService {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         // Check if user is in CMAB traffic allocation
-        DecisionResponse<String> bucketResponse = bucketer.bucketForCmab(experiment, bucketingId, projectConfig);
+        DecisionResponse<Variation> bucketResponse = bucketer.bucket(experiment, bucketingId, projectConfig, true);
+        // DecisionResponse<String> bucketResponse = bucketer.bucketForCmab(experiment, bucketingId, projectConfig);
         reasons.merge(bucketResponse.getReasons());
 
-        String bucketedEntityId = bucketResponse.getResult();
+        Variation bucketedVariation = bucketResponse.getResult();
+        String bucketedEntityId = bucketedVariation != null ? bucketedVariation.getId() : null;
 
         if (bucketedEntityId == null) {
             String message = String.format("User \"%s\" not in CMAB experiment \"%s\" due to traffic allocation.",
