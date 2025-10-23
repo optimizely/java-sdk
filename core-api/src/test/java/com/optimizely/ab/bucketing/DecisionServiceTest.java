@@ -361,7 +361,7 @@ public class DecisionServiceTest {
             anyObject(),
             anyObject(),
             any(DecisionReasons.class),
-            anyBoolean()
+            any(DecisionPath.class)
         );
         // do not bucket to any rollouts
         doReturn(DecisionResponse.responseNoReasons(new FeatureDecision(null, null, null))).when(decisionService).getVariationForFeatureInRollout(
@@ -401,7 +401,7 @@ public class DecisionServiceTest {
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
             anyObject(),
-            anyBoolean()
+            any(DecisionPath.class)
         );
 
         doReturn(DecisionResponse.responseNoReasons(ValidProjectConfigV4.VARIATION_MUTEX_GROUP_EXP_2_VAR_1)).when(decisionService).getVariation(
@@ -409,7 +409,7 @@ public class DecisionServiceTest {
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
             anyObject(),
-            anyBoolean()
+            any(DecisionPath.class)
         );
 
         FeatureDecision featureDecision = decisionService.getVariationForFeature(
@@ -450,7 +450,7 @@ public class DecisionServiceTest {
             anyObject(),
             anyObject(),
             any(DecisionReasons.class),
-            anyBoolean()
+            any(DecisionPath.class)
         );
 
         // return variation for rollout
@@ -485,7 +485,7 @@ public class DecisionServiceTest {
             anyObject(),
             anyObject(),
             any(DecisionReasons.class),
-            anyBoolean()
+            any(DecisionPath.class)
         );
     }
 
@@ -513,7 +513,7 @@ public class DecisionServiceTest {
             anyObject(),
             anyObject(),
             any(DecisionReasons.class),
-            anyBoolean()
+            any(DecisionPath.class)
         );
 
         // return variation for rollout
@@ -548,7 +548,7 @@ public class DecisionServiceTest {
             anyObject(),
             anyObject(),
             any(DecisionReasons.class),
-            anyBoolean()
+            any(DecisionPath.class)
         );
 
         logbackVerifier.expectMessage(

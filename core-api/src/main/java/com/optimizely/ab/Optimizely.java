@@ -16,10 +16,7 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
-import com.optimizely.ab.bucketing.Bucketer;
-import com.optimizely.ab.bucketing.DecisionService;
-import com.optimizely.ab.bucketing.FeatureDecision;
-import com.optimizely.ab.bucketing.UserProfileService;
+import com.optimizely.ab.bucketing.*;
 import com.optimizely.ab.cmab.service.CmabCacheValue;
 import com.optimizely.ab.cmab.service.CmabService;
 import com.optimizely.ab.cmab.service.CmabServiceOptions;
@@ -1409,7 +1406,7 @@ public class Optimizely implements AutoCloseable {
                                                           @Nonnull List<String> keys,
                                                           @Nonnull List<OptimizelyDecideOption> options,
                                                           boolean ignoreDefaultOptions,
-                                                          boolean useCmab) {
+                                                          DecisionPath decisionPath) {
         Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
 
         ProjectConfig projectConfig = getProjectConfig();
@@ -1454,7 +1451,7 @@ public class Optimizely implements AutoCloseable {
         }
 
         List<DecisionResponse<FeatureDecision>> decisionList =
-            decisionService.getVariationsForFeatureList(flagsWithoutForcedDecision, user, projectConfig, allOptions, useCmab);
+            decisionService.getVariationsForFeatureList(flagsWithoutForcedDecision, user, projectConfig, allOptions, decisionPath);
 
         for (int i = 0; i < flagsWithoutForcedDecision.size(); i++) {
             DecisionResponse<FeatureDecision> decision = decisionList.get(i);
@@ -1497,7 +1494,7 @@ public class Optimizely implements AutoCloseable {
                                                           @Nonnull List<String> keys,
                                                           @Nonnull List<OptimizelyDecideOption> options,
                                                           boolean ignoreDefaultOptions) {
-        return decideForKeys(user, keys, options, ignoreDefaultOptions, true);
+        return decideForKeys(user, keys, options, ignoreDefaultOptions, DecisionPath.WITH_CMAB);
     }
 
     Map<String, OptimizelyDecision> decideAll(@Nonnull OptimizelyUserContext user,
@@ -1585,7 +1582,7 @@ public class Optimizely implements AutoCloseable {
                                                                     @Nonnull List<String> keys,
                                                                     @Nonnull List<OptimizelyDecideOption> options,
                                                                     boolean ignoreDefaultOptions) {
-        return decideForKeys(user, keys, options, ignoreDefaultOptions, false);
+        return decideForKeys(user, keys, options, ignoreDefaultOptions, DecisionPath.WITHOUT_CMAB);
     }
 
 

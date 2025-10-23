@@ -63,6 +63,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.optimizely.ab.bucketing.Bucketer;
+import com.optimizely.ab.bucketing.DecisionPath;
 import com.optimizely.ab.bucketing.DecisionService;
 import com.optimizely.ab.bucketing.FeatureDecision;
 import com.optimizely.ab.config.Attribute;
@@ -5117,7 +5118,7 @@ public class OptimizelyTest {
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
             any(List.class),
-            eq(true)
+            eq(DecisionPath.WITH_CMAB)
         )).thenReturn(Arrays.asList(errorDecisionResponse));
         
         
