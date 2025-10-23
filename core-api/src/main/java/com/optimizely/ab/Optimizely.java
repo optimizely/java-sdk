@@ -1540,7 +1540,7 @@ public class Optimizely implements AutoCloseable {
 
     /**
      * Returns decision results for multiple flag keys, skipping CMAB logic and using only traditional A/B testing.
-     * This will be called by mobile apps which will use non-blocking legacy ab-tests only (for backward compatibility with android-sdk)
+     * This will be called by mobile apps which will make synchronous decisions only (for backward compatibility with android-sdk)
      * 
      * @param user    An OptimizelyUserContext associated with this OptimizelyClient.
      * @param keys    A list of flag keys for which decisions will be made.
