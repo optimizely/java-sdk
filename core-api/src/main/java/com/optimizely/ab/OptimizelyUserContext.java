@@ -50,7 +50,7 @@ public class OptimizelyUserContext {
     private List<String> qualifiedSegments;
 
     @Nonnull
-    private final Optimizely optimizely;
+    final Optimizely optimizely;
 
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyUserContext.class);
 
@@ -205,42 +205,6 @@ public class OptimizelyUserContext {
         return decideAll(Collections.emptyList());
     }
 
-    /**
-     * Returns a decision result ({@link OptimizelyDecision}) for a given flag key and a user context, 
-     * which contains all data required to deliver the flag. This method skips CMAB logic.
-     * backward compatibility support for android sync decisions
-     * @param key A flag key for which a decision will be made.
-     * @param options A list of options for decision-making.
-     * @return A decision result.
-     */
-    public OptimizelyDecision decideSync(@Nonnull String key,
-                                                @Nonnull List<OptimizelyDecideOption> options) {
-        return optimizely.decideSync(copy(), key, options);
-    }
-
-    /**
-     * Returns a key-map of decision results ({@link OptimizelyDecision}) for multiple flag keys and a user context.
-     * This method skips CMAB logic.
-     * backward compatibility support for android sync decisions
-     * @param keys A list of flag keys for which decisions will be made.
-     * @param options A list of options for decision-making.
-     * @return All decision results mapped by flag keys.
-     */
-    public Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull List<String> keys,
-                                                                    @Nonnull List<OptimizelyDecideOption> options) {
-        return optimizely.decideForKeysSync(copy(), keys, options);
-    }
-
-    /**
-     * Returns a key-map of decision results ({@link OptimizelyDecision}) for all active flag keys.
-     * This method skips CMAB logic.
-     * backward compatibility support for android sync decisions
-     * @param options A list of options for decision-making.
-     * @return All decision results mapped by flag keys.
-     */
-    public Map<String, OptimizelyDecision> decideAllSync(@Nonnull List<OptimizelyDecideOption> options) {
-        return optimizely.decideAllSync(copy(), options);
-    }
 
     /**
      * Returns a decision result asynchronously for a given flag key and a user context.
