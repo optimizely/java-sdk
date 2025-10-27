@@ -1988,12 +1988,8 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
-        public Builder withCmabClient(CmabClient cmabClient) {
-            int DEFAULT_MAX_SIZE = 1000;
-            int DEFAULT_CMAB_CACHE_TIMEOUT = 30 * 60;
-            DefaultLRUCache<CmabCacheValue> cmabCache = new DefaultLRUCache<>(DEFAULT_MAX_SIZE, DEFAULT_CMAB_CACHE_TIMEOUT);
-            DefaultCmabService defaultCmabService = new DefaultCmabService(cmabClient, cmabCache, logger);
-            this.cmabService = defaultCmabService;
+        public Builder withCmabService(CmabService cmabService) {
+            this.cmabService = cmabService;
             return this;
         }
 

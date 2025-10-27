@@ -52,12 +52,12 @@ public class RetryConfig {
     }
 
     /**
-     * Creates a RetryConfig with default backoff settings and timeout (1 second base, 2x multiplier, 10 second timeout).
+     * Creates a RetryConfig with default backoff settings and timeout (100 millisecond base, 2x multiplier, 10 second timeout).
      *
      * @param maxRetries Maximum number of retry attempts
      */
     public RetryConfig(int maxRetries) {
-        this(maxRetries, 1000, 2.0, 10000); // Default: 1 second base, exponential backoff, 10 second timeout
+        this(maxRetries, 100, 2.0, 10000);
     }
 
     /**
@@ -66,7 +66,7 @@ public class RetryConfig {
      * @return Retry config with default settings
      */
     public static RetryConfig defaultConfig() {
-        return new RetryConfig(3);
+        return new RetryConfig(1);
     }
 
     /**

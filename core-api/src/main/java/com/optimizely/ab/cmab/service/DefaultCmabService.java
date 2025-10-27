@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.bucketing.internal.MurmurHash3;
@@ -29,16 +30,25 @@ import com.optimizely.ab.cmab.client.CmabClient;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.internal.Cache;
 import com.optimizely.ab.internal.DefaultLRUCache;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 
 public class DefaultCmabService implements CmabService {
-
-    private final DefaultLRUCache<CmabCacheValue> cmabCache;
+    public static final int DEFAULT_CMAB_CACHE_SIZE = 1000;
+    public static final int DEFAULT_CMAB_CACHE_TIMEOUT_SECS = 300; // 5 minutes
+    
+    private final Cache<CmabCacheValue> cmabCache;
     private final CmabClient cmabClient;
     private final Logger logger;
 
-    public DefaultCmabService(CmabClient cmabClient, DefaultLRUCache<CmabCacheValue> cmabCache, Logger logger) {
+    // public DefaultCmabService(CmabClient cmabClient, DefaultLRUCache<CmabCacheValue> cmabCache, Logger logger) {
+    //     this.cmabCache = cmabCache;
+    //     this.cmabClient = cmabClient;
+    //     this.logger = logger;
+    // }
+
+    public DefaultCmabService(CmabClient cmabClient, Cache<CmabCacheValue> cmabCache, Logger logger) {
         this.cmabCache = cmabCache;
         this.cmabClient = cmabClient;
         this.logger = logger;
@@ -181,5 +191,98 @@ public class DefaultCmabService implements CmabService {
         
         // Convert to hex string to match your existing pattern
         return Integer.toHexString(hash);
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private int cmabCacheSize = DEFAULT_CMAB_CACHE_SIZE;
+        private int cmabCacheTimeoutInSecs = DEFAULT_CMAB_CACHE_TIMEOUT_SECS;
+        private Cache<CmabCacheValue> customCache;
+        private CmabClient client;
+        private Logger logger;
+
+        /**
+         * Set the maximum size of the CMAB cache.
+         * 
+         * Default value is 1000 entries.
+         *
+         * @param cacheSize The maximum number of entries to store in the cache
+         * @return Builder instance
+         */
+        public Builder withCmabCacheSize(int cacheSize) {
+            this.cmabCacheSize = cacheSize;
+            return this;
+        }
+        
+        /**
+         * Set the timeout duration for cached CMAB decisions.
+         * 
+         * Default value is 300 seconds (5 minutes).
+         *
+         * @param timeoutInSecs The timeout in seconds before cached entries expire
+         * @return Builder instance
+         */
+        public Builder withCmabCacheTimeoutInSecs(int timeoutInSecs) {
+            this.cmabCacheTimeoutInSecs = timeoutInSecs;
+            return this;
+        }
+
+        /**
+         * Provide a custom {@link CmabClient} instance which makes HTTP calls to fetch CMAB decisions.
+         *
+         * A Default CmabClient implementation is required for CMAB functionality.
+         *
+         * @param client The implementation of {@link CmabClient}
+         * @return Builder instance
+         */
+        public Builder withClient(CmabClient client) {
+            this.client = client;
+            return this;
+        }
+
+        /**
+         * Provide a custom {@link Cache} instance for caching CMAB decisions.
+         *
+         * If provided, this will override the cache size and timeout settings.
+         *
+         * @param cache The custom cache instance implementing {@link Cache}
+         * @return Builder instance
+         */
+        public Builder withCustomCache(Cache<CmabCacheValue> cache) {
+            this.customCache = cache;
+            return this;
+        }
+
+        /**
+         * Provide a custom {@link Logger} instance for logging CMAB service operations.
+         *
+         * If not provided, a default SLF4J logger will be used.
+         *
+         * @param logger The logger instance
+         * @return Builder instance
+         */
+        public Builder withLogger(Logger logger) {
+            this.logger = logger;
+            return this;
+        }
+
+        public DefaultCmabService build() {
+            if (client == null) {
+                throw new IllegalStateException("CmabClient is required");
+            }
+
+            if (logger == null) {
+                logger = LoggerFactory.getLogger(DefaultCmabService.class);
+            }
+
+            Cache<CmabCacheValue> cache = customCache != null ? customCache : 
+                new DefaultLRUCache<>(cmabCacheSize, cmabCacheTimeoutInSecs);
+
+
+            return new DefaultCmabService(client, cache, logger);
+        }
     }
 }

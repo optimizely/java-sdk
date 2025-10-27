@@ -24,12 +24,15 @@ import org.slf4j.LoggerFactory;
 
 import com.optimizely.ab.cmab.DefaultCmabClient;
 import com.optimizely.ab.cmab.client.CmabClientConfig;
+import com.optimizely.ab.cmab.service.CmabCacheValue;
+import com.optimizely.ab.cmab.service.DefaultCmabService;
 import com.optimizely.ab.config.HttpProjectConfigManager;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.ProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
 import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.event.EventHandler;
+import com.optimizely.ab.internal.Cache;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.odp.DefaultODPApiManager;
@@ -56,6 +59,8 @@ import com.optimizely.ab.odp.ODPManager;
  */
 public final class OptimizelyFactory {
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyFactory.class);
+
+    private static Cache<CmabCacheValue> customCmabCache;
 
     /**
      * Convenience method for setting the maximum number of events contained within a batch.
@@ -203,6 +208,48 @@ public final class OptimizelyFactory {
         }
 
         PropertyUtils.set(HttpProjectConfigManager.CONFIG_DATAFILE_AUTH_TOKEN, datafileAccessToken);
+    }
+
+    /**
+     * Convenience method for setting the CMAB cache size.
+     * {@link DefaultCmabService.Builder#withCmabCacheSize(int)}
+     *
+     * @param cacheSize The maximum number of CMAB cache entries
+     */
+    public static void setCmabCacheSize(int cacheSize) {
+        if (cacheSize <= 0) {
+            logger.warn("CMAB cache size cannot be <= 0. Reverting to default configuration.");
+            return;
+        }
+        PropertyUtils.set("optimizely.cmab.cache.size", Integer.toString(cacheSize));
+    }
+
+    /**
+     * Convenience method for setting the CMAB cache timeout.
+     * {@link DefaultCmabService.Builder#withCmabCacheTimeoutInSecs(int)}
+     *
+     * @param timeoutInSecs The timeout in seconds before CMAB cache entries expire
+     */
+    public static void setCmabCacheTimeoutInSecs(int timeoutInSecs) {
+        if (timeoutInSecs <= 0) {
+            logger.warn("CMAB cache timeout cannot be <= 0. Reverting to default configuration.");
+            return;
+        }
+        PropertyUtils.set("optimizely.cmab.cache.timeout", Integer.toString(timeoutInSecs));
+    }
+
+    /**
+     * Convenience method for setting a custom CMAB cache implementation.
+     * {@link DefaultCmabService.Builder#withCustomCache(Cache)}
+     *
+     * @param cache The custom cache implementation
+     */
+    public static void setCustomCmabCache(Cache<CmabCacheValue> cache) {
+        if (cache == null) {
+            logger.warn("Custom CMAB cache cannot be null. Reverting to default configuration.");
+            return;
+        }
+        customCmabCache = cache;
     }
 
     /**
@@ -373,13 +420,43 @@ public final class OptimizelyFactory {
             .build();
 
         DefaultCmabClient defaultCmabClient = new DefaultCmabClient(CmabClientConfig.withDefaultRetry());
+        
+        DefaultCmabService.Builder cmabBuilder = DefaultCmabService.builder()
+            .withClient(defaultCmabClient);
 
+        // Always apply cache size from properties if set
+        String cacheSizeStr = PropertyUtils.get("optimizely.cmab.cache.size");
+        if (cacheSizeStr != null) {
+            try {
+                cmabBuilder.withCmabCacheSize(Integer.parseInt(cacheSizeStr));
+            } catch (NumberFormatException e) {
+                logger.warn("Invalid CMAB cache size property value: {}", cacheSizeStr);
+            }
+        }
+
+        // Always apply cache timeout from properties if set
+        String cacheTimeoutStr = PropertyUtils.get("optimizely.cmab.cache.timeout");
+        if (cacheTimeoutStr != null) {
+            try {
+                cmabBuilder.withCmabCacheTimeoutInSecs(Integer.parseInt(cacheTimeoutStr));
+            } catch (NumberFormatException e) {
+                logger.warn("Invalid CMAB cache timeout property value: {}", cacheTimeoutStr);
+            }
+        }
+
+        // If custom cache is provided, it overrides the size/timeout settings
+        if (customCmabCache != null) {
+            cmabBuilder.withCustomCache(customCmabCache);
+        }
+
+        DefaultCmabService defaultCmabService = cmabBuilder.build();
+        
         return Optimizely.builder()
             .withEventProcessor(eventProcessor)
             .withConfigManager(configManager)
             .withNotificationCenter(notificationCenter)
             .withODPManager(odpManager)
-            .withCmabClient(defaultCmabClient)
+            .withCmabService(defaultCmabService)
             .build();
     }
 }
