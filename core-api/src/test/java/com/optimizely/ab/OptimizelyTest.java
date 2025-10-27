@@ -23,6 +23,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -5135,4 +5138,101 @@ public class OptimizelyTest {
         assertTrue(decision.getReasons().contains("Failed to fetch CMAB data for experiment exp-cmab."));
     }
 
+    @Test
+    public void decideAsyncReturnsDecision() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .build();
+        OptimizelyUserContext userContext = optimizely.createUserContext(testUserId);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<OptimizelyDecision> decisionRef = new AtomicReference<>();
+        final AtomicReference<Throwable> errorRef = new AtomicReference<>();
+
+        optimizely.decideAsync(userContext,
+            FEATURE_MULTI_VARIATE_FEATURE_KEY, (OptimizelyDecision decision) -> {
+                try {
+                    decisionRef.set(decision);
+                } catch (Throwable t) {
+                    errorRef.set(t);
+                } finally {
+                    latch.countDown();
+                }
+        },
+            Collections.emptyList()
+        );
+
+        boolean completed = latch.await(5, TimeUnit.SECONDS);
+        
+        if (errorRef.get() != null) {
+            throw new AssertionError("Error in callback", errorRef.get());
+        }
+        
+        assertTrue("Callback should be called within timeout", completed);
+        
+        OptimizelyDecision decision = decisionRef.get();
+        assertNotNull("Decision should not be null", decision);
+        assertEquals("Flag key should match", FEATURE_MULTI_VARIATE_FEATURE_KEY, decision.getFlagKey());
+    }
+
+    @Test
+    public void decideForKeysAsyncReturnsDecisions() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .build();
+        OptimizelyUserContext userContext = optimizely.createUserContext(testUserId);
+
+        List<String> flagKeys = Arrays.asList(
+            FEATURE_MULTI_VARIATE_FEATURE_KEY,
+            FEATURE_SINGLE_VARIABLE_STRING_KEY
+        );
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<Map<String, OptimizelyDecision>> decisionsRef = new AtomicReference<>();
+
+        optimizely.decideForKeysAsync(userContext,
+            flagKeys, (Map<String, OptimizelyDecision> decisions) -> {
+                decisionsRef.set(decisions);
+                latch.countDown();
+        },
+            Collections.emptyList()
+        );
+
+        assertTrue("Callback should be called within timeout", latch.await(5, TimeUnit.SECONDS));
+        assertNotNull("Decisions should not be null", decisionsRef.get());
+        assertEquals("Should return decisions for 2 keys", 2, decisionsRef.get().size());
+        assertTrue("Should contain first flag key", decisionsRef.get().containsKey(FEATURE_MULTI_VARIATE_FEATURE_KEY));
+        assertTrue("Should contain second flag key", decisionsRef.get().containsKey(FEATURE_SINGLE_VARIABLE_STRING_KEY));
+    }
+
+    @Test
+    public void decideAllAsyncReturnsAllDecisions() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .build();
+        OptimizelyUserContext userContext = optimizely.createUserContext(testUserId);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<Map<String, OptimizelyDecision>> decisionsRef = new AtomicReference<>();
+
+        optimizely.decideAllAsync(userContext, (Map<String, OptimizelyDecision> decisions) -> {
+            decisionsRef.set(decisions);
+            latch.countDown();
+        },
+            Collections.emptyList()
+        );
+
+        assertTrue("Callback should be called within timeout", latch.await(5, TimeUnit.SECONDS));
+        assertNotNull("Decisions should not be null", decisionsRef.get());
+        assertFalse("Decisions should not be empty", decisionsRef.get().isEmpty());
+    }
 }

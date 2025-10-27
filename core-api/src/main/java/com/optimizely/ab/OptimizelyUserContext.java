@@ -31,11 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import com.optimizely.ab.odp.ODPSegmentCallback;
 import com.optimizely.ab.odp.ODPSegmentOption;
-import com.optimizely.ab.optimizelydecision.AsyncDecisionFetcher;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
-import com.optimizely.ab.optimizelydecision.OptimizelyDecisionCallback;
-import com.optimizely.ab.optimizelydecision.OptimizelyDecisionsCallback;
 
 public class OptimizelyUserContext {
     // OptimizelyForcedDecisionsKey mapped to variationKeys
@@ -203,48 +200,6 @@ public class OptimizelyUserContext {
      */
     public Map<String, OptimizelyDecision> decideAll() {
         return decideAll(Collections.emptyList());
-    }
-
-
-    /**
-     * Returns a decision result asynchronously for a given flag key and a user context.
-     * support for android async decisions
-     * @param key A flag key for which a decision will be made.
-     * @param callback A callback to invoke when the decision is available.
-     * @param options A list of options for decision-making.
-     */
-    public void decideAsync(@Nonnull String key,
-                            @Nonnull OptimizelyDecisionCallback callback,
-                            @Nonnull List<OptimizelyDecideOption> options) {
-        AsyncDecisionFetcher fetcher = new AsyncDecisionFetcher(this, key, options, callback);
-        fetcher.start();
-    }
-
-
-    /**
-     * Returns decision results asynchronously for multiple flag keys.
-     * support for android async decisions
-     * @param keys A list of flag keys for which decisions will be made.
-     * @param callback A callback to invoke when decisions are available.
-     * @param options A list of options for decision-making.
-     */
-    public void decideForKeysAsync(@Nonnull List<String> keys,
-                                   @Nonnull OptimizelyDecisionsCallback callback,
-                                   @Nonnull List<OptimizelyDecideOption> options) {
-        AsyncDecisionFetcher fetcher = new AsyncDecisionFetcher(this, keys, options, callback);
-        fetcher.start();
-    }
-
-    /**
-     * Returns decision results asynchronously for all active flag keys.
-     * support for android async decisions
-     * @param callback A callback to invoke when decisions are available.
-     * @param options A list of options for decision-making.
-     */
-    public void decideAllAsync(@Nonnull OptimizelyDecisionsCallback callback,
-                               @Nonnull List<OptimizelyDecideOption> options) {
-        AsyncDecisionFetcher fetcher = new AsyncDecisionFetcher(this, options, callback);
-        fetcher.start();
     }
 
     /**
