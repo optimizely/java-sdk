@@ -38,10 +38,10 @@ public class DefaultCmabService implements CmabService {
     private final CmabClient cmabClient;
     private final Logger logger;
 
-    public DefaultCmabService(CmabServiceOptions options) {
-        this.cmabCache = options.getCmabCache();
-        this.cmabClient = options.getCmabClient();
-        this.logger = options.getLogger();
+    public DefaultCmabService(CmabClient cmabClient, DefaultLRUCache<CmabCacheValue> cmabCache, Logger logger) {
+        this.cmabCache = cmabCache;
+        this.cmabClient = cmabClient;
+        this.logger = logger;
     }
 
     @Override

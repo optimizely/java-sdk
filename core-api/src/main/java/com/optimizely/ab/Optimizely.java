@@ -19,7 +19,6 @@ import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.bucketing.*;
 import com.optimizely.ab.cmab.service.CmabCacheValue;
 import com.optimizely.ab.cmab.service.CmabService;
-import com.optimizely.ab.cmab.service.CmabServiceOptions;
 import com.optimizely.ab.cmab.service.DefaultCmabService;
 import com.optimizely.ab.config.AtomicProjectConfigManager;
 import com.optimizely.ab.config.DatafileProjectConfig;
@@ -1993,8 +1992,7 @@ public class Optimizely implements AutoCloseable {
             int DEFAULT_MAX_SIZE = 1000;
             int DEFAULT_CMAB_CACHE_TIMEOUT = 30 * 60;
             DefaultLRUCache<CmabCacheValue> cmabCache = new DefaultLRUCache<>(DEFAULT_MAX_SIZE, DEFAULT_CMAB_CACHE_TIMEOUT);
-            CmabServiceOptions cmabServiceOptions = new CmabServiceOptions(logger, cmabCache, cmabClient);
-            DefaultCmabService defaultCmabService = new DefaultCmabService(cmabServiceOptions);
+            DefaultCmabService defaultCmabService = new DefaultCmabService(cmabClient, cmabCache, logger);
             this.cmabService = defaultCmabService;
             return this;
         }
