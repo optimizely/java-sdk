@@ -1518,7 +1518,6 @@ public class Optimizely implements AutoCloseable {
      * @param options A list of options for decision-making.
      * @return A decision result using traditional A/B testing logic only.
      */
-    @VisibleForTesting()
     OptimizelyDecision decideSync(@Nonnull OptimizelyUserContext user,
                                   @Nonnull String key,
                                   @Nonnull List<OptimizelyDecideOption> options) {
