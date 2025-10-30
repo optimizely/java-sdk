@@ -1518,6 +1518,7 @@ public class Optimizely implements AutoCloseable {
      * @param options A list of options for decision-making.
      * @return A decision result using traditional A/B testing logic only.
      */
+    @VisibleForTesting()
     OptimizelyDecision decideSync(@Nonnull OptimizelyUserContext user,
                                   @Nonnull String key,
                                   @Nonnull List<OptimizelyDecideOption> options) {
@@ -1547,6 +1548,13 @@ public class Optimizely implements AutoCloseable {
         return decideForKeysSync(user, keys, options, false);
     }
 
+    private Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull OptimizelyUserContext user,
+                                                              @Nonnull List<String> keys,
+                                                              @Nonnull List<OptimizelyDecideOption> options,
+                                                              boolean ignoreDefaultOptions) {
+        return decideForKeys(user, keys, options, ignoreDefaultOptions, DecisionPath.WITHOUT_CMAB);
+    }
+
     /**
      * Returns decision results for all active flag keys, skipping CMAB logic and using only traditional A/B testing.
      * This will be called by mobile apps which will make synchronous decisions only (for backward compatibility with android-sdk)
@@ -1572,13 +1580,6 @@ public class Optimizely implements AutoCloseable {
         return decideForKeysSync(user, allFlagKeys, options);
     }
 
-    private Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull OptimizelyUserContext user,
-                                                              @Nonnull List<String> keys,
-                                                              @Nonnull List<OptimizelyDecideOption> options,
-                                                              boolean ignoreDefaultOptions) {
-        return decideForKeys(user, keys, options, ignoreDefaultOptions, DecisionPath.WITHOUT_CMAB);
-    }
-
     //============ decide async ============//
 
     /**
@@ -1589,10 +1590,10 @@ public class Optimizely implements AutoCloseable {
      * @param callback A callback to invoke when the decision is available
      * @param options A list of options for decision-making
      */
-    public void decideAsync(@Nonnull OptimizelyUserContext userContext,
-                            @Nonnull String key,
-                            @Nonnull OptimizelyDecisionCallback callback,
-                            @Nonnull List<OptimizelyDecideOption> options) {
+    void decideAsync(@Nonnull OptimizelyUserContext userContext,
+                     @Nonnull String key,
+                     @Nonnull List<OptimizelyDecideOption> options,
+                     @Nonnull OptimizelyDecisionCallback callback) {
         AsyncDecisionFetcher fetcher = new AsyncDecisionFetcher(userContext, key, options, callback);
         fetcher.start();
     }
@@ -1605,10 +1606,10 @@ public class Optimizely implements AutoCloseable {
      * @param callback    A callback to invoke when decisions are available
      * @param options     A list of options for decision-making
      */
-    public void decideForKeysAsync(@Nonnull OptimizelyUserContext userContext,
-                                   @Nonnull List<String> keys,
-                                   @Nonnull OptimizelyDecisionsCallback callback,
-                                   @Nonnull List<OptimizelyDecideOption> options) {
+    void decideForKeysAsync(@Nonnull OptimizelyUserContext userContext,
+                            @Nonnull List<String> keys,
+                            @Nonnull List<OptimizelyDecideOption> options,
+                            @Nonnull OptimizelyDecisionsCallback callback) {
         AsyncDecisionFetcher fetcher = new AsyncDecisionFetcher(userContext, keys, options, callback);
         fetcher.start();
     }
@@ -1620,9 +1621,9 @@ public class Optimizely implements AutoCloseable {
      * @param callback A callback to invoke when decisions are available
      * @param options A list of options for decision-making
      */
-    public void decideAllAsync(@Nonnull OptimizelyUserContext userContext,
-                               @Nonnull OptimizelyDecisionsCallback callback,
-                               @Nonnull List<OptimizelyDecideOption> options) {
+    void decideAllAsync(@Nonnull OptimizelyUserContext userContext,
+                        @Nonnull List<OptimizelyDecideOption> options,
+                        @Nonnull OptimizelyDecisionsCallback callback) {
         AsyncDecisionFetcher fetcher = new AsyncDecisionFetcher(userContext, options, callback);
         fetcher.start();
     }

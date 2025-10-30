@@ -26,6 +26,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecisionCallback;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecisionsCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -395,4 +398,44 @@ public class OptimizelyUserContext {
             ", attributes='" + attributes + '\'' +
             '}';
     }
+
+    // sync decision support for android-sdk backward compatibility only
+
+    @VisibleForTesting  // protected, open for testing only
+    public OptimizelyDecision decideSync(@Nonnull String key,
+                                     @Nonnull List<OptimizelyDecideOption> options) {
+        return optimizely.decideSync(copy(), key, options);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull List<String> keys,
+                                                         @Nonnull List<OptimizelyDecideOption> options) {
+        return optimizely.decideForKeysSync(copy(), keys, options);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public Map<String, OptimizelyDecision> decideAllSync(@Nonnull List<OptimizelyDecideOption> options) {
+        return optimizely.decideAllSync(copy(), options);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public void decideAsync(@Nonnull String key,
+                                          @Nonnull List<OptimizelyDecideOption> options,
+                                          @Nonnull OptimizelyDecisionCallback callback) {
+        optimizely.decideAsync(copy(), key, options, callback);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public void decideForKeysAsync(@Nonnull List<String> keys,
+                                                              @Nonnull List<OptimizelyDecideOption> options,
+                                                              @Nonnull OptimizelyDecisionsCallback callback) {
+        optimizely.decideForKeysAsync(copy(), keys, options, callback);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public void decideAllAsync(@Nonnull List<OptimizelyDecideOption> options,
+                                                          @Nonnull OptimizelyDecisionsCallback callback) {
+        optimizely.decideAllAsync(copy(), options, callback);
+    }
+
 }

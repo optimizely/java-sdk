@@ -43,8 +43,6 @@ public class DefaultCmabClient implements CmabClient {
     private static final Logger logger = LoggerFactory.getLogger(DefaultCmabClient.class);
     private static final int DEFAULT_TIMEOUT_MS = 10000;
 
-    private static final String CMAB_PREDICTION_ENDPOINT = "https://prediction.cmab.optimizely.com/predict/%s";
-
     private final OptimizelyHttpClient httpClient;
     private final RetryConfig retryConfig;
 
@@ -78,7 +76,7 @@ public class DefaultCmabClient implements CmabClient {
     @Override
     public String fetchDecision(String ruleId, String userId, Map<String, Object> attributes, String cmabUuid) {
         // Implementation will use this.httpClient and this.retryConfig
-        String url = String.format(CMAB_PREDICTION_ENDPOINT, ruleId);
+        String url = String.format(CmabClientHelper.CMAB_PREDICTION_ENDPOINT, ruleId);
         String requestBody = CmabClientHelper.buildRequestJson(userId, ruleId, attributes, cmabUuid);
 
         // Use retry logic if configured, otherwise single request

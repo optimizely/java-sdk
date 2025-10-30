@@ -5152,8 +5152,11 @@ public class OptimizelyTest {
         final AtomicReference<OptimizelyDecision> decisionRef = new AtomicReference<>();
         final AtomicReference<Throwable> errorRef = new AtomicReference<>();
 
-        optimizely.decideAsync(userContext,
-            FEATURE_MULTI_VARIATE_FEATURE_KEY, (OptimizelyDecision decision) -> {
+        optimizely.decideAsync(
+            userContext,
+            FEATURE_MULTI_VARIATE_FEATURE_KEY,
+            Collections.emptyList(),
+            (OptimizelyDecision decision) -> {
                 try {
                     decisionRef.set(decision);
                 } catch (Throwable t) {
@@ -5161,8 +5164,7 @@ public class OptimizelyTest {
                 } finally {
                     latch.countDown();
                 }
-        },
-            Collections.emptyList()
+            }
         );
 
         boolean completed = latch.await(5, TimeUnit.SECONDS);
@@ -5196,12 +5198,14 @@ public class OptimizelyTest {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<Map<String, OptimizelyDecision>> decisionsRef = new AtomicReference<>();
 
-        optimizely.decideForKeysAsync(userContext,
-            flagKeys, (Map<String, OptimizelyDecision> decisions) -> {
+        optimizely.decideForKeysAsync(
+            userContext,
+            flagKeys,
+            Collections.emptyList(),
+            (Map<String, OptimizelyDecision> decisions) -> {
                 decisionsRef.set(decisions);
                 latch.countDown();
-        },
-            Collections.emptyList()
+            }
         );
 
         assertTrue("Callback should be called within timeout", latch.await(5, TimeUnit.SECONDS));
@@ -5224,11 +5228,13 @@ public class OptimizelyTest {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<Map<String, OptimizelyDecision>> decisionsRef = new AtomicReference<>();
 
-        optimizely.decideAllAsync(userContext, (Map<String, OptimizelyDecision> decisions) -> {
-            decisionsRef.set(decisions);
-            latch.countDown();
-        },
-            Collections.emptyList()
+        optimizely.decideAllAsync(
+            userContext,
+            Collections.emptyList(),
+            (Map<String, OptimizelyDecision> decisions) -> {
+                decisionsRef.set(decisions);
+                latch.countDown();
+            }
         );
 
         assertTrue("Callback should be called within timeout", latch.await(5, TimeUnit.SECONDS));

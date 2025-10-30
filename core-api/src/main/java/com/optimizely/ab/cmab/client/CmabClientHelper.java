@@ -20,6 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CmabClientHelper {
+    public static final String CMAB_PREDICTION_ENDPOINT = "https://prediction.cmab.optimizely.com/predict/%s";
     public static final String CMAB_FETCH_FAILED = "CMAB decision fetch failed with status: %s";
     public static final String INVALID_CMAB_FETCH_RESPONSE = "Invalid CMAB fetch response";
     private static final Pattern VARIATION_ID_PATTERN = Pattern.compile("\"variation_id\"\\s*:\\s*\"?([^\"\\s,}]+)\"?");
