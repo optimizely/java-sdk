@@ -158,7 +158,10 @@ public class DecisionService {
         if (decisionMeetAudience.getResult()) {
             String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
             String cmabUUID = null;
-            if (decisionPath == DecisionPath.WITH_CMAB && isCmabExperiment(experiment)) {
+            decisionVariation = bucketer.bucket(experiment, bucketingId, projectConfig);
+            if (decisionPath == DecisionPath.WITH_CMAB && isCmabExperiment(experiment) && decisionVariation.getResult() != null) {  
+                // group-allocation and traffic-allocation checking passed for cmab  
+                // we need server decision overruling local bucketing for cmab  
                 DecisionResponse<CmabDecision> cmabDecision = getDecisionForCmabExperiment(projectConfig, experiment, user, bucketingId, options);
                 reasons.merge(cmabDecision.getReasons());
 
@@ -174,7 +177,6 @@ public class DecisionService {
                 }
             } else {
                 // Standard bucketing for non-CMAB experiments
-                decisionVariation = bucketer.bucket(experiment, bucketingId, projectConfig);
                 reasons.merge(decisionVariation.getReasons());
                 variation = decisionVariation.getResult();
             }
@@ -939,23 +941,6 @@ public class DecisionService {
                                                                         @Nonnull String bucketingId,
                                                                         @Nonnull List<OptimizelyDecideOption> options) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
-
-        // Check if user is in CMAB traffic allocation
-        DecisionResponse<Variation> bucketResponse = bucketer.bucket(experiment, bucketingId, projectConfig, true);
-        // DecisionResponse<String> bucketResponse = bucketer.bucketForCmab(experiment, bucketingId, projectConfig);
-        reasons.merge(bucketResponse.getReasons());
-
-        Variation bucketedVariation = bucketResponse.getResult();
-        String bucketedEntityId = bucketedVariation != null ? bucketedVariation.getId() : null;
-
-        if (bucketedEntityId == null) {
-            String message = String.format("User \"%s\" not in CMAB experiment \"%s\" due to traffic allocation.",
-                    userContext.getUserId(), experiment.getKey());
-            logger.info(message);
-            reasons.addInfo(message);
-
-            return new DecisionResponse<>(null, reasons);
-        }
 
         // User is in CMAB allocation, proceed to CMAB decision
         try {

@@ -1535,9 +1535,13 @@ public class DecisionServiceTest {
             mockCmab // This makes it a CMAB experiment
         );
         
-        Bucketer bucketer = new Bucketer();
+        // Bucketer bucketer = new Bucketer();
+        Bucketer mockBucketer = mock(Bucketer.class);
+        Variation bucketedVariation = new Variation("$", "$");
+        when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class)))
+            .thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
         DecisionService decisionServiceWithMockCmabService = new DecisionService(
-            bucketer,
+            mockBucketer,
             mockErrorHandler, 
             null, 
             mockCmabService
@@ -1599,7 +1603,7 @@ public class DecisionServiceTest {
         // Mock bucketer to return a variation (user is in CMAB traffic)
         Variation bucketedVariation = new Variation("$", "$");
         Bucketer mockBucketer = mock(Bucketer.class);
-        when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), eq(true)))
+        when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class)))
             .thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
         
         DecisionService decisionServiceWithMockCmabService = new DecisionService(
@@ -1670,7 +1674,7 @@ public class DecisionServiceTest {
         
         // Mock bucketer to return null for CMAB allocation (user not in CMAB traffic)
         Bucketer mockBucketer = mock(Bucketer.class);
-        when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), eq(true)))
+        when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class)))
             .thenReturn(DecisionResponse.nullNoReasons());
         
         DecisionService decisionServiceWithMockCmabService = new DecisionService(
@@ -1697,7 +1701,7 @@ public class DecisionServiceTest {
         verify(mockCmabService, never()).getDecision(any(), any(), any(), any());
         
         // Verify that bucketer was called for CMAB allocation
-        verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), eq(true));
+        verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
     }
 
     private Experiment createMockCmabExperiment() {
