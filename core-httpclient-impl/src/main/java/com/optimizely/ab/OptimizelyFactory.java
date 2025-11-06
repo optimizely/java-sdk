@@ -32,7 +32,7 @@ import com.optimizely.ab.config.ProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
 import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.event.EventHandler;
-import com.optimizely.ab.internal.Cache;
+import com.optimizely.ab.internal.CacheWithRemove;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.odp.DefaultODPApiManager;
@@ -60,7 +60,7 @@ import com.optimizely.ab.odp.ODPManager;
 public final class OptimizelyFactory {
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyFactory.class);
 
-    private static Cache<CmabCacheValue> customCmabCache;
+    private static CacheWithRemove<CmabCacheValue> customCmabCache;
 
     /**
      * Convenience method for setting the maximum number of events contained within a batch.
@@ -244,7 +244,7 @@ public final class OptimizelyFactory {
      *
      * @param cache The custom cache implementation
      */
-    public static void setCustomCmabCache(Cache<CmabCacheValue> cache) {
+    public static void setCustomCmabCache(CacheWithRemove<CmabCacheValue> cache) {
         if (cache == null) {
             logger.warn("Custom CMAB cache cannot be null. Reverting to default configuration.");
             return;

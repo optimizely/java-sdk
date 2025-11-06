@@ -30,7 +30,7 @@ import com.optimizely.ab.cmab.client.CmabClient;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.internal.Cache;
+import com.optimizely.ab.internal.CacheWithRemove;
 import com.optimizely.ab.internal.DefaultLRUCache;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 
@@ -38,7 +38,7 @@ public class DefaultCmabService implements CmabService {
     public static final int DEFAULT_CMAB_CACHE_SIZE = 1000;
     public static final int DEFAULT_CMAB_CACHE_TIMEOUT_SECS = 300; // 5 minutes
     
-    private final Cache<CmabCacheValue> cmabCache;
+    private final CacheWithRemove<CmabCacheValue> cmabCache;
     private final CmabClient cmabClient;
     private final Logger logger;
 
@@ -48,7 +48,7 @@ public class DefaultCmabService implements CmabService {
     //     this.logger = logger;
     // }
 
-    public DefaultCmabService(CmabClient cmabClient, Cache<CmabCacheValue> cmabCache, Logger logger) {
+    public DefaultCmabService(CmabClient cmabClient, CacheWithRemove<CmabCacheValue> cmabCache, Logger logger) {
         this.cmabCache = cmabCache;
         this.cmabClient = cmabClient;
         this.logger = logger;
@@ -200,7 +200,7 @@ public class DefaultCmabService implements CmabService {
     public static class Builder {
         private int cmabCacheSize = DEFAULT_CMAB_CACHE_SIZE;
         private int cmabCacheTimeoutInSecs = DEFAULT_CMAB_CACHE_TIMEOUT_SECS;
-        private Cache<CmabCacheValue> customCache;
+        private CacheWithRemove<CmabCacheValue> customCache;
         private CmabClient client;
         private Logger logger;
 
@@ -251,7 +251,7 @@ public class DefaultCmabService implements CmabService {
          * @param cache The custom cache instance implementing {@link Cache}
          * @return Builder instance
          */
-        public Builder withCustomCache(Cache<CmabCacheValue> cache) {
+        public Builder withCustomCache(CacheWithRemove<CmabCacheValue> cache) {
             this.customCache = cache;
             return this;
         }
@@ -278,7 +278,7 @@ public class DefaultCmabService implements CmabService {
                 logger = LoggerFactory.getLogger(DefaultCmabService.class);
             }
 
-            Cache<CmabCacheValue> cache = customCache != null ? customCache : 
+            CacheWithRemove<CmabCacheValue> cache = customCache != null ? customCache : 
                 new DefaultLRUCache<>(cmabCacheSize, cmabCacheTimeoutInSecs);
 
 
