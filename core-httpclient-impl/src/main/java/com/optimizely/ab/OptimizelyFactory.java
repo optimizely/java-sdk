@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import com.optimizely.ab.cmab.DefaultCmabClient;
 import com.optimizely.ab.cmab.client.CmabClientConfig;
-import com.optimizely.ab.cmab.service.CmabCacheValue;
 import com.optimizely.ab.cmab.service.DefaultCmabService;
 import com.optimizely.ab.config.HttpProjectConfigManager;
 import com.optimizely.ab.config.ProjectConfig;
@@ -32,7 +31,6 @@ import com.optimizely.ab.config.ProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
 import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.event.EventHandler;
-import com.optimizely.ab.internal.CacheWithRemove;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.odp.DefaultODPApiManager;
@@ -59,8 +57,6 @@ import com.optimizely.ab.odp.ODPManager;
  */
 public final class OptimizelyFactory {
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyFactory.class);
-
-    private static CacheWithRemove<CmabCacheValue> customCmabCache;
 
     /**
      * Convenience method for setting the maximum number of events contained within a batch.
@@ -208,48 +204,6 @@ public final class OptimizelyFactory {
         }
 
         PropertyUtils.set(HttpProjectConfigManager.CONFIG_DATAFILE_AUTH_TOKEN, datafileAccessToken);
-    }
-
-    /**
-     * Convenience method for setting the CMAB cache size.
-     * {@link DefaultCmabService.Builder#withCmabCacheSize(int)}
-     *
-     * @param cacheSize The maximum number of CMAB cache entries
-     */
-    public static void setCmabCacheSize(int cacheSize) {
-        if (cacheSize <= 0) {
-            logger.warn("CMAB cache size cannot be <= 0. Reverting to default configuration.");
-            return;
-        }
-        PropertyUtils.set("optimizely.cmab.cache.size", Integer.toString(cacheSize));
-    }
-
-    /**
-     * Convenience method for setting the CMAB cache timeout.
-     * {@link DefaultCmabService.Builder#withCmabCacheTimeoutInSecs(int)}
-     *
-     * @param timeoutInSecs The timeout in seconds before CMAB cache entries expire
-     */
-    public static void setCmabCacheTimeoutInSecs(int timeoutInSecs) {
-        if (timeoutInSecs <= 0) {
-            logger.warn("CMAB cache timeout cannot be <= 0. Reverting to default configuration.");
-            return;
-        }
-        PropertyUtils.set("optimizely.cmab.cache.timeout", Integer.toString(timeoutInSecs));
-    }
-
-    /**
-     * Convenience method for setting a custom CMAB cache implementation.
-     * {@link DefaultCmabService.Builder#withCustomCache(Cache)}
-     *
-     * @param cache The custom cache implementation
-     */
-    public static void setCustomCmabCache(CacheWithRemove<CmabCacheValue> cache) {
-        if (cache == null) {
-            logger.warn("Custom CMAB cache cannot be null. Reverting to default configuration.");
-            return;
-        }
-        customCmabCache = cache;
     }
 
     /**
@@ -406,6 +360,20 @@ public final class OptimizelyFactory {
      * @return A new Optimizely instance
      * */
     public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler, ODPApiManager odpApiManager) {
+        return newDefaultInstance(configManager, notificationCenter, eventHandler, odpApiManager, null);
+    }
+
+    /**
+     * Returns a new Optimizely instance based on preset configuration.
+     *
+     * @param configManager      The {@link ProjectConfigManager} supplied to Optimizely instance.
+     * @param notificationCenter The {@link NotificationCenter} supplied to Optimizely instance.
+     * @param eventHandler       The {@link EventHandler} supplied to Optimizely instance.
+     * @param odpApiManager      The {@link ODPApiManager} supplied to Optimizely instance.
+     * @param cmabService        The {@link DefaultCmabService} supplied to Optimizely instance.
+     * @return A new Optimizely instance
+     * */
+    public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler, ODPApiManager odpApiManager, DefaultCmabService cmabService) {
         if (notificationCenter == null) {
             notificationCenter = new NotificationCenter();
         }
@@ -419,44 +387,20 @@ public final class OptimizelyFactory {
             .withApiManager(odpApiManager != null ? odpApiManager : new DefaultODPApiManager())
             .build();
 
-        DefaultCmabClient defaultCmabClient = new DefaultCmabClient(CmabClientConfig.withDefaultRetry());
-        
-        DefaultCmabService.Builder cmabBuilder = DefaultCmabService.builder()
-            .withClient(defaultCmabClient);
-
-        // Always apply cache size from properties if set
-        String cacheSizeStr = PropertyUtils.get("optimizely.cmab.cache.size");
-        if (cacheSizeStr != null) {
-            try {
-                cmabBuilder.withCmabCacheSize(Integer.parseInt(cacheSizeStr));
-            } catch (NumberFormatException e) {
-                logger.warn("Invalid CMAB cache size property value: {}", cacheSizeStr);
-            }
+        // If no cmabService provided, create default one
+        if (cmabService == null) {
+            DefaultCmabClient defaultCmabClient = new DefaultCmabClient(CmabClientConfig.withDefaultRetry());
+            cmabService = DefaultCmabService.builder()
+                .withClient(defaultCmabClient)
+                .build();
         }
-
-        // Always apply cache timeout from properties if set
-        String cacheTimeoutStr = PropertyUtils.get("optimizely.cmab.cache.timeout");
-        if (cacheTimeoutStr != null) {
-            try {
-                cmabBuilder.withCmabCacheTimeoutInSecs(Integer.parseInt(cacheTimeoutStr));
-            } catch (NumberFormatException e) {
-                logger.warn("Invalid CMAB cache timeout property value: {}", cacheTimeoutStr);
-            }
-        }
-
-        // If custom cache is provided, it overrides the size/timeout settings
-        if (customCmabCache != null) {
-            cmabBuilder.withCustomCache(customCmabCache);
-        }
-
-        DefaultCmabService defaultCmabService = cmabBuilder.build();
         
         return Optimizely.builder()
             .withEventProcessor(eventProcessor)
             .withConfigManager(configManager)
             .withNotificationCenter(notificationCenter)
             .withODPManager(odpManager)
-            .withCmabService(defaultCmabService)
+            .withCmabService(cmabService)
             .build();
     }
 }
