@@ -42,16 +42,14 @@ public class DefaultCmabService implements CmabService {
     private final CmabClient cmabClient;
     private final Logger logger;
 
-    // public DefaultCmabService(CmabClient cmabClient, DefaultLRUCache<CmabCacheValue> cmabCache, Logger logger) {
-    //     this.cmabCache = cmabCache;
-    //     this.cmabClient = cmabClient;
-    //     this.logger = logger;
-    // }
+    public DefaultCmabService(CmabClient cmabClient, CacheWithRemove<CmabCacheValue> cmabCache) {
+        this(cmabClient, cmabCache, null);
+    }
 
     public DefaultCmabService(CmabClient cmabClient, CacheWithRemove<CmabCacheValue> cmabCache, Logger logger) {
         this.cmabCache = cmabCache;
         this.cmabClient = cmabClient;
-        this.logger = logger;
+        this.logger = logger != null ? logger : LoggerFactory.getLogger(DefaultCmabService.class);
     }
 
     @Override
@@ -61,15 +59,18 @@ public class DefaultCmabService implements CmabService {
         Map<String, Object> filteredAttributes = filterAttributes(projectConfig, userContext, ruleId);
 
         if (options.contains(OptimizelyDecideOption.IGNORE_CMAB_CACHE)) {
+            logger.debug("Ignoring CMAB cache for user '{}' and rule '{}'", userId, ruleId);
             return fetchDecision(ruleId, userId, filteredAttributes);
         }
 
         if (options.contains(OptimizelyDecideOption.RESET_CMAB_CACHE)) {
+            logger.debug("Resetting CMAB cache for user '{}' and rule '{}'", userId, ruleId);
             cmabCache.reset();
         }
 
         String cacheKey = getCacheKey(userContext.getUserId(), ruleId);
         if (options.contains(OptimizelyDecideOption.INVALIDATE_USER_CMAB_CACHE)) {
+            logger.debug("Invalidating CMAB cache for user '{}' and rule '{}'", userId, ruleId);
             cmabCache.remove(cacheKey);
         }
 
@@ -79,13 +80,19 @@ public class DefaultCmabService implements CmabService {
 
         if (cachedValue != null) {
             if (cachedValue.getAttributesHash().equals(attributesHash)) {
+                logger.debug("CMAB cache hit for user '{}' and rule '{}'", userId, ruleId);
                 return new CmabDecision(cachedValue.getVariationId(), cachedValue.getCmabUuid());
             } else {
+                logger.debug("CMAB cache attributes mismatch for user '{}' and rule '{}', fetching new decision", userId, ruleId);
                 cmabCache.remove(cacheKey);
             }
+        } else {
+            logger.debug("CMAB cache miss for user '{}' and rule '{}'", userId, ruleId);
         }
 
         CmabDecision cmabDecision = fetchDecision(ruleId, userId, filteredAttributes);
+        logger.debug("CMAB decision is {}", cmabDecision);
+        
         cmabCache.save(cacheKey, new CmabCacheValue(attributesHash, cmabDecision.getVariationId(), cmabDecision.getCmabUUID()));
 
         return cmabDecision;
@@ -104,18 +111,13 @@ public class DefaultCmabService implements CmabService {
         // Get experiment by rule ID
         Experiment experiment = projectConfig.getExperimentIdMapping().get(ruleId);
         if (experiment == null) {
-            if (logger != null) {
-                logger.debug("Experiment not found for rule ID: {}", ruleId);
-            }
+            logger.debug("Experiment not found for rule ID: {}", ruleId);
             return filteredAttributes;
         }
 
         // Check if experiment has CMAB configuration
-        // Add null check for getCmab()
         if (experiment.getCmab() == null) {
-            if (logger != null) {
-                logger.debug("No CMAB configuration found for experiment: {}", ruleId);
-            }
+            logger.debug("No CMAB configuration found for experiment: {}", ruleId);
             return filteredAttributes;
         }
 
@@ -125,11 +127,8 @@ public class DefaultCmabService implements CmabService {
         }
 
         Map<String, Attribute> attributeIdMapping = projectConfig.getAttributeIdMapping();
-        // Add null check for attributeIdMapping
         if (attributeIdMapping == null) {
-            if (logger != null) {
-                logger.debug("No attribute mapping found in project config for rule ID: {}", ruleId);
-            }
+            logger.debug("No attribute mapping found in project config for rule ID: {}", ruleId);
             return filteredAttributes;
         }
 
@@ -139,10 +138,10 @@ public class DefaultCmabService implements CmabService {
             if (attribute != null) {
                 if (userAttributes.containsKey(attribute.getKey())) {
                     filteredAttributes.put(attribute.getKey(), userAttributes.get(attribute.getKey()));
-                } else if (logger != null) {
+                } else {
                     logger.debug("User attribute '{}' not found for attribute ID '{}'", attribute.getKey(), attributeId);
                 }
-            } else if (logger != null) {
+            } else {
                 logger.debug("Attribute configuration not found for ID: {}", attributeId);
             }
         }
@@ -202,7 +201,6 @@ public class DefaultCmabService implements CmabService {
         private int cmabCacheTimeoutInSecs = DEFAULT_CMAB_CACHE_TIMEOUT_SECS;
         private CacheWithRemove<CmabCacheValue> customCache;
         private CmabClient client;
-        private Logger logger;
 
         /**
          * Set the maximum size of the CMAB cache.
@@ -256,33 +254,15 @@ public class DefaultCmabService implements CmabService {
             return this;
         }
 
-        /**
-         * Provide a custom {@link Logger} instance for logging CMAB service operations.
-         *
-         * If not provided, a default SLF4J logger will be used.
-         *
-         * @param logger The logger instance
-         * @return Builder instance
-         */
-        public Builder withLogger(Logger logger) {
-            this.logger = logger;
-            return this;
-        }
-
         public DefaultCmabService build() {
             if (client == null) {
                 throw new IllegalStateException("CmabClient is required");
             }
 
-            if (logger == null) {
-                logger = LoggerFactory.getLogger(DefaultCmabService.class);
-            }
-
             CacheWithRemove<CmabCacheValue> cache = customCache != null ? customCache : 
                 new DefaultLRUCache<>(cmabCacheSize, cmabCacheTimeoutInSecs);
 
-
-            return new DefaultCmabService(client, cache, logger);
+            return new DefaultCmabService(client, cache);
         }
     }
 }
