@@ -23,7 +23,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
 
-public class DefaultLRUCache<T> implements Cache<T> {
+public class DefaultLRUCache<T> implements CacheWithRemove<T> {
 
     private final ReentrantLock lock = new ReentrantLock();
 
