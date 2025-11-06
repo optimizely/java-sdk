@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.bucketing.internal.MurmurHash3;
@@ -29,19 +30,26 @@ import com.optimizely.ab.cmab.client.CmabClient;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.internal.CacheWithRemove;
 import com.optimizely.ab.internal.DefaultLRUCache;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 
 public class DefaultCmabService implements CmabService {
-
-    private final DefaultLRUCache<CmabCacheValue> cmabCache;
+    public static final int DEFAULT_CMAB_CACHE_SIZE = 1000;
+    public static final int DEFAULT_CMAB_CACHE_TIMEOUT_SECS = 300; // 5 minutes
+    
+    private final CacheWithRemove<CmabCacheValue> cmabCache;
     private final CmabClient cmabClient;
     private final Logger logger;
 
-    public DefaultCmabService(CmabServiceOptions options) {
-        this.cmabCache = options.getCmabCache();
-        this.cmabClient = options.getCmabClient();
-        this.logger = options.getLogger();
+    public DefaultCmabService(CmabClient cmabClient, CacheWithRemove<CmabCacheValue> cmabCache) {
+        this(cmabClient, cmabCache, null);
+    }
+
+    public DefaultCmabService(CmabClient cmabClient, CacheWithRemove<CmabCacheValue> cmabCache, Logger logger) {
+        this.cmabCache = cmabCache;
+        this.cmabClient = cmabClient;
+        this.logger = logger != null ? logger : LoggerFactory.getLogger(DefaultCmabService.class);
     }
 
     @Override
@@ -51,15 +59,18 @@ public class DefaultCmabService implements CmabService {
         Map<String, Object> filteredAttributes = filterAttributes(projectConfig, userContext, ruleId);
 
         if (options.contains(OptimizelyDecideOption.IGNORE_CMAB_CACHE)) {
+            logger.debug("Ignoring CMAB cache for user '{}' and rule '{}'", userId, ruleId);
             return fetchDecision(ruleId, userId, filteredAttributes);
         }
 
         if (options.contains(OptimizelyDecideOption.RESET_CMAB_CACHE)) {
+            logger.debug("Resetting CMAB cache for user '{}' and rule '{}'", userId, ruleId);
             cmabCache.reset();
         }
 
         String cacheKey = getCacheKey(userContext.getUserId(), ruleId);
         if (options.contains(OptimizelyDecideOption.INVALIDATE_USER_CMAB_CACHE)) {
+            logger.debug("Invalidating CMAB cache for user '{}' and rule '{}'", userId, ruleId);
             cmabCache.remove(cacheKey);
         }
 
@@ -69,13 +80,19 @@ public class DefaultCmabService implements CmabService {
 
         if (cachedValue != null) {
             if (cachedValue.getAttributesHash().equals(attributesHash)) {
+                logger.debug("CMAB cache hit for user '{}' and rule '{}'", userId, ruleId);
                 return new CmabDecision(cachedValue.getVariationId(), cachedValue.getCmabUuid());
             } else {
+                logger.debug("CMAB cache attributes mismatch for user '{}' and rule '{}', fetching new decision", userId, ruleId);
                 cmabCache.remove(cacheKey);
             }
+        } else {
+            logger.debug("CMAB cache miss for user '{}' and rule '{}'", userId, ruleId);
         }
 
         CmabDecision cmabDecision = fetchDecision(ruleId, userId, filteredAttributes);
+        logger.debug("CMAB decision is {}", cmabDecision);
+        
         cmabCache.save(cacheKey, new CmabCacheValue(attributesHash, cmabDecision.getVariationId(), cmabDecision.getCmabUUID()));
 
         return cmabDecision;
@@ -94,18 +111,13 @@ public class DefaultCmabService implements CmabService {
         // Get experiment by rule ID
         Experiment experiment = projectConfig.getExperimentIdMapping().get(ruleId);
         if (experiment == null) {
-            if (logger != null) {
-                logger.debug("Experiment not found for rule ID: {}", ruleId);
-            }
+            logger.debug("Experiment not found for rule ID: {}", ruleId);
             return filteredAttributes;
         }
 
         // Check if experiment has CMAB configuration
-        // Add null check for getCmab()
         if (experiment.getCmab() == null) {
-            if (logger != null) {
-                logger.debug("No CMAB configuration found for experiment: {}", ruleId);
-            }
+            logger.debug("No CMAB configuration found for experiment: {}", ruleId);
             return filteredAttributes;
         }
 
@@ -115,11 +127,8 @@ public class DefaultCmabService implements CmabService {
         }
 
         Map<String, Attribute> attributeIdMapping = projectConfig.getAttributeIdMapping();
-        // Add null check for attributeIdMapping
         if (attributeIdMapping == null) {
-            if (logger != null) {
-                logger.debug("No attribute mapping found in project config for rule ID: {}", ruleId);
-            }
+            logger.debug("No attribute mapping found in project config for rule ID: {}", ruleId);
             return filteredAttributes;
         }
 
@@ -129,10 +138,10 @@ public class DefaultCmabService implements CmabService {
             if (attribute != null) {
                 if (userAttributes.containsKey(attribute.getKey())) {
                     filteredAttributes.put(attribute.getKey(), userAttributes.get(attribute.getKey()));
-                } else if (logger != null) {
+                } else {
                     logger.debug("User attribute '{}' not found for attribute ID '{}'", attribute.getKey(), attributeId);
                 }
-            } else if (logger != null) {
+            } else {
                 logger.debug("Attribute configuration not found for ID: {}", attributeId);
             }
         }
@@ -181,5 +190,79 @@ public class DefaultCmabService implements CmabService {
         
         // Convert to hex string to match your existing pattern
         return Integer.toHexString(hash);
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private int cmabCacheSize = DEFAULT_CMAB_CACHE_SIZE;
+        private int cmabCacheTimeoutInSecs = DEFAULT_CMAB_CACHE_TIMEOUT_SECS;
+        private CacheWithRemove<CmabCacheValue> customCache;
+        private CmabClient client;
+
+        /**
+         * Set the maximum size of the CMAB cache.
+         * 
+         * Default value is 1000 entries.
+         *
+         * @param cacheSize The maximum number of entries to store in the cache
+         * @return Builder instance
+         */
+        public Builder withCmabCacheSize(int cacheSize) {
+            this.cmabCacheSize = cacheSize;
+            return this;
+        }
+        
+        /**
+         * Set the timeout duration for cached CMAB decisions.
+         * 
+         * Default value is 300 seconds (5 minutes).
+         *
+         * @param timeoutInSecs The timeout in seconds before cached entries expire
+         * @return Builder instance
+         */
+        public Builder withCmabCacheTimeoutInSecs(int timeoutInSecs) {
+            this.cmabCacheTimeoutInSecs = timeoutInSecs;
+            return this;
+        }
+
+        /**
+         * Provide a custom {@link CmabClient} instance which makes HTTP calls to fetch CMAB decisions.
+         *
+         * A Default CmabClient implementation is required for CMAB functionality.
+         *
+         * @param client The implementation of {@link CmabClient}
+         * @return Builder instance
+         */
+        public Builder withClient(CmabClient client) {
+            this.client = client;
+            return this;
+        }
+
+        /**
+         * Provide a custom {@link Cache} instance for caching CMAB decisions.
+         *
+         * If provided, this will override the cache size and timeout settings.
+         *
+         * @param cache The custom cache instance implementing {@link Cache}
+         * @return Builder instance
+         */
+        public Builder withCustomCache(CacheWithRemove<CmabCacheValue> cache) {
+            this.customCache = cache;
+            return this;
+        }
+
+        public DefaultCmabService build() {
+            if (client == null) {
+                throw new IllegalStateException("CmabClient is required");
+            }
+
+            CacheWithRemove<CmabCacheValue> cache = customCache != null ? customCache : 
+                new DefaultLRUCache<>(cmabCacheSize, cmabCacheTimeoutInSecs);
+
+            return new DefaultCmabService(client, cache);
+        }
     }
 }

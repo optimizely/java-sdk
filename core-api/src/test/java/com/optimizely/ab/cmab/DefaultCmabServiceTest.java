@@ -43,7 +43,6 @@ import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.cmab.client.CmabClient;
 import com.optimizely.ab.cmab.service.CmabCacheValue;
 import com.optimizely.ab.cmab.service.CmabDecision;
-import com.optimizely.ab.cmab.service.CmabServiceOptions;
 import com.optimizely.ab.cmab.service.DefaultCmabService;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.Cmab;
@@ -83,9 +82,7 @@ public class DefaultCmabServiceTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        
-        CmabServiceOptions options = new CmabServiceOptions(mockLogger, mockCmabCache, mockCmabClient);
-        cmabService = new DefaultCmabService(options);
+        cmabService = new DefaultCmabService(mockCmabClient, mockCmabCache, mockLogger);
 
         // Setup mock user context
         when(mockUserContext.getUserId()).thenReturn("user123");

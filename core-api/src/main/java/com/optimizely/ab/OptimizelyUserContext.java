@@ -26,17 +26,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecisionCallback;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecisionsCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.optimizely.ab.odp.ODPSegmentCallback;
 import com.optimizely.ab.odp.ODPSegmentOption;
-import com.optimizely.ab.optimizelydecision.AsyncDecisionFetcher;
-import com.optimizely.ab.optimizelydecision.AsyncDecisionsFetcher;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
-import com.optimizely.ab.optimizelydecision.OptimizelyDecisionCallback;
-import com.optimizely.ab.optimizelydecision.OptimizelyDecisionsCallback;
 
 public class OptimizelyUserContext {
     // OptimizelyForcedDecisionsKey mapped to variationKeys
@@ -51,7 +50,7 @@ public class OptimizelyUserContext {
     private List<String> qualifiedSegments;
 
     @Nonnull
-    private final Optimizely optimizely;
+    final Optimizely optimizely;
 
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyUserContext.class);
 
@@ -204,134 +203,6 @@ public class OptimizelyUserContext {
      */
     public Map<String, OptimizelyDecision> decideAll() {
         return decideAll(Collections.emptyList());
-    }
-
-    /**
-     * Returns a decision result ({@link OptimizelyDecision}) for a given flag key and a user context, 
-     * which contains all data required to deliver the flag. This method skips CMAB logic.
-     * @param key A flag key for which a decision will be made.
-     * @param options A list of options for decision-making.
-     * @return A decision result.
-     */
-    public OptimizelyDecision decideSync(@Nonnull String key,
-                                                @Nonnull List<OptimizelyDecideOption> options) {
-        return optimizely.decideSync(copy(), key, options);
-    }
-
-    /**
-     * Returns a decision result ({@link OptimizelyDecision}) for a given flag key and a user context,
-     * which contains all data required to deliver the flag. This method skips CMAB logic.
-     *
-     * @param key A flag key for which a decision will be made.
-     * @return A decision result.
-     */
-    public OptimizelyDecision decideSync(@Nonnull String key) {
-        return decideSync(key, Collections.emptyList());
-    }
-
-    /**
-     * Returns a key-map of decision results ({@link OptimizelyDecision}) for multiple flag keys and a user context.
-     * This method skips CMAB logic.
-     * @param keys A list of flag keys for which decisions will be made.
-     * @param options A list of options for decision-making.
-     * @return All decision results mapped by flag keys.
-     */
-    public Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull List<String> keys,
-                                                                    @Nonnull List<OptimizelyDecideOption> options) {
-        return optimizely.decideForKeysSync(copy(), keys, options);
-    }
-
-    /**
-     * Returns a key-map of decision results for multiple flag keys and a user context.
-     * This method skips CMAB logic.
-     *
-     * @param keys A list of flag keys for which decisions will be made.
-     * @return All decision results mapped by flag keys.
-     */
-    public Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull List<String> keys) {
-        return decideForKeysSync(keys, Collections.emptyList());
-    }
-
-    /**
-     * Returns a key-map of decision results ({@link OptimizelyDecision}) for all active flag keys.
-     * This method skips CMAB logic.
-     *
-     * @param options A list of options for decision-making.
-     * @return All decision results mapped by flag keys.
-     */
-    public Map<String, OptimizelyDecision> decideAllSync(@Nonnull List<OptimizelyDecideOption> options) {
-        return optimizely.decideAllSync(copy(), options);
-    }
-
-    /**
-     * Returns a key-map of decision results ({@link OptimizelyDecision}) for all active flag keys.
-     * This method skips CMAB logic.
-     *
-     * @return A dictionary of all decision results, mapped by flag keys.
-     */
-    public Map<String, OptimizelyDecision> decideAllSync() {
-        return decideAllSync(Collections.emptyList());
-    }
-
-    /**
-     * Returns a decision result asynchronously for a given flag key and a user context.
-     *
-     * @param key A flag key for which a decision will be made.
-     * @param callback A callback to invoke when the decision is available.
-     * @param options A list of options for decision-making.
-     */
-    public void decideAsync(@Nonnull String key,
-                            @Nonnull OptimizelyDecisionCallback callback,
-                            @Nonnull List<OptimizelyDecideOption> options) {
-        AsyncDecisionFetcher fetcher = new AsyncDecisionFetcher(this, key, options, callback);
-        fetcher.start();
-    }
-
-    /**
-     * Returns a decision result asynchronously for a given flag key and a user context.
-     *
-     * @param key A flag key for which a decision will be made.
-     * @param callback A callback to invoke when the decision is available.
-     */
-    public void decideAsync(@Nonnull String key, @Nonnull OptimizelyDecisionCallback callback) {
-        decideAsync(key, callback, Collections.emptyList());
-    }
-
-    /**
-     * Returns decision results asynchronously for multiple flag keys.
-     *
-     * @param keys A list of flag keys for which decisions will be made.
-     * @param callback A callback to invoke when decisions are available.
-     * @param options A list of options for decision-making.
-     */
-    public void decideForKeysAsync(@Nonnull List<String> keys,
-                                   @Nonnull OptimizelyDecisionsCallback callback,
-                                   @Nonnull List<OptimizelyDecideOption> options) {
-        AsyncDecisionsFetcher fetcher = new AsyncDecisionsFetcher(this, keys, options, callback);
-        fetcher.start();
-    }
-
-    /**
-     * Returns decision results asynchronously for multiple flag keys.
-     */
-    public void decideForKeysAsync(@Nonnull List<String> keys, @Nonnull OptimizelyDecisionsCallback callback) {
-        decideForKeysAsync(keys, callback, Collections.emptyList());
-    }
-
-    /**
-     * Returns decision results asynchronously for all active flag keys.
-     */
-    public void decideAllAsync(@Nonnull OptimizelyDecisionsCallback callback,
-                               @Nonnull List<OptimizelyDecideOption> options) {
-        AsyncDecisionsFetcher fetcher = new AsyncDecisionsFetcher(this, null, options, callback, true);
-        fetcher.start();
-    }
-
-    /**
-     * Returns decision results asynchronously for all active flag keys.
-     */
-    public void decideAllAsync(@Nonnull OptimizelyDecisionsCallback callback) {
-        decideAllAsync(callback, Collections.emptyList());
     }
 
     /**
@@ -527,4 +398,44 @@ public class OptimizelyUserContext {
             ", attributes='" + attributes + '\'' +
             '}';
     }
+
+    // sync decision support for android-sdk backward compatibility only
+
+    @VisibleForTesting  // protected, open for testing only
+    public OptimizelyDecision decideSync(@Nonnull String key,
+                                     @Nonnull List<OptimizelyDecideOption> options) {
+        return optimizely.decideSync(copy(), key, options);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull List<String> keys,
+                                                         @Nonnull List<OptimizelyDecideOption> options) {
+        return optimizely.decideForKeysSync(copy(), keys, options);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public Map<String, OptimizelyDecision> decideAllSync(@Nonnull List<OptimizelyDecideOption> options) {
+        return optimizely.decideAllSync(copy(), options);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public void decideAsync(@Nonnull String key,
+                                          @Nonnull List<OptimizelyDecideOption> options,
+                                          @Nonnull OptimizelyDecisionCallback callback) {
+        optimizely.decideAsync(copy(), key, options, callback);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public void decideForKeysAsync(@Nonnull List<String> keys,
+                                                              @Nonnull List<OptimizelyDecideOption> options,
+                                                              @Nonnull OptimizelyDecisionsCallback callback) {
+        optimizely.decideForKeysAsync(copy(), keys, options, callback);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public void decideAllAsync(@Nonnull List<OptimizelyDecideOption> options,
+                                                          @Nonnull OptimizelyDecisionsCallback callback) {
+        optimizely.decideAllAsync(copy(), options, callback);
+    }
+
 }

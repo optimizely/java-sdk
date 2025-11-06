@@ -15,27 +15,41 @@
  */
 package com.optimizely.ab.optimizelydecision;
 
-import com.optimizely.ab.OptimizelyUserContext;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nonnull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-import java.util.List;
+import com.optimizely.ab.OptimizelyUserContext;
 
 /**
- * AsyncDecisionFetcher handles asynchronous decision fetching for a single flag key.
+ * AsyncDecisionFetcher handles asynchronous decision fetching for single or multiple flag keys.
  * This class follows the same pattern as ODP's async segment fetching.
  */
 public class AsyncDecisionFetcher extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(AsyncDecisionFetcher.class);
 
-    private final String key;
+    private final String singleKey;
+    private final List<String> keys;
     private final List<OptimizelyDecideOption> options;
-    private final OptimizelyDecisionCallback callback;
+    private final OptimizelyDecisionCallback singleCallback;
+    private final OptimizelyDecisionsCallback multipleCallback;
     private final OptimizelyUserContext userContext;
+    private final boolean decideAll;
+    private final FetchType fetchType;
+
+    private enum FetchType {
+        SINGLE_DECISION,
+        MULTIPLE_DECISIONS,
+        ALL_DECISIONS
+    }
 
     /**
-     * Constructor for async decision fetching.
+     * Constructor for async single decision fetching.
      *
      * @param userContext The user context to make decisions for
      * @param key The flag key to decide on
@@ -47,27 +61,112 @@ public class AsyncDecisionFetcher extends Thread {
                                 @Nonnull List<OptimizelyDecideOption> options,
                                 @Nonnull OptimizelyDecisionCallback callback) {
         this.userContext = userContext;
-        this.key = key;
+        this.singleKey = key;
+        this.keys = null;
         this.options = options;
-        this.callback = callback;
+        this.singleCallback = callback;
+        this.multipleCallback = null;
+        this.decideAll = false;
+        this.fetchType = FetchType.SINGLE_DECISION;
 
-        // Set thread name for debugging
         setName("AsyncDecisionFetcher-" + key);
+        setDaemon(true);
+    }
 
-        // Set as daemon thread so it doesn't prevent JVM shutdown
+    /**
+     * Constructor for deciding on specific keys.
+     *
+     * @param userContext The user context to make decisions for
+     * @param keys        List of flag keys to decide on
+     * @param options     Decision options
+     * @param callback    Callback to invoke when decisions are ready
+     */
+    public AsyncDecisionFetcher(@Nonnull OptimizelyUserContext userContext,
+                                @Nonnull List<String> keys,
+                                @Nonnull List<OptimizelyDecideOption> options,
+                                @Nonnull OptimizelyDecisionsCallback callback) {
+        this.userContext = userContext;
+        this.singleKey = null;
+        this.keys = keys;
+        this.options = options;
+        this.singleCallback = null;
+        this.multipleCallback = callback;
+        this.decideAll = false;
+        this.fetchType = FetchType.MULTIPLE_DECISIONS;
+
+        setName("AsyncDecisionFetcher-keys");
+        setDaemon(true);
+    }
+
+    /**
+     * Constructor for deciding on all flags.
+     *
+     * @param userContext The user context to make decisions for
+     * @param options     Decision options
+     * @param callback    Callback to invoke when decisions are ready
+     */
+    public AsyncDecisionFetcher(@Nonnull OptimizelyUserContext userContext,
+                                @Nonnull List<OptimizelyDecideOption> options,
+                                @Nonnull OptimizelyDecisionsCallback callback) {
+        this.userContext = userContext;
+        this.singleKey = null;
+        this.keys = null;
+        this.options = options;
+        this.singleCallback = null;
+        this.multipleCallback = callback;
+        this.decideAll = true;
+        this.fetchType = FetchType.ALL_DECISIONS;
+
+        setName("AsyncDecisionFetcher-all");
         setDaemon(true);
     }
 
     @Override
     public void run() {
         try {
-            OptimizelyDecision decision = userContext.decide(key, options);
-            callback.onCompleted(decision);
+            switch (fetchType) {
+                case SINGLE_DECISION:
+                    handleSingleDecision();
+                    break;
+                case MULTIPLE_DECISIONS:
+                    handleMultipleDecisions();
+                    break;
+                case ALL_DECISIONS:
+                    handleAllDecisions();
+                    break;
+            }
         } catch (Exception e) {
-            logger.error("Error in async decision fetching for key: " + key, e);
-            // Create an error decision and pass it to the callback
-            OptimizelyDecision errorDecision = createErrorDecision(key, e.getMessage());
-            callback.onCompleted(errorDecision);
+            logger.error("Error in async decision fetching", e);
+            handleError(e);
+        }
+    }
+
+    private void handleSingleDecision() {
+        OptimizelyDecision decision = userContext.decide(singleKey, options);
+        singleCallback.onCompleted(decision);
+    }
+
+    private void handleMultipleDecisions() {
+        Map<String, OptimizelyDecision> decisions = userContext.decideForKeys(keys, options);
+        multipleCallback.onCompleted(decisions);
+    }
+
+    private void handleAllDecisions() {
+        Map<String, OptimizelyDecision> decisions = userContext.decideAll(options);
+        multipleCallback.onCompleted(decisions);
+    }
+
+    private void handleError(Exception e) {
+        switch (fetchType) {
+            case SINGLE_DECISION:
+                OptimizelyDecision errorDecision = createErrorDecision(singleKey, e.getMessage());
+                singleCallback.onCompleted(errorDecision);
+                break;
+            case MULTIPLE_DECISIONS:
+            case ALL_DECISIONS:
+                // Return empty map on error - this follows the pattern of sync methods
+                multipleCallback.onCompleted(Collections.emptyMap());
+                break;
         }
     }
 

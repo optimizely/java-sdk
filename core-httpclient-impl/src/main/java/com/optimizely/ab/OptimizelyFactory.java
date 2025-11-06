@@ -24,8 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import com.optimizely.ab.cmab.DefaultCmabClient;
 import com.optimizely.ab.cmab.client.CmabClientConfig;
-import com.optimizely.ab.cmab.service.CmabCacheValue;
-import com.optimizely.ab.cmab.service.CmabServiceOptions;
 import com.optimizely.ab.cmab.service.DefaultCmabService;
 import com.optimizely.ab.config.HttpProjectConfigManager;
 import com.optimizely.ab.config.ProjectConfig;
@@ -33,7 +31,6 @@ import com.optimizely.ab.config.ProjectConfigManager;
 import com.optimizely.ab.event.AsyncEventHandler;
 import com.optimizely.ab.event.BatchEventProcessor;
 import com.optimizely.ab.event.EventHandler;
-import com.optimizely.ab.internal.DefaultLRUCache;
 import com.optimizely.ab.internal.PropertyUtils;
 import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.odp.DefaultODPApiManager;
@@ -363,6 +360,20 @@ public final class OptimizelyFactory {
      * @return A new Optimizely instance
      * */
     public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler, ODPApiManager odpApiManager) {
+        return newDefaultInstance(configManager, notificationCenter, eventHandler, odpApiManager, null);
+    }
+
+    /**
+     * Returns a new Optimizely instance based on preset configuration.
+     *
+     * @param configManager      The {@link ProjectConfigManager} supplied to Optimizely instance.
+     * @param notificationCenter The {@link NotificationCenter} supplied to Optimizely instance.
+     * @param eventHandler       The {@link EventHandler} supplied to Optimizely instance.
+     * @param odpApiManager      The {@link ODPApiManager} supplied to Optimizely instance.
+     * @param cmabService        The {@link DefaultCmabService} supplied to Optimizely instance.
+     * @return A new Optimizely instance
+     * */
+    public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler, ODPApiManager odpApiManager, DefaultCmabService cmabService) {
         if (notificationCenter == null) {
             notificationCenter = new NotificationCenter();
         }
@@ -376,13 +387,14 @@ public final class OptimizelyFactory {
             .withApiManager(odpApiManager != null ? odpApiManager : new DefaultODPApiManager())
             .build();
 
-        DefaultCmabClient defaultCmabClient = new DefaultCmabClient(CmabClientConfig.withDefaultRetry());
-        int DEFAULT_MAX_SIZE = 1000;
-        int DEFAULT_CMAB_CACHE_TIMEOUT = 30 * 60 * 1000;
-        DefaultLRUCache<CmabCacheValue> cmabCache = new DefaultLRUCache<>(DEFAULT_MAX_SIZE, DEFAULT_CMAB_CACHE_TIMEOUT);
-        CmabServiceOptions cmabServiceOptions = new CmabServiceOptions(logger, cmabCache, defaultCmabClient);
-        DefaultCmabService cmabService = new DefaultCmabService(cmabServiceOptions);
-
+        // If no cmabService provided, create default one
+        if (cmabService == null) {
+            DefaultCmabClient defaultCmabClient = new DefaultCmabClient(CmabClientConfig.withDefaultRetry());
+            cmabService = DefaultCmabService.builder()
+                .withClient(defaultCmabClient)
+                .build();
+        }
+        
         return Optimizely.builder()
             .withEventProcessor(eventProcessor)
             .withConfigManager(configManager)

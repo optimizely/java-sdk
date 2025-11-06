@@ -35,6 +35,8 @@ public class CmabClientConfig {
 
     /**
      * Creates a config with default retry settings.
+     * 
+     * @return A default cmab client config
      */
     public static CmabClientConfig withDefaultRetry() {
         return new CmabClientConfig(RetryConfig.defaultConfig());
@@ -42,6 +44,8 @@ public class CmabClientConfig {
 
     /**
      * Creates a config with no retry.
+     * 
+     * @return A cmab client config with no retry
      */
     public static CmabClientConfig withNoRetry() {
         return new CmabClientConfig(null);

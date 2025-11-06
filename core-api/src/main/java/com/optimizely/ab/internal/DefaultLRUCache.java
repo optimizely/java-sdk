@@ -16,12 +16,14 @@
  */
 package com.optimizely.ab.internal;
 
-import com.optimizely.ab.annotations.VisibleForTesting;
-
-import java.util.*;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class DefaultLRUCache<T> implements Cache<T> {
+import com.optimizely.ab.annotations.VisibleForTesting;
+
+public class DefaultLRUCache<T> implements CacheWithRemove<T> {
 
     private final ReentrantLock lock = new ReentrantLock();
 
