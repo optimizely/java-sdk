@@ -370,7 +370,7 @@ public final class OptimizelyFactory {
      * @param notificationCenter The {@link NotificationCenter} supplied to Optimizely instance.
      * @param eventHandler       The {@link EventHandler} supplied to Optimizely instance.
      * @param odpApiManager      The {@link ODPApiManager} supplied to Optimizely instance.
-     * @param cmabService        The {@link DefaultCmabService} supplied to Optimizely instance.
+     * @param cmabService        The {@link CmabService} supplied to Optimizely instance.
      * @return A new Optimizely instance
      * */
     public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler, ODPApiManager odpApiManager, DefaultCmabService cmabService) {
