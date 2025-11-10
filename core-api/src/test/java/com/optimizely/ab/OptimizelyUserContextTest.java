@@ -25,7 +25,6 @@ import com.optimizely.ab.bucketing.UserProfileService;
 import com.optimizely.ab.bucketing.UserProfileUtils;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.config.parser.ConfigParseException;
-import com.optimizely.ab.event.EventHandler;
 import com.optimizely.ab.event.EventProcessor;
 import com.optimizely.ab.event.ForwardingEventProcessor;
 import com.optimizely.ab.event.internal.ImpressionEvent;
@@ -44,8 +43,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -57,9 +54,6 @@ import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNo
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 public class OptimizelyUserContextTest {
