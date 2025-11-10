@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.optimizely.ab.cmab.DefaultCmabClient;
 import com.optimizely.ab.cmab.client.CmabClientConfig;
+import com.optimizely.ab.cmab.service.CmabService;
 import com.optimizely.ab.cmab.service.DefaultCmabService;
 import com.optimizely.ab.config.HttpProjectConfigManager;
 import com.optimizely.ab.config.ProjectConfig;
@@ -373,7 +374,7 @@ public final class OptimizelyFactory {
      * @param cmabService        The {@link CmabService} supplied to Optimizely instance.
      * @return A new Optimizely instance
      * */
-    public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler, ODPApiManager odpApiManager, DefaultCmabService cmabService) {
+    public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler, ODPApiManager odpApiManager, CmabService cmabService) {
         if (notificationCenter == null) {
             notificationCenter = new NotificationCenter();
         }
