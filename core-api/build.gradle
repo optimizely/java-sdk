@@ -7,10 +7,10 @@ dependencies {
     testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion
 
     // an assortment of json parsers
-    compileOnly group: 'com.google.code.gson', name: 'gson', version: gsonVersion, optional
-    compileOnly group: 'org.json', name: 'json', version: jsonVersion, optional
-    compileOnly group: 'com.googlecode.json-simple', name: 'json-simple', version: jsonSimpleVersion, optional
-    compileOnly group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion, optional
+    compileOnly group: 'com.google.code.gson', name: 'gson', version: gsonVersion
+    compileOnly group: 'org.json', name: 'json', version: jsonVersion
+    compileOnly group: 'com.googlecode.json-simple', name: 'json-simple', version: jsonSimpleVersion
+    compileOnly group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
 }
 
 tasks.named('processJmhResources') {
