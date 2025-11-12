@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, 2019, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, 2025 Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ package com.optimizely.ab.event.internal.serializer;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
 class JacksonSerializer implements Serializer {
 
     private ObjectMapper mapper =
         new ObjectMapper().setPropertyNamingStrategy(
-            PropertyNamingStrategy.SNAKE_CASE);
+            PropertyNamingStrategies.SNAKE_CASE);
 
     public <T> String serialize(T payload) {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
