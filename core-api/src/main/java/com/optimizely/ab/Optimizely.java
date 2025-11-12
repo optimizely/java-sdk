@@ -17,9 +17,7 @@ package com.optimizely.ab;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
 import com.optimizely.ab.bucketing.*;
-import com.optimizely.ab.cmab.service.CmabCacheValue;
 import com.optimizely.ab.cmab.service.CmabService;
-import com.optimizely.ab.cmab.service.DefaultCmabService;
 import com.optimizely.ab.config.AtomicProjectConfigManager;
 import com.optimizely.ab.config.DatafileProjectConfig;
 import com.optimizely.ab.config.EventType;
@@ -82,7 +80,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.optimizely.ab.cmab.client.CmabClient;
 import static com.optimizely.ab.internal.SafetyUtils.tryClose;
 
 /**
