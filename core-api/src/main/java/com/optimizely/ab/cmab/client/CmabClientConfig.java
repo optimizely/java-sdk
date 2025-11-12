@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
  */
 public class CmabClientConfig {
     private final RetryConfig retryConfig;
+    private String cmabEndpoint = null;
 
     public CmabClientConfig(@Nullable RetryConfig retryConfig) {
         this.retryConfig = retryConfig;
@@ -31,6 +32,15 @@ public class CmabClientConfig {
     @Nullable
     public RetryConfig getRetryConfig() {
         return retryConfig;
+    }
+
+    @Nullable
+    public String getCmabEndpoint() {
+        return cmabEndpoint;
+    }
+
+    public void setCmabEndpoint(@Nullable String cmabEndpoint){
+        this.cmabEndpoint = cmabEndpoint;
     }
 
     /**
