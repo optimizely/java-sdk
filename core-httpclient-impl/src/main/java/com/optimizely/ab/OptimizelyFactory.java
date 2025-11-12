@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.optimizely.ab.cmab.DefaultCmabClient;
-import com.optimizely.ab.cmab.client.CmabClientConfig;
 import com.optimizely.ab.cmab.service.CmabService;
 import com.optimizely.ab.cmab.service.DefaultCmabService;
 import com.optimizely.ab.config.HttpProjectConfigManager;
@@ -390,7 +389,7 @@ public final class OptimizelyFactory {
 
         // If no cmabService provided, create default one
         if (cmabService == null) {
-            DefaultCmabClient defaultCmabClient = new DefaultCmabClient(CmabClientConfig.withDefaultRetry());
+            DefaultCmabClient defaultCmabClient = new DefaultCmabClient();
             cmabService = DefaultCmabService.builder()
                 .withClient(defaultCmabClient)
                 .build();

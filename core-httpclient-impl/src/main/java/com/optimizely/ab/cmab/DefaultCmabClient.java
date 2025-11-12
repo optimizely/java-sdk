@@ -62,9 +62,9 @@ public class DefaultCmabClient implements CmabClient {
         this(null, config);
     }
 
-    // Default constructor (no retry, default HTTP client)
+    // Default constructor (default HTTP client, default retry config)
     public DefaultCmabClient() {
-        this(null, CmabClientConfig.withNoRetry());
+        this(null, CmabClientConfig.withDefaultRetry());
     }
 
     // Extract HTTP client creation logic
