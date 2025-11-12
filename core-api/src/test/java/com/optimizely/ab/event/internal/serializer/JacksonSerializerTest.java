@@ -18,7 +18,7 @@ package com.optimizely.ab.event.internal.serializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 
 import org.junit.Test;
@@ -42,7 +42,7 @@ public class JacksonSerializerTest {
     private JacksonSerializer serializer = new JacksonSerializer();
     private ObjectMapper mapper =
         new ObjectMapper().setPropertyNamingStrategy(
-            PropertyNamingStrategy.SNAKE_CASE);
+            PropertyNamingStrategies.SNAKE_CASE);
 
 
     @Test
