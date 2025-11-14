@@ -153,7 +153,7 @@ public class Optimizely implements AutoCloseable {
                        @Nonnull List<OptimizelyDecideOption> defaultDecideOptions,
                        @Nullable ODPManager odpManager,
                        @Nonnull CmabService cmabService
-                       ) {
+    ) {
         this.eventHandler = eventHandler;
         this.eventProcessor = eventProcessor;
         this.errorHandler = errorHandler;
@@ -349,14 +349,14 @@ public class Optimizely implements AutoCloseable {
 
         // Legacy API methods only apply to the Experiment type and not to Holdout.
         boolean isExperimentType = experiment instanceof Experiment;
-        
+
         // Kept For backwards compatibility.
         // This notification is deprecated and the new DecisionNotifications
         // are sent via their respective method calls.
         if (notificationCenter.getNotificationManager(ActivateNotification.class).size() > 0 && isExperimentType) {
             LogEvent impressionEvent = EventFactory.createLogEvent(userEvent);
             ActivateNotification activateNotification = new ActivateNotification(
-                (Experiment)experiment, userId, filteredAttributes, variation, impressionEvent);
+                (Experiment) experiment, userId, filteredAttributes, variation, impressionEvent);
             notificationCenter.send(activateNotification);
         }
         return true;
@@ -1286,20 +1286,6 @@ public class Optimizely implements AutoCloseable {
         return new OptimizelyUserContext(this, userId, attributes, Collections.EMPTY_MAP, null, false);
     }
 
-    OptimizelyDecision decide(@Nonnull OptimizelyUserContext user,
-                              @Nonnull String key,
-                              @Nonnull List<OptimizelyDecideOption> options) {
-        ProjectConfig projectConfig = getProjectConfig();
-        if (projectConfig == null) {
-            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
-        }
-
-        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
-        allOptions.remove(OptimizelyDecideOption.ENABLED_FLAGS_ONLY);
-
-        return decideForKeys(user, Arrays.asList(key), allOptions, true).get(key);
-    }
-
     private OptimizelyDecision createOptimizelyDecision(
         OptimizelyUserContext user,
         String flagKey,
@@ -1387,17 +1373,72 @@ public class Optimizely implements AutoCloseable {
             reasonsToReport);
     }
 
+    OptimizelyDecision decide(@Nonnull OptimizelyUserContext user,
+                              @Nonnull String key,
+                              @Nonnull List<OptimizelyDecideOption> options) {
+        return decideInternal(user, key, options, DecisionPath.WITH_CMAB);
+    }
+
     Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
                                                   @Nonnull List<String> keys,
                                                   @Nonnull List<OptimizelyDecideOption> options) {
-        return decideForKeys(user, keys, options, false);
+        return decideForKeysInternal(user, keys, options, false, DecisionPath.WITH_CMAB);
     }
 
-    private Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
-                                                          @Nonnull List<String> keys,
-                                                          @Nonnull List<OptimizelyDecideOption> options,
-                                                          boolean ignoreDefaultOptions,
-                                                          DecisionPath decisionPath) {
+    Map<String, OptimizelyDecision> decideAll(@Nonnull OptimizelyUserContext user,
+                                              @Nonnull List<OptimizelyDecideOption> options) {
+        return decideAllInternal(user, options, DecisionPath.WITH_CMAB);
+    }
+
+    /**
+     * Returns a decision result ({@link OptimizelyDecision}) for a given flag key and a user context,
+     * skipping CMAB logic and using only traditional A/B testing.
+     * This will be called by mobile apps which will make synchronous decisions only (for backward compatibility with android-sdk)
+     *
+     * @param user    An OptimizelyUserContext associated with this OptimizelyClient.
+     * @param key     A flag key for which a decision will be made.
+     * @param options A list of options for decision-making.
+     * @return A decision result using traditional A/B testing logic only.
+     */
+    OptimizelyDecision decideSync(@Nonnull OptimizelyUserContext user,
+                                  @Nonnull String key,
+                                  @Nonnull List<OptimizelyDecideOption> options) {
+        return decideInternal(user, key, options, DecisionPath.WITHOUT_CMAB);
+    }
+
+    /**
+     * Returns decision results for multiple flag keys, skipping CMAB logic and using only traditional A/B testing.
+     * This will be called by mobile apps which will make synchronous decisions only (for backward compatibility with android-sdk)
+     *
+     * @param user    An OptimizelyUserContext associated with this OptimizelyClient.
+     * @param keys    A list of flag keys for which decisions will be made.
+     * @param options A list of options for decision-making.
+     * @return All decision results mapped by flag keys, using traditional A/B testing logic only.
+     */
+    Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull OptimizelyUserContext user,
+                                                      @Nonnull List<String> keys,
+                                                      @Nonnull List<OptimizelyDecideOption> options) {
+        return decideForKeysInternal(user, keys, options, false, DecisionPath.WITHOUT_CMAB);
+    }
+
+    /**
+     * Returns decision results for all active flag keys, skipping CMAB logic and using only traditional A/B testing.
+     * This will be called by mobile apps which will make synchronous decisions only (for backward compatibility with android-sdk)
+     *
+     * @param user    An OptimizelyUserContext associated with this OptimizelyClient.
+     * @param options A list of options for decision-making.
+     * @return All decision results mapped by flag keys, using traditional A/B testing logic only.
+     */
+    Map<String, OptimizelyDecision> decideAllSync(@Nonnull OptimizelyUserContext user,
+                                                  @Nonnull List<OptimizelyDecideOption> options) {
+        return decideAllInternal(user, options, DecisionPath.WITHOUT_CMAB);
+    }
+
+    private Map<String, OptimizelyDecision> decideForKeysInternal(@Nonnull OptimizelyUserContext user,
+                                                                  @Nonnull List<String> keys,
+                                                                  @Nonnull List<OptimizelyDecideOption> options,
+                                                                  boolean ignoreDefaultOptions,
+                                                                  DecisionPath decisionPath) {
         Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
 
         ProjectConfig projectConfig = getProjectConfig();
@@ -1481,86 +1522,9 @@ public class Optimizely implements AutoCloseable {
         return decisionMap;
     }
 
-    private Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
-                                                          @Nonnull List<String> keys,
-                                                          @Nonnull List<OptimizelyDecideOption> options,
-                                                          boolean ignoreDefaultOptions) {
-        return decideForKeys(user, keys, options, ignoreDefaultOptions, DecisionPath.WITH_CMAB);
-    }
-
-    Map<String, OptimizelyDecision> decideAll(@Nonnull OptimizelyUserContext user,
-                                              @Nonnull List<OptimizelyDecideOption> options) {
-        Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
-
-        ProjectConfig projectConfig = getProjectConfig();
-        if (projectConfig == null) {
-            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
-            return decisionMap;
-        }
-
-        List<FeatureFlag> allFlags = projectConfig.getFeatureFlags();
-        List<String> allFlagKeys = new ArrayList<>();
-        for (int i = 0; i < allFlags.size(); i++) allFlagKeys.add(allFlags.get(i).getKey());
-
-        return decideForKeys(user, allFlagKeys, options);
-    }
-
-    /**
-     * Returns a decision result ({@link OptimizelyDecision}) for a given flag key and a user context,
-     * skipping CMAB logic and using only traditional A/B testing.
-     * This will be called by mobile apps which will make synchronous decisions only (for backward compatibility with android-sdk)
-     *
-     * @param user    An OptimizelyUserContext associated with this OptimizelyClient.
-     * @param key     A flag key for which a decision will be made.
-     * @param options A list of options for decision-making.
-     * @return A decision result using traditional A/B testing logic only.
-     */
-    OptimizelyDecision decideSync(@Nonnull OptimizelyUserContext user,
-                                  @Nonnull String key,
-                                  @Nonnull List<OptimizelyDecideOption> options) {
-        ProjectConfig projectConfig = getProjectConfig();
-        if (projectConfig == null) {
-            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
-        }
-
-        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
-        allOptions.remove(OptimizelyDecideOption.ENABLED_FLAGS_ONLY);
-
-        return decideForKeysSync(user, Arrays.asList(key), allOptions, true).get(key);
-    }
-
-    /**
-     * Returns decision results for multiple flag keys, skipping CMAB logic and using only traditional A/B testing.
-     * This will be called by mobile apps which will make synchronous decisions only (for backward compatibility with android-sdk)
-     *
-     * @param user    An OptimizelyUserContext associated with this OptimizelyClient.
-     * @param keys    A list of flag keys for which decisions will be made.
-     * @param options A list of options for decision-making.
-     * @return All decision results mapped by flag keys, using traditional A/B testing logic only.
-     */
-    Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull OptimizelyUserContext user,
-                                                      @Nonnull List<String> keys,
-                                                      @Nonnull List<OptimizelyDecideOption> options) {
-        return decideForKeysSync(user, keys, options, false);
-    }
-
-    private Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull OptimizelyUserContext user,
-                                                              @Nonnull List<String> keys,
+    private Map<String, OptimizelyDecision> decideAllInternal(@Nonnull OptimizelyUserContext user,
                                                               @Nonnull List<OptimizelyDecideOption> options,
-                                                              boolean ignoreDefaultOptions) {
-        return decideForKeys(user, keys, options, ignoreDefaultOptions, DecisionPath.WITHOUT_CMAB);
-    }
-
-    /**
-     * Returns decision results for all active flag keys, skipping CMAB logic and using only traditional A/B testing.
-     * This will be called by mobile apps which will make synchronous decisions only (for backward compatibility with android-sdk)
-     *
-     * @param user    An OptimizelyUserContext associated with this OptimizelyClient.
-     * @param options A list of options for decision-making.
-     * @return All decision results mapped by flag keys, using traditional A/B testing logic only.
-     */
-    Map<String, OptimizelyDecision> decideAllSync(@Nonnull OptimizelyUserContext user,
-                                                  @Nonnull List<OptimizelyDecideOption> options) {
+                                                              @Nonnull DecisionPath decisionPath) {
         Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
 
         ProjectConfig projectConfig = getProjectConfig();
@@ -1573,7 +1537,22 @@ public class Optimizely implements AutoCloseable {
         List<String> allFlagKeys = new ArrayList<>();
         for (int i = 0; i < allFlags.size(); i++) allFlagKeys.add(allFlags.get(i).getKey());
 
-        return decideForKeysSync(user, allFlagKeys, options);
+        return decideForKeysInternal(user, allFlagKeys, options, false, decisionPath);
+    }
+
+    private OptimizelyDecision decideInternal(@Nonnull OptimizelyUserContext user,
+                                              @Nonnull String key,
+                                              @Nonnull List<OptimizelyDecideOption> options,
+                                              @Nonnull DecisionPath decisionPath) {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
+        }
+
+        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
+        allOptions.remove(OptimizelyDecideOption.ENABLED_FLAGS_ONLY);
+
+        return decideForKeysInternal(user, Arrays.asList(key), allOptions, true, decisionPath).get(key);
     }
 
     //============ decide async ============//
@@ -1582,9 +1561,9 @@ public class Optimizely implements AutoCloseable {
      * Returns a decision result asynchronously for a given flag key and a user context.
      *
      * @param userContext The user context to make decisions for
-     * @param key A flag key for which a decision will be made
-     * @param callback A callback to invoke when the decision is available
-     * @param options A list of options for decision-making
+     * @param key         A flag key for which a decision will be made
+     * @param callback    A callback to invoke when the decision is available
+     * @param options     A list of options for decision-making
      */
     void decideAsync(@Nonnull OptimizelyUserContext userContext,
                      @Nonnull String key,
@@ -1614,8 +1593,8 @@ public class Optimizely implements AutoCloseable {
      * Returns decision results asynchronously for all active flag keys.
      *
      * @param userContext The user context to make decisions for
-     * @param callback A callback to invoke when decisions are available
-     * @param options A list of options for decision-making
+     * @param callback    A callback to invoke when decisions are available
+     * @param options     A list of options for decision-making
      */
     void decideAllAsync(@Nonnull OptimizelyUserContext userContext,
                         @Nonnull List<OptimizelyDecideOption> options,
