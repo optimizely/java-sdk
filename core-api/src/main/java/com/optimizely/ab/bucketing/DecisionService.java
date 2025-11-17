@@ -78,6 +78,19 @@ public class DecisionService {
      */
     private transient ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping = new ConcurrentHashMap<String, ConcurrentHashMap<String, String>>();
 
+    /**
+     * Initialize a decision service for the Optimizely client.
+     *
+     * @param bucketer           Base bucketer to allocate new users to an experiment.
+     * @param errorHandler       The error handler of the Optimizely client.
+     * @param userProfileService UserProfileService implementation for storing user info.
+     * @param cmabService        Cmab Service for decision making.
+     */
+    public DecisionService(@Nonnull Bucketer bucketer,
+                           @Nonnull ErrorHandler errorHandler,
+                           @Nullable UserProfileService userProfileService) {
+        this(bucketer, errorHandler, userProfileService, null);
+    }
 
     /**
      * Initialize a decision service for the Optimizely client.
@@ -90,7 +103,7 @@ public class DecisionService {
     public DecisionService(@Nonnull Bucketer bucketer,
                            @Nonnull ErrorHandler errorHandler,
                            @Nullable UserProfileService userProfileService,
-                           @Nonnull CmabService cmabService) {
+                           @Nullable CmabService cmabService) {
         this.bucketer = bucketer;
         this.errorHandler = errorHandler;
         this.userProfileService = userProfileService;

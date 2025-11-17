@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.optimizely.ab.cmab.DefaultCmabClient;
-import com.optimizely.ab.cmab.client.CmabClientConfig;
+import com.optimizely.ab.cmab.service.CmabService;
 import com.optimizely.ab.cmab.service.DefaultCmabService;
 import com.optimizely.ab.config.HttpProjectConfigManager;
 import com.optimizely.ab.config.ProjectConfig;
@@ -370,10 +370,10 @@ public final class OptimizelyFactory {
      * @param notificationCenter The {@link NotificationCenter} supplied to Optimizely instance.
      * @param eventHandler       The {@link EventHandler} supplied to Optimizely instance.
      * @param odpApiManager      The {@link ODPApiManager} supplied to Optimizely instance.
-     * @param cmabService        The {@link DefaultCmabService} supplied to Optimizely instance.
+     * @param cmabService        The {@link CmabService} supplied to Optimizely instance.
      * @return A new Optimizely instance
      * */
-    public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler, ODPApiManager odpApiManager, DefaultCmabService cmabService) {
+    public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler, ODPApiManager odpApiManager, CmabService cmabService) {
         if (notificationCenter == null) {
             notificationCenter = new NotificationCenter();
         }
@@ -389,7 +389,7 @@ public final class OptimizelyFactory {
 
         // If no cmabService provided, create default one
         if (cmabService == null) {
-            DefaultCmabClient defaultCmabClient = new DefaultCmabClient(CmabClientConfig.withDefaultRetry());
+            DefaultCmabClient defaultCmabClient = new DefaultCmabClient();
             cmabService = DefaultCmabService.builder()
                 .withClient(defaultCmabClient)
                 .build();

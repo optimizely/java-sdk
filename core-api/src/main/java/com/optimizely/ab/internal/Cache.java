@@ -22,4 +22,8 @@ public interface Cache<T> {
     void save(String key, T value);
     T lookup(String key);
     void reset();
+    default void remove(String key) {
+        // Default implementation does nothing
+        // Implementations should override this method to provide actual removal functionality
+    }
 }

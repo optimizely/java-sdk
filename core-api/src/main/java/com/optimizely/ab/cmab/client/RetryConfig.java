@@ -61,7 +61,7 @@ public class RetryConfig {
     }
 
     /**
-     * Creates a default RetryConfig with 3 retries and exponential backoff.
+     * Creates a default RetryConfig with 1 retry and exponential backoff.
      * 
      * @return Retry config with default settings
      */

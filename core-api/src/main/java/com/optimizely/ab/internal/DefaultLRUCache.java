@@ -23,7 +23,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
 
-public class DefaultLRUCache<T> implements CacheWithRemove<T> {
+public class DefaultLRUCache<T> implements Cache<T> {
 
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -96,6 +96,7 @@ public class DefaultLRUCache<T> implements CacheWithRemove<T> {
         }
     }
 
+    @Override
     public void remove(String key) {
         if (maxSize == 0) {
             // Cache is disabled when maxSize = 0

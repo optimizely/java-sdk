@@ -18,8 +18,6 @@ package com.optimizely.ab.cmab;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.http.ParseException;
 import org.apache.http.StatusLine;
@@ -33,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import com.optimizely.ab.OptimizelyHttpClient;
 import com.optimizely.ab.cmab.client.CmabClient;
 import com.optimizely.ab.cmab.client.CmabClientConfig;
+import com.optimizely.ab.cmab.client.CmabClientHelper;
 import com.optimizely.ab.cmab.client.CmabFetchException;
 import com.optimizely.ab.cmab.client.CmabInvalidResponseException;
 import com.optimizely.ab.cmab.client.RetryConfig;
@@ -45,11 +44,15 @@ public class DefaultCmabClient implements CmabClient {
 
     private final OptimizelyHttpClient httpClient;
     private final RetryConfig retryConfig;
+    private final String cmabEndpoint;
 
     // Primary constructor - all others delegate to this
     public DefaultCmabClient(OptimizelyHttpClient httpClient, CmabClientConfig config) {
         this.retryConfig = config != null ? config.getRetryConfig() : null;
         this.httpClient = httpClient != null ? httpClient : createDefaultHttpClient();
+        this.cmabEndpoint = (config != null && config.getCmabEndpoint() != null)
+            ? config.getCmabEndpoint()
+            : CmabClientHelper.CMAB_PREDICTION_ENDPOINT;
     }
 
     // Constructor with HTTP client only (no retry)
@@ -62,9 +65,9 @@ public class DefaultCmabClient implements CmabClient {
         this(null, config);
     }
 
-    // Default constructor (no retry, default HTTP client)
+    // Default constructor (default HTTP client, default retry config)
     public DefaultCmabClient() {
-        this(null, CmabClientConfig.withNoRetry());
+        this(null, CmabClientConfig.withDefaultRetry());
     }
 
     // Extract HTTP client creation logic
@@ -76,7 +79,7 @@ public class DefaultCmabClient implements CmabClient {
     @Override
     public String fetchDecision(String ruleId, String userId, Map<String, Object> attributes, String cmabUuid) {
         // Implementation will use this.httpClient and this.retryConfig
-        String url = String.format(CmabClientHelper.CMAB_PREDICTION_ENDPOINT, ruleId);
+        String url = String.format(cmabEndpoint, ruleId);
         String requestBody = CmabClientHelper.buildRequestJson(userId, ruleId, attributes, cmabUuid);
 
         // Use retry logic if configured, otherwise single request
