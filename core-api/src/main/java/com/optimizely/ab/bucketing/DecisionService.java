@@ -84,7 +84,6 @@ public class DecisionService {
      * @param bucketer           Base bucketer to allocate new users to an experiment.
      * @param errorHandler       The error handler of the Optimizely client.
      * @param userProfileService UserProfileService implementation for storing user info.
-     * @param cmabService        Cmab Service for decision making.
      */
     public DecisionService(@Nonnull Bucketer bucketer,
                            @Nonnull ErrorHandler errorHandler,

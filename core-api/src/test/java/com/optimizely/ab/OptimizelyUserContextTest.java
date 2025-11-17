@@ -54,9 +54,6 @@ import static com.optimizely.ab.notification.DecisionNotification.FlagDecisionNo
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 public class OptimizelyUserContextTest {

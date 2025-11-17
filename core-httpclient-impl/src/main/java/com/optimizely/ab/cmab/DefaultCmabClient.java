@@ -35,7 +35,6 @@ import com.optimizely.ab.cmab.client.CmabClientHelper;
 import com.optimizely.ab.cmab.client.CmabFetchException;
 import com.optimizely.ab.cmab.client.CmabInvalidResponseException;
 import com.optimizely.ab.cmab.client.RetryConfig;
-import com.optimizely.ab.cmab.client.CmabClientHelper;
 
 public class DefaultCmabClient implements CmabClient {
     
