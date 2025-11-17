@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.bucketing;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -111,8 +112,23 @@ public class Bucketer {
         int bucketValue = generateBucketValue(hashCode);
         logger.debug("Assigned bucket {} to user with bucketingId \"{}\" when bucketing to a variation.", bucketValue, bucketingId);
 
+        if (experiment instanceof Experiment && ((Experiment) experiment).getCmab() != null) {
+            // Override traffic allocations for CMAB experiments
+            String message = reasons.addInfo("Using CMAB traffic allocation for experiment \"%s\"", experimentKey);
+            logger.info(message);
+            trafficAllocations = Collections.singletonList(
+                new TrafficAllocation("$", ((Experiment) experiment).getCmab().getTrafficAllocation())
+            );
+        }
+
         String bucketedVariationId = bucketToEntity(bucketValue, trafficAllocations);
-        if (bucketedVariationId != null) {
+        if ("$".equals(bucketedVariationId)) {
+            // for cmab experiments
+            String message = reasons.addInfo("User with bucketingId \"%s\" is bucketed into CMAB for experiment \"%s\"", bucketingId, experimentKey);
+            logger.info(message);
+            return new DecisionResponse(new Variation("$", "$"), reasons);
+        }
+        else if (bucketedVariationId != null) {
             Variation bucketedVariation = experiment.getVariationIdToVariationMap().get(bucketedVariationId);
             String variationKey = bucketedVariation.getKey();
             String message = reasons.addInfo("User with bucketingId \"%s\" is in variation \"%s\" of experiment \"%s\".", bucketingId, variationKey,
