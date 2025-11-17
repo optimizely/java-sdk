@@ -350,6 +350,8 @@ public class Optimizely implements AutoCloseable {
         // Legacy API methods only apply to the Experiment type and not to Holdout.
         boolean isExperimentType = experiment instanceof Experiment;
 
+        // [TESTING]
+        
         // Kept For backwards compatibility.
         // This notification is deprecated and the new DecisionNotifications
         // are sent via their respective method calls.
