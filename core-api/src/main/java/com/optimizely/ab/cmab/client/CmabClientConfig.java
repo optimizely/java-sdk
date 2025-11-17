@@ -23,9 +23,15 @@ import javax.annotation.Nullable;
  */
 public class CmabClientConfig {
     private final RetryConfig retryConfig;
+    private String cmabEndpoint = null;
 
     public CmabClientConfig(@Nullable RetryConfig retryConfig) {
         this.retryConfig = retryConfig;
+    }
+
+    public CmabClientConfig(@Nullable RetryConfig retryConfig, @Nullable String cmabEndpoint) {
+        this.retryConfig = retryConfig;
+        this.cmabEndpoint = cmabEndpoint;
     }
 
     @Nullable
@@ -33,8 +39,19 @@ public class CmabClientConfig {
         return retryConfig;
     }
 
+    @Nullable
+    public String getCmabEndpoint() {
+        return cmabEndpoint;
+    }
+
+    public void setCmabEndpoint(@Nullable String cmabEndpoint){
+        this.cmabEndpoint = cmabEndpoint;
+    }
+
     /**
      * Creates a config with default retry settings.
+     * 
+     * @return A default cmab client config
      */
     public static CmabClientConfig withDefaultRetry() {
         return new CmabClientConfig(RetryConfig.defaultConfig());
@@ -42,8 +59,19 @@ public class CmabClientConfig {
 
     /**
      * Creates a config with no retry.
+     * 
+     * @return A cmab client config with no retry
      */
     public static CmabClientConfig withNoRetry() {
         return new CmabClientConfig(null);
+    }
+
+    /**
+     * Creates a config with custom cmab endpoint.
+     * 
+     * @return A cmab client config with custom cmab endpoint
+     */
+    public static CmabClientConfig withCmabEndpoint(@Nullable String cmabEndpoint) {
+        return new CmabClientConfig(RetryConfig.defaultConfig(), cmabEndpoint);
     }
 }
