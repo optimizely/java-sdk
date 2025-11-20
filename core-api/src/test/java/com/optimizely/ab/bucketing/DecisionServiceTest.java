@@ -34,6 +34,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -55,6 +56,9 @@ import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.OptimizelyDecisionContext;
 import com.optimizely.ab.OptimizelyForcedDecision;
 import com.optimizely.ab.OptimizelyUserContext;
+import com.optimizely.ab.cmab.service.CmabService;
+import com.optimizely.ab.cmab.service.CmabDecision;
+import com.optimizely.ab.config.Cmab;
 import com.optimizely.ab.config.DatafileProjectConfigTestUtils;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.noAudienceProjectConfigV3;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV3;
@@ -109,6 +113,9 @@ public class DecisionServiceTest {
     @Mock
     private ErrorHandler mockErrorHandler;
 
+    @Mock
+    private CmabService mockCmabService;
+
     private ProjectConfig noAudienceProjectConfig;
     private ProjectConfig v4ProjectConfig;
     private ProjectConfig validProjectConfig;
@@ -129,7 +136,7 @@ public class DecisionServiceTest {
         whitelistedExperiment = validProjectConfig.getExperimentIdMapping().get("223");
         whitelistedVariation = whitelistedExperiment.getVariationKeyToVariationMap().get("vtag1");
         Bucketer bucketer = new Bucketer();
-        decisionService = spy(new DecisionService(bucketer, mockErrorHandler, null));
+        decisionService = spy(new DecisionService(bucketer, mockErrorHandler, null, mockCmabService));
         this.optimizely = Optimizely.builder().build();
     }
 
@@ -224,7 +231,8 @@ public class DecisionServiceTest {
         UserProfileService userProfileService = mock(UserProfileService.class);
         when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
-        DecisionService decisionService = spy(new DecisionService(new Bucketer(), mockErrorHandler, userProfileService));
+        CmabService cmabService = mock(CmabService.class);
+        DecisionService decisionService = spy(new DecisionService(new Bucketer(), mockErrorHandler, userProfileService, cmabService));
 
         // ensure that normal users still get excluded from the experiment when they fail audience evaluation
         assertNull(decisionService.getVariation(experiment, optimizely.createUserContext(genericUserId, Collections.<String, Object>emptyMap()), validProjectConfig).getResult());
@@ -255,7 +263,8 @@ public class DecisionServiceTest {
         UserProfileService userProfileService = mock(UserProfileService.class);
         when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
-        DecisionService decisionService = spy(new DecisionService(new Bucketer(), mockErrorHandler, userProfileService));
+        CmabService cmabService = mock(CmabService.class);
+        DecisionService decisionService = spy(new DecisionService(new Bucketer(), mockErrorHandler, userProfileService, cmabService));
 
         // ensure that normal users still get excluded from the experiment when they fail audience evaluation
         assertNull(decisionService.getVariation(experiment, optimizely.createUserContext(genericUserId, Collections.<String, Object>emptyMap()), validProjectConfig).getResult());
@@ -351,7 +360,8 @@ public class DecisionServiceTest {
             any(ProjectConfig.class),
             anyObject(),
             anyObject(),
-            any(DecisionReasons.class)
+            any(DecisionReasons.class),
+            any(DecisionPath.class)
         );
         // do not bucket to any rollouts
         doReturn(DecisionResponse.responseNoReasons(new FeatureDecision(null, null, null))).when(decisionService).getVariationForFeatureInRollout(
@@ -390,14 +400,16 @@ public class DecisionServiceTest {
             eq(ValidProjectConfigV4.EXPERIMENT_MUTEX_GROUP_EXPERIMENT_1),
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
-            anyObject()
+            anyObject(),
+            any(DecisionPath.class)
         );
 
         doReturn(DecisionResponse.responseNoReasons(ValidProjectConfigV4.VARIATION_MUTEX_GROUP_EXP_2_VAR_1)).when(decisionService).getVariation(
             eq(ValidProjectConfigV4.EXPERIMENT_MUTEX_GROUP_EXPERIMENT_2),
             any(OptimizelyUserContext.class),
             any(ProjectConfig.class),
-            anyObject()
+            anyObject(),
+            any(DecisionPath.class)
         );
 
         FeatureDecision featureDecision = decisionService.getVariationForFeature(
@@ -437,7 +449,8 @@ public class DecisionServiceTest {
             any(ProjectConfig.class),
             anyObject(),
             anyObject(),
-            any(DecisionReasons.class)
+            any(DecisionReasons.class),
+            any(DecisionPath.class)
         );
 
         // return variation for rollout
@@ -471,7 +484,8 @@ public class DecisionServiceTest {
             any(ProjectConfig.class),
             anyObject(),
             anyObject(),
-            any(DecisionReasons.class)
+            any(DecisionReasons.class),
+            any(DecisionPath.class)
         );
     }
 
@@ -498,7 +512,8 @@ public class DecisionServiceTest {
             any(ProjectConfig.class),
             anyObject(),
             anyObject(),
-            any(DecisionReasons.class)
+            any(DecisionReasons.class),
+            any(DecisionPath.class)
         );
 
         // return variation for rollout
@@ -532,7 +547,8 @@ public class DecisionServiceTest {
             any(ProjectConfig.class),
             anyObject(),
             anyObject(),
-            any(DecisionReasons.class)
+            any(DecisionReasons.class),
+            any(DecisionPath.class)
         );
 
         logbackVerifier.expectMessage(
@@ -550,7 +566,7 @@ public class DecisionServiceTest {
         ErrorHandler mockErrorHandler = mock(ErrorHandler.class);
         UserProfileService mockUserProfileService = mock(UserProfileService.class);
 
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, mockUserProfileService);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, mockUserProfileService, mockCmabService);
 
         FeatureFlag featureFlag1 = FEATURE_FLAG_MULTI_VARIATE_FEATURE;
         FeatureFlag featureFlag2 = FEATURE_FLAG_MULTI_VARIATE_FUTURE_FEATURE;
@@ -609,7 +625,8 @@ public class DecisionServiceTest {
         DecisionService decisionService = new DecisionService(
             mockBucketer,
             mockErrorHandler,
-            null
+            null,
+            mockCmabService
         );
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
@@ -636,7 +653,7 @@ public class DecisionServiceTest {
         Bucketer mockBucketer = mock(Bucketer.class);
         when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class))).thenReturn(DecisionResponse.nullNoReasons());
 
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
@@ -666,7 +683,8 @@ public class DecisionServiceTest {
         DecisionService decisionService = new DecisionService(
             mockBucketer,
             mockErrorHandler,
-            null
+            null,
+            mockCmabService
         );
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
@@ -707,7 +725,8 @@ public class DecisionServiceTest {
         DecisionService decisionService = new DecisionService(
             mockBucketer,
             mockErrorHandler,
-            null
+            null,
+            mockCmabService
         );
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
@@ -747,7 +766,8 @@ public class DecisionServiceTest {
         DecisionService decisionService = new DecisionService(
             mockBucketer,
             mockErrorHandler,
-            null
+            null,
+            mockCmabService
         );
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
@@ -786,7 +806,7 @@ public class DecisionServiceTest {
         when(mockBucketer.bucket(eq(everyoneElseRule), anyString(), any(ProjectConfig.class))).thenReturn(DecisionResponse.responseNoReasons(everyoneElseVariation));
         when(mockBucketer.bucket(eq(englishCitizensRule), anyString(), any(ProjectConfig.class))).thenReturn(DecisionResponse.responseNoReasons(englishCitizenVariation));
 
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
 
         FeatureDecision featureDecision = decisionService.getVariationForFeatureInRollout(
             FEATURE_FLAG_MULTI_VARIATE_FEATURE,
@@ -939,7 +959,7 @@ public class DecisionServiceTest {
         when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
         Bucketer bucketer = new Bucketer();
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService, mockCmabService);
 
         logbackVerifier.expectMessage(Level.INFO,
             "Returning previously activated variation \"" + variation.getKey() + "\" of experiment \"" + experiment.getKey() + "\""
@@ -965,7 +985,7 @@ public class DecisionServiceTest {
         UserProfile userProfile = new UserProfile(userProfileId, Collections.<String, Decision>emptyMap());
         when(userProfileService.lookup(userProfileId)).thenReturn(userProfile.toMap());
 
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService, mockCmabService);
 
         logbackVerifier.expectMessage(Level.INFO, "No previously activated variation of experiment " +
             "\"" + experiment.getKey() + "\" for user \"" + userProfileId + "\" found in user profile.");
@@ -992,7 +1012,7 @@ public class DecisionServiceTest {
         UserProfileService userProfileService = mock(UserProfileService.class);
         when(userProfileService.lookup(userProfileId)).thenReturn(storedUserProfile.toMap());
 
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService, mockCmabService);
 
         logbackVerifier.expectMessage(Level.INFO,
             "User \"" + userProfileId + "\" was previously bucketed into variation with ID \"" + storedVariationId + "\" for " +
@@ -1023,7 +1043,7 @@ public class DecisionServiceTest {
         Bucketer mockBucketer = mock(Bucketer.class);
         when(mockBucketer.bucket(eq(experiment), eq(userProfileId), eq(noAudienceProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(variation));
 
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, userProfileService, mockCmabService);
 
         assertEquals(variation, decisionService.getVariation(
             experiment, optimizely.createUserContext(userProfileId, Collections.emptyMap()), noAudienceProjectConfig).getResult()
@@ -1058,7 +1078,8 @@ public class DecisionServiceTest {
         UserProfile saveUserProfile = new UserProfile(userProfileId,
             new HashMap<String, Decision>());
 
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService);
+        CmabService cmabService = mock(CmabService.class);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService, cmabService);
 
 
         decisionService.saveVariation(experiment, variation, saveUserProfile);
@@ -1084,7 +1105,7 @@ public class DecisionServiceTest {
 
         Bucketer bucketer = mock(Bucketer.class);
         UserProfileService userProfileService = mock(UserProfileService.class);
-        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService);
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, userProfileService, mockCmabService);
 
         when(bucketer.bucket(eq(experiment), eq(userProfileId), eq(noAudienceProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(variation));
         when(userProfileService.lookup(userProfileId)).thenReturn(null);
@@ -1096,7 +1117,7 @@ public class DecisionServiceTest {
     @Test
     public void getVariationBucketingId() throws Exception {
         Bucketer bucketer = mock(Bucketer.class);
-        DecisionService decisionService = spy(new DecisionService(bucketer, mockErrorHandler, null));
+        DecisionService decisionService = spy(new DecisionService(bucketer, mockErrorHandler, null, mockCmabService));
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation expectedVariation = experiment.getVariations().get(0);
 
@@ -1130,7 +1151,8 @@ public class DecisionServiceTest {
         DecisionService decisionService = spy(new DecisionService(
             bucketer,
             mockErrorHandler,
-            null
+            null,
+            mockCmabService
         ));
 
         FeatureDecision expectedFeatureDecision = new FeatureDecision(
@@ -1285,7 +1307,7 @@ public class DecisionServiceTest {
         
         Bucketer mockBucketer = new Bucketer();
         
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
         
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("$opt_bucketing_id", "ppid160000");
@@ -1307,8 +1329,8 @@ public class DecisionServiceTest {
         ProjectConfig holdoutProjectConfig = generateValidProjectConfigV4_holdout();
 
         Bucketer mockBucketer = new Bucketer();
-
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
+        CmabService cmabService = mock(CmabService.class);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, cmabService);
 
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("$opt_bucketing_id", "ppid120000");
@@ -1331,7 +1353,7 @@ public class DecisionServiceTest {
 
         Bucketer mockBucketer = new Bucketer();
 
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
 
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("$opt_bucketing_id", "ppid300002");
@@ -1362,7 +1384,7 @@ public class DecisionServiceTest {
 
         Bucketer mockBucketer = new Bucketer();
 
-        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null);
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
 
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("$opt_bucketing_id", "ppid543400");
@@ -1380,5 +1402,333 @@ public class DecisionServiceTest {
         assertEquals(FeatureDecision.DecisionSource.HOLDOUT, featureDecision.decisionSource);
 
         logbackVerifier.expectMessage(Level.INFO, "User (user123) is in variation (ho_off_key) of holdout (typed_audience_holdout).");
+    }
+    
+    /**
+     * Verify that whitelisted variations take precedence over CMAB service decisions
+     * in CMAB experiments.
+     */
+    @Test
+    public void getVariationCmabExperimentWhitelistedPrecedesCmabService() {
+        // Create a CMAB experiment with whitelisting
+        Experiment cmabExperiment = createMockCmabExperiment();
+        Variation whitelistedVariation = cmabExperiment.getVariations().get(0);
+        
+        // Setup whitelisting for the test user
+        Map<String, String> userIdToVariationKeyMap = new HashMap<>();
+        userIdToVariationKeyMap.put(whitelistedUserId, whitelistedVariation.getKey());
+        
+        // Create mock Cmab object
+        Cmab mockCmab = mock(Cmab.class);
+        
+        // Create experiment with whitelisting and CMAB config
+        Experiment experimentWithWhitelisting = new Experiment(
+            cmabExperiment.getId(),
+            cmabExperiment.getKey(),
+            cmabExperiment.getStatus(),
+            cmabExperiment.getLayerId(),
+            cmabExperiment.getAudienceIds(),
+            cmabExperiment.getAudienceConditions(),
+            cmabExperiment.getVariations(),
+            userIdToVariationKeyMap,
+            cmabExperiment.getTrafficAllocation(),
+            mockCmab // This makes it a CMAB experiment
+        );
+        
+        // Mock CmabService.getDecision to return a different variation (should be ignored)
+        // Note: We don't need to mock anything since the user is whitelisted
+        
+        // Call getVariation
+        DecisionResponse<Variation> result = decisionService.getVariation(
+            experimentWithWhitelisting,
+            optimizely.createUserContext(whitelistedUserId, Collections.emptyMap()),
+            v4ProjectConfig
+        );
+        
+        // Verify whitelisted variation is returned
+        assertEquals(whitelistedVariation, result.getResult());
+
+        // Verify CmabService was never called since user is whitelisted
+        verify(mockCmabService, never()).getDecision(any(), any(), any(), any());
+        
+        // Verify appropriate logging
+        logbackVerifier.expectMessage(Level.INFO, 
+            "User \"" + whitelistedUserId + "\" is forced in variation \"" + 
+            whitelistedVariation.getKey() + "\".");
+    }
+
+    /**
+     * Verify that forced variations take precedence over CMAB service decisions
+     * in CMAB experiments.
+     */
+    @Test
+    public void getVariationCmabExperimentForcedPrecedesCmabService() {
+        // Create a CMAB experiment
+        Experiment cmabExperiment = createMockCmabExperiment();
+        Variation forcedVariation = cmabExperiment.getVariations().get(0);
+        Variation cmabServiceVariation = cmabExperiment.getVariations().get(1);
+        
+        // Create mock Cmab object
+        Cmab mockCmab = mock(Cmab.class);
+        
+        // Create experiment with CMAB config (no whitelisting)
+        Experiment experiment = new Experiment(
+            cmabExperiment.getId(),
+            cmabExperiment.getKey(),
+            cmabExperiment.getStatus(),
+            cmabExperiment.getLayerId(),
+            cmabExperiment.getAudienceIds(),
+            cmabExperiment.getAudienceConditions(),
+            cmabExperiment.getVariations(),
+            Collections.emptyMap(), // No whitelisting
+            cmabExperiment.getTrafficAllocation(),
+            mockCmab // This makes it a CMAB experiment
+        );
+        
+        // Set forced variation for the user
+        decisionService.setForcedVariation(experiment, genericUserId, forcedVariation.getKey());
+        
+        // Mock CmabService.getDecision to return a different variation (should be ignored)
+        CmabDecision mockCmabDecision = mock(CmabDecision.class);
+        when(mockCmabDecision.getVariationId()).thenReturn(cmabServiceVariation.getId());
+        when(mockCmabService.getDecision(any(), any(), any(), any()))
+            .thenReturn(mockCmabDecision);
+        
+        // Call getVariation
+        DecisionResponse<Variation> result = decisionService.getVariation(
+            experiment,
+            optimizely.createUserContext(genericUserId, Collections.emptyMap()),
+            v4ProjectConfig
+        );
+        
+        // Verify forced variation is returned (not CMAB service result)
+        assertEquals(forcedVariation, result.getResult());
+        
+        // Verify CmabService was never called since user has forced variation
+        verify(mockCmabService, never()).getDecision(any(), any(), any(), any());
+    }
+
+    /**
+     * Verify that getVariation handles CMAB service errors gracefully
+     * and falls back appropriately when CmabService throws an exception.
+     */
+    @Test
+    public void getVariationCmabExperimentServiceError() {
+        // Create a CMAB experiment
+        Experiment cmabExperiment = createMockCmabExperiment();
+        
+        // Create mock Cmab object
+        Cmab mockCmab = mock(Cmab.class);
+        when(mockCmab.getTrafficAllocation()).thenReturn(10000); 
+        
+        // Create experiment with CMAB config (no whitelisting, no forced variations)
+        Experiment experiment = new Experiment(
+            cmabExperiment.getId(),
+            cmabExperiment.getKey(),
+            cmabExperiment.getStatus(),
+            cmabExperiment.getLayerId(),
+                       cmabExperiment.getAudienceIds(),
+            cmabExperiment.getAudienceConditions(),
+            cmabExperiment.getVariations(),
+            Collections.emptyMap(), // No whitelisting
+            cmabExperiment.getTrafficAllocation(),
+            mockCmab // This makes it a CMAB experiment
+        );
+        
+        // Bucketer bucketer = new Bucketer();
+        Bucketer mockBucketer = mock(Bucketer.class);
+        Variation bucketedVariation = new Variation("$", "$");
+        when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class)))
+            .thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
+        DecisionService decisionServiceWithMockCmabService = new DecisionService(
+            mockBucketer,
+            mockErrorHandler, 
+            null, 
+            mockCmabService
+        );
+        
+        // Mock CmabService.getDecision to throw an exception
+        RuntimeException cmabException = new RuntimeException("CMAB service unavailable");
+        when(mockCmabService.getDecision(any(), any(), any(), any()))
+            .thenThrow(cmabException);
+        
+        // Call getVariation
+        DecisionResponse<Variation> result = decisionServiceWithMockCmabService.getVariation(
+            experiment,
+            optimizely.createUserContext(genericUserId, Collections.emptyMap()),
+            v4ProjectConfig
+        );
+        
+        // Verify that the method handles the error gracefully
+        // The result depends on whether the real bucketer allocates the user to CMAB traffic or not
+        // If user is not in CMAB traffic: result should be null
+        // If user is in CMAB traffic but CMAB service fails: result should be null
+        assertNull(result.getResult());
+        
+        // Verify that the error is not propagated (no exception thrown)
+        assertTrue(result.isError());
+        
+        // Assert that CmabService.getDecision was called exactly once
+        verify(mockCmabService, times(1)).getDecision(any(), any(), any(), any());
+    }
+
+    /**
+     * Verify that getVariation returns the variation from CMAB service
+     * when user is bucketed into CMAB traffic and service returns a valid decision.
+     */
+    @Test
+    public void getVariationCmabExperimentServiceSuccess() {
+        // Use an existing experiment from v4ProjectConfig and modify it to be CMAB
+        Experiment baseExperiment = v4ProjectConfig.getExperiments().get(0);
+        Variation expectedVariation = baseExperiment.getVariations().get(0);
+        
+        // Create mock Cmab object
+        Cmab mockCmab = mock(Cmab.class);
+        when(mockCmab.getTrafficAllocation()).thenReturn(10000); // 100% allocation
+        
+        // Create CMAB experiment using existing experiment structure
+        Experiment cmabExperiment = new Experiment(
+            baseExperiment.getId(),
+            baseExperiment.getKey(),
+            baseExperiment.getStatus(),
+            baseExperiment.getLayerId(),
+            baseExperiment.getAudienceIds(),
+            baseExperiment.getAudienceConditions(),
+            baseExperiment.getVariations(),
+            Collections.emptyMap(), // No whitelisting
+            baseExperiment.getTrafficAllocation(),
+            mockCmab // This makes it a CMAB experiment
+        );
+        
+        // Mock bucketer to return a variation (user is in CMAB traffic)
+        Variation bucketedVariation = new Variation("$", "$");
+        Bucketer mockBucketer = mock(Bucketer.class);
+        when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class)))
+            .thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
+        
+        DecisionService decisionServiceWithMockCmabService = new DecisionService(
+            mockBucketer,
+            mockErrorHandler, 
+            null, 
+            mockCmabService
+        );
+        
+        // Mock CmabService.getDecision to return the expected variation ID
+        CmabDecision mockCmabDecision = mock(CmabDecision.class);
+        when(mockCmabDecision.getVariationId()).thenReturn(expectedVariation.getId());
+        when(mockCmabService.getDecision(any(), any(), any(), any()))
+            .thenReturn(mockCmabDecision);
+        
+        // Call getVariation
+        DecisionResponse<Variation> result = decisionServiceWithMockCmabService.getVariation(
+            cmabExperiment,
+            optimizely.createUserContext(genericUserId, Collections.emptyMap()),
+            v4ProjectConfig
+        );
+        
+        // Verify that CMAB service decision is returned
+        assertNotNull("Result should not be null", result.getResult());
+        assertEquals(expectedVariation, result.getResult());
+        
+        // Verify that the result is not an error
+        assertFalse(result.isError());
+        
+        // Verify CmabService.getDecision was called
+        verify(mockCmabService, times(1)).getDecision(any(), any(), any(), any());
+        
+        // Verify that the correct parameters were passed to CMAB service
+        verify(mockCmabService).getDecision(
+            eq(v4ProjectConfig),
+            any(OptimizelyUserContext.class),
+            eq(cmabExperiment.getId()),
+            any(List.class)
+        );
+    }
+
+    /**
+     * Verify that getVariation returns null when user is not bucketed into CMAB traffic
+     * by mocking the bucketer to return null for CMAB allocation.
+     */
+    @Test
+    public void getVariationCmabExperimentUserNotInTrafficAllocation() {
+        // Create a CMAB experiment
+        Experiment cmabExperiment = createMockCmabExperiment();
+        
+        // Create mock Cmab object
+        Cmab mockCmab = mock(Cmab.class);
+        when(mockCmab.getTrafficAllocation()).thenReturn(5000);
+        
+        // Create experiment with CMAB config (no whitelisting, no forced variations)
+        Experiment experiment = new Experiment(
+            cmabExperiment.getId(),
+            cmabExperiment.getKey(),
+            cmabExperiment.getStatus(),
+            cmabExperiment.getLayerId(),
+            cmabExperiment.getAudienceIds(),
+            cmabExperiment.getAudienceConditions(),
+            cmabExperiment.getVariations(),
+            Collections.emptyMap(), // No whitelisting
+            cmabExperiment.getTrafficAllocation(),
+            mockCmab // This makes it a CMAB experiment
+        );
+        
+        // Mock bucketer to return null for CMAB allocation (user not in CMAB traffic)
+        Bucketer mockBucketer = mock(Bucketer.class);
+        when(mockBucketer.bucket(any(Experiment.class), anyString(), any(ProjectConfig.class)))
+            .thenReturn(DecisionResponse.nullNoReasons());
+        
+        DecisionService decisionServiceWithMockCmabService = new DecisionService(
+            mockBucketer,
+            mockErrorHandler, 
+            null, 
+            mockCmabService
+        );
+        
+        // Call getVariation
+        DecisionResponse<Variation> result = decisionServiceWithMockCmabService.getVariation(
+            experiment,
+            optimizely.createUserContext(genericUserId, Collections.emptyMap()),
+            v4ProjectConfig
+        );
+        
+        // Verify that no variation is returned (user not in CMAB traffic)
+        assertNull(result.getResult());
+        
+        // Verify that the result is not an error
+        assertFalse(result.isError());
+        
+        // Assert that CmabService.getDecision was never called (user not in CMAB traffic)
+        verify(mockCmabService, never()).getDecision(any(), any(), any(), any());
+        
+        // Verify that bucketer was called for CMAB allocation
+        verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class));
+    }
+
+    private Experiment createMockCmabExperiment() {
+        List<Variation> variations = Arrays.asList(
+            new Variation("111151", "variation_1"),
+            new Variation("111152", "variation_2")
+        );
+        
+        List<TrafficAllocation> trafficAllocations = Arrays.asList(
+            new TrafficAllocation("111151", 5000),
+            new TrafficAllocation("111152", 4000)
+        );
+        
+        // Mock CMAB configuration
+        Cmab mockCmab = mock(Cmab.class);
+        
+        return new Experiment(
+            "111150",
+            "cmab_experiment",
+            "Running",
+            "111150",
+            Collections.emptyList(), // No audience IDs
+            null, // No audience conditions
+            variations,
+            Collections.emptyMap(), // No whitelisting initially
+            trafficAllocations,
+            mockCmab // This makes it a CMAB experiment
+        );
     }
 }

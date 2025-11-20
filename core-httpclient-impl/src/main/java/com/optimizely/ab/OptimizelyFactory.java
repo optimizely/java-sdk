@@ -16,6 +16,15 @@
  */
 package com.optimizely.ab;
 
+import java.util.concurrent.TimeUnit;
+
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.optimizely.ab.cmab.DefaultCmabClient;
+import com.optimizely.ab.cmab.service.CmabService;
+import com.optimizely.ab.cmab.service.DefaultCmabService;
 import com.optimizely.ab.config.HttpProjectConfigManager;
 import com.optimizely.ab.config.ProjectConfig;
 import com.optimizely.ab.config.ProjectConfigManager;
@@ -27,11 +36,6 @@ import com.optimizely.ab.notification.NotificationCenter;
 import com.optimizely.ab.odp.DefaultODPApiManager;
 import com.optimizely.ab.odp.ODPApiManager;
 import com.optimizely.ab.odp.ODPManager;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * OptimizelyFactory is a utility class to instantiate an {@link Optimizely} client with a minimal
@@ -356,6 +360,20 @@ public final class OptimizelyFactory {
      * @return A new Optimizely instance
      * */
     public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler, ODPApiManager odpApiManager) {
+        return newDefaultInstance(configManager, notificationCenter, eventHandler, odpApiManager, null);
+    }
+
+    /**
+     * Returns a new Optimizely instance based on preset configuration.
+     *
+     * @param configManager      The {@link ProjectConfigManager} supplied to Optimizely instance.
+     * @param notificationCenter The {@link NotificationCenter} supplied to Optimizely instance.
+     * @param eventHandler       The {@link EventHandler} supplied to Optimizely instance.
+     * @param odpApiManager      The {@link ODPApiManager} supplied to Optimizely instance.
+     * @param cmabService        The {@link CmabService} supplied to Optimizely instance.
+     * @return A new Optimizely instance
+     * */
+    public static Optimizely newDefaultInstance(ProjectConfigManager configManager, NotificationCenter notificationCenter, EventHandler eventHandler, ODPApiManager odpApiManager, CmabService cmabService) {
         if (notificationCenter == null) {
             notificationCenter = new NotificationCenter();
         }
@@ -369,11 +387,20 @@ public final class OptimizelyFactory {
             .withApiManager(odpApiManager != null ? odpApiManager : new DefaultODPApiManager())
             .build();
 
+        // If no cmabService provided, create default one
+        if (cmabService == null) {
+            DefaultCmabClient defaultCmabClient = new DefaultCmabClient();
+            cmabService = DefaultCmabService.builder()
+                .withClient(defaultCmabClient)
+                .build();
+        }
+        
         return Optimizely.builder()
             .withEventProcessor(eventProcessor)
             .withConfigManager(configManager)
             .withNotificationCenter(notificationCenter)
             .withODPManager(odpManager)
+            .withCmabService(cmabService)
             .build();
     }
 }

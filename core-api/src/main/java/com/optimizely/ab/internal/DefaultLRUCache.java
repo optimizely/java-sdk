@@ -16,10 +16,12 @@
  */
 package com.optimizely.ab.internal;
 
-import com.optimizely.ab.annotations.VisibleForTesting;
-
-import java.util.*;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
+
+import com.optimizely.ab.annotations.VisibleForTesting;
 
 public class DefaultLRUCache<T> implements Cache<T> {
 
@@ -94,6 +96,7 @@ public class DefaultLRUCache<T> implements Cache<T> {
         }
     }
 
+    @Override
     public void remove(String key) {
         if (maxSize == 0) {
             // Cache is disabled when maxSize = 0
