@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.bucketing;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -97,7 +98,8 @@ public class Bucketer {
 
     @Nonnull
     private DecisionResponse<Variation> bucketToVariation(@Nonnull ExperimentCore experiment,
-                                                          @Nonnull String bucketingId) {
+                                                          @Nonnull String bucketingId,
+                                                          @Nonnull DecisionPath decisionPath) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         // "salt" the bucket id using the experiment id
@@ -111,8 +113,25 @@ public class Bucketer {
         int bucketValue = generateBucketValue(hashCode);
         logger.debug("Assigned bucket {} to user with bucketingId \"{}\" when bucketing to a variation.", bucketValue, bucketingId);
 
+        // Only apply CMAB traffic allocation logic if decision path is WITH_CMAB
+        if (decisionPath == DecisionPath.WITH_CMAB && experiment instanceof Experiment && ((Experiment) experiment).getCmab() != null) {
+            // For CMAB experiments, the original trafficAllocation is kept empty for backward compatibility.
+            // Use the traffic allocation defined in the CMAB block for bucketing instead.
+            String message = reasons.addInfo("Using CMAB traffic allocation for experiment \"%s\"", experimentKey);
+            logger.info(message);
+            trafficAllocations = Collections.singletonList(
+                new TrafficAllocation("$", ((Experiment) experiment).getCmab().getTrafficAllocation())
+            );
+        }
+
         String bucketedVariationId = bucketToEntity(bucketValue, trafficAllocations);
-        if (bucketedVariationId != null) {
+        if (decisionPath == DecisionPath.WITH_CMAB && "$".equals(bucketedVariationId)) {
+            // for cmab experiments
+            String message = reasons.addInfo("User with bucketingId \"%s\" is bucketed into CMAB for experiment \"%s\"", bucketingId, experimentKey);
+            logger.info(message);
+            return new DecisionResponse(new Variation("$", "$"), reasons);
+        }
+        else if (bucketedVariationId != null) {
             Variation bucketedVariation = experiment.getVariationIdToVariationMap().get(bucketedVariationId);
             String variationKey = bucketedVariation.getKey();
             String message = reasons.addInfo("User with bucketingId \"%s\" is in variation \"%s\" of experiment \"%s\".", bucketingId, variationKey,
@@ -134,12 +153,14 @@ public class Bucketer {
      * @param experiment  The Experiment in which the user is to be bucketed.
      * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
      * @param projectConfig      The current projectConfig
+     * @param decisionPath      enum for decision making logic
      * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
      */
     @Nonnull
     public DecisionResponse<Variation> bucket(@Nonnull ExperimentCore experiment,
                                               @Nonnull String bucketingId,
-                                              @Nonnull ProjectConfig projectConfig) {
+                                              @Nonnull ProjectConfig projectConfig,
+                                              @Nonnull DecisionPath decisionPath) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         // ---------- Bucket User ----------
@@ -154,8 +175,6 @@ public class Bucketer {
                     String message = reasons.addInfo("User with bucketingId \"%s\" is not in any experiment of group %s.", bucketingId, experimentGroup.getId());
                     logger.info(message);
                     return new DecisionResponse(null, reasons);
-                } else {
-
                 }
                 // if the experiment a user is bucketed in within a group isn't the same as the experiment provided,
                 // don't perform further bucketing within the experiment
@@ -172,9 +191,24 @@ public class Bucketer {
             }
         }
 
-        DecisionResponse<Variation> decisionResponse = bucketToVariation(experiment, bucketingId);
+        DecisionResponse<Variation> decisionResponse = bucketToVariation(experiment, bucketingId, decisionPath);
         reasons.merge(decisionResponse.getReasons());
         return new DecisionResponse<>(decisionResponse.getResult(), reasons);
+    }
+
+    /**
+     * Assign a {@link Variation} of an {@link Experiment} to a user based on hashed value from murmurhash3.
+     *
+     * @param experiment  The Experiment in which the user is to be bucketed.
+     * @param bucketingId string A customer-assigned value used to create the key for the murmur hash.
+     * @param projectConfig      The current projectConfig
+     * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
+     */
+    @Nonnull
+    public DecisionResponse<Variation> bucket(@Nonnull ExperimentCore experiment,
+                                              @Nonnull String bucketingId,
+                                              @Nonnull ProjectConfig projectConfig) {
+        return bucket(experiment, bucketingId, projectConfig, DecisionPath.WITHOUT_CMAB);
     }
 
     //======== Helper methods ========//
