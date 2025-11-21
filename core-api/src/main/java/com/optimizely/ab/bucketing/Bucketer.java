@@ -115,7 +115,8 @@ public class Bucketer {
 
         // Only apply CMAB traffic allocation logic if decision path is WITH_CMAB
         if (decisionPath == DecisionPath.WITH_CMAB && experiment instanceof Experiment && ((Experiment) experiment).getCmab() != null) {
-            // Override traffic allocations for CMAB experiments
+            // For CMAB experiments, the original trafficAllocation is kept empty for backward compatibility.
+            // Use the traffic allocation defined in the CMAB block for bucketing instead.
             String message = reasons.addInfo("Using CMAB traffic allocation for experiment \"%s\"", experimentKey);
             logger.info(message);
             trafficAllocations = Collections.singletonList(
