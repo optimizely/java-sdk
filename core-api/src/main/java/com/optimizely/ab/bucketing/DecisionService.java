@@ -170,8 +170,8 @@ public class DecisionService {
         if (decisionMeetAudience.getResult()) {
             String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
             String cmabUUID = null;
-            decisionVariation = bucketer.bucket(experiment, bucketingId, projectConfig);
-            if (decisionPath == DecisionPath.WITH_CMAB && isCmabExperiment(experiment) && decisionVariation.getResult() != null) {  
+            decisionVariation = bucketer.bucket(experiment, bucketingId, projectConfig, decisionPath);
+            if (decisionPath == DecisionPath.WITH_CMAB && isCmabExperiment(experiment) && decisionVariation.getResult() != null) {
                 // group-allocation and traffic-allocation checking passed for cmab  
                 // we need server decision overruling local bucketing for cmab  
                 DecisionResponse<CmabDecision> cmabDecision = getDecisionForCmabExperiment(projectConfig, experiment, user, bucketingId, options);
