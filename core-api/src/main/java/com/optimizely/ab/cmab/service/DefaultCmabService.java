@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,10 +38,12 @@ import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 public class DefaultCmabService implements CmabService {
     public static final int DEFAULT_CMAB_CACHE_SIZE = 10000;
     public static final int DEFAULT_CMAB_CACHE_TIMEOUT_SECS = 30*60; // 30 minutes
+    private static final int NUM_LOCK_STRIPES = 1000;
     
     private final Cache<CmabCacheValue> cmabCache;
     private final CmabClient cmabClient;
     private final Logger logger;
+    private final ReentrantLock[] locks;
 
     public DefaultCmabService(CmabClient cmabClient, Cache<CmabCacheValue> cmabCache) {
         this(cmabClient, cmabCache, null);
@@ -50,52 +53,64 @@ public class DefaultCmabService implements CmabService {
         this.cmabCache = cmabCache;
         this.cmabClient = cmabClient;
         this.logger = logger != null ? logger : LoggerFactory.getLogger(DefaultCmabService.class);
+        this.locks = new ReentrantLock[NUM_LOCK_STRIPES];
+        for (int i = 0; i < NUM_LOCK_STRIPES; i++) {
+            this.locks[i] = new ReentrantLock();
+        }
     }
 
     @Override
     public CmabDecision getDecision(ProjectConfig projectConfig, OptimizelyUserContext userContext, String ruleId, List<OptimizelyDecideOption> options) {
         options = options == null ? Collections.emptyList() : options;
         String userId = userContext.getUserId();
-        Map<String, Object> filteredAttributes = filterAttributes(projectConfig, userContext, ruleId);
 
-        if (options.contains(OptimizelyDecideOption.IGNORE_CMAB_CACHE)) {
-            logger.debug("Ignoring CMAB cache for user '{}' and rule '{}'", userId, ruleId);
-            return fetchDecision(ruleId, userId, filteredAttributes);
-        }
+        int lockIndex = getLockIndex(userId, ruleId);
+        ReentrantLock lock = locks[lockIndex];
+        lock.lock();
+        try {
+            Map<String, Object> filteredAttributes = filterAttributes(projectConfig, userContext, ruleId);
 
-        if (options.contains(OptimizelyDecideOption.RESET_CMAB_CACHE)) {
-            logger.debug("Resetting CMAB cache for user '{}' and rule '{}'", userId, ruleId);
-            cmabCache.reset();
-        }
+            if (options.contains(OptimizelyDecideOption.IGNORE_CMAB_CACHE)) {
+                logger.debug("Ignoring CMAB cache for user '{}' and rule '{}'", userId, ruleId);
+                return fetchDecision(ruleId, userId, filteredAttributes);
+            }
 
-        String cacheKey = getCacheKey(userContext.getUserId(), ruleId);
-        if (options.contains(OptimizelyDecideOption.INVALIDATE_USER_CMAB_CACHE)) {
-            logger.debug("Invalidating CMAB cache for user '{}' and rule '{}'", userId, ruleId);
-            cmabCache.remove(cacheKey);
-        }
+            if (options.contains(OptimizelyDecideOption.RESET_CMAB_CACHE)) {
+                logger.debug("Resetting CMAB cache for user '{}' and rule '{}'", userId, ruleId);
+                cmabCache.reset();
+            }
 
-        CmabCacheValue cachedValue = cmabCache.lookup(cacheKey);
-
-        String attributesHash = hashAttributes(filteredAttributes);
-
-        if (cachedValue != null) {
-            if (cachedValue.getAttributesHash().equals(attributesHash)) {
-                logger.debug("CMAB cache hit for user '{}' and rule '{}'", userId, ruleId);
-                return new CmabDecision(cachedValue.getVariationId(), cachedValue.getCmabUuid());
-            } else {
-                logger.debug("CMAB cache attributes mismatch for user '{}' and rule '{}', fetching new decision", userId, ruleId);
+            String cacheKey = getCacheKey(userContext.getUserId(), ruleId);
+            if (options.contains(OptimizelyDecideOption.INVALIDATE_USER_CMAB_CACHE)) {
+                logger.debug("Invalidating CMAB cache for user '{}' and rule '{}'", userId, ruleId);
                 cmabCache.remove(cacheKey);
             }
-        } else {
-            logger.debug("CMAB cache miss for user '{}' and rule '{}'", userId, ruleId);
+
+            CmabCacheValue cachedValue = cmabCache.lookup(cacheKey);
+
+            String attributesHash = hashAttributes(filteredAttributes);
+
+            if (cachedValue != null) {
+                if (cachedValue.getAttributesHash().equals(attributesHash)) {
+                    logger.debug("CMAB cache hit for user '{}' and rule '{}'", userId, ruleId);
+                    return new CmabDecision(cachedValue.getVariationId(), cachedValue.getCmabUuid());
+                } else {
+                    logger.debug("CMAB cache attributes mismatch for user '{}' and rule '{}', fetching new decision", userId, ruleId);
+                    cmabCache.remove(cacheKey);
+                }
+            } else {
+                logger.debug("CMAB cache miss for user '{}' and rule '{}'", userId, ruleId);
+            }
+
+            CmabDecision cmabDecision = fetchDecision(ruleId, userId, filteredAttributes);
+            logger.debug("CMAB decision is {}", cmabDecision);
+
+            cmabCache.save(cacheKey, new CmabCacheValue(attributesHash, cmabDecision.getVariationId(), cmabDecision.getCmabUUID()));
+
+            return cmabDecision;
+        } finally {
+            lock.unlock();
         }
-
-        CmabDecision cmabDecision = fetchDecision(ruleId, userId, filteredAttributes);
-        logger.debug("CMAB decision is {}", cmabDecision);
-        
-        cmabCache.save(cacheKey, new CmabCacheValue(attributesHash, cmabDecision.getVariationId(), cmabDecision.getCmabUUID()));
-
-        return cmabDecision;
     }
 
     private CmabDecision fetchDecision(String ruleId, String userId, Map<String, Object> attributes) {
@@ -190,6 +205,13 @@ public class DefaultCmabService implements CmabService {
         
         // Convert to hex string to match your existing pattern
         return Integer.toHexString(hash);
+    }
+
+    private int getLockIndex(String userId, String ruleId) {
+        // Create a hash of userId + ruleId for consistent lock selection
+        String combined = userId + ruleId;
+        int hash = MurmurHash3.murmurhash3_x86_32(combined, 0, combined.length(), 0);
+        return Math.abs(hash) % NUM_LOCK_STRIPES;
     }
 
     public static Builder builder() {
