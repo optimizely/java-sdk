@@ -43,7 +43,6 @@ import com.optimizely.ab.event.internal.EventFactory;
 import com.optimizely.ab.event.internal.UserEvent;
 import com.optimizely.ab.event.internal.UserEventFactory;
 import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.internal.DefaultLRUCache;
 import com.optimizely.ab.internal.NotificationRegistry;
 import com.optimizely.ab.notification.ActivateNotification;
 import com.optimizely.ab.notification.DecisionNotification;
@@ -80,7 +79,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.optimizely.ab.cmab.client.CmabClient;
 import static com.optimizely.ab.internal.SafetyUtils.tryClose;
 
 /**
