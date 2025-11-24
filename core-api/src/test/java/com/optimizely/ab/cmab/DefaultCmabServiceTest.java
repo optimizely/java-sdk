@@ -15,18 +15,14 @@
  */
 package com.optimizely.ab.cmab;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Method;
+import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -374,5 +370,62 @@ public class DefaultCmabServiceTest {
         assertEquals("varA", decision.getVariationId());
         assertNotNull(decision.getCmabUUID());
         verify(mockCmabCache).save(eq(cacheKey), any(CmabCacheValue.class));
+    }
+    @Test
+    public void testLockStripingDistribution() {
+        // Test different combinations to ensure they get different lock indices
+        String[][] testCases = {
+            {"user1", "rule1"},
+            {"user2", "rule1"},
+            {"user1", "rule2"},
+            {"user3", "rule3"},
+            {"user4", "rule4"}
+        };
+
+        Set<Integer> lockIndices = new HashSet<>();
+        for (String[] testCase : testCases) {
+            String userId = testCase[0];
+            String ruleId = testCase[1];
+
+            // Use reflection to access the private getLockIndex method
+            try {
+                Method getLockIndexMethod = DefaultCmabService.class.getDeclaredMethod("getLockIndex", String.class, String.class);
+                getLockIndexMethod.setAccessible(true);
+
+                int index = (Integer) getLockIndexMethod.invoke(cmabService, userId, ruleId);
+
+                // Verify index is within expected range
+                assertTrue("Lock index should be non-negative", index >= 0);
+                assertTrue("Lock index should be less than NUM_LOCK_STRIPES", index < 1000);
+
+                lockIndices.add(index);
+            } catch (Exception e) {
+                fail("Failed to invoke getLockIndex method: " + e.getMessage());
+            }
+        }
+
+        assertTrue("Different user/rule combinations should generally use different locks", lockIndices.size() > 1);
+    }
+
+    @Test
+    public void testSameUserRuleCombinationUsesConsistentLock() {
+        String userId = "test_user";
+        String ruleId = "test_rule";
+
+        try {
+            Method getLockIndexMethod = DefaultCmabService.class.getDeclaredMethod("getLockIndex", String.class, String.class);
+            getLockIndexMethod.setAccessible(true);
+
+            // Get lock index multiple times
+            int index1 = (Integer) getLockIndexMethod.invoke(cmabService, userId, ruleId);
+            int index2 = (Integer) getLockIndexMethod.invoke(cmabService, userId, ruleId);
+            int index3 = (Integer) getLockIndexMethod.invoke(cmabService, userId, ruleId);
+
+            // All should be the same
+            assertEquals("Same user/rule should always use same lock", index1, index2);
+            assertEquals("Same user/rule should always use same lock", index2, index3);
+        } catch (Exception e) {
+            fail("Failed to invoke getLockIndex method: " + e.getMessage());
+        }
     }
 }
