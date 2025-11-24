@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.optimizely.ab.event.internal.ClientEngineInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +39,8 @@ import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
 public class DefaultCmabService implements CmabService {
     public static final int DEFAULT_CMAB_CACHE_SIZE = 10000;
     public static final int DEFAULT_CMAB_CACHE_TIMEOUT_SECS = 30*60; // 30 minutes
-    private static final int NUM_LOCK_STRIPES = 1000;
+    private static final boolean IS_ANDROID = ClientEngineInfo.getClientEngineName().toLowerCase().contains("android");
+    private static final int NUM_LOCK_STRIPES = IS_ANDROID ? 100 : 1000;
     
     private final Cache<CmabCacheValue> cmabCache;
     private final CmabClient cmabClient;
