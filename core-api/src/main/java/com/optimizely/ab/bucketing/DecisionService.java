@@ -957,11 +957,12 @@ public class DecisionService {
         // User is in CMAB allocation, proceed to CMAB decision
         try {
             CmabDecision cmabDecision = cmabService.getDecision(projectConfig, userContext, experiment.getId(), options);
-
+            String message = String.format("Successfully fetched CMAB decision %s for experiment %s.", cmabDecision.toString(), experiment.getKey());
+            reasons.addInfo(message);
             return new DecisionResponse<>(cmabDecision, reasons);
         } catch (Exception e) {
-            String errorMessage = String.format("CMAB fetch failed for experiment \"%s\"", experiment.getKey());
-            reasons.addInfo(errorMessage);
+            String errorMessage = String.format("Failed to fetch CMAB data for experiment %s.", experiment.getKey());
+            reasons.addError(errorMessage);
             logger.error("{} {}", errorMessage, e.getMessage());
 
             return new DecisionResponse<>(null, reasons, true, null);

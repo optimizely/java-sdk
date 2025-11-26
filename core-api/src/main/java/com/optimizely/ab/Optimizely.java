@@ -1494,6 +1494,7 @@ public class Optimizely implements AutoCloseable {
         for (int i = 0; i < flagsWithoutForcedDecision.size(); i++) {
             DecisionResponse<FeatureDecision> decision = decisionList.get(i);
             boolean error = decision.isError();
+            List<String> reasons = decision.getReasons().toReport();
             String experimentKey = null;
             if (decision.getResult() != null && decision.getResult().experiment != null) {
                 experimentKey = decision.getResult().experiment.getKey();
@@ -1501,7 +1502,7 @@ public class Optimizely implements AutoCloseable {
             String flagKey = flagsWithoutForcedDecision.get(i).getKey();
 
             if (error) {
-                OptimizelyDecision optimizelyDecision = OptimizelyDecision.newErrorDecision(flagKey, user, DecisionMessage.CMAB_ERROR.reason(experimentKey));
+                OptimizelyDecision optimizelyDecision = OptimizelyDecision.newErrorDecision(flagKey, user, reasons);
                 decisionMap.put(flagKey, optimizelyDecision);
                 if (validKeys.contains(flagKey)) {
                     validKeys.remove(flagKey);

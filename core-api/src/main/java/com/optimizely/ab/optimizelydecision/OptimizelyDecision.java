@@ -130,7 +130,20 @@ public class OptimizelyDecision {
             user,
             Arrays.asList(error));
     }
-    
+
+    public static OptimizelyDecision newErrorDecision(@Nonnull String key,
+                                                      @Nonnull OptimizelyUserContext user,
+                                                      @Nonnull List<String> reasons) {
+        return new OptimizelyDecision(
+            null,
+            false,
+            new OptimizelyJSON(Collections.emptyMap()),
+            null,
+            key,
+            user,
+            reasons);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null || getClass() != obj.getClass()) return false;
