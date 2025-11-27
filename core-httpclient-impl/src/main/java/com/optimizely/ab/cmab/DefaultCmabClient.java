@@ -101,6 +101,7 @@ public class DefaultCmabClient implements CmabClient {
         request.setHeader("content-type", "application/json");
         CloseableHttpResponse response = null;
         try {
+            logger.info("Fetching CMAB decision: {} with body: {}", url, requestBody);
             response = httpClient.execute(request);
             
             if (!CmabClientHelper.isSuccessStatusCode(response.getStatusLine().getStatusCode())) {

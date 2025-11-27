@@ -5090,7 +5090,6 @@ public class OptimizelyTest {
     @Test
     public void testDecideReturnsErrorDecisionWhenDecisionServiceFails() throws Exception {
         assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
-        
         // Use the CMAB datafile
         Optimizely optimizely = Optimizely.builder()
             .withDatafile(validConfigJsonCMAB())  
@@ -5099,6 +5098,7 @@ public class OptimizelyTest {
 
         // Mock decision service to return an error from CMAB
         DecisionReasons reasons = new DefaultDecisionReasons();
+        reasons.addError("Failed to fetch CMAB data for experiment exp-cmab.");
         FeatureDecision errorFeatureDecision = new FeatureDecision(new Experiment("123", "exp-cmab", "123"), null, FeatureDecision.DecisionSource.ROLLOUT);
         DecisionResponse<FeatureDecision> errorDecisionResponse = new DecisionResponse<>(
             errorFeatureDecision,
@@ -5129,7 +5129,6 @@ public class OptimizelyTest {
         OptimizelyUserContext userContext = optimizely.createUserContext("test_user");
         OptimizelyDecision decision = userContext.decide("feature_1"); // This is the feature flag key from cmab-config.json
         
-        System.out.println("reasons: " + decision.getReasons());
         // Verify the decision contains the error information
         assertFalse(decision.getEnabled());
         assertNull(decision.getVariationKey());
