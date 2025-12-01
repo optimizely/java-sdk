@@ -39,6 +39,12 @@ public class FeatureDecision {
     @Nullable
     public DecisionSource decisionSource;
 
+    /**
+     * The CMAB UUID for Contextual Multi-Armed Bandit experiments.
+     */
+    @Nullable
+    public String cmabUUID;
+
     public enum DecisionSource {
         FEATURE_TEST("feature-test"),
         ROLLOUT("rollout"),
@@ -68,6 +74,23 @@ public class FeatureDecision {
         this.experiment = experiment;
         this.variation = variation;
         this.decisionSource = decisionSource;
+        this.cmabUUID = null;
+    }
+
+    /**
+     * Initialize a FeatureDecision object with CMAB UUID.
+     *
+     * @param experiment     The {@link ExperimentCore} the Feature is associated with.
+     * @param variation      The {@link Variation} the user was bucketed into.
+     * @param decisionSource The source of the variation.
+     * @param cmabUUID       The CMAB UUID for Contextual Multi-Armed Bandit experiments.
+     */
+    public FeatureDecision(@Nullable ExperimentCore experiment, @Nullable Variation variation,
+                           @Nullable DecisionSource decisionSource, @Nullable String cmabUUID) {
+        this.experiment = experiment;
+        this.variation = variation;
+        this.decisionSource = decisionSource;
+        this.cmabUUID = cmabUUID;
     }
 
     @Override
@@ -79,13 +102,15 @@ public class FeatureDecision {
 
         if (variation != null ? !variation.equals(that.variation) : that.variation != null)
             return false;
-        return decisionSource == that.decisionSource;
+        if (decisionSource != that.decisionSource) return false;
+        return cmabUUID != null ? cmabUUID.equals(that.cmabUUID) : that.cmabUUID == null;
     }
 
     @Override
     public int hashCode() {
         int result = variation != null ? variation.hashCode() : 0;
         result = 31 * result + (decisionSource != null ? decisionSource.hashCode() : 0);
+        result = 31 * result + (cmabUUID != null ? cmabUUID.hashCode() : 0);
         return result;
     }
 }

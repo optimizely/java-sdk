@@ -33,17 +33,20 @@ public class DecisionMetadata {
     String variationKey;
     @JsonProperty("enabled")
     boolean enabled;
+    @JsonProperty("cmab_uuid")
+    String cmabUUID;
 
     @VisibleForTesting
     public DecisionMetadata() {
     }
 
-    public DecisionMetadata(String flagKey, String ruleKey, String ruleType, String variationKey, boolean enabled) {
+    public DecisionMetadata(String flagKey, String ruleKey, String ruleType, String variationKey, boolean enabled, String cmabUUID) {
         this.flagKey = flagKey;
         this.ruleKey = ruleKey;
         this.ruleType = ruleType;
         this.variationKey = variationKey;
         this.enabled = enabled;
+        this.cmabUUID = cmabUUID;
     }
 
     public String getRuleType() {
@@ -66,6 +69,10 @@ public class DecisionMetadata {
         return variationKey;
     }
 
+    public String getCmabUUID() {
+        return cmabUUID;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -77,6 +84,7 @@ public class DecisionMetadata {
         if (!ruleKey.equals(that.ruleKey)) return false;
         if (!flagKey.equals(that.flagKey)) return false;
         if (enabled != that.enabled) return false;
+        if (!java.util.Objects.equals(cmabUUID, that.cmabUUID)) return false;
         return variationKey.equals(that.variationKey);
     }
 
@@ -86,6 +94,7 @@ public class DecisionMetadata {
         result = 31 * result + flagKey.hashCode();
         result = 31 * result + ruleKey.hashCode();
         result = 31 * result + variationKey.hashCode();
+        result = 31 * result + (cmabUUID != null ? cmabUUID.hashCode() : 0);
         return result;
     }
 
@@ -97,6 +106,7 @@ public class DecisionMetadata {
             .add("ruleType='" + ruleType + "'")
             .add("variationKey='" + variationKey + "'")
             .add("enabled=" + enabled)
+            .add("cmabUUID='" + cmabUUID + "'")
             .toString();
     }
 
@@ -108,6 +118,7 @@ public class DecisionMetadata {
         private String flagKey;
         private String variationKey;
         private boolean enabled;
+        private String cmabUUID;
 
         public Builder setEnabled(boolean enabled) {
             this.enabled = enabled;
@@ -134,8 +145,13 @@ public class DecisionMetadata {
             return this;
         }
 
+        public Builder setCmabUUID(String cmabUUID){
+            this.cmabUUID = cmabUUID;
+            return this;
+        }
+
         public DecisionMetadata build() {
-            return new DecisionMetadata(flagKey, ruleKey, ruleType, variationKey, enabled);
+            return new DecisionMetadata(flagKey, ruleKey, ruleType, variationKey, enabled, cmabUUID);
         }
     }
 }

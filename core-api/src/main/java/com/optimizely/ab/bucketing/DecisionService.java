@@ -26,6 +26,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.optimizely.ab.cmab.service.CmabDecision;
+import com.optimizely.ab.cmab.service.CmabService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,12 +60,14 @@ import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
  *   3. Checking sticky bucketing
  *   4. Checking audience targeting
  *   5. Using Murmurhash3 to bucket the user.
+ *   6. Handling CMAB (Contextual Multi-Armed Bandit) experiments for dynamic variation selection
  */
 public class DecisionService {
 
     private final Bucketer bucketer;
     private final ErrorHandler errorHandler;
     private final UserProfileService userProfileService;
+    private final CmabService cmabService;
     private static final Logger logger = LoggerFactory.getLogger(DecisionService.class);
 
     /**
@@ -73,7 +77,6 @@ public class DecisionService {
      * whitelisting forcedVariations data structure in the Experiments class).
      */
     private transient ConcurrentHashMap<String, ConcurrentHashMap<String, String>> forcedVariationMapping = new ConcurrentHashMap<String, ConcurrentHashMap<String, String>>();
-
 
     /**
      * Initialize a decision service for the Optimizely client.
@@ -85,9 +88,25 @@ public class DecisionService {
     public DecisionService(@Nonnull Bucketer bucketer,
                            @Nonnull ErrorHandler errorHandler,
                            @Nullable UserProfileService userProfileService) {
+        this(bucketer, errorHandler, userProfileService, null);
+    }
+
+    /**
+     * Initialize a decision service for the Optimizely client.
+     *
+     * @param bucketer           Base bucketer to allocate new users to an experiment.
+     * @param errorHandler       The error handler of the Optimizely client.
+     * @param userProfileService UserProfileService implementation for storing user info.
+     * @param cmabService        Cmab Service for decision making.
+     */
+    public DecisionService(@Nonnull Bucketer bucketer,
+                           @Nonnull ErrorHandler errorHandler,
+                           @Nullable UserProfileService userProfileService,
+                           @Nullable CmabService cmabService) {
         this.bucketer = bucketer;
         this.errorHandler = errorHandler;
         this.userProfileService = userProfileService;
+        this.cmabService = cmabService;
     }
 
     /**
@@ -99,6 +118,7 @@ public class DecisionService {
      * @param options              An array of decision options
      * @param userProfileTracker   tracker for reading and updating user profile of the user
      * @param reasons              Decision reasons
+     * @param decisionPath         An enum of paths for decision-making logic
      * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
      */
     @Nonnull
@@ -107,7 +127,8 @@ public class DecisionService {
                                                     @Nonnull ProjectConfig projectConfig,
                                                     @Nonnull List<OptimizelyDecideOption> options,
                                                     @Nullable UserProfileTracker userProfileTracker,
-                                                    @Nullable DecisionReasons reasons) {
+                                                    @Nullable DecisionReasons reasons,
+                                                    @Nonnull DecisionPath decisionPath) {
         if (reasons == null) {
             reasons = DefaultDecisionReasons.newInstance();
         }
@@ -148,10 +169,29 @@ public class DecisionService {
         reasons.merge(decisionMeetAudience.getReasons());
         if (decisionMeetAudience.getResult()) {
             String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
+            String cmabUUID = null;
+            decisionVariation = bucketer.bucket(experiment, bucketingId, projectConfig, decisionPath);
+            if (decisionPath == DecisionPath.WITH_CMAB && isCmabExperiment(experiment) && decisionVariation.getResult() != null) {
+                // group-allocation and traffic-allocation checking passed for cmab  
+                // we need server decision overruling local bucketing for cmab  
+                DecisionResponse<CmabDecision> cmabDecision = getDecisionForCmabExperiment(projectConfig, experiment, user, bucketingId, options);
+                reasons.merge(cmabDecision.getReasons());
 
-            decisionVariation = bucketer.bucket(experiment, bucketingId, projectConfig);
-            reasons.merge(decisionVariation.getReasons());
-            variation = decisionVariation.getResult();
+                if (cmabDecision.isError()) {
+                    return new DecisionResponse<>(null, reasons, true, null);
+                }
+
+                CmabDecision cmabResult = cmabDecision.getResult();
+                if (cmabResult != null) {
+                    String variationId = cmabResult.getVariationId();
+                    cmabUUID = cmabResult.getCmabUUID();
+                    variation = experiment.getVariationIdToVariationMap().get(variationId);
+                }
+            } else {
+                // Standard bucketing for non-CMAB experiments
+                reasons.merge(decisionVariation.getReasons());
+                variation = decisionVariation.getResult();
+            }
 
             if (variation != null) {
                 if (userProfileTracker != null) {
@@ -161,7 +201,7 @@ public class DecisionService {
                 }
             }
 
-            return new DecisionResponse(variation, reasons);
+            return new DecisionResponse<>(variation, reasons, false, cmabUUID);
         }
 
         String message = reasons.addInfo("User \"%s\" does not meet conditions to be in experiment \"%s\".", user.getUserId(), experiment.getKey());
@@ -176,13 +216,15 @@ public class DecisionService {
      * @param user               The current OptimizelyUserContext
      * @param projectConfig      The current projectConfig
      * @param options            An array of decision options
+     * @param decisionPath       An enum of paths for decision-making logic
      * @return A {@link DecisionResponse} including the {@link Variation} that user is bucketed into (or null) and the decision reasons
      */
     @Nonnull
     public DecisionResponse<Variation> getVariation(@Nonnull Experiment experiment,
                                                     @Nonnull OptimizelyUserContext user,
                                                     @Nonnull ProjectConfig projectConfig,
-                                                    @Nonnull List<OptimizelyDecideOption> options) {
+                                                    @Nonnull List<OptimizelyDecideOption> options,
+                                                    @Nonnull DecisionPath decisionPath) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         // fetch the user profile map from the user profile service
@@ -194,7 +236,7 @@ public class DecisionService {
             userProfileTracker.loadUserProfile(reasons, errorHandler);
         }
 
-        DecisionResponse<Variation> response = getVariation(experiment, user, projectConfig, options, userProfileTracker, reasons);
+        DecisionResponse<Variation> response = getVariation(experiment, user, projectConfig, options, userProfileTracker, reasons, decisionPath);
 
         if(userProfileService != null && !ignoreUPS) {
             userProfileTracker.saveUserProfile(errorHandler);
@@ -206,7 +248,7 @@ public class DecisionService {
     public DecisionResponse<Variation>  getVariation(@Nonnull Experiment experiment,
                                                      @Nonnull OptimizelyUserContext user,
                                                      @Nonnull ProjectConfig projectConfig) {
-        return getVariation(experiment, user, projectConfig, Collections.emptyList());
+        return getVariation(experiment, user, projectConfig, Collections.emptyList(), DecisionPath.WITH_CMAB);
     }
 
     /**
@@ -240,6 +282,25 @@ public class DecisionService {
                                                                     @Nonnull OptimizelyUserContext user,
                                                                     @Nonnull ProjectConfig projectConfig,
                                                                     @Nonnull List<OptimizelyDecideOption> options) {
+        return getVariationsForFeatureList(featureFlags, user, projectConfig, options, DecisionPath.WITH_CMAB);
+    }
+
+    /**
+     * Get the variations the user is bucketed into for the list of feature flags
+     *
+     * @param featureFlags        The feature flag list the user wants to access.
+     * @param user                The current OptimizelyuserContext
+     * @param projectConfig       The current projectConfig
+     * @param options             An array of decision options
+     * @param decisionPath        An enum of paths for decision-making logic
+     * @return A {@link DecisionResponse} including a {@link FeatureDecision} and the decision reasons
+     */
+    @Nonnull
+    public  List<DecisionResponse<FeatureDecision>> getVariationsForFeatureList(@Nonnull List<FeatureFlag> featureFlags,
+                                                                    @Nonnull OptimizelyUserContext user,
+                                                                    @Nonnull ProjectConfig projectConfig,
+                                                                    @Nonnull List<OptimizelyDecideOption> options,
+                                                                    @Nonnull DecisionPath decisionPath) {
         DecisionReasons upsReasons = DefaultDecisionReasons.newInstance();
 
         boolean ignoreUPS = options.contains(OptimizelyDecideOption.IGNORE_USER_PROFILE_SERVICE);
@@ -268,12 +329,14 @@ public class DecisionService {
                 }
             }
 
-            DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options, userProfileTracker);
+            DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options, userProfileTracker, decisionPath);
             reasons.merge(decisionVariationResponse.getReasons());
 
             FeatureDecision decision = decisionVariationResponse.getResult();
+            boolean error = decisionVariationResponse.isError();
+
             if (decision != null) {
-                decisions.add(new DecisionResponse(decision, reasons));
+                decisions.add(new DecisionResponse(decision, reasons, error, decision.cmabUUID));
                 continue;
             }
 
@@ -321,21 +384,32 @@ public class DecisionService {
                                                                  @Nonnull FeatureFlag featureFlag,
                                                                  @Nonnull OptimizelyUserContext user,
                                                                  @Nonnull List<OptimizelyDecideOption> options,
-                                                                 @Nullable UserProfileTracker userProfileTracker) {
+                                                                 @Nullable UserProfileTracker userProfileTracker,
+                                                                 @Nonnull DecisionPath decisionPath) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
         if (!featureFlag.getExperimentIds().isEmpty()) {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
 
                 DecisionResponse<Variation> decisionVariation =
-                    getVariationFromExperimentRule(projectConfig, featureFlag.getKey(), experiment, user, options, userProfileTracker);
+                    getVariationFromExperimentRule(projectConfig, featureFlag.getKey(), experiment, user, options, userProfileTracker, decisionPath);
                 reasons.merge(decisionVariation.getReasons());
                 Variation variation = decisionVariation.getResult();
-
+                String cmabUUID = decisionVariation.getCmabUUID();
+                boolean error = decisionVariation.isError();
+                if (error) {
+                    return new DecisionResponse(
+                        new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST, cmabUUID),
+                        reasons,
+                        decisionVariation.isError(),
+                        cmabUUID);
+                }
                 if (variation != null) {
                     return new DecisionResponse(
-                        new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST),
-                        reasons);
+                        new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST, cmabUUID),
+                        reasons,
+                        decisionVariation.isError(),
+                        cmabUUID);
                 }
             }
         } else {
@@ -749,7 +823,8 @@ public class DecisionService {
                                                                       @Nonnull Experiment rule,
                                                                       @Nonnull OptimizelyUserContext user,
                                                                       @Nonnull List<OptimizelyDecideOption> options,
-                                                                      @Nullable UserProfileTracker userProfileTracker) {
+                                                                      @Nullable UserProfileTracker userProfileTracker,
+                                                                      @Nonnull DecisionPath decisionPath) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         String ruleKey = rule != null ? rule.getKey() : null;
@@ -764,12 +839,12 @@ public class DecisionService {
             return new DecisionResponse(variation, reasons);
         }
         //regular decision
-        DecisionResponse<Variation> decisionResponse = getVariation(rule, user, projectConfig, options, userProfileTracker, null);
+        DecisionResponse<Variation> decisionResponse = getVariation(rule, user, projectConfig, options, userProfileTracker, null, decisionPath);
         reasons.merge(decisionResponse.getReasons());
 
         variation = decisionResponse.getResult();
 
-        return new DecisionResponse(variation, reasons);
+        return new DecisionResponse<>(variation, reasons, decisionResponse.isError(), decisionResponse.getCmabUUID());
     }
 
     /**
@@ -859,4 +934,52 @@ public class DecisionService {
         return new DecisionResponse(variationToSkipToEveryoneElsePair, reasons);
     }
 
+    /**
+     * Retrieves a decision for a contextual multi-armed bandit (CMAB)
+     * experiment.
+     *
+     * @param projectConfig Instance of ProjectConfig.
+     * @param experiment The experiment object for which the decision is to be
+     * made.
+     * @param userContext The user context containing user id and attributes.
+     * @param bucketingId The bucketing ID to use for traffic allocation.
+     * @param options Optional list of decide options.
+     * @return A CmabDecisionResult containing error status, result, and
+     * reasons.
+     */
+    private DecisionResponse<CmabDecision> getDecisionForCmabExperiment(@Nonnull ProjectConfig projectConfig,
+                                                                        @Nonnull Experiment experiment,
+                                                                        @Nonnull OptimizelyUserContext userContext,
+                                                                        @Nonnull String bucketingId,
+                                                                        @Nonnull List<OptimizelyDecideOption> options) {
+        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+
+        // User is in CMAB allocation, proceed to CMAB decision
+        try {
+            CmabDecision cmabDecision = cmabService.getDecision(projectConfig, userContext, experiment.getId(), options);
+            String message = String.format("Successfully fetched CMAB decision %s for experiment %s.", cmabDecision.toString(), experiment.getKey());
+            reasons.addInfo(message);
+            return new DecisionResponse<>(cmabDecision, reasons);
+        } catch (Exception e) {
+            String errorMessage = String.format("Failed to fetch CMAB data for experiment %s.", experiment.getKey());
+            reasons.addError(errorMessage);
+            logger.error("{} {}", errorMessage, e.getMessage());
+
+            return new DecisionResponse<>(null, reasons, true, null);
+        }
+    }
+
+    /**
+     * Checks whether an experiment is a contextual multi-armed bandit (CMAB)
+     * experiment.
+     *
+     * @param experiment The experiment to check
+     * @return true if the experiment is a CMAB experiment, false otherwise
+     */
+    private boolean isCmabExperiment(@Nonnull Experiment experiment) {
+        if (cmabService == null){
+            return false;
+        }
+        return experiment.getCmab() != null;
+    }
 }

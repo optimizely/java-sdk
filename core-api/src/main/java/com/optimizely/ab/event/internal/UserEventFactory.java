@@ -41,7 +41,8 @@ public class UserEventFactory {
                                                         @Nonnull Map<String, ?> attributes,
                                                         @Nonnull String flagKey,
                                                         @Nonnull String ruleType,
-                                                        @Nonnull boolean enabled) {
+                                                        @Nonnull boolean enabled,
+                                                        @Nullable String cmabUUID) {
 
         if ((FeatureDecision.DecisionSource.ROLLOUT.toString().equals(ruleType)  || variation == null) && !projectConfig.getSendFlagDecisions())
         {
@@ -68,13 +69,18 @@ public class UserEventFactory {
             .withProjectConfig(projectConfig)
             .build();
 
-        DecisionMetadata metadata = new DecisionMetadata.Builder()
+        DecisionMetadata.Builder metadataBuilder = new DecisionMetadata.Builder()
             .setFlagKey(flagKey)
             .setRuleKey(experimentKey)
             .setRuleType(ruleType)
             .setVariationKey(variationKey)
-            .setEnabled(enabled)
-            .build();
+            .setEnabled(enabled);
+        
+        if (cmabUUID != null) {
+            metadataBuilder.setCmabUUID(cmabUUID);
+        }
+        
+        DecisionMetadata metadata = metadataBuilder.build();
 
         return new ImpressionEvent.Builder()
             .withUserContext(userContext)

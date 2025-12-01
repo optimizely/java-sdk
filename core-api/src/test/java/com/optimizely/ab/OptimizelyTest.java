@@ -15,31 +15,26 @@
  ***************************************************************************/
 package com.optimizely.ab;
 
-import ch.qos.logback.classic.Level;
-import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import com.optimizely.ab.bucketing.Bucketer;
-import com.optimizely.ab.bucketing.DecisionService;
-import com.optimizely.ab.bucketing.FeatureDecision;
-import com.optimizely.ab.config.*;
-import com.optimizely.ab.error.NoOpErrorHandler;
-import com.optimizely.ab.error.RaiseExceptionErrorHandler;
-import com.optimizely.ab.event.BatchEventProcessor;
-import com.optimizely.ab.event.EventHandler;
-import com.optimizely.ab.event.EventProcessor;
-import com.optimizely.ab.event.LogEvent;
-import com.optimizely.ab.event.internal.UserEventFactory;
-import com.optimizely.ab.internal.ControlAttribute;
-import com.optimizely.ab.internal.LogbackVerifier;
-import com.optimizely.ab.notification.*;
-import com.optimizely.ab.odp.ODPEvent;
-import com.optimizely.ab.odp.ODPEventManager;
-import com.optimizely.ab.odp.ODPManager;
-import com.optimizely.ab.optimizelydecision.DecisionResponse;
-import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.IOException;
+import java.util.Arrays;
+import static java.util.Arrays.asList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assume.assumeTrue;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,29 +43,127 @@ import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMapOf;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.function.Function;
-
-import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.*;
-import static com.optimizely.ab.config.ValidProjectConfigV4.*;
-import static com.optimizely.ab.event.LogEvent.RequestMethod;
+import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.optimizely.ab.bucketing.Bucketer;
+import com.optimizely.ab.bucketing.DecisionPath;
+import com.optimizely.ab.bucketing.DecisionService;
+import com.optimizely.ab.bucketing.FeatureDecision;
+import com.optimizely.ab.config.Attribute;
+import com.optimizely.ab.config.DatafileProjectConfig;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.invalidProjectConfigV5;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.noAudienceProjectConfigJsonV2;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.noAudienceProjectConfigJsonV3;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonCMAB;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV2;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV3;
+import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validConfigJsonV4;
+import com.optimizely.ab.config.EventType;
+import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.FeatureFlag;
+import com.optimizely.ab.config.FeatureVariable;
+import com.optimizely.ab.config.FeatureVariableUsageInstance;
+import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.config.ProjectConfigManager;
+import com.optimizely.ab.config.TrafficAllocation;
+import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_BOOLEAN_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_DOUBLE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_HOUSE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.ATTRIBUTE_INTEGER_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_GRYFFINDOR_VALUE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.AUDIENCE_SLYTHERIN_VALUE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.EVENT_BASIC_EVENT_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.EVENT_LAUNCHED_EXPERIMENT_ONLY_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_BASIC_EXPERIMENT_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_LAUNCHED_EXPERIMENT_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_PAUSED_EXPERIMENT_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_MULTI_VARIATE_FEATURE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_SINGLE_VARIABLE_DOUBLE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_FLAG_SINGLE_VARIABLE_INTEGER;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_MULTI_VARIATE_FEATURE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_SINGLE_VARIABLE_BOOLEAN_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_SINGLE_VARIABLE_DOUBLE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_SINGLE_VARIABLE_INTEGER_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.FEATURE_SINGLE_VARIABLE_STRING_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.MULTIVARIATE_EXPERIMENT_FORCED_VARIATION_USER_ID_GRED;
+import static com.optimizely.ab.config.ValidProjectConfigV4.PAUSED_EXPERIMENT_FORCED_VARIATION_USER_ID_CONTROL;
+import static com.optimizely.ab.config.ValidProjectConfigV4.ROLLOUT_2_ID;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_BOOLEAN_VARIABLE_DEFAULT_VALUE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_BOOLEAN_VARIABLE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_DOUBLE_DEFAULT_VALUE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_DOUBLE_VARIABLE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_FIRST_LETTER_DEFAULT_VALUE;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_FIRST_LETTER_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_INTEGER_VARIABLE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_JSON_PATCHED_TYPE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIABLE_STRING_VARIABLE_KEY;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIATION_MULTIVARIATE_EXPERIMENT_GRED;
+import static com.optimizely.ab.config.ValidProjectConfigV4.VARIATION_MULTIVARIATE_EXPERIMENT_GRED_KEY;
+import com.optimizely.ab.config.Variation;
+import com.optimizely.ab.error.NoOpErrorHandler;
+import com.optimizely.ab.error.RaiseExceptionErrorHandler;
+import com.optimizely.ab.event.BatchEventProcessor;
+import com.optimizely.ab.event.EventHandler;
+import com.optimizely.ab.event.EventProcessor;
+import com.optimizely.ab.event.LogEvent;
+import com.optimizely.ab.event.LogEvent.RequestMethod;
+import com.optimizely.ab.event.internal.UserEventFactory;
+import com.optimizely.ab.internal.ControlAttribute;
+import com.optimizely.ab.internal.LogbackVerifier;
+import com.optimizely.ab.notification.ActivateNotification;
+import com.optimizely.ab.notification.ActivateNotificationListener;
+import com.optimizely.ab.notification.DecisionNotification;
 import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.EXPERIMENT_KEY;
 import static com.optimizely.ab.notification.DecisionNotification.ExperimentDecisionNotificationBuilder.VARIATION_KEY;
-import static com.optimizely.ab.notification.DecisionNotification.FeatureVariableDecisionNotificationBuilder.*;
-import static java.util.Arrays.asList;
+import static com.optimizely.ab.notification.DecisionNotification.FeatureVariableDecisionNotificationBuilder.FEATURE_ENABLED;
+import static com.optimizely.ab.notification.DecisionNotification.FeatureVariableDecisionNotificationBuilder.FEATURE_KEY;
+import static com.optimizely.ab.notification.DecisionNotification.FeatureVariableDecisionNotificationBuilder.SOURCE;
+import static com.optimizely.ab.notification.DecisionNotification.FeatureVariableDecisionNotificationBuilder.SOURCE_INFO;
+import static com.optimizely.ab.notification.DecisionNotification.FeatureVariableDecisionNotificationBuilder.VARIABLE_KEY;
+import static com.optimizely.ab.notification.DecisionNotification.FeatureVariableDecisionNotificationBuilder.VARIABLE_TYPE;
+import static com.optimizely.ab.notification.DecisionNotification.FeatureVariableDecisionNotificationBuilder.VARIABLE_VALUE;
+import static com.optimizely.ab.notification.DecisionNotification.FeatureVariableDecisionNotificationBuilder.VARIABLE_VALUES;
+import com.optimizely.ab.notification.NotificationCenter;
+import com.optimizely.ab.notification.NotificationHandler;
+import com.optimizely.ab.notification.NotificationManager;
+import com.optimizely.ab.notification.TrackNotification;
+import com.optimizely.ab.notification.UpdateConfigNotification;
+import com.optimizely.ab.odp.ODPEvent;
+import com.optimizely.ab.odp.ODPEventManager;
+import com.optimizely.ab.odp.ODPManager;
+import com.optimizely.ab.optimizelydecision.DecisionReasons;
+import com.optimizely.ab.optimizelydecision.DecisionResponse;
+import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
+import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
+
+import ch.qos.logback.classic.Level;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import static junit.framework.TestCase.assertTrue;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Tests for the top-level {@link Optimizely} class.
@@ -411,7 +504,7 @@ public class OptimizelyTest {
         Experiment activatedExperiment = validProjectConfig.getExperiments().get(0);
         Map<String, String> testUserAttributes = Collections.singletonMap("browser_type", "chromey");
 
-        when(mockBucketer.bucket(eq(activatedExperiment), eq(testUserId), eq(validProjectConfig))).thenReturn(DecisionResponse.nullNoReasons());
+        when(mockBucketer.bucket(eq(activatedExperiment), eq(testUserId), eq(validProjectConfig), any(DecisionPath.class))).thenReturn(DecisionResponse.nullNoReasons());
 
         logbackVerifier.expectMessage(Level.INFO, "Not activating user \"userId\" for experiment \"" +
             activatedExperiment.getKey() + "\".");
@@ -1288,7 +1381,7 @@ public class OptimizelyTest {
 
         Optimizely optimizely = optimizelyBuilder.withBucketing(mockBucketer).build();
 
-        when(mockBucketer.bucket(eq(activatedExperiment), eq(testUserId), eq(validProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
+        when(mockBucketer.bucket(eq(activatedExperiment), eq(testUserId), eq(validProjectConfig), any(DecisionPath.class))).thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
 
         Map<String, String> testUserAttributes = new HashMap<>();
         testUserAttributes.put("browser_type", "chrome");
@@ -1298,7 +1391,7 @@ public class OptimizelyTest {
             testUserAttributes);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(eq(activatedExperiment), eq(testUserId), eq(validProjectConfig));
+        verify(mockBucketer).bucket(eq(activatedExperiment), eq(testUserId), eq(validProjectConfig), any(DecisionPath.class));
         assertThat(actualVariation, is(bucketedVariation));
 
         // verify that we didn't attempt to dispatch an event
@@ -1319,13 +1412,13 @@ public class OptimizelyTest {
             .withConfig(noAudienceProjectConfig)
             .build();
 
-        when(mockBucketer.bucket(eq(activatedExperiment), eq(testUserId), eq(noAudienceProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
+        when(mockBucketer.bucket(eq(activatedExperiment), eq(testUserId), eq(noAudienceProjectConfig), any(DecisionPath.class))).thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
 
         // activate the experiment
         Variation actualVariation = optimizely.getVariation(activatedExperiment.getKey(), testUserId);
 
         // verify that the bucketing algorithm was called correctly
-        verify(mockBucketer).bucket(eq(activatedExperiment), eq(testUserId), eq(noAudienceProjectConfig));
+        verify(mockBucketer).bucket(eq(activatedExperiment), eq(testUserId), eq(noAudienceProjectConfig), any(DecisionPath.class));
         assertThat(actualVariation, is(bucketedVariation));
 
         // verify that we didn't attempt to dispatch an event
@@ -1380,7 +1473,7 @@ public class OptimizelyTest {
         Experiment experiment = validProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = experiment.getVariations().get(0);
 
-        when(mockBucketer.bucket(eq(experiment), eq(testUserId), eq(validProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
+        when(mockBucketer.bucket(eq(experiment), eq(testUserId), eq(validProjectConfig), any(DecisionPath.class))).thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
 
         Optimizely optimizely = optimizelyBuilder.withBucketing(mockBucketer).build();
 
@@ -1389,7 +1482,7 @@ public class OptimizelyTest {
 
         Variation actualVariation = optimizely.getVariation(experiment.getKey(), testUserId, testUserAttributes);
 
-        verify(mockBucketer).bucket(eq(experiment), eq(testUserId), eq(validProjectConfig));
+        verify(mockBucketer).bucket(eq(experiment), eq(testUserId), eq(validProjectConfig), any(DecisionPath.class));
         assertThat(actualVariation, is(bucketedVariation));
     }
 
@@ -1430,7 +1523,7 @@ public class OptimizelyTest {
         Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
         Variation bucketedVariation = experiment.getVariations().get(0);
 
-        when(mockBucketer.bucket(eq(experiment), eq(testUserId), eq(noAudienceProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
+        when(mockBucketer.bucket(eq(experiment), eq(testUserId), eq(noAudienceProjectConfig), any(DecisionPath.class))).thenReturn(DecisionResponse.responseNoReasons(bucketedVariation));
 
         Optimizely optimizely = optimizelyBuilder
             .withConfig(noAudienceProjectConfig)
@@ -1439,7 +1532,7 @@ public class OptimizelyTest {
 
         Variation actualVariation = optimizely.getVariation(experiment.getKey(), testUserId);
 
-        verify(mockBucketer).bucket(eq(experiment), eq(testUserId), eq(noAudienceProjectConfig));
+        verify(mockBucketer).bucket(eq(experiment), eq(testUserId), eq(noAudienceProjectConfig), any(DecisionPath.class));
         assertThat(actualVariation, is(bucketedVariation));
     }
 
@@ -1497,7 +1590,7 @@ public class OptimizelyTest {
             attributes.put("browser_type", "chrome");
         }
 
-        when(mockBucketer.bucket(eq(experiment), eq("user"), eq(validProjectConfig))).thenReturn(DecisionResponse.responseNoReasons(variation));
+        when(mockBucketer.bucket(eq(experiment), eq("user"), eq(validProjectConfig), any(DecisionPath.class))).thenReturn(DecisionResponse.responseNoReasons(variation));
 
         Optimizely optimizely = optimizelyBuilder.withBucketing(mockBucketer).build();
 
@@ -4992,5 +5085,159 @@ public class OptimizelyTest {
 
         optimizely.identifyUser("the-user");
         Mockito.verify(mockODPEventManager, times(1)).identifyUser("the-user");
+    }
+
+    @Test
+    public void testDecideReturnsErrorDecisionWhenDecisionServiceFails() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        // Use the CMAB datafile
+        Optimizely optimizely = Optimizely.builder()
+            .withDatafile(validConfigJsonCMAB())  
+            .withDecisionService(mockDecisionService)
+            .build();
+
+        // Mock decision service to return an error from CMAB
+        DecisionReasons reasons = new DefaultDecisionReasons();
+        reasons.addError("Failed to fetch CMAB data for experiment exp-cmab.");
+        FeatureDecision errorFeatureDecision = new FeatureDecision(new Experiment("123", "exp-cmab", "123"), null, FeatureDecision.DecisionSource.ROLLOUT);
+        DecisionResponse<FeatureDecision> errorDecisionResponse = new DecisionResponse<>(
+            errorFeatureDecision,
+            reasons,
+            true,
+            null
+        );
+        
+        // Mock validatedForcedDecision to return no forced decision (but not null!)
+        DecisionResponse<Variation> noForcedDecision = new DecisionResponse<>(null, new DefaultDecisionReasons());
+        when(mockDecisionService.validatedForcedDecision(
+            any(OptimizelyDecisionContext.class),
+            any(ProjectConfig.class),
+            any(OptimizelyUserContext.class)
+        )).thenReturn(noForcedDecision);
+        
+        // Mock getVariationsForFeatureList to return the error decision
+        when(mockDecisionService.getVariationsForFeatureList(
+            any(List.class),
+            any(OptimizelyUserContext.class),
+            any(ProjectConfig.class),
+            any(List.class),
+            eq(DecisionPath.WITH_CMAB)
+        )).thenReturn(Arrays.asList(errorDecisionResponse));
+        
+        
+        // Use the feature flag from your CMAB config
+        OptimizelyUserContext userContext = optimizely.createUserContext("test_user");
+        OptimizelyDecision decision = userContext.decide("feature_1"); // This is the feature flag key from cmab-config.json
+        
+        // Verify the decision contains the error information
+        assertFalse(decision.getEnabled());
+        assertNull(decision.getVariationKey());
+        assertNull(decision.getRuleKey());
+        assertEquals("feature_1", decision.getFlagKey());
+        assertTrue(decision.getReasons().contains("Failed to fetch CMAB data for experiment exp-cmab."));
+    }
+
+    @Test
+    public void decideAsyncReturnsDecision() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .build();
+        OptimizelyUserContext userContext = optimizely.createUserContext(testUserId);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<OptimizelyDecision> decisionRef = new AtomicReference<>();
+        final AtomicReference<Throwable> errorRef = new AtomicReference<>();
+
+        optimizely.decideAsync(
+            userContext,
+            FEATURE_MULTI_VARIATE_FEATURE_KEY,
+            Collections.emptyList(),
+            (OptimizelyDecision decision) -> {
+                try {
+                    decisionRef.set(decision);
+                } catch (Throwable t) {
+                    errorRef.set(t);
+                } finally {
+                    latch.countDown();
+                }
+            }
+        );
+
+        boolean completed = latch.await(5, TimeUnit.SECONDS);
+        
+        if (errorRef.get() != null) {
+            throw new AssertionError("Error in callback", errorRef.get());
+        }
+        
+        assertTrue("Callback should be called within timeout", completed);
+        
+        OptimizelyDecision decision = decisionRef.get();
+        assertNotNull("Decision should not be null", decision);
+        assertEquals("Flag key should match", FEATURE_MULTI_VARIATE_FEATURE_KEY, decision.getFlagKey());
+    }
+
+    @Test
+    public void decideForKeysAsyncReturnsDecisions() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .build();
+        OptimizelyUserContext userContext = optimizely.createUserContext(testUserId);
+
+        List<String> flagKeys = Arrays.asList(
+            FEATURE_MULTI_VARIATE_FEATURE_KEY,
+            FEATURE_SINGLE_VARIABLE_STRING_KEY
+        );
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<Map<String, OptimizelyDecision>> decisionsRef = new AtomicReference<>();
+
+        optimizely.decideForKeysAsync(
+            userContext,
+            flagKeys,
+            Collections.emptyList(),
+            (Map<String, OptimizelyDecision> decisions) -> {
+                decisionsRef.set(decisions);
+                latch.countDown();
+            }
+        );
+
+        assertTrue("Callback should be called within timeout", latch.await(5, TimeUnit.SECONDS));
+        assertNotNull("Decisions should not be null", decisionsRef.get());
+        assertEquals("Should return decisions for 2 keys", 2, decisionsRef.get().size());
+        assertTrue("Should contain first flag key", decisionsRef.get().containsKey(FEATURE_MULTI_VARIATE_FEATURE_KEY));
+        assertTrue("Should contain second flag key", decisionsRef.get().containsKey(FEATURE_SINGLE_VARIABLE_STRING_KEY));
+    }
+
+    @Test
+    public void decideAllAsyncReturnsAllDecisions() throws Exception {
+        assumeTrue(datafileVersion >= Integer.parseInt(ProjectConfig.Version.V4.toString()));
+        ProjectConfigManager mockProjectConfigManager = mock(ProjectConfigManager.class);
+        Mockito.when(mockProjectConfigManager.getConfig()).thenReturn(validProjectConfig);
+        Optimizely optimizely = Optimizely.builder()
+            .withConfigManager(mockProjectConfigManager)
+            .build();
+        OptimizelyUserContext userContext = optimizely.createUserContext(testUserId);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<Map<String, OptimizelyDecision>> decisionsRef = new AtomicReference<>();
+
+        optimizely.decideAllAsync(
+            userContext,
+            Collections.emptyList(),
+            (Map<String, OptimizelyDecision> decisions) -> {
+                decisionsRef.set(decisions);
+                latch.countDown();
+            }
+        );
+
+        assertTrue("Callback should be called within timeout", latch.await(5, TimeUnit.SECONDS));
+        assertNotNull("Decisions should not be null", decisionsRef.get());
+        assertFalse("Decisions should not be empty", decisionsRef.get().isEmpty());
     }
 }

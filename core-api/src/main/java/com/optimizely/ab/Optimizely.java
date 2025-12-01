@@ -16,10 +16,8 @@
 package com.optimizely.ab;
 
 import com.optimizely.ab.annotations.VisibleForTesting;
-import com.optimizely.ab.bucketing.Bucketer;
-import com.optimizely.ab.bucketing.DecisionService;
-import com.optimizely.ab.bucketing.FeatureDecision;
-import com.optimizely.ab.bucketing.UserProfileService;
+import com.optimizely.ab.bucketing.*;
+import com.optimizely.ab.cmab.service.CmabService;
 import com.optimizely.ab.config.AtomicProjectConfigManager;
 import com.optimizely.ab.config.DatafileProjectConfig;
 import com.optimizely.ab.config.EventType;
@@ -62,19 +60,16 @@ import com.optimizely.ab.odp.ODPSegmentOption;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
-import com.optimizely.ab.optimizelydecision.DecisionMessage;
-import com.optimizely.ab.optimizelydecision.DecisionReasons;
-import com.optimizely.ab.optimizelydecision.DecisionResponse;
-import com.optimizely.ab.optimizelydecision.DefaultDecisionReasons;
-import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
-import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
+import com.optimizely.ab.optimizelydecision.*;
 import com.optimizely.ab.optimizelyjson.OptimizelyJSON;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
+
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -141,7 +136,10 @@ public class Optimizely implements AutoCloseable {
     @Nullable
     private final ODPManager odpManager;
 
+    private final CmabService cmabService;
+
     private final ReentrantLock lock = new ReentrantLock();
+
 
     private Optimizely(@Nonnull EventHandler eventHandler,
                        @Nonnull EventProcessor eventProcessor,
@@ -152,7 +150,8 @@ public class Optimizely implements AutoCloseable {
                        @Nullable OptimizelyConfigManager optimizelyConfigManager,
                        @Nonnull NotificationCenter notificationCenter,
                        @Nonnull List<OptimizelyDecideOption> defaultDecideOptions,
-                       @Nullable ODPManager odpManager
+                       @Nullable ODPManager odpManager,
+                       @Nonnull CmabService cmabService
     ) {
         this.eventHandler = eventHandler;
         this.eventProcessor = eventProcessor;
@@ -164,6 +163,7 @@ public class Optimizely implements AutoCloseable {
         this.notificationCenter = notificationCenter;
         this.defaultDecideOptions = defaultDecideOptions;
         this.odpManager = odpManager;
+        this.cmabService = cmabService;
 
         if (odpManager != null) {
             odpManager.getEventManager().start();
@@ -305,7 +305,7 @@ public class Optimizely implements AutoCloseable {
                                 @Nonnull Map<String, ?> filteredAttributes,
                                 @Nonnull Variation variation,
                                 @Nonnull String ruleType) {
-        sendImpression(projectConfig, experiment, userId, filteredAttributes, variation, "", ruleType, true);
+        sendImpression(projectConfig, experiment, userId, filteredAttributes, variation, "", ruleType, true, null);
     }
 
     /**
@@ -318,6 +318,7 @@ public class Optimizely implements AutoCloseable {
      * @param variation          the variation that was returned from activate.
      * @param flagKey            It can either be empty if ruleType is experiment or it's feature key in case ruleType is feature-test or rollout
      * @param ruleType           It can either be experiment in case impression event is sent from activate or it's feature-test or rollout
+     * @param cmabUUID           The cmabUUID if the experiment is a cmab experiment.
      */
     private boolean sendImpression(@Nonnull ProjectConfig projectConfig,
                                    @Nullable ExperimentCore experiment,
@@ -326,7 +327,8 @@ public class Optimizely implements AutoCloseable {
                                    @Nullable Variation variation,
                                    @Nonnull String flagKey,
                                    @Nonnull String ruleType,
-                                   @Nonnull boolean enabled) {
+                                   @Nonnull boolean enabled,
+                                   @Nullable String cmabUUID) {
 
         UserEvent userEvent = UserEventFactory.createImpressionEvent(
             projectConfig,
@@ -336,7 +338,8 @@ public class Optimizely implements AutoCloseable {
             filteredAttributes,
             flagKey,
             ruleType,
-            enabled);
+            enabled,
+            cmabUUID);
 
         if (userEvent == null) {
             return false;
@@ -348,14 +351,14 @@ public class Optimizely implements AutoCloseable {
 
         // Legacy API methods only apply to the Experiment type and not to Holdout.
         boolean isExperimentType = experiment instanceof Experiment;
-        
+
         // Kept For backwards compatibility.
         // This notification is deprecated and the new DecisionNotifications
         // are sent via their respective method calls.
         if (notificationCenter.getNotificationManager(ActivateNotification.class).size() > 0 && isExperimentType) {
             LogEvent impressionEvent = EventFactory.createLogEvent(userEvent);
             ActivateNotification activateNotification = new ActivateNotification(
-                (Experiment)experiment, userId, filteredAttributes, variation, impressionEvent);
+                (Experiment) experiment, userId, filteredAttributes, variation, impressionEvent);
             notificationCenter.send(activateNotification);
         }
         return true;
@@ -498,7 +501,7 @@ public class Optimizely implements AutoCloseable {
         if (featureDecision.decisionSource != null) {
             decisionSource = featureDecision.decisionSource;
         }
-
+        String cmabUUID = featureDecision.cmabUUID;
         if (featureDecision.variation != null) {
             // This information is only necessary for feature tests.
             // For rollouts experiments and variations are an implementation detail only.
@@ -520,7 +523,8 @@ public class Optimizely implements AutoCloseable {
             featureDecision.variation,
             featureKey,
             decisionSource.toString(),
-            featureEnabled);
+            featureEnabled,
+            cmabUUID);
 
         DecisionNotification decisionNotification = DecisionNotification.newFeatureDecisionNotificationBuilder()
             .withUserId(userId)
@@ -1285,20 +1289,6 @@ public class Optimizely implements AutoCloseable {
         return new OptimizelyUserContext(this, userId, attributes, Collections.EMPTY_MAP, null, false);
     }
 
-    OptimizelyDecision decide(@Nonnull OptimizelyUserContext user,
-                              @Nonnull String key,
-                              @Nonnull List<OptimizelyDecideOption> options) {
-        ProjectConfig projectConfig = getProjectConfig();
-        if (projectConfig == null) {
-            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
-        }
-
-        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
-        allOptions.remove(OptimizelyDecideOption.ENABLED_FLAGS_ONLY);
-
-        return decideForKeys(user, Arrays.asList(key), allOptions, true).get(key);
-    }
-
     private OptimizelyDecision createOptimizelyDecision(
         OptimizelyUserContext user,
         String flagKey,
@@ -1349,6 +1339,8 @@ public class Optimizely implements AutoCloseable {
         Map<String, Object> attributes = user.getAttributes();
         Map<String, ?> copiedAttributes = new HashMap<>(attributes);
 
+        String cmabUUID =  flagDecision.cmabUUID;
+
         if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
             decisionEventDispatched = sendImpression(
                 projectConfig,
@@ -1358,7 +1350,8 @@ public class Optimizely implements AutoCloseable {
                 flagDecision.variation,
                 flagKey,
                 decisionSource.toString(),
-                flagEnabled);
+                flagEnabled,
+                cmabUUID);
         }
 
         DecisionNotification decisionNotification = DecisionNotification.newFlagDecisionNotificationBuilder()
@@ -1386,16 +1379,72 @@ public class Optimizely implements AutoCloseable {
             reasonsToReport);
     }
 
+    OptimizelyDecision decide(@Nonnull OptimizelyUserContext user,
+                              @Nonnull String key,
+                              @Nonnull List<OptimizelyDecideOption> options) {
+        return decideInternal(user, key, options, DecisionPath.WITH_CMAB);
+    }
+
     Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
                                                   @Nonnull List<String> keys,
                                                   @Nonnull List<OptimizelyDecideOption> options) {
-        return decideForKeys(user, keys, options, false);
+        return decideForKeysInternal(user, keys, options, false, DecisionPath.WITH_CMAB);
     }
 
-    private Map<String, OptimizelyDecision> decideForKeys(@Nonnull OptimizelyUserContext user,
-                                                          @Nonnull List<String> keys,
-                                                          @Nonnull List<OptimizelyDecideOption> options,
-                                                          boolean ignoreDefaultOptions) {
+    Map<String, OptimizelyDecision> decideAll(@Nonnull OptimizelyUserContext user,
+                                              @Nonnull List<OptimizelyDecideOption> options) {
+        return decideAllInternal(user, options, DecisionPath.WITH_CMAB);
+    }
+
+    /**
+     * Returns a decision result ({@link OptimizelyDecision}) for a given flag key and a user context,
+     * skipping CMAB logic and using only traditional A/B testing.
+     * This will be called by mobile apps which will make synchronous decisions only (for backward compatibility with android-sdk)
+     *
+     * @param user    An OptimizelyUserContext associated with this OptimizelyClient.
+     * @param key     A flag key for which a decision will be made.
+     * @param options A list of options for decision-making.
+     * @return A decision result using traditional A/B testing logic only.
+     */
+    OptimizelyDecision decideSync(@Nonnull OptimizelyUserContext user,
+                                  @Nonnull String key,
+                                  @Nonnull List<OptimizelyDecideOption> options) {
+        return decideInternal(user, key, options, DecisionPath.WITHOUT_CMAB);
+    }
+
+    /**
+     * Returns decision results for multiple flag keys, skipping CMAB logic and using only traditional A/B testing.
+     * This will be called by mobile apps which will make synchronous decisions only (for backward compatibility with android-sdk)
+     *
+     * @param user    An OptimizelyUserContext associated with this OptimizelyClient.
+     * @param keys    A list of flag keys for which decisions will be made.
+     * @param options A list of options for decision-making.
+     * @return All decision results mapped by flag keys, using traditional A/B testing logic only.
+     */
+    Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull OptimizelyUserContext user,
+                                                      @Nonnull List<String> keys,
+                                                      @Nonnull List<OptimizelyDecideOption> options) {
+        return decideForKeysInternal(user, keys, options, false, DecisionPath.WITHOUT_CMAB);
+    }
+
+    /**
+     * Returns decision results for all active flag keys, skipping CMAB logic and using only traditional A/B testing.
+     * This will be called by mobile apps which will make synchronous decisions only (for backward compatibility with android-sdk)
+     *
+     * @param user    An OptimizelyUserContext associated with this OptimizelyClient.
+     * @param options A list of options for decision-making.
+     * @return All decision results mapped by flag keys, using traditional A/B testing logic only.
+     */
+    Map<String, OptimizelyDecision> decideAllSync(@Nonnull OptimizelyUserContext user,
+                                                  @Nonnull List<OptimizelyDecideOption> options) {
+        return decideAllInternal(user, options, DecisionPath.WITHOUT_CMAB);
+    }
+
+    private Map<String, OptimizelyDecision> decideForKeysInternal(@Nonnull OptimizelyUserContext user,
+                                                                  @Nonnull List<String> keys,
+                                                                  @Nonnull List<OptimizelyDecideOption> options,
+                                                                  boolean ignoreDefaultOptions,
+                                                                  DecisionPath decisionPath) {
         Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
 
         ProjectConfig projectConfig = getProjectConfig();
@@ -1440,11 +1489,26 @@ public class Optimizely implements AutoCloseable {
         }
 
         List<DecisionResponse<FeatureDecision>> decisionList =
-            decisionService.getVariationsForFeatureList(flagsWithoutForcedDecision, user, projectConfig, allOptions);
+            decisionService.getVariationsForFeatureList(flagsWithoutForcedDecision, user, projectConfig, allOptions, decisionPath);
 
         for (int i = 0; i < flagsWithoutForcedDecision.size(); i++) {
             DecisionResponse<FeatureDecision> decision = decisionList.get(i);
+            boolean error = decision.isError();
+            List<String> reasons = decision.getReasons().toReport();
+            String experimentKey = null;
+            if (decision.getResult() != null && decision.getResult().experiment != null) {
+                experimentKey = decision.getResult().experiment.getKey();
+            }
             String flagKey = flagsWithoutForcedDecision.get(i).getKey();
+
+            if (error) {
+                OptimizelyDecision optimizelyDecision = OptimizelyDecision.newErrorDecision(flagKey, user, reasons);
+                decisionMap.put(flagKey, optimizelyDecision);
+                if (validKeys.contains(flagKey)) {
+                    validKeys.remove(flagKey);
+                }
+            }
+
             flagDecisions.put(flagKey, decision.getResult());
             decisionReasonsMap.get(flagKey).merge(decision.getReasons());
         }
@@ -1465,13 +1529,14 @@ public class Optimizely implements AutoCloseable {
         return decisionMap;
     }
 
-    Map<String, OptimizelyDecision> decideAll(@Nonnull OptimizelyUserContext user,
-                                              @Nonnull List<OptimizelyDecideOption> options) {
+    private Map<String, OptimizelyDecision> decideAllInternal(@Nonnull OptimizelyUserContext user,
+                                                              @Nonnull List<OptimizelyDecideOption> options,
+                                                              @Nonnull DecisionPath decisionPath) {
         Map<String, OptimizelyDecision> decisionMap = new HashMap<>();
 
         ProjectConfig projectConfig = getProjectConfig();
         if (projectConfig == null) {
-            logger.error("Optimizely instance is not valid, failing isFeatureEnabled call.");
+            logger.error("Optimizely instance is not valid, failing decideAllSync call.");
             return decisionMap;
         }
 
@@ -1479,7 +1544,70 @@ public class Optimizely implements AutoCloseable {
         List<String> allFlagKeys = new ArrayList<>();
         for (int i = 0; i < allFlags.size(); i++) allFlagKeys.add(allFlags.get(i).getKey());
 
-        return decideForKeys(user, allFlagKeys, options);
+        return decideForKeysInternal(user, allFlagKeys, options, false, decisionPath);
+    }
+
+    private OptimizelyDecision decideInternal(@Nonnull OptimizelyUserContext user,
+                                              @Nonnull String key,
+                                              @Nonnull List<OptimizelyDecideOption> options,
+                                              @Nonnull DecisionPath decisionPath) {
+        ProjectConfig projectConfig = getProjectConfig();
+        if (projectConfig == null) {
+            return OptimizelyDecision.newErrorDecision(key, user, DecisionMessage.SDK_NOT_READY.reason());
+        }
+
+        List<OptimizelyDecideOption> allOptions = getAllOptions(options);
+        allOptions.remove(OptimizelyDecideOption.ENABLED_FLAGS_ONLY);
+
+        return decideForKeysInternal(user, Arrays.asList(key), allOptions, true, decisionPath).get(key);
+    }
+
+    //============ decide async ============//
+
+    /**
+     * Returns a decision result asynchronously for a given flag key and a user context.
+     *
+     * @param userContext The user context to make decisions for
+     * @param key         A flag key for which a decision will be made
+     * @param callback    A callback to invoke when the decision is available
+     * @param options     A list of options for decision-making
+     */
+    void decideAsync(@Nonnull OptimizelyUserContext userContext,
+                     @Nonnull String key,
+                     @Nonnull List<OptimizelyDecideOption> options,
+                     @Nonnull OptimizelyDecisionCallback callback) {
+        AsyncDecisionFetcher fetcher = new AsyncDecisionFetcher(userContext, key, options, callback);
+        fetcher.start();
+    }
+
+    /**
+     * Returns decision results asynchronously for multiple flag keys.
+     *
+     * @param userContext The user context to make decisions for
+     * @param keys        A list of flag keys for which decisions will be made
+     * @param callback    A callback to invoke when decisions are available
+     * @param options     A list of options for decision-making
+     */
+    void decideForKeysAsync(@Nonnull OptimizelyUserContext userContext,
+                            @Nonnull List<String> keys,
+                            @Nonnull List<OptimizelyDecideOption> options,
+                            @Nonnull OptimizelyDecisionsCallback callback) {
+        AsyncDecisionFetcher fetcher = new AsyncDecisionFetcher(userContext, keys, options, callback);
+        fetcher.start();
+    }
+
+    /**
+     * Returns decision results asynchronously for all active flag keys.
+     *
+     * @param userContext The user context to make decisions for
+     * @param callback    A callback to invoke when decisions are available
+     * @param options     A list of options for decision-making
+     */
+    void decideAllAsync(@Nonnull OptimizelyUserContext userContext,
+                        @Nonnull List<OptimizelyDecideOption> options,
+                        @Nonnull OptimizelyDecisionsCallback callback) {
+        AsyncDecisionFetcher fetcher = new AsyncDecisionFetcher(userContext, options, callback);
+        fetcher.start();
     }
 
     private List<OptimizelyDecideOption> getAllOptions(List<OptimizelyDecideOption> options) {
@@ -1731,6 +1859,7 @@ public class Optimizely implements AutoCloseable {
         private NotificationCenter notificationCenter;
         private List<OptimizelyDecideOption> defaultDecideOptions;
         private ODPManager odpManager;
+        private CmabService cmabService;
 
         // For backwards compatibility
         private AtomicProjectConfigManager fallbackConfigManager = new AtomicProjectConfigManager();
@@ -1842,6 +1971,11 @@ public class Optimizely implements AutoCloseable {
             return this;
         }
 
+        public Builder withCmabService(CmabService cmabService) {
+            this.cmabService = cmabService;
+            return this;
+        }
+
         // Helper functions for making testing easier
         protected Builder withBucketing(Bucketer bucketer) {
             this.bucketer = bucketer;
@@ -1872,8 +2006,12 @@ public class Optimizely implements AutoCloseable {
                 bucketer = new Bucketer();
             }
 
+            if (cmabService == null) {
+                logger.warn("CMAB service is not initiated. CMAB functionality will not be available.");
+            }
+
             if (decisionService == null) {
-                decisionService = new DecisionService(bucketer, errorHandler, userProfileService);
+                decisionService = new DecisionService(bucketer, errorHandler, userProfileService, cmabService);
             }
 
             if (projectConfig == null && datafile != null && !datafile.isEmpty()) {
@@ -1916,7 +2054,7 @@ public class Optimizely implements AutoCloseable {
                 defaultDecideOptions = Collections.emptyList();
             }
 
-            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, optimizelyConfigManager, notificationCenter, defaultDecideOptions, odpManager);
+            return new Optimizely(eventHandler, eventProcessor, errorHandler, decisionService, userProfileService, projectConfigManager, optimizelyConfigManager, notificationCenter, defaultDecideOptions, odpManager, cmabService);
         }
     }
 }

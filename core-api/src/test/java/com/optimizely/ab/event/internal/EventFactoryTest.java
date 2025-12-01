@@ -104,7 +104,7 @@ public class EventFactoryTest {
         Map<String, String> attributeMap = new HashMap<String, String>();
         attributeMap.put(attribute.getKey(), "value");
         attributeMap.put(ControlAttribute.USER_AGENT_ATTRIBUTE.toString(), "Chrome");
-        DecisionMetadata metadata = new DecisionMetadata(activatedExperiment.getKey(), activatedExperiment.getKey(), ruleType, "variationKey", true);
+        DecisionMetadata metadata = new DecisionMetadata(activatedExperiment.getKey(), activatedExperiment.getKey(), ruleType, "variationKey", true, null);
         Decision expectedDecision = new Decision.Builder()
             .setCampaignId(activatedExperiment.getLayerId())
             .setExperimentId(activatedExperiment.getId())
@@ -1064,7 +1064,8 @@ public class EventFactoryTest {
             attributes,
             activatedExperiment.getKey(),
             "experiment",
-            true);
+            true,
+            null);
 
         return EventFactory.createLogEvent(userEvent);
         

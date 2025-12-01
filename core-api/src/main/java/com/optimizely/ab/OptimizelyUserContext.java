@@ -16,18 +16,26 @@
  */
 package com.optimizely.ab;
 
-import com.optimizely.ab.config.ProjectConfig;
-import com.optimizely.ab.odp.ODPManager;
-import com.optimizely.ab.odp.ODPSegmentCallback;
-import com.optimizely.ab.odp.ODPSegmentOption;
-import com.optimizely.ab.optimizelydecision.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+
+import com.optimizely.ab.annotations.VisibleForTesting;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecisionCallback;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecisionsCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.optimizely.ab.odp.ODPSegmentCallback;
+import com.optimizely.ab.odp.ODPSegmentOption;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
+import com.optimizely.ab.optimizelydecision.OptimizelyDecision;
 
 public class OptimizelyUserContext {
     // OptimizelyForcedDecisionsKey mapped to variationKeys
@@ -42,7 +50,7 @@ public class OptimizelyUserContext {
     private List<String> qualifiedSegments;
 
     @Nonnull
-    private final Optimizely optimizely;
+    final Optimizely optimizely;
 
     private static final Logger logger = LoggerFactory.getLogger(OptimizelyUserContext.class);
 
@@ -390,4 +398,44 @@ public class OptimizelyUserContext {
             ", attributes='" + attributes + '\'' +
             '}';
     }
+
+    // sync decision support for android-sdk backward compatibility only
+
+    @VisibleForTesting  // protected, open for testing only
+    public OptimizelyDecision decideSync(@Nonnull String key,
+                                     @Nonnull List<OptimizelyDecideOption> options) {
+        return optimizely.decideSync(copy(), key, options);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public Map<String, OptimizelyDecision> decideForKeysSync(@Nonnull List<String> keys,
+                                                         @Nonnull List<OptimizelyDecideOption> options) {
+        return optimizely.decideForKeysSync(copy(), keys, options);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public Map<String, OptimizelyDecision> decideAllSync(@Nonnull List<OptimizelyDecideOption> options) {
+        return optimizely.decideAllSync(copy(), options);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public void decideAsync(@Nonnull String key,
+                                          @Nonnull List<OptimizelyDecideOption> options,
+                                          @Nonnull OptimizelyDecisionCallback callback) {
+        optimizely.decideAsync(copy(), key, options, callback);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public void decideForKeysAsync(@Nonnull List<String> keys,
+                                                              @Nonnull List<OptimizelyDecideOption> options,
+                                                              @Nonnull OptimizelyDecisionsCallback callback) {
+        optimizely.decideForKeysAsync(copy(), keys, options, callback);
+    }
+
+    @VisibleForTesting  // protected, open for testing only
+    public void decideAllAsync(@Nonnull List<OptimizelyDecideOption> options,
+                                                          @Nonnull OptimizelyDecisionsCallback callback) {
+        optimizely.decideAllAsync(copy(), options, callback);
+    }
+
 }

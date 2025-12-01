@@ -424,6 +424,10 @@ public final class DatafileProjectConfigTestUtils {
         return Resources.toString(Resources.getResource("config/null-featureEnabled-config-v4.json"), Charsets.UTF_8);
     }
 
+    public static String validConfigJsonCMAB() throws IOException {
+        return Resources.toString(Resources.getResource("config/cmab-config.json"), Charsets.UTF_8);
+    }
+
     /**
      * @return the expected {@link DatafileProjectConfig} for the json produced by {@link #validConfigJsonV2()} ()}
      */
