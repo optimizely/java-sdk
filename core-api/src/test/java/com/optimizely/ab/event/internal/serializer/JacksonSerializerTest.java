@@ -18,7 +18,6 @@ package com.optimizely.ab.event.internal.serializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.optimizely.ab.event.internal.payload.EventBatch;
 
 import org.junit.Test;
@@ -36,14 +35,34 @@ import static com.optimizely.ab.event.internal.serializer.SerializerTestUtils.ge
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 public class JacksonSerializerTest {
 
     private JacksonSerializer serializer = new JacksonSerializer();
-    private ObjectMapper mapper =
-        new ObjectMapper().setPropertyNamingStrategy(
-            PropertyNamingStrategies.SNAKE_CASE);
+    private ObjectMapper mapper = JacksonSerializer.createMapper();
 
+    @Test
+    public void createMapperSucceeds() {
+        // Verify that createMapper() successfully creates an ObjectMapper with snake_case naming
+        // This tests that the reflection logic works for the current Jackson version
+        ObjectMapper testMapper = JacksonSerializer.createMapper();
+        assertNotNull("Mapper should be created successfully", testMapper);
+        
+        // Verify snake_case naming by serializing a simple object
+        class TestObject {
+            @SuppressWarnings("unused")
+            public String getMyFieldName() { return "test"; }
+        }
+        
+        try {
+            String json = testMapper.writeValueAsString(new TestObject());
+            assertTrue("Should use snake_case naming", json.contains("my_field_name"));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to serialize with snake_case naming", e);
+        }
+    }
 
     @Test
     public void serializeImpression() throws IOException {
