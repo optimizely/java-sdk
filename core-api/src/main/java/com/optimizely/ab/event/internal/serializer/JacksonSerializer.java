@@ -32,17 +32,7 @@ class JacksonSerializer implements Serializer {
     static ObjectMapper createMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         Object namingStrategy = getSnakeCaseStrategy();
-        
-        try {
-            // Use setPropertyNamingStrategy method (available in all versions)
-            objectMapper.getClass()
-                .getMethod("setPropertyNamingStrategy", 
-                    Class.forName("com.fasterxml.jackson.databind.PropertyNamingStrategy"))
-                .invoke(objectMapper, namingStrategy);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to set snake_case naming strategy", e);
-        }
-        
+        objectMapper.setPropertyNamingStrategy((com.fasterxml.jackson.databind.PropertyNamingStrategy) namingStrategy);
         return objectMapper;
     }
 
