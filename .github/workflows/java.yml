@@ -49,7 +49,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jdk: [8, 11, 17]
+        # github not support JVM 8 anymore
+        jdk: [11, 17]
         optimizely_default_parser: [GSON_CONFIG_PARSER, JACKSON_CONFIG_PARSER, JSON_CONFIG_PARSER, JSON_SIMPLE_CONFIG_PARSER]
     steps:
       - name: checkout
