@@ -16,10 +16,10 @@
  */
 package com.optimizely.ab.event.internal.payload;
 
+import java.util.StringJoiner;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.annotations.VisibleForTesting;
-
-import java.util.StringJoiner;
 
 public class DecisionMetadata {
 
@@ -33,7 +33,7 @@ public class DecisionMetadata {
     String variationKey;
     @JsonProperty("enabled")
     boolean enabled;
-    @JsonProperty("cmab_uuid")
+    @JsonProperty("c_m_a_b_u_u_i_d")
     String cmabUUID;
 
     @VisibleForTesting
