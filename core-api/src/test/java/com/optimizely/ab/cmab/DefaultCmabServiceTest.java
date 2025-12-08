@@ -16,13 +16,22 @@
 package com.optimizely.ab.cmab;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-
-import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -124,7 +133,7 @@ public class DefaultCmabServiceTest {
         CmabDecision secondDecision = cmabService.getDecision(mockProjectConfig, mockUserContext, "exp1", Collections.emptyList());
         
         assertEquals("varA", secondDecision.getVariationId());
-        assertEquals(savedValue.getCmabUuid(), secondDecision.getCmabUUID());
+        assertEquals(savedValue.getCmabUuid(), secondDecision.getCmabUuid());
         verify(mockCmabClient, never()).fetchDecision(any(), any(), any(), any());
     }
 
@@ -137,7 +146,7 @@ public class DefaultCmabServiceTest {
         CmabDecision decision = cmabService.getDecision(mockProjectConfig, mockUserContext, "exp1", options);
 
         assertEquals("varB", decision.getVariationId());
-        assertNotNull(decision.getCmabUUID());
+        assertNotNull(decision.getCmabUuid());
         
         Map<String, Object> expectedAttributes = new HashMap<>();
         expectedAttributes.put("age", 25);
@@ -162,7 +171,7 @@ public class DefaultCmabServiceTest {
         
         // Verify the decision is correct
         assertEquals("varC", decision.getVariationId());
-        assertNotNull(decision.getCmabUUID());
+        assertNotNull(decision.getCmabUuid());
     }
 
     @Test
@@ -176,7 +185,7 @@ public class DefaultCmabServiceTest {
 
         verify(mockCmabCache).reset();
         assertEquals("varD", decision.getVariationId());
-        assertNotNull(decision.getCmabUUID());
+        assertNotNull(decision.getCmabUuid());
     }
 
     @Test
@@ -226,7 +235,7 @@ public class DefaultCmabServiceTest {
         verify(mockCmabClient).fetchDecision(eq("exp1"), eq("user123"), eq(expectedAttributes), anyString());
         
         assertEquals("varF", decision.getVariationId());
-        assertNotNull(decision.getCmabUUID());
+        assertNotNull(decision.getCmabUuid());
     }
 
     @Test
@@ -261,7 +270,7 @@ public class DefaultCmabServiceTest {
         // Verify cache was populated
         verify(mockCmabCache).save(eq(cacheKey), any(CmabCacheValue.class));
         assertEquals("varA", decision1.getVariationId());
-        assertNotNull(decision1.getCmabUUID());
+        assertNotNull(decision1.getCmabUuid());
     }
 
     @Test
@@ -368,7 +377,7 @@ public class DefaultCmabServiceTest {
         
         // Verify basic functionality
         assertEquals("varA", decision.getVariationId());
-        assertNotNull(decision.getCmabUUID());
+        assertNotNull(decision.getCmabUuid());
         verify(mockCmabCache).save(eq(cacheKey), any(CmabCacheValue.class));
     }
     @Test

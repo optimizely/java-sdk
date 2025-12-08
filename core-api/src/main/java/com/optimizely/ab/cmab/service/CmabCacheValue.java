@@ -20,12 +20,12 @@ import java.util.Objects;
 public class CmabCacheValue {
     private final String attributesHash;
     private final String variationId;
-    private final String cmabUUID;
+    private final String cmabUuid;
 
-    public CmabCacheValue(String attributesHash, String variationId, String cmabUUID) {
+    public CmabCacheValue(String attributesHash, String variationId, String cmabUuid) {
         this.attributesHash = attributesHash;
         this.variationId = variationId;
-        this.cmabUUID = cmabUUID;
+        this.cmabUuid = cmabUuid;
     }
 
     public String getAttributesHash() {
@@ -37,7 +37,7 @@ public class CmabCacheValue {
     }
 
     public String getCmabUuid() {
-        return cmabUUID;
+        return cmabUuid;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class CmabCacheValue {
         return "CmabCacheValue{" +
             "attributesHash='" + attributesHash + '\'' +
             ", variationId='" + variationId + '\'' +
-            ", cmabUuid='" + cmabUUID + '\'' +
+            ", cmabUuid='" + cmabUuid + '\'' +
             '}';
     }
 
@@ -56,11 +56,11 @@ public class CmabCacheValue {
         CmabCacheValue that = (CmabCacheValue) o;
         return Objects.equals(attributesHash, that.attributesHash) &&
             Objects.equals(variationId, that.variationId) &&
-            Objects.equals(cmabUUID, that.cmabUUID);
+            Objects.equals(cmabUuid, that.cmabUuid);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(attributesHash, variationId, cmabUUID);
+        return Objects.hash(attributesHash, variationId, cmabUuid);
     }
 }

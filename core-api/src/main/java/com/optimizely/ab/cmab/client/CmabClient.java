@@ -24,8 +24,8 @@ public interface CmabClient {
      * @param ruleId     The rule/experiment ID
      * @param userId     The user ID
      * @param attributes User attributes
-     * @param cmabUUID   The CMAB UUID
+     * @param cmabUuid   The CMAB UUID
      * @return CompletableFuture containing the variation ID as a String
      */
-    String fetchDecision(String ruleId, String userId, Map<String, Object> attributes, String cmabUUID);
+    String fetchDecision(String ruleId, String userId, Map<String, Object> attributes, String cmabUuid);
 }
