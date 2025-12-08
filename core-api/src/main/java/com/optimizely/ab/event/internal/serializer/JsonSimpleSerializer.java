@@ -16,19 +16,13 @@
  */
 package com.optimizely.ab.event.internal.serializer;
 
-import java.util.List;
-import java.util.Map;
+import com.optimizely.ab.event.internal.payload.*;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import com.optimizely.ab.event.internal.payload.Attribute;
-import com.optimizely.ab.event.internal.payload.Decision;
-import com.optimizely.ab.event.internal.payload.DecisionMetadata;
-import com.optimizely.ab.event.internal.payload.Event;
-import com.optimizely.ab.event.internal.payload.EventBatch;
-import com.optimizely.ab.event.internal.payload.Snapshot;
-import com.optimizely.ab.event.internal.payload.Visitor;
+import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("unchecked")
 class JsonSimpleSerializer implements Serializer {
