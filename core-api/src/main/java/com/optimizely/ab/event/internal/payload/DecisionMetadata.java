@@ -16,10 +16,10 @@
  */
 package com.optimizely.ab.event.internal.payload;
 
+import java.util.StringJoiner;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.optimizely.ab.annotations.VisibleForTesting;
-
-import java.util.StringJoiner;
 
 public class DecisionMetadata {
 
@@ -34,19 +34,19 @@ public class DecisionMetadata {
     @JsonProperty("enabled")
     boolean enabled;
     @JsonProperty("cmab_uuid")
-    String cmabUUID;
+    String cmabUuid;
 
     @VisibleForTesting
     public DecisionMetadata() {
     }
 
-    public DecisionMetadata(String flagKey, String ruleKey, String ruleType, String variationKey, boolean enabled, String cmabUUID) {
+    public DecisionMetadata(String flagKey, String ruleKey, String ruleType, String variationKey, boolean enabled, String cmabUuid) {
         this.flagKey = flagKey;
         this.ruleKey = ruleKey;
         this.ruleType = ruleType;
         this.variationKey = variationKey;
         this.enabled = enabled;
-        this.cmabUUID = cmabUUID;
+        this.cmabUuid = cmabUuid;
     }
 
     public String getRuleType() {
@@ -69,8 +69,8 @@ public class DecisionMetadata {
         return variationKey;
     }
 
-    public String getCmabUUID() {
-        return cmabUUID;
+    public String getCmabUuid() {
+        return cmabUuid;
     }
 
     @Override
@@ -84,7 +84,7 @@ public class DecisionMetadata {
         if (!ruleKey.equals(that.ruleKey)) return false;
         if (!flagKey.equals(that.flagKey)) return false;
         if (enabled != that.enabled) return false;
-        if (!java.util.Objects.equals(cmabUUID, that.cmabUUID)) return false;
+        if (!java.util.Objects.equals(cmabUuid, that.cmabUuid)) return false;
         return variationKey.equals(that.variationKey);
     }
 
@@ -94,7 +94,7 @@ public class DecisionMetadata {
         result = 31 * result + flagKey.hashCode();
         result = 31 * result + ruleKey.hashCode();
         result = 31 * result + variationKey.hashCode();
-        result = 31 * result + (cmabUUID != null ? cmabUUID.hashCode() : 0);
+        result = 31 * result + (cmabUuid != null ? cmabUuid.hashCode() : 0);
         return result;
     }
 
@@ -106,7 +106,7 @@ public class DecisionMetadata {
             .add("ruleType='" + ruleType + "'")
             .add("variationKey='" + variationKey + "'")
             .add("enabled=" + enabled)
-            .add("cmabUUID='" + cmabUUID + "'")
+            .add("cmabUuid='" + cmabUuid + "'")
             .toString();
     }
 
@@ -118,7 +118,7 @@ public class DecisionMetadata {
         private String flagKey;
         private String variationKey;
         private boolean enabled;
-        private String cmabUUID;
+        private String cmabUuid;
 
         public Builder setEnabled(boolean enabled) {
             this.enabled = enabled;
@@ -145,13 +145,13 @@ public class DecisionMetadata {
             return this;
         }
 
-        public Builder setCmabUUID(String cmabUUID){
-            this.cmabUUID = cmabUUID;
+        public Builder setCmabUuid(String cmabUuid){
+            this.cmabUuid = cmabUuid;
             return this;
         }
 
         public DecisionMetadata build() {
-            return new DecisionMetadata(flagKey, ruleKey, ruleType, variationKey, enabled, cmabUUID);
+            return new DecisionMetadata(flagKey, ruleKey, ruleType, variationKey, enabled, cmabUuid);
         }
     }
 }
