@@ -1,5 +1,28 @@
 # Optimizely Java X SDK Changelog
 
+## [4.3.0]
+Dec 10th, 2025
+
+### New Features
+- **CMAB (Contextual Multi-Armed Bandit) Support**: Added support for CMAB experiments with new configuration options and cache control ([#577](https://github.com/optimizely/java-sdk/pull/577), [#578](https://github.com/optimizely/java-sdk/pull/578), [#579](https://github.com/optimizely/java-sdk/pull/579), [#582](https://github.com/optimizely/java-sdk/pull/582), [#583](https://github.com/optimizely/java-sdk/pull/583), [#584](https://github.com/optimizely/java-sdk/pull/584), [#585](https://github.com/optimizely/java-sdk/pull/585), [#590](https://github.com/optimizely/java-sdk/pull/590), [#593](https://github.com/optimizely/java-sdk/pull/593))
+- **Add Holdouts Feature**: Add Holdout support for feature experimentation ([#572](https://github.com/optimizely/java-sdk/pull/572), [#576](https://github.com/optimizely/java-sdk/pull/576))
+- **Multi-Region Support for Data Hosting**: Added SDK support for multi-region data hosting ([#573](https://github.com/optimizely/java-sdk/pull/573))
+
+### API Changes
+- **OptimizelyUserContext**: New asynchronous decision-making methods
+  - `decideAsync()`: Asynchronous method to make a decision for a single flag with CMAB support
+  - `decideAllAsync()`: Asynchronous method to make decisions for all flags
+  - `decideForKeysAsync()`: Asynchronous method to make decisions for multiple flag keys
+
+- **Client Initialization**:
+  - `CmabClientConfig` can be injected when initializing the client for custom CMAB configuration
+  - `CmabService` can be provided to `OptimizelyFactory` for custom CMAB service implementation
+
+- **New Decide Options**: Added cache control options for CMAB
+  - `IGNORE_CMAB_CACHE`: Skip reading from CMAB cache
+  - `RESET_CMAB_CACHE`: Clear and reset CMAB cache before decision
+  - `INVALIDATE_USER_CMAB_CACHE`: Invalidate cache entries for specific user
+
 ## [4.2.2]
 May 28th, 2025
 
