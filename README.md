@@ -44,9 +44,9 @@ dependencies {
   compile 'com.optimizely.ab:core-api:{VERSION}'
   compile 'com.optimizely.ab:core-httpclient-impl:{VERSION}'
   // The SDK integrates with multiple JSON parsers, here we use Jackson.
-  compile 'com.fasterxml.jackson.core:jackson-core:2.7.1'
-  compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.1'
-  compile 'com.fasterxml.jackson.core:jackson-databind:2.7.1'
+  compile 'com.fasterxml.jackson.core:jackson-core:2.13.5'
+  compile 'com.fasterxml.jackson.core:jackson-annotations:2.13.5'
+  compile 'com.fasterxml.jackson.core:jackson-databind:2.13.5'
 }
 ```
 

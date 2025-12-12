@@ -49,17 +49,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jdk: [8, 9]
+        # github not support JVM 8 anymore
+        jdk: [11, 17]
         optimizely_default_parser: [GSON_CONFIG_PARSER, JACKSON_CONFIG_PARSER, JSON_CONFIG_PARSER, JSON_SIMPLE_CONFIG_PARSER]
     steps:
       - name: checkout
         uses: actions/checkout@v4
       
       - name: set up JDK ${{ matrix.jdk }}
-        uses: AdoptOpenJDK/install-jdk@v1
+        uses: actions/setup-java@v4
         with:
-          version: ${{ matrix.jdk }}
-          architecture: x64
+          java-version: ${{ matrix.jdk }}
+          distribution: 'temurin'
       
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
