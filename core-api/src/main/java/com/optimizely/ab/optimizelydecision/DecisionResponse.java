@@ -23,13 +23,13 @@ public class DecisionResponse<T> {
     private T result;
     private DecisionReasons reasons;
     private boolean error;
-    private String cmabUUID;
+    private String cmabUuid;
 
-    public DecisionResponse(@Nullable T result, @Nonnull DecisionReasons reasons, @Nonnull boolean error, @Nullable String cmabUUID) {
+    public DecisionResponse(@Nullable T result, @Nonnull DecisionReasons reasons, @Nonnull boolean error, @Nullable String cmabUuid) {
         this.result = result;
         this.reasons = reasons;
         this.error = error;
-        this.cmabUUID = cmabUUID;
+        this.cmabUuid = cmabUuid;
     }
 
     public DecisionResponse(@Nullable T result, @Nonnull DecisionReasons reasons) {
@@ -60,7 +60,7 @@ public class DecisionResponse<T> {
     }
 
     @Nullable
-    public String getCmabUUID() {
-        return cmabUUID;
+    public String getCmabUuid() {
+        return cmabUuid;
     }
 }

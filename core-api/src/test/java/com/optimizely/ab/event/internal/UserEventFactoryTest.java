@@ -186,7 +186,7 @@ public class UserEventFactoryTest {
         // Verify DecisionMetadata contains cmabUUID
         DecisionMetadata metadata = result.getMetadata();
         assertNotNull(metadata);
-        assertEquals(cmabUUID, metadata.getCmabUUID());
+        assertEquals(cmabUUID, metadata.getCmabUuid());
         assertEquals(flagKey, metadata.getFlagKey());
         assertEquals("experimentKey", metadata.getRuleKey());
         assertEquals(ruleType, metadata.getRuleType());
@@ -240,6 +240,6 @@ public class UserEventFactoryTest {
         assertNotNull(result);
         DecisionMetadata metadata = result.getMetadata();
         assertNotNull(metadata);
-        assertNull(metadata.getCmabUUID());
+        assertNull(metadata.getCmabUuid());
     }
 }

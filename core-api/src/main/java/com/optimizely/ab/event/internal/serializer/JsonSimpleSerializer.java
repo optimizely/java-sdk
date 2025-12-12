@@ -16,13 +16,8 @@
  */
 package com.optimizely.ab.event.internal.serializer;
 
-import com.optimizely.ab.event.internal.payload.Attribute;
-import com.optimizely.ab.event.internal.payload.Decision;
-import com.optimizely.ab.event.internal.payload.EventBatch;
+import com.optimizely.ab.event.internal.payload.*;
 
-import com.optimizely.ab.event.internal.payload.Event;
-import com.optimizely.ab.event.internal.payload.Snapshot;
-import com.optimizely.ab.event.internal.payload.Visitor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -142,6 +137,19 @@ class JsonSimpleSerializer implements Serializer {
         if (decision.getVariationId() != null) jsonObject.put("variation_id", decision.getVariationId());
         jsonObject.put("is_campaign_holdback", decision.getIsCampaignHoldback());
 
+        if (decision.getMetadata() != null) jsonObject.put("metadata", serializeDecisionMetadata(decision.getMetadata()));
+
+        return jsonObject;
+    }
+
+    private JSONObject serializeDecisionMetadata(DecisionMetadata metadata) {
+        JSONObject jsonObject = new JSONObject();
+        if (metadata.getFlagKey() != null) jsonObject.put("flag_key", metadata.getFlagKey());
+        if (metadata.getRuleKey() != null) jsonObject.put("rule_key", metadata.getRuleKey());
+        if (metadata.getRuleType() != null) jsonObject.put("rule_type", metadata.getRuleType());
+        if (metadata.getVariationKey() != null) jsonObject.put("variation_key", metadata.getVariationKey());
+        jsonObject.put("enabled", metadata.getEnabled());
+        if (metadata.getCmabUuid() != null) jsonObject.put("cmab_uuid", metadata.getCmabUuid());
         return jsonObject;
     }
 

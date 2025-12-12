@@ -42,7 +42,7 @@ public class UserEventFactory {
                                                         @Nonnull String flagKey,
                                                         @Nonnull String ruleType,
                                                         @Nonnull boolean enabled,
-                                                        @Nullable String cmabUUID) {
+                                                        @Nullable String cmabUuid) {
 
         if ((FeatureDecision.DecisionSource.ROLLOUT.toString().equals(ruleType)  || variation == null) && !projectConfig.getSendFlagDecisions())
         {
@@ -76,8 +76,8 @@ public class UserEventFactory {
             .setVariationKey(variationKey)
             .setEnabled(enabled);
         
-        if (cmabUUID != null) {
-            metadataBuilder.setCmabUUID(cmabUUID);
+        if (cmabUuid != null) {
+            metadataBuilder.setCmabUuid(cmabUuid);
         }
         
         DecisionMetadata metadata = metadataBuilder.build();
