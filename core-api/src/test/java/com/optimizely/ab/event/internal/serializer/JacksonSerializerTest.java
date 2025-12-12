@@ -18,12 +18,7 @@ package com.optimizely.ab.event.internal.serializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-<<<<<<< HEAD
-import com.optimizely.ab.event.internal.payload.EventBatch;
-=======
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.optimizely.ab.event.internal.payload.*;
->>>>>>> master
 
 import org.junit.Test;
 
@@ -40,13 +35,7 @@ import static com.optimizely.ab.event.internal.serializer.SerializerTestUtils.ge
 import static com.optimizely.ab.event.internal.serializer.SerializerTestUtils.generateImpressionWithSessionIdJson;
 
 import static org.hamcrest.CoreMatchers.is;
-<<<<<<< HEAD
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNotNull;
-=======
 import static org.junit.Assert.*;
->>>>>>> master
 
 public class JacksonSerializerTest {
 
