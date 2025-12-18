@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, 2019, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, 2025 Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,13 +19,41 @@ package com.optimizely.ab.event.internal.serializer;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 
 class JacksonSerializer implements Serializer {
 
-    private ObjectMapper mapper =
-        new ObjectMapper().setPropertyNamingStrategy(
-            PropertyNamingStrategy.SNAKE_CASE);
+    private ObjectMapper mapper = createMapper();
+
+    /**
+     * Creates an ObjectMapper with snake_case naming strategy.
+     * Supports both Jackson 2.12+ (PropertyNamingStrategies) and earlier versions (PropertyNamingStrategy).
+     * Uses reflection to avoid compile-time dependencies on either API.
+     */
+    static ObjectMapper createMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Object namingStrategy = getSnakeCaseStrategy();
+        objectMapper.setPropertyNamingStrategy((com.fasterxml.jackson.databind.PropertyNamingStrategy) namingStrategy);
+        return objectMapper;
+    }
+
+    /**
+     * Gets the snake case naming strategy, supporting both Jackson 2.12+ and earlier versions.
+     */
+    private static Object getSnakeCaseStrategy() {
+        try {
+            // Try Jackson 2.12+ API first
+            Class<?> strategiesClass = Class.forName("com.fasterxml.jackson.databind.PropertyNamingStrategies");
+            return strategiesClass.getField("SNAKE_CASE").get(null);
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+            try {
+                // Fall back to Jackson 2.11 and earlier (deprecated but compatible)
+                Class<?> strategyClass = Class.forName("com.fasterxml.jackson.databind.PropertyNamingStrategy");
+                return strategyClass.getField("SNAKE_CASE").get(null);
+            } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException ex) {
+                throw new RuntimeException("Unable to find snake_case naming strategy in Jackson", ex);
+            }
+        }
+    }
 
     public <T> String serialize(T payload) {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);

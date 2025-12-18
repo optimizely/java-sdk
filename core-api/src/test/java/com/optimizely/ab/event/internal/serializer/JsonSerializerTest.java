@@ -16,13 +16,14 @@
  */
 package com.optimizely.ab.event.internal.serializer;
 
-import com.optimizely.ab.event.internal.payload.EventBatch;
+import com.optimizely.ab.event.internal.payload.*;
 
 import org.json.JSONObject;
 
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import static com.optimizely.ab.event.internal.serializer.SerializerTestUtils.generateConversion;
 import static com.optimizely.ab.event.internal.serializer.SerializerTestUtils.generateConversionJson;
@@ -33,6 +34,7 @@ import static com.optimizely.ab.event.internal.serializer.SerializerTestUtils.ge
 import static com.optimizely.ab.event.internal.serializer.SerializerTestUtils.generateImpressionWithSessionId;
 import static com.optimizely.ab.event.internal.serializer.SerializerTestUtils.generateImpressionWithSessionIdJson;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class JsonSerializerTest {
@@ -77,5 +79,54 @@ public class JsonSerializerTest {
         JSONObject expected = new JSONObject(generateConversionWithSessionIdJson());
 
         assertTrue(actual.similar(expected));
+    }
+
+    @Test
+    public void serializeDecisionMetadataWithCmabUuid() throws IOException {
+        String cmabUuid = "test-cmab-uuid-12345";
+        DecisionMetadata metadata = new DecisionMetadata("test_flag", "test_rule", "feature-test", "variation_a", true, cmabUuid);
+
+        Decision decision = new Decision.Builder()
+            .setCampaignId("layerId")
+            .setExperimentId("experimentId")
+            .setVariationId("variationId")
+            .setIsCampaignHoldback(false)
+            .setMetadata(metadata)
+            .build();
+
+        Event event = new Event.Builder()
+            .setTimestamp(12345L)
+            .setUuid("event-uuid")
+            .setEntityId("entityId")
+            .setKey("test_event")
+            .setType("test_event")
+            .build();
+
+        Snapshot snapshot = new Snapshot.Builder()
+            .setDecisions(Collections.singletonList(decision))
+            .setEvents(Collections.singletonList(event))
+            .build();
+
+        Visitor visitor = new Visitor.Builder()
+            .setVisitorId("visitor123")
+            .setAttributes(Collections.<Attribute>emptyList())
+            .setSnapshots(Collections.singletonList(snapshot))
+            .build();
+
+        EventBatch eventBatch = new EventBatch.Builder()
+            .setClientVersion("1.0.0")
+            .setAccountId("accountId")
+            .setVisitors(Collections.singletonList(visitor))
+            .setAnonymizeIp(false)
+            .setProjectId("projectId")
+            .setRevision("1")
+            .build();
+
+        String serialized = serializer.serialize(eventBatch);
+        System.out.println("serialized"+serialized);
+        // Verify correct serialization
+        assertTrue("Serialized JSON should contain 'cmab_uuid'", serialized.contains("\"cmab_uuid\""));
+        assertTrue("Serialized JSON should contain the UUID value", serialized.contains(cmabUuid));
+        assertFalse("Serialized JSON must NOT contain 'cmab_u_u_i_d'", serialized.contains("\"cmab_u_u_i_d\""));
     }
 }

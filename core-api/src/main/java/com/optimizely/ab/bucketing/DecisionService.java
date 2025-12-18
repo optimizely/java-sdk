@@ -169,7 +169,7 @@ public class DecisionService {
         reasons.merge(decisionMeetAudience.getReasons());
         if (decisionMeetAudience.getResult()) {
             String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
-            String cmabUUID = null;
+            String cmabUuid = null;
             decisionVariation = bucketer.bucket(experiment, bucketingId, projectConfig, decisionPath);
             if (decisionPath == DecisionPath.WITH_CMAB && isCmabExperiment(experiment) && decisionVariation.getResult() != null) {
                 // group-allocation and traffic-allocation checking passed for cmab  
@@ -185,7 +185,7 @@ public class DecisionService {
                 CmabDecision cmabResult = cmabDecision.getResult();
                 if (cmabResult != null) {
                     String variationId = cmabResult.getVariationId();
-                    cmabUUID = cmabResult.getCmabUUID();
+                    cmabUuid = cmabResult.getCmabUuid();
                     variation = experiment.getVariationIdToVariationMap().get(variationId);
                 }
             } else {
@@ -202,7 +202,7 @@ public class DecisionService {
                 }
             }
 
-            return new DecisionResponse<>(variation, reasons, false, cmabUUID);
+            return new DecisionResponse<>(variation, reasons, false, cmabUuid);
         }
 
         String message = reasons.addInfo("User \"%s\" does not meet conditions to be in experiment \"%s\".", user.getUserId(), experiment.getKey());
@@ -337,7 +337,7 @@ public class DecisionService {
             boolean error = decisionVariationResponse.isError();
 
             if (decision != null) {
-                decisions.add(new DecisionResponse(decision, reasons, error, decision.cmabUUID));
+                decisions.add(new DecisionResponse(decision, reasons, error, decision.cmabUuid));
                 continue;
             }
 
@@ -396,21 +396,21 @@ public class DecisionService {
                     getVariationFromExperimentRule(projectConfig, featureFlag.getKey(), experiment, user, options, userProfileTracker, decisionPath);
                 reasons.merge(decisionVariation.getReasons());
                 Variation variation = decisionVariation.getResult();
-                String cmabUUID = decisionVariation.getCmabUUID();
+                String cmabUuid = decisionVariation.getCmabUuid();
                 boolean error = decisionVariation.isError();
                 if (error) {
                     return new DecisionResponse(
-                        new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST, cmabUUID),
+                        new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST, cmabUuid),
                         reasons,
                         decisionVariation.isError(),
-                        cmabUUID);
+                        cmabUuid);
                 }
                 if (variation != null) {
                     return new DecisionResponse(
-                        new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST, cmabUUID),
+                        new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST, cmabUuid),
                         reasons,
                         decisionVariation.isError(),
-                        cmabUUID);
+                        cmabUuid);
                 }
             }
         } else {
@@ -845,7 +845,7 @@ public class DecisionService {
 
         variation = decisionResponse.getResult();
 
-        return new DecisionResponse<>(variation, reasons, decisionResponse.isError(), decisionResponse.getCmabUUID());
+        return new DecisionResponse<>(variation, reasons, decisionResponse.isError(), decisionResponse.getCmabUuid());
     }
 
     /**

@@ -19,26 +19,26 @@ import java.util.Objects;
 
 public class CmabDecision {
     private final String variationId;
-    private final String cmabUUID;
+    private final String cmabUuid;
 
-    public CmabDecision(String variationId, String cmabUUID) {
+    public CmabDecision(String variationId, String cmabUuid) {
         this.variationId = variationId;
-        this.cmabUUID = cmabUUID;
+        this.cmabUuid = cmabUuid;
     }
 
     public String getVariationId() {
         return variationId;
     }
 
-    public String getCmabUUID() {
-        return cmabUUID;
+    public String getCmabUuid() {
+        return cmabUuid;
     }
 
     @Override
     public String toString() {
         return "CmabDecision{" +
             "variationId='" + variationId + '\'' +
-            ", cmabUUID='" + cmabUUID + '\'' +
+            ", cmabUuid='" + cmabUuid + '\'' +
             '}';
     }
 
@@ -48,11 +48,11 @@ public class CmabDecision {
         if (o == null || getClass() != o.getClass()) return false;
         CmabDecision that = (CmabDecision) o;
         return Objects.equals(variationId, that.variationId) &&
-            Objects.equals(cmabUUID, that.cmabUUID);
+            Objects.equals(cmabUuid, that.cmabUuid);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(variationId, cmabUUID);
+        return Objects.hash(variationId, cmabUuid);
     }
 }

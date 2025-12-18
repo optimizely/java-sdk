@@ -18,12 +18,12 @@ package com.optimizely.ab.event.internal.serializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.optimizely.ab.event.internal.payload.EventBatch;
+import com.optimizely.ab.event.internal.payload.*;
 
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import static com.optimizely.ab.event.internal.serializer.SerializerTestUtils.generateConversion;
 import static com.optimizely.ab.event.internal.serializer.SerializerTestUtils.generateConversionJson;
@@ -35,15 +35,33 @@ import static com.optimizely.ab.event.internal.serializer.SerializerTestUtils.ge
 import static com.optimizely.ab.event.internal.serializer.SerializerTestUtils.generateImpressionWithSessionIdJson;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class JacksonSerializerTest {
 
     private JacksonSerializer serializer = new JacksonSerializer();
-    private ObjectMapper mapper =
-        new ObjectMapper().setPropertyNamingStrategy(
-            PropertyNamingStrategy.SNAKE_CASE);
+    private ObjectMapper mapper = JacksonSerializer.createMapper();
 
+    @Test
+    public void createMapperSucceeds() {
+        // Verify that createMapper() successfully creates an ObjectMapper with snake_case naming
+        // This tests that the reflection logic works for the current Jackson version
+        ObjectMapper testMapper = JacksonSerializer.createMapper();
+        assertNotNull("Mapper should be created successfully", testMapper);
+        
+        // Verify snake_case naming by serializing a simple object
+        class TestObject {
+            @SuppressWarnings("unused")
+            public String getMyFieldName() { return "test"; }
+        }
+        
+        try {
+            String json = testMapper.writeValueAsString(new TestObject());
+            assertTrue("Should use snake_case naming", json.contains("my_field_name"));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to serialize with snake_case naming", e);
+        }
+    }
 
     @Test
     public void serializeImpression() throws IOException {
@@ -83,5 +101,54 @@ public class JacksonSerializerTest {
         EventBatch expected = mapper.readValue(generateConversionWithSessionIdJson(), EventBatch.class);
 
         assertThat(actual, is(expected));
+    }
+
+    @Test
+    public void serializeDecisionMetadataWithCmabUuid() throws IOException {
+        String cmabUuid = "test-cmab-uuid-12345";
+        DecisionMetadata metadata = new DecisionMetadata("test_flag", "test_rule", "feature-test", "variation_a", true, cmabUuid);
+
+        Decision decision = new Decision.Builder()
+            .setCampaignId("layerId")
+            .setExperimentId("experimentId")
+            .setVariationId("variationId")
+            .setIsCampaignHoldback(false)
+            .setMetadata(metadata)
+            .build();
+
+        Event event = new Event.Builder()
+            .setTimestamp(12345L)
+            .setUuid("event-uuid")
+            .setEntityId("entityId")
+            .setKey("test_event")
+            .setType("test_event")
+            .build();
+
+        Snapshot snapshot = new Snapshot.Builder()
+            .setDecisions(Collections.singletonList(decision))
+            .setEvents(Collections.singletonList(event))
+            .build();
+
+        Visitor visitor = new Visitor.Builder()
+            .setVisitorId("visitor123")
+            .setAttributes(Collections.<Attribute>emptyList())
+            .setSnapshots(Collections.singletonList(snapshot))
+            .build();
+
+        EventBatch eventBatch = new EventBatch.Builder()
+            .setClientVersion("1.0.0")
+            .setAccountId("accountId")
+            .setVisitors(Collections.singletonList(visitor))
+            .setAnonymizeIp(false)
+            .setProjectId("projectId")
+            .setRevision("1")
+            .build();
+
+        String serialized = serializer.serialize(eventBatch);
+        System.out.println("serialized" + serialized);
+        // Critical assertion: must be "cmab_uuid", NOT "cmab_u_u_i_d"
+        assertTrue("Serialized JSON should contain 'cmab_uuid'", serialized.contains("\"cmab_uuid\""));
+        assertTrue("Serialized JSON should contain the UUID value", serialized.contains(cmabUuid));
+        assertFalse("Serialized JSON must NOT contain 'cmab_u_u_i_d'", serialized.contains("\"cmab_u_u_i_d\""));
     }
 }

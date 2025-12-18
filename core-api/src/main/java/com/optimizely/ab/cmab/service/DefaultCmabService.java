@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.optimizely.ab.event.internal.ClientEngineInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +31,7 @@ import com.optimizely.ab.cmab.client.CmabClient;
 import com.optimizely.ab.config.Attribute;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.ProjectConfig;
+import com.optimizely.ab.event.internal.ClientEngineInfo;
 import com.optimizely.ab.internal.Cache;
 import com.optimizely.ab.internal.DefaultLRUCache;
 import com.optimizely.ab.optimizelydecision.OptimizelyDecideOption;
@@ -107,7 +107,7 @@ public class DefaultCmabService implements CmabService {
             CmabDecision cmabDecision = fetchDecision(ruleId, userId, filteredAttributes);
             logger.debug("CMAB decision is {}", cmabDecision);
 
-            cmabCache.save(cacheKey, new CmabCacheValue(attributesHash, cmabDecision.getVariationId(), cmabDecision.getCmabUUID()));
+            cmabCache.save(cacheKey, new CmabCacheValue(attributesHash, cmabDecision.getVariationId(), cmabDecision.getCmabUuid()));
 
             return cmabDecision;
         } finally {

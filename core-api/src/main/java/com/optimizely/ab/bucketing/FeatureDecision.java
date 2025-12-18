@@ -43,7 +43,7 @@ public class FeatureDecision {
      * The CMAB UUID for Contextual Multi-Armed Bandit experiments.
      */
     @Nullable
-    public String cmabUUID;
+    public String cmabUuid;
 
     public enum DecisionSource {
         FEATURE_TEST("feature-test"),
@@ -74,7 +74,7 @@ public class FeatureDecision {
         this.experiment = experiment;
         this.variation = variation;
         this.decisionSource = decisionSource;
-        this.cmabUUID = null;
+        this.cmabUuid = null;
     }
 
     /**
@@ -83,14 +83,14 @@ public class FeatureDecision {
      * @param experiment     The {@link ExperimentCore} the Feature is associated with.
      * @param variation      The {@link Variation} the user was bucketed into.
      * @param decisionSource The source of the variation.
-     * @param cmabUUID       The CMAB UUID for Contextual Multi-Armed Bandit experiments.
+     * @param cmabUuid       The CMAB UUID for Contextual Multi-Armed Bandit experiments.
      */
     public FeatureDecision(@Nullable ExperimentCore experiment, @Nullable Variation variation,
-                           @Nullable DecisionSource decisionSource, @Nullable String cmabUUID) {
+                           @Nullable DecisionSource decisionSource, @Nullable String cmabUuid) {
         this.experiment = experiment;
         this.variation = variation;
         this.decisionSource = decisionSource;
-        this.cmabUUID = cmabUUID;
+        this.cmabUuid = cmabUuid;
     }
 
     @Override
@@ -103,14 +103,14 @@ public class FeatureDecision {
         if (variation != null ? !variation.equals(that.variation) : that.variation != null)
             return false;
         if (decisionSource != that.decisionSource) return false;
-        return cmabUUID != null ? cmabUUID.equals(that.cmabUUID) : that.cmabUUID == null;
+        return cmabUuid != null ? cmabUuid.equals(that.cmabUuid) : that.cmabUuid == null;
     }
 
     @Override
     public int hashCode() {
         int result = variation != null ? variation.hashCode() : 0;
         result = 31 * result + (decisionSource != null ? decisionSource.hashCode() : 0);
-        result = 31 * result + (cmabUUID != null ? cmabUUID.hashCode() : 0);
+        result = 31 * result + (cmabUuid != null ? cmabUuid.hashCode() : 0);
         return result;
     }
 }
