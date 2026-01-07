@@ -1704,6 +1704,103 @@ public class DecisionServiceTest {
         verify(mockBucketer, times(1)).bucket(any(Experiment.class), anyString(), any(ProjectConfig.class), any(DecisionPath.class));
     }
 
+    /**
+     * Verify that CMAB experiments do NOT save bucketing decisions to user profile.
+     * CMAB decisions are dynamic and should not be stored for sticky bucketing.
+     */
+    @Test
+    public void getVariationCmabExperimentDoesNotSaveUserProfile() throws Exception {
+        // Create a CMAB experiment
+        Experiment cmabExperiment = createMockCmabExperiment();
+        Variation variation1 = cmabExperiment.getVariations().get(0);
+        
+        // Setup user profile service and tracker
+        UserProfileService mockUserProfileService = mock(UserProfileService.class);
+        when(mockUserProfileService.lookup(genericUserId)).thenReturn(null);
+        
+        // Setup bucketer to return a variation (pass traffic allocation)
+        Bucketer mockBucketer = mock(Bucketer.class);
+        when(mockBucketer.bucket(eq(cmabExperiment), anyString(), eq(v4ProjectConfig), any(DecisionPath.class)))
+            .thenReturn(DecisionResponse.responseNoReasons(variation1));
+        
+        // Setup CMAB service to return a decision
+        CmabDecision mockCmabDecision = mock(CmabDecision.class);
+        when(mockCmabDecision.getVariationId()).thenReturn(variation1.getId());
+        when(mockCmabDecision.getCmabUuid()).thenReturn("test-cmab-uuid-123");
+        when(mockCmabService.getDecision(any(), any(), any(), any()))
+            .thenReturn(mockCmabDecision);
+        
+        DecisionService decisionServiceWithUPS = new DecisionService(
+            mockBucketer,
+            mockErrorHandler,
+            mockUserProfileService,
+            mockCmabService
+        );
+        
+        // Call getVariation with CMAB experiment
+        DecisionResponse<Variation> result = decisionServiceWithUPS.getVariation(
+            cmabExperiment,
+            optimizely.createUserContext(genericUserId, Collections.emptyMap()),
+            v4ProjectConfig
+        );
+        
+        // Verify variation and cmab_uuid are returned
+        assertEquals(variation1, result.getResult());
+        assertEquals("test-cmab-uuid-123", result.getCmabUuid());
+        
+        // Verify user profile service was NEVER called to save
+        verify(mockUserProfileService, never()).save(anyMapOf(String.class, Object.class));
+        
+        // Verify debug log was called to explain CMAB exclusion
+        logbackVerifier.expectMessage(Level.DEBUG,
+            "Skipping user profile service for CMAB experiment \"cmab_experiment\". " +
+            "CMAB decisions are dynamic and not stored for sticky bucketing.");
+    }
+    
+    /**
+     * Verify that standard (non-CMAB) experiments DO save bucketing decisions to user profile.
+     * Standard experiments should use sticky bucketing.
+     */
+    @Test
+    public void getVariationStandardExperimentSavesUserProfile() throws Exception {
+        final Experiment experiment = noAudienceProjectConfig.getExperiments().get(0);
+        final Variation variation = experiment.getVariations().get(0);
+        final Decision decision = new Decision(variation.getId());
+        
+        UserProfileService mockUserProfileService = mock(UserProfileService.class);
+        when(mockUserProfileService.lookup(genericUserId)).thenReturn(null);
+        
+        Bucketer mockBucketer = mock(Bucketer.class);
+        when(mockBucketer.bucket(eq(experiment), eq(genericUserId), eq(noAudienceProjectConfig), any(DecisionPath.class)))
+            .thenReturn(DecisionResponse.responseNoReasons(variation));
+        
+        DecisionService decisionServiceWithUPS = new DecisionService(
+            mockBucketer,
+            mockErrorHandler,
+            mockUserProfileService,
+            null // No CMAB service for standard experiment
+        );
+        
+        // Call getVariation with standard experiment
+        DecisionResponse<Variation> result = decisionServiceWithUPS.getVariation(
+            experiment,
+            optimizely.createUserContext(genericUserId, Collections.emptyMap()),
+            noAudienceProjectConfig
+        );
+        
+        // Verify variation was returned
+        assertEquals(variation, result.getResult());
+        
+        // Verify user profile WAS saved for standard experiment
+        UserProfile expectedUserProfile = new UserProfile(genericUserId,
+            Collections.singletonMap(experiment.getId(), decision));
+        verify(mockUserProfileService, times(1)).save(eq(expectedUserProfile.toMap()));
+        
+        // Verify appropriate logging
+        logbackVerifier.expectMessage(Level.INFO,
+            String.format("Saved user profile of user \"%s\".", genericUserId));
+    }
+
     private Experiment createMockCmabExperiment() {
         List<Variation> variations = Arrays.asList(
             new Variation("111151", "variation_1"),
