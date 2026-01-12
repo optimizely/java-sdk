@@ -164,7 +164,7 @@ public class DecisionService {
                 return new DecisionResponse(variation, reasons);
             }
         }
-        boolean ignoreUPS = false;
+        boolean ignoreUPS = false; // whether to ignore user profile service for cmab experiments
 
         DecisionResponse<Boolean> decisionMeetAudience = ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, experiment, user, EXPERIMENT, experiment.getKey());
         reasons.merge(decisionMeetAudience.getReasons());
