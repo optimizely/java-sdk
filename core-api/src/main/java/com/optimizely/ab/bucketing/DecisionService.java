@@ -164,6 +164,7 @@ public class DecisionService {
                 return new DecisionResponse(variation, reasons);
             }
         }
+        boolean ignoreUPS = false; // whether to ignore user profile service for cmab experiments
 
         DecisionResponse<Boolean> decisionMeetAudience = ExperimentUtils.doesUserMeetAudienceConditions(projectConfig, experiment, user, EXPERIMENT, experiment.getKey());
         reasons.merge(decisionMeetAudience.getReasons());
@@ -181,6 +182,13 @@ public class DecisionService {
                     return new DecisionResponse<>(null, reasons, true, null);
                 }
 
+                // Skip UPS for CMAB experiments as decisions are dynamic and not stored for sticky bucketing
+                ignoreUPS = true;
+                logger.debug(
+                    "Skipping user profile service for CMAB experiment \"{}\". CMAB decisions are dynamic and not stored for sticky bucketing.",
+                    experiment.getKey()
+                );
+
                 CmabDecision cmabResult = cmabDecision.getResult();
                 if (cmabResult != null) {
                     String variationId = cmabResult.getVariationId();
@@ -194,7 +202,7 @@ public class DecisionService {
             }
 
             if (variation != null) {
-                if (userProfileTracker != null) {
+                if (userProfileTracker != null && !ignoreUPS) {
                     userProfileTracker.updateUserProfile(experiment, variation);
                 } else {
                     logger.debug("This decision will not be saved since the UserProfileService is null.");
