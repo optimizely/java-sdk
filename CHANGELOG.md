@@ -1,5 +1,14 @@
 # Optimizely Java X SDK Changelog
 
+## [4.3.1]
+Jan 20, 2025
+
+### Fixes
+* [FSSDK-11986] upgrade Jackson serializer deprecated class by @jaeopt in https://github.com/optimizely/java-sdk/pull/587
+* [FSSDK-12030] Update: Exclude CMAB from UserProfileService by @FarhanAnjum-opti in https://github.com/optimizely/java-sdk/pull/595
+* [FSSDK-11953] java-sdk CMAB: Fix missing bucketing reasons in CMAB decision path by @Copilot in https://github.com/optimizely/java-sdk/pull/592
+
+
 ## [4.3.0]
 Dec 10th, 2025
 
