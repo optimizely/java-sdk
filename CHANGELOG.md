@@ -1,5 +1,13 @@
 # Optimizely Java X SDK Changelog
 
+## [4.3.1]
+Jan 20, 2025
+
+### Fixes
+* [FSSDK-12030] Exclude CMAB from UserProfileService ([#595](https://github.com/optimizely/java-sdk/pull/595))
+* [FSSDK-11953] Fix missing bucketing reasons in CMAB decision path ([#592](https://github.com/optimizely/java-sdk/pull/592))
+
+
 ## [4.3.0]
 Dec 10th, 2025
 
