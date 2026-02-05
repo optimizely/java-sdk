@@ -35,6 +35,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -66,6 +68,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     public final OptimizelyHttpClient httpClient;
     private final URI uri;
     private final String datafileAccessToken;
+    private final Map<String, String> customHeaders;
     private String datafileLastModified;
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -74,6 +77,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                                      OptimizelyHttpClient httpClient,
                                      String url,
                                      String datafileAccessToken,
+                                     Map<String, String> customHeaders,
                                      long blockingTimeoutPeriod,
                                      TimeUnit blockingTimeoutUnit,
                                      NotificationCenter notificationCenter,
@@ -82,6 +86,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         this.httpClient = httpClient;
         this.uri = URI.create(url);
         this.datafileAccessToken = datafileAccessToken;
+        this.customHeaders = customHeaders != null ? new HashMap<>(customHeaders) : new HashMap<>();
     }
 
     public URI getUri() {
@@ -171,12 +176,20 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
     HttpGet createHttpRequest() {
         HttpGet httpGet = new HttpGet(uri);
 
+        // Apply SDK headers first
         if (datafileAccessToken != null) {
             httpGet.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + datafileAccessToken);
         }
 
         if (datafileLastModified != null) {
             httpGet.setHeader(HttpHeaders.IF_MODIFIED_SINCE, datafileLastModified);
+        }
+
+        // Apply custom headers last to allow user override of SDK headers
+        if (customHeaders != null && !customHeaders.isEmpty()) {
+            for (Map.Entry<String, String> header : customHeaders.entrySet()) {
+                httpGet.setHeader(header.getKey(), header.getValue());
+            }
         }
 
         return httpGet;
@@ -190,6 +203,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
         private String datafile;
         private String url;
         private String datafileAccessToken = null;
+        private Map<String, String> customHeaders = null;
         private String format = "https://cdn.optimizely.com/datafiles/%s.json";
         private String authFormat = "https://config.optimizely.com/datafiles/auth/%s.json";
         private OptimizelyHttpClient httpClient;
@@ -219,6 +233,18 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
 
         public Builder withDatafileAccessToken(String token) {
             this.datafileAccessToken = token;
+            return this;
+        }
+
+        /**
+         * Set custom headers to be included in HTTP requests to fetch the datafile.
+         * If a custom header has the same name as an SDK-added header, the custom header value will override it.
+         *
+         * @param customHeaders A map of header names to header values
+         * @return A HttpProjectConfigManager builder
+         */
+        public Builder withCustomHeaders(Map<String, String> customHeaders) {
+            this.customHeaders = customHeaders;
             return this;
         }
 
@@ -380,6 +406,7 @@ public class HttpProjectConfigManager extends PollingProjectConfigManager {
                 httpClient,
                 url,
                 datafileAccessToken,
+                customHeaders,
                 blockingTimeoutPeriod,
                 blockingTimeoutUnit,
                 notificationCenter,
