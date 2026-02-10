@@ -1,5 +1,8 @@
 # Optimizely Java SDK
 
+[![Maven Central](https://img.shields.io/maven-central/v/com.optimizely.ab/core-api.svg)](https://mvnrepository.com/artifact/com.optimizely.ab/core-api)
+[![Build Status](https://github.com/optimizely/java-sdk/actions/workflows/java.yml/badge.svg?branch=master)](https://github.com/optimizely/java-sdk/actions/workflows/java.yml?query=branch%3Amaster)
+[![Coverage Status](https://coveralls.io/repos/github/optimizely/java-sdk/badge.svg?branch=master)](https://coveralls.io/github/optimizely/java-sdk?branch=master)
 [![Apache 2.0](https://img.shields.io/badge/license-APACHE%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 This repository houses the Java SDK for use with Optimizely Feature Experimentation and Optimizely Full Stack (legacy).
