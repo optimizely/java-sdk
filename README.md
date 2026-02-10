@@ -4,13 +4,13 @@
 
 This repository houses the Java SDK for use with Optimizely Feature Experimentation and Optimizely Full Stack (legacy).
 
-Optimizely Feature Experimentation is an A/B testing and feature management tool for product development teams that enables you to experiment at every step. Using Optimizely Feature Experimentation allows for every feature on your roadmap to be an opportunity to discover hidden insights. Learn more at [Optimizely.com](https://www.optimizely.com/products/experiment/feature-experimentation/), or see the [developer documentation](https://docs.developers.optimizely.com/experimentation/v4.0.0-full-stack/docs/welcome).
+Optimizely Feature Experimentation is an A/B testing and feature management tool for product development teams that enables you to experiment at every step. Using Optimizely Feature Experimentation allows for every feature on your roadmap to be an opportunity to discover hidden insights. Learn more at [Optimizely.com](https://www.optimizely.com/products/experiment/feature-experimentation/), or see the [developer documentation](https://docs.developers.optimizely.com/feature-experimentation/docs/introduction).
 
 Optimizely Rollouts is [free feature flags](https://www.optimizely.com/free-feature-flagging/) for development teams. You can easily roll out and roll back features in any application without code deploys, mitigating risk for every feature on your roadmap.
 
 ## Get started
 
-Refer to the [Java SDK's developer documentation](https://docs.developers.optimizely.com/experimentation/v4.0.0-full-stack/docs/java-sdk) for detailed instructions on getting started with using the SDK.
+Refer to the [Java SDK's developer documentation](https://docs.developers.optimizely.com/feature-experimentation/docs/java-sdk) for detailed instructions on getting started with using the SDK.
 
 ### Requirements
 
@@ -53,7 +53,7 @@ dependencies {
 
 ## Use the Java SDK
 
-See the Optimizely Feature Experimentation [developer documentation](https://docs.developers.optimizely.com/experimentation/v4.0-full-stack/docs/java-sdk) to learn how to set up your first Java project and use the SDK.
+See the Optimizely Feature Experimentation [developer documentation](https://docs.developers.optimizely.com/feature-experimentation/docs/java-sdk) to learn how to set up your first Java project and use the SDK.
 
 
 ## SDK Development
