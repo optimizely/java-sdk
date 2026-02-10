@@ -49,7 +49,9 @@ dependencies {
   compile 'com.fasterxml.jackson.core:jackson-databind:2.13.5'
 }
 ```
+## Feature Management Access
 
+To access the Feature Management configuration in the Optimizely dashboard, please contact your Optimizely customer success manager.
 
 ## Use the Java SDK
 
