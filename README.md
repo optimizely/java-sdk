@@ -167,8 +167,6 @@ License (Apache 2.0): [https://github.com/apache/httpcomponents-client/blob/mast
 
 - Go - https://github.com/optimizely/go-sdk
 
-- Java - https://github.com/optimizely/java-sdk
-
 - JavaScript - https://github.com/optimizely/javascript-sdk
 
 - PHP - https://github.com/optimizely/php-sdk
