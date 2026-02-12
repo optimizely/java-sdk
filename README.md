@@ -1,16 +1,19 @@
 # Optimizely Java SDK
 
+[![Maven Central](https://img.shields.io/maven-central/v/com.optimizely.ab/core-api.svg)](https://mvnrepository.com/artifact/com.optimizely.ab/core-api)
+[![Build Status](https://github.com/optimizely/java-sdk/actions/workflows/java.yml/badge.svg?branch=master)](https://github.com/optimizely/java-sdk/actions/workflows/java.yml?query=branch%3Amaster)
+[![Coverage Status](https://coveralls.io/repos/github/optimizely/java-sdk/badge.svg?branch=master)](https://coveralls.io/github/optimizely/java-sdk?branch=master)
 [![Apache 2.0](https://img.shields.io/badge/license-APACHE%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 This repository houses the Java SDK for use with Optimizely Feature Experimentation and Optimizely Full Stack (legacy).
 
-Optimizely Feature Experimentation is an A/B testing and feature management tool for product development teams that enables you to experiment at every step. Using Optimizely Feature Experimentation allows for every feature on your roadmap to be an opportunity to discover hidden insights. Learn more at [Optimizely.com](https://www.optimizely.com/products/experiment/feature-experimentation/), or see the [developer documentation](https://docs.developers.optimizely.com/experimentation/v4.0.0-full-stack/docs/welcome).
+Optimizely Feature Experimentation is an A/B testing and feature management tool for product development teams that enables you to experiment at every step. Using Optimizely Feature Experimentation allows for every feature on your roadmap to be an opportunity to discover hidden insights. Learn more at [Optimizely.com](https://www.optimizely.com/products/experiment/feature-experimentation/), or see the [developer documentation](https://docs.developers.optimizely.com/feature-experimentation/docs/introduction).
 
 Optimizely Rollouts is [free feature flags](https://www.optimizely.com/free-feature-flagging/) for development teams. You can easily roll out and roll back features in any application without code deploys, mitigating risk for every feature on your roadmap.
 
 ## Get started
 
-Refer to the [Java SDK's developer documentation](https://docs.developers.optimizely.com/experimentation/v4.0.0-full-stack/docs/java-sdk) for detailed instructions on getting started with using the SDK.
+Refer to the [Java SDK's developer documentation](https://docs.developers.optimizely.com/feature-experimentation/docs/java-sdk) for detailed instructions on getting started with using the SDK.
 
 ### Requirements
 
@@ -49,11 +52,13 @@ dependencies {
   compile 'com.fasterxml.jackson.core:jackson-databind:2.13.5'
 }
 ```
+## Feature Management Access
 
+To access the Feature Management configuration in the Optimizely dashboard, please contact your Optimizely customer success manager.
 
 ## Use the Java SDK
 
-See the Optimizely Feature Experimentation [developer documentation](https://docs.developers.optimizely.com/experimentation/v4.0-full-stack/docs/java-sdk) to learn how to set up your first Java project and use the SDK.
+See the Optimizely Feature Experimentation [developer documentation](https://docs.developers.optimizely.com/feature-experimentation/docs/java-sdk) to learn how to set up your first Java project and use the SDK.
 
 
 ## SDK Development
@@ -161,8 +166,6 @@ License (Apache 2.0): [https://github.com/apache/httpcomponents-client/blob/mast
 - Flutter - https://github.com/optimizely/optimizely-flutter-sdk
 
 - Go - https://github.com/optimizely/go-sdk
-
-- Java - https://github.com/optimizely/java-sdk
 
 - JavaScript - https://github.com/optimizely/javascript-sdk
 
