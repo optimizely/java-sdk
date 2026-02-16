@@ -399,6 +399,17 @@ public class DecisionService {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
 
+                // Skip experiments with unsupported types.
+                // If the experiment type is null (not set in datafile), we still evaluate it.
+                // If the experiment type is set but not in the supported list, we skip it.
+                if (experiment != null && experiment.getType() != null && !Experiment.SUPPORTED_TYPES.contains(experiment.getType())) {
+                    String skipMessage = reasons.addInfo(
+                        "Skipping experiment \"%s\" with unsupported type \"%s\" for feature \"%s\".",
+                        experiment.getKey(), experiment.getType(), featureFlag.getKey());
+                    logger.debug(skipMessage);
+                    continue;
+                }
+
                 DecisionResponse<Variation> decisionVariation =
                     getVariationFromExperimentRule(projectConfig, featureFlag.getKey(), experiment, user, options, userProfileTracker, decisionPath);
                 reasons.merge(decisionVariation.getReasons());

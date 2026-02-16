@@ -148,6 +148,8 @@ final public class JsonConfigParser implements ConfigParser {
             JSONObject experimentObject = (JSONObject) obj;
             String id = experimentObject.getString("id");
             String key = experimentObject.getString("key");
+            String type = experimentObject.has("type") && !experimentObject.isNull("type")
+                ? experimentObject.getString("type") : null;
             String status = experimentObject.isNull("status") ?
                 ExperimentStatus.NOT_STARTED.toString() : experimentObject.getString("status");
             String layerId = experimentObject.has("layerId") ? experimentObject.getString("layerId") : null;
@@ -179,7 +181,7 @@ final public class JsonConfigParser implements ConfigParser {
                 cmab = parseCmab(cmabObject);
             }
 
-            experiments.add(new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
+            experiments.add(new Experiment(id, key, type, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
                 trafficAllocations, groupId, cmab));
         }
 

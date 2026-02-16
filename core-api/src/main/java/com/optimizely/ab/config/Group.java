@@ -55,6 +55,7 @@ public class Group implements IdMapped {
                 experiment = new Experiment(
                     experiment.getId(),
                     experiment.getKey(),
+                    experiment.getType(),
                     experiment.getStatus(),
                     experiment.getLayerId(),
                     experiment.getAudienceIds(),
