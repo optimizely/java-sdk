@@ -20,6 +20,7 @@ jobs:
         repository: 'optimizely/ci-helper-tools'
         path: 'home/runner/ci-helper-tools'
         ref: 'master'
+        persist-credentials: false
     - name: set SDK Branch if PR
       env: 
         HEAD_REF: ${{ github.head_ref }}
