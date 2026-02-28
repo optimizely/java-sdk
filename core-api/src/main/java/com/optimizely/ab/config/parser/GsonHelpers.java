@@ -137,6 +137,8 @@ final class GsonHelpers {
     static Experiment parseExperiment(JsonObject experimentJson, String groupId, JsonDeserializationContext context) {
         String id = experimentJson.get("id").getAsString();
         String key = experimentJson.get("key").getAsString();
+        String type = experimentJson.has("type") && !experimentJson.get("type").isJsonNull()
+            ? experimentJson.get("type").getAsString() : null;
         JsonElement experimentStatusJson = experimentJson.get("status");
         String status = experimentStatusJson.isJsonNull() ?
             ExperimentStatus.NOT_STARTED.toString() : experimentStatusJson.getAsString();
@@ -168,7 +170,7 @@ final class GsonHelpers {
             }
         }
 
-        return new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
+        return new Experiment(id, key, type, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
             trafficAllocations, groupId, cmab);
     }
 

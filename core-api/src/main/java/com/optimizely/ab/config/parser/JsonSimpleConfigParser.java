@@ -150,6 +150,8 @@ final public class JsonSimpleConfigParser implements ConfigParser {
             JSONObject experimentObject = (JSONObject) obj;
             String id = (String) experimentObject.get("id");
             String key = (String) experimentObject.get("key");
+            Object typeObj = experimentObject.get("type");
+            String type = typeObj != null ? (String) typeObj : null;
             Object statusJson = experimentObject.get("status");
             String status = statusJson == null ? ExperimentStatus.NOT_STARTED.toString() :
                 (String) experimentObject.get("status");
@@ -189,7 +191,7 @@ final public class JsonSimpleConfigParser implements ConfigParser {
                 }
             }
 
-            experiments.add(new Experiment(id, key, status, layerId, audienceIds, conditions, variations, 
+            experiments.add(new Experiment(id, key, type, status, layerId, audienceIds, conditions, variations,
                 userIdToVariationKeyMap, trafficAllocations, groupId, cmab));
         }
 
