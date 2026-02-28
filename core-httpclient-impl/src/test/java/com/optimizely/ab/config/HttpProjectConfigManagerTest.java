@@ -37,6 +37,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import static com.optimizely.ab.config.HttpProjectConfigManager.*;
@@ -395,5 +397,160 @@ public class HttpProjectConfigManagerTest {
         // Assert ProjectConfig when refetched as datafile has not changed
         ProjectConfig latestConfig = projectConfigManager.getConfig();
         assertEquals(actual, latestConfig);
+    }
+
+    @Test
+    public void testCustomHeadersAreIncludedInRequest() throws Exception {
+        Map<String, String> customHeaders = new HashMap<>();
+        customHeaders.put("X-Custom-Header", "custom-value");
+        customHeaders.put("X-Another-Header", "another-value");
+
+        HttpProjectConfigManager manager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("test-sdk-key")
+            .withCustomHeaders(customHeaders)
+            .build(true);
+
+        try {
+            HttpGet request = manager.createHttpRequest();
+
+            // Verify custom headers are present
+            assertNotNull(request.getFirstHeader("X-Custom-Header"));
+            assertEquals("custom-value", request.getFirstHeader("X-Custom-Header").getValue());
+            assertNotNull(request.getFirstHeader("X-Another-Header"));
+            assertEquals("another-value", request.getFirstHeader("X-Another-Header").getValue());
+        } finally {
+            manager.close();
+        }
+    }
+
+    @Test
+    public void testCustomHeadersOverrideSdkHeaders() throws Exception {
+        Map<String, String> customHeaders = new HashMap<>();
+        // Override the Authorization header
+        customHeaders.put(HttpHeaders.AUTHORIZATION, "Bearer custom-token");
+
+        HttpProjectConfigManager manager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("test-sdk-key")
+            .withDatafileAccessToken("sdk-token")
+            .withCustomHeaders(customHeaders)
+            .build(true);
+
+        try {
+            HttpGet request = manager.createHttpRequest();
+
+            // Verify custom header overrides SDK header
+            assertNotNull(request.getFirstHeader(HttpHeaders.AUTHORIZATION));
+            assertEquals("Bearer custom-token", request.getFirstHeader(HttpHeaders.AUTHORIZATION).getValue());
+        } finally {
+            manager.close();
+        }
+    }
+
+    @Test
+    public void testWithoutCustomHeaders() throws Exception {
+        HttpProjectConfigManager manager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("test-sdk-key")
+            .build(true);
+
+        try {
+            HttpGet request = manager.createHttpRequest();
+
+            // Verify no custom headers are present (only SDK headers)
+            assertNull(request.getFirstHeader("X-Custom-Header"));
+        } finally {
+            manager.close();
+        }
+    }
+
+    @Test
+    public void testWithNullCustomHeaders() throws Exception {
+        HttpProjectConfigManager manager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("test-sdk-key")
+            .withCustomHeaders(null)
+            .build(true);
+
+        try {
+            HttpGet request = manager.createHttpRequest();
+
+            // Should not throw exception and should work normally
+            assertNotNull(request);
+        } finally {
+            manager.close();
+        }
+    }
+
+    @Test
+    public void testWithEmptyCustomHeaders() throws Exception {
+        Map<String, String> customHeaders = new HashMap<>();
+
+        HttpProjectConfigManager manager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("test-sdk-key")
+            .withCustomHeaders(customHeaders)
+            .build(true);
+
+        try {
+            HttpGet request = manager.createHttpRequest();
+
+            // Should not throw exception and should work normally
+            assertNotNull(request);
+        } finally {
+            manager.close();
+        }
+    }
+
+    @Test
+    public void testCustomHeadersWithDatafileAccessToken() throws Exception {
+        Map<String, String> customHeaders = new HashMap<>();
+        customHeaders.put("X-Custom-Header", "custom-value");
+
+        HttpProjectConfigManager manager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("test-sdk-key")
+            .withDatafileAccessToken("test-token")
+            .withCustomHeaders(customHeaders)
+            .build(true);
+
+        try {
+            HttpGet request = manager.createHttpRequest();
+
+            // Verify both custom headers and SDK headers are present
+            assertNotNull(request.getFirstHeader("X-Custom-Header"));
+            assertEquals("custom-value", request.getFirstHeader("X-Custom-Header").getValue());
+            assertNotNull(request.getFirstHeader(HttpHeaders.AUTHORIZATION));
+            assertEquals("Bearer test-token", request.getFirstHeader(HttpHeaders.AUTHORIZATION).getValue());
+        } finally {
+            manager.close();
+        }
+    }
+
+    @Test
+    public void testCustomHeadersAreImmutable() throws Exception {
+        Map<String, String> customHeaders = new HashMap<>();
+        customHeaders.put("X-Custom-Header", "original-value");
+
+        HttpProjectConfigManager manager = builder()
+            .withOptimizelyHttpClient(mockHttpClient)
+            .withSdkKey("test-sdk-key")
+            .withCustomHeaders(customHeaders)
+            .build(true);
+
+        try {
+            // Modify the original map after building
+            customHeaders.put("X-Custom-Header", "modified-value");
+            customHeaders.put("X-New-Header", "new-value");
+
+            HttpGet request = manager.createHttpRequest();
+
+            // Verify headers are not affected by external map modifications
+            assertEquals("original-value", request.getFirstHeader("X-Custom-Header").getValue());
+            assertNull(request.getFirstHeader("X-New-Header"));
+        } finally {
+            manager.close();
+        }
     }
 }
