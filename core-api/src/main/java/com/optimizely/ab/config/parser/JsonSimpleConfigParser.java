@@ -189,8 +189,17 @@ final public class JsonSimpleConfigParser implements ConfigParser {
                 }
             }
 
-            experiments.add(new Experiment(id, key, status, layerId, audienceIds, conditions, variations, 
-                userIdToVariationKeyMap, trafficAllocations, groupId, cmab));
+            // Parse type field
+            String type = null;
+            if (experimentObject.containsKey("type")) {
+                Object typeObj = experimentObject.get("type");
+                if (typeObj != null) {
+                    type = (String) typeObj;
+                }
+            }
+
+            experiments.add(new Experiment(id, key, status, layerId, audienceIds, conditions, variations,
+                userIdToVariationKeyMap, trafficAllocations, groupId, cmab, type));
         }
 
         return experiments;

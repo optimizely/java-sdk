@@ -194,6 +194,10 @@ public class DatafileProjectConfig implements ProjectConfig {
         List<Experiment> allExperiments = new ArrayList<Experiment>();
         allExperiments.addAll(experiments);
         allExperiments.addAll(aggregateGroupExperiments(groups));
+
+        // Inject "everyone else" variation into feature_rollout experiments
+        allExperiments = injectFeatureRolloutVariations(allExperiments, this.featureFlags, this.rollouts);
+
         this.experiments = Collections.unmodifiableList(allExperiments);
 
         if (holdouts == null) {
@@ -355,6 +359,110 @@ public class DatafileProjectConfig implements ProjectConfig {
     @Nullable
     public Experiment getExperimentForVariationId(String variationId) {
         return this.variationIdToExperimentMapping.get(variationId);
+    }
+
+    /**
+     * Injects the "everyone else" variation from the flag's rollout into any experiment
+     * with type "feature_rollout". This enables Feature Rollout experiments to fall back
+     * to the everyone else variation when users are outside the rollout percentage.
+     */
+    private List<Experiment> injectFeatureRolloutVariations(
+        List<Experiment> allExperiments,
+        List<FeatureFlag> featureFlags,
+        List<Rollout> rollouts
+    ) {
+        if (featureFlags == null || featureFlags.isEmpty()) {
+            return allExperiments;
+        }
+
+        // Build rollout ID to Rollout mapping
+        Map<String, Rollout> rolloutMap = new HashMap<>();
+        if (rollouts != null) {
+            for (Rollout rollout : rollouts) {
+                rolloutMap.put(rollout.getId(), rollout);
+            }
+        }
+
+        // Build experiment ID to index mapping for quick lookup
+        Map<String, Integer> experimentIndexMap = new HashMap<>();
+        for (int i = 0; i < allExperiments.size(); i++) {
+            experimentIndexMap.put(allExperiments.get(i).getId(), i);
+        }
+
+        List<Experiment> result = new ArrayList<>(allExperiments);
+
+        for (FeatureFlag flag : featureFlags) {
+            Variation everyoneElseVariation = getEveryoneElseVariation(flag, rolloutMap);
+            if (everyoneElseVariation == null) {
+                continue;
+            }
+
+            for (String experimentId : flag.getExperimentIds()) {
+                Integer index = experimentIndexMap.get(experimentId);
+                if (index == null) {
+                    continue;
+                }
+                Experiment experiment = result.get(index);
+                if (!"feature_rollout".equals(experiment.getType())) {
+                    continue;
+                }
+
+                // Create new experiment with injected variation and traffic allocation
+                List<Variation> newVariations = new ArrayList<>(experiment.getVariations());
+                newVariations.add(everyoneElseVariation);
+
+                List<TrafficAllocation> newTrafficAllocation = new ArrayList<>(experiment.getTrafficAllocation());
+                newTrafficAllocation.add(new TrafficAllocation(everyoneElseVariation.getId(), 10000));
+
+                Experiment updatedExperiment = new Experiment(
+                    experiment.getId(),
+                    experiment.getKey(),
+                    experiment.getStatus(),
+                    experiment.getLayerId(),
+                    experiment.getAudienceIds(),
+                    experiment.getAudienceConditions(),
+                    newVariations,
+                    experiment.getUserIdToVariationKeyMap(),
+                    newTrafficAllocation,
+                    experiment.getGroupId(),
+                    experiment.getCmab(),
+                    experiment.getType()
+                );
+
+                result.set(index, updatedExperiment);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Gets the "everyone else" variation from the flag's rollout.
+     * The everyone else rule is the last experiment in the rollout,
+     * and the variation is the first variation of that rule.
+     *
+     * @return the everyone else variation, or null if it cannot be resolved
+     */
+    @Nullable
+    private Variation getEveryoneElseVariation(FeatureFlag flag, Map<String, Rollout> rolloutMap) {
+        String rolloutId = flag.getRolloutId();
+        if (rolloutId == null || rolloutId.isEmpty()) {
+            return null;
+        }
+        Rollout rollout = rolloutMap.get(rolloutId);
+        if (rollout == null) {
+            return null;
+        }
+        List<Experiment> rolloutExperiments = rollout.getExperiments();
+        if (rolloutExperiments == null || rolloutExperiments.isEmpty()) {
+            return null;
+        }
+        Experiment everyoneElseRule = rolloutExperiments.get(rolloutExperiments.size() - 1);
+        List<Variation> variations = everyoneElseRule.getVariations();
+        if (variations == null || variations.isEmpty()) {
+            return null;
+        }
+        return variations.get(0);
     }
 
     private List<Experiment> aggregateGroupExperiments(List<Group> groups) {
