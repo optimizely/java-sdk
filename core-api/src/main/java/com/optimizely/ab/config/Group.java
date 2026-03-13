@@ -63,7 +63,8 @@ public class Group implements IdMapped {
                     experiment.getUserIdToVariationKeyMap(),
                     experiment.getTrafficAllocation(),
                     id,
-                    experiment.getCmab()
+                    experiment.getCmab(),
+                    experiment.getType()
                 );
             }
             this.experiments.add(experiment);

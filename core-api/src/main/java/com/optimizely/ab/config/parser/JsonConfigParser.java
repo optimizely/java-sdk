@@ -179,8 +179,10 @@ final public class JsonConfigParser implements ConfigParser {
                 cmab = parseCmab(cmabObject);
             }
 
+            String type = experimentObject.optString("type", null);
+
             experiments.add(new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
-                trafficAllocations, groupId, cmab));
+                trafficAllocations, groupId, cmab, type));
         }
 
         return experiments;

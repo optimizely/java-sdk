@@ -168,8 +168,16 @@ final class GsonHelpers {
             }
         }
 
+        String type = null;
+        if (experimentJson.has("type")) {
+            JsonElement typeElement = experimentJson.get("type");
+            if (!typeElement.isJsonNull()) {
+                type = typeElement.getAsString();
+            }
+        }
+
         return new Experiment(id, key, status, layerId, audienceIds, conditions, variations, userIdToVariationKeyMap,
-            trafficAllocations, groupId, cmab);
+            trafficAllocations, groupId, cmab, type);
     }
 
     static Experiment parseExperiment(JsonObject experimentJson, JsonDeserializationContext context) {
