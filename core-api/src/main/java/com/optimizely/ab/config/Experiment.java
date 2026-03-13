@@ -53,6 +53,12 @@ public class Experiment implements ExperimentCore {
     private final Map<String, Variation> variationIdToVariationMap;
     private final Map<String, String> userIdToVariationKeyMap;
 
+    public static final String TYPE_AB = "a/b";
+    public static final String TYPE_MAB = "multi_armed_bandit";
+    public static final String TYPE_CMAB = "contextual_multi_armed_bandit";
+    public static final String TYPE_TD = "targeted_delivery";
+    public static final String TYPE_FR = "feature_rollout";
+
     public enum ExperimentStatus {
         RUNNING("Running"),
         LAUNCHED("Launched"),

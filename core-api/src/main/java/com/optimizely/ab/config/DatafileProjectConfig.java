@@ -403,7 +403,7 @@ public class DatafileProjectConfig implements ProjectConfig {
                     continue;
                 }
                 Experiment experiment = result.get(index);
-                if (!"feature_rollout".equals(experiment.getType())) {
+                if (!Experiment.TYPE_FR.equals(experiment.getType())) {
                     continue;
                 }
 

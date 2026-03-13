@@ -63,7 +63,7 @@ public class FeatureRolloutConfigTest {
     public void featureRolloutExperimentGetsEveryoneElseVariationInjected() {
         Experiment experiment = projectConfig.getExperimentKeyMapping().get("feature_rollout_experiment");
         assertNotNull("Experiment should exist", experiment);
-        assertEquals("feature_rollout", experiment.getType());
+        assertEquals(Experiment.TYPE_FR, experiment.getType());
 
         // Should have 2 variations: original + everyone else
         assertEquals("Should have 2 variations after injection", 2, experiment.getVariations().size());
@@ -107,7 +107,7 @@ public class FeatureRolloutConfigTest {
     public void abTestExperimentNotModified() {
         Experiment experiment = projectConfig.getExperimentKeyMapping().get("ab_test_experiment");
         assertNotNull("Experiment should exist", experiment);
-        assertEquals("a/b", experiment.getType());
+        assertEquals(Experiment.TYPE_AB, experiment.getType());
 
         // Should still have exactly 2 original variations
         assertEquals("A/B test should keep original 2 variations", 2, experiment.getVariations().size());
@@ -127,7 +127,7 @@ public class FeatureRolloutConfigTest {
     public void featureRolloutWithEmptyRolloutIdDoesNotCrash() {
         Experiment experiment = projectConfig.getExperimentKeyMapping().get("rollout_no_rollout_id_experiment");
         assertNotNull("Experiment should exist", experiment);
-        assertEquals("feature_rollout", experiment.getType());
+        assertEquals(Experiment.TYPE_FR, experiment.getType());
 
         // Should keep only original variation since rollout cannot be resolved
         assertEquals("Should keep only original variation", 1, experiment.getVariations().size());
@@ -142,11 +142,11 @@ public class FeatureRolloutConfigTest {
     public void typeFieldCorrectlyParsed() {
         Experiment rolloutExp = projectConfig.getExperimentKeyMapping().get("feature_rollout_experiment");
         assertNotNull(rolloutExp);
-        assertEquals("feature_rollout", rolloutExp.getType());
+        assertEquals(Experiment.TYPE_FR, rolloutExp.getType());
 
         Experiment abExp = projectConfig.getExperimentKeyMapping().get("ab_test_experiment");
         assertNotNull(abExp);
-        assertEquals("a/b", abExp.getType());
+        assertEquals(Experiment.TYPE_AB, abExp.getType());
 
         Experiment noTypeExp = projectConfig.getExperimentKeyMapping().get("no_type_experiment");
         assertNotNull(noTypeExp);
