@@ -383,6 +383,7 @@ public class DatafileProjectConfig implements ProjectConfig {
             }
         }
 
+        // [TESTING]
         // Build experiment ID to index mapping for quick lookup
         Map<String, Integer> experimentIndexMap = new HashMap<>();
         for (int i = 0; i < allExperiments.size(); i++) {
