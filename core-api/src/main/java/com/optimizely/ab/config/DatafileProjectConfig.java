@@ -393,47 +393,47 @@ public class DatafileProjectConfig implements ProjectConfig {
 
         List<Experiment> updatedExperiments = new ArrayList<>(allExperiments);
 
-        for (FeatureFlag flag : featureFlags) {
-            Variation everyoneElseVariation = getEveryoneElseVariation(flag, rolloutMap);
-            if (everyoneElseVariation == null) {
-                continue;
-            }
+        // for (FeatureFlag flag : featureFlags) {
+        //     Variation everyoneElseVariation = getEveryoneElseVariation(flag, rolloutMap);
+        //     if (everyoneElseVariation == null) {
+        //         continue;
+        //     }
 
-            for (String experimentId : flag.getExperimentIds()) {
-                Integer index = experimentIndexMap.get(experimentId);
-                if (index == null) {
-                    continue;
-                }
-                Experiment experiment = updatedExperiments.get(index);
-                if (!Experiment.TYPE_FR.equals(experiment.getType())) {
-                    continue;
-                }
+        //     for (String experimentId : flag.getExperimentIds()) {
+        //         Integer index = experimentIndexMap.get(experimentId);
+        //         if (index == null) {
+        //             continue;
+        //         }
+        //         Experiment experiment = updatedExperiments.get(index);
+        //         if (!Experiment.TYPE_FR.equals(experiment.getType())) {
+        //             continue;
+        //         }
 
-                // Create new experiment with injected variation and traffic allocation
-                List<Variation> newVariations = new ArrayList<>(experiment.getVariations());
-                newVariations.add(everyoneElseVariation);
+        //         // Create new experiment with injected variation and traffic allocation
+        //         List<Variation> newVariations = new ArrayList<>(experiment.getVariations());
+        //         newVariations.add(everyoneElseVariation);
 
-                List<TrafficAllocation> newTrafficAllocation = new ArrayList<>(experiment.getTrafficAllocation());
-                newTrafficAllocation.add(new TrafficAllocation(everyoneElseVariation.getId(), 10000));
+        //         List<TrafficAllocation> newTrafficAllocation = new ArrayList<>(experiment.getTrafficAllocation());
+        //         newTrafficAllocation.add(new TrafficAllocation(everyoneElseVariation.getId(), 10000));
 
-                Experiment updatedExperiment = new Experiment(
-                    experiment.getId(),
-                    experiment.getKey(),
-                    experiment.getStatus(),
-                    experiment.getLayerId(),
-                    experiment.getAudienceIds(),
-                    experiment.getAudienceConditions(),
-                    newVariations,
-                    experiment.getUserIdToVariationKeyMap(),
-                    newTrafficAllocation,
-                    experiment.getGroupId(),
-                    experiment.getCmab(),
-                    experiment.getType()
-                );
+        //         Experiment updatedExperiment = new Experiment(
+        //             experiment.getId(),
+        //             experiment.getKey(),
+        //             experiment.getStatus(),
+        //             experiment.getLayerId(),
+        //             experiment.getAudienceIds(),
+        //             experiment.getAudienceConditions(),
+        //             newVariations,
+        //             experiment.getUserIdToVariationKeyMap(),
+        //             newTrafficAllocation,
+        //             experiment.getGroupId(),
+        //             experiment.getCmab(),
+        //             experiment.getType()
+        //         );
 
-                updatedExperiments.set(index, updatedExperiment);
-            }
-        }
+        //         updatedExperiments.set(index, updatedExperiment);
+        //     }
+        // }
 
         return updatedExperiments;
     }
