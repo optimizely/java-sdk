@@ -27,8 +27,7 @@ import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.TypedAudience;
 
 import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * GSON {@link DatafileProjectConfig} deserializer to allow the constructor to be used.
@@ -125,6 +124,28 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
 
         if (jsonObject.has("region")) {
             region = jsonObject.get("region").getAsString();
+        }
+
+        // Validate experiment types
+        Set<String> validExperimentTypes = new HashSet<>(Arrays.asList(
+            Experiment.TYPE_AB, Experiment.TYPE_MAB, Experiment.TYPE_CMAB,
+            Experiment.TYPE_TD, Experiment.TYPE_FR
+        ));
+        for (Experiment experiment : experiments) {
+            if (experiment.getType() != null && !validExperimentTypes.contains(experiment.getType())) {
+                throw new JsonParseException(
+                    String.format("Experiment \"%s\" has invalid type \"%s\". Valid types: %s.",
+                        experiment.getKey(), experiment.getType(), validExperimentTypes));
+            }
+        }
+        for (Group group : groups) {
+            for (Experiment experiment : group.getExperiments()) {
+                if (experiment.getType() != null && !validExperimentTypes.contains(experiment.getType())) {
+                    throw new JsonParseException(
+                        String.format("Experiment \"%s\" has invalid type \"%s\". Valid types: %s.",
+                            experiment.getKey(), experiment.getType(), validExperimentTypes));
+                }
+            }
         }
 
         return new DatafileProjectConfig(

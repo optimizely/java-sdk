@@ -26,8 +26,7 @@ import com.optimizely.ab.config.audience.Audience;
 import com.optimizely.ab.config.audience.TypedAudience;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig> {
     @Override
@@ -99,6 +98,28 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
 
         if (node.hasNonNull("region")) {
             region = node.get("region").textValue();
+        }
+
+        // Validate experiment types
+        Set<String> validExperimentTypes = new HashSet<>(Arrays.asList(
+            Experiment.TYPE_AB, Experiment.TYPE_MAB, Experiment.TYPE_CMAB,
+            Experiment.TYPE_TD, Experiment.TYPE_FR
+        ));
+        for (Experiment experiment : experiments) {
+            if (experiment.getType() != null && !validExperimentTypes.contains(experiment.getType())) {
+                throw new IOException(
+                    String.format("Experiment \"%s\" has invalid type \"%s\". Valid types: %s.",
+                        experiment.getKey(), experiment.getType(), validExperimentTypes));
+            }
+        }
+        for (Group group : groups) {
+            for (Experiment experiment : group.getExperiments()) {
+                if (experiment.getType() != null && !validExperimentTypes.contains(experiment.getType())) {
+                    throw new IOException(
+                        String.format("Experiment \"%s\" has invalid type \"%s\". Valid types: %s.",
+                            experiment.getKey(), experiment.getType(), validExperimentTypes));
+                }
+            }
         }
 
         return new DatafileProjectConfig(
