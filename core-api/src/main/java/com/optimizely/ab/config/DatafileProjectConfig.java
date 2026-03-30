@@ -375,7 +375,9 @@ public class DatafileProjectConfig implements ProjectConfig {
             return allExperiments;
         }
 
-        // Build rollout ID to Rollout mapping
+        // Build rollout ID to Rollout mapping.
+        // [NOTE] we cannot use the rolloutIdMapping here because it is built after we 
+        // inject the variations, which causes a circular dependency.
         Map<String, Rollout> rolloutMap = new HashMap<>();
         if (rollouts != null) {
             for (Rollout rollout : rollouts) {
