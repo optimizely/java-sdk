@@ -196,7 +196,7 @@ public class DatafileProjectConfig implements ProjectConfig {
         allExperiments.addAll(aggregateGroupExperiments(groups));
 
         // Inject "everyone else" variation into feature_rollout experiments
-        allExperiments = injectFeatureRolloutVariations(allExperiments, this.featureFlags, this.rollouts);
+        allExperiments = injectFeatureRolloutVariations(allExperiments, this.featureFlags);
 
         this.experiments = Collections.unmodifiableList(allExperiments);
 
@@ -368,8 +368,7 @@ public class DatafileProjectConfig implements ProjectConfig {
      */
     private List<Experiment> injectFeatureRolloutVariations(
         List<Experiment> allExperiments,
-        List<FeatureFlag> featureFlags,
-        List<Rollout> rollouts
+        List<FeatureFlag> featureFlags
     ) {
         if (featureFlags == null || featureFlags.isEmpty()) {
             return allExperiments;
