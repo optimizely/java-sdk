@@ -375,24 +375,16 @@ public class DatafileProjectConfig implements ProjectConfig {
             return allExperiments;
         }
 
-        // Build rollout ID to Rollout mapping
-        Map<String, Rollout> rolloutMap = new HashMap<>();
-        if (rollouts != null) {
-            for (Rollout rollout : rollouts) {
-                rolloutMap.put(rollout.getId(), rollout);
-            }
-        }
-
         // Build experiment ID to index mapping for quick lookup
         Map<String, Integer> experimentIndexMap = new HashMap<>();
         for (int i = 0; i < allExperiments.size(); i++) {
             experimentIndexMap.put(allExperiments.get(i).getId(), i);
         }
 
-        List<Experiment> result = new ArrayList<>(allExperiments);
+        List<Experiment> updatedExperiments = new ArrayList<>(allExperiments);
 
         for (FeatureFlag flag : featureFlags) {
-            Variation everyoneElseVariation = getEveryoneElseVariation(flag, rolloutMap);
+            Variation everyoneElseVariation = getEveryoneElseVariation(flag, this.rolloutIdMapping);
             if (everyoneElseVariation == null) {
                 continue;
             }
@@ -402,7 +394,7 @@ public class DatafileProjectConfig implements ProjectConfig {
                 if (index == null) {
                     continue;
                 }
-                Experiment experiment = result.get(index);
+                Experiment experiment = updatedExperiments.get(index);
                 if (!Experiment.TYPE_FR.equals(experiment.getType())) {
                     continue;
                 }
@@ -429,11 +421,11 @@ public class DatafileProjectConfig implements ProjectConfig {
                     experiment.getType()
                 );
 
-                result.set(index, updatedExperiment);
+                updatedExperiments.set(index, updatedExperiment);
             }
         }
 
-        return result;
+        return updatedExperiments;
     }
 
     /**
