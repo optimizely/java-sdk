@@ -135,7 +135,22 @@ public class FeatureRolloutConfigTest {
     }
 
     /**
-     * Test 6: Type field parsed - experiments with type field in the datafile
+     * Test 6: Unknown type accepted - experiment with type "new_unknown_type"
+     * does NOT cause error or rejection, and config parsing succeeds.
+     */
+    @Test
+    public void unknownExperimentTypeAccepted() {
+        Experiment experiment = projectConfig.getExperimentKeyMapping().get("unknown_type_experiment");
+        assertNotNull("Experiment with unknown type should be parsed successfully", experiment);
+        assertEquals("new_unknown_type", experiment.getType());
+        assertEquals("exp_unknown_type", experiment.getId());
+        assertEquals("unknown_type_experiment", experiment.getKey());
+        assertEquals(1, experiment.getVariations().size());
+        assertEquals("unknown_variation", experiment.getVariations().get(0).getKey());
+    }
+
+    /**
+     * Test 7: Type field parsed - experiments with type field in the datafile
      * have the value correctly preserved after config parsing.
      */
     @Test

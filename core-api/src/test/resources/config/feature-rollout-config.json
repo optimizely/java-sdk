@@ -110,6 +110,28 @@
           "endOfRange": 5000
         }
       ]
+    },
+    {
+      "id": "exp_unknown_type",
+      "key": "unknown_type_experiment",
+      "status": "Running",
+      "layerId": "layer_5",
+      "audienceIds": [],
+      "forcedVariations": {},
+      "type": "new_unknown_type",
+      "variations": [
+        {
+          "id": "var_unknown_1",
+          "key": "unknown_variation",
+          "featureEnabled": true
+        }
+      ],
+      "trafficAllocation": [
+        {
+          "entityId": "var_unknown_1",
+          "endOfRange": 10000
+        }
+      ]
     }
   ],
   "featureFlags": [
