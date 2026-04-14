@@ -35,11 +35,9 @@ import javax.annotation.Nullable;
  */
 public class HoldoutConfig {
     private List<Holdout> allHoldouts;
-    private List<Holdout> global;
+    private List<Holdout> globalHoldouts;
     private Map<String, Holdout> holdoutIdMap;
-    private Map<String, List<Holdout>> flagHoldoutsMap;
-    private Map<String, List<Holdout>> includedHoldouts;
-    private Map<String, Set<Holdout>> excludedHoldouts;
+    private Map<String, List<Holdout>> ruleHoldoutsMap;
 
     /**
      * Initializes a new HoldoutConfig with an empty list of holdouts.
@@ -55,17 +53,15 @@ public class HoldoutConfig {
      */
     public HoldoutConfig(@Nonnull List<Holdout> allHoldouts) {
         this.allHoldouts = new ArrayList<>(allHoldouts);
-        this.global = new ArrayList<>();
+        this.globalHoldouts = new ArrayList<>();
         this.holdoutIdMap = new HashMap<>();
-        this.flagHoldoutsMap = new ConcurrentHashMap<>();
-        this.includedHoldouts = new HashMap<>();
-        this.excludedHoldouts = new HashMap<>();
+        this.ruleHoldoutsMap = new HashMap<>();
         updateHoldoutMapping();
     }
 
     /**
      * Updates internal mappings of holdouts including the id map, global list,
-     * and per-flag inclusion/exclusion maps.
+     * and per-rule holdout maps.
      */
     private void updateHoldoutMapping() {
         holdoutIdMap.clear();
@@ -73,73 +69,43 @@ public class HoldoutConfig {
             holdoutIdMap.put(holdout.getId(), holdout);
         }
 
-        flagHoldoutsMap.clear();
-        global.clear();
-        includedHoldouts.clear();
-        excludedHoldouts.clear();
+        globalHoldouts.clear();
+        ruleHoldoutsMap.clear();
 
         for (Holdout holdout : allHoldouts) {
-            boolean hasIncludedFlags = !holdout.getIncludedFlags().isEmpty();
-            boolean hasExcludedFlags = !holdout.getExcludedFlags().isEmpty();
-
-            if (!hasIncludedFlags && !hasExcludedFlags) {
-                // Global holdout (applies to all flags)
-                global.add(holdout);
-            } else if (hasIncludedFlags) {
-                // Holdout only applies to specific included flags
-                for (String flagId : holdout.getIncludedFlags()) {
-                    includedHoldouts.computeIfAbsent(flagId, k -> new ArrayList<>()).add(holdout);
-                }
+            if (holdout.isGlobal()) {
+                // Global holdout (includedRules == null, applies to all rules)
+                globalHoldouts.add(holdout);
             } else {
-                // Global holdout with specific exclusions
-                global.add(holdout);
-
-                for (String flagId : holdout.getExcludedFlags()) {
-                    excludedHoldouts.computeIfAbsent(flagId, k -> new HashSet<>()).add(holdout);
+                // Local holdout (includedRules != null, applies to specific rules)
+                List<String> includedRules = holdout.getIncludedRules();
+                if (includedRules != null) {
+                    for (String ruleId : includedRules) {
+                        ruleHoldoutsMap.computeIfAbsent(ruleId, k -> new ArrayList<>()).add(holdout);
+                    }
                 }
             }
         }
     }
 
     /**
-     * Returns the applicable holdouts for the given flag ID by combining global holdouts
-     * (excluding any specified) and included holdouts, in that order.
-     * Caches the result for future calls.
+     * Returns global holdouts that apply to all rules.
      *
-     * @param id The flag identifier
-     * @return A list of Holdout objects relevant to the given flag
+     * @return A list of global Holdout objects
      */
-    public List<Holdout> getHoldoutForFlag(@Nonnull String id) {
-        if (allHoldouts.isEmpty()) {
-            return Collections.emptyList();
-        }
+    public List<Holdout> getGlobalHoldouts() {
+        return Collections.unmodifiableList(globalHoldouts);
+    }
 
-        // Check cache and return persistent holdouts
-        if (flagHoldoutsMap.containsKey(id)) {
-            return flagHoldoutsMap.get(id);
-        }
-
-        // Prioritize global holdouts first
-        List<Holdout> activeHoldouts = new ArrayList<>();
-        Set<Holdout> excluded = excludedHoldouts.getOrDefault(id, Collections.emptySet()); 
-
-        if (!excluded.isEmpty()) {
-            for (Holdout holdout : global) {
-                if (!excluded.contains(holdout)) {
-                    activeHoldouts.add(holdout);
-                }
-            }
-        } else {
-            activeHoldouts.addAll(global);
-        }
-
-        // Add included holdouts
-        activeHoldouts.addAll(includedHoldouts.getOrDefault(id, Collections.emptyList()));
-
-        // Cache the result
-        flagHoldoutsMap.put(id, activeHoldouts);
-
-        return activeHoldouts;
+    /**
+     * Returns local holdouts that target a specific rule.
+     *
+     * @param ruleId The rule identifier
+     * @return A list of Holdout objects targeting the specified rule
+     */
+    public List<Holdout> getHoldoutsForRule(@Nonnull String ruleId) {
+        List<Holdout> holdouts = ruleHoldoutsMap.get(ruleId);
+        return holdouts == null ? Collections.emptyList() : Collections.unmodifiableList(holdouts);
     }
 
     /**

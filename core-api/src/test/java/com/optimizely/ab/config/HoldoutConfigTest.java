@@ -23,7 +23,6 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import org.junit.Before;
@@ -31,164 +30,97 @@ import org.junit.Test;
 
 public class HoldoutConfigTest {
 
-    private Holdout globalHoldout;
-    private Holdout includedHoldout;
-    private Holdout excludedHoldout;
-    private Holdout mixedHoldout;
+    private Holdout globalHoldout1;
+    private Holdout globalHoldout2;
+    private Holdout localSingleRule;
+    private Holdout localMultipleRulesSameFlag;
+    private Holdout localCrossFlagRules;
+    private Holdout emptyLocalHoldout;
 
     @Before
     public void setUp() {
-        // Global holdout (no included/excluded flags)
-        globalHoldout = new Holdout("global1", "global_holdout");
-
-        // Holdout with included flags
-        includedHoldout = new Holdout("included1", "included_holdout", "Running",
+        // Global holdout (includedRules == null)
+        globalHoldout1 = new Holdout("global1", "global_holdout_1", "Running",
                 Collections.emptyList(), null, Collections.emptyList(),
-                Collections.emptyList(), Arrays.asList("flag1", "flag2"), null);
+                Collections.emptyList(), null);
 
-        // Global holdout with excluded flags
-        excludedHoldout = new Holdout("excluded1", "excluded_holdout", "Running",
+        // Another global holdout
+        globalHoldout2 = new Holdout("global2", "global_holdout_2", "Running",
                 Collections.emptyList(), null, Collections.emptyList(),
-                Collections.emptyList(), null, Arrays.asList("flag3"));
+                Collections.emptyList(), null);
 
-        // Another global holdout for testing
-        mixedHoldout = new Holdout("mixed1", "mixed_holdout");
+        // Local holdout with single rule
+        localSingleRule = new Holdout("local1", "local_single_rule", "Running",
+                Collections.emptyList(), null, Collections.emptyList(),
+                Collections.emptyList(), Arrays.asList("rule1"));
+
+        // Local holdout with multiple rules (same flag)
+        localMultipleRulesSameFlag = new Holdout("local2", "local_multiple_same_flag", "Running",
+                Collections.emptyList(), null, Collections.emptyList(),
+                Collections.emptyList(), Arrays.asList("rule1", "rule2", "rule3"));
+
+        // Local holdout with cross-flag targeting
+        localCrossFlagRules = new Holdout("local3", "local_cross_flag", "Running",
+                Collections.emptyList(), null, Collections.emptyList(),
+                Collections.emptyList(), Arrays.asList("rule1", "rule4", "rule5"));
+
+        // Local holdout with empty rules list (different from null)
+        emptyLocalHoldout = new Holdout("local_empty", "empty_rules", "Running",
+                Collections.emptyList(), null, Collections.emptyList(),
+                Collections.emptyList(), Collections.emptyList());
     }
 
     @Test
     public void testEmptyConstructor() {
         HoldoutConfig config = new HoldoutConfig();
-        
+
         assertTrue(config.getAllHoldouts().isEmpty());
-        assertTrue(config.getHoldoutForFlag("any_flag").isEmpty());
+        assertTrue(config.getGlobalHoldouts().isEmpty());
+        assertTrue(config.getHoldoutsForRule("any_rule").isEmpty());
         assertNull(config.getHoldout("any_id"));
     }
 
     @Test
     public void testConstructorWithEmptyList() {
         HoldoutConfig config = new HoldoutConfig(Collections.emptyList());
-        
+
         assertTrue(config.getAllHoldouts().isEmpty());
-        assertTrue(config.getHoldoutForFlag("any_flag").isEmpty());
+        assertTrue(config.getGlobalHoldouts().isEmpty());
+        assertTrue(config.getHoldoutsForRule("any_rule").isEmpty());
         assertNull(config.getHoldout("any_id"));
     }
 
     @Test
-    public void testConstructorWithGlobalHoldouts() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, mixedHoldout);
-        HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        assertEquals(2, config.getAllHoldouts().size());
-        assertTrue(config.getAllHoldouts().contains(globalHoldout));
-    }
-
-    @Test
     public void testGetHoldout() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, includedHoldout);
+        List<Holdout> holdouts = Arrays.asList(globalHoldout1, localSingleRule);
         HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        assertEquals(globalHoldout, config.getHoldout("global1"));
-        assertEquals(includedHoldout, config.getHoldout("included1"));
+
+        assertEquals(globalHoldout1, config.getHoldout("global1"));
+        assertEquals(localSingleRule, config.getHoldout("local1"));
         assertNull(config.getHoldout("nonexistent"));
     }
 
     @Test
-    public void testGetHoldoutForFlagWithGlobalHoldouts() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, mixedHoldout);
+    public void testGetAllHoldouts() {
+        List<Holdout> holdouts = Arrays.asList(globalHoldout1, localSingleRule, globalHoldout2);
         HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        List<Holdout> flagHoldouts = config.getHoldoutForFlag("any_flag");
-        assertEquals(2, flagHoldouts.size());
-        assertTrue(flagHoldouts.contains(globalHoldout));
-        assertTrue(flagHoldouts.contains(mixedHoldout));
-    }
 
-    @Test
-    public void testGetHoldoutForFlagWithIncludedHoldouts() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, includedHoldout);
-        HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        // Flag included in holdout
-        List<Holdout> flag1Holdouts = config.getHoldoutForFlag("flag1");
-        assertEquals(2, flag1Holdouts.size());
-        assertTrue(flag1Holdouts.contains(globalHoldout)); // Global first
-        assertTrue(flag1Holdouts.contains(includedHoldout)); // Included second
-        
-        List<Holdout> flag2Holdouts = config.getHoldoutForFlag("flag2");
-        assertEquals(2, flag2Holdouts.size());
-        assertTrue(flag2Holdouts.contains(globalHoldout));
-        assertTrue(flag2Holdouts.contains(includedHoldout));
-        
-        // Flag not included in holdout
-        List<Holdout> flag3Holdouts = config.getHoldoutForFlag("flag3");
-        assertEquals(1, flag3Holdouts.size());
-        assertTrue(flag3Holdouts.contains(globalHoldout)); // Only global
-    }
-
-    @Test
-    public void testGetHoldoutForFlagWithExcludedHoldouts() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, excludedHoldout);
-        HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        // Flag excluded from holdout
-        List<Holdout> flag3Holdouts = config.getHoldoutForFlag("flag3");
-        assertEquals(1, flag3Holdouts.size());
-        assertTrue(flag3Holdouts.contains(globalHoldout)); // excludedHoldout should be filtered out
-        
-        // Flag not excluded
-        List<Holdout> flag1Holdouts = config.getHoldoutForFlag("flag1");
-        assertEquals(2, flag1Holdouts.size());
-        assertTrue(flag1Holdouts.contains(globalHoldout));
-        assertTrue(flag1Holdouts.contains(excludedHoldout));
-    }
-
-    @Test
-    public void testGetHoldoutForFlagWithMixedHoldouts() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, includedHoldout, excludedHoldout);
-        HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        // flag1 is included in includedHoldout
-        List<Holdout> flag1Holdouts = config.getHoldoutForFlag("flag1");
-        assertEquals(3, flag1Holdouts.size());
-        assertTrue(flag1Holdouts.contains(globalHoldout));
-        assertTrue(flag1Holdouts.contains(excludedHoldout));
-        assertTrue(flag1Holdouts.contains(includedHoldout));
-        
-        // flag3 is excluded from excludedHoldout
-        List<Holdout> flag3Holdouts = config.getHoldoutForFlag("flag3");
-        assertEquals(1, flag3Holdouts.size());
-        assertTrue(flag3Holdouts.contains(globalHoldout)); // Only global, excludedHoldout filtered out
-        
-        // flag4 has no specific inclusion/exclusion
-        List<Holdout> flag4Holdouts = config.getHoldoutForFlag("flag4");
-        assertEquals(2, flag4Holdouts.size());
-        assertTrue(flag4Holdouts.contains(globalHoldout));
-        assertTrue(flag4Holdouts.contains(excludedHoldout));
-    }
-
-    @Test
-    public void testCachingBehavior() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, includedHoldout);
-        HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        // First call
-        List<Holdout> firstCall = config.getHoldoutForFlag("flag1");
-        // Second call should return cached result (same object reference)
-        List<Holdout> secondCall = config.getHoldoutForFlag("flag1");
-        
-        assertSame(firstCall, secondCall);
-        assertEquals(2, firstCall.size());
+        List<Holdout> allHoldouts = config.getAllHoldouts();
+        assertEquals(3, allHoldouts.size());
+        assertTrue(allHoldouts.contains(globalHoldout1));
+        assertTrue(allHoldouts.contains(localSingleRule));
+        assertTrue(allHoldouts.contains(globalHoldout2));
     }
 
     @Test
     public void testGetAllHoldoutsIsUnmodifiable() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, includedHoldout);
+        List<Holdout> holdouts = Arrays.asList(globalHoldout1, localSingleRule);
         HoldoutConfig config = new HoldoutConfig(holdouts);
-        
+
         List<Holdout> allHoldouts = config.getAllHoldouts();
-        
+
         try {
-            allHoldouts.add(mixedHoldout);
+            allHoldouts.add(globalHoldout2);
             fail("Should throw UnsupportedOperationException");
         } catch (UnsupportedOperationException e) {
             // Expected
@@ -196,38 +128,209 @@ public class HoldoutConfigTest {
     }
 
     @Test
-    public void testEmptyFlagHoldouts() {
-        HoldoutConfig config = new HoldoutConfig();
-        
-        List<Holdout> flagHoldouts = config.getHoldoutForFlag("any_flag");
-        assertTrue(flagHoldouts.isEmpty());
-        
-        // Should return same empty list for subsequent calls (caching)
-        List<Holdout> secondCall = config.getHoldoutForFlag("any_flag");
-        assertSame(flagHoldouts, secondCall);
+    public void testGlobalHoldoutsOnly() {
+        List<Holdout> holdouts = Arrays.asList(globalHoldout1, globalHoldout2);
+        HoldoutConfig config = new HoldoutConfig(holdouts);
+
+        List<Holdout> globals = config.getGlobalHoldouts();
+        assertEquals(2, globals.size());
+        assertTrue(globals.contains(globalHoldout1));
+        assertTrue(globals.contains(globalHoldout2));
+
+        // No rules should have local holdouts
+        assertTrue(config.getHoldoutsForRule("rule1").isEmpty());
+        assertTrue(config.getHoldoutsForRule("rule2").isEmpty());
     }
 
     @Test
-    public void testHoldoutWithBothIncludedAndExcluded() {
-        // Create a holdout with both included and excluded flags (included takes precedence)
-        Holdout bothHoldout = new Holdout("both1", "both_holdout", "Running",
-                Collections.emptyList(), null, Collections.emptyList(),
-                Collections.emptyList(), Arrays.asList("flag1"), Arrays.asList("flag2"));
-        
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, bothHoldout);
+    public void testLocalHoldoutSingleRule() {
+        List<Holdout> holdouts = Arrays.asList(localSingleRule);
         HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        // flag1 should include bothHoldout (included takes precedence)
-        List<Holdout> flag1Holdouts = config.getHoldoutForFlag("flag1");
-        assertEquals(2, flag1Holdouts.size());
-        assertTrue(flag1Holdouts.contains(globalHoldout));
-        assertTrue(flag1Holdouts.contains(bothHoldout));
-        
-        // flag2 should not include bothHoldout (not in included list)
-        List<Holdout> flag2Holdouts = config.getHoldoutForFlag("flag2");
-        assertEquals(1, flag2Holdouts.size());
-        assertTrue(flag2Holdouts.contains(globalHoldout));
-        assertFalse(flag2Holdouts.contains(bothHoldout));
+
+        // Global holdouts should be empty
+        assertTrue(config.getGlobalHoldouts().isEmpty());
+
+        // rule1 should have the local holdout
+        List<Holdout> rule1Holdouts = config.getHoldoutsForRule("rule1");
+        assertEquals(1, rule1Holdouts.size());
+        assertTrue(rule1Holdouts.contains(localSingleRule));
+
+        // Other rules should not have this holdout
+        assertTrue(config.getHoldoutsForRule("rule2").isEmpty());
+        assertTrue(config.getHoldoutsForRule("rule3").isEmpty());
     }
 
+    @Test
+    public void testLocalHoldoutMultipleRulesSameFlag() {
+        List<Holdout> holdouts = Arrays.asList(localMultipleRulesSameFlag);
+        HoldoutConfig config = new HoldoutConfig(holdouts);
+
+        // Global holdouts should be empty
+        assertTrue(config.getGlobalHoldouts().isEmpty());
+
+        // rule1, rule2, rule3 should all have the local holdout
+        List<Holdout> rule1Holdouts = config.getHoldoutsForRule("rule1");
+        assertEquals(1, rule1Holdouts.size());
+        assertTrue(rule1Holdouts.contains(localMultipleRulesSameFlag));
+
+        List<Holdout> rule2Holdouts = config.getHoldoutsForRule("rule2");
+        assertEquals(1, rule2Holdouts.size());
+        assertTrue(rule2Holdouts.contains(localMultipleRulesSameFlag));
+
+        List<Holdout> rule3Holdouts = config.getHoldoutsForRule("rule3");
+        assertEquals(1, rule3Holdouts.size());
+        assertTrue(rule3Holdouts.contains(localMultipleRulesSameFlag));
+
+        // Other rules should not have this holdout
+        assertTrue(config.getHoldoutsForRule("rule4").isEmpty());
+    }
+
+    @Test
+    public void testLocalHoldoutCrossFlagTargeting() {
+        List<Holdout> holdouts = Arrays.asList(localCrossFlagRules);
+        HoldoutConfig config = new HoldoutConfig(holdouts);
+
+        // Global holdouts should be empty
+        assertTrue(config.getGlobalHoldouts().isEmpty());
+
+        // rule1, rule4, rule5 should all have the local holdout
+        List<Holdout> rule1Holdouts = config.getHoldoutsForRule("rule1");
+        assertEquals(1, rule1Holdouts.size());
+        assertTrue(rule1Holdouts.contains(localCrossFlagRules));
+
+        List<Holdout> rule4Holdouts = config.getHoldoutsForRule("rule4");
+        assertEquals(1, rule4Holdouts.size());
+        assertTrue(rule4Holdouts.contains(localCrossFlagRules));
+
+        List<Holdout> rule5Holdouts = config.getHoldoutsForRule("rule5");
+        assertEquals(1, rule5Holdouts.size());
+        assertTrue(rule5Holdouts.contains(localCrossFlagRules));
+
+        // Other rules should not have this holdout
+        assertTrue(config.getHoldoutsForRule("rule2").isEmpty());
+        assertTrue(config.getHoldoutsForRule("rule3").isEmpty());
+    }
+
+    @Test
+    public void testMixedGlobalAndLocalHoldouts() {
+        List<Holdout> holdouts = Arrays.asList(globalHoldout1, localSingleRule, globalHoldout2, localCrossFlagRules);
+        HoldoutConfig config = new HoldoutConfig(holdouts);
+
+        // Check global holdouts
+        List<Holdout> globals = config.getGlobalHoldouts();
+        assertEquals(2, globals.size());
+        assertTrue(globals.contains(globalHoldout1));
+        assertTrue(globals.contains(globalHoldout2));
+
+        // rule1 should have two local holdouts (from localSingleRule and localCrossFlagRules)
+        List<Holdout> rule1Holdouts = config.getHoldoutsForRule("rule1");
+        assertEquals(2, rule1Holdouts.size());
+        assertTrue(rule1Holdouts.contains(localSingleRule));
+        assertTrue(rule1Holdouts.contains(localCrossFlagRules));
+
+        // rule4 should have one local holdout (from localCrossFlagRules)
+        List<Holdout> rule4Holdouts = config.getHoldoutsForRule("rule4");
+        assertEquals(1, rule4Holdouts.size());
+        assertTrue(rule4Holdouts.contains(localCrossFlagRules));
+
+        // rule2 should have no local holdouts
+        assertTrue(config.getHoldoutsForRule("rule2").isEmpty());
+    }
+
+    @Test
+    public void testEmptyRulesListVsNull() {
+        List<Holdout> holdouts = Arrays.asList(globalHoldout1, emptyLocalHoldout);
+        HoldoutConfig config = new HoldoutConfig(holdouts);
+
+        // globalHoldout1 should be in global list (includedRules == null)
+        List<Holdout> globals = config.getGlobalHoldouts();
+        assertEquals(1, globals.size());
+        assertTrue(globals.contains(globalHoldout1));
+        assertFalse(globals.contains(emptyLocalHoldout));
+
+        // emptyLocalHoldout should NOT be in global list (includedRules == empty list, not null)
+        // No rules should have emptyLocalHoldout since its list is empty
+        assertTrue(config.getHoldoutsForRule("rule1").isEmpty());
+        assertTrue(config.getHoldoutsForRule("rule2").isEmpty());
+    }
+
+    @Test
+    public void testHoldoutIsGlobalMethod() {
+        assertTrue(globalHoldout1.isGlobal());
+        assertTrue(globalHoldout2.isGlobal());
+        assertFalse(localSingleRule.isGlobal());
+        assertFalse(localMultipleRulesSameFlag.isGlobal());
+        assertFalse(localCrossFlagRules.isGlobal());
+        assertFalse(emptyLocalHoldout.isGlobal());
+    }
+
+    @Test
+    public void testGetHoldoutsForRuleReturnsUnmodifiableList() {
+        List<Holdout> holdouts = Arrays.asList(localSingleRule);
+        HoldoutConfig config = new HoldoutConfig(holdouts);
+
+        List<Holdout> rule1Holdouts = config.getHoldoutsForRule("rule1");
+
+        try {
+            rule1Holdouts.add(localMultipleRulesSameFlag);
+            fail("Should throw UnsupportedOperationException");
+        } catch (UnsupportedOperationException e) {
+            // Expected
+        }
+    }
+
+    @Test
+    public void testGetGlobalHoldoutsReturnsUnmodifiableList() {
+        List<Holdout> holdouts = Arrays.asList(globalHoldout1);
+        HoldoutConfig config = new HoldoutConfig(holdouts);
+
+        List<Holdout> globals = config.getGlobalHoldouts();
+
+        try {
+            globals.add(globalHoldout2);
+            fail("Should throw UnsupportedOperationException");
+        } catch (UnsupportedOperationException e) {
+            // Expected
+        }
+    }
+
+    @Test
+    public void testNonExistentRuleReturnsEmptyList() {
+        List<Holdout> holdouts = Arrays.asList(globalHoldout1, localSingleRule);
+        HoldoutConfig config = new HoldoutConfig(holdouts);
+
+        List<Holdout> nonExistentRuleHoldouts = config.getHoldoutsForRule("nonexistent_rule_id");
+        assertTrue(nonExistentRuleHoldouts.isEmpty());
+    }
+
+    @Test
+    public void testMultipleLocalHoldoutsTargetingSameRule() {
+        List<Holdout> holdouts = Arrays.asList(localSingleRule, localMultipleRulesSameFlag, localCrossFlagRules);
+        HoldoutConfig config = new HoldoutConfig(holdouts);
+
+        // rule1 is targeted by all three local holdouts
+        List<Holdout> rule1Holdouts = config.getHoldoutsForRule("rule1");
+        assertEquals(3, rule1Holdouts.size());
+        assertTrue(rule1Holdouts.contains(localSingleRule));
+        assertTrue(rule1Holdouts.contains(localMultipleRulesSameFlag));
+        assertTrue(rule1Holdouts.contains(localCrossFlagRules));
+    }
+
+    @Test
+    public void testPrecedenceGlobalBeforeLocal() {
+        // This test verifies the data structure setup
+        // The actual precedence in decision flow is handled by DecisionService
+        List<Holdout> holdouts = Arrays.asList(globalHoldout1, localSingleRule);
+        HoldoutConfig config = new HoldoutConfig(holdouts);
+
+        // Global holdouts are separate from local holdouts
+        List<Holdout> globals = config.getGlobalHoldouts();
+        assertEquals(1, globals.size());
+        assertTrue(globals.contains(globalHoldout1));
+
+        List<Holdout> rule1Holdouts = config.getHoldoutsForRule("rule1");
+        assertEquals(1, rule1Holdouts.size());
+        assertTrue(rule1Holdouts.contains(localSingleRule));
+        assertFalse(rule1Holdouts.contains(globalHoldout1)); // Global not in rule-specific list
+    }
 }

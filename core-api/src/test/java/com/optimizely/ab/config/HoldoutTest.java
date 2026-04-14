@@ -204,8 +204,36 @@ public class HoldoutTest {
             audienceConditions,
             Collections.<Variation>emptyList(),
             Collections.<TrafficAllocation>emptyList(),
-            Collections.<String>emptyList(),
-            Collections.<String>emptyList()
+            null  // includedRules = null for global holdout
         );
+    }
+
+    @Test
+    public void testGlobalHoldoutIsGlobalReturnsTrue() {
+        Holdout globalHoldout = new Holdout("1", "global", "Running",
+            Collections.emptyList(), null, Collections.emptyList(),
+            Collections.emptyList(), null);
+        assertEquals(true, globalHoldout.isGlobal());
+        assertEquals(null, globalHoldout.getIncludedRules());
+    }
+
+    @Test
+    public void testLocalHoldoutIsGlobalReturnsFalse() {
+        List<String> rules = Collections.singletonList("rule1");
+        Holdout localHoldout = new Holdout("2", "local", "Running",
+            Collections.emptyList(), null, Collections.emptyList(),
+            Collections.emptyList(), rules);
+        assertEquals(false, localHoldout.isGlobal());
+        assertEquals(rules, localHoldout.getIncludedRules());
+    }
+
+    @Test
+    public void testEmptyRulesListIsNotGlobal() {
+        List<String> emptyRules = Collections.emptyList();
+        Holdout localHoldout = new Holdout("3", "empty_local", "Running",
+            Collections.emptyList(), null, Collections.emptyList(),
+            Collections.emptyList(), emptyRules);
+        assertEquals(false, localHoldout.isGlobal());
+        assertEquals(emptyRules, localHoldout.getIncludedRules());
     }
 }

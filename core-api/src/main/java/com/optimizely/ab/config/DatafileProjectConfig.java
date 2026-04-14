@@ -571,11 +571,16 @@ public class DatafileProjectConfig implements ProjectConfig {
     }
 
     @Override
-    public List<Holdout> getHoldoutForFlag(@Nonnull String id) {
-        return holdoutConfig.getHoldoutForFlag(id);
+    public List<Holdout> getGlobalHoldouts() {
+        return holdoutConfig.getGlobalHoldouts();
     }
 
-    @Override   
+    @Override
+    public List<Holdout> getHoldoutsForRule(@Nonnull String ruleId) {
+        return holdoutConfig.getHoldoutsForRule(ruleId);
+    }
+
+    @Override
     public Holdout getHoldout(@Nonnull String id) {
         return holdoutConfig.getHoldout(id);
     }
