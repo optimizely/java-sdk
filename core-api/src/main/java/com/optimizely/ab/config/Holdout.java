@@ -81,7 +81,7 @@ public class Holdout implements ExperimentCore {
             @JsonProperty("audienceConditions") @Nullable Condition audienceConditions,
             @JsonProperty("variations") @Nonnull List<Variation> variations,
             @JsonProperty("trafficAllocation") @Nonnull List<TrafficAllocation> trafficAllocation,
-            @JsonProperty(value = "includedRules", required = false) @Nullable List<String> includedRules) {
+            @JsonProperty("includedRules") @Nullable List<String> includedRules) {
         this.id = id;
         this.key = key;
         this.status = status;

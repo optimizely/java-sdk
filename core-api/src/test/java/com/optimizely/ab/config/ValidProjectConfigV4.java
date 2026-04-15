@@ -588,9 +588,8 @@ public class ValidProjectConfigV4 {
                 )
             ),
             DatafileProjectConfigTestUtils.createListOfObjects(
-                "4195505407",
-                "3926744821",
-                "3281420120"
+                "2201520193",
+                "2048875663"
             )
     );
 
