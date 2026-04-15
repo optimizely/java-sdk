@@ -338,6 +338,19 @@ public class DecisionService {
                 }
             }
 
+            // Evaluate local holdouts targeting this specific feature flag
+            List<Holdout> localHoldouts = projectConfig.getHoldoutsForRule(featureFlag.getId());
+            if (!localHoldouts.isEmpty()) {
+                for (Holdout holdout : localHoldouts) {
+                    DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
+                    reasons.merge(holdoutDecision.getReasons());
+                    if (holdoutDecision.getResult() != null) {
+                        decisions.add(new DecisionResponse<>(new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT), reasons));
+                        continue flagLoop;
+                    }
+                }
+            }
+
             DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options, userProfileTracker, decisionPath);
             reasons.merge(decisionVariationResponse.getReasons());
 
@@ -849,14 +862,16 @@ public class DecisionService {
         }
 
         // Check local holdouts targeting this rule
-        List<Holdout> localHoldouts = projectConfig.getHoldoutsForRule(rule.getId());
-        if (!localHoldouts.isEmpty()) {
-            for (Holdout holdout : localHoldouts) {
-                DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
-                reasons.merge(holdoutDecision.getReasons());
-                if (holdoutDecision.getResult() != null) {
-                    // User is in holdout - return holdout variation immediately, skip this rule
-                    return new DecisionResponse(holdoutDecision.getResult(), reasons);
+        if (rule != null) {
+            List<Holdout> localHoldouts = projectConfig.getHoldoutsForRule(rule.getId());
+            if (!localHoldouts.isEmpty()) {
+                for (Holdout holdout : localHoldouts) {
+                    DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
+                    reasons.merge(holdoutDecision.getReasons());
+                    if (holdoutDecision.getResult() != null) {
+                        // User is in holdout - return holdout variation immediately, skip this rule
+                        return new DecisionResponse(holdoutDecision.getResult(), reasons);
+                    }
                 }
             }
         }

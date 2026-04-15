@@ -551,7 +551,6 @@ public class ValidProjectConfigV4 {
                 500
             )
         ),
-        null,
         null
     );
 
@@ -570,7 +569,6 @@ public class ValidProjectConfigV4 {
                         0
                 )
             ),
-            null,
             null
     );
 
@@ -593,8 +591,7 @@ public class ValidProjectConfigV4 {
                 "4195505407",
                 "3926744821",
                 "3281420120"
-            ),
-            null
+            )
     );
 
     public static final Holdout HOLDOUT_EXCLUDED_FLAGS_HOLDOUT = new Holdout(
@@ -612,12 +609,7 @@ public class ValidProjectConfigV4 {
                         1500
                 )
             ),
-            null,
-            DatafileProjectConfigTestUtils.createListOfObjects(
-                "2591051011",
-                "2079378557",
-                "3263342226"
-            )
+            null
     );
 
     public static final Holdout HOLDOUT_TYPEDAUDIENCE_HOLDOUT = new Holdout(
@@ -640,8 +632,7 @@ public class ValidProjectConfigV4 {
                     1000
                 )
             ),
-            Collections.<String>emptyList(),
-            Collections.<String>emptyList()
+            null
     );
     private static final String LAYER_TYPEDAUDIENCE_EXPERIMENT_ID = "1630555627";
     private static final String EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_ID = "1323241597";

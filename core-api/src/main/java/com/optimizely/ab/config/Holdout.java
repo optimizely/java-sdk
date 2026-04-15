@@ -38,7 +38,7 @@ public class Holdout implements ExperimentCore {
     private final String id;
     private final String key;
     private final String status;
-    
+
     private final List<String> audienceIds;
     private final Condition<AudienceIdCondition> audienceConditions;
     private final List<Variation> variations;

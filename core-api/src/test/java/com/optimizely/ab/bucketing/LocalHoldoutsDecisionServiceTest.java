@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.bucketing;
 
+import com.optimizely.ab.Optimizely;
 import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.*;
 import com.optimizely.ab.error.ErrorHandler;
@@ -25,7 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.*;
 
@@ -46,6 +47,7 @@ public class LocalHoldoutsDecisionServiceTest {
 
     private DecisionService decisionService;
     private ErrorHandler errorHandler;
+    private Optimizely optimizely;
 
     private Variation controlVariation;
     private Variation treatmentVariation;
@@ -59,6 +61,7 @@ public class LocalHoldoutsDecisionServiceTest {
 
     @Before
     public void setUp() {
+        optimizely = Optimizely.builder().build();
         errorHandler = new NoOpErrorHandler();
         decisionService = new DecisionService(mockBucketer, errorHandler, null);
 
@@ -82,25 +85,23 @@ public class LocalHoldoutsDecisionServiceTest {
         // Create experiment rule
         experimentRule = new Experiment("experiment_rule_id", "experiment_rule",
             "Running", "layer_id", Collections.emptyList(), null,
-            variations, Collections.emptyMap(), Collections.emptyList(),
-            Collections.emptyMap());
+            variations, Collections.emptyMap(), Collections.emptyList());
 
         // Create delivery rule
         deliveryRule = new Experiment("delivery_rule_id", "delivery_rule",
             "Running", "layer_id", Collections.emptyList(), null,
-            variations, Collections.emptyMap(), Collections.emptyList(),
-            Collections.emptyMap());
+            variations, Collections.emptyMap(), Collections.emptyList());
 
         // Create feature flag
         featureFlag = new FeatureFlag("flag_id", "test_flag", "layer_id",
-            Collections.singletonList("experiment_rule_id"), "rollout_id",
+            Collections.singletonList("experiment_rule_id"),
             Collections.emptyList());
     }
 
     @Test
     public void testGlobalHoldoutEvaluatedAtFlagLevel() {
         // Arrange
-        OptimizelyUserContext user = new OptimizelyUserContext(null, "user123", Collections.emptyMap());
+        OptimizelyUserContext user = new OptimizelyUserContext(optimizely, "user123", Collections.emptyMap());
 
         when(mockProjectConfig.getGlobalHoldouts()).thenReturn(Collections.singletonList(globalHoldout));
         when(mockBucketer.bucket(eq(globalHoldout), anyString(), eq(mockProjectConfig)))
@@ -118,7 +119,7 @@ public class LocalHoldoutsDecisionServiceTest {
     @Test
     public void testLocalHoldoutEvaluatedAtRuleLevel() {
         // Arrange
-        OptimizelyUserContext user = new OptimizelyUserContext(null, "user123", Collections.emptyMap());
+        OptimizelyUserContext user = new OptimizelyUserContext(optimizely, "user123", Collections.emptyMap());
 
         when(mockProjectConfig.getHoldoutsForRule("experiment_rule_id"))
             .thenReturn(Collections.singletonList(localHoldout));
@@ -136,7 +137,7 @@ public class LocalHoldoutsDecisionServiceTest {
     @Test
     public void testLocalHoldoutNotAppliedToNonTargetedRule() {
         // Arrange - local holdout only targets "experiment_rule_id"
-        OptimizelyUserContext user = new OptimizelyUserContext(null, "user123", Collections.emptyMap());
+        OptimizelyUserContext user = new OptimizelyUserContext(optimizely, "user123", Collections.emptyMap());
 
         when(mockProjectConfig.getHoldoutsForRule("other_rule_id"))
             .thenReturn(Collections.emptyList());
@@ -281,7 +282,7 @@ public class LocalHoldoutsDecisionServiceTest {
             Collections.emptyList(), null, Arrays.asList(holdoutVariation), Collections.emptyList(),
             Arrays.asList("rule1"));
 
-        OptimizelyUserContext user = new OptimizelyUserContext(null, "user123", Collections.emptyMap());
+        OptimizelyUserContext user = new OptimizelyUserContext(optimizely, "user123", Collections.emptyMap());
 
         // Act
         DecisionResponse<Variation> result = decisionService.getVariationForHoldout(draftHoldout, user, mockProjectConfig);

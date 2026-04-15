@@ -261,22 +261,13 @@ final public class JsonSimpleConfigParser implements ConfigParser {
             List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation((JSONArray) hoObject.get("trafficAllocation"));
 
-            List<String> includedFlags;
-            if (hoObject.containsKey("includedFlags")) {
-                includedFlags = new ArrayList<String>((JSONArray) hoObject.get("includedFlags"));
-            } else {
-                includedFlags = Collections.emptyList();
-            }
-
-            List<String> excludedFlags;
-            if (hoObject.containsKey("excludedFlags")) {
-                excludedFlags = new ArrayList<String>((JSONArray) hoObject.get("excludedFlags"));
-            } else {
-                excludedFlags = Collections.emptyList();
+            List<String> includedRules = null;
+            if (hoObject.containsKey("includedRules")) {
+                includedRules = new ArrayList<String>((JSONArray) hoObject.get("includedRules"));
             }
 
             holdouts.add(new Holdout(id, key, status, audienceIds, conditions, variations,
-                trafficAllocations, includedFlags, excludedFlags));
+                trafficAllocations, includedRules));
         }
 
         return holdouts;

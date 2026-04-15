@@ -527,7 +527,7 @@ public final class DatafileProjectConfigTestUtils {
         // System.out.println("Expected holdouts: " + expected);
         // System.out.println("Actual size: " + actual.size());
         // System.out.println("Expected size: " + expected.size());
-        
+
         assertThat(actual.size(), is(expected.size()));
 
 
@@ -544,8 +544,7 @@ public final class DatafileProjectConfigTestUtils {
             // System.out.println("Actual audience conditions: " + actualHoldout.getAudienceConditions());
             // System.out.println("Expected audience conditions: " + expectedHoldout.getAudienceConditions());
             assertThat(actualHoldout.getAudienceConditions(), is(expectedHoldout.getAudienceConditions()));
-            assertThat(actualHoldout.getIncludedFlags(), is(expectedHoldout.getIncludedFlags()));
-            assertThat(actualHoldout.getExcludedFlags(), is(expectedHoldout.getExcludedFlags()));
+            assertThat(actualHoldout.getIncludedRules(), is(expectedHoldout.getIncludedRules()));
             verifyVariations(actualHoldout.getVariations(), expectedHoldout.getVariations());
             verifyTrafficAllocations(actualHoldout.getTrafficAllocation(),
                 expectedHoldout.getTrafficAllocation());
