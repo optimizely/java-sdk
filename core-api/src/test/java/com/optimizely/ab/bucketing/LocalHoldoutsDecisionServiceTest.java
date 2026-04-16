@@ -137,8 +137,6 @@ public class LocalHoldoutsDecisionServiceTest {
     @Test
     public void testLocalHoldoutNotAppliedToNonTargetedRule() {
         // Arrange - local holdout only targets "experiment_rule_id"
-        OptimizelyUserContext user = new OptimizelyUserContext(optimizely, "user123", Collections.emptyMap());
-
         when(mockProjectConfig.getHoldoutsForRule("other_rule_id"))
             .thenReturn(Collections.emptyList());
 
