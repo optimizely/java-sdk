@@ -108,28 +108,6 @@ final public class JsonSimpleConfigParser implements ConfigParser {
                 String regionString = (String) rootObject.get("region");
             }
 
-            // Validate experiment types
-            Set<String> validExperimentTypes = new HashSet<>(Arrays.asList(
-                Experiment.TYPE_AB, Experiment.TYPE_MAB, Experiment.TYPE_CMAB,
-                Experiment.TYPE_TD, Experiment.TYPE_FR
-            ));
-            for (Experiment experiment : experiments) {
-                if (experiment.getType() != null && !validExperimentTypes.contains(experiment.getType())) {
-                    throw new ConfigParseException(
-                        String.format("Experiment \"%s\" has invalid type \"%s\". Valid types: %s.",
-                            experiment.getKey(), experiment.getType(), validExperimentTypes));
-                }
-            }
-            for (Group group : groups) {
-                for (Experiment experiment : group.getExperiments()) {
-                    if (experiment.getType() != null && !validExperimentTypes.contains(experiment.getType())) {
-                        throw new ConfigParseException(
-                            String.format("Experiment \"%s\" has invalid type \"%s\". Valid types: %s.",
-                                experiment.getKey(), experiment.getType(), validExperimentTypes));
-                    }
-                }
-            }
-
             return new DatafileProjectConfig(
                 accountId,
                 anonymizeIP,
@@ -152,8 +130,6 @@ final public class JsonSimpleConfigParser implements ConfigParser {
                 rollouts,
                 integrations
             );
-        } catch (ConfigParseException e) {
-            throw e;
         } catch (RuntimeException ex) {
             throw new ConfigParseException("Unable to parse datafile: " + json, ex);
         } catch (Exception e) {
