@@ -511,11 +511,6 @@
           "id": "$opt_dummy_variation_id",
           "key": "ho_off_key"
         }
-      ],
-      "includedFlags": [
-        "4195505407",
-        "3926744821",
-        "3281420120"
       ]
     },
     {
@@ -574,11 +569,6 @@
           "id": "$opt_dummy_variation_id",
           "key": "ho_off_key"
         }
-      ],
-      "excludedFlags": [
-        "2591051011",
-        "2079378557",
-        "3263342226"
       ]
     }
   ],

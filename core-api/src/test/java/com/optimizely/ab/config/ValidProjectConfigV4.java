@@ -574,51 +574,6 @@ public class ValidProjectConfigV4 {
             null
     );
 
-    public static final Holdout HOLDOUT_INCLUDED_FLAGS_HOLDOUT = new Holdout(
-            "1007543323427",
-            "holdout_included_flags",
-            Holdout.HoldoutStatus.RUNNING.toString(),
-            Collections.<String>emptyList(),
-            null,
-            DatafileProjectConfigTestUtils.createListOfObjects(
-                VARIATION_HOLDOUT_VARIATION_OFF
-            ),
-            DatafileProjectConfigTestUtils.createListOfObjects(
-                new TrafficAllocation(
-                        "$opt_dummy_variation_id",
-                        2000
-                )
-            ),
-            DatafileProjectConfigTestUtils.createListOfObjects(
-                "4195505407",
-                "3926744821",
-                "3281420120"
-            ),
-            null
-    );
-
-    public static final Holdout HOLDOUT_EXCLUDED_FLAGS_HOLDOUT = new Holdout(
-            "100753234214",
-            "holdout_excluded_flags",
-            Holdout.HoldoutStatus.RUNNING.toString(),
-            Collections.<String>emptyList(),
-            null,
-            DatafileProjectConfigTestUtils.createListOfObjects(
-                VARIATION_HOLDOUT_VARIATION_OFF
-            ),
-            DatafileProjectConfigTestUtils.createListOfObjects(
-                new TrafficAllocation(
-                        "$opt_dummy_variation_id",
-                        1500
-                )
-            ),
-            null,
-            DatafileProjectConfigTestUtils.createListOfObjects(
-                "2591051011",
-                "2079378557",
-                "3263342226"
-            )
-    );
 
     public static final Holdout HOLDOUT_TYPEDAUDIENCE_HOLDOUT = new Holdout(
             "10075323429",
@@ -1634,10 +1589,8 @@ public class ValidProjectConfigV4 {
         // list holdouts
         List<Holdout> holdouts = new ArrayList<Holdout>();
         holdouts.add(HOLDOUT_ZERO_TRAFFIC_HOLDOUT);
-        holdouts.add(HOLDOUT_INCLUDED_FLAGS_HOLDOUT);
         holdouts.add(HOLDOUT_BASIC_HOLDOUT);
         holdouts.add(HOLDOUT_TYPEDAUDIENCE_HOLDOUT);
-        holdouts.add(HOLDOUT_EXCLUDED_FLAGS_HOLDOUT);
 
         // list featureFlags
         List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>();

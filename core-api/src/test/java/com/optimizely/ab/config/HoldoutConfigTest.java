@@ -31,28 +31,16 @@ import org.junit.Test;
 
 public class HoldoutConfigTest {
 
-    private Holdout globalHoldout;
-    private Holdout includedHoldout;
-    private Holdout excludedHoldout;
-    private Holdout mixedHoldout;
+    private Holdout holdout1;
+    private Holdout holdout2;
+    private Holdout holdout3;
 
     @Before
     public void setUp() {
-        // Global holdout (no included/excluded flags)
-        globalHoldout = new Holdout("global1", "global_holdout");
-
-        // Holdout with included flags
-        includedHoldout = new Holdout("included1", "included_holdout", "Running",
-                Collections.emptyList(), null, Collections.emptyList(),
-                Collections.emptyList(), Arrays.asList("flag1", "flag2"), null);
-
-        // Global holdout with excluded flags
-        excludedHoldout = new Holdout("excluded1", "excluded_holdout", "Running",
-                Collections.emptyList(), null, Collections.emptyList(),
-                Collections.emptyList(), null, Arrays.asList("flag3"));
-
-        // Another global holdout for testing
-        mixedHoldout = new Holdout("mixed1", "mixed_holdout");
+        // All holdouts are now global (apply to all flags)
+        holdout1 = new Holdout("holdout1", "first_holdout");
+        holdout2 = new Holdout("holdout2", "second_holdout");
+        holdout3 = new Holdout("holdout3", "third_holdout");
     }
 
     @Test
@@ -74,121 +62,56 @@ public class HoldoutConfigTest {
     }
 
     @Test
-    public void testConstructorWithGlobalHoldouts() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, mixedHoldout);
+    public void testConstructorWithHoldouts() {
+        List<Holdout> holdouts = Arrays.asList(holdout1, holdout2);
         HoldoutConfig config = new HoldoutConfig(holdouts);
-        
+
         assertEquals(2, config.getAllHoldouts().size());
-        assertTrue(config.getAllHoldouts().contains(globalHoldout));
+        assertTrue(config.getAllHoldouts().contains(holdout1));
     }
 
     @Test
     public void testGetHoldout() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, includedHoldout);
+        List<Holdout> holdouts = Arrays.asList(holdout1, holdout2);
         HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        assertEquals(globalHoldout, config.getHoldout("global1"));
-        assertEquals(includedHoldout, config.getHoldout("included1"));
+
+        assertEquals(holdout1, config.getHoldout("holdout1"));
+        assertEquals(holdout2, config.getHoldout("holdout2"));
         assertNull(config.getHoldout("nonexistent"));
     }
 
     @Test
-    public void testGetHoldoutForFlagWithGlobalHoldouts() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, mixedHoldout);
+    public void testGetHoldoutForFlagReturnsAllHoldouts() {
+        List<Holdout> holdouts = Arrays.asList(holdout1, holdout2, holdout3);
         HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        List<Holdout> flagHoldouts = config.getHoldoutForFlag("any_flag");
-        assertEquals(2, flagHoldouts.size());
-        assertTrue(flagHoldouts.contains(globalHoldout));
-        assertTrue(flagHoldouts.contains(mixedHoldout));
-    }
 
-    @Test
-    public void testGetHoldoutForFlagWithIncludedHoldouts() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, includedHoldout);
-        HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        // Flag included in holdout
-        List<Holdout> flag1Holdouts = config.getHoldoutForFlag("flag1");
-        assertEquals(2, flag1Holdouts.size());
-        assertTrue(flag1Holdouts.contains(globalHoldout)); // Global first
-        assertTrue(flag1Holdouts.contains(includedHoldout)); // Included second
-        
-        List<Holdout> flag2Holdouts = config.getHoldoutForFlag("flag2");
-        assertEquals(2, flag2Holdouts.size());
-        assertTrue(flag2Holdouts.contains(globalHoldout));
-        assertTrue(flag2Holdouts.contains(includedHoldout));
-        
-        // Flag not included in holdout
-        List<Holdout> flag3Holdouts = config.getHoldoutForFlag("flag3");
-        assertEquals(1, flag3Holdouts.size());
-        assertTrue(flag3Holdouts.contains(globalHoldout)); // Only global
-    }
-
-    @Test
-    public void testGetHoldoutForFlagWithExcludedHoldouts() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, excludedHoldout);
-        HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        // Flag excluded from holdout
-        List<Holdout> flag3Holdouts = config.getHoldoutForFlag("flag3");
-        assertEquals(1, flag3Holdouts.size());
-        assertTrue(flag3Holdouts.contains(globalHoldout)); // excludedHoldout should be filtered out
-        
-        // Flag not excluded
-        List<Holdout> flag1Holdouts = config.getHoldoutForFlag("flag1");
-        assertEquals(2, flag1Holdouts.size());
-        assertTrue(flag1Holdouts.contains(globalHoldout));
-        assertTrue(flag1Holdouts.contains(excludedHoldout));
-    }
-
-    @Test
-    public void testGetHoldoutForFlagWithMixedHoldouts() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, includedHoldout, excludedHoldout);
-        HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        // flag1 is included in includedHoldout
+        // All holdouts are global and apply to all flags
         List<Holdout> flag1Holdouts = config.getHoldoutForFlag("flag1");
         assertEquals(3, flag1Holdouts.size());
-        assertTrue(flag1Holdouts.contains(globalHoldout));
-        assertTrue(flag1Holdouts.contains(excludedHoldout));
-        assertTrue(flag1Holdouts.contains(includedHoldout));
-        
-        // flag3 is excluded from excludedHoldout
-        List<Holdout> flag3Holdouts = config.getHoldoutForFlag("flag3");
-        assertEquals(1, flag3Holdouts.size());
-        assertTrue(flag3Holdouts.contains(globalHoldout)); // Only global, excludedHoldout filtered out
-        
-        // flag4 has no specific inclusion/exclusion
-        List<Holdout> flag4Holdouts = config.getHoldoutForFlag("flag4");
-        assertEquals(2, flag4Holdouts.size());
-        assertTrue(flag4Holdouts.contains(globalHoldout));
-        assertTrue(flag4Holdouts.contains(excludedHoldout));
-    }
+        assertTrue(flag1Holdouts.contains(holdout1));
+        assertTrue(flag1Holdouts.contains(holdout2));
+        assertTrue(flag1Holdouts.contains(holdout3));
 
-    @Test
-    public void testCachingBehavior() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, includedHoldout);
-        HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        // First call
-        List<Holdout> firstCall = config.getHoldoutForFlag("flag1");
-        // Second call should return cached result (same object reference)
-        List<Holdout> secondCall = config.getHoldoutForFlag("flag1");
-        
-        assertSame(firstCall, secondCall);
-        assertEquals(2, firstCall.size());
+        List<Holdout> flag2Holdouts = config.getHoldoutForFlag("flag2");
+        assertEquals(3, flag2Holdouts.size());
+        assertTrue(flag2Holdouts.contains(holdout1));
+        assertTrue(flag2Holdouts.contains(holdout2));
+        assertTrue(flag2Holdouts.contains(holdout3));
+
+        // Any flag should return all holdouts
+        List<Holdout> anyFlagHoldouts = config.getHoldoutForFlag("any_flag");
+        assertEquals(3, anyFlagHoldouts.size());
     }
 
     @Test
     public void testGetAllHoldoutsIsUnmodifiable() {
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, includedHoldout);
+        List<Holdout> holdouts = Arrays.asList(holdout1, holdout2);
         HoldoutConfig config = new HoldoutConfig(holdouts);
-        
+
         List<Holdout> allHoldouts = config.getAllHoldouts();
-        
+
         try {
-            allHoldouts.add(mixedHoldout);
+            allHoldouts.add(holdout3);
             fail("Should throw UnsupportedOperationException");
         } catch (UnsupportedOperationException e) {
             // Expected
@@ -198,36 +121,9 @@ public class HoldoutConfigTest {
     @Test
     public void testEmptyFlagHoldouts() {
         HoldoutConfig config = new HoldoutConfig();
-        
+
         List<Holdout> flagHoldouts = config.getHoldoutForFlag("any_flag");
         assertTrue(flagHoldouts.isEmpty());
-        
-        // Should return same empty list for subsequent calls (caching)
-        List<Holdout> secondCall = config.getHoldoutForFlag("any_flag");
-        assertSame(flagHoldouts, secondCall);
-    }
-
-    @Test
-    public void testHoldoutWithBothIncludedAndExcluded() {
-        // Create a holdout with both included and excluded flags (included takes precedence)
-        Holdout bothHoldout = new Holdout("both1", "both_holdout", "Running",
-                Collections.emptyList(), null, Collections.emptyList(),
-                Collections.emptyList(), Arrays.asList("flag1"), Arrays.asList("flag2"));
-        
-        List<Holdout> holdouts = Arrays.asList(globalHoldout, bothHoldout);
-        HoldoutConfig config = new HoldoutConfig(holdouts);
-        
-        // flag1 should include bothHoldout (included takes precedence)
-        List<Holdout> flag1Holdouts = config.getHoldoutForFlag("flag1");
-        assertEquals(2, flag1Holdouts.size());
-        assertTrue(flag1Holdouts.contains(globalHoldout));
-        assertTrue(flag1Holdouts.contains(bothHoldout));
-        
-        // flag2 should not include bothHoldout (not in included list)
-        List<Holdout> flag2Holdouts = config.getHoldoutForFlag("flag2");
-        assertEquals(1, flag2Holdouts.size());
-        assertTrue(flag2Holdouts.contains(globalHoldout));
-        assertFalse(flag2Holdouts.contains(bothHoldout));
     }
 
 }
