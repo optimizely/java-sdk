@@ -550,9 +550,7 @@ public class ValidProjectConfigV4 {
                 "$opt_dummy_variation_id",
                 500
             )
-        ),
-        null,
-        null
+        )
     );
 
     private static final Holdout HOLDOUT_ZERO_TRAFFIC_HOLDOUT = new Holdout(
@@ -569,9 +567,7 @@ public class ValidProjectConfigV4 {
                         "$opt_dummy_variation_id",
                         0
                 )
-            ),
-            null,
-            null
+            )
     );
 
 
@@ -594,9 +590,7 @@ public class ValidProjectConfigV4 {
                     "$opt_dummy_variation_id",
                     1000
                 )
-            ),
-            Collections.<String>emptyList(),
-            Collections.<String>emptyList()
+            )
     );
     private static final String LAYER_TYPEDAUDIENCE_EXPERIMENT_ID = "1630555627";
     private static final String EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_ID = "1323241597";
