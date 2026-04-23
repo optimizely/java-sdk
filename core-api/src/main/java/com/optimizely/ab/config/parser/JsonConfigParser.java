@@ -218,34 +218,8 @@ final public class JsonConfigParser implements ConfigParser {
             List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation(holdoutObject.getJSONArray("trafficAllocation"));
 
-            List<String> includedFlags;
-            if (holdoutObject.has("includedFlags")) {
-                JSONArray includedIdsJson = holdoutObject.getJSONArray("includedFlags");
-                includedFlags = new ArrayList<>(includedIdsJson.length());
-
-                for (int j = 0; j < includedIdsJson.length(); j++) {
-                    Object idObj = includedIdsJson.get(j);
-                    includedFlags.add((String) idObj);
-                }
-            } else {
-                includedFlags = Collections.emptyList();
-            }
-
-            List<String> excludedFlags;
-            if (holdoutObject.has("excludedFlags")) {
-                JSONArray excludedIdsJson = holdoutObject.getJSONArray("excludedFlags");
-                excludedFlags = new ArrayList<>(excludedIdsJson.length());
-
-                for (int j = 0; j < excludedIdsJson.length(); j++) {
-                    Object idObj = excludedIdsJson.get(j);
-                    excludedFlags.add((String) idObj);
-                }
-            } else {
-                excludedFlags = Collections.emptyList();
-            }
-
             holdouts.add(new Holdout(id, key, status, audienceIds, conditions, variations,
-                trafficAllocations, includedFlags, excludedFlags));
+                trafficAllocations));
         }
 
         return holdouts;

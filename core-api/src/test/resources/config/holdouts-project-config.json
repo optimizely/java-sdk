@@ -496,30 +496,6 @@
     },
     {
       "audienceIds": [],
-      "id": "1007543323427",
-      "key": "holdout_included_flags",
-      "status": "Running",
-      "trafficAllocation": [
-        {
-          "endOfRange": 2000,
-          "entityId": "$opt_dummy_variation_id"
-        }
-      ],
-      "variations": [
-        {
-          "featureEnabled": false,
-          "id": "$opt_dummy_variation_id",
-          "key": "ho_off_key"
-        }
-      ],
-      "includedFlags": [
-        "4195505407",
-        "3926744821",
-        "3281420120"
-      ]
-    },
-    {
-      "audienceIds": [],
       "id": "10075323428",
       "key": "basic_holdout",
       "status": "Running",
@@ -556,30 +532,6 @@
       ],
       "audienceIds": ["3468206643", "3468206644", "3468206646", "3468206645"],
       "audienceConditions" : ["or", "3468206643", "3468206644", "3468206646", "3468206645"]
-    },
-    {
-      "audienceIds": [],
-      "id": "100753234214",
-      "key": "holdout_excluded_flags",
-      "status": "Running",
-      "trafficAllocation": [
-        {
-          "endOfRange": 1500,
-          "entityId": "$opt_dummy_variation_id"
-        }
-      ],
-      "variations": [
-        {
-          "featureEnabled": false,
-          "id": "$opt_dummy_variation_id",
-          "key": "ho_off_key"
-        }
-      ],
-      "excludedFlags": [
-        "2591051011",
-        "2079378557",
-        "3263342226"
-      ]
     }
   ],
   "groups": [

@@ -43,8 +43,6 @@ public class Holdout implements ExperimentCore {
     private final Condition<AudienceIdCondition> audienceConditions;
     private final List<Variation> variations;
     private final List<TrafficAllocation> trafficAllocation;
-    private final List<String> includedFlags;
-    private final List<String> excludedFlags;
 
     private final Map<String, Variation> variationKeyToVariationMap;
     private final Map<String, Variation> variationIdToVariationMap;
@@ -70,7 +68,7 @@ public class Holdout implements ExperimentCore {
 
     @VisibleForTesting
     public Holdout(String id, String key) {
-        this(id, key, "Running", Collections.emptyList(), null, Collections.emptyList(), Collections.emptyList(), null, null);
+        this(id, key, "Running", Collections.emptyList(), null, Collections.emptyList(), Collections.emptyList());
     }
 
     // Keep only this constructor and add @JsonCreator to it
@@ -81,9 +79,7 @@ public class Holdout implements ExperimentCore {
             @JsonProperty("audienceIds") @Nonnull List<String> audienceIds,
             @JsonProperty("audienceConditions") @Nullable Condition audienceConditions,
             @JsonProperty("variations") @Nonnull List<Variation> variations,
-            @JsonProperty("trafficAllocation") @Nonnull List<TrafficAllocation> trafficAllocation,
-            @JsonProperty("includedFlags") @Nullable List<String> includedFlags,
-            @JsonProperty("excludedFlags") @Nullable List<String> excludedFlags) {
+            @JsonProperty("trafficAllocation") @Nonnull List<TrafficAllocation> trafficAllocation) {
         this.id = id;
         this.key = key;
         this.status = status;
@@ -91,8 +87,6 @@ public class Holdout implements ExperimentCore {
         this.audienceConditions = audienceConditions;
         this.variations = variations;
         this.trafficAllocation = trafficAllocation;
-        this.includedFlags = includedFlags == null ? Collections.emptyList() : Collections.unmodifiableList(includedFlags);
-        this.excludedFlags = excludedFlags == null ? Collections.emptyList() : Collections.unmodifiableList(excludedFlags);
         this.variationKeyToVariationMap = ProjectConfigUtils.generateNameMapping(this.variations);
         this.variationIdToVariationMap = ProjectConfigUtils.generateIdMapping(this.variations);
     }
@@ -139,14 +133,6 @@ public class Holdout implements ExperimentCore {
 
     public String getGroupId() {
         return "";
-    }
-
-    public List<String> getIncludedFlags() {
-        return includedFlags;
-    }
-
-    public List<String> getExcludedFlags() {
-        return excludedFlags;
     }
 
     public boolean isActive() {

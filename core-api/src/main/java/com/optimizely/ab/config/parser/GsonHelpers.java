@@ -202,23 +202,7 @@ final class GsonHelpers {
         List<TrafficAllocation> trafficAllocations =
             parseTrafficAllocation(holdoutJson.getAsJsonArray("trafficAllocation"));
 
-        List<String> includedFlags = new ArrayList<>();
-        if (holdoutJson.has("includedFlags")) {
-            JsonArray includedIdsJson = holdoutJson.getAsJsonArray("includedFlags");
-            for (JsonElement hoIdObj : includedIdsJson) {
-                includedFlags.add(hoIdObj.getAsString());
-            }
-        }
-
-        List<String> excludedFlags = new ArrayList<>();
-        if (holdoutJson.has("excludedFlags")) {
-            JsonArray excludedIdsJson = holdoutJson.getAsJsonArray("excludedFlags");
-            for (JsonElement hoIdObj : excludedIdsJson) {
-                excludedFlags.add(hoIdObj.getAsString());
-            }
-        }
-
-        return new Holdout(id, key, status, audienceIds, conditions, variations, trafficAllocations, includedFlags, excludedFlags);
+        return new Holdout(id, key, status, audienceIds, conditions, variations, trafficAllocations);
     }
 
     static FeatureFlag parseFeatureFlag(JsonObject featureFlagJson, JsonDeserializationContext context) {

@@ -203,9 +203,7 @@ public class HoldoutTest {
             Collections.<String>emptyList(),
             audienceConditions,
             Collections.<Variation>emptyList(),
-            Collections.<TrafficAllocation>emptyList(),
-            Collections.<String>emptyList(),
-            Collections.<String>emptyList()
+            Collections.<TrafficAllocation>emptyList()
         );
     }
 }
