@@ -4,7 +4,11 @@
 Apr 29, 2026
 
 ### New Features
-- **Feature Rollout**: Introduced Feature Rollout capabilities. Feature Rollouts represent a new experiment type merging Targeted Delivery simplicity with A/B test measurement capabilities.
+- **Feature Rollout**: Introduced Feature Rollout capabilities. Feature Rollouts represent a new experiment type merging Targeted Delivery simplicity with A/B test measurement capabilities. The "everyone else" variation from the flag's rollout is automatically injected into feature_rollout experiments during config parsing ([#601](https://github.com/optimizely/java-sdk/pull/601)). See [Feature Rollout docs](https://docs.developers.optimizely.com/feature-experimentation/docs/run-feature-rollout) for implementation details.
+
+### Bug Fixes & Improvements
+- **Holdout Model Cleanup**: Removed deprecated `includedFlags` and `excludedFlags` from Holdout model, simplifying the data structure by treating all holdouts as global ([#604](https://github.com/optimizely/java-sdk/pull/604)). This reduces complexity while maintaining full holdout functionality.
+- **Forward Compatibility**: Removed experiment type validation from config parsing to ensure forward compatibility when new experiment types are added in the future. Unknown experiment types are now silently accepted and stored as-is ([#602](https://github.com/optimizely/java-sdk/pull/602)).
 
 ## [4.3.1]
 Jan 20, 2025
