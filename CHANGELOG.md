@@ -1,5 +1,11 @@
 # Optimizely Java X SDK Changelog
 
+## [4.4.0]
+Apr 29, 2026
+
+### New Features
+- **Feature Rollout**: Introduced Feature Rollout capabilities. Feature Rollouts represent a new experiment type merging Targeted Delivery simplicity with A/B test measurement capability.
+
 ## [4.3.1]
 Jan 20, 2025
 
