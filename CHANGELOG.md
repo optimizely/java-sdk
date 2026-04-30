@@ -9,11 +9,7 @@ Apr 30, 2026
 - Add Feature Rollout support ([#601](https://github.com/optimizely/java-sdk/pull/601)).
 - Remove experiment type validation from config parsing ([#602](https://github.com/optimizely/java-sdk/pull/602)).
 - Remove legacy flag-level holdout fields ([#604](https://github.com/optimizely/java-sdk/pull/604)).
-
-### Fixes
 - Arnica risk fixes ([#600](https://github.com/optimizely/java-sdk/pull/600)).
-
-### Other
 - Fix documentation links in README.md ([#598](https://github.com/optimizely/java-sdk/pull/598)).
 
 ## [4.3.1]
