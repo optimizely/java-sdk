@@ -1,5 +1,27 @@
 # Optimizely Java X SDK Changelog
 
+## [4.4.0]
+Apr 29, 2026
+
+### New Features
+
+**Feature Rollout**: Introduced Feature Rollout capabilities. Feature Rollouts represent a new experiment type merging Targeted Delivery simplicity with A/B test measurement capabilities. See [Feature Rollout docs](https://docs.developers.optimizely.com/feature-experimentation/docs/cmab-cache-config-for-the-java-sdk) for implementation details.
+- Add Feature Rollout support ([#601](https://github.com/optimizely/java-sdk/pull/601)).
+
+### API Changes
+
+- Remove experiment type validation from config parsing ([#602](https://github.com/optimizely/java-sdk/pull/602)).
+- Remove legacy flag-level holdout fields ([#604](https://github.com/optimizely/java-sdk/pull/604)).
+
+### Fixes
+
+- Fix documentation links in README.md ([#598](https://github.com/optimizely/java-sdk/pull/598)).
+
+### Improvements
+
+- Arnica risk fixes ([#600](https://github.com/optimizely/java-sdk/pull/600)).
+
+
 ## [4.3.1]
 Jan 20, 2025
 
