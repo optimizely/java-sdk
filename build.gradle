@@ -30,9 +30,8 @@ allprojects {
     group = 'com.optimizely.ab'
 
     def github_tagged_version = System.getenv('GITHUB_TAG')
-    if (github_tagged_version != null) {
-        version = github_tagged_version
-    }
+    // keep SNAPSHOT for fallback for local build version
+    version = github_tagged_version ?: '0.0.0-SNAPSHOT'
 
     ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 }
