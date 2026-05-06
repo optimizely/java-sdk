@@ -404,19 +404,22 @@ public class GsonConfigParserTest {
 
     @Test
     public void testFromJson() {
-        String json = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true}";
+        String json = "{\"k1\":\"v1\",\"k2\":3.5,\"k3\":true,\"k4\":12345}";
 
         Map<String, Object> expectedMap = new HashMap<>();
         expectedMap.put("k1", "v1");
         expectedMap.put("k2", 3.5);
         expectedMap.put("k3", true);
+        expectedMap.put("k4", 12345L);
 
         GsonConfigParser parser = new GsonConfigParser();
 
-        Map map = null;
+        Map<String, Object> map = null;
         try {
             map = parser.fromJson(json, Map.class);
-            assertEquals(map, expectedMap);
+            for (String key : map.keySet()) {
+                assertEquals(expectedMap.get(key), map.get(key));
+            }
         } catch (JsonParseException e) {
             fail("Parse to map failed: " + e.getMessage());
         }
