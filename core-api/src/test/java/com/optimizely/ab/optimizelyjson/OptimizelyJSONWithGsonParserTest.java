@@ -64,10 +64,7 @@ public class OptimizelyJSONWithGsonParserTest {
         m1.put("k3", m2);
 
         OptimizelyJSON oj1 = new OptimizelyJSON(json, getParser());
-        Map<String, Object> ojMap = oj1.toMap();
-        for (String key : m1.keySet()) {
-            assertEquals(m1.get(key), ojMap.get(key));
-        }
+        assertEquals(oj1.toMap(), m1);
     }
 
     @Test

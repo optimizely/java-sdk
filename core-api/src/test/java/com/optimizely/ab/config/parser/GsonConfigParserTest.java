@@ -417,9 +417,7 @@ public class GsonConfigParserTest {
         Map<String, Object> map = null;
         try {
             map = parser.fromJson(json, Map.class);
-            for (String key : map.keySet()) {
-                assertEquals(expectedMap.get(key), map.get(key));
-            }
+            assertEquals(expectedMap, map);
         } catch (JsonParseException e) {
             fail("Parse to map failed: " + e.getMessage());
         }
