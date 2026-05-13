@@ -43,6 +43,7 @@ public class Holdout implements ExperimentCore {
     private final Condition<AudienceIdCondition> audienceConditions;
     private final List<Variation> variations;
     private final List<TrafficAllocation> trafficAllocation;
+    private final List<String> includedRules;
 
     private final Map<String, Variation> variationKeyToVariationMap;
     private final Map<String, Variation> variationIdToVariationMap;
@@ -68,7 +69,7 @@ public class Holdout implements ExperimentCore {
 
     @VisibleForTesting
     public Holdout(String id, String key) {
-        this(id, key, "Running", Collections.emptyList(), null, Collections.emptyList(), Collections.emptyList());
+        this(id, key, "Running", Collections.emptyList(), null, Collections.emptyList(), Collections.emptyList(), null);
     }
 
     // Keep only this constructor and add @JsonCreator to it
@@ -79,7 +80,8 @@ public class Holdout implements ExperimentCore {
             @JsonProperty("audienceIds") @Nonnull List<String> audienceIds,
             @JsonProperty("audienceConditions") @Nullable Condition audienceConditions,
             @JsonProperty("variations") @Nonnull List<Variation> variations,
-            @JsonProperty("trafficAllocation") @Nonnull List<TrafficAllocation> trafficAllocation) {
+            @JsonProperty("trafficAllocation") @Nonnull List<TrafficAllocation> trafficAllocation,
+            @JsonProperty("includedRules") @Nullable List<String> includedRules) {
         this.id = id;
         this.key = key;
         this.status = status;
@@ -87,6 +89,7 @@ public class Holdout implements ExperimentCore {
         this.audienceConditions = audienceConditions;
         this.variations = variations;
         this.trafficAllocation = trafficAllocation;
+        this.includedRules = includedRules;
         this.variationKeyToVariationMap = ProjectConfigUtils.generateNameMapping(this.variations);
         this.variationIdToVariationMap = ProjectConfigUtils.generateIdMapping(this.variations);
     }
@@ -131,6 +134,15 @@ public class Holdout implements ExperimentCore {
         return trafficAllocation;
     }
 
+    @Nullable
+    public List<String> getIncludedRules() {
+        return includedRules;
+    }
+
+    public boolean isGlobal() {
+        return includedRules == null;
+    }
+
     public String getGroupId() {
         return "";
     }
@@ -154,6 +166,7 @@ public class Holdout implements ExperimentCore {
                 + ", variations=" + variations
                 + ", variationKeyToVariationMap=" + variationKeyToVariationMap
                 + ", trafficAllocation=" + trafficAllocation
+                + ", includedRules=" + includedRules
                 + '}';
     }
 }

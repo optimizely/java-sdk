@@ -75,6 +75,10 @@ public interface ProjectConfig {
 
     List<Holdout> getHoldoutForFlag(@Nonnull String id);
 
+    List<Holdout> getGlobalHoldouts();
+
+    List<Holdout> getHoldoutsForRule(@Nonnull String ruleId);
+
     Holdout getHoldout(@Nonnull String id);
 
     Set<String> getAllSegments();

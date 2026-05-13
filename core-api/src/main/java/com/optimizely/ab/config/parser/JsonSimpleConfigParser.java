@@ -237,8 +237,18 @@ final public class JsonSimpleConfigParser implements ConfigParser {
             List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation((JSONArray) hoObject.get("trafficAllocation"));
 
+            // parse includedRules (optional field for local holdouts, null for global holdouts)
+            List<String> includedRules = null;
+            if (hoObject.containsKey("includedRules") && hoObject.get("includedRules") != null) {
+                JSONArray includedRulesJson = (JSONArray) hoObject.get("includedRules");
+                includedRules = new ArrayList<String>(includedRulesJson.size());
+                for (Object ruleIdObj : includedRulesJson) {
+                    includedRules.add((String) ruleIdObj);
+                }
+            }
+
             holdouts.add(new Holdout(id, key, status, audienceIds, conditions, variations,
-                trafficAllocations));
+                trafficAllocations, includedRules));
         }
 
         return holdouts;

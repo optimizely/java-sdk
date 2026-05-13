@@ -202,7 +202,17 @@ final class GsonHelpers {
         List<TrafficAllocation> trafficAllocations =
             parseTrafficAllocation(holdoutJson.getAsJsonArray("trafficAllocation"));
 
-        return new Holdout(id, key, status, audienceIds, conditions, variations, trafficAllocations);
+        // parse includedRules (optional field for local holdouts, null for global holdouts)
+        List<String> includedRules = null;
+        if (holdoutJson.has("includedRules") && !holdoutJson.get("includedRules").isJsonNull()) {
+            JsonArray includedRulesJson = holdoutJson.getAsJsonArray("includedRules");
+            includedRules = new ArrayList<>(includedRulesJson.size());
+            for (JsonElement ruleIdObj : includedRulesJson) {
+                includedRules.add(ruleIdObj.getAsString());
+            }
+        }
+
+        return new Holdout(id, key, status, audienceIds, conditions, variations, trafficAllocations, includedRules);
     }
 
     static FeatureFlag parseFeatureFlag(JsonObject featureFlagJson, JsonDeserializationContext context) {
