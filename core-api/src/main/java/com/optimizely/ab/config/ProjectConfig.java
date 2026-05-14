@@ -77,6 +77,8 @@ public interface ProjectConfig {
 
     Holdout getHoldout(@Nonnull String id);
 
+    HoldoutConfig getHoldoutConfig();
+
     Set<String> getAllSegments();
 
     List<Experiment> getExperimentsForEventKey(String eventKey);

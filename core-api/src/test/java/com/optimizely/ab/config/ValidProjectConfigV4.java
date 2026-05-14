@@ -1534,6 +1534,19 @@ public class ValidProjectConfigV4 {
     }
 
     public static ProjectConfig generateValidProjectConfigV4_holdout() {
+        List<Holdout> holdouts = new ArrayList<Holdout>();
+        holdouts.add(HOLDOUT_ZERO_TRAFFIC_HOLDOUT);
+        holdouts.add(HOLDOUT_BASIC_HOLDOUT);
+        holdouts.add(HOLDOUT_TYPEDAUDIENCE_HOLDOUT);
+        return generateValidProjectConfigV4WithHoldouts(holdouts);
+    }
+
+    /**
+     * Builds the same holdout project config as {@link #generateValidProjectConfigV4_holdout()}
+     * but substitutes the given holdout list.  Useful for testing local holdout scenarios
+     * without spy-based mocking.
+     */
+    public static ProjectConfig generateValidProjectConfigV4WithHoldouts(List<Holdout> holdouts) {
 
         // list attributes
         List<Attribute> attributes = new ArrayList<Attribute>();
@@ -1579,12 +1592,6 @@ public class ValidProjectConfigV4 {
         experiments.add(EXPERIMENT_PAUSED_EXPERIMENT);
         experiments.add(EXPERIMENT_LAUNCHED_EXPERIMENT);
         experiments.add(EXPERIMENT_WITH_MALFORMED_AUDIENCE);
-
-        // list holdouts
-        List<Holdout> holdouts = new ArrayList<Holdout>();
-        holdouts.add(HOLDOUT_ZERO_TRAFFIC_HOLDOUT);
-        holdouts.add(HOLDOUT_BASIC_HOLDOUT);
-        holdouts.add(HOLDOUT_TYPEDAUDIENCE_HOLDOUT);
 
         // list featureFlags
         List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>();

@@ -38,11 +38,19 @@ public class Holdout implements ExperimentCore {
     private final String id;
     private final String key;
     private final String status;
-    
+
     private final List<String> audienceIds;
     private final Condition<AudienceIdCondition> audienceConditions;
     private final List<Variation> variations;
     private final List<TrafficAllocation> trafficAllocation;
+
+    /**
+     * Optional list of rule IDs this holdout targets.
+     * null = global holdout (applies to all rules across all flags)
+     * non-null = local holdout (applies only to the specified rule IDs)
+     */
+    @Nullable
+    private final List<String> includedRules;
 
     private final Map<String, Variation> variationKeyToVariationMap;
     private final Map<String, Variation> variationIdToVariationMap;
@@ -68,10 +76,22 @@ public class Holdout implements ExperimentCore {
 
     @VisibleForTesting
     public Holdout(String id, String key) {
-        this(id, key, "Running", Collections.emptyList(), null, Collections.emptyList(), Collections.emptyList());
+        this(id, key, "Running", Collections.emptyList(), null, Collections.emptyList(), Collections.emptyList(), null);
     }
 
-    // Keep only this constructor and add @JsonCreator to it
+    /**
+     * Convenience constructor for tests that do not need includedRules (maintains backward compatibility).
+     */
+    public Holdout(@Nonnull String id,
+            @Nonnull String key,
+            @Nonnull String status,
+            @Nonnull List<String> audienceIds,
+            @Nullable Condition audienceConditions,
+            @Nonnull List<Variation> variations,
+            @Nonnull List<TrafficAllocation> trafficAllocation) {
+        this(id, key, status, audienceIds, audienceConditions, variations, trafficAllocation, null);
+    }
+
     @JsonCreator
     public Holdout(@JsonProperty("id") @Nonnull String id,
             @JsonProperty("key") @Nonnull String key,
@@ -79,7 +99,8 @@ public class Holdout implements ExperimentCore {
             @JsonProperty("audienceIds") @Nonnull List<String> audienceIds,
             @JsonProperty("audienceConditions") @Nullable Condition audienceConditions,
             @JsonProperty("variations") @Nonnull List<Variation> variations,
-            @JsonProperty("trafficAllocation") @Nonnull List<TrafficAllocation> trafficAllocation) {
+            @JsonProperty("trafficAllocation") @Nonnull List<TrafficAllocation> trafficAllocation,
+            @JsonProperty("includedRules") @Nullable List<String> includedRules) {
         this.id = id;
         this.key = key;
         this.status = status;
@@ -87,6 +108,7 @@ public class Holdout implements ExperimentCore {
         this.audienceConditions = audienceConditions;
         this.variations = variations;
         this.trafficAllocation = trafficAllocation;
+        this.includedRules = includedRules;
         this.variationKeyToVariationMap = ProjectConfigUtils.generateNameMapping(this.variations);
         this.variationIdToVariationMap = ProjectConfigUtils.generateIdMapping(this.variations);
     }
@@ -135,6 +157,27 @@ public class Holdout implements ExperimentCore {
         return "";
     }
 
+    /**
+     * Returns the list of rule IDs this holdout is scoped to, or null if this is a global holdout.
+     *
+     * @return null for a global holdout; a (possibly empty) list of rule IDs for a local holdout
+     */
+    @Nullable
+    public List<String> getIncludedRules() {
+        return includedRules;
+    }
+
+    /**
+     * Returns {@code true} if this is a global holdout (applies to all rules across all flags).
+     * A holdout is global when {@code includedRules} is {@code null}.
+     * An empty list is NOT the same as global — it is a local holdout that targets no rules.
+     *
+     * @return true if global, false if local
+     */
+    public boolean isGlobal() {
+        return includedRules == null;
+    }
+
     public boolean isActive() {
         return status.equals(Holdout.HoldoutStatus.RUNNING.toString());
     }
@@ -154,6 +197,7 @@ public class Holdout implements ExperimentCore {
                 + ", variations=" + variations
                 + ", variationKeyToVariationMap=" + variationKeyToVariationMap
                 + ", trafficAllocation=" + trafficAllocation
+                + ", includedRules=" + includedRules
                 + '}';
     }
 }

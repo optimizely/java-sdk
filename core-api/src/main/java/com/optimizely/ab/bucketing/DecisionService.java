@@ -325,15 +325,14 @@ public class DecisionService {
             DecisionReasons reasons = DefaultDecisionReasons.newInstance();
             reasons.merge(upsReasons);
 
-            List<Holdout> holdouts = projectConfig.getHoldoutForFlag(featureFlag.getId());
-            if (!holdouts.isEmpty()) {
-                for (Holdout holdout : holdouts) {
-                    DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
-                    reasons.merge(holdoutDecision.getReasons());
-                    if (holdoutDecision.getResult() != null) {
-                        decisions.add(new DecisionResponse<>(new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT), reasons));
-                        continue flagLoop;
-                    }
+            // Evaluate global holdouts at the flag level (before any per-rule logic)
+            List<Holdout> globalHoldouts = projectConfig.getHoldoutConfig().getGlobalHoldouts();
+            for (Holdout holdout : globalHoldouts) {
+                DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
+                reasons.merge(holdoutDecision.getReasons());
+                if (holdoutDecision.getResult() != null) {
+                    decisions.add(new DecisionResponse<>(new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT), reasons));
+                    continue flagLoop;
                 }
             }
 
@@ -398,6 +397,20 @@ public class DecisionService {
         if (!featureFlag.getExperimentIds().isEmpty()) {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
+
+                // Check local holdouts targeting this experiment rule before regular evaluation (FSSDK-12369)
+                if (experiment != null) {
+                    List<Holdout> localHoldouts = projectConfig.getHoldoutConfig().getHoldoutsForRule(experiment.getId());
+                    for (Holdout holdout : localHoldouts) {
+                        DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
+                        reasons.merge(holdoutDecision.getReasons());
+                        if (holdoutDecision.getResult() != null) {
+                            return new DecisionResponse<>(
+                                new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT),
+                                reasons);
+                        }
+                    }
+                }
 
                 DecisionResponse<Variation> decisionVariation =
                     getVariationFromExperimentRule(projectConfig, featureFlag.getKey(), experiment, user, options, userProfileTracker, decisionPath);
@@ -468,6 +481,19 @@ public class DecisionService {
 
         int index = 0;
         while (index < rolloutRulesLength) {
+            Experiment rule = rollout.getExperiments().get(index);
+
+            // Check local holdouts targeting this delivery rule before regular evaluation (FSSDK-12369)
+            List<Holdout> localHoldoutsForRule = projectConfig.getHoldoutConfig().getHoldoutsForRule(rule.getId());
+            boolean localHoldoutHit = false;
+            for (Holdout holdout : localHoldoutsForRule) {
+                DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
+                reasons.merge(holdoutDecision.getReasons());
+                if (holdoutDecision.getResult() != null) {
+                    FeatureDecision holdoutFeatureDecision = new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT);
+                    return new DecisionResponse(holdoutFeatureDecision, reasons);
+                }
+            }
 
             DecisionResponse<AbstractMap.SimpleEntry> decisionVariationResponse = getVariationFromDeliveryRule(
                 projectConfig,
@@ -482,7 +508,6 @@ public class DecisionService {
             Variation variation = response.getKey();
             Boolean skipToEveryoneElse = response.getValue();
             if (variation != null) {
-                Experiment rule = rollout.getExperiments().get(index);
                 FeatureDecision featureDecision = new FeatureDecision(rule, variation, FeatureDecision.DecisionSource.ROLLOUT);
                 return new DecisionResponse(featureDecision, reasons);
             }
@@ -846,6 +871,7 @@ public class DecisionService {
         if (variation != null) {
             return new DecisionResponse(variation, reasons);
         }
+
         //regular decision
         DecisionResponse<Variation> decisionResponse = getVariation(rule, user, projectConfig, options, userProfileTracker, null, decisionPath);
         reasons.merge(decisionResponse.getReasons());

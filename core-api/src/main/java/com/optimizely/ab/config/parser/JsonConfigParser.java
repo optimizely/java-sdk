@@ -218,8 +218,18 @@ final public class JsonConfigParser implements ConfigParser {
             List<TrafficAllocation> trafficAllocations =
                 parseTrafficAllocation(holdoutObject.getJSONArray("trafficAllocation"));
 
+            // Parse optional includedRules field (null = global holdout, non-null = local holdout)
+            List<String> includedRules = null;
+            if (holdoutObject.has("includedRules") && !holdoutObject.isNull("includedRules")) {
+                JSONArray includedRulesJson = holdoutObject.getJSONArray("includedRules");
+                includedRules = new ArrayList<>(includedRulesJson.length());
+                for (int j = 0; j < includedRulesJson.length(); j++) {
+                    includedRules.add(includedRulesJson.getString(j));
+                }
+            }
+
             holdouts.add(new Holdout(id, key, status, audienceIds, conditions, variations,
-                trafficAllocations));
+                trafficAllocations, includedRules));
         }
 
         return holdouts;

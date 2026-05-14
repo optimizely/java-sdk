@@ -575,9 +575,14 @@ public class DatafileProjectConfig implements ProjectConfig {
         return holdoutConfig.getHoldoutForFlag(id);
     }
 
-    @Override   
+    @Override
     public Holdout getHoldout(@Nonnull String id) {
         return holdoutConfig.getHoldout(id);
+    }
+
+    @Override
+    public HoldoutConfig getHoldoutConfig() {
+        return holdoutConfig;
     }
 
     @Override
