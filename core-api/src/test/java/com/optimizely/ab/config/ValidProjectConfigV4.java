@@ -592,6 +592,44 @@ public class ValidProjectConfigV4 {
                 )
             )
     );
+    /**
+     * Feature flag wired to EXPERIMENT_BASIC_EXPERIMENT_ID, used by local holdout tests.
+     * Not part of the standard feature flags — only used in generateValidProjectConfigV4_localHoldout().
+     */
+    public static final String FEATURE_FLAG_BASIC_EXPERIMENT_FEATURE_KEY = "basic_experiment_feature";
+    private static final String FEATURE_BASIC_EXPERIMENT_FEATURE_ID = "9999999901";
+    public static final FeatureFlag FEATURE_FLAG_BASIC_EXPERIMENT_FEATURE = new FeatureFlag(
+        FEATURE_BASIC_EXPERIMENT_FEATURE_ID,
+        FEATURE_FLAG_BASIC_EXPERIMENT_FEATURE_KEY,
+        "",
+        Collections.singletonList(EXPERIMENT_BASIC_EXPERIMENT_ID),
+        Collections.<FeatureVariable>emptyList()
+    );
+
+    /**
+     * Local holdout targeting EXPERIMENT_BASIC_EXPERIMENT_ID ("1323241596").
+     * 100% traffic allocation — user hits this holdout whenever it applies.
+     */
+    public static final Holdout HOLDOUT_LOCAL_FOR_BASIC_EXPERIMENT = new Holdout(
+        "20075323428",
+        "local_holdout_basic_experiment",
+        Holdout.HoldoutStatus.RUNNING.toString(),
+        Collections.<String>emptyList(),
+        null,
+        DatafileProjectConfigTestUtils.createListOfObjects(
+            VARIATION_HOLDOUT_VARIATION_OFF
+        ),
+        DatafileProjectConfigTestUtils.createListOfObjects(
+            new TrafficAllocation(
+                "$opt_dummy_variation_id",
+                10000
+            )
+        ),
+        DatafileProjectConfigTestUtils.createListOfObjects(
+            EXPERIMENT_BASIC_EXPERIMENT_ID  // targets the basic experiment rule
+        )
+    );
+
     private static final String LAYER_TYPEDAUDIENCE_EXPERIMENT_ID = "1630555627";
     private static final String EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_ID = "1323241597";
     public static final String EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT_KEY = "typed_audience_experiment";
@@ -1588,6 +1626,109 @@ public class ValidProjectConfigV4 {
 
         // list featureFlags
         List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>();
+        featureFlags.add(FEATURE_FLAG_BOOLEAN_FEATURE);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_DOUBLE);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_INTEGER);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_BOOLEAN);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_STRING);
+        featureFlags.add(FEATURE_FLAG_MULTI_VARIATE_FEATURE);
+        featureFlags.add(FEATURE_FLAG_MULTI_VARIATE_FUTURE_FEATURE);
+        featureFlags.add(FEATURE_FLAG_MUTEX_GROUP_FEATURE);
+
+        List<Group> groups = new ArrayList<Group>();
+        groups.add(GROUP_1);
+        groups.add(GROUP_2);
+
+        // list rollouts
+        List<Rollout> rollouts = new ArrayList<Rollout>();
+        rollouts.add(ROLLOUT_1);
+        rollouts.add(ROLLOUT_2);
+        rollouts.add(ROLLOUT_3);
+
+        List<Integration> integrations = new ArrayList<>();
+        integrations.add(odpIntegration);
+
+        return new DatafileProjectConfig(
+            ACCOUNT_ID,
+            ANONYMIZE_IP,
+            SEND_FLAG_DECISIONS,
+            BOT_FILTERING,
+            REGION,
+            PROJECT_ID,
+            REVISION,
+            SDK_KEY,
+            ENVIRONMENT_KEY,
+            VERSION,
+            attributes,
+            audiences,
+            typedAudiences,
+            events,
+            experiments,
+            holdouts,
+            featureFlags,
+            groups,
+            rollouts,
+            integrations
+        );
+    }
+
+    /**
+     * Generates a ProjectConfig that includes a local holdout targeting EXPERIMENT_BASIC_EXPERIMENT_ID.
+     * Used to test local holdout decision logic in DecisionService.
+     */
+    public static ProjectConfig generateValidProjectConfigV4_localHoldout() {
+        // list attributes
+        List<Attribute> attributes = new ArrayList<Attribute>();
+        attributes.add(ATTRIBUTE_HOUSE);
+        attributes.add(ATTRIBUTE_NATIONALITY);
+        attributes.add(ATTRIBUTE_OPT);
+        attributes.add(ATTRIBUTE_BOOLEAN);
+        attributes.add(ATTRIBUTE_INTEGER);
+        attributes.add(ATTRIBUTE_DOUBLE);
+        attributes.add(ATTRIBUTE_EMPTY);
+
+        // list audiences
+        List<Audience> audiences = new ArrayList<Audience>();
+        audiences.add(AUDIENCE_GRYFFINDOR);
+        audiences.add(AUDIENCE_SLYTHERIN);
+        audiences.add(AUDIENCE_ENGLISH_CITIZENS);
+        audiences.add(AUDIENCE_WITH_MISSING_VALUE);
+
+        List<Audience> typedAudiences = new ArrayList<Audience>();
+        typedAudiences.add(TYPED_AUDIENCE_BOOL);
+        typedAudiences.add(TYPED_AUDIENCE_EXACT_INT);
+        typedAudiences.add(TYPED_AUDIENCE_INT);
+        typedAudiences.add(TYPED_AUDIENCE_DOUBLE);
+        typedAudiences.add(TYPED_AUDIENCE_GRYFFINDOR);
+        typedAudiences.add(TYPED_AUDIENCE_SLYTHERIN);
+        typedAudiences.add(TYPED_AUDIENCE_ENGLISH_CITIZENS);
+        typedAudiences.add(AUDIENCE_WITH_MISSING_VALUE);
+
+        // list events
+        List<EventType> events = new ArrayList<EventType>();
+        events.add(EVENT_BASIC_EVENT);
+        events.add(EVENT_PAUSED_EXPERIMENT);
+        events.add(EVENT_LAUNCHED_EXPERIMENT_ONLY);
+
+        // list experiments — include EXPERIMENT_BASIC_EXPERIMENT so the feature flag resolves it
+        List<Experiment> experiments = new ArrayList<Experiment>();
+        experiments.add(EXPERIMENT_BASIC_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_LEAF_EXPERIMENT);
+        experiments.add(EXPERIMENT_MULTIVARIATE_EXPERIMENT);
+        experiments.add(EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT);
+        experiments.add(EXPERIMENT_PAUSED_EXPERIMENT);
+        experiments.add(EXPERIMENT_LAUNCHED_EXPERIMENT);
+        experiments.add(EXPERIMENT_WITH_MALFORMED_AUDIENCE);
+
+        // Local holdout targeting the basic experiment rule only — NO global holdouts
+        List<Holdout> holdouts = new ArrayList<Holdout>();
+        holdouts.add(HOLDOUT_LOCAL_FOR_BASIC_EXPERIMENT);
+
+        // list featureFlags — include a feature wired to EXPERIMENT_BASIC_EXPERIMENT for local holdout tests
+        List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>();
+        featureFlags.add(FEATURE_FLAG_BASIC_EXPERIMENT_FEATURE);  // wired to basic_experiment
         featureFlags.add(FEATURE_FLAG_BOOLEAN_FEATURE);
         featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_DOUBLE);
         featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_INTEGER);

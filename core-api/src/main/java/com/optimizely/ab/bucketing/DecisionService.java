@@ -325,9 +325,10 @@ public class DecisionService {
             DecisionReasons reasons = DefaultDecisionReasons.newInstance();
             reasons.merge(upsReasons);
 
-            List<Holdout> holdouts = projectConfig.getHoldoutForFlag(featureFlag.getId());
-            if (!holdouts.isEmpty()) {
-                for (Holdout holdout : holdouts) {
+            // Evaluate global holdouts at flag level (before any rules are iterated)
+            List<Holdout> globalHoldouts = projectConfig.getGlobalHoldouts();
+            if (!globalHoldouts.isEmpty()) {
+                for (Holdout holdout : globalHoldouts) {
                     DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
                     reasons.merge(holdoutDecision.getReasons());
                     if (holdoutDecision.getResult() != null) {
@@ -395,12 +396,44 @@ public class DecisionService {
                                                                  @Nullable UserProfileTracker userProfileTracker,
                                                                  @Nonnull DecisionPath decisionPath) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+        // Cache flagKey once to avoid multiple getKey() calls (important for mock-based tests)
+        String flagKey = featureFlag.getKey();
         if (!featureFlag.getExperimentIds().isEmpty()) {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
 
+                // Step 1: Check forced decision for this experiment rule first (highest priority).
+                // We must do this before the local holdout check so forced decisions win.
+                if (experiment != null) {
+                    String ruleKey = experiment.getKey();
+                    OptimizelyDecisionContext fdContext = new OptimizelyDecisionContext(flagKey, ruleKey);
+                    DecisionResponse<Variation> fdResponse = validatedForcedDecision(fdContext, projectConfig, user);
+                    reasons.merge(fdResponse.getReasons());
+                    if (fdResponse.getResult() != null) {
+                        return new DecisionResponse<>(
+                            new FeatureDecision(experiment, fdResponse.getResult(), FeatureDecision.DecisionSource.FEATURE_TEST),
+                            reasons);
+                    }
+
+                    // Step 2: Check local holdouts targeting this experiment rule.
+                    // Local holdouts run after forced decisions but before regular rule evaluation.
+                    List<Holdout> localHoldouts = projectConfig.getHoldoutsForRule(experiment.getId());
+                    for (Holdout holdout : localHoldouts) {
+                        DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
+                        reasons.merge(holdoutDecision.getReasons());
+                        if (holdoutDecision.getResult() != null) {
+                            return new DecisionResponse<>(
+                                new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT),
+                                reasons);
+                        }
+                    }
+                }
+
+                // Step 3: Regular rule evaluation (getVariationFromExperimentRule also checks
+                // forced decisions internally but it will find no forced decision since we already
+                // checked above; the duplicate check is harmless).
                 DecisionResponse<Variation> decisionVariation =
-                    getVariationFromExperimentRule(projectConfig, featureFlag.getKey(), experiment, user, options, userProfileTracker, decisionPath);
+                    getVariationFromExperimentRule(projectConfig, flagKey, experiment, user, options, userProfileTracker, decisionPath);
                 reasons.merge(decisionVariation.getReasons());
                 Variation variation = decisionVariation.getResult();
                 String cmabUuid = decisionVariation.getCmabUuid();
@@ -421,7 +454,7 @@ public class DecisionService {
                 }
             }
         } else {
-            String message = reasons.addInfo("The feature flag \"%s\" is not used in any experiments.", featureFlag.getKey());
+            String message = reasons.addInfo("The feature flag \"%s\" is not used in any experiments.", flagKey);
             logger.info(message);
         }
 
@@ -468,7 +501,33 @@ public class DecisionService {
 
         int index = 0;
         while (index < rolloutRulesLength) {
+            Experiment rolloutRule = rollout.getExperiments().get(index);
 
+            // Step 1: Check forced decision for this delivery rule (highest priority).
+            String rolloutRuleKey = rolloutRule.getKey();
+            OptimizelyDecisionContext rolloutFdContext = new OptimizelyDecisionContext(featureFlag.getKey(), rolloutRuleKey);
+            DecisionResponse<Variation> rolloutFdResponse = validatedForcedDecision(rolloutFdContext, projectConfig, user);
+            reasons.merge(rolloutFdResponse.getReasons());
+            if (rolloutFdResponse.getResult() != null) {
+                FeatureDecision featureDecision = new FeatureDecision(rolloutRule, rolloutFdResponse.getResult(), FeatureDecision.DecisionSource.ROLLOUT);
+                return new DecisionResponse<>(featureDecision, reasons);
+            }
+
+            // Step 2: Check local holdouts targeting this delivery rule.
+            // Local holdouts run after forced decisions but before regular delivery rule evaluation.
+            List<Holdout> rolloutLocalHoldouts = projectConfig.getHoldoutsForRule(rolloutRule.getId());
+            for (Holdout holdout : rolloutLocalHoldouts) {
+                DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
+                reasons.merge(holdoutDecision.getReasons());
+                if (holdoutDecision.getResult() != null) {
+                    return new DecisionResponse<>(
+                        new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT),
+                        reasons);
+                }
+            }
+
+            // Step 3: Regular delivery rule evaluation (getVariationFromDeliveryRule also checks
+            // forced decisions internally; the duplicate check is harmless).
             DecisionResponse<AbstractMap.SimpleEntry> decisionVariationResponse = getVariationFromDeliveryRule(
                 projectConfig,
                 featureFlag.getKey(),
@@ -836,7 +895,7 @@ public class DecisionService {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         String ruleKey = rule != null ? rule.getKey() : null;
-        // Check Forced-Decision
+        // Step 1: Check Forced-Decision
         OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, ruleKey);
         DecisionResponse<Variation> forcedDecisionResponse = validatedForcedDecision(optimizelyDecisionContext, projectConfig, user);
 
@@ -846,7 +905,9 @@ public class DecisionService {
         if (variation != null) {
             return new DecisionResponse(variation, reasons);
         }
-        //regular decision
+
+        // Regular rule decision (local holdouts for experiment rules are checked by the caller
+        // getVariationFromExperiment, where the FeatureDecision source can be set to HOLDOUT)
         DecisionResponse<Variation> decisionResponse = getVariation(rule, user, projectConfig, options, userProfileTracker, null, decisionPath);
         reasons.merge(decisionResponse.getReasons());
 
