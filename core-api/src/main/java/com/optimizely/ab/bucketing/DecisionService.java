@@ -398,6 +398,20 @@ public class DecisionService {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
 
+                // Check local holdouts targeting this experiment rule before regular evaluation (FSSDK-12369)
+                if (experiment != null) {
+                    List<Holdout> localHoldouts = projectConfig.getHoldoutConfig().getHoldoutsForRule(experiment.getId());
+                    for (Holdout holdout : localHoldouts) {
+                        DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
+                        reasons.merge(holdoutDecision.getReasons());
+                        if (holdoutDecision.getResult() != null) {
+                            return new DecisionResponse<>(
+                                new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT),
+                                reasons);
+                        }
+                    }
+                }
+
                 DecisionResponse<Variation> decisionVariation =
                     getVariationFromExperimentRule(projectConfig, featureFlag.getKey(), experiment, user, options, userProfileTracker, decisionPath);
                 reasons.merge(decisionVariation.getReasons());
@@ -468,6 +482,18 @@ public class DecisionService {
         int index = 0;
         while (index < rolloutRulesLength) {
             Experiment rule = rollout.getExperiments().get(index);
+
+            // Check local holdouts targeting this delivery rule before regular evaluation (FSSDK-12369)
+            List<Holdout> localHoldoutsForRule = projectConfig.getHoldoutConfig().getHoldoutsForRule(rule.getId());
+            boolean localHoldoutHit = false;
+            for (Holdout holdout : localHoldoutsForRule) {
+                DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
+                reasons.merge(holdoutDecision.getReasons());
+                if (holdoutDecision.getResult() != null) {
+                    FeatureDecision holdoutFeatureDecision = new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT);
+                    return new DecisionResponse(holdoutFeatureDecision, reasons);
+                }
+            }
 
             DecisionResponse<AbstractMap.SimpleEntry> decisionVariationResponse = getVariationFromDeliveryRule(
                 projectConfig,
@@ -846,16 +872,6 @@ public class DecisionService {
             return new DecisionResponse(variation, reasons);
         }
 
-        // Check local holdouts targeting this specific experiment rule (FSSDK-12369)
-        List<Holdout> localHoldouts = projectConfig.getHoldoutConfig().getHoldoutsForRule(rule.getId());
-        for (Holdout holdout : localHoldouts) {
-            DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
-            reasons.merge(holdoutDecision.getReasons());
-            if (holdoutDecision.getResult() != null) {
-                return new DecisionResponse<>(holdoutDecision.getResult(), reasons);
-            }
-        }
-
         //regular decision
         DecisionResponse<Variation> decisionResponse = getVariation(rule, user, projectConfig, options, userProfileTracker, null, decisionPath);
         reasons.merge(decisionResponse.getReasons());
@@ -904,17 +920,6 @@ public class DecisionService {
         if (variation != null) {
             variationToSkipToEveryoneElsePair = new AbstractMap.SimpleEntry<>(variation, false);
             return new DecisionResponse(variationToSkipToEveryoneElsePair, reasons);
-        }
-
-        // Check local holdouts targeting this specific delivery rule (FSSDK-12369)
-        List<Holdout> localHoldouts = projectConfig.getHoldoutConfig().getHoldoutsForRule(rule.getId());
-        for (Holdout holdout : localHoldouts) {
-            DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
-            reasons.merge(holdoutDecision.getReasons());
-            if (holdoutDecision.getResult() != null) {
-                variationToSkipToEveryoneElsePair = new AbstractMap.SimpleEntry<>(holdoutDecision.getResult(), false);
-                return new DecisionResponse(variationToSkipToEveryoneElsePair, reasons);
-            }
         }
 
         // Handle a regular decision

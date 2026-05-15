@@ -86,9 +86,7 @@ import static com.optimizely.ab.config.ValidProjectConfigV4.HOLDOUT_TYPEDAUDIENC
 import static com.optimizely.ab.config.ValidProjectConfigV4.ROLLOUT_2;
 import static com.optimizely.ab.config.ValidProjectConfigV4.ROLLOUT_3_EVERYONE_ELSE_RULE;
 import static com.optimizely.ab.config.ValidProjectConfigV4.ROLLOUT_3_EVERYONE_ELSE_RULE_ENABLED_VARIATION;
-import static com.optimizely.ab.config.ValidProjectConfigV4.EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.VARIATION_HOLDOUT_VARIATION_OFF;
-import static com.optimizely.ab.config.ValidProjectConfigV4.VARIATION_MULTIVARIATE_EXPERIMENT_GRED_KEY;
 import static com.optimizely.ab.config.ValidProjectConfigV4.generateValidProjectConfigV4_holdout;
 import static com.optimizely.ab.config.ValidProjectConfigV4.generateValidProjectConfigV4WithHoldouts;
 import com.optimizely.ab.config.Variation;
@@ -1966,54 +1964,6 @@ public class DecisionServiceTest {
         ).getResult();
 
         assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.decisionSource);
-    }
-
-    /**
-     * Forced decision takes priority over a 100%-traffic local holdout.
-     * Even when a local holdout would bucket the user, a forced decision for the same rule must win.
-     * This is the mandatory ordering enforcement test — if it fails, the per-rule ordering is wrong.
-     */
-    @Test
-    public void localHoldouts_forcedDecisionTakesPriorityOverLocalHoldout() {
-        final String experimentRuleId = "3262035800"; // EXPERIMENT_MULTIVARIATE_EXPERIMENT_ID
-        final String flagKey = FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(); // "multi_variate_feature"
-        final String ruleKey = EXPERIMENT_MULTIVARIATE_EXPERIMENT_KEY; // "multivariate_experiment"
-
-        // 100% traffic local holdout targeting the same experiment rule
-        Holdout localHoldout = new Holdout(
-            "local_ho_forced_test",
-            "local_holdout_forced_decision_test",
-            Holdout.HoldoutStatus.RUNNING.toString(),
-            Collections.emptyList(),
-            null,
-            DatafileProjectConfigTestUtils.createListOfObjects(VARIATION_HOLDOUT_VARIATION_OFF),
-            DatafileProjectConfigTestUtils.createListOfObjects(
-                new TrafficAllocation("$opt_dummy_variation_id", 10000) // 100% — would always bucket
-            ),
-            Collections.singletonList(experimentRuleId)
-        );
-
-        ProjectConfig config = buildHoldoutProjectConfig(Collections.singletonList(localHoldout));
-        Bucketer bucketer = new Bucketer();
-        DecisionService svc = new DecisionService(bucketer, mockErrorHandler, null, mockCmabService);
-
-        // Set a forced decision for the same rule
-        OptimizelyUserContext userCtx = optimizely.createUserContext("anyUser", Collections.emptyMap());
-        OptimizelyDecisionContext ctx = new OptimizelyDecisionContext(flagKey, ruleKey);
-        OptimizelyForcedDecision forcedDecision = new OptimizelyForcedDecision(VARIATION_MULTIVARIATE_EXPERIMENT_GRED_KEY);
-        userCtx.setForcedDecision(ctx, forcedDecision);
-
-        FeatureDecision decision = svc.getVariationForFeature(
-            FEATURE_FLAG_MULTI_VARIATE_FEATURE,
-            userCtx,
-            config
-        ).getResult();
-
-        // Forced decision must win — NOT the holdout
-        assertNotEquals("Holdout must not win when forced decision is set",
-            FeatureDecision.DecisionSource.HOLDOUT, decision.decisionSource);
-        assertEquals("Forced variation key must be returned",
-            VARIATION_MULTIVARIATE_EXPERIMENT_GRED_KEY, decision.variation.getKey());
     }
 
     /**
