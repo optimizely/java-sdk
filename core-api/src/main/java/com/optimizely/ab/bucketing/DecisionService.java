@@ -36,6 +36,7 @@ import com.optimizely.ab.OptimizelyForcedDecision;
 import com.optimizely.ab.OptimizelyRuntimeException;
 import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.config.Experiment;
+import com.optimizely.ab.config.ExperimentCore;
 import com.optimizely.ab.config.FeatureFlag;
 import com.optimizely.ab.config.Holdout;
 import com.optimizely.ab.config.ProjectConfig;
@@ -402,55 +403,12 @@ public class DecisionService {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
 
-                // Step 1: Check forced decision for this experiment rule first (highest priority).
-                // We must do this before the local holdout check so forced decisions win.
-                if (experiment != null) {
-                    String ruleKey = experiment.getKey();
-                    OptimizelyDecisionContext fdContext = new OptimizelyDecisionContext(flagKey, ruleKey);
-                    DecisionResponse<Variation> fdResponse = validatedForcedDecision(fdContext, projectConfig, user);
-                    reasons.merge(fdResponse.getReasons());
-                    if (fdResponse.getResult() != null) {
-                        return new DecisionResponse<>(
-                            new FeatureDecision(experiment, fdResponse.getResult(), FeatureDecision.DecisionSource.FEATURE_TEST),
-                            reasons);
-                    }
-
-                    // Step 2: Check local holdouts targeting this experiment rule.
-                    // Local holdouts run after forced decisions but before regular rule evaluation.
-                    List<Holdout> localHoldouts = projectConfig.getHoldoutsForRule(experiment.getId());
-                    for (Holdout holdout : localHoldouts) {
-                        DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
-                        reasons.merge(holdoutDecision.getReasons());
-                        if (holdoutDecision.getResult() != null) {
-                            return new DecisionResponse<>(
-                                new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT),
-                                reasons);
-                        }
-                    }
-                }
-
-                // Step 3: Regular rule evaluation (getVariationFromExperimentRule also checks
-                // forced decisions internally but it will find no forced decision since we already
-                // checked above; the duplicate check is harmless).
-                DecisionResponse<Variation> decisionVariation =
+                DecisionResponse<FeatureDecision> decisionVariation =
                     getVariationFromExperimentRule(projectConfig, flagKey, experiment, user, options, userProfileTracker, decisionPath);
                 reasons.merge(decisionVariation.getReasons());
-                Variation variation = decisionVariation.getResult();
-                String cmabUuid = decisionVariation.getCmabUuid();
-                boolean error = decisionVariation.isError();
-                if (error) {
-                    return new DecisionResponse(
-                        new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST, cmabUuid),
-                        reasons,
-                        decisionVariation.isError(),
-                        cmabUuid);
-                }
-                if (variation != null) {
-                    return new DecisionResponse(
-                        new FeatureDecision(experiment, variation, FeatureDecision.DecisionSource.FEATURE_TEST, cmabUuid),
-                        reasons,
-                        decisionVariation.isError(),
-                        cmabUuid);
+                FeatureDecision featureDecision = decisionVariation.getResult();
+                if (decisionVariation.isError() || (featureDecision != null && featureDecision.variation != null)) {
+                    return new DecisionResponse(featureDecision, reasons, decisionVariation.isError(), decisionVariation.getCmabUuid());
                 }
             }
         } else {
@@ -503,31 +461,6 @@ public class DecisionService {
         while (index < rolloutRulesLength) {
             Experiment rolloutRule = rollout.getExperiments().get(index);
 
-            // Step 1: Check forced decision for this delivery rule (highest priority).
-            String rolloutRuleKey = rolloutRule.getKey();
-            OptimizelyDecisionContext rolloutFdContext = new OptimizelyDecisionContext(featureFlag.getKey(), rolloutRuleKey);
-            DecisionResponse<Variation> rolloutFdResponse = validatedForcedDecision(rolloutFdContext, projectConfig, user);
-            reasons.merge(rolloutFdResponse.getReasons());
-            if (rolloutFdResponse.getResult() != null) {
-                FeatureDecision featureDecision = new FeatureDecision(rolloutRule, rolloutFdResponse.getResult(), FeatureDecision.DecisionSource.ROLLOUT);
-                return new DecisionResponse<>(featureDecision, reasons);
-            }
-
-            // Step 2: Check local holdouts targeting this delivery rule.
-            // Local holdouts run after forced decisions but before regular delivery rule evaluation.
-            List<Holdout> rolloutLocalHoldouts = projectConfig.getHoldoutsForRule(rolloutRule.getId());
-            for (Holdout holdout : rolloutLocalHoldouts) {
-                DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
-                reasons.merge(holdoutDecision.getReasons());
-                if (holdoutDecision.getResult() != null) {
-                    return new DecisionResponse<>(
-                        new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT),
-                        reasons);
-                }
-            }
-
-            // Step 3: Regular delivery rule evaluation (getVariationFromDeliveryRule also checks
-            // forced decisions internally; the duplicate check is harmless).
             DecisionResponse<AbstractMap.SimpleEntry> decisionVariationResponse = getVariationFromDeliveryRule(
                 projectConfig,
                 featureFlag.getKey(),
@@ -537,12 +470,10 @@ public class DecisionService {
             );
             reasons.merge(decisionVariationResponse.getReasons());
 
-            AbstractMap.SimpleEntry<Variation, Boolean> response = decisionVariationResponse.getResult();
-            Variation variation = response.getKey();
+            AbstractMap.SimpleEntry<FeatureDecision, Boolean> response = decisionVariationResponse.getResult();
+            FeatureDecision featureDecision = response.getKey();
             Boolean skipToEveryoneElse = response.getValue();
-            if (variation != null) {
-                Experiment rule = rollout.getExperiments().get(index);
-                FeatureDecision featureDecision = new FeatureDecision(rule, variation, FeatureDecision.DecisionSource.ROLLOUT);
+            if (featureDecision != null) {
                 return new DecisionResponse(featureDecision, reasons);
             }
 
@@ -773,6 +704,23 @@ public class DecisionService {
         return new DecisionResponse<>(null, reasons);
     }
 
+    DecisionResponse<FeatureDecision> evaluateLocalHoldouts(@Nonnull ExperimentCore rule,
+                                                            @Nonnull ProjectConfig projectConfig,
+                                                            @Nonnull OptimizelyUserContext user) {
+        DecisionReasons reasons = DefaultDecisionReasons.newInstance();
+        List<Holdout> localHoldouts = projectConfig.getHoldoutsForRule(rule.getId());
+        for (Holdout holdout : localHoldouts) {
+            DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
+            reasons.merge(holdoutDecision.getReasons());
+            if (holdoutDecision.getResult() != null) {
+                return new DecisionResponse<>(
+                    new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT),
+                    reasons);
+            }
+        }
+        return new DecisionResponse<>(null, reasons);
+    }
+
     public ConcurrentHashMap<String, ConcurrentHashMap<String, String>> getForcedVariationMapping() {
         return forcedVariationMapping;
     }
@@ -885,7 +833,7 @@ public class DecisionService {
     }
 
 
-    private DecisionResponse<Variation> getVariationFromExperimentRule(@Nonnull ProjectConfig projectConfig,
+    private DecisionResponse<FeatureDecision> getVariationFromExperimentRule(@Nonnull ProjectConfig projectConfig,
                                                                       @Nonnull String flagKey,
                                                                       @Nonnull Experiment rule,
                                                                       @Nonnull OptimizelyUserContext user,
@@ -903,17 +851,29 @@ public class DecisionService {
 
         Variation variation = forcedDecisionResponse.getResult();
         if (variation != null) {
-            return new DecisionResponse(variation, reasons);
+            return new DecisionResponse(
+                new FeatureDecision(rule, variation, FeatureDecision.DecisionSource.FEATURE_TEST),
+                reasons);
         }
 
-        // Regular rule decision (local holdouts for experiment rules are checked by the caller
-        // getVariationFromExperiment, where the FeatureDecision source can be set to HOLDOUT)
+        // Step 2: Check local holdouts
+        if (rule != null) {
+            DecisionResponse<FeatureDecision> holdoutResponse = evaluateLocalHoldouts(rule, projectConfig, user);
+            reasons.merge(holdoutResponse.getReasons());
+            if (holdoutResponse.getResult() != null) {
+                return new DecisionResponse<>(holdoutResponse.getResult(), reasons);
+            }
+        }
+
+        // Step 3: Regular rule decision
         DecisionResponse<Variation> decisionResponse = getVariation(rule, user, projectConfig, options, userProfileTracker, null, decisionPath);
         reasons.merge(decisionResponse.getReasons());
 
         variation = decisionResponse.getResult();
 
-        return new DecisionResponse<>(variation, reasons, decisionResponse.isError(), decisionResponse.getCmabUuid());
+        return new DecisionResponse<>(
+            new FeatureDecision(rule, variation, FeatureDecision.DecisionSource.FEATURE_TEST, decisionResponse.getCmabUuid()),
+            reasons, decisionResponse.isError(), decisionResponse.getCmabUuid());
     }
 
     /**
@@ -933,8 +893,8 @@ public class DecisionService {
      * @param rules             The experiments belonging to a rollout
      * @param ruleIndex         The index of the rule
      * @param user              The OptimizelyUserContext
-     * @return                  Returns a DecisionResponse Object containing a AbstractMap.SimpleEntry<Variation, Boolean>
-     *                          where the Variation is the result and the Boolean is the skipToEveryoneElse.
+     * @return                  Returns a DecisionResponse Object containing a AbstractMap.SimpleEntry<FeatureDecision, Boolean>
+     *                          where the FeatureDecision is the result and the Boolean is the skipToEveryoneElse.
      */
     DecisionResponse<AbstractMap.SimpleEntry> getVariationFromDeliveryRule(@Nonnull ProjectConfig projectConfig,
                                                        @Nonnull String flagKey,
@@ -944,20 +904,30 @@ public class DecisionService {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
 
         Boolean skipToEveryoneElse = false;
-        AbstractMap.SimpleEntry<Variation, Boolean> variationToSkipToEveryoneElsePair;
-        // Check forced-decisions first
+        AbstractMap.SimpleEntry<FeatureDecision, Boolean> resultPair;
         Experiment rule = rules.get(ruleIndex);
+
+        // Step 1: Check Forced-Decision
         OptimizelyDecisionContext optimizelyDecisionContext = new OptimizelyDecisionContext(flagKey, rule.getKey());
         DecisionResponse<Variation> forcedDecisionResponse = validatedForcedDecision(optimizelyDecisionContext, projectConfig, user);
         reasons.merge(forcedDecisionResponse.getReasons());
 
         Variation variation = forcedDecisionResponse.getResult();
         if (variation != null) {
-            variationToSkipToEveryoneElsePair = new AbstractMap.SimpleEntry<>(variation, false);
-            return new DecisionResponse(variationToSkipToEveryoneElsePair, reasons);
+            resultPair = new AbstractMap.SimpleEntry<>(
+                new FeatureDecision(rule, variation, FeatureDecision.DecisionSource.ROLLOUT), false);
+            return new DecisionResponse(resultPair, reasons);
         }
 
-        // Handle a regular decision
+        // Step 2: Check local holdouts
+        DecisionResponse<FeatureDecision> holdoutResponse = evaluateLocalHoldouts(rule, projectConfig, user);
+        reasons.merge(holdoutResponse.getReasons());
+        if (holdoutResponse.getResult() != null) {
+            resultPair = new AbstractMap.SimpleEntry<>(holdoutResponse.getResult(), false);
+            return new DecisionResponse(resultPair, reasons);
+        }
+
+        // Step 3: Regular rule decision
         String bucketingId = getBucketingId(user.getUserId(), user.getAttributes());
         Boolean everyoneElse = (ruleIndex == rules.size() - 1);
         String loggingKey = everyoneElse ? "Everyone Else" : String.valueOf(ruleIndex + 1);
@@ -999,8 +969,11 @@ public class DecisionService {
             reasons.addInfo(message);
             logger.debug(message);
         }
-        variationToSkipToEveryoneElsePair = new AbstractMap.SimpleEntry<>(bucketedVariation, skipToEveryoneElse);
-        return new DecisionResponse(variationToSkipToEveryoneElsePair, reasons);
+        FeatureDecision featureDecision = bucketedVariation != null
+            ? new FeatureDecision(rule, bucketedVariation, FeatureDecision.DecisionSource.ROLLOUT)
+            : null;
+        resultPair = new AbstractMap.SimpleEntry<>(featureDecision, skipToEveryoneElse);
+        return new DecisionResponse(resultPair, reasons);
     }
 
     /**

@@ -841,12 +841,12 @@ public class DecisionServiceTest {
             optimizely.createUserContext(genericUserId, Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE))
         );
 
-        Variation variation = (Variation) decisionResponse.getResult().getKey();
+        FeatureDecision featureDecision = (FeatureDecision) decisionResponse.getResult().getKey();
         Boolean skipToEveryoneElse = (Boolean) decisionResponse.getResult().getValue();
         assertNotNull(decisionResponse.getResult());
-        assertNotNull(variation);
+        assertNotNull(featureDecision);
         assertNotNull(expectedVariation);
-        assertEquals(expectedVariation, variation);
+        assertEquals(expectedVariation, featureDecision.variation);
         assertFalse(skipToEveryoneElse);
     }
 
@@ -1747,6 +1747,60 @@ public class DecisionServiceTest {
     }
 
     // ===================================================================
+    //========= evaluateLocalHoldouts tests =========/
+
+    @Test
+    public void evaluateLocalHoldouts_returnsHoldoutDecisionWhenUserBucketed() {
+        ProjectConfig localHoldoutConfig = ValidProjectConfigV4.generateValidProjectConfigV4_localHoldout();
+        Experiment targetedRule = localHoldoutConfig.getExperimentIdMapping().get("1323241596");
+
+        Bucketer bucketer = new Bucketer();
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, null, mockCmabService);
+
+        DecisionResponse<FeatureDecision> response = decisionService.evaluateLocalHoldouts(
+            targetedRule, localHoldoutConfig,
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap())
+        );
+
+        assertNotNull(response.getResult());
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, response.getResult().decisionSource);
+        assertEquals(ValidProjectConfigV4.HOLDOUT_LOCAL_FOR_BASIC_EXPERIMENT, response.getResult().experiment);
+        assertEquals(VARIATION_HOLDOUT_VARIATION_OFF, response.getResult().variation);
+    }
+
+    @Test
+    public void evaluateLocalHoldouts_returnsNullWhenNoHoldoutsForRule() {
+        ProjectConfig localHoldoutConfig = ValidProjectConfigV4.generateValidProjectConfigV4_localHoldout();
+        // EXPERIMENT_MULTIVARIATE_EXPERIMENT is not targeted by any local holdout
+        Experiment untargetedRule = localHoldoutConfig.getExperimentIdMapping().get("3262035800");
+
+        Bucketer bucketer = new Bucketer();
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, null, mockCmabService);
+
+        DecisionResponse<FeatureDecision> response = decisionService.evaluateLocalHoldouts(
+            untargetedRule, localHoldoutConfig,
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap())
+        );
+
+        assertNull(response.getResult());
+    }
+
+    @Test
+    public void evaluateLocalHoldouts_returnsNullWhenConfigHasNoHoldouts() {
+        ProjectConfig noHoldoutConfig = validProjectConfigV4();
+        Experiment rule = noHoldoutConfig.getExperimentIdMapping().get("1323241596");
+
+        Bucketer bucketer = new Bucketer();
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, null, mockCmabService);
+
+        DecisionResponse<FeatureDecision> response = decisionService.evaluateLocalHoldouts(
+            rule, noHoldoutConfig,
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap())
+        );
+
+        assertNull(response.getResult());
+    }
+
     // Local holdout decision service tests (FSSDK-12369)
     // ===================================================================
 
