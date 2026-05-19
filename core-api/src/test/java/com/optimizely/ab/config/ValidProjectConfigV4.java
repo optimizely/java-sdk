@@ -592,6 +592,26 @@ public class ValidProjectConfigV4 {
                 )
             )
     );
+    public static final Holdout HOLDOUT_LOCAL_FOR_BASIC_EXPERIMENT_PARSER = new Holdout(
+        "10075323430",
+        "local_holdout_for_basic_experiment",
+        Holdout.HoldoutStatus.RUNNING.toString(),
+        Collections.<String>emptyList(),
+        null,
+        DatafileProjectConfigTestUtils.createListOfObjects(
+            VARIATION_HOLDOUT_VARIATION_OFF
+        ),
+        DatafileProjectConfigTestUtils.createListOfObjects(
+            new TrafficAllocation(
+                "$opt_dummy_variation_id",
+                10000
+            )
+        ),
+        DatafileProjectConfigTestUtils.createListOfObjects(
+            EXPERIMENT_BASIC_EXPERIMENT_ID
+        )
+    );
+
     /**
      * Feature flag wired to EXPERIMENT_BASIC_EXPERIMENT_ID, used by local holdout tests.
      * Not part of the standard feature flags — only used in generateValidProjectConfigV4_localHoldout().
@@ -1623,6 +1643,7 @@ public class ValidProjectConfigV4 {
         holdouts.add(HOLDOUT_ZERO_TRAFFIC_HOLDOUT);
         holdouts.add(HOLDOUT_BASIC_HOLDOUT);
         holdouts.add(HOLDOUT_TYPEDAUDIENCE_HOLDOUT);
+        holdouts.add(HOLDOUT_LOCAL_FOR_BASIC_EXPERIMENT_PARSER);
 
         // list featureFlags
         List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>();

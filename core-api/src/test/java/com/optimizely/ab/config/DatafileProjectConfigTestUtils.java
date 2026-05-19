@@ -544,6 +544,8 @@ public final class DatafileProjectConfigTestUtils {
             // System.out.println("Actual audience conditions: " + actualHoldout.getAudienceConditions());
             // System.out.println("Expected audience conditions: " + expectedHoldout.getAudienceConditions());
             assertThat(actualHoldout.getAudienceConditions(), is(expectedHoldout.getAudienceConditions()));
+            assertThat(actualHoldout.getIncludedRules(), is(expectedHoldout.getIncludedRules()));
+            assertThat(actualHoldout.isGlobal(), is(expectedHoldout.isGlobal()));
             verifyVariations(actualHoldout.getVariations(), expectedHoldout.getVariations());
             verifyTrafficAllocations(actualHoldout.getTrafficAllocation(),
                 expectedHoldout.getTrafficAllocation());
