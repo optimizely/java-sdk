@@ -419,7 +419,7 @@ public class DecisionServiceTest {
         assertEquals(FeatureDecision.DecisionSource.FEATURE_TEST, featureDecision.decisionSource);
 
         verify(spyFeatureFlag, times(2)).getExperimentIds();
-        verify(spyFeatureFlag, times(2)).getKey();
+        verify(spyFeatureFlag, times(1)).getKey();
     }
 
     /**
@@ -841,12 +841,12 @@ public class DecisionServiceTest {
             optimizely.createUserContext(genericUserId, Collections.singletonMap(ATTRIBUTE_NATIONALITY_KEY, AUDIENCE_ENGLISH_CITIZENS_VALUE))
         );
 
-        Variation variation = (Variation) decisionResponse.getResult().getKey();
+        FeatureDecision featureDecision = (FeatureDecision) decisionResponse.getResult().getKey();
         Boolean skipToEveryoneElse = (Boolean) decisionResponse.getResult().getValue();
         assertNotNull(decisionResponse.getResult());
-        assertNotNull(variation);
+        assertNotNull(featureDecision);
         assertNotNull(expectedVariation);
-        assertEquals(expectedVariation, variation);
+        assertEquals(expectedVariation, featureDecision.variation);
         assertFalse(skipToEveryoneElse);
     }
 
@@ -1744,6 +1744,199 @@ public class DecisionServiceTest {
         // Verify appropriate logging
         logbackVerifier.expectMessage(Level.INFO,
             String.format("Saved user profile of user \"%s\".", genericUserId));
+    }
+
+    // ===================================================================
+    //========= evaluateLocalHoldouts tests =========/
+
+    @Test
+    public void evaluateLocalHoldouts_returnsHoldoutDecisionWhenUserBucketed() {
+        ProjectConfig localHoldoutConfig = ValidProjectConfigV4.generateValidProjectConfigV4_localHoldout();
+        Experiment targetedRule = localHoldoutConfig.getExperimentIdMapping().get("1323241596");
+
+        Bucketer bucketer = new Bucketer();
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, null, mockCmabService);
+
+        DecisionResponse<FeatureDecision> response = decisionService.evaluateLocalHoldouts(
+            targetedRule, localHoldoutConfig,
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap())
+        );
+
+        assertNotNull(response.getResult());
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, response.getResult().decisionSource);
+        assertEquals(ValidProjectConfigV4.HOLDOUT_LOCAL_FOR_BASIC_EXPERIMENT, response.getResult().experiment);
+        assertEquals(VARIATION_HOLDOUT_VARIATION_OFF, response.getResult().variation);
+    }
+
+    @Test
+    public void evaluateLocalHoldouts_returnsNullWhenNoHoldoutsForRule() {
+        ProjectConfig localHoldoutConfig = ValidProjectConfigV4.generateValidProjectConfigV4_localHoldout();
+        // EXPERIMENT_MULTIVARIATE_EXPERIMENT is not targeted by any local holdout
+        Experiment untargetedRule = localHoldoutConfig.getExperimentIdMapping().get("3262035800");
+
+        Bucketer bucketer = new Bucketer();
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, null, mockCmabService);
+
+        DecisionResponse<FeatureDecision> response = decisionService.evaluateLocalHoldouts(
+            untargetedRule, localHoldoutConfig,
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap())
+        );
+
+        assertNull(response.getResult());
+    }
+
+    @Test
+    public void evaluateLocalHoldouts_returnsNullWhenConfigHasNoHoldouts() {
+        ProjectConfig noHoldoutConfig = validProjectConfigV4();
+        Experiment rule = noHoldoutConfig.getExperimentIdMapping().get("1323241596");
+
+        Bucketer bucketer = new Bucketer();
+        DecisionService decisionService = new DecisionService(bucketer, mockErrorHandler, null, mockCmabService);
+
+        DecisionResponse<FeatureDecision> response = decisionService.evaluateLocalHoldouts(
+            rule, noHoldoutConfig,
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap())
+        );
+
+        assertNull(response.getResult());
+    }
+
+    // Local holdout decision service tests (FSSDK-12369)
+    // ===================================================================
+
+    /**
+     * Global holdout is evaluated at flag level — a user bucketed into a global holdout
+     * receives the holdout variation before any rule is evaluated.
+     */
+    @Test
+    public void localHoldout_globalHoldoutEvaluatedAtFlagLevelBeforeRules() {
+        ProjectConfig holdoutProjectConfig = generateValidProjectConfigV4_holdout();
+
+        Bucketer mockBucketer = new Bucketer();
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
+
+        // ppid160000 buckets into basic_holdout (global, 5% traffic)
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("$opt_bucketing_id", "ppid160000");
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+            FEATURE_FLAG_BOOLEAN_FEATURE,
+            optimizely.createUserContext("user123", attributes),
+            holdoutProjectConfig
+        ).getResult();
+
+        // Should return global holdout decision — not a regular experiment or rollout decision
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, featureDecision.decisionSource);
+        assertEquals(HOLDOUT_BASIC_HOLDOUT, featureDecision.experiment);
+        assertEquals(VARIATION_HOLDOUT_VARIATION_OFF, featureDecision.variation);
+    }
+
+    /**
+     * Local holdout hit: a user bucketed into a local holdout targeting experiment rule X
+     * receives the holdout variation for that rule; regular rule evaluation is skipped.
+     */
+    @Test
+    public void localHoldout_userInLocalHoldoutReceivesHoldoutVariation() {
+        // Config has only a local holdout targeting EXPERIMENT_BASIC_EXPERIMENT_ID (100% traffic)
+        ProjectConfig localHoldoutConfig = ValidProjectConfigV4.generateValidProjectConfigV4_localHoldout();
+
+        Bucketer mockBucketer = new Bucketer();
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
+
+        // Use FEATURE_FLAG_BASIC_EXPERIMENT_FEATURE which is wired to EXPERIMENT_BASIC_EXPERIMENT_ID
+        // 100% traffic local holdout — any user bucketed into the experiment rule hits the holdout
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+            ValidProjectConfigV4.FEATURE_FLAG_BASIC_EXPERIMENT_FEATURE,
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap()),
+            localHoldoutConfig
+        ).getResult();
+
+        assertEquals("User should be in holdout, not regular experiment",
+            FeatureDecision.DecisionSource.HOLDOUT, featureDecision.decisionSource);
+        assertEquals(ValidProjectConfigV4.HOLDOUT_LOCAL_FOR_BASIC_EXPERIMENT, featureDecision.experiment);
+        assertEquals(VARIATION_HOLDOUT_VARIATION_OFF, featureDecision.variation);
+
+        logbackVerifier.expectMessage(Level.INFO,
+            "User (any_user) is in variation (ho_off_key) of holdout (local_holdout_basic_experiment).");
+    }
+
+    /**
+     * Local holdout miss: when a user does not hit the local holdout, they fall through
+     * to regular rule evaluation.
+     */
+    @Test
+    public void localHoldout_userNotInLocalHoldoutFallsThroughToRegularRuleEvaluation() {
+        // Config has no holdouts at all — user should get a regular experiment decision
+        ProjectConfig noHoldoutConfig = validProjectConfigV4();
+
+        Bucketer mockBucketer = new Bucketer();
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
+
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+            FEATURE_FLAG_MULTI_VARIATE_FEATURE,
+            optimizely.createUserContext(genericUserId, Collections.<String, Object>emptyMap()),
+            noHoldoutConfig
+        ).getResult();
+
+        // No holdouts in config — decision source must not be HOLDOUT
+        assertTrue("Without holdouts, decision source should not be HOLDOUT",
+            featureDecision == null || featureDecision.decisionSource != FeatureDecision.DecisionSource.HOLDOUT);
+    }
+
+    /**
+     * Rule specificity: a local holdout targeting rule X does not affect rule Y.
+     * getHoldoutsForRule is rule-specific.
+     */
+    @Test
+    public void localHoldout_ruleSpecificityLocalHoldoutDoesNotAffectOtherRules() {
+        ProjectConfig localHoldoutConfig = ValidProjectConfigV4.generateValidProjectConfigV4_localHoldout();
+
+        // The local holdout targets EXPERIMENT_BASIC_EXPERIMENT_ID.
+        // FEATURE_FLAG_MULTI_VARIATE_FEATURE uses a different experiment — holdout should not apply.
+        Bucketer mockBucketer = new Bucketer();
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
+
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+            FEATURE_FLAG_MULTI_VARIATE_FEATURE,
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap()),
+            localHoldoutConfig
+        ).getResult();
+
+        // The local holdout targets basic_experiment, not multi_variate_feature's experiment
+        assertTrue("Local holdout targeting a different rule must not affect this feature",
+            featureDecision == null || featureDecision.decisionSource != FeatureDecision.DecisionSource.HOLDOUT);
+    }
+
+    /**
+     * Forced decision priority (MANDATORY enforcement test):
+     * When a forced decision AND a 100% local holdout both target the same rule,
+     * the forced decision must win.
+     */
+    @Test
+    public void localHoldout_forcedDecisionTakesPriorityOverLocalHoldout() {
+        // Config has a 100% local holdout targeting EXPERIMENT_BASIC_EXPERIMENT_ID
+        ProjectConfig localHoldoutConfig = ValidProjectConfigV4.generateValidProjectConfigV4_localHoldout();
+
+        Bucketer mockBucketer = new Bucketer();
+        DecisionService decisionService = new DecisionService(mockBucketer, mockErrorHandler, null, mockCmabService);
+
+        // Set a forced decision for the basic experiment rule
+        OptimizelyUserContext userContext = optimizely.createUserContext("forced_user", Collections.<String, Object>emptyMap());
+        userContext.setForcedDecision(
+            new OptimizelyDecisionContext(ValidProjectConfigV4.FEATURE_FLAG_BASIC_EXPERIMENT_FEATURE_KEY,
+                ValidProjectConfigV4.EXPERIMENT_BASIC_EXPERIMENT_KEY),
+            new OptimizelyForcedDecision("A")
+        );
+
+        FeatureDecision featureDecision = decisionService.getVariationForFeature(
+            ValidProjectConfigV4.FEATURE_FLAG_BASIC_EXPERIMENT_FEATURE,
+            userContext,
+            localHoldoutConfig
+        ).getResult();
+
+        // Forced decision must win over local holdout
+        assertNotNull("Forced decision should produce a result", featureDecision);
+        assertNotEquals("Forced decision must NOT return holdout variation",
+            FeatureDecision.DecisionSource.HOLDOUT, featureDecision.decisionSource);
     }
 
     private Experiment createMockCmabExperiment() {

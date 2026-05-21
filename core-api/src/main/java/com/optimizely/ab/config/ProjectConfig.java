@@ -75,6 +75,21 @@ public interface ProjectConfig {
 
     List<Holdout> getHoldoutForFlag(@Nonnull String id);
 
+    /**
+     * Returns all global holdouts (holdouts where includedRules == null).
+     * Evaluated at flag level, before any rules are iterated.
+     */
+    List<Holdout> getGlobalHoldouts();
+
+    /**
+     * Returns local holdouts targeting a specific rule ID.
+     * Evaluated per-rule, after forced decision check and before regular rule evaluation.
+     *
+     * @param ruleId The rule identifier to look up
+     * @return List of local holdouts for that rule, or empty list if none
+     */
+    List<Holdout> getHoldoutsForRule(@Nonnull String ruleId);
+
     Holdout getHoldout(@Nonnull String id);
 
     Set<String> getAllSegments();
