@@ -5084,7 +5084,10 @@ public class OptimizelyTest {
             .build();
 
         optimizely.identifyUser("the-user");
-        Mockito.verify(mockODPEventManager, times(1)).identifyUser("the-user");
+        ArgumentCaptor<Map> identifiersCaptor = ArgumentCaptor.forClass(Map.class);
+        Mockito.verify(mockODPEventManager, times(1)).identifyUser(identifiersCaptor.capture());
+        Map<String, String> capturedIdentifiers = identifiersCaptor.getValue();
+        assertEquals("the-user", capturedIdentifiers.get("fs_user_id"));
     }
 
     @Test

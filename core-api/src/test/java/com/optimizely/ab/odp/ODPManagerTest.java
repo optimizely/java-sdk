@@ -23,8 +23,10 @@ import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -75,13 +77,16 @@ public class ODPManagerTest {
         ODPManager odpManager = ODPManager.builder().withApiManager(mockApiManager).build();
         odpManager.updateSettings("test-host", "test-key", new HashSet<>(Arrays.asList("segment1", "segment2")));
 
-        odpManager.getEventManager().identifyUser("vuid", "fsuid");
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("vuid", "vuid_value");
+        identifiers.put("fs_user_id", "fsuid");
+        odpManager.getEventManager().identifyUser(identifiers);
         Thread.sleep(2000);
         verify(mockApiManager, times(1))
             .sendEvents(eq("test-key"), eq("test-host/v3/events"), any());
 
         odpManager.updateSettings("test-host-updated", "test-key-updated", new HashSet<>(Arrays.asList("segment1")));
-        odpManager.getEventManager().identifyUser("vuid", "fsuid");
+        odpManager.getEventManager().identifyUser(identifiers);
         Thread.sleep(1200);
         verify(mockApiManager, times(1))
             .sendEvents(eq("test-key-updated"), eq("test-host-updated/v3/events"), any());

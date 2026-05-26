@@ -203,7 +203,10 @@ public class ODPEventManagerTest {
         eventManager.updateSettings(odpConfig);
         eventManager.start();
         for (int i = 0; i < 2; i++) {
-            eventManager.identifyUser("the-vuid-" + i, "the-fs-user-id-" + i);
+            Map<String, String> identifiers = new HashMap<>();
+            identifiers.put("vuid", "the-vuid-" + i);
+            identifiers.put("fs_user_id", "the-fs-user-id-" + i);
+            eventManager.identifyUser(identifiers);
         }
 
         Thread.sleep(1500);
@@ -290,61 +293,88 @@ public class ODPEventManagerTest {
     }
 
     @Test
-    public void identifyUserWithVuidAndUserId() throws InterruptedException {
+    public void identifyUserWithMultipleIdentifiers() throws InterruptedException {
         ODPEventManager eventManager = spy(new ODPEventManager(mockApiManager));
         ArgumentCaptor<ODPEvent> captor = ArgumentCaptor.forClass(ODPEvent.class);
 
-        eventManager.identifyUser("vuid_123", "test-user");
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("vuid", "vuid_123");
+        identifiers.put("fs_user_id", "test-user");
+        eventManager.identifyUser(identifiers);
         verify(eventManager, times(1)).sendEvent(captor.capture());
 
         ODPEvent event = captor.getValue();
-        Map<String, String> identifiers = event.getIdentifiers();
-        assertEquals(identifiers.size(), 2);
-        assertEquals(identifiers.get("vuid"), "vuid_123");
-        assertEquals(identifiers.get("fs_user_id"), "test-user");
+        Map<String, String> eventIdentifiers = event.getIdentifiers();
+        assertEquals(eventIdentifiers.size(), 2);
+        assertEquals(eventIdentifiers.get("vuid"), "vuid_123");
+        assertEquals(eventIdentifiers.get("fs_user_id"), "test-user");
     }
 
     @Test
-    public void identifyUserWithVuidOnly() throws InterruptedException {
+    public void identifyUserSkippedWithSingleIdentifier() throws InterruptedException {
         ODPEventManager eventManager = spy(new ODPEventManager(mockApiManager));
-        ArgumentCaptor<ODPEvent> captor = ArgumentCaptor.forClass(ODPEvent.class);
 
-        eventManager.identifyUser("vuid_123", null);
-        verify(eventManager, times(1)).sendEvent(captor.capture());
-
-        ODPEvent event = captor.getValue();
-        Map<String, String> identifiers = event.getIdentifiers();
-        assertEquals(identifiers.size(), 1);
-        assertEquals(identifiers.get("vuid"), "vuid_123");
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("fs_user_id", "test-user");
+        eventManager.identifyUser(identifiers);
+        verify(eventManager, never()).sendEvent(any(ODPEvent.class));
+        logbackVerifier.expectMessage(Level.DEBUG, "ODP identify event is not dispatched (only one identifier provided).");
     }
 
     @Test
-    public void identifyUserWithUserIdOnly() throws InterruptedException {
+    public void identifyUserSkippedWithEmptyValues() throws InterruptedException {
         ODPEventManager eventManager = spy(new ODPEventManager(mockApiManager));
-        ArgumentCaptor<ODPEvent> captor = ArgumentCaptor.forClass(ODPEvent.class);
 
-        eventManager.identifyUser(null, "test-user");
-        verify(eventManager, times(1)).sendEvent(captor.capture());
-
-        ODPEvent event = captor.getValue();
-        Map<String, String> identifiers = event.getIdentifiers();
-        assertEquals(identifiers.size(), 1);
-        assertEquals(identifiers.get("fs_user_id"), "test-user");
+        // Two keys but one has empty value - only 1 valid identifier
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("fs_user_id", "test-user");
+        identifiers.put("email", "");
+        eventManager.identifyUser(identifiers);
+        verify(eventManager, never()).sendEvent(any(ODPEvent.class));
+        logbackVerifier.expectMessage(Level.DEBUG, "ODP identify event is not dispatched (only one identifier provided).");
     }
 
     @Test
-    public void identifyUserWithVuidAsUserId() throws InterruptedException {
+    public void identifyUserSkippedWithNullValues() throws InterruptedException {
+        ODPEventManager eventManager = spy(new ODPEventManager(mockApiManager));
+
+        // Two keys but one has null value - only 1 valid identifier
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("fs_user_id", "test-user");
+        identifiers.put("vuid", null);
+        eventManager.identifyUser(identifiers);
+        verify(eventManager, never()).sendEvent(any(ODPEvent.class));
+        logbackVerifier.expectMessage(Level.DEBUG, "ODP identify event is not dispatched (only one identifier provided).");
+    }
+
+    @Test
+    public void identifyUserSkippedWithEmptyMap() throws InterruptedException {
+        ODPEventManager eventManager = spy(new ODPEventManager(mockApiManager));
+
+        Map<String, String> identifiers = new HashMap<>();
+        eventManager.identifyUser(identifiers);
+        verify(eventManager, never()).sendEvent(any(ODPEvent.class));
+        logbackVerifier.expectMessage(Level.DEBUG, "ODP identify event is not dispatched (only one identifier provided).");
+    }
+
+    @Test
+    public void identifyUserSendsWithThreeIdentifiers() throws InterruptedException {
         ODPEventManager eventManager = spy(new ODPEventManager(mockApiManager));
         ArgumentCaptor<ODPEvent> captor = ArgumentCaptor.forClass(ODPEvent.class);
 
-        eventManager.identifyUser(null, "vuid_123");
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("vuid", "vuid_123");
+        identifiers.put("fs_user_id", "test-user");
+        identifiers.put("email", "test@example.com");
+        eventManager.identifyUser(identifiers);
         verify(eventManager, times(1)).sendEvent(captor.capture());
 
         ODPEvent event = captor.getValue();
-        Map<String, String> identifiers = event.getIdentifiers();
-        assertEquals(identifiers.size(), 1);
-        // SDK will convert userId to vuid when userId has a valid vuid format.
-        assertEquals(identifiers.get("vuid"), "vuid_123");
+        Map<String, String> eventIdentifiers = event.getIdentifiers();
+        assertEquals(3, eventIdentifiers.size());
+        assertEquals("vuid_123", eventIdentifiers.get("vuid"));
+        assertEquals("test-user", eventIdentifiers.get("fs_user_id"));
+        assertEquals("test@example.com", eventIdentifiers.get("email"));
     }
 
     @Test

@@ -111,23 +111,21 @@ public class ODPEventManager {
         }
     }
 
-    public void identifyUser(String userId) {
-        identifyUser(null, userId);
-    }
-
-    public void identifyUser(@Nullable String vuid, @Nullable String userId) {
-        Map<String, String> identifiers = new HashMap<>();
-        if (vuid != null) {
-            identifiers.put(ODPUserKey.VUID.getKeyString(), vuid);
-        }
-        if (userId != null) {
-            if (ODPManager.isVuid(userId)) {
-                identifiers.put(ODPUserKey.VUID.getKeyString(), userId);
-            } else {
-                identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
+    public void identifyUser(@Nonnull Map<String, String> identifiers) {
+        // Filter out identifiers with null or empty values
+        Map<String, String> validIdentifiers = new HashMap<>();
+        for (Map.Entry<String, String> entry : identifiers.entrySet()) {
+            if (entry.getValue() != null && !entry.getValue().isEmpty()) {
+                validIdentifiers.put(entry.getKey(), entry.getValue());
             }
         }
-        ODPEvent event = new ODPEvent("fullstack", "identified", identifiers, null);
+
+        if (validIdentifiers.size() < 2) {
+            logger.debug("ODP identify event is not dispatched (only one identifier provided).");
+            return;
+        }
+
+        ODPEvent event = new ODPEvent("fullstack", "identified", validIdentifiers, null);
         sendEvent(event);
     }
 

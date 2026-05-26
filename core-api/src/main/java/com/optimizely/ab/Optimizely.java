@@ -57,6 +57,7 @@ import com.optimizely.ab.odp.ODPEvent;
 import com.optimizely.ab.odp.ODPManager;
 import com.optimizely.ab.odp.ODPSegmentManager;
 import com.optimizely.ab.odp.ODPSegmentOption;
+import com.optimizely.ab.odp.ODPUserKey;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfig;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigManager;
 import com.optimizely.ab.optimizelyconfig.OptimizelyConfigService;
@@ -1794,7 +1795,13 @@ public class Optimizely implements AutoCloseable {
         }
         ODPManager odpManager = getODPManager();
         if (odpManager != null) {
-            odpManager.getEventManager().identifyUser(userId);
+            Map<String, String> identifiers = new HashMap<>();
+            if (ODPManager.isVuid(userId)) {
+                identifiers.put(ODPUserKey.VUID.getKeyString(), userId);
+            } else {
+                identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
+            }
+            odpManager.getEventManager().identifyUser(identifiers);
         }
     }
 
