@@ -111,8 +111,34 @@ public class ODPEventManager {
         }
     }
 
+    /**
+     * @deprecated Use {@link #identifyUser(Map)} instead.
+     */
+    @Deprecated
+    public void identifyUser(String userId) {
+        identifyUser(null, userId);
+    }
+
+    /**
+     * @deprecated Use {@link #identifyUser(Map)} instead.
+     */
+    @Deprecated
+    public void identifyUser(@Nullable String vuid, @Nullable String userId) {
+        Map<String, String> identifiers = new HashMap<>();
+        if (vuid != null) {
+            identifiers.put(ODPUserKey.VUID.getKeyString(), vuid);
+        }
+        if (userId != null) {
+            if (ODPManager.isVuid(userId)) {
+                identifiers.put(ODPUserKey.VUID.getKeyString(), userId);
+            } else {
+                identifiers.put(ODPUserKey.FS_USER_ID.getKeyString(), userId);
+            }
+        }
+        identifyUser(identifiers);
+    }
+
     public void identifyUser(@Nonnull Map<String, String> identifiers) {
-        // Filter out identifiers with null or empty values
         Map<String, String> validIdentifiers = new HashMap<>();
         for (Map.Entry<String, String> entry : identifiers.entrySet()) {
             if (entry.getValue() != null && !entry.getValue().isEmpty()) {
