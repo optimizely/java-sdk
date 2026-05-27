@@ -139,6 +139,11 @@ public class ODPEventManager {
     }
 
     public void identifyUser(@Nonnull Map<String, String> identifiers) {
+        if (identifiers == null) {
+            logger.debug("ODP identify event is not dispatched (fewer than 2 valid identifiers).");
+            return;
+        }
+
         Map<String, String> validIdentifiers = new HashMap<>();
         for (Map.Entry<String, String> entry : identifiers.entrySet()) {
             if (entry.getValue() != null && !entry.getValue().isEmpty()) {
@@ -147,7 +152,7 @@ public class ODPEventManager {
         }
 
         if (validIdentifiers.size() < 2) {
-            logger.debug("ODP identify event is not dispatched (only one identifier provided).");
+            logger.debug("ODP identify event is not dispatched (fewer than 2 valid identifiers).");
             return;
         }
 

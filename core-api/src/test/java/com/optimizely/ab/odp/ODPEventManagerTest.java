@@ -305,9 +305,9 @@ public class ODPEventManagerTest {
 
         ODPEvent event = captor.getValue();
         Map<String, String> eventIdentifiers = event.getIdentifiers();
-        assertEquals(eventIdentifiers.size(), 2);
-        assertEquals(eventIdentifiers.get("vuid"), "vuid_123");
-        assertEquals(eventIdentifiers.get("fs_user_id"), "test-user");
+        assertEquals(2, eventIdentifiers.size());
+        assertEquals("vuid_123", eventIdentifiers.get("vuid"));
+        assertEquals("test-user", eventIdentifiers.get("fs_user_id"));
     }
 
     @Test
@@ -318,7 +318,7 @@ public class ODPEventManagerTest {
         identifiers.put("fs_user_id", "test-user");
         eventManager.identifyUser(identifiers);
         verify(eventManager, never()).sendEvent(any(ODPEvent.class));
-        logbackVerifier.expectMessage(Level.DEBUG, "ODP identify event is not dispatched (only one identifier provided).");
+        logbackVerifier.expectMessage(Level.DEBUG, "ODP identify event is not dispatched (fewer than 2 valid identifiers).");
     }
 
     @Test
@@ -331,7 +331,7 @@ public class ODPEventManagerTest {
         identifiers.put("email", "");
         eventManager.identifyUser(identifiers);
         verify(eventManager, never()).sendEvent(any(ODPEvent.class));
-        logbackVerifier.expectMessage(Level.DEBUG, "ODP identify event is not dispatched (only one identifier provided).");
+        logbackVerifier.expectMessage(Level.DEBUG, "ODP identify event is not dispatched (fewer than 2 valid identifiers).");
     }
 
     @Test
@@ -344,7 +344,7 @@ public class ODPEventManagerTest {
         identifiers.put("vuid", null);
         eventManager.identifyUser(identifiers);
         verify(eventManager, never()).sendEvent(any(ODPEvent.class));
-        logbackVerifier.expectMessage(Level.DEBUG, "ODP identify event is not dispatched (only one identifier provided).");
+        logbackVerifier.expectMessage(Level.DEBUG, "ODP identify event is not dispatched (fewer than 2 valid identifiers).");
     }
 
     @Test
@@ -354,7 +354,7 @@ public class ODPEventManagerTest {
         Map<String, String> identifiers = new HashMap<>();
         eventManager.identifyUser(identifiers);
         verify(eventManager, never()).sendEvent(any(ODPEvent.class));
-        logbackVerifier.expectMessage(Level.DEBUG, "ODP identify event is not dispatched (only one identifier provided).");
+        logbackVerifier.expectMessage(Level.DEBUG, "ODP identify event is not dispatched (fewer than 2 valid identifiers).");
     }
 
     @Test
