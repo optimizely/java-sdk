@@ -1970,7 +1970,7 @@ public class OptimizelyUserContextTest {
             .build();
 
         optimizely.createUserContext("test-user");
-        verify(mockODPEventManager, never()).identifyUser("test-user");
+        verify(mockODPEventManager, never()).identifyUser(any(Map.class));
         Mockito.reset(mockODPEventManager);
 
         logbackVerifier.expectMessage(Level.ERROR, "Optimizely instance is not valid, failing identifyUser call.");
@@ -1992,13 +1992,16 @@ public class OptimizelyUserContextTest {
             .build();
 
         OptimizelyUserContext userContext = optimizely.createUserContext("test-user");
-        verify(mockODPEventManager).identifyUser("test-user");
+        ArgumentCaptor<Map> identifiersCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockODPEventManager).identifyUser(identifiersCaptor.capture());
+        Map<String, String> capturedIdentifiers = identifiersCaptor.getValue();
+        assertEquals("test-user", capturedIdentifiers.get("fs_user_id"));
 
         Mockito.reset(mockODPEventManager);
         OptimizelyUserContext userContextClone = userContext.copy();
 
-        // identifyUser should not be called the new userContext is created through copy
-        verify(mockODPEventManager, never()).identifyUser("test-user");
+        // identifyUser should not be called when the new userContext is created through copy
+        verify(mockODPEventManager, never()).identifyUser(any(Map.class));
 
         assertNotSame(userContextClone, userContext);
     }
