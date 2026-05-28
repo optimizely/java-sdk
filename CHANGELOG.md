@@ -1,5 +1,13 @@
 # Optimizely Java X SDK Changelog
 
+## [4.4.1]
+May 28, 2026
+
+### Fixes
+- Block ODP identify event for single identifier ([#629](https://github.com/optimizely/java-sdk/pull/629))
+- Add local holdouts support ([#628](https://github.com/optimizely/java-sdk/pull/628))
+
+
 ## [4.4.0]
 May 4, 2026
 
