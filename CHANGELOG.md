@@ -1,5 +1,12 @@
 # Optimizely Java X SDK Changelog
 
+## [4.4.2]
+May 29, 2026
+
+### Fixes
+- Include commonIdentifiers when counting identifiers in identifyUser ([#631](https://github.com/optimizely/java-sdk/pull/631))
+
+
 ## [4.4.1]
 May 28, 2026
 
