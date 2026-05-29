@@ -151,14 +151,18 @@ public class ODPEventManager {
             }
         }
 
+        // android-sdk sets vuid in commonIdentifiers. Augment here so the vuid is included
+        // when counting identifiers. Idempotent with augment in sendEvent.
+        Map<String, String> allIdentifiers = augmentCommonIdentifiers(validIdentifiers);
+
         // An identify event requires at least 2 identifiers to link (e.g., vuid + fs_user_id).
         // A single identifier has no cross-reference value and would generate unnecessary traffic.
-        if (validIdentifiers.size() < 2) {
+        if (allIdentifiers.size() < 2) {
             logger.debug("ODP identify event is not dispatched (fewer than 2 valid identifiers).");
             return;
         }
 
-        ODPEvent event = new ODPEvent("fullstack", "identified", validIdentifiers, null);
+        ODPEvent event = new ODPEvent("fullstack", "identified", allIdentifiers, null);
         sendEvent(event);
     }
 

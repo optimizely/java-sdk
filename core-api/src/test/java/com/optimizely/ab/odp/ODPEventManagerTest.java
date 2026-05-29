@@ -358,6 +358,32 @@ public class ODPEventManagerTest {
     }
 
     @Test
+    public void identifyUserSendsWhenCommonIdentifiersProvideSecondIdentifier() throws InterruptedException {
+        ODPEventManager eventManager = spy(new ODPEventManager(mockApiManager));
+        ArgumentCaptor<ODPEvent> captor = ArgumentCaptor.forClass(ODPEvent.class);
+
+        // VUID is set as a common identifier (e.g., vuid enabled in ODPManager)
+        Map<String, String> commonIdentifiers = new HashMap<>();
+        commonIdentifiers.put("vuid", "vuid_abc123");
+        eventManager.setUserCommonIdentifiers(commonIdentifiers);
+
+        // createUserContext passes only fs_user_id — a single identifier in the call
+        Map<String, String> identifiers = new HashMap<>();
+        identifiers.put("fs_user_id", "test-user");
+        eventManager.identifyUser(identifiers);
+
+        // Should NOT be dropped: common identifiers provide the second identifier (vuid),
+        // making this a valid identify event with 2 identifiers total.
+        verify(eventManager, times(1)).sendEvent(captor.capture());
+
+        ODPEvent event = captor.getValue();
+        Map<String, String> eventIdentifiers = event.getIdentifiers();
+        assertEquals(2, eventIdentifiers.size());
+        assertEquals("test-user", eventIdentifiers.get("fs_user_id"));
+        assertEquals("vuid_abc123", eventIdentifiers.get("vuid"));
+    }
+
+    @Test
     public void identifyUserSendsWithThreeIdentifiers() throws InterruptedException {
         ODPEventManager eventManager = spy(new ODPEventManager(mockApiManager));
         ArgumentCaptor<ODPEvent> captor = ArgumentCaptor.forClass(ODPEvent.class);
