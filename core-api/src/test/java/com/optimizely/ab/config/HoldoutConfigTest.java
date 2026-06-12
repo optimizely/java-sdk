@@ -29,6 +29,7 @@ import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.Test;
 
+@SuppressWarnings("deprecation")
 public class HoldoutConfigTest {
 
     private Holdout globalHoldout1;
@@ -263,8 +264,177 @@ public class HoldoutConfigTest {
         }
     }
 
-    // Helper for assertNotNull (avoids import of static from junit 4.x)
+    // -----------------------------------------------------------------------
+    // Section-aware constructor (FSSDK-12760): localHoldouts datafile section
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void testSectionConstructorPartitionsByDatafileSection() {
+        // Entries are routed by section membership, not by includedRules.
+        HoldoutConfig config = new HoldoutConfig(
+            Arrays.asList(globalHoldout1, globalHoldout2),
+            Arrays.asList(localHoldoutRuleA, localHoldoutRuleB)
+        );
+
+        List<Holdout> globals = config.getGlobalHoldouts();
+        assertEquals(2, globals.size());
+        assertTrue(globals.contains(globalHoldout1));
+        assertTrue(globals.contains(globalHoldout2));
+
+        // Local entries are registered under their includedRules.
+        List<Holdout> forRuleA = config.getHoldoutsForRule("ruleA");
+        assertEquals(2, forRuleA.size());
+        assertTrue(forRuleA.contains(localHoldoutRuleA));
+        assertTrue(forRuleA.contains(localHoldoutRuleB));
+    }
+
+    @Test
+    public void testGlobalSectionEntriesIgnoreIncludedRules() {
+        // A holdout placed in the global 'holdouts' section must be treated as global
+        // and have its includedRules stripped — even if the datafile incorrectly carries one.
+        Holdout strayGlobalWithRules = new Holdout(
+            "stray", "stray_holdout",
+            "Running",
+            Collections.<String>emptyList(),
+            null,
+            Collections.<Variation>emptyList(),
+            Collections.<TrafficAllocation>emptyList(),
+            Arrays.asList("ruleA")
+        );
+
+        HoldoutConfig config = new HoldoutConfig(
+            Arrays.asList(strayGlobalWithRules),
+            Collections.<Holdout>emptyList()
+        );
+
+        // The entity-level isGlobal must report true after stripping
+        List<Holdout> globals = config.getGlobalHoldouts();
+        assertEquals(1, globals.size());
+        Holdout sanitized = globals.get(0);
+        assertEquals("stray", sanitized.getId());
+        assertTrue("includedRules should be stripped on global-section entries", sanitized.isGlobal());
+        assertNull(sanitized.getIncludedRules());
+
+        // And the stray rule ID must NOT be registered as a local rule
+        assertTrue(config.getHoldoutsForRule("ruleA").isEmpty());
+
+        // holdoutIdMap returns the sanitized copy (verifies that callers see the stripped form)
+        Holdout viaIdMap = config.getHoldout("stray");
+        assertNotNull("Stray global must be retrievable by ID", viaIdMap);
+        assertTrue(viaIdMap.isGlobal());
+        assertNull(viaIdMap.getIncludedRules());
+    }
+
+    @Test
+    public void testLocalSectionEntryWithoutIncludedRulesIsExcluded() {
+        // Entry placed in the localHoldouts section but missing includedRules is invalid.
+        Holdout invalidLocal = new Holdout(
+            "invalid", "invalid_local",
+            "Running",
+            Collections.<String>emptyList(),
+            null,
+            Collections.<Variation>emptyList(),
+            Collections.<TrafficAllocation>emptyList(),
+            null  // missing includedRules
+        );
+
+        HoldoutConfig config = new HoldoutConfig(
+            Collections.<Holdout>emptyList(),
+            Arrays.asList(invalidLocal)
+        );
+
+        // Excluded from every map: must NOT fall back to global application
+        assertTrue("Invalid local must not be promoted to global", config.getGlobalHoldouts().isEmpty());
+        assertTrue("Invalid local must not be registered for any rule",
+            config.getHoldoutsForRule("ruleA").isEmpty());
+        assertNull("Invalid local must not be retrievable by ID", config.getHoldout("invalid"));
+    }
+
+    @Test
+    public void testLocalSectionEntryWithEmptyIncludedRulesIsValidButInert() {
+        // includedRules == [] is valid but inert: the entity is tracked in the id map
+        // (no error logged) but is not registered under any rule. Matches the spec's
+        // entity-level semantics where [] != null.
+        HoldoutConfig config = new HoldoutConfig(
+            Collections.<Holdout>emptyList(),
+            Arrays.asList(localHoldoutEmpty)
+        );
+
+        // Not promoted to global
+        assertTrue(config.getGlobalHoldouts().isEmpty());
+        // Not registered under any rule (no rule IDs to target)
+        assertTrue(config.getHoldoutsForRule("ruleA").isEmpty());
+        // But the entity is tracked in the id map
+        Holdout stored = config.getHoldout("local_holdout_empty");
+        assertNotNull("Empty-includedRules local must still be retrievable by ID", stored);
+        assertFalse("Empty-includedRules local must not report isGlobal", stored.isGlobal());
+    }
+
+    @Test
+    public void testBothSectionsPresentPartitionCorrectly() {
+        // When both sections are non-empty, scope is enforced strictly by section.
+        HoldoutConfig config = new HoldoutConfig(
+            Arrays.asList(globalHoldout1),
+            Arrays.asList(localHoldoutRuleA)
+        );
+
+        List<Holdout> globals = config.getGlobalHoldouts();
+        assertEquals(1, globals.size());
+        assertSame(globalHoldout1, globals.get(0));
+
+        List<Holdout> forRuleA = config.getHoldoutsForRule("ruleA");
+        assertEquals(1, forRuleA.size());
+        assertSame(localHoldoutRuleA, forRuleA.get(0));
+
+        // ID map covers both
+        assertNotNull("Global must be in id map", config.getHoldout("holdout1"));
+        assertNotNull("Local must be in id map", config.getHoldout("local_holdout_a"));
+    }
+
+    @Test
+    public void testBackwardCompatNoLocalSection() {
+        // Older datafiles emit only the 'holdouts' section. Passing an empty list for
+        // localHoldoutsSection must match the legacy behavior exactly.
+        HoldoutConfig config = new HoldoutConfig(
+            Arrays.asList(globalHoldout1, globalHoldout2),
+            Collections.<Holdout>emptyList()
+        );
+
+        assertEquals(2, config.getGlobalHoldouts().size());
+        assertTrue(config.getHoldoutsForRule("any_rule").isEmpty());
+        assertEquals(2, config.getAllHoldouts().size());
+    }
+
+    @Test
+    public void testEmptyBothSections() {
+        HoldoutConfig config = new HoldoutConfig(
+            Collections.<Holdout>emptyList(),
+            Collections.<Holdout>emptyList()
+        );
+
+        assertTrue(config.getAllHoldouts().isEmpty());
+        assertTrue(config.getGlobalHoldouts().isEmpty());
+        assertTrue(config.getHoldoutsForRule("any_rule").isEmpty());
+        assertNull(config.getHoldout("any_id"));
+    }
+
+    @Test
+    public void testSectionConstructorIdMapTracksBothSections() {
+        HoldoutConfig config = new HoldoutConfig(
+            Arrays.asList(globalHoldout1),
+            Arrays.asList(localHoldoutRuleA)
+        );
+
+        assertSame(globalHoldout1, config.getHoldout("holdout1"));
+        assertSame(localHoldoutRuleA, config.getHoldout("local_holdout_a"));
+    }
+
+    // Helper for assertNotNull/assertNull (avoids import of static from junit 4.x)
     private static void assertNotNull(String message, Object obj) {
         assertTrue(message, obj != null);
+    }
+
+    private static void assertNotNull(Object obj) {
+        assertTrue("Expected non-null", obj != null);
     }
 }

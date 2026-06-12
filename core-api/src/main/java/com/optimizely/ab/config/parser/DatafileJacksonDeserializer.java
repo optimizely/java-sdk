@@ -52,6 +52,15 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
             holdouts = Collections.emptyList();
         }
 
+        // Parse optional 'localHoldouts' top-level section (Gen 3+ datafile shape).
+        // Absent in legacy datafiles — handled by passing an empty list to the constructor.
+        List<Holdout> localHoldouts;
+        if (node.has("localHoldouts")) {
+            localHoldouts = JacksonHelpers.arrayNodeToList(node.get("localHoldouts"), Holdout.class, codec);
+        } else {
+            localHoldouts = Collections.emptyList();
+        }
+
         List<Audience> audiences = Collections.emptyList();
         if (node.has("audiences")) {
             audiences = JacksonHelpers.arrayNodeToList(node.get("audiences"), Audience.class, codec);
@@ -117,6 +126,7 @@ class DatafileJacksonDeserializer extends JsonDeserializer<DatafileProjectConfig
             events,
             experiments,
             holdouts,
+            localHoldouts,
             featureFlags,
             groups,
             rollouts,

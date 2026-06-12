@@ -45,9 +45,8 @@ public class Holdout implements ExperimentCore {
     private final List<TrafficAllocation> trafficAllocation;
 
     /**
-     * Optional list of rule IDs this holdout targets. When null, the holdout is global
-     * (applies to all rules across all flags). When non-null (even empty), it is a local
-     * holdout that only applies to the specified rule IDs.
+     * Per-rule targeting for local holdouts. Scope comes from the datafile section, not
+     * this field; HoldoutConfig strips it on entries from the global 'holdouts' section.
      */
     @Nullable
     private final List<String> includedRules;
@@ -183,7 +182,9 @@ public class Holdout implements ExperimentCore {
 
     /**
      * Returns true if this holdout is global (applies to all rules across all flags).
-     * A holdout is global when includedRules is null.
+     * Scope is determined by the datafile section ('holdouts' vs 'localHoldouts');
+     * HoldoutConfig strips 'includedRules' from global-section entries, so this stays
+     * consistent with section membership.
      *
      * @return true if this is a global holdout, false if it is a local holdout
      */

@@ -27,63 +27,148 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
- * HoldoutConfig manages collections of Holdout objects, distinguishing between global holdouts
- * (which apply to all rules) and local holdouts (which target specific rule IDs).
+ * HoldoutConfig manages collections of Holdout objects partitioned by datafile section.
+ *
+ * <p>Two top-level datafile sections drive holdout scoping (Gen 3+):
+ * <ul>
+ *   <li>{@code holdouts}      — every entry is a global holdout (applied to every flag).
+ *                               Any {@code includedRules} field on these entries is IGNORED
+ *                               and stripped at parse time; section membership alone determines
+ *                               scope.</li>
+ *   <li>{@code localHoldouts} — every entry is a local holdout (rule-scoped via
+ *                               {@code includedRules}). Entries missing or with empty
+ *                               {@code includedRules} are invalid and skipped with an error log.</li>
+ * </ul>
+ *
+ * <p>Backward compatibility: older datafiles that only emit the {@code holdouts} section
+ * continue to work unchanged — every entry is treated as global, matching pre-localHoldouts
+ * behavior. The {@code localHoldouts} key is simply absent and parsed as an empty list.
  */
 public class HoldoutConfig {
+    private static final Logger logger = LoggerFactory.getLogger(HoldoutConfig.class);
+
     private List<Holdout> allHoldouts;
     private Map<String, Holdout> holdoutIdMap;
 
-    /** Global holdouts: holdouts where includedRules == null. Evaluated at flag level. */
+    /** Global holdouts: entries from the datafile 'holdouts' section. Evaluated at flag level. */
     private List<Holdout> globalHoldouts;
 
     /** Rule-level map: ruleId -> list of local holdouts targeting that rule. */
     private Map<String, List<Holdout>> ruleHoldoutsMap;
 
     /**
-     * Initializes a new HoldoutConfig with an empty list of holdouts.
+     * Initializes a new HoldoutConfig with no holdouts.
      */
     public HoldoutConfig() {
-        this(Collections.emptyList());
+        this(Collections.<Holdout>emptyList(), Collections.<Holdout>emptyList());
     }
 
     /**
-     * Initializes a new HoldoutConfig with the specified holdouts.
+     * Backward-compatible constructor: treats every entry as if it came from the global
+     * 'holdouts' section. Any {@code includedRules} field on these entries is preserved
+     * (legacy classification is by entity-level {@code includedRules}, used only by callers
+     * who pre-date the section split).
      *
      * @param allHoldouts The list of holdouts to manage
+     * @deprecated Prefer {@link #HoldoutConfig(List, List)} so global vs. local scope is
+     *             driven by datafile section membership.
      */
+    @Deprecated
     public HoldoutConfig(@Nonnull List<Holdout> allHoldouts) {
         this.allHoldouts = new ArrayList<>(allHoldouts);
         this.holdoutIdMap = new HashMap<>();
         this.globalHoldouts = new ArrayList<>();
         this.ruleHoldoutsMap = new HashMap<>();
-        updateHoldoutMapping();
+        updateLegacyHoldoutMapping();
     }
 
     /**
-     * Updates internal mappings:
-     * - holdoutIdMap: id -> Holdout
-     * - globalHoldouts: holdouts where includedRules == null
-     * - ruleHoldoutsMap: ruleId -> list of holdouts that include that rule
+     * Initializes a new HoldoutConfig from the two top-level datafile sections.
+     *
+     * <p>Entries in {@code globalHoldoutsFromSection} are treated as global regardless of
+     * any {@code includedRules} field they may carry; that field is stripped so section
+     * membership is the sole signal for scope.
+     *
+     * <p>Entries in {@code localHoldoutsFromSection} must carry a non-empty
+     * {@code includedRules} list. Invalid entries (null or empty {@code includedRules})
+     * are logged at ERROR and excluded from evaluation — they do NOT fall back to
+     * global application (the partition between sections is hard).
+     *
+     * @param globalHoldoutsFromSection Entries from the datafile 'holdouts' section
+     * @param localHoldoutsFromSection  Entries from the datafile 'localHoldouts' section
      */
-    private void updateHoldoutMapping() {
-        holdoutIdMap.clear();
-        globalHoldouts.clear();
-        ruleHoldoutsMap.clear();
+    public HoldoutConfig(@Nonnull List<Holdout> globalHoldoutsFromSection,
+                         @Nonnull List<Holdout> localHoldoutsFromSection) {
+        this.allHoldouts = new ArrayList<>();
+        this.holdoutIdMap = new HashMap<>();
+        this.globalHoldouts = new ArrayList<>();
+        this.ruleHoldoutsMap = new HashMap<>();
+        updateHoldoutMapping(globalHoldoutsFromSection, localHoldoutsFromSection);
+    }
 
+    /**
+     * Section-aware mapping: enforces that scope comes from the datafile section, not the
+     * {@code includedRules} field. Stale {@code includedRules} values on global-section
+     * entries are stripped; invalid local-section entries are logged and skipped.
+     */
+    private void updateHoldoutMapping(@Nonnull List<Holdout> globalHoldoutsFromSection,
+                                      @Nonnull List<Holdout> localHoldoutsFromSection) {
+        // Process global holdouts: section membership is the sole signal for scope.
+        // Strip any stale 'includedRules' so the entity is unambiguously global (isGlobal -> true),
+        // even if the datafile incorrectly includes one.
+        for (Holdout holdout : globalHoldoutsFromSection) {
+            Holdout sanitized = holdout.isGlobal() ? holdout : stripIncludedRules(holdout);
+
+            allHoldouts.add(sanitized);
+            holdoutIdMap.put(sanitized.getId(), sanitized);
+            globalHoldouts.add(sanitized);
+        }
+
+        // Process local holdouts: every entry must carry an 'includedRules' field.
+        // Entries with null/missing includedRules are invalid per spec — log an error and
+        // exclude them from evaluation (do NOT fall back to global application).
+        // An empty includedRules list is valid but inert: the entity is tracked in the id
+        // map but is not registered under any rule (matches Python reference semantics).
+        for (Holdout holdout : localHoldoutsFromSection) {
+            List<String> includedRules = holdout.getIncludedRules();
+            if (includedRules == null) {
+                logger.error(
+                    "Local holdout \"{}\" is missing required 'includedRules' field and will be excluded from evaluation.",
+                    holdout.getKey() != null ? holdout.getKey() : holdout.getId());
+                continue;
+            }
+
+            allHoldouts.add(holdout);
+            holdoutIdMap.put(holdout.getId(), holdout);
+            for (String ruleId : includedRules) {
+                if (!ruleHoldoutsMap.containsKey(ruleId)) {
+                    ruleHoldoutsMap.put(ruleId, new ArrayList<Holdout>());
+                }
+                ruleHoldoutsMap.get(ruleId).add(holdout);
+            }
+        }
+    }
+
+    /**
+     * Legacy mapping used by the deprecated single-list constructor. Classifies each entry
+     * by its entity-level {@code includedRules} (null -> global, non-null -> local).
+     * Preserved unchanged for callers that have not migrated to section-aware construction.
+     */
+    private void updateLegacyHoldoutMapping() {
         for (Holdout holdout : allHoldouts) {
             holdoutIdMap.put(holdout.getId(), holdout);
 
             if (holdout.isGlobal()) {
-                // includedRules == null: global holdout — applies to all rules
                 globalHoldouts.add(holdout);
             } else {
-                // includedRules != null: local holdout — add to each targeted rule
                 List<String> includedRules = holdout.getIncludedRules();
                 for (String ruleId : includedRules) {
                     if (!ruleHoldoutsMap.containsKey(ruleId)) {
-                        ruleHoldoutsMap.put(ruleId, new ArrayList<>());
+                        ruleHoldoutsMap.put(ruleId, new ArrayList<Holdout>());
                     }
                     ruleHoldoutsMap.get(ruleId).add(holdout);
                 }
@@ -92,8 +177,28 @@ public class HoldoutConfig {
     }
 
     /**
-     * Returns all global holdouts (holdouts where includedRules == null).
+     * Returns a copy of the given holdout with {@code includedRules} forced to null, so the
+     * entity is unambiguously classified as global. Used only when a stale {@code includedRules}
+     * appears on an entry coming from the global 'holdouts' section.
+     */
+    private static Holdout stripIncludedRules(Holdout holdout) {
+        return new Holdout(
+            holdout.getId(),
+            holdout.getKey(),
+            holdout.getStatus(),
+            holdout.getAudienceIds(),
+            holdout.getAudienceConditions(),
+            holdout.getVariations(),
+            holdout.getTrafficAllocation(),
+            null
+        );
+    }
+
+    /**
+     * Returns all global holdouts (entries from the datafile 'holdouts' section).
      * These are evaluated at the flag level, before any rules are evaluated.
+     * Section membership in 'holdouts' is the sole signal for global scope — any
+     * 'includedRules' field on these entries is ignored.
      *
      * @return An unmodifiable list of global holdouts
      */
@@ -102,8 +207,9 @@ public class HoldoutConfig {
     }
 
     /**
-     * Returns local holdouts targeting a specific rule ID.
-     * These are evaluated per-rule, after the forced decision check and before regular rule evaluation.
+     * Returns local holdouts targeting a specific rule ID. Local holdouts come from the
+     * datafile 'localHoldouts' section and are scoped per-rule via 'includedRules'.
+     * Evaluated per-rule, after the forced decision check and before regular rule evaluation.
      *
      * @param ruleId The rule identifier to look up
      * @return An unmodifiable list of local holdouts targeting that rule, or empty list if none
@@ -111,7 +217,7 @@ public class HoldoutConfig {
     @Nonnull
     public List<Holdout> getHoldoutsForRule(@Nonnull String ruleId) {
         List<Holdout> holdouts = ruleHoldoutsMap.get(ruleId);
-        return holdouts != null ? Collections.unmodifiableList(holdouts) : Collections.emptyList();
+        return holdouts != null ? Collections.unmodifiableList(holdouts) : Collections.<Holdout>emptyList();
     }
 
     /**
@@ -140,7 +246,7 @@ public class HoldoutConfig {
     }
 
     /**
-     * Returns all holdouts managed by this config.
+     * Returns all holdouts managed by this config (both global and local sections, in that order).
      *
      * @return An unmodifiable list of all holdouts
      */

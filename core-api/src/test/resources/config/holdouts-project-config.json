@@ -532,7 +532,9 @@
       ],
       "audienceIds": ["3468206643", "3468206644", "3468206646", "3468206645"],
       "audienceConditions" : ["or", "3468206643", "3468206644", "3468206646", "3468206645"]
-    },
+    }
+  ],
+  "localHoldouts": [
     {
       "id": "10075323430",
       "key": "local_holdout_for_basic_experiment",
