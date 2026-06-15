@@ -190,9 +190,11 @@ public class DatafileProjectConfig implements ProjectConfig {
     // The two top-level datafile sections drive holdout scoping (Gen 3+):
     //   - 'holdouts'      -> all entries are global holdouts (every flag).
     //                        Any 'includedRules' on these entries is IGNORED (HoldoutConfig
-    //                        strips it at parse time so section membership is the sole signal).
+    //                        strips it while building the mapping so section membership is
+    //                        the sole signal).
     //   - 'localHoldouts' -> all entries are local holdouts (rule-scoped via includedRules).
-    //                        Entries missing/empty includedRules are logged and skipped.
+    //                        Entries with includedRules == null are logged and skipped.
+    //                        Entries with an empty includedRules list are valid but inert.
     //
     // Backward compatibility: older datafiles without a 'localHoldouts' section continue to
     // work unchanged. Pass {@code null} or an empty list for {@code localHoldouts}.

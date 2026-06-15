@@ -37,11 +37,13 @@ import org.slf4j.LoggerFactory;
  * <ul>
  *   <li>{@code holdouts}      — every entry is a global holdout (applied to every flag).
  *                               Any {@code includedRules} field on these entries is IGNORED
- *                               and stripped at parse time; section membership alone determines
- *                               scope.</li>
+ *                               and stripped while building the mapping; section membership
+ *                               alone determines scope.</li>
  *   <li>{@code localHoldouts} — every entry is a local holdout (rule-scoped via
- *                               {@code includedRules}). Entries missing or with empty
- *                               {@code includedRules} are invalid and skipped with an error log.</li>
+ *                               {@code includedRules}). Entries missing {@code includedRules}
+ *                               (null) are invalid and skipped with an error log. Entries
+ *                               with an empty {@code includedRules} list are valid but inert:
+ *                               tracked in the id map, not registered under any rule.</li>
  * </ul>
  *
  * <p>Backward compatibility: older datafiles that only emit the {@code holdouts} section
@@ -93,10 +95,11 @@ public class HoldoutConfig {
      * any {@code includedRules} field they may carry; that field is stripped so section
      * membership is the sole signal for scope.
      *
-     * <p>Entries in {@code localHoldoutsFromSection} must carry a non-empty
-     * {@code includedRules} list. Invalid entries (null or empty {@code includedRules})
-     * are logged at ERROR and excluded from evaluation — they do NOT fall back to
-     * global application (the partition between sections is hard).
+     * <p>Entries in {@code localHoldoutsFromSection} must carry an {@code includedRules}
+     * list. Entries with {@code includedRules == null} are invalid, logged at ERROR, and
+     * excluded from evaluation — they do NOT fall back to global application (the partition
+     * between sections is hard). Entries with an empty {@code includedRules} list are valid
+     * but inert: tracked in the id map, not registered under any rule.
      *
      * @param globalHoldoutsFromSection Entries from the datafile 'holdouts' section
      * @param localHoldoutsFromSection  Entries from the datafile 'localHoldouts' section
