@@ -72,6 +72,15 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
             holdouts = Collections.emptyList();
         }
 
+        // Parse optional 'localHoldouts' top-level section (Gen 3+ datafile shape).
+        // Absent in legacy datafiles — handled by passing an empty list to the constructor.
+        List<Holdout> localHoldouts;
+        if (jsonObject.has("localHoldouts")) {
+            localHoldouts = context.deserialize(jsonObject.get("localHoldouts").getAsJsonArray(), holdoutsType);
+        } else {
+            localHoldouts = Collections.emptyList();
+        }
+
         List<Attribute> attributes;
         attributes = context.deserialize(jsonObject.get("attributes"), attributesType);
 
@@ -143,6 +152,7 @@ public class DatafileGsonDeserializer implements JsonDeserializer<ProjectConfig>
             events,
             experiments,
             holdouts,
+            localHoldouts,
             featureFlags,
             groups,
             rollouts,

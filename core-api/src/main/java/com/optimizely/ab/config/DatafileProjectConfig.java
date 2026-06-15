@@ -136,7 +136,10 @@ public class DatafileProjectConfig implements ProjectConfig {
         );
     }
 
-    // v4 constructor
+    // v4 constructor (legacy — single holdouts list). For backward compatibility with callers
+    // that pre-date the 'localHoldouts' section split, entries are auto-partitioned by their
+    // entity-level includedRules field: null -> global section, non-null -> local section.
+    // Prefer the 21-arg constructor when you have explicit datafile sections.
     public DatafileProjectConfig(String accountId,
                                  boolean anonymizeIP,
                                  boolean sendFlagDecisions,
@@ -153,6 +156,65 @@ public class DatafileProjectConfig implements ProjectConfig {
                                  List<EventType> events,
                                  List<Experiment> experiments,
                                  List<Holdout> holdouts,
+                                 List<FeatureFlag> featureFlags,
+                                 List<Group> groups,
+                                 List<Rollout> rollouts,
+                                 List<Integration> integrations) {
+        this(accountId, anonymizeIP, sendFlagDecisions, botFiltering, region, projectId, revision,
+            sdkKey, environmentKey, version, attributes, audiences, typedAudiences, events,
+            experiments,
+            partitionLegacyHoldoutsByScope(holdouts, true),
+            partitionLegacyHoldoutsByScope(holdouts, false),
+            featureFlags, groups, rollouts, integrations);
+    }
+
+    // Helper for the legacy v4 constructor: splits a mixed holdouts list by entity-level scope
+    // so callers that haven't migrated to the section-aware constructor still get the right
+    // global/local routing. {@code wantGlobal=true} returns entries with {@code includedRules == null};
+    // {@code wantGlobal=false} returns entries with {@code includedRules != null}.
+    private static List<Holdout> partitionLegacyHoldoutsByScope(List<Holdout> holdouts, boolean wantGlobal) {
+        if (holdouts == null || holdouts.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Holdout> partition = new ArrayList<Holdout>();
+        for (Holdout holdout : holdouts) {
+            if (holdout.isGlobal() == wantGlobal) {
+                partition.add(holdout);
+            }
+        }
+        return partition;
+    }
+
+    // v4 constructor with separate localHoldouts section.
+    //
+    // The two top-level datafile sections drive holdout scoping (Gen 3+):
+    //   - 'holdouts'      -> all entries are global holdouts (every flag).
+    //                        Any 'includedRules' on these entries is IGNORED (HoldoutConfig
+    //                        strips it while building the mapping so section membership is
+    //                        the sole signal).
+    //   - 'localHoldouts' -> all entries are local holdouts (rule-scoped via includedRules).
+    //                        Entries with includedRules == null are logged and skipped.
+    //                        Entries with an empty includedRules list are valid but inert.
+    //
+    // Backward compatibility: older datafiles without a 'localHoldouts' section continue to
+    // work unchanged. Pass {@code null} or an empty list for {@code localHoldouts}.
+    public DatafileProjectConfig(String accountId,
+                                 boolean anonymizeIP,
+                                 boolean sendFlagDecisions,
+                                 Boolean botFiltering,
+                                 String region,
+                                 String projectId,
+                                 String revision,
+                                 String sdkKey,
+                                 String environmentKey,
+                                 String version,
+                                 List<Attribute> attributes,
+                                 List<Audience> audiences,
+                                 List<Audience> typedAudiences,
+                                 List<EventType> events,
+                                 List<Experiment> experiments,
+                                 List<Holdout> holdouts,
+                                 List<Holdout> localHoldouts,
                                  List<FeatureFlag> featureFlags,
                                  List<Group> groups,
                                  List<Rollout> rollouts,
@@ -200,10 +262,12 @@ public class DatafileProjectConfig implements ProjectConfig {
 
         this.experiments = Collections.unmodifiableList(allExperiments);
 
-        if (holdouts == null) {
+        List<Holdout> globalHoldoutsSection = holdouts != null ? holdouts : Collections.<Holdout>emptyList();
+        List<Holdout> localHoldoutsSection = localHoldouts != null ? localHoldouts : Collections.<Holdout>emptyList();
+        if (globalHoldoutsSection.isEmpty() && localHoldoutsSection.isEmpty()) {
             this.holdoutConfig = new HoldoutConfig();
-        }  else {
-            this.holdoutConfig = new HoldoutConfig(holdouts);
+        } else {
+            this.holdoutConfig = new HoldoutConfig(globalHoldoutsSection, localHoldoutsSection);
         }
 
         String publicKeyForODP = "";

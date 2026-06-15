@@ -64,6 +64,15 @@ final public class JsonSimpleConfigParser implements ConfigParser {
                 holdouts = Collections.emptyList();
             }
 
+            // Parse optional 'localHoldouts' top-level section (Gen 3+ datafile shape).
+            // Absent in legacy datafiles — handled by passing an empty list to the constructor.
+            List<Holdout> localHoldouts;
+            if (rootObject.containsKey("localHoldouts")) {
+                localHoldouts = parseHoldouts((JSONArray) rootObject.get("localHoldouts"));
+            } else {
+                localHoldouts = Collections.emptyList();
+            }
+
             List<Attribute> attributes;
             attributes = parseAttributes((JSONArray) rootObject.get("attributes"));
 
@@ -125,6 +134,7 @@ final public class JsonSimpleConfigParser implements ConfigParser {
                 events,
                 experiments,
                 holdouts,
+                localHoldouts,
                 featureFlags,
                 groups,
                 rollouts,
