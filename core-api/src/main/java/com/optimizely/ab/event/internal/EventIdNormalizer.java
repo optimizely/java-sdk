@@ -22,15 +22,17 @@ package com.optimizely.ab.event.internal;
  * <p>Implements FSSDK-12813:
  * <ul>
  *   <li>{@code campaign_id} and impression {@code entity_id} must be a non-empty
- *       decimal-digit string. If empty / null / non-numeric / whitespace, substitute
- *       {@code experiment_id}.</li>
+ *       string of any character content (IDs may be opaque, e.g. {@code "default-12345"},
+ *       {@code "layer_abc"}). If null or empty string, substitute {@code experiment_id}.
+ *       Non-numeric strings pass through unchanged.</li>
  *   <li>{@code variation_id} must be a non-empty decimal-digit string OR {@code null}.
- *       If empty / non-numeric / non-string / whitespace, substitute {@code null}.</li>
+ *       If empty / non-numeric / whitespace, substitute {@code null}. This field retains
+ *       the stricter numeric-string-only contract.</li>
  * </ul>
  *
- * <p>A "numeric string" is a non-empty string consisting entirely of decimal digits
- * {@code [0-9]}. Leading zeros are allowed. Whitespace, negatives, decimals, and
- * exponents are INVALID.
+ * <p>For {@code variation_id}, a "numeric string" is a non-empty string consisting
+ * entirely of decimal digits {@code [0-9]}. Leading zeros are allowed. Whitespace,
+ * negatives, decimals, and exponents are INVALID.
  *
  * <p>Normalization applies uniformly to all decision types (experiment, feature test,
  * rollout, holdout). It must not drop, defer, or fail event dispatch, and it must not
@@ -43,8 +45,19 @@ final class EventIdNormalizer {
     }
 
     /**
+     * @return {@code true} iff {@code value} is non-null and has length &ge; 1.
+     *         Character content is not validated — any non-empty string is accepted.
+     *         Used to validate {@code campaign_id} and impression {@code entity_id}
+     *         per the FSSDK-12813 relaxed contract.
+     */
+    static boolean isNonEmptyString(String value) {
+        return value != null && !value.isEmpty();
+    }
+
+    /**
      * @return {@code true} iff {@code value} is non-null and consists entirely of decimal digits.
      *         Empty strings, whitespace, negatives, decimals, and exponents are all invalid.
+     *         Used to validate {@code variation_id} per the FSSDK-12813 strict numeric-string contract.
      */
     static boolean isNumericString(String value) {
         if (value == null) {
@@ -66,13 +79,18 @@ final class EventIdNormalizer {
     /**
      * Normalize a {@code campaign_id} or impression {@code entity_id}.
      *
-     * @param campaignId the candidate campaign_id (may be null, empty, or non-numeric)
+     * <p>Per FSSDK-12813, any non-empty string is accepted as-is (IDs may be opaque,
+     * e.g. {@code "default-12345"}, {@code "layer_abc"}). The fallback to
+     * {@code experiment_id} fires ONLY when {@code campaignId} is {@code null} or
+     * the empty string {@code ""}.
+     *
+     * @param campaignId the candidate campaign_id (may be null or empty)
      * @param experimentId fallback experiment_id (returned as-is; not re-validated)
-     * @return {@code campaignId} when it is a non-empty numeric string,
+     * @return {@code campaignId} when it is a non-empty string of any content,
      *         otherwise {@code experimentId} (which may itself be {@code null}).
      */
     static String normalizeCampaignId(String campaignId, String experimentId) {
-        if (isNumericString(campaignId)) {
+        if (isNonEmptyString(campaignId)) {
             return campaignId;
         }
         return experimentId;
@@ -80,6 +98,10 @@ final class EventIdNormalizer {
 
     /**
      * Normalize a {@code variation_id}.
+     *
+     * <p>Per FSSDK-12813, {@code variation_id} retains the stricter contract: must be
+     * a non-empty decimal-digit string. Anything else (null, empty, whitespace, or
+     * non-numeric) is replaced with {@code null}.
      *
      * @param variationId the candidate variation_id (may be null, empty, or non-numeric)
      * @return {@code variationId} when it is a non-empty numeric string, otherwise {@code null}.

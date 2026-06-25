@@ -28,18 +28,45 @@ import static org.junit.Assert.assertTrue;
  *
  * <p>Covers FSSDK-12813 normalization rules:
  * <ul>
- *   <li>A "numeric string" is non-empty and consists entirely of decimal digits {@code [0-9]}.</li>
- *   <li>Leading zeros are allowed.</li>
- *   <li>Whitespace, negatives, decimals, and exponents are INVALID.</li>
- *   <li>{@code campaign_id} (and impression {@code entity_id}) → falls back to {@code experiment_id}
- *       when invalid.</li>
- *   <li>{@code variation_id} → falls back to {@code null} when invalid.</li>
+ *   <li>{@code campaign_id} (and impression {@code entity_id}) → falls back to
+ *       {@code experiment_id} ONLY when {@code null} or empty string. Any other
+ *       non-empty string passes through unchanged (IDs may be opaque).</li>
+ *   <li>{@code variation_id} → falls back to {@code null} when null, empty, whitespace,
+ *       or non-numeric. A "numeric string" is non-empty and consists entirely of
+ *       decimal digits {@code [0-9]}; leading zeros allowed; whitespace, negatives,
+ *       decimals, and exponents are INVALID.</li>
  * </ul>
  */
 public class EventIdNormalizerTest {
 
     // ---------------------------------------------------------------------
-    // isNumericString
+    // isNonEmptyString — used for campaign_id / entity_id
+    // ---------------------------------------------------------------------
+
+    @Test
+    public void isNonEmptyString_anyNonEmpty_returnsTrue() {
+        assertTrue(EventIdNormalizer.isNonEmptyString("0"));
+        assertTrue(EventIdNormalizer.isNonEmptyString("12345"));
+        assertTrue(EventIdNormalizer.isNonEmptyString("default-12345"));
+        assertTrue(EventIdNormalizer.isNonEmptyString("layer_abc"));
+        // Whitespace-only strings are still non-empty by length, and any character
+        // content is allowed under the relaxed campaign_id / entity_id contract.
+        assertTrue(EventIdNormalizer.isNonEmptyString(" "));
+        assertTrue(EventIdNormalizer.isNonEmptyString("\t"));
+    }
+
+    @Test
+    public void isNonEmptyString_null_returnsFalse() {
+        assertFalse(EventIdNormalizer.isNonEmptyString(null));
+    }
+
+    @Test
+    public void isNonEmptyString_empty_returnsFalse() {
+        assertFalse(EventIdNormalizer.isNonEmptyString(""));
+    }
+
+    // ---------------------------------------------------------------------
+    // isNumericString — used for variation_id (strict)
     // ---------------------------------------------------------------------
 
     @Test
@@ -118,7 +145,7 @@ public class EventIdNormalizerTest {
     }
 
     // ---------------------------------------------------------------------
-    // normalizeCampaignId
+    // normalizeCampaignId — relaxed: any non-empty string passes through
     // ---------------------------------------------------------------------
 
     @Test
@@ -126,6 +153,28 @@ public class EventIdNormalizerTest {
         assertEquals("12345", EventIdNormalizer.normalizeCampaignId("12345", "67890"));
         assertEquals("0", EventIdNormalizer.normalizeCampaignId("0", "67890"));
         assertEquals("0123", EventIdNormalizer.normalizeCampaignId("0123", "67890"));
+    }
+
+    @Test
+    public void normalizeCampaignId_opaqueString_passesThroughUnchanged() {
+        // Per relaxed FSSDK-12813 contract, any non-empty string is valid for
+        // campaign_id (IDs may be opaque), so no fallback fires.
+        assertEquals("default-12345", EventIdNormalizer.normalizeCampaignId("default-12345", "67890"));
+        assertEquals("layer_abc", EventIdNormalizer.normalizeCampaignId("layer_abc", "67890"));
+        assertEquals("abc", EventIdNormalizer.normalizeCampaignId("abc", "67890"));
+        assertEquals("exp_42", EventIdNormalizer.normalizeCampaignId("exp_42", "67890"));
+        assertEquals("12a", EventIdNormalizer.normalizeCampaignId("12a", "67890"));
+        assertEquals("-1", EventIdNormalizer.normalizeCampaignId("-1", "67890"));
+        assertEquals("1.0", EventIdNormalizer.normalizeCampaignId("1.0", "67890"));
+    }
+
+    @Test
+    public void normalizeCampaignId_whitespace_passesThroughUnchanged() {
+        // Whitespace-only strings have length >= 1, so under the relaxed contract
+        // they are accepted as-is. The pipeline is responsible for further validation.
+        assertEquals(" ", EventIdNormalizer.normalizeCampaignId(" ", "67890"));
+        assertEquals("  ", EventIdNormalizer.normalizeCampaignId("  ", "67890"));
+        assertEquals("\t", EventIdNormalizer.normalizeCampaignId("\t", "67890"));
     }
 
     @Test
@@ -139,40 +188,22 @@ public class EventIdNormalizerTest {
     }
 
     @Test
-    public void normalizeCampaignId_whitespace_fallsBackToExperimentId() {
-        assertEquals("67890", EventIdNormalizer.normalizeCampaignId(" ", "67890"));
-        assertEquals("67890", EventIdNormalizer.normalizeCampaignId("  ", "67890"));
-        assertEquals("67890", EventIdNormalizer.normalizeCampaignId("\t", "67890"));
-    }
-
-    @Test
-    public void normalizeCampaignId_nonNumeric_fallsBackToExperimentId() {
-        assertEquals("67890", EventIdNormalizer.normalizeCampaignId("abc", "67890"));
-        assertEquals("67890", EventIdNormalizer.normalizeCampaignId("layerId", "67890"));
-        assertEquals("67890", EventIdNormalizer.normalizeCampaignId("exp_42", "67890"));
-        assertEquals("67890", EventIdNormalizer.normalizeCampaignId("12a", "67890"));
-        assertEquals("67890", EventIdNormalizer.normalizeCampaignId("-1", "67890"));
-        assertEquals("67890", EventIdNormalizer.normalizeCampaignId("1.0", "67890"));
-    }
-
-    @Test
     public void normalizeCampaignId_invalidCampaignAndNullExperiment_returnsNull() {
         // Spec is silent on this combination; library returns experiment_id as-is, which may be null.
         // This is intentional: no logging, no failure, just pass-through.
         assertNull(EventIdNormalizer.normalizeCampaignId(null, null));
         assertNull(EventIdNormalizer.normalizeCampaignId("", null));
-        assertNull(EventIdNormalizer.normalizeCampaignId("abc", null));
     }
 
     @Test
-    public void normalizeCampaignId_invalidCampaignAndNonNumericExperiment_returnsExperimentAsIs() {
+    public void normalizeCampaignId_nullCampaignAndOpaqueExperiment_returnsExperimentAsIs() {
         // Fallback is verbatim — not re-validated. This matches the spec.
         assertEquals("expKey", EventIdNormalizer.normalizeCampaignId(null, "expKey"));
-        assertEquals("", EventIdNormalizer.normalizeCampaignId("abc", ""));
+        assertEquals("default-99", EventIdNormalizer.normalizeCampaignId("", "default-99"));
     }
 
     // ---------------------------------------------------------------------
-    // normalizeVariationId
+    // normalizeVariationId — strict numeric-string-only (UNCHANGED)
     // ---------------------------------------------------------------------
 
     @Test
