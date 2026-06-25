@@ -267,7 +267,6 @@ public class OptimizelyUserContextTest {
             .setVariationKey("")
             .setEnabled(false)
             .build();
-        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
         eventHandler.expectImpression(null, null, userId, Collections.emptyMap(), metadata);
     }
 
@@ -640,7 +639,6 @@ public class OptimizelyUserContextTest {
         user.decide(flagKey);
         assertTrue(isListenerCalled);
 
-        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
         eventHandler.expectImpression(null, null, userId, attributes);
     }
 
@@ -2104,7 +2102,6 @@ public class OptimizelyUserContextTest {
         String variationKey = "ho_off_key";            // holdout (off) variation key
         String experimentId = "10075323428";           // holdout experiment id in holdouts-project-config.json
         String variationId = "$opt_dummy_variation_id";// dummy variation id used for holdout impressions
-        // FSSDK-12813: dummy variation_id is non-numeric and normalized to null on the wire.
         String expectedDispatchedVariationId = null;
         String expectedReason = "User (" + userId + ") is in variation (" + variationKey + ") of holdout (" + ruleKey + ").";
 
@@ -2181,7 +2178,6 @@ public class OptimizelyUserContextTest {
 
         String holdoutExperimentId = "10075323428"; // basic_holdout id
         String variationId = "$opt_dummy_variation_id";
-        // FSSDK-12813: dummy variation_id is non-numeric and normalized to null on the wire.
         String expectedDispatchedVariationId = null;
         String variationKey = "ho_off_key";
         String expectedReason = "User (" + userId + ") is in variation (" + variationKey + ") of holdout (basic_holdout).";

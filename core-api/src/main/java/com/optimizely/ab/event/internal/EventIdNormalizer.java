@@ -19,7 +19,6 @@ package com.optimizely.ab.event.internal;
 /**
  * EventIdNormalizer normalizes decision-event identifier fields prior to wire serialization.
  *
- * <p>Implements FSSDK-12813:
  * <ul>
  *   <li>{@code campaign_id} and impression {@code entity_id} must be a non-empty
  *       string of any character content (IDs may be opaque, e.g. {@code "default-12345"},
@@ -47,8 +46,7 @@ final class EventIdNormalizer {
     /**
      * @return {@code true} iff {@code value} is non-null and has length &ge; 1.
      *         Character content is not validated — any non-empty string is accepted.
-     *         Used to validate {@code campaign_id} and impression {@code entity_id}
-     *         per the FSSDK-12813 relaxed contract.
+     *         Used to validate {@code campaign_id} and impression {@code entity_id}.
      */
     static boolean isNonEmptyString(String value) {
         return value != null && !value.isEmpty();
@@ -57,7 +55,7 @@ final class EventIdNormalizer {
     /**
      * @return {@code true} iff {@code value} is non-null and consists entirely of decimal digits.
      *         Empty strings, whitespace, negatives, decimals, and exponents are all invalid.
-     *         Used to validate {@code variation_id} per the FSSDK-12813 strict numeric-string contract.
+     *         Used to validate {@code variation_id} per the strict numeric-string contract.
      */
     static boolean isNumericString(String value) {
         if (value == null) {
@@ -79,8 +77,8 @@ final class EventIdNormalizer {
     /**
      * Normalize a {@code campaign_id} or impression {@code entity_id}.
      *
-     * <p>Per FSSDK-12813, any non-empty string is accepted as-is (IDs may be opaque,
-     * e.g. {@code "default-12345"}, {@code "layer_abc"}). The fallback to
+     * <p>Any non-empty string is accepted as-is (IDs may be opaque, e.g.
+     * {@code "default-12345"}, {@code "layer_abc"}). The fallback to
      * {@code experiment_id} fires ONLY when {@code campaignId} is {@code null} or
      * the empty string {@code ""}.
      *
@@ -97,11 +95,9 @@ final class EventIdNormalizer {
     }
 
     /**
-     * Normalize a {@code variation_id}.
-     *
-     * <p>Per FSSDK-12813, {@code variation_id} retains the stricter contract: must be
-     * a non-empty decimal-digit string. Anything else (null, empty, whitespace, or
-     * non-numeric) is replaced with {@code null}.
+     * Normalize a {@code variation_id}. {@code variation_id} retains the stricter
+     * contract: must be a non-empty decimal-digit string. Anything else (null,
+     * empty, whitespace, or non-numeric) is replaced with {@code null}.
      *
      * @param variationId the candidate variation_id (may be null, empty, or non-numeric)
      * @return {@code variationId} when it is a non-empty numeric string, otherwise {@code null}.

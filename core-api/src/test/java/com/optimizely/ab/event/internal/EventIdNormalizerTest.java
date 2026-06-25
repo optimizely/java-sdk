@@ -26,7 +26,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Unit tests for {@link EventIdNormalizer}.
  *
- * <p>Covers FSSDK-12813 normalization rules:
+ * <p>Covers normalization rules:
  * <ul>
  *   <li>{@code campaign_id} (and impression {@code entity_id}) → falls back to
  *       {@code experiment_id} ONLY when {@code null} or empty string. Any other
@@ -157,8 +157,8 @@ public class EventIdNormalizerTest {
 
     @Test
     public void normalizeCampaignId_opaqueString_passesThroughUnchanged() {
-        // Per relaxed FSSDK-12813 contract, any non-empty string is valid for
-        // campaign_id (IDs may be opaque), so no fallback fires.
+        // Any non-empty string is valid for campaign_id (IDs may be opaque),
+        // so no fallback fires.
         assertEquals("default-12345", EventIdNormalizer.normalizeCampaignId("default-12345", "67890"));
         assertEquals("layer_abc", EventIdNormalizer.normalizeCampaignId("layer_abc", "67890"));
         assertEquals("abc", EventIdNormalizer.normalizeCampaignId("abc", "67890"));

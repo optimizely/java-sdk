@@ -97,11 +97,6 @@ public class EventFactory {
 
         UserContext userContext = impressionEvent.getUserContext();
 
-        // FSSDK-12813: Normalize identifier fields uniformly across all decision types
-        // (experiment, feature test, rollout, holdout). Empty / null / non-numeric
-        // campaign_id falls back to experiment_id. Empty / null / non-numeric
-        // variation_id becomes null. entity_id mirrors the normalized campaign_id
-        // byte-for-byte to guarantee wire equivalence.
         String normalizedCampaignId = EventIdNormalizer.normalizeCampaignId(
             impressionEvent.getLayerId(), impressionEvent.getExperimentId());
         String normalizedVariationId = EventIdNormalizer.normalizeVariationId(

@@ -37,8 +37,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Integration tests for FSSDK-12813 decision-event identifier normalization,
- * exercising the full path from {@link ImpressionEvent} through
+ * Integration tests for decision-event identifier normalization, exercising
+ * the full path from {@link ImpressionEvent} through
  * {@link EventFactory#createLogEvent} to the wire payload.
  *
  * <p>Verifies:
@@ -169,8 +169,7 @@ public class EventFactoryNormalizationTest {
 
     @Test
     public void campaignId_whitespace_passesThroughUnchanged() {
-        // FSSDK-12813 (relaxed): any non-empty string is valid for campaign_id.
-        // Whitespace-only strings have length >= 1, so they pass through as-is.
+        // Whitespace-only strings have length >= 1, so they pass through.
         ImpressionEvent imp = buildImpression(
             "experiment", " ", "2222", "3333");
         LogEvent log = EventFactory.createLogEvent(imp);
@@ -180,9 +179,9 @@ public class EventFactoryNormalizationTest {
 
     @Test
     public void campaignId_nonNumericString_passesThroughUnchanged() {
-        // FSSDK-12813 (relaxed): opaque/non-numeric IDs (e.g. "layerKey",
-        // "default-12345", "layer_abc") are valid campaign_id values and must
-        // pass through to both decisions[].campaign_id and events[].entity_id.
+        // Opaque/non-numeric IDs (e.g. "layerKey", "default-12345",
+        // "layer_abc") are valid campaign_id values and must pass through to
+        // both decisions[].campaign_id and events[].entity_id.
         ImpressionEvent imp = buildImpression(
             "experiment", "layerKey", "2222", "3333");
         LogEvent log = EventFactory.createLogEvent(imp);
@@ -192,8 +191,8 @@ public class EventFactoryNormalizationTest {
 
     @Test
     public void campaignId_opaqueDashSeparatedString_passesThroughUnchanged() {
-        // FSSDK-12813 (relaxed): explicit coverage for the canonical opaque-ID
-        // example from the spec ("default-12345").
+        // Explicit coverage for the canonical opaque-ID example
+        // ("default-12345").
         ImpressionEvent imp = buildImpression(
             "experiment", "default-12345", "2222", "3333");
         LogEvent log = EventFactory.createLogEvent(imp);
@@ -243,14 +242,8 @@ public class EventFactoryNormalizationTest {
 
     @Test
     public void normalization_uniformAcrossAllRuleTypes() {
-        // FSSDK-12813 (relaxed):
-        //   - campaign_id: any non-empty string passes through unchanged
-        //     (including opaque IDs like "bad-layer"). Fallback to experiment_id
-        //     only fires for null / empty string.
-        //   - variation_id: still strict numeric-string-only; non-numeric
-        //     inputs like "bad-variation" become null.
-        // This test verifies the SAME relaxed-campaign / strict-variation
-        // behavior applies uniformly across every rule type.
+        // Verifies the same relaxed-campaign / strict-variation behavior
+        // applies uniformly across every rule type.
         String[] ruleTypes = {"experiment", "feature-test", "rollout", "holdout"};
         for (String ruleType : ruleTypes) {
             ImpressionEvent imp = buildImpression(
@@ -277,8 +270,8 @@ public class EventFactoryNormalizationTest {
 
     @Test
     public void normalization_uniformAcrossAllRuleTypes_nullCampaignFallsBack() {
-        // FSSDK-12813 (relaxed): when campaign_id is null, fallback to
-        // experiment_id still fires uniformly across every rule type.
+        // When campaign_id is null, the fallback to experiment_id fires
+        // uniformly across every rule type.
         String[] ruleTypes = {"experiment", "feature-test", "rollout", "holdout"};
         for (String ruleType : ruleTypes) {
             ImpressionEvent imp = buildImpression(
@@ -312,8 +305,8 @@ public class EventFactoryNormalizationTest {
         assertEquals(firstDecision(log1).getCampaignId(), firstEvent(log1).getEntityId());
         assertEquals("1111", firstEvent(log1).getEntityId());
 
-        // 2) campaign_id is opaque non-numeric string → passes through unchanged
-        //    under the relaxed FSSDK-12813 contract; entity_id still mirrors it.
+        // 2) campaign_id is opaque non-numeric string → passes through;
+        //    entity_id still mirrors it.
         ImpressionEvent imp2 = buildImpression("experiment", "bad", "2222", "3333");
         LogEvent log2 = EventFactory.createLogEvent(imp2);
         assertEquals(firstDecision(log2).getCampaignId(), firstEvent(log2).getEntityId());
@@ -338,10 +331,8 @@ public class EventFactoryNormalizationTest {
 
     @Test
     public void event_isNeverDropped_evenWhenAllIdsAreInvalid() {
-        // FSSDK-12813 (FR-006/FR-007): Even when EVERY id is null or non-numeric,
-        // the event must still be created — normalization never drops events and
-        // never throws. We use null/empty campaign_id (triggers fallback) and a
-        // non-numeric variation_id (becomes null) to exercise both fallback paths.
+        // Even when EVERY id is null or non-numeric, the event must still be
+        // created — normalization never drops events and never throws.
         ImpressionEvent impNullCampaign = buildImpression(
             "experiment", null, "2222", "bad");
         LogEvent logNull = EventFactory.createLogEvent(impNullCampaign);
