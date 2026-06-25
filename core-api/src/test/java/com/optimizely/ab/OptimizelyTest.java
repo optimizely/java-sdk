@@ -618,7 +618,8 @@ public class OptimizelyTest {
         assertTrue(optimizely.setForcedVariation(activatedExperiment.getKey(), testUserId, null));
         assertNull(optimizely.getForcedVariation(activatedExperiment.getKey(), testUserId));
         assertFalse(optimizely.isFeatureEnabled(FEATURE_FLAG_MULTI_VARIATE_FEATURE.getKey(), testUserId));
-        eventHandler.expectImpression(null, "", testUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, testUserId);
     }
 
     /**
@@ -1810,13 +1811,19 @@ public class OptimizelyTest {
         List<String> featureFlags = optimizely.getEnabledFeatures(testUserId, Collections.emptyMap());
         assertEquals(2, featureFlags.size());
 
-        eventHandler.expectImpression(null, "", testUserId);
-        eventHandler.expectImpression(null, "", testUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, testUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, testUserId);
         eventHandler.expectImpression("3794675122", "589640735", testUserId);
-        eventHandler.expectImpression(null, "", testUserId);
-        eventHandler.expectImpression(null, "", testUserId);
-        eventHandler.expectImpression(null, "", testUserId);
-        eventHandler.expectImpression(null, "", testUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, testUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, testUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, testUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, testUserId);
         eventHandler.expectImpression("1786133852", "1619235542", testUserId);
 
         // Verify that listener being called
@@ -1853,14 +1860,22 @@ public class OptimizelyTest {
         // Verify that listener not being called
         assertFalse(isListenerCalled);
 
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
 
         assertTrue(optimizely.notificationCenter.removeNotificationListener(notificationId));
     }
@@ -2013,7 +2028,8 @@ public class OptimizelyTest {
             "Feature \"" + validFeatureKey +
                 "\" is enabled for user \"" + genericUserId + "\"? false"
         );
-        eventHandler.expectImpression(null, "", genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
 
         // Verify that listener being called
         assertTrue(isListenerCalled);
@@ -3339,7 +3355,8 @@ public class OptimizelyTest {
             "Feature \"" + validFeatureKey +
                 "\" is enabled for user \"" + genericUserId + "\"? false"
         );
-        eventHandler.expectImpression(null, "", genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
 
         verify(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
@@ -3384,7 +3401,8 @@ public class OptimizelyTest {
             "Feature \"" + validFeatureKey +
                 "\" is enabled for user \"" + genericUserId + "\"? true"
         );
-        eventHandler.expectImpression("3421010877", "variationId", genericUserId);
+        // FSSDK-12813: non-numeric variation_id "variationId" is normalized to null on the wire.
+        eventHandler.expectImpression("3421010877", null, genericUserId);
 
         verify(mockDecisionService).getVariationForFeature(
             eq(FEATURE_FLAG_MULTI_VARIATE_FEATURE),
@@ -3456,7 +3474,8 @@ public class OptimizelyTest {
         );
 
         assertTrue(optimizely.isFeatureEnabled(validFeatureKey, genericUserId));
-        eventHandler.expectImpression("3421010877", "variationId", genericUserId);
+        // FSSDK-12813: non-numeric variation_id "variationId" is normalized to null on the wire.
+        eventHandler.expectImpression("3421010877", null, genericUserId);
 
     }
 
@@ -3485,7 +3504,8 @@ public class OptimizelyTest {
         );
 
         assertFalse(spyOptimizely.isFeatureEnabled(FEATURE_MULTI_VARIATE_FEATURE_KEY, genericUserId));
-        eventHandler.expectImpression("3421010877", "variationId", genericUserId);
+        // FSSDK-12813: non-numeric variation_id "variationId" is normalized to null on the wire.
+        eventHandler.expectImpression("3421010877", null, genericUserId);
 
     }
 
@@ -3582,10 +3602,13 @@ public class OptimizelyTest {
         List<String> featureFlags = optimizely.getEnabledFeatures(genericUserId, Collections.emptyMap());
         assertFalse(featureFlags.isEmpty());
 
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
         eventHandler.expectImpression("3794675122", "589640735", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
         eventHandler.expectImpression("1785077004", "1566407342", genericUserId);
         eventHandler.expectImpression("828245624", "3137445031", genericUserId);
         eventHandler.expectImpression("828245624", "3137445031", genericUserId);
@@ -3606,10 +3629,11 @@ public class OptimizelyTest {
         List<String> featureFlags = optimizely.getEnabledFeatures("", Collections.emptyMap());
         assertFalse(featureFlags.isEmpty());
 
-        eventHandler.expectImpression(null, "", "");
-        eventHandler.expectImpression(null, "", "");
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, "");
+        eventHandler.expectImpression(null, null, "");
         eventHandler.expectImpression("3794675122", "589640735", "");
-        eventHandler.expectImpression(null, "", "");
+        eventHandler.expectImpression(null, null, "");
         eventHandler.expectImpression("1785077004", "1566407342", "");
         eventHandler.expectImpression("828245624", "3137445031", "");
         eventHandler.expectImpression("828245624", "3137445031", "");
@@ -3660,14 +3684,22 @@ public class OptimizelyTest {
         List<String> featureFlags = optimizely.getEnabledFeatures(genericUserId, Collections.emptyMap());
         assertTrue(featureFlags.isEmpty());
 
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
-        eventHandler.expectImpression(null, "", genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
+        // FSSDK-12813: empty-string variation_id is normalized to null on the wire.
+        eventHandler.expectImpression(null, null, genericUserId);
     }
 
     /**

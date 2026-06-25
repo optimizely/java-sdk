@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2020, 2022, Optimizely and contributors
+ *    Copyright 2016-2020, 2022, 2025, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -97,10 +97,20 @@ public class EventFactory {
 
         UserContext userContext = impressionEvent.getUserContext();
 
+        // FSSDK-12813: Normalize identifier fields uniformly across all decision types
+        // (experiment, feature test, rollout, holdout). Empty / null / non-numeric
+        // campaign_id falls back to experiment_id. Empty / null / non-numeric
+        // variation_id becomes null. entity_id mirrors the normalized campaign_id
+        // byte-for-byte to guarantee wire equivalence.
+        String normalizedCampaignId = EventIdNormalizer.normalizeCampaignId(
+            impressionEvent.getLayerId(), impressionEvent.getExperimentId());
+        String normalizedVariationId = EventIdNormalizer.normalizeVariationId(
+            impressionEvent.getVariationId());
+
         Decision decision = new Decision.Builder()
-            .setCampaignId(impressionEvent.getLayerId())
+            .setCampaignId(normalizedCampaignId)
             .setExperimentId(impressionEvent.getExperimentId())
-            .setVariationId(impressionEvent.getVariationId())
+            .setVariationId(normalizedVariationId)
             .setMetadata(impressionEvent.getMetadata())
             .setIsCampaignHoldback(false)
             .build();
@@ -108,7 +118,7 @@ public class EventFactory {
         Event event = new Event.Builder()
             .setTimestamp(impressionEvent.getTimestamp())
             .setUuid(impressionEvent.getUUID())
-            .setEntityId(impressionEvent.getLayerId())
+            .setEntityId(normalizedCampaignId)
             .setKey(ACTIVATE_EVENT_KEY)
             .setType(ACTIVATE_EVENT_KEY)
             .build();
