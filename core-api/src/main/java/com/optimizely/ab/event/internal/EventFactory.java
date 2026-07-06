@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2020, 2022, Optimizely and contributors
+ *    Copyright 2016-2020, 2022, 2026, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -97,10 +97,15 @@ public class EventFactory {
 
         UserContext userContext = impressionEvent.getUserContext();
 
+        String normalizedCampaignId = EventIdNormalizer.normalizeCampaignId(
+            impressionEvent.getLayerId(), impressionEvent.getExperimentId());
+        String normalizedVariationId = EventIdNormalizer.normalizeVariationId(
+            impressionEvent.getVariationId());
+
         Decision decision = new Decision.Builder()
-            .setCampaignId(impressionEvent.getLayerId())
+            .setCampaignId(normalizedCampaignId)
             .setExperimentId(impressionEvent.getExperimentId())
-            .setVariationId(impressionEvent.getVariationId())
+            .setVariationId(normalizedVariationId)
             .setMetadata(impressionEvent.getMetadata())
             .setIsCampaignHoldback(false)
             .build();
@@ -108,7 +113,7 @@ public class EventFactory {
         Event event = new Event.Builder()
             .setTimestamp(impressionEvent.getTimestamp())
             .setUuid(impressionEvent.getUUID())
-            .setEntityId(impressionEvent.getLayerId())
+            .setEntityId(normalizedCampaignId)
             .setKey(ACTIVATE_EVENT_KEY)
             .setType(ACTIVATE_EVENT_KEY)
             .build();

@@ -27,6 +27,7 @@ public class Decision {
     @JsonInclude(JsonInclude.Include.ALWAYS)
     @JsonProperty("experiment_id")
     String experimentId;
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     @JsonProperty("variation_id")
     String variationId;
     @JsonProperty("is_campaign_holdback")
