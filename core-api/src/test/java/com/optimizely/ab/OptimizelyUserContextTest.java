@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2021-2024, Optimizely and contributors
+ *    Copyright 2021-2024, 2026, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -267,7 +267,7 @@ public class OptimizelyUserContextTest {
             .setVariationKey("")
             .setEnabled(false)
             .build();
-        eventHandler.expectImpression(null, "", userId, Collections.emptyMap(), metadata);
+        eventHandler.expectImpression(null, null, userId, Collections.emptyMap(), metadata);
     }
 
     // decideAll
@@ -639,7 +639,7 @@ public class OptimizelyUserContextTest {
         user.decide(flagKey);
         assertTrue(isListenerCalled);
 
-        eventHandler.expectImpression(null, "", userId, attributes);
+        eventHandler.expectImpression(null, null, userId, attributes);
     }
 
     @Test
@@ -2102,6 +2102,7 @@ public class OptimizelyUserContextTest {
         String variationKey = "ho_off_key";            // holdout (off) variation key
         String experimentId = "10075323428";           // holdout experiment id in holdouts-project-config.json
         String variationId = "$opt_dummy_variation_id";// dummy variation id used for holdout impressions
+        String expectedDispatchedVariationId = null;
         String expectedReason = "User (" + userId + ") is in variation (" + variationKey + ") of holdout (" + ruleKey + ").";
 
         Map<String, Object> attrs = new HashMap<>();
@@ -2153,7 +2154,7 @@ public class OptimizelyUserContextTest {
             .setVariationKey(variationKey)
             .setEnabled(false)
             .build();
-        eventHandler.expectImpression(experimentId, variationId, userId, Collections.singletonMap("nationality", "English"), metadata);
+        eventHandler.expectImpression(experimentId, expectedDispatchedVariationId, userId, Collections.singletonMap("nationality", "English"), metadata);
 
         // Log expectation (reuse existing pattern)
         logbackVerifier.expectMessage(Level.INFO, expectedReason);
@@ -2177,6 +2178,7 @@ public class OptimizelyUserContextTest {
 
         String holdoutExperimentId = "10075323428"; // basic_holdout id
         String variationId = "$opt_dummy_variation_id";
+        String expectedDispatchedVariationId = null;
         String variationKey = "ho_off_key";
         String expectedReason = "User (" + userId + ") is in variation (" + variationKey + ") of holdout (basic_holdout).";
 
@@ -2195,7 +2197,7 @@ public class OptimizelyUserContextTest {
                 .setEnabled(false)
                 .build();
             // attributes map expected empty (reserved $opt_ attribute filtered out)
-            eventHandler.expectImpression(holdoutExperimentId, variationId, userId, Collections.emptyMap(), metadata);
+            eventHandler.expectImpression(holdoutExperimentId, expectedDispatchedVariationId, userId, Collections.emptyMap(), metadata);
         }
 
         // At least one log message confirming holdout membership

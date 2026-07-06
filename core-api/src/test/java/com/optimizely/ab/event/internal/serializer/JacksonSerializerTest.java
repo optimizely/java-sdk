@@ -151,4 +151,51 @@ public class JacksonSerializerTest {
         assertTrue("Serialized JSON should contain the UUID value", serialized.contains(cmabUuid));
         assertFalse("Serialized JSON must NOT contain 'cmab_u_u_i_d'", serialized.contains("\"cmab_u_u_i_d\""));
     }
+
+    @Test
+    public void serializeDecisionWithNullVariationId_emitsExplicitJsonNull() {
+        // JacksonSerializer sets Include.NON_NULL globally, so fields default to being
+        // stripped when null. Decision.variation_id must override that with
+        // @JsonInclude(ALWAYS) so the wire payload carries "variation_id": null instead
+        // of dropping the key — required for cross-SDK byte-equivalence under FSSDK-12813.
+        DecisionMetadata metadata = new DecisionMetadata.Builder()
+            .setFlagKey("test_flag")
+            .setRuleKey("test_rule")
+            .setRuleType("holdout")
+            .setVariationKey("ho_off_key")
+            .setEnabled(false)
+            .build();
+
+        Decision decision = new Decision.Builder()
+            .setCampaignId("12345")
+            .setExperimentId("67890")
+            .setVariationId(null)
+            .setIsCampaignHoldback(false)
+            .setMetadata(metadata)
+            .build();
+
+        Snapshot snapshot = new Snapshot.Builder()
+            .setDecisions(Collections.singletonList(decision))
+            .setEvents(Collections.<Event>emptyList())
+            .build();
+
+        Visitor visitor = new Visitor.Builder()
+            .setVisitorId("visitor123")
+            .setAttributes(Collections.<Attribute>emptyList())
+            .setSnapshots(Collections.singletonList(snapshot))
+            .build();
+
+        EventBatch eventBatch = new EventBatch.Builder()
+            .setAccountId("accountId")
+            .setProjectId("projectId")
+            .setRevision("1")
+            .setVisitors(Collections.singletonList(visitor))
+            .build();
+
+        String serialized = serializer.serialize(eventBatch);
+        assertTrue(
+            "variation_id key must be present with explicit null when normalization "
+                + "yields null: " + serialized,
+            serialized.contains("\"variation_id\":null"));
+    }
 }
