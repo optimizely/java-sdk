@@ -1,5 +1,23 @@
 # Optimizely Java X SDK Changelog
 
+## [4.5.0]
+July 7, 2026
+
+### New Features
+
+**Local Holdouts**: Added support for Local Holdouts, enabling holdout experiments
+to be scoped to specific feature flags rather than applied globally.
+Local Holdouts let you measure the true incremental impact of individual features
+by holding out a subset of users from specific rollouts while still serving them other experiences.
+See [Holdouts docs](https://support.optimizely.com/hc/en-us/articles/38941939408269-Global-holdouts) for more information.
+
+- Add localHoldouts to datafile for backward compatibility ([#633](https://github.com/optimizely/java-sdk/pull/633))
+
+### Fixes
+- Use attribute id instead of key for CMAB prediction requests ([#635](https://github.com/optimizely/java-sdk/pull/635))
+- Normalize decision event campaign_id, variation_id, and entity_id ([#634](https://github.com/optimizely/java-sdk/pull/634))
+
+
 ## [4.4.2]
 May 29, 2026
 
