@@ -1,5 +1,5 @@
 /**
- * Copyright 2025, Optimizely
+ * Copyright 2025-2026, Optimizely
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -154,7 +154,7 @@ public class DefaultCmabService implements CmabService {
             Attribute attribute = attributeIdMapping.get(attributeId);
             if (attribute != null) {
                 if (userAttributes.containsKey(attribute.getKey())) {
-                    filteredAttributes.put(attribute.getKey(), userAttributes.get(attribute.getKey()));
+                    filteredAttributes.put(attribute.getId(), userAttributes.get(attribute.getKey()));
                 } else {
                     logger.debug("User attribute '{}' not found for attribute ID '{}'", attribute.getKey(), attributeId);
                 }

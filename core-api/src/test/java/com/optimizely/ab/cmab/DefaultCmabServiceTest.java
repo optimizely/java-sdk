@@ -1,5 +1,5 @@
 /**
- * Copyright 2025, Optimizely
+ * Copyright 2025-2026, Optimizely
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -142,8 +142,8 @@ public class DefaultCmabServiceTest {
         assertNotNull(decision.getCmabUuid());
         
         Map<String, Object> expectedAttributes = new HashMap<>();
-        expectedAttributes.put("age", 25);
-        expectedAttributes.put("location", "USA");
+        expectedAttributes.put("66", 25);
+        expectedAttributes.put("77", "USA");
         verify(mockCmabClient).fetchDecision(eq("exp1"), eq("user123"), eq(expectedAttributes), anyString());
     }
 
@@ -199,8 +199,8 @@ public class DefaultCmabServiceTest {
         assertEquals("varE", decision.getVariationId());
         
         Map<String, Object> expectedAttributes = new HashMap<>();
-        expectedAttributes.put("age", 25);
-        expectedAttributes.put("location", "USA");
+        expectedAttributes.put("66", 25);
+        expectedAttributes.put("77", "USA");
         verify(mockCmabClient).fetchDecision(eq("exp1"), eq("user123"), eq(expectedAttributes), anyString());
     }
 
@@ -221,12 +221,11 @@ public class DefaultCmabServiceTest {
         List<OptimizelyDecideOption> options = Arrays.asList(OptimizelyDecideOption.IGNORE_CMAB_CACHE);
         CmabDecision decision = cmabService.getDecision(mockProjectConfig, mockUserContext, "exp1", options);
 
-        // Verify only age and location are passed (attributes configured in setUp)
         Map<String, Object> expectedAttributes = new HashMap<>();
-        expectedAttributes.put("age", 25);
-        expectedAttributes.put("location", "USA");
+        expectedAttributes.put("66", 25);
+        expectedAttributes.put("77", "USA");
         verify(mockCmabClient).fetchDecision(eq("exp1"), eq("user123"), eq(expectedAttributes), anyString());
-        
+
         assertEquals("varF", decision.getVariationId());
         assertNotNull(decision.getCmabUuid());
     }
@@ -275,10 +274,9 @@ public class DefaultCmabServiceTest {
         List<OptimizelyDecideOption> options = Arrays.asList(OptimizelyDecideOption.IGNORE_CMAB_CACHE);
         cmabService.getDecision(mockProjectConfig, mockUserContext, "exp1", options);
 
-        // Verify only the configured attributes (age, location) are passed
         Map<String, Object> expectedAttributes = new HashMap<>();
-        expectedAttributes.put("age", 25);
-        expectedAttributes.put("location", "USA");
+        expectedAttributes.put("66", 25);
+        expectedAttributes.put("77", "USA");
         verify(mockCmabClient).fetchDecision(eq("exp1"), eq("user123"), eq(expectedAttributes), anyString());
     }
 
@@ -306,9 +304,8 @@ public class DefaultCmabServiceTest {
         List<OptimizelyDecideOption> options = Arrays.asList(OptimizelyDecideOption.IGNORE_CMAB_CACHE);
         cmabService.getDecision(mockProjectConfig, mockUserContext, "exp1", options);
 
-        // Should only include the attribute that exists (age with ID 66)
         Map<String, Object> expectedAttributes = new HashMap<>();
-        expectedAttributes.put("age", 25);
+        expectedAttributes.put("66", 25);
         verify(mockCmabClient).fetchDecision(eq("exp1"), eq("user123"), eq(expectedAttributes), anyString());
         
         // Verify debug log was called for missing attribute
@@ -328,13 +325,9 @@ public class DefaultCmabServiceTest {
         List<OptimizelyDecideOption> options = Arrays.asList(OptimizelyDecideOption.IGNORE_CMAB_CACHE);
         cmabService.getDecision(mockProjectConfig, mockUserContext, "exp1", options);
 
-        // Should only include the attribute the user has
         Map<String, Object> expectedAttributes = new HashMap<>();
-        expectedAttributes.put("age", 25);
+        expectedAttributes.put("66", 25);
         verify(mockCmabClient).fetchDecision(eq("exp1"), eq("user123"), eq(expectedAttributes), anyString());
-        
-        // Remove the logger verification if it's causing issues
-        // verify(mockLogger).debug(anyString(), eq("location"), eq("exp1"));
     }
 
     @Test
