@@ -3,10 +3,12 @@
 ## [4.5.0]
 July 7, 2026
 
+### New Features
+- Add localHoldouts to datafile for backward compatibility ([#633](https://github.com/optimizely/java-sdk/pull/633))
+
 ### Fixes
 - Use attribute id instead of key for CMAB prediction requests ([#635](https://github.com/optimizely/java-sdk/pull/635))
 - Normalize decision event campaign_id, variation_id, and entity_id ([#634](https://github.com/optimizely/java-sdk/pull/634))
-- Add localHoldouts to datafile for backward compatibility ([#633](https://github.com/optimizely/java-sdk/pull/633))
 
 
 ## [4.4.2]
