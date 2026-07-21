@@ -51,6 +51,8 @@ public class Holdout implements ExperimentCore {
     @Nullable
     private final List<String> includedRules;
 
+    private final boolean excludeTargetedDeliveries;
+
     private final Map<String, Variation> variationKeyToVariationMap;
     private final Map<String, Variation> variationIdToVariationMap;
     // Not necessary for HO
@@ -75,7 +77,7 @@ public class Holdout implements ExperimentCore {
 
     @VisibleForTesting
     public Holdout(String id, String key) {
-        this(id, key, "Running", Collections.emptyList(), null, Collections.emptyList(), Collections.emptyList(), null);
+        this(id, key, "Running", Collections.emptyList(), null, Collections.emptyList(), Collections.emptyList(), null, false);
     }
 
     /**
@@ -88,7 +90,7 @@ public class Holdout implements ExperimentCore {
             @Nullable Condition audienceConditions,
             @Nonnull List<Variation> variations,
             @Nonnull List<TrafficAllocation> trafficAllocation) {
-        this(id, key, status, audienceIds, audienceConditions, variations, trafficAllocation, null);
+        this(id, key, status, audienceIds, audienceConditions, variations, trafficAllocation, null, false);
     }
 
     /**
@@ -105,7 +107,8 @@ public class Holdout implements ExperimentCore {
             @JsonProperty("audienceConditions") @Nullable Condition audienceConditions,
             @JsonProperty("variations") @Nonnull List<Variation> variations,
             @JsonProperty("trafficAllocation") @Nonnull List<TrafficAllocation> trafficAllocation,
-            @JsonProperty("includedRules") @Nullable List<String> includedRules) {
+            @JsonProperty("includedRules") @Nullable List<String> includedRules,
+            @JsonProperty("exclude_targeted_deliveries") @Nullable Boolean excludeTargetedDeliveries) {
         this.id = id;
         this.key = key;
         this.status = status;
@@ -114,6 +117,7 @@ public class Holdout implements ExperimentCore {
         this.variations = variations;
         this.trafficAllocation = trafficAllocation;
         this.includedRules = includedRules;
+        this.excludeTargetedDeliveries = excludeTargetedDeliveries != null ? excludeTargetedDeliveries : false;
         this.variationKeyToVariationMap = ProjectConfigUtils.generateNameMapping(this.variations);
         this.variationIdToVariationMap = ProjectConfigUtils.generateIdMapping(this.variations);
     }
@@ -188,6 +192,10 @@ public class Holdout implements ExperimentCore {
      *
      * @return true if this is a global holdout, false if it is a local holdout
      */
+    public boolean isExcludeTargetedDeliveries() {
+        return excludeTargetedDeliveries;
+    }
+
     public boolean isGlobal() {
         return includedRules == null;
     }
@@ -204,6 +212,7 @@ public class Holdout implements ExperimentCore {
                 + ", variationKeyToVariationMap=" + variationKeyToVariationMap
                 + ", trafficAllocation=" + trafficAllocation
                 + ", includedRules=" + includedRules
+                + ", excludeTargetedDeliveries=" + excludeTargetedDeliveries
                 + '}';
     }
 }

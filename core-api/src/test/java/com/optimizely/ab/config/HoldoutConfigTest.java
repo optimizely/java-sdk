@@ -52,7 +52,8 @@ public class HoldoutConfigTest {
             null,
             Collections.<Variation>emptyList(),
             Collections.<TrafficAllocation>emptyList(),
-            Arrays.asList("ruleA")
+            Arrays.asList("ruleA"),
+            false
         );
 
         // Local holdout targeting rules "ruleA" and "ruleB"
@@ -63,7 +64,8 @@ public class HoldoutConfigTest {
             null,
             Collections.<Variation>emptyList(),
             Collections.<TrafficAllocation>emptyList(),
-            Arrays.asList("ruleA", "ruleB")
+            Arrays.asList("ruleA", "ruleB"),
+            false
         );
 
         // Local holdout with empty includedRules list — targets no rules
@@ -74,7 +76,8 @@ public class HoldoutConfigTest {
             null,
             Collections.<Variation>emptyList(),
             Collections.<TrafficAllocation>emptyList(),
-            Collections.<String>emptyList()
+            Collections.<String>emptyList(),
+            false
         );
     }
 
@@ -265,7 +268,7 @@ public class HoldoutConfigTest {
     }
 
     // -----------------------------------------------------------------------
-    // Section-aware constructor (FSSDK-12760): localHoldouts datafile section
+    // Section-aware constructor: localHoldouts datafile section
     // -----------------------------------------------------------------------
 
     @Test
@@ -299,7 +302,8 @@ public class HoldoutConfigTest {
             null,
             Collections.<Variation>emptyList(),
             Collections.<TrafficAllocation>emptyList(),
-            Arrays.asList("ruleA")
+            Arrays.asList("ruleA"),
+            false
         );
 
         HoldoutConfig config = new HoldoutConfig(
@@ -335,7 +339,8 @@ public class HoldoutConfigTest {
             null,
             Collections.<Variation>emptyList(),
             Collections.<TrafficAllocation>emptyList(),
-            null  // missing includedRules
+            null,  // missing includedRules
+            false
         );
 
         HoldoutConfig config = new HoldoutConfig(

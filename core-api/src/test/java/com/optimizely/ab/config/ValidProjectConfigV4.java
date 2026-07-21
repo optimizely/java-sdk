@@ -609,7 +609,8 @@ public class ValidProjectConfigV4 {
         ),
         DatafileProjectConfigTestUtils.createListOfObjects(
             EXPERIMENT_BASIC_EXPERIMENT_ID
-        )
+        ),
+        false
     );
 
     /**
@@ -647,7 +648,48 @@ public class ValidProjectConfigV4 {
         ),
         DatafileProjectConfigTestUtils.createListOfObjects(
             EXPERIMENT_BASIC_EXPERIMENT_ID  // targets the basic experiment rule
-        )
+        ),
+        false
+    );
+
+    public static final Holdout HOLDOUT_GLOBAL_EXCLUDE_TARGETED_DELIVERIES = new Holdout(
+        "30075323428",
+        "global_holdout_exclude_td",
+        Holdout.HoldoutStatus.RUNNING.toString(),
+        Collections.<String>emptyList(),
+        null,
+        DatafileProjectConfigTestUtils.createListOfObjects(
+            VARIATION_HOLDOUT_VARIATION_OFF
+        ),
+        DatafileProjectConfigTestUtils.createListOfObjects(
+            new TrafficAllocation(
+                "$opt_dummy_variation_id",
+                10000
+            )
+        ),
+        null,
+        true
+    );
+
+    public static final Holdout HOLDOUT_LOCAL_EXCLUDE_TARGETED_DELIVERIES = new Holdout(
+        "30075323429",
+        "local_holdout_exclude_td",
+        Holdout.HoldoutStatus.RUNNING.toString(),
+        Collections.<String>emptyList(),
+        null,
+        DatafileProjectConfigTestUtils.createListOfObjects(
+            VARIATION_HOLDOUT_VARIATION_OFF
+        ),
+        DatafileProjectConfigTestUtils.createListOfObjects(
+            new TrafficAllocation(
+                "$opt_dummy_variation_id",
+                10000
+            )
+        ),
+        DatafileProjectConfigTestUtils.createListOfObjects(
+            EXPERIMENT_BASIC_EXPERIMENT_ID
+        ),
+        true
     );
 
     private static final String LAYER_TYPEDAUDIENCE_EXPERIMENT_ID = "1630555627";
@@ -1764,6 +1806,190 @@ public class ValidProjectConfigV4 {
         groups.add(GROUP_2);
 
         // list rollouts
+        List<Rollout> rollouts = new ArrayList<Rollout>();
+        rollouts.add(ROLLOUT_1);
+        rollouts.add(ROLLOUT_2);
+        rollouts.add(ROLLOUT_3);
+
+        List<Integration> integrations = new ArrayList<>();
+        integrations.add(odpIntegration);
+
+        return new DatafileProjectConfig(
+            ACCOUNT_ID,
+            ANONYMIZE_IP,
+            SEND_FLAG_DECISIONS,
+            BOT_FILTERING,
+            REGION,
+            PROJECT_ID,
+            REVISION,
+            SDK_KEY,
+            ENVIRONMENT_KEY,
+            VERSION,
+            attributes,
+            audiences,
+            typedAudiences,
+            events,
+            experiments,
+            holdouts,
+            featureFlags,
+            groups,
+            rollouts,
+            integrations
+        );
+    }
+
+    public static ProjectConfig generateValidProjectConfigV4_globalHoldoutExcludeTargetedDeliveries() {
+        List<Attribute> attributes = new ArrayList<Attribute>();
+        attributes.add(ATTRIBUTE_HOUSE);
+        attributes.add(ATTRIBUTE_NATIONALITY);
+        attributes.add(ATTRIBUTE_OPT);
+        attributes.add(ATTRIBUTE_BOOLEAN);
+        attributes.add(ATTRIBUTE_INTEGER);
+        attributes.add(ATTRIBUTE_DOUBLE);
+        attributes.add(ATTRIBUTE_EMPTY);
+
+        List<Audience> audiences = new ArrayList<Audience>();
+        audiences.add(AUDIENCE_GRYFFINDOR);
+        audiences.add(AUDIENCE_SLYTHERIN);
+        audiences.add(AUDIENCE_ENGLISH_CITIZENS);
+        audiences.add(AUDIENCE_WITH_MISSING_VALUE);
+
+        List<Audience> typedAudiences = new ArrayList<Audience>();
+        typedAudiences.add(TYPED_AUDIENCE_BOOL);
+        typedAudiences.add(TYPED_AUDIENCE_EXACT_INT);
+        typedAudiences.add(TYPED_AUDIENCE_INT);
+        typedAudiences.add(TYPED_AUDIENCE_DOUBLE);
+        typedAudiences.add(TYPED_AUDIENCE_GRYFFINDOR);
+        typedAudiences.add(TYPED_AUDIENCE_SLYTHERIN);
+        typedAudiences.add(TYPED_AUDIENCE_ENGLISH_CITIZENS);
+        typedAudiences.add(AUDIENCE_WITH_MISSING_VALUE);
+
+        List<EventType> events = new ArrayList<EventType>();
+        events.add(EVENT_BASIC_EVENT);
+        events.add(EVENT_PAUSED_EXPERIMENT);
+        events.add(EVENT_LAUNCHED_EXPERIMENT_ONLY);
+
+        List<Experiment> experiments = new ArrayList<Experiment>();
+        experiments.add(EXPERIMENT_BASIC_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_LEAF_EXPERIMENT);
+        experiments.add(EXPERIMENT_MULTIVARIATE_EXPERIMENT);
+        experiments.add(EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT);
+        experiments.add(EXPERIMENT_PAUSED_EXPERIMENT);
+        experiments.add(EXPERIMENT_LAUNCHED_EXPERIMENT);
+        experiments.add(EXPERIMENT_WITH_MALFORMED_AUDIENCE);
+
+        List<Holdout> holdouts = new ArrayList<Holdout>();
+        holdouts.add(HOLDOUT_GLOBAL_EXCLUDE_TARGETED_DELIVERIES);
+
+        List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>();
+        featureFlags.add(FEATURE_FLAG_BOOLEAN_FEATURE);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_DOUBLE);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_INTEGER);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_BOOLEAN);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_STRING);
+        featureFlags.add(FEATURE_FLAG_MULTI_VARIATE_FEATURE);
+        featureFlags.add(FEATURE_FLAG_MULTI_VARIATE_FUTURE_FEATURE);
+        featureFlags.add(FEATURE_FLAG_MUTEX_GROUP_FEATURE);
+        featureFlags.add(FEATURE_FLAG_BASIC_EXPERIMENT_FEATURE);
+
+        List<Group> groups = new ArrayList<Group>();
+        groups.add(GROUP_1);
+        groups.add(GROUP_2);
+
+        List<Rollout> rollouts = new ArrayList<Rollout>();
+        rollouts.add(ROLLOUT_1);
+        rollouts.add(ROLLOUT_2);
+        rollouts.add(ROLLOUT_3);
+
+        List<Integration> integrations = new ArrayList<>();
+        integrations.add(odpIntegration);
+
+        return new DatafileProjectConfig(
+            ACCOUNT_ID,
+            ANONYMIZE_IP,
+            SEND_FLAG_DECISIONS,
+            BOT_FILTERING,
+            REGION,
+            PROJECT_ID,
+            REVISION,
+            SDK_KEY,
+            ENVIRONMENT_KEY,
+            VERSION,
+            attributes,
+            audiences,
+            typedAudiences,
+            events,
+            experiments,
+            holdouts,
+            featureFlags,
+            groups,
+            rollouts,
+            integrations
+        );
+    }
+
+    public static ProjectConfig generateValidProjectConfigV4_localHoldoutExcludeTargetedDeliveries() {
+        List<Attribute> attributes = new ArrayList<Attribute>();
+        attributes.add(ATTRIBUTE_HOUSE);
+        attributes.add(ATTRIBUTE_NATIONALITY);
+        attributes.add(ATTRIBUTE_OPT);
+        attributes.add(ATTRIBUTE_BOOLEAN);
+        attributes.add(ATTRIBUTE_INTEGER);
+        attributes.add(ATTRIBUTE_DOUBLE);
+        attributes.add(ATTRIBUTE_EMPTY);
+
+        List<Audience> audiences = new ArrayList<Audience>();
+        audiences.add(AUDIENCE_GRYFFINDOR);
+        audiences.add(AUDIENCE_SLYTHERIN);
+        audiences.add(AUDIENCE_ENGLISH_CITIZENS);
+        audiences.add(AUDIENCE_WITH_MISSING_VALUE);
+
+        List<Audience> typedAudiences = new ArrayList<Audience>();
+        typedAudiences.add(TYPED_AUDIENCE_BOOL);
+        typedAudiences.add(TYPED_AUDIENCE_EXACT_INT);
+        typedAudiences.add(TYPED_AUDIENCE_INT);
+        typedAudiences.add(TYPED_AUDIENCE_DOUBLE);
+        typedAudiences.add(TYPED_AUDIENCE_GRYFFINDOR);
+        typedAudiences.add(TYPED_AUDIENCE_SLYTHERIN);
+        typedAudiences.add(TYPED_AUDIENCE_ENGLISH_CITIZENS);
+        typedAudiences.add(AUDIENCE_WITH_MISSING_VALUE);
+
+        List<EventType> events = new ArrayList<EventType>();
+        events.add(EVENT_BASIC_EVENT);
+        events.add(EVENT_PAUSED_EXPERIMENT);
+        events.add(EVENT_LAUNCHED_EXPERIMENT_ONLY);
+
+        List<Experiment> experiments = new ArrayList<Experiment>();
+        experiments.add(EXPERIMENT_BASIC_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_WITH_AND_EXPERIMENT);
+        experiments.add(EXPERIMENT_TYPEDAUDIENCE_LEAF_EXPERIMENT);
+        experiments.add(EXPERIMENT_MULTIVARIATE_EXPERIMENT);
+        experiments.add(EXPERIMENT_DOUBLE_FEATURE_EXPERIMENT);
+        experiments.add(EXPERIMENT_PAUSED_EXPERIMENT);
+        experiments.add(EXPERIMENT_LAUNCHED_EXPERIMENT);
+        experiments.add(EXPERIMENT_WITH_MALFORMED_AUDIENCE);
+
+        List<Holdout> holdouts = new ArrayList<Holdout>();
+        holdouts.add(HOLDOUT_LOCAL_EXCLUDE_TARGETED_DELIVERIES);
+
+        List<FeatureFlag> featureFlags = new ArrayList<FeatureFlag>();
+        featureFlags.add(FEATURE_FLAG_BASIC_EXPERIMENT_FEATURE);
+        featureFlags.add(FEATURE_FLAG_BOOLEAN_FEATURE);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_DOUBLE);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_INTEGER);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_BOOLEAN);
+        featureFlags.add(FEATURE_FLAG_SINGLE_VARIABLE_STRING);
+        featureFlags.add(FEATURE_FLAG_MULTI_VARIATE_FEATURE);
+        featureFlags.add(FEATURE_FLAG_MULTI_VARIATE_FUTURE_FEATURE);
+        featureFlags.add(FEATURE_FLAG_MUTEX_GROUP_FEATURE);
+
+        List<Group> groups = new ArrayList<Group>();
+        groups.add(GROUP_1);
+        groups.add(GROUP_2);
+
         List<Rollout> rollouts = new ArrayList<Rollout>();
         rollouts.add(ROLLOUT_1);
         rollouts.add(ROLLOUT_2);

@@ -196,6 +196,48 @@ public class HoldoutTest {
         return conditionTestScenarios;
     }
 
+    @Test
+    public void testExcludeTargetedDeliveries_defaultsToFalse() {
+        Holdout holdout = new Holdout("id1", "key1");
+        assertEquals(false, holdout.isExcludeTargetedDeliveries());
+    }
+
+    @Test
+    public void testExcludeTargetedDeliveries_defaultsToFalseWhenNullPassedToConstructor() {
+        Holdout holdout = new Holdout(
+            "id1", "key1", "Running",
+            Collections.<String>emptyList(), null,
+            Collections.<Variation>emptyList(),
+            Collections.<TrafficAllocation>emptyList(),
+            null, null
+        );
+        assertEquals(false, holdout.isExcludeTargetedDeliveries());
+    }
+
+    @Test
+    public void testExcludeTargetedDeliveries_trueWhenSet() {
+        Holdout holdout = new Holdout(
+            "id1", "key1", "Running",
+            Collections.<String>emptyList(), null,
+            Collections.<Variation>emptyList(),
+            Collections.<TrafficAllocation>emptyList(),
+            null, true
+        );
+        assertEquals(true, holdout.isExcludeTargetedDeliveries());
+    }
+
+    @Test
+    public void testExcludeTargetedDeliveries_falseWhenExplicitlySet() {
+        Holdout holdout = new Holdout(
+            "id1", "key1", "Running",
+            Collections.<String>emptyList(), null,
+            Collections.<Variation>emptyList(),
+            Collections.<TrafficAllocation>emptyList(),
+            null, false
+        );
+        assertEquals(false, holdout.isExcludeTargetedDeliveries());
+    }
+
     private Holdout makeMockHoldoutWithStatus(Holdout.HoldoutStatus status, Condition audienceConditions) {
         return new Holdout("12345",
             "mockHoldoutKey",
