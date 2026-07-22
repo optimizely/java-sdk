@@ -45,6 +45,13 @@ public class FeatureDecision {
     @Nullable
     public String cmabUuid;
 
+    @Nullable
+    public FeatureDecision holdoutDecision;
+
+    public void setHoldoutDecision(@Nullable FeatureDecision holdoutDecision) {
+        this.holdoutDecision = holdoutDecision;
+    }
+
     public enum DecisionSource {
         FEATURE_TEST("feature-test"),
         ROLLOUT("rollout"),

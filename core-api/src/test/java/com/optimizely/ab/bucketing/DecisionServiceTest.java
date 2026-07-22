@@ -1760,8 +1760,7 @@ public class DecisionServiceTest {
 
         DecisionResponse<FeatureDecision> response = decisionService.evaluateLocalHoldouts(
             targetedRule, localHoldoutConfig,
-            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap()),
-            false
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap())
         );
 
         assertNotNull(response.getResult());
@@ -1781,8 +1780,7 @@ public class DecisionServiceTest {
 
         DecisionResponse<FeatureDecision> response = decisionService.evaluateLocalHoldouts(
             untargetedRule, localHoldoutConfig,
-            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap()),
-            false
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap())
         );
 
         assertNull(response.getResult());
@@ -1798,8 +1796,7 @@ public class DecisionServiceTest {
 
         DecisionResponse<FeatureDecision> response = decisionService.evaluateLocalHoldouts(
             rule, noHoldoutConfig,
-            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap()),
-            false
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap())
         );
 
         assertNull(response.getResult());
@@ -1974,7 +1971,7 @@ public class DecisionServiceTest {
     }
 
     @Test
-    public void excludeTargetedDeliveries_globalHoldoutTrue_blocksExperimentRules() {
+    public void excludeTargetedDeliveries_globalHoldoutTrue_skipsExperimentRules() {
         ProjectConfig config = ValidProjectConfigV4.generateValidProjectConfigV4_globalHoldoutExcludeTargetedDeliveries();
 
         Bucketer bucketer = new Bucketer();
@@ -1986,8 +1983,12 @@ public class DecisionServiceTest {
             config
         ).getResult();
 
-        assertNotNull(decision);
-        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.decisionSource);
+        assertTrue("With excludeTargetedDeliveries=true and no rollout, variation should be null",
+            decision == null || decision.variation == null);
+        if (decision != null) {
+            assertNotNull("holdoutDecision should be attached", decision.holdoutDecision);
+            assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecision.decisionSource);
+        }
     }
 
     @Test
@@ -2009,7 +2010,7 @@ public class DecisionServiceTest {
     }
 
     @Test
-    public void excludeTargetedDeliveries_globalHoldoutTrue_noDeliveryMatch_returnsHoldout() {
+    public void excludeTargetedDeliveries_globalHoldoutTrue_noDeliveryMatch_returnsNullWithHoldoutAttached() {
         ProjectConfig config = ValidProjectConfigV4.generateValidProjectConfigV4_globalHoldoutExcludeTargetedDeliveries();
 
         Bucketer bucketer = new Bucketer();
@@ -2021,28 +2022,30 @@ public class DecisionServiceTest {
             config
         ).getResult();
 
-        assertNotNull(decision);
-        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.decisionSource);
-        assertEquals(HOLDOUT_GLOBAL_EXCLUDE_TARGETED_DELIVERIES, decision.experiment);
+        assertTrue("When excludeTargetedDeliveries=true and no delivery match, variation should be null",
+            decision == null || decision.variation == null);
+        if (decision != null) {
+            assertNotNull("holdoutDecision should be attached", decision.holdoutDecision);
+            assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecision.decisionSource);
+        }
     }
 
     @Test
-    public void excludeTargetedDeliveries_localHoldoutTrue_skipsHoldoutForDeliveryRules() {
+    public void excludeTargetedDeliveries_localHoldoutTrue_appliesHoldoutForDeliveryRules() {
         ProjectConfig config = ValidProjectConfigV4.generateValidProjectConfigV4_localHoldoutExcludeTargetedDeliveries();
 
         Bucketer bucketer = new Bucketer();
         DecisionService ds = new DecisionService(bucketer, mockErrorHandler, null, mockCmabService);
 
-        Experiment deliveryRule = mock(Experiment.class);
-        when(deliveryRule.getId()).thenReturn(ValidProjectConfigV4.EXPERIMENT_BASIC_EXPERIMENT_KEY);
+        Experiment deliveryRule = config.getExperimentIdMapping().get("1323241596");
 
         DecisionResponse<FeatureDecision> response = ds.evaluateLocalHoldouts(
             deliveryRule, config,
-            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap()),
-            true
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap())
         );
 
-        assertNull(response.getResult());
+        assertNotNull(response.getResult());
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, response.getResult().decisionSource);
     }
 
     @Test
@@ -2073,8 +2076,7 @@ public class DecisionServiceTest {
 
         DecisionResponse<FeatureDecision> response = ds.evaluateLocalHoldouts(
             targetedRule, config,
-            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap()),
-            true
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap())
         );
 
         assertNotNull(response.getResult());
@@ -2103,6 +2105,67 @@ public class DecisionServiceTest {
 
         assertNotNull(decision);
         assertNotEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.decisionSource);
+    }
+
+    //========= local holdout ignores excludeTargetedDeliveries tests =========/
+
+    @Test
+    public void localHoldout_ignoresExcludeTargetedDeliveries() {
+        ProjectConfig config = ValidProjectConfigV4.generateValidProjectConfigV4_localHoldoutExcludeTargetedDeliveries();
+
+        Bucketer bucketer = new Bucketer();
+        DecisionService ds = new DecisionService(bucketer, mockErrorHandler, null, mockCmabService);
+
+        FeatureDecision decision = ds.getVariationForFeature(
+            ValidProjectConfigV4.FEATURE_FLAG_BASIC_EXPERIMENT_FEATURE,
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap()),
+            config
+        ).getResult();
+
+        assertNotNull(decision);
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.decisionSource);
+        assertEquals(HOLDOUT_LOCAL_EXCLUDE_TARGETED_DELIVERIES, decision.experiment);
+    }
+
+    @Test
+    public void globalHoldout_excludeTD_rolloutReturnsNull_returnsNull() {
+        ProjectConfig config = ValidProjectConfigV4.generateValidProjectConfigV4_globalHoldoutExcludeTargetedDeliveries();
+
+        Bucketer bucketer = new Bucketer();
+        DecisionService ds = new DecisionService(bucketer, mockErrorHandler, null, mockCmabService);
+
+        FeatureDecision decision = ds.getVariationForFeature(
+            FEATURE_FLAG_BOOLEAN_FEATURE,
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap()),
+            config
+        ).getResult();
+
+        assertTrue("When excludeTargetedDeliveries=true and rollout returns null, result should be null or have null variation",
+            decision == null || decision.variation == null);
+        if (decision != null) {
+            assertNotEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.decisionSource);
+        }
+    }
+
+    @Test
+    public void globalHoldout_excludeTD_holdoutDecisionAttached() {
+        ProjectConfig config = ValidProjectConfigV4.generateValidProjectConfigV4_globalHoldoutExcludeTargetedDeliveries();
+
+        Bucketer bucketer = new Bucketer();
+        DecisionService ds = new DecisionService(bucketer, mockErrorHandler, null, mockCmabService);
+
+        FeatureDecision decision = ds.getVariationForFeature(
+            FEATURE_FLAG_SINGLE_VARIABLE_INTEGER,
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap()),
+            config
+        ).getResult();
+
+        assertNotNull(decision);
+        assertEquals(FeatureDecision.DecisionSource.ROLLOUT, decision.decisionSource);
+        assertNotNull("holdoutDecision should be attached when user is in holdout with excludeTargetedDeliveries=true",
+            decision.holdoutDecision);
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecision.decisionSource);
+        assertEquals(HOLDOUT_GLOBAL_EXCLUDE_TARGETED_DELIVERIES, decision.holdoutDecision.experiment);
     }
 
     private Experiment createMockCmabExperiment() {

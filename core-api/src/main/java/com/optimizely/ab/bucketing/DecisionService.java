@@ -365,10 +365,20 @@ public class DecisionService {
             FeatureDecision decision = decisionFeatureResponse.getResult();
 
             if (decision != null && decision.variation != null) {
+                if (globalHoldoutDecision != null) {
+                    decision.setHoldoutDecision(globalHoldoutDecision);
+                }
+                String message = reasons.addInfo("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
+                    user.getUserId(), featureFlag.getKey());
+                logger.info(message);
                 decisions.add(new DecisionResponse(decision, reasons));
-            } else if (globalHoldoutDecision != null) {
-                decisions.add(new DecisionResponse<>(globalHoldoutDecision, reasons));
             } else {
+                if (globalHoldoutDecision != null) {
+                    if (decision == null) {
+                        decision = new FeatureDecision(null, null, null);
+                    }
+                    decision.setHoldoutDecision(globalHoldoutDecision);
+                }
                 String message = reasons.addInfo("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
                     user.getUserId(), featureFlag.getKey());
                 logger.info(message);
@@ -715,14 +725,10 @@ public class DecisionService {
 
     DecisionResponse<FeatureDecision> evaluateLocalHoldouts(@Nonnull ExperimentCore rule,
                                                             @Nonnull ProjectConfig projectConfig,
-                                                            @Nonnull OptimizelyUserContext user,
-                                                            boolean isDeliveryRule) {
+                                                            @Nonnull OptimizelyUserContext user) {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
         List<Holdout> localHoldouts = projectConfig.getHoldoutsForRule(rule.getId());
         for (Holdout holdout : localHoldouts) {
-            if (isDeliveryRule && holdout.isExcludeTargetedDeliveries()) {
-                continue;
-            }
             DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
             reasons.merge(holdoutDecision.getReasons());
             if (holdoutDecision.getResult() != null) {
@@ -871,7 +877,7 @@ public class DecisionService {
 
         // Step 2: Check local holdouts
         if (rule != null) {
-            DecisionResponse<FeatureDecision> holdoutResponse = evaluateLocalHoldouts(rule, projectConfig, user, false);
+            DecisionResponse<FeatureDecision> holdoutResponse = evaluateLocalHoldouts(rule, projectConfig, user);
             reasons.merge(holdoutResponse.getReasons());
             if (holdoutResponse.getResult() != null) {
                 return new DecisionResponse<>(holdoutResponse.getResult(), reasons);
@@ -933,7 +939,7 @@ public class DecisionService {
         }
 
         // Step 2: Check local holdouts
-        DecisionResponse<FeatureDecision> holdoutResponse = evaluateLocalHoldouts(rule, projectConfig, user, true);
+        DecisionResponse<FeatureDecision> holdoutResponse = evaluateLocalHoldouts(rule, projectConfig, user);
         reasons.merge(holdoutResponse.getReasons());
         if (holdoutResponse.getResult() != null) {
             resultPair = new AbstractMap.SimpleEntry<>(holdoutResponse.getResult(), false);
