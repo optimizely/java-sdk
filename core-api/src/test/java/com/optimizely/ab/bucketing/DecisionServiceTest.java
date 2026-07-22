@@ -2168,6 +2168,28 @@ public class DecisionServiceTest {
         assertEquals(HOLDOUT_GLOBAL_EXCLUDE_TARGETED_DELIVERIES, decision.holdoutDecision.experiment);
     }
 
+    @Test
+    public void globalHoldout_excludeTD_addsDecisionReason() {
+        ProjectConfig config = ValidProjectConfigV4.generateValidProjectConfigV4_globalHoldoutExcludeTargetedDeliveries();
+
+        Bucketer bucketer = new Bucketer();
+        DecisionService ds = new DecisionService(bucketer, mockErrorHandler, null, mockCmabService);
+
+        DecisionResponse<FeatureDecision> response = ds.getVariationForFeature(
+            FEATURE_FLAG_SINGLE_VARIABLE_INTEGER,
+            optimizely.createUserContext("any_user", Collections.<String, Object>emptyMap()),
+            config
+        );
+
+        List<String> reasons = response.getReasons().toReport();
+        String expectedReason = String.format(
+            "Holdout '%s' has excludeTargetedDeliveries enabled, continuing to rollout evaluation.",
+            HOLDOUT_GLOBAL_EXCLUDE_TARGETED_DELIVERIES.getKey()
+        );
+        assertTrue("Reasons should contain excludeTargetedDeliveries bypass message",
+            reasons.contains(expectedReason));
+    }
+
     private Experiment createMockCmabExperiment() {
         List<Variation> variations = Arrays.asList(
             new Variation("111151", "variation_1"),

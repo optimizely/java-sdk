@@ -347,6 +347,10 @@ public class DecisionService {
                 continue flagLoop;
             }
 
+            if (globalHoldoutDecision != null && excludeTargetedDeliveries) {
+                reasons.addInfo("Holdout '%s' has excludeTargetedDeliveries enabled, continuing to rollout evaluation.", globalHoldoutDecision.experiment.getKey());
+            }
+
             if (globalHoldoutDecision == null) {
                 DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options, userProfileTracker, decisionPath);
                 reasons.merge(decisionVariationResponse.getReasons());

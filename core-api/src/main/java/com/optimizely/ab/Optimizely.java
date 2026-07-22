@@ -1357,7 +1357,7 @@ public class Optimizely implements AutoCloseable {
         }
 
         if (flagDecision.holdoutDecision != null && !allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
-            sendImpression(
+            decisionEventDispatched = sendImpression(
                 projectConfig,
                 flagDecision.holdoutDecision.experiment,
                 userId,
@@ -1366,7 +1366,7 @@ public class Optimizely implements AutoCloseable {
                 flagKey,
                 flagDecision.holdoutDecision.decisionSource != null ? flagDecision.holdoutDecision.decisionSource.toString() : FeatureDecision.DecisionSource.HOLDOUT.toString(),
                 flagDecision.holdoutDecision.variation != null && flagDecision.holdoutDecision.variation.getFeatureEnabled(),
-                null);
+                null) || decisionEventDispatched;
         }
 
         DecisionNotification decisionNotification = DecisionNotification.newFlagDecisionNotificationBuilder()
