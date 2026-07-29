@@ -2183,7 +2183,7 @@ public class DecisionServiceTest {
 
         List<String> reasons = response.getReasons().toReport();
         String expectedReason = String.format(
-            "Holdout '%s' has excludeTargetedDeliveries enabled, continuing to rollout evaluation.",
+            "Holdout \"%s\" has excludeTargetedDeliveries enabled, continuing to rollout evaluation.",
             HOLDOUT_GLOBAL_EXCLUDE_TARGETED_DELIVERIES.getKey()
         );
         assertTrue("Reasons should contain excludeTargetedDeliveries bypass message",
