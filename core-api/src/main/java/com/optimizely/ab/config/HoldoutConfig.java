@@ -193,7 +193,8 @@ public class HoldoutConfig {
             holdout.getAudienceConditions(),
             holdout.getVariations(),
             holdout.getTrafficAllocation(),
-            null
+            null,
+            holdout.isExcludeTargetedDeliveries()
         );
     }
 

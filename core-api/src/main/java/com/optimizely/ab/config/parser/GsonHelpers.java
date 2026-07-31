@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2017, 2019, Optimizely and contributors
+ *    Copyright 2016-2017, 2019, 2026, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -212,7 +212,12 @@ final class GsonHelpers {
             }
         }
 
-        return new Holdout(id, key, status, audienceIds, conditions, variations, trafficAllocations, includedRules);
+        boolean excludeTargetedDeliveries = false;
+        if (holdoutJson.has("exclude_targeted_deliveries") && !holdoutJson.get("exclude_targeted_deliveries").isJsonNull()) {
+            excludeTargetedDeliveries = holdoutJson.get("exclude_targeted_deliveries").getAsBoolean();
+        }
+
+        return new Holdout(id, key, status, audienceIds, conditions, variations, trafficAllocations, includedRules, excludeTargetedDeliveries);
     }
 
     static FeatureFlag parseFeatureFlag(JsonObject featureFlagJson, JsonDeserializationContext context) {

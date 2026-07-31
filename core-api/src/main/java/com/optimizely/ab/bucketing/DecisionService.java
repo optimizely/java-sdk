@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2017-2022, 2024, Optimizely, Inc. and contributors             *
+ * Copyright 2017-2022, 2024, 2026, Optimizely, Inc. and contributors             *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -328,43 +328,66 @@ public class DecisionService {
 
             // Evaluate global holdouts at flag level (before any rules are iterated)
             List<Holdout> globalHoldouts = projectConfig.getGlobalHoldouts();
+            FeatureDecision globalHoldoutDecision = null;
+            boolean excludeTargetedDeliveries = false;
             if (!globalHoldouts.isEmpty()) {
                 for (Holdout holdout : globalHoldouts) {
                     DecisionResponse<Variation> holdoutDecision = getVariationForHoldout(holdout, user, projectConfig);
                     reasons.merge(holdoutDecision.getReasons());
                     if (holdoutDecision.getResult() != null) {
-                        decisions.add(new DecisionResponse<>(new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT), reasons));
-                        continue flagLoop;
+                        globalHoldoutDecision = new FeatureDecision(holdout, holdoutDecision.getResult(), FeatureDecision.DecisionSource.HOLDOUT);
+                        excludeTargetedDeliveries = holdout.isExcludeTargetedDeliveries();
+                        break;
                     }
                 }
             }
 
-            DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options, userProfileTracker, decisionPath);
-            reasons.merge(decisionVariationResponse.getReasons());
+            if (globalHoldoutDecision != null && !excludeTargetedDeliveries) {
+                decisions.add(new DecisionResponse<>(globalHoldoutDecision, reasons));
+                continue flagLoop;
+            }
 
-            FeatureDecision decision = decisionVariationResponse.getResult();
-            boolean error = decisionVariationResponse.isError();
+            if (globalHoldoutDecision != null && excludeTargetedDeliveries) {
+                reasons.addInfo("Holdout \"%s\" has excludeTargetedDeliveries enabled, continuing to rollout evaluation.", globalHoldoutDecision.experiment.getKey());
+            }
 
-            if (decision != null) {
-                decisions.add(new DecisionResponse(decision, reasons, error, decision.cmabUuid));
-                continue;
+            if (globalHoldoutDecision == null) {
+                DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options, userProfileTracker, decisionPath);
+                reasons.merge(decisionVariationResponse.getReasons());
+
+                FeatureDecision decision = decisionVariationResponse.getResult();
+                boolean error = decisionVariationResponse.isError();
+
+                if (decision != null) {
+                    decisions.add(new DecisionResponse(decision, reasons, error, decision.cmabUuid));
+                    continue flagLoop;
+                }
             }
 
             DecisionResponse<FeatureDecision> decisionFeatureResponse = getVariationForFeatureInRollout(featureFlag, user, projectConfig);
             reasons.merge(decisionFeatureResponse.getReasons());
-            decision = decisionFeatureResponse.getResult();
+            FeatureDecision decision = decisionFeatureResponse.getResult();
 
-            String message;
-            if (decision.variation == null) {
-                message = reasons.addInfo("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
+            if (decision != null && decision.variation != null) {
+                if (globalHoldoutDecision != null) {
+                    decision.setHoldoutDecision(globalHoldoutDecision);
+                }
+                String message = reasons.addInfo("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
                     user.getUserId(), featureFlag.getKey());
+                logger.info(message);
+                decisions.add(new DecisionResponse(decision, reasons));
             } else {
-                message = reasons.addInfo("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
+                if (globalHoldoutDecision != null) {
+                    if (decision == null) {
+                        decision = new FeatureDecision(null, null, null);
+                    }
+                    decision.setHoldoutDecision(globalHoldoutDecision);
+                }
+                String message = reasons.addInfo("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
                     user.getUserId(), featureFlag.getKey());
+                logger.info(message);
+                decisions.add(new DecisionResponse(decision, reasons));
             }
-            logger.info(message);
-
-            decisions.add(new DecisionResponse(decision, reasons));
         }
 
         if (userProfileService != null && !ignoreUPS) {

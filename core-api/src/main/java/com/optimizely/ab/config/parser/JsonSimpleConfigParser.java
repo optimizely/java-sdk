@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright 2016-2022, Optimizely and contributors
+ *    Copyright 2016-2022, 2026, Optimizely and contributors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -257,8 +257,13 @@ final public class JsonSimpleConfigParser implements ConfigParser {
                 }
             }
 
+            boolean excludeTargetedDeliveries = false;
+            if (hoObject.containsKey("exclude_targeted_deliveries") && hoObject.get("exclude_targeted_deliveries") != null) {
+                excludeTargetedDeliveries = (Boolean) hoObject.get("exclude_targeted_deliveries");
+            }
+
             holdouts.add(new Holdout(id, key, status, audienceIds, conditions, variations,
-                trafficAllocations, includedRules));
+                trafficAllocations, includedRules, excludeTargetedDeliveries));
         }
 
         return holdouts;
