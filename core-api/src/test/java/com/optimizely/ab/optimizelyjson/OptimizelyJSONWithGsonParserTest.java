@@ -50,16 +50,16 @@ public class OptimizelyJSONWithGsonParserTest {
     @Test
     public void testIntegerProcessing() throws JsonParseException {
 
-        // GSON parser toMap() adds ".0" to all integers
+        // GSON parser toMap() converts integers to longs
 
         String json = "{\"k1\":1,\"k2\":2.5,\"k3\":{\"kk1\":3,\"kk2\":4.0}}";
 
         Map<String,Object> m2 = new HashMap<String,Object>();
-        m2.put("kk1", 3.0);
+        m2.put("kk1", 3L);
         m2.put("kk2", 4.0);
 
         Map<String,Object> m1 = new HashMap<String,Object>();
-        m1.put("k1", 1.0);
+        m1.put("k1", 1L);
         m1.put("k2", 2.5);
         m1.put("k3", m2);
 
