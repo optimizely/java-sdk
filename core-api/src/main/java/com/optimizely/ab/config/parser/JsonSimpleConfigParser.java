@@ -258,8 +258,8 @@ final public class JsonSimpleConfigParser implements ConfigParser {
             }
 
             boolean excludeTargetedDeliveries = false;
-            if (hoObject.containsKey("exclude_targeted_deliveries") && hoObject.get("exclude_targeted_deliveries") != null) {
-                excludeTargetedDeliveries = (Boolean) hoObject.get("exclude_targeted_deliveries");
+            if (hoObject.containsKey("excludeTargetedDeliveries") && hoObject.get("excludeTargetedDeliveries") != null) {
+                excludeTargetedDeliveries = (Boolean) hoObject.get("excludeTargetedDeliveries");
             }
 
             holdouts.add(new Holdout(id, key, status, audienceIds, conditions, variations,

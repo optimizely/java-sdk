@@ -511,7 +511,8 @@
           "id": "$opt_dummy_variation_id",
           "key": "ho_off_key"
         }
-      ]
+      ],
+      "excludeTargetedDeliveries": false
     },
     {
       "id": "10075323429",
@@ -532,6 +533,26 @@
       ],
       "audienceIds": ["3468206643", "3468206644", "3468206646", "3468206645"],
       "audienceConditions" : ["or", "3468206643", "3468206644", "3468206646", "3468206645"]
+    },
+    {
+      "audienceIds": [],
+      "id": "1007532345431",
+      "key": "holdout_etd_parser_coverage",
+      "status": "Running",
+      "trafficAllocation": [
+        {
+          "endOfRange": 0,
+          "entityId": "$opt_dummy_variation_id"
+        }
+      ],
+      "variations": [
+        {
+          "featureEnabled": false,
+          "id": "$opt_dummy_variation_id",
+          "key": "ho_off_key"
+        }
+      ],
+      "excludeTargetedDeliveries": true
     }
   ],
   "localHoldouts": [

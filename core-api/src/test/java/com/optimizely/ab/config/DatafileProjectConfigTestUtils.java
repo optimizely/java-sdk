@@ -546,6 +546,7 @@ public final class DatafileProjectConfigTestUtils {
             assertThat(actualHoldout.getAudienceConditions(), is(expectedHoldout.getAudienceConditions()));
             assertThat(actualHoldout.getIncludedRules(), is(expectedHoldout.getIncludedRules()));
             assertThat(actualHoldout.isGlobal(), is(expectedHoldout.isGlobal()));
+            assertThat(actualHoldout.isExcludeTargetedDeliveries(), is(expectedHoldout.isExcludeTargetedDeliveries()));
             verifyVariations(actualHoldout.getVariations(), expectedHoldout.getVariations());
             verifyTrafficAllocations(actualHoldout.getTrafficAllocation(),
                 expectedHoldout.getTrafficAllocation());

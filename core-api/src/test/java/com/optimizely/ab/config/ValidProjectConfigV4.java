@@ -570,6 +570,28 @@ public class ValidProjectConfigV4 {
             )
     );
 
+    // Dedicated 0% traffic holdout used solely to verify excludeTargetedDeliveries parsing
+    // across all 4 ConfigParser implementations, without affecting decision-path tests
+    // (no user is ever bucketed into a 0%-traffic holdout).
+    public static final Holdout HOLDOUT_ETD_PARSER_COVERAGE = new Holdout(
+            "1007532345431",
+            "holdout_etd_parser_coverage",
+            Holdout.HoldoutStatus.RUNNING.toString(),
+            Collections.<String>emptyList(),
+            null,
+            DatafileProjectConfigTestUtils.createListOfObjects(
+                VARIATION_HOLDOUT_VARIATION_OFF
+            ),
+            DatafileProjectConfigTestUtils.createListOfObjects(
+                new TrafficAllocation(
+                        "$opt_dummy_variation_id",
+                        0
+                )
+            ),
+            null,
+            true
+    );
+
 
     public static final Holdout HOLDOUT_TYPEDAUDIENCE_HOLDOUT = new Holdout(
             "10075323429",
@@ -1685,6 +1707,7 @@ public class ValidProjectConfigV4 {
         holdouts.add(HOLDOUT_ZERO_TRAFFIC_HOLDOUT);
         holdouts.add(HOLDOUT_BASIC_HOLDOUT);
         holdouts.add(HOLDOUT_TYPEDAUDIENCE_HOLDOUT);
+        holdouts.add(HOLDOUT_ETD_PARSER_COVERAGE);
         holdouts.add(HOLDOUT_LOCAL_FOR_BASIC_EXPERIMENT_PARSER);
 
         // list featureFlags
