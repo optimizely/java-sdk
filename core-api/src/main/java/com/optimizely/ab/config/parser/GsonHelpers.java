@@ -213,8 +213,8 @@ final class GsonHelpers {
         }
 
         boolean excludeTargetedDeliveries = false;
-        if (holdoutJson.has("exclude_targeted_deliveries") && !holdoutJson.get("exclude_targeted_deliveries").isJsonNull()) {
-            excludeTargetedDeliveries = holdoutJson.get("exclude_targeted_deliveries").getAsBoolean();
+        if (holdoutJson.has("excludeTargetedDeliveries") && !holdoutJson.get("excludeTargetedDeliveries").isJsonNull()) {
+            excludeTargetedDeliveries = holdoutJson.get("excludeTargetedDeliveries").getAsBoolean();
         }
 
         return new Holdout(id, key, status, audienceIds, conditions, variations, trafficAllocations, includedRules, excludeTargetedDeliveries);

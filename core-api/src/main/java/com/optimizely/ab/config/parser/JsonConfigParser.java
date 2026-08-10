@@ -239,8 +239,8 @@ final public class JsonConfigParser implements ConfigParser {
             }
 
             boolean excludeTargetedDeliveries = false;
-            if (holdoutObject.has("exclude_targeted_deliveries") && !holdoutObject.isNull("exclude_targeted_deliveries")) {
-                excludeTargetedDeliveries = holdoutObject.getBoolean("exclude_targeted_deliveries");
+            if (holdoutObject.has("excludeTargetedDeliveries") && !holdoutObject.isNull("excludeTargetedDeliveries")) {
+                excludeTargetedDeliveries = holdoutObject.getBoolean("excludeTargetedDeliveries");
             }
 
             holdouts.add(new Holdout(id, key, status, audienceIds, conditions, variations,
