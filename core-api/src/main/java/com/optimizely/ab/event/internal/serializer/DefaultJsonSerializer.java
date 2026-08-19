@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 import com.optimizely.ab.config.parser.MissingJsonParserException;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.concurrent.Callable;
 
 /**
  * Factory for generating {@link Serializer} instances, based on the json library available on the classpath.
@@ -48,22 +50,27 @@ public final class DefaultJsonSerializer {
     private static @Nonnull
     Serializer create() {
         Serializer serializer;
-
-        if (isPresent("com.fasterxml.jackson.databind.ObjectMapper")) {
-            serializer = new JacksonSerializer();
-        } else if (isPresent("com.google.gson.Gson")) {
-            serializer = new GsonSerializer();
-        } else if (isPresent("org.json.simple.JSONObject")) {
-            serializer = new JsonSimpleSerializer();
-        } else if (isPresent("org.json.JSONObject")) {
-            serializer = new JsonSerializer();
-        } else {
-            throw new MissingJsonParserException("unable to locate a JSON parser. "
-                + "Please see <link> for more information");
+        if ((serializer = tryCreate("com.fasterxml.jackson.databind.ObjectMapper", JacksonSerializer::new)) != null ||
+            (serializer = tryCreate("com.google.gson.Gson", GsonSerializer::new)) != null ||
+            (serializer = tryCreate("org.json.simple.JSONObject", JsonSimpleSerializer::new)) != null ||
+            (serializer = tryCreate("org.json.JSONObject", JsonSerializer::new)) != null) {
+            logger.debug("using json serializer: {}", serializer.getClass().getSimpleName());
+            return serializer;
         }
+        throw new MissingJsonParserException("unable to locate a JSON parser. "
+            + "Please see <link> for more information");
+    }
 
-        logger.debug("using json serializer: {}", serializer.getClass().getSimpleName());
-        return serializer;
+    private static @Nullable Serializer tryCreate(String className, Callable<Serializer> factory) {
+        if (!isPresent(className)) {
+            return null;
+        }
+        try {
+            return factory.call();
+        } catch (Throwable t) {
+            logger.warn("{} found on classpath but serializer init failed, trying next option.", className, t);
+            return null;
+        }
     }
 
     private static boolean isPresent(@Nonnull String className) {
