@@ -1,5 +1,16 @@
 # Optimizely Java X SDK Changelog
 
+## [4.6.0]
+September 2, 2026
+
+### New Features
+
+**Holdout Targeted Delivery Exclusion**: Holdouts can now be configured to exclude Targeted Delivery rules, so users held out of experiments still receive their Targeted Delivery experiences. This gives you a cleaner measure of experiment impact without holding users back from ongoing rollouts.
+
+- Fix excludeTargetedDeliveries parsing in Holdout config parsers ([#638](https://github.com/optimizely/java-sdk/pull/638))
+- Add holdout exclusion logic for Targeted Delivery rules ([#637](https://github.com/optimizely/java-sdk/pull/637))
+
+
 ## [4.5.0]
 July 7, 2026
 
