@@ -20,6 +20,7 @@ import javax.annotation.Nonnull;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.ToNumberPolicy;
 import com.optimizely.ab.config.DatafileProjectConfig;
 import com.optimizely.ab.config.Experiment;
 import com.optimizely.ab.config.FeatureFlag;
@@ -37,6 +38,7 @@ final public class GsonConfigParser implements ConfigParser {
 
     public GsonConfigParser() {
         this(new GsonBuilder()
+            .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
             .registerTypeAdapter(Audience.class, new AudienceGsonDeserializer())
             .registerTypeAdapter(TypedAudience.class, new AudienceGsonDeserializer())
             .registerTypeAdapter(Experiment.class, new ExperimentGsonDeserializer())
