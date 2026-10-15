@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2017, 2019, Optimizely, Inc. and contributors                        *
+ * Copyright 2017, 2019, 2026, Optimizely, Inc. and contributors                  *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -15,7 +15,11 @@
  ***************************************************************************/
 package com.optimizely.ab.bucketing;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import com.optimizely.ab.config.ExperimentCore;
 import com.optimizely.ab.config.Variation;
@@ -45,12 +49,8 @@ public class FeatureDecision {
     @Nullable
     public String cmabUuid;
 
-    @Nullable
-    public FeatureDecision holdoutDecision;
-
-    public void setHoldoutDecision(@Nullable FeatureDecision holdoutDecision) {
-        this.holdoutDecision = holdoutDecision;
-    }
+    @Nonnull
+    public List<FeatureDecision> holdoutDecisions = new ArrayList<>();
 
     public enum DecisionSource {
         FEATURE_TEST("feature-test"),

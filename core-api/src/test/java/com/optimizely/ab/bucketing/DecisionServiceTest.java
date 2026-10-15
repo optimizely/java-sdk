@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2017-2022, 2024, Optimizely, Inc. and contributors             *
+ * Copyright 2017-2022, 2024, 2026, Optimizely, Inc. and contributors       *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -1832,10 +1832,10 @@ public class DecisionServiceTest {
 
     /**
      * Local holdout hit: a user bucketed into a local holdout targeting experiment rule X
-     * receives the holdout variation for that rule; regular rule evaluation is skipped.
+     * is excluded from that rule; the hit is recorded and evaluation continues.
      */
     @Test
-    public void localHoldout_userInLocalHoldoutReceivesHoldoutVariation() {
+    public void localHoldout_hitIsRecordedAndEvaluationContinues() {
         // Config has only a local holdout targeting EXPERIMENT_BASIC_EXPERIMENT_ID (100% traffic)
         ProjectConfig localHoldoutConfig = ValidProjectConfigV4.generateValidProjectConfigV4_localHoldout();
 
@@ -1850,10 +1850,15 @@ public class DecisionServiceTest {
             localHoldoutConfig
         ).getResult();
 
-        assertEquals("User should be in holdout, not regular experiment",
-            FeatureDecision.DecisionSource.HOLDOUT, featureDecision.decisionSource);
-        assertEquals(ValidProjectConfigV4.HOLDOUT_LOCAL_FOR_BASIC_EXPERIMENT, featureDecision.experiment);
-        assertEquals(VARIATION_HOLDOUT_VARIATION_OFF, featureDecision.variation);
+        assertNotNull(featureDecision);
+        assertNull(featureDecision.experiment);
+        assertNull(featureDecision.variation);
+        assertNull(featureDecision.decisionSource);
+        assertEquals(1, featureDecision.holdoutDecisions.size());
+        FeatureDecision holdoutDecision = featureDecision.holdoutDecisions.get(0);
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, holdoutDecision.decisionSource);
+        assertEquals(ValidProjectConfigV4.HOLDOUT_LOCAL_FOR_BASIC_EXPERIMENT, holdoutDecision.experiment);
+        assertEquals(VARIATION_HOLDOUT_VARIATION_OFF, holdoutDecision.variation);
 
         logbackVerifier.expectMessage(Level.INFO,
             "User (any_user) is in variation (ho_off_key) of holdout (local_holdout_basic_experiment).");
@@ -1986,8 +1991,8 @@ public class DecisionServiceTest {
         assertTrue("With excludeTargetedDeliveries=true and no rollout, variation should be null",
             decision == null || decision.variation == null);
         if (decision != null) {
-            assertNotNull("holdoutDecision should be attached", decision.holdoutDecision);
-            assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecision.decisionSource);
+            assertEquals("holdoutDecision should be attached", 1, decision.holdoutDecisions.size());
+            assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecisions.get(0).decisionSource);
         }
     }
 
@@ -2025,8 +2030,8 @@ public class DecisionServiceTest {
         assertTrue("When excludeTargetedDeliveries=true and no delivery match, variation should be null",
             decision == null || decision.variation == null);
         if (decision != null) {
-            assertNotNull("holdoutDecision should be attached", decision.holdoutDecision);
-            assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecision.decisionSource);
+            assertEquals("holdoutDecision should be attached", 1, decision.holdoutDecisions.size());
+            assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecisions.get(0).decisionSource);
         }
     }
 
@@ -2062,8 +2067,9 @@ public class DecisionServiceTest {
         ).getResult();
 
         assertNotNull(decision);
-        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.decisionSource);
-        assertEquals(HOLDOUT_LOCAL_EXCLUDE_TARGETED_DELIVERIES, decision.experiment);
+        assertNotEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.decisionSource);
+        assertEquals(1, decision.holdoutDecisions.size());
+        assertEquals(HOLDOUT_LOCAL_EXCLUDE_TARGETED_DELIVERIES, decision.holdoutDecisions.get(0).experiment);
     }
 
     @Test
@@ -2123,8 +2129,9 @@ public class DecisionServiceTest {
         ).getResult();
 
         assertNotNull(decision);
-        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.decisionSource);
-        assertEquals(HOLDOUT_LOCAL_EXCLUDE_TARGETED_DELIVERIES, decision.experiment);
+        assertNotEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.decisionSource);
+        assertEquals(1, decision.holdoutDecisions.size());
+        assertEquals(HOLDOUT_LOCAL_EXCLUDE_TARGETED_DELIVERIES, decision.holdoutDecisions.get(0).experiment);
     }
 
     @Test
@@ -2162,10 +2169,10 @@ public class DecisionServiceTest {
 
         assertNotNull(decision);
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT, decision.decisionSource);
-        assertNotNull("holdoutDecision should be attached when user is in holdout with excludeTargetedDeliveries=true",
-            decision.holdoutDecision);
-        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecision.decisionSource);
-        assertEquals(HOLDOUT_GLOBAL_EXCLUDE_TARGETED_DELIVERIES, decision.holdoutDecision.experiment);
+        assertEquals("holdoutDecision should be attached when user is in holdout with excludeTargetedDeliveries=true",
+            1, decision.holdoutDecisions.size());
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecisions.get(0).decisionSource);
+        assertEquals(HOLDOUT_GLOBAL_EXCLUDE_TARGETED_DELIVERIES, decision.holdoutDecisions.get(0).experiment);
     }
 
     @Test

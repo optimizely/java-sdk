@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright 2016-2024, Optimizely, Inc. and contributors                   *
+ * Copyright 2016-2024, 2026, Optimizely, Inc. and contributors                *
  *                                                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");          *
  * you may not use this file except in compliance with the License.         *
@@ -1356,17 +1356,19 @@ public class Optimizely implements AutoCloseable {
                 cmabUuid);
         }
 
-        if (flagDecision.holdoutDecision != null && !allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
-            decisionEventDispatched = sendImpression(
-                projectConfig,
-                flagDecision.holdoutDecision.experiment,
-                userId,
-                copiedAttributes,
-                flagDecision.holdoutDecision.variation,
-                flagKey,
-                flagDecision.holdoutDecision.decisionSource != null ? flagDecision.holdoutDecision.decisionSource.toString() : FeatureDecision.DecisionSource.HOLDOUT.toString(),
-                flagDecision.holdoutDecision.variation != null && flagDecision.holdoutDecision.variation.getFeatureEnabled(),
-                null) || decisionEventDispatched;
+        if (!allOptions.contains(OptimizelyDecideOption.DISABLE_DECISION_EVENT)) {
+            for (FeatureDecision holdoutDecision : flagDecision.holdoutDecisions) {
+                decisionEventDispatched = sendImpression(
+                    projectConfig,
+                    holdoutDecision.experiment,
+                    userId,
+                    copiedAttributes,
+                    holdoutDecision.variation,
+                    flagKey,
+                    holdoutDecision.decisionSource != null ? holdoutDecision.decisionSource.toString() : FeatureDecision.DecisionSource.HOLDOUT.toString(),
+                    holdoutDecision.variation != null && holdoutDecision.variation.getFeatureEnabled(),
+                    null) || decisionEventDispatched;
+            }
         }
 
         DecisionNotification decisionNotification = DecisionNotification.newFlagDecisionNotificationBuilder()
