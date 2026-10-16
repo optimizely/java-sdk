@@ -351,16 +351,23 @@ public class DecisionService {
                 reasons.addInfo("Holdout \"%s\" has excludeTargetedDeliveries enabled, continuing to rollout evaluation.", globalHoldoutDecision.experiment.getKey());
             }
 
-            if (globalHoldoutDecision == null) {
+            List<FeatureDecision> holdoutDecisions = new ArrayList<>();
+            if (globalHoldoutDecision != null) {
+                holdoutDecisions.add(globalHoldoutDecision);
+            } else {
                 DecisionResponse<FeatureDecision> decisionVariationResponse = getVariationFromExperiment(projectConfig, featureFlag, user, options, userProfileTracker, decisionPath);
                 reasons.merge(decisionVariationResponse.getReasons());
 
                 FeatureDecision decision = decisionVariationResponse.getResult();
                 boolean error = decisionVariationResponse.isError();
 
-                if (decision != null) {
+                if (decision != null && (decision.variation != null || error)) {
+                    syncDeprecatedHoldoutDecision(decision);
                     decisions.add(new DecisionResponse(decision, reasons, error, decision.cmabUuid));
                     continue flagLoop;
+                }
+                if (decision != null) {
+                    holdoutDecisions.addAll(decision.holdoutDecisions);
                 }
             }
 
@@ -368,21 +375,20 @@ public class DecisionService {
             reasons.merge(decisionFeatureResponse.getReasons());
             FeatureDecision decision = decisionFeatureResponse.getResult();
 
-            if (decision != null && decision.variation != null) {
-                if (globalHoldoutDecision != null) {
-                    decision.setHoldoutDecision(globalHoldoutDecision);
+            if (!holdoutDecisions.isEmpty()) {
+                if (decision == null) {
+                    decision = new FeatureDecision(null, null, null);
                 }
+                decision.holdoutDecisions.addAll(0, holdoutDecisions);
+            }
+            syncDeprecatedHoldoutDecision(decision);
+
+            if (decision != null && decision.variation != null) {
                 String message = reasons.addInfo("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
                     user.getUserId(), featureFlag.getKey());
                 logger.info(message);
                 decisions.add(new DecisionResponse(decision, reasons));
             } else {
-                if (globalHoldoutDecision != null) {
-                    if (decision == null) {
-                        decision = new FeatureDecision(null, null, null);
-                    }
-                    decision.setHoldoutDecision(globalHoldoutDecision);
-                }
                 String message = reasons.addInfo("The user \"%s\" was not bucketed into a rollout for feature flag \"%s\".",
                     user.getUserId(), featureFlag.getKey());
                 logger.info(message);
@@ -395,6 +401,13 @@ public class DecisionService {
         }
 
         return decisions;
+    }
+
+    @SuppressWarnings("deprecation")
+    private static void syncDeprecatedHoldoutDecision(@Nullable FeatureDecision decision) {
+        if (decision != null && !decision.holdoutDecisions.isEmpty()) {
+            decision.setHoldoutDecision(decision.holdoutDecisions.get(0));
+        }
     }
 
     @Nonnull
@@ -422,6 +435,7 @@ public class DecisionService {
         DecisionReasons reasons = DefaultDecisionReasons.newInstance();
         // Cache flagKey once to avoid multiple getKey() calls (important for mock-based tests)
         String flagKey = featureFlag.getKey();
+        List<FeatureDecision> holdoutDecisions = new ArrayList<>();
         if (!featureFlag.getExperimentIds().isEmpty()) {
             for (String experimentId : featureFlag.getExperimentIds()) {
                 Experiment experiment = projectConfig.getExperimentIdMapping().get(experimentId);
@@ -430,7 +444,12 @@ public class DecisionService {
                     getVariationFromExperimentRule(projectConfig, flagKey, experiment, user, options, userProfileTracker, decisionPath);
                 reasons.merge(decisionVariation.getReasons());
                 FeatureDecision featureDecision = decisionVariation.getResult();
+                if (featureDecision != null && featureDecision.decisionSource == FeatureDecision.DecisionSource.HOLDOUT) {
+                    holdoutDecisions.add(featureDecision);
+                    continue;
+                }
                 if (decisionVariation.isError() || (featureDecision != null && featureDecision.variation != null)) {
+                    featureDecision.holdoutDecisions.addAll(holdoutDecisions);
                     return new DecisionResponse(featureDecision, reasons, decisionVariation.isError(), decisionVariation.getCmabUuid());
                 }
             }
@@ -439,6 +458,11 @@ public class DecisionService {
             logger.info(message);
         }
 
+        if (!holdoutDecisions.isEmpty()) {
+            FeatureDecision emptyDecision = new FeatureDecision(null, null, null);
+            emptyDecision.holdoutDecisions.addAll(holdoutDecisions);
+            return new DecisionResponse(emptyDecision, reasons);
+        }
         return new DecisionResponse(null, reasons);
 
     }
@@ -480,6 +504,7 @@ public class DecisionService {
         }
 
 
+        List<FeatureDecision> holdoutDecisions = new ArrayList<>();
         int index = 0;
         while (index < rolloutRulesLength) {
             Experiment rolloutRule = rollout.getExperiments().get(index);
@@ -496,7 +521,13 @@ public class DecisionService {
             AbstractMap.SimpleEntry<FeatureDecision, Boolean> response = decisionVariationResponse.getResult();
             FeatureDecision featureDecision = response.getKey();
             Boolean skipToEveryoneElse = response.getValue();
+            if (featureDecision != null && featureDecision.decisionSource == FeatureDecision.DecisionSource.HOLDOUT) {
+                holdoutDecisions.add(featureDecision);
+                index++;
+                continue;
+            }
             if (featureDecision != null) {
+                featureDecision.holdoutDecisions.addAll(holdoutDecisions);
                 return new DecisionResponse(featureDecision, reasons);
             }
 
@@ -504,7 +535,9 @@ public class DecisionService {
             index = skipToEveryoneElse ? (rolloutRulesLength - 1) : (index + 1);
         }
 
-        return new DecisionResponse(new FeatureDecision(null, null, null), reasons);
+        FeatureDecision emptyDecision = new FeatureDecision(null, null, null);
+        emptyDecision.holdoutDecisions.addAll(holdoutDecisions);
+        return new DecisionResponse(emptyDecision, reasons);
     }
 
     /**

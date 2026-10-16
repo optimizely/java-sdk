@@ -2204,4 +2204,184 @@ public class OptimizelyUserContextTest {
         logbackVerifier.expectMessage(Level.INFO, expectedReason);
     }
 
+    private Optimizely createOptimizelyWithLocalHoldouts(boolean sendFlagDecisions) throws Exception {
+        String datafile = Resources.toString(Resources.getResource("config/local-holdouts-project-config.json"), Charsets.UTF_8);
+        if (!sendFlagDecisions) {
+            datafile = datafile.replace("\"sendFlagDecisions\": true", "\"sendFlagDecisions\": false");
+        }
+        return new Optimizely.Builder().withDatafile(datafile).withEventProcessor(new ForwardingEventProcessor(eventHandler, null)).build();
+    }
+
+    private void expectLocalHoldoutImpression(String holdoutId, String holdoutKey, String flagKey, Map<String, ?> attributes) {
+        DecisionMetadata metadata = new DecisionMetadata.Builder()
+            .setFlagKey(flagKey)
+            .setRuleKey(holdoutKey)
+            .setRuleType("holdout")
+            .setVariationKey("ho_off_key")
+            .setEnabled(false)
+            .build();
+        eventHandler.expectImpression(holdoutId, null, userId, attributes, metadata);
+    }
+
+    private void expectRuleImpression(String experimentId, String variationId, String flagKey, String ruleKey, String ruleType, String variationKey, Map<String, ?> attributes) {
+        DecisionMetadata metadata = new DecisionMetadata.Builder()
+            .setFlagKey(flagKey)
+            .setRuleKey(ruleKey)
+            .setRuleType(ruleType)
+            .setVariationKey(variationKey)
+            .setEnabled(true)
+            .build();
+        eventHandler.expectImpression(experimentId, variationId, userId, attributes, metadata);
+    }
+
+    @Test
+    public void decide_localHoldoutOnFirstExperimentRule_servedBySecondExperimentRule() throws Exception {
+        Optimizely opt = createOptimizelyWithLocalHoldouts(true);
+        Map<String, Object> attrs = Collections.singletonMap("lh", "exp1");
+
+        OptimizelyDecision decision = opt.createUserContext(userId, attrs).decide("lh_flag");
+
+        assertEquals("exp_2_on", decision.getVariationKey());
+        assertEquals("exp_rule_2", decision.getRuleKey());
+        assertTrue(decision.getEnabled());
+        expectRuleImpression("5200000002", "5200000012", "lh_flag", "exp_rule_2", "feature-test", "exp_2_on", attrs);
+        expectLocalHoldoutImpression("5300000001", "lh_exp_rule_1", "lh_flag", attrs);
+    }
+
+    @Test
+    public void decide_localHoldoutsOnSeveralRules_sendEventPerHit() throws Exception {
+        Optimizely opt = createOptimizelyWithLocalHoldouts(true);
+        Map<String, Object> attrs = Collections.singletonMap("lh", "exp1,exp2");
+
+        OptimizelyDecision decision = opt.createUserContext(userId, attrs).decide("lh_flag");
+
+        assertEquals("delivery_on", decision.getVariationKey());
+        assertEquals("delivery_rule", decision.getRuleKey());
+        expectRuleImpression("5400000001", "5400000011", "lh_flag", "delivery_rule", "rollout", "delivery_on", attrs);
+        expectLocalHoldoutImpression("5300000001", "lh_exp_rule_1", "lh_flag", attrs);
+        expectLocalHoldoutImpression("5300000002", "lh_exp_rule_2", "lh_flag", attrs);
+    }
+
+    @Test
+    public void decide_localHoldoutHitAndNoRuleServes_stillSendsHoldoutEvents() throws Exception {
+        Optimizely opt = createOptimizelyWithLocalHoldouts(true);
+        Map<String, Object> attrs = Collections.singletonMap("lh", "delivery,everyone");
+
+        OptimizelyDecision decision = opt.createUserContext(userId, attrs).decide("lh_delivery_flag");
+
+        assertNull(decision.getVariationKey());
+        assertNull(decision.getRuleKey());
+        assertFalse(decision.getEnabled());
+        DecisionMetadata offMetadata = new DecisionMetadata.Builder()
+            .setFlagKey("lh_delivery_flag")
+            .setRuleKey("")
+            .setRuleType("rollout")
+            .setVariationKey("")
+            .setEnabled(false)
+            .build();
+        eventHandler.expectImpression(null, null, userId, attrs, offMetadata);
+        expectLocalHoldoutImpression("5300000003", "lh_delivery_rule", "lh_delivery_flag", attrs);
+        expectLocalHoldoutImpression("5300000004", "lh_everyone_else_rule", "lh_delivery_flag", attrs);
+    }
+
+    @Test
+    public void decide_localHoldoutOnDeliveryRule_sendsHoldoutEventWhenSendFlagDecisionsOff() throws Exception {
+        Optimizely opt = createOptimizelyWithLocalHoldouts(false);
+        Map<String, Object> attrs = Collections.singletonMap("lh", "delivery");
+
+        OptimizelyDecision decision = opt.createUserContext(userId, attrs).decide("lh_delivery_flag");
+
+        assertEquals("everyone_else_on", decision.getVariationKey());
+        assertEquals("everyone_else_rule", decision.getRuleKey());
+        assertTrue(decision.getEnabled());
+        expectLocalHoldoutImpression("5300000003", "lh_delivery_rule", "lh_delivery_flag", attrs);
+    }
+
+    @Test
+    public void decide_localHoldoutOnFirstDeliveryRule_servedBySecondDeliveryRule() throws Exception {
+        Optimizely opt = createOptimizelyWithLocalHoldouts(true);
+        Map<String, Object> attrs = Collections.emptyMap();
+
+        OptimizelyDecision decision = opt.createUserContext(userId, attrs).decide("lh_multi_delivery_flag");
+
+        assertEquals("second_delivery_on", decision.getVariationKey());
+        assertEquals("second_delivery_rule", decision.getRuleKey());
+        assertTrue(decision.getEnabled());
+        expectRuleImpression("5400000004", "5400000014", "lh_multi_delivery_flag", "second_delivery_rule", "rollout", "second_delivery_on", attrs);
+        expectLocalHoldoutImpression("5300000006", "lh_first_delivery_rule", "lh_multi_delivery_flag", attrs);
+    }
+
+    @Test
+    public void decide_localHoldoutWithDisableDecisionEvent_sendsNoEvents() throws Exception {
+        Optimizely opt = createOptimizelyWithLocalHoldouts(true);
+        Map<String, Object> attrs = Collections.singletonMap("lh", "exp1,delivery");
+
+        OptimizelyDecision decision = opt.createUserContext(userId, attrs)
+            .decide("lh_flag", Collections.singletonList(OptimizelyDecideOption.DISABLE_DECISION_EVENT));
+
+        assertEquals("exp_2_on", decision.getVariationKey());
+        eventHandler.expectCalls(0);
+    }
+
+    @Test
+    public void decide_oneLocalHoldoutOnTwoRules_sendsEventPerRule() throws Exception {
+        Optimizely opt = createOptimizelyWithLocalHoldouts(true);
+        Map<String, Object> attrs = Collections.singletonMap("lh", "multi");
+
+        OptimizelyDecision decision = opt.createUserContext(userId, attrs).decide("lh_flag");
+
+        assertEquals("delivery_on", decision.getVariationKey());
+        expectRuleImpression("5400000001", "5400000011", "lh_flag", "delivery_rule", "rollout", "delivery_on", attrs);
+        expectLocalHoldoutImpression("5300000005", "lh_both_exp_rules", "lh_flag", attrs);
+        expectLocalHoldoutImpression("5300000005", "lh_both_exp_rules", "lh_flag", attrs);
+    }
+
+    @Test
+    public void decide_noLocalHoldoutHit_servedByFirstRule() throws Exception {
+        Optimizely opt = createOptimizelyWithLocalHoldouts(true);
+        Map<String, Object> attrs = Collections.singletonMap("lh", "none");
+
+        OptimizelyDecision decision = opt.createUserContext(userId, attrs).decide("lh_flag");
+
+        assertEquals("exp_1_on", decision.getVariationKey());
+        assertEquals("exp_rule_1", decision.getRuleKey());
+        expectRuleImpression("5200000001", "5200000011", "lh_flag", "exp_rule_1", "feature-test", "exp_1_on", attrs);
+    }
+
+    @Test
+    public void isFeatureEnabled_skipsLocallyHeldOutRuleWithoutHoldoutEvent() throws Exception {
+        Optimizely opt = createOptimizelyWithLocalHoldouts(true);
+        Map<String, Object> attrs = Collections.singletonMap("lh", "exp1");
+
+        assertTrue(opt.isFeatureEnabled("lh_flag", userId, attrs));
+
+        expectRuleImpression("5200000002", "5200000012", "lh_flag", "exp_rule_2", "feature-test", "exp_2_on", attrs);
+    }
+
+    @Test
+    public void decideForKeys_localHoldoutHitThenCmabError_returnsErrorAndSendsNoEventsForFlag() throws Exception {
+        String datafile = Resources.toString(Resources.getResource("config/local-holdouts-project-config.json"), Charsets.UTF_8);
+        com.optimizely.ab.cmab.service.CmabService mockCmabService = mock(com.optimizely.ab.cmab.service.CmabService.class);
+        when(mockCmabService.getDecision(any(), any(), any(), any())).thenThrow(new RuntimeException("CMAB fetch failed"));
+        Optimizely opt = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .withCmabService(mockCmabService)
+            .build();
+        Map<String, Object> attrs = Collections.singletonMap("lh", "exp1");
+
+        Map<String, OptimizelyDecision> decisions = opt.createUserContext(userId, attrs)
+            .decideForKeys(Arrays.asList("lh_cmab_flag", "lh_flag"));
+
+        OptimizelyDecision cmabDecision = decisions.get("lh_cmab_flag");
+        assertNull(cmabDecision.getVariationKey());
+        assertFalse(cmabDecision.getEnabled());
+        assertNull(cmabDecision.getRuleKey());
+        assertTrue(cmabDecision.getReasons().contains("Failed to fetch CMAB data for experiment cmab_rule."));
+
+        assertEquals("exp_2_on", decisions.get("lh_flag").getVariationKey());
+        expectRuleImpression("5200000002", "5200000012", "lh_flag", "exp_rule_2", "feature-test", "exp_2_on", attrs);
+        expectLocalHoldoutImpression("5300000001", "lh_exp_rule_1", "lh_flag", attrs);
+    }
+
 }
