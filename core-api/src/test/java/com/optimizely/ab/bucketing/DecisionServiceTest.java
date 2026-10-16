@@ -29,6 +29,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Rule;
@@ -59,6 +60,9 @@ import com.optimizely.ab.OptimizelyUserContext;
 import com.optimizely.ab.cmab.service.CmabService;
 import com.optimizely.ab.cmab.service.CmabDecision;
 import com.optimizely.ab.config.Cmab;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
+import com.optimizely.ab.config.DatafileProjectConfig;
 import com.optimizely.ab.config.DatafileProjectConfigTestUtils;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.noAudienceProjectConfigV3;
 import static com.optimizely.ab.config.DatafileProjectConfigTestUtils.validProjectConfigV3;
@@ -1864,6 +1868,52 @@ public class DecisionServiceTest {
             "User (any_user) is in variation (ho_off_key) of holdout (local_holdout_basic_experiment).");
     }
 
+    private ProjectConfig localHoldoutsProjectConfig() throws Exception {
+        String datafile = Resources.toString(Resources.getResource("config/local-holdouts-project-config.json"), Charsets.UTF_8);
+        return new DatafileProjectConfig.Builder().withDatafile(datafile).build();
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    public void localHoldout_hitsOnSeveralRules_deprecatedHoldoutDecisionIsFirstHit() throws Exception {
+        ProjectConfig config = localHoldoutsProjectConfig();
+        DecisionService decisionService = new DecisionService(new Bucketer(), mockErrorHandler, null, mockCmabService);
+
+        FeatureDecision decision = decisionService.getVariationForFeature(
+            config.getFeatureKeyMapping().get("lh_flag"),
+            optimizely.createUserContext("any_user", Collections.<String, Object>singletonMap("lh", "exp1,exp2")),
+            config
+        ).getResult();
+
+        assertNotNull(decision);
+        assertEquals(FeatureDecision.DecisionSource.ROLLOUT, decision.decisionSource);
+        assertEquals("delivery_rule", decision.experiment.getKey());
+        assertEquals(2, decision.holdoutDecisions.size());
+        assertEquals("lh_exp_rule_1", decision.holdoutDecisions.get(0).experiment.getKey());
+        assertEquals("lh_exp_rule_2", decision.holdoutDecisions.get(1).experiment.getKey());
+        assertSame(decision.holdoutDecisions.get(0), decision.holdoutDecision);
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    public void localHoldout_hitThenServedByLaterExperimentRule_deprecatedHoldoutDecisionIsFirstHit() throws Exception {
+        ProjectConfig config = localHoldoutsProjectConfig();
+        DecisionService decisionService = new DecisionService(new Bucketer(), mockErrorHandler, null, mockCmabService);
+
+        FeatureDecision decision = decisionService.getVariationForFeature(
+            config.getFeatureKeyMapping().get("lh_flag"),
+            optimizely.createUserContext("any_user", Collections.<String, Object>singletonMap("lh", "exp1")),
+            config
+        ).getResult();
+
+        assertNotNull(decision);
+        assertEquals(FeatureDecision.DecisionSource.FEATURE_TEST, decision.decisionSource);
+        assertEquals("exp_rule_2", decision.experiment.getKey());
+        assertEquals(1, decision.holdoutDecisions.size());
+        assertEquals("lh_exp_rule_1", decision.holdoutDecisions.get(0).experiment.getKey());
+        assertSame(decision.holdoutDecisions.get(0), decision.holdoutDecision);
+    }
+
     /**
      * Local holdout miss: when a user does not hit the local holdout, they fall through
      * to regular rule evaluation.
@@ -1976,6 +2026,7 @@ public class DecisionServiceTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void excludeTargetedDeliveries_globalHoldoutTrue_skipsExperimentRules() {
         ProjectConfig config = ValidProjectConfigV4.generateValidProjectConfigV4_globalHoldoutExcludeTargetedDeliveries();
 
@@ -1991,6 +2042,8 @@ public class DecisionServiceTest {
         assertTrue("With excludeTargetedDeliveries=true and no rollout, variation should be null",
             decision == null || decision.variation == null);
         if (decision != null) {
+            assertNotNull("holdoutDecision should be attached", decision.holdoutDecision);
+            assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecision.decisionSource);
             assertEquals("holdoutDecision should be attached", 1, decision.holdoutDecisions.size());
             assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecisions.get(0).decisionSource);
         }
@@ -2015,6 +2068,7 @@ public class DecisionServiceTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void excludeTargetedDeliveries_globalHoldoutTrue_noDeliveryMatch_returnsNullWithHoldoutAttached() {
         ProjectConfig config = ValidProjectConfigV4.generateValidProjectConfigV4_globalHoldoutExcludeTargetedDeliveries();
 
@@ -2030,6 +2084,8 @@ public class DecisionServiceTest {
         assertTrue("When excludeTargetedDeliveries=true and no delivery match, variation should be null",
             decision == null || decision.variation == null);
         if (decision != null) {
+            assertNotNull("holdoutDecision should be attached", decision.holdoutDecision);
+            assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecision.decisionSource);
             assertEquals("holdoutDecision should be attached", 1, decision.holdoutDecisions.size());
             assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecisions.get(0).decisionSource);
         }
@@ -2155,6 +2211,7 @@ public class DecisionServiceTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void globalHoldout_excludeTD_holdoutDecisionAttached() {
         ProjectConfig config = ValidProjectConfigV4.generateValidProjectConfigV4_globalHoldoutExcludeTargetedDeliveries();
 
@@ -2169,6 +2226,10 @@ public class DecisionServiceTest {
 
         assertNotNull(decision);
         assertEquals(FeatureDecision.DecisionSource.ROLLOUT, decision.decisionSource);
+        assertNotNull("holdoutDecision should be attached when user is in holdout with excludeTargetedDeliveries=true",
+            decision.holdoutDecision);
+        assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecision.decisionSource);
+        assertEquals(HOLDOUT_GLOBAL_EXCLUDE_TARGETED_DELIVERIES, decision.holdoutDecision.experiment);
         assertEquals("holdoutDecision should be attached when user is in holdout with excludeTargetedDeliveries=true",
             1, decision.holdoutDecisions.size());
         assertEquals(FeatureDecision.DecisionSource.HOLDOUT, decision.holdoutDecisions.get(0).decisionSource);

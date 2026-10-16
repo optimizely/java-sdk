@@ -49,8 +49,23 @@ public class FeatureDecision {
     @Nullable
     public String cmabUuid;
 
+    /**
+     * @deprecated use {@link #holdoutDecisions}
+     */
+    @Deprecated
+    @Nullable
+    public FeatureDecision holdoutDecision;
+
     @Nonnull
     public List<FeatureDecision> holdoutDecisions = new ArrayList<>();
+
+    /**
+     * @deprecated use {@link #holdoutDecisions}
+     */
+    @Deprecated
+    public void setHoldoutDecision(@Nullable FeatureDecision holdoutDecision) {
+        this.holdoutDecision = holdoutDecision;
+    }
 
     public enum DecisionSource {
         FEATURE_TEST("feature-test"),

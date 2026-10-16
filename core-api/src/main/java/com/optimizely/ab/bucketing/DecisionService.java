@@ -362,6 +362,7 @@ public class DecisionService {
                 boolean error = decisionVariationResponse.isError();
 
                 if (decision != null && (decision.variation != null || error)) {
+                    syncDeprecatedHoldoutDecision(decision);
                     decisions.add(new DecisionResponse(decision, reasons, error, decision.cmabUuid));
                     continue flagLoop;
                 }
@@ -380,6 +381,7 @@ public class DecisionService {
                 }
                 decision.holdoutDecisions.addAll(0, holdoutDecisions);
             }
+            syncDeprecatedHoldoutDecision(decision);
 
             if (decision != null && decision.variation != null) {
                 String message = reasons.addInfo("The user \"%s\" was bucketed into a rollout for feature flag \"%s\".",
@@ -399,6 +401,13 @@ public class DecisionService {
         }
 
         return decisions;
+    }
+
+    @SuppressWarnings("deprecation")
+    private static void syncDeprecatedHoldoutDecision(@Nullable FeatureDecision decision) {
+        if (decision != null && !decision.holdoutDecisions.isEmpty()) {
+            decision.setHoldoutDecision(decision.holdoutDecisions.get(0));
+        }
     }
 
     @Nonnull
