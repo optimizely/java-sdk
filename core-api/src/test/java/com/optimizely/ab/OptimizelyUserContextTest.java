@@ -2358,4 +2358,30 @@ public class OptimizelyUserContextTest {
         expectRuleImpression("5200000002", "5200000012", "lh_flag", "exp_rule_2", "feature-test", "exp_2_on", attrs);
     }
 
+    @Test
+    public void decideForKeys_localHoldoutHitThenCmabError_returnsErrorAndSendsNoEventsForFlag() throws Exception {
+        String datafile = Resources.toString(Resources.getResource("config/local-holdouts-project-config.json"), Charsets.UTF_8);
+        com.optimizely.ab.cmab.service.CmabService mockCmabService = mock(com.optimizely.ab.cmab.service.CmabService.class);
+        when(mockCmabService.getDecision(any(), any(), any(), any())).thenThrow(new RuntimeException("CMAB fetch failed"));
+        Optimizely opt = new Optimizely.Builder()
+            .withDatafile(datafile)
+            .withEventProcessor(new ForwardingEventProcessor(eventHandler, null))
+            .withCmabService(mockCmabService)
+            .build();
+        Map<String, Object> attrs = Collections.singletonMap("lh", "exp1");
+
+        Map<String, OptimizelyDecision> decisions = opt.createUserContext(userId, attrs)
+            .decideForKeys(Arrays.asList("lh_cmab_flag", "lh_flag"));
+
+        OptimizelyDecision cmabDecision = decisions.get("lh_cmab_flag");
+        assertNull(cmabDecision.getVariationKey());
+        assertFalse(cmabDecision.getEnabled());
+        assertNull(cmabDecision.getRuleKey());
+        assertTrue(cmabDecision.getReasons().contains("Failed to fetch CMAB data for experiment cmab_rule."));
+
+        assertEquals("exp_2_on", decisions.get("lh_flag").getVariationKey());
+        expectRuleImpression("5200000002", "5200000012", "lh_flag", "exp_rule_2", "feature-test", "exp_2_on", attrs);
+        expectLocalHoldoutImpression("5300000001", "lh_exp_rule_1", "lh_flag", attrs);
+    }
+
 }

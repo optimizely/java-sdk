@@ -60,6 +60,17 @@
       "trafficAllocation": [{"entityId": "5200000012", "endOfRange": 10000}],
       "audienceIds": [],
       "forcedVariations": {}
+    },
+    {
+      "id": "5200000003",
+      "key": "cmab_rule",
+      "layerId": "5200000103",
+      "status": "Running",
+      "variations": [{"id": "5200000013", "key": "cmab_on", "featureEnabled": true, "variables": []}],
+      "trafficAllocation": [],
+      "audienceIds": [],
+      "forcedVariations": {},
+      "cmab": {"attributeIds": [], "trafficAllocation": 10000}
     }
   ],
   "holdouts": [],
@@ -140,6 +151,13 @@
       "key": "lh_multi_delivery_flag",
       "rolloutId": "5400000200",
       "experimentIds": [],
+      "variables": []
+    },
+    {
+      "id": "5500000004",
+      "key": "lh_cmab_flag",
+      "rolloutId": "5400000100",
+      "experimentIds": ["5200000001", "5200000003"],
       "variables": []
     }
   ],
