@@ -1,5 +1,13 @@
 # Optimizely Java X SDK Changelog
 
+## [4.7.1]
+November 5, 2026
+
+### Test
+
+Do not merge. Verification of upstream dependency handling in the release flow.
+
+
 ## [4.7.0]
 October 30, 2026
 
