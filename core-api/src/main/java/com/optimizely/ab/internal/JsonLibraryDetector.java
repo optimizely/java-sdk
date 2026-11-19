@@ -40,18 +40,26 @@ public final class JsonLibraryDetector {
     }
 
     /**
+     * @param className fully qualified class name to check
+     * @return true if the class name is in the allowlist of supported JSON library classes
+     */
+    public static boolean isAllowed(String className) {
+        return className != null && ALLOWED_CLASS_NAMES.contains(className);
+    }
+
+    /**
      * @param className fully qualified class name to look for
      * @return true if the class is one of the supported JSON library classes and is present on the classpath,
      * false if it is absent or is not in the allowlist
      */
     public static boolean isPresent(String className) {
-        if (className == null || !ALLOWED_CLASS_NAMES.contains(className)) {
+        if (!isAllowed(className)) {
             return false;
         }
 
         try {
-            // nosemgrep: java.lang.security.audit.unsafe-reflection.unsafe-reflection
             // className is validated against the fixed allowlist above and the class is not initialized.
+            // nosemgrep: java.lang.security.audit.unsafe-reflection.unsafe-reflection
             Class.forName(className, false, JsonLibraryDetector.class.getClassLoader());
             return true;
         } catch (ClassNotFoundException e) {

@@ -71,6 +71,10 @@ public final class DefaultConfigParser {
             return supplier.get();
         }
 
+        String getClassName() {
+            return className;
+        }
+
         private boolean isPresent() {
             return JsonLibraryDetector.isPresent(className);
         }

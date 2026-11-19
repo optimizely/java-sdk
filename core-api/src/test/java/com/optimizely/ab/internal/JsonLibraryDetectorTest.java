@@ -38,6 +38,15 @@ public class JsonLibraryDetectorTest {
     }
 
     @Test
+    public void everyJsonParserProviderClassNameIsAllowlisted() {
+        // guards against adding a parser to the enum and forgetting the allowlist
+        for (JsonParserProvider provider : JsonParserProvider.values()) {
+            assertTrue(provider + " is missing from the JsonLibraryDetector allowlist",
+                JsonLibraryDetector.isAllowed(provider.getClassName()));
+        }
+    }
+
+    @Test
     public void unknownAndMalformedNamesAreRejected() {
         assertFalse(JsonLibraryDetector.isPresent(null));
         assertFalse(JsonLibraryDetector.isPresent(""));
