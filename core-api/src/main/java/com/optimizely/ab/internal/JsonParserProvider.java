@@ -34,12 +34,7 @@ public enum JsonParserProvider {
     }
 
     private boolean isAvailable() {
-        try {
-            Class.forName(className);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
+        return JsonLibraryDetector.isPresent(className);
     }
 
     public static JsonParserProvider getDefaultParser() {
