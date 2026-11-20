@@ -33,13 +33,12 @@ public enum JsonParserProvider {
         this.className = className;
     }
 
+    String getClassName() {
+        return className;
+    }
+
     private boolean isAvailable() {
-        try {
-            Class.forName(className);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
+        return JsonLibraryDetector.isPresent(className);
     }
 
     public static JsonParserProvider getDefaultParser() {

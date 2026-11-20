@@ -16,6 +16,7 @@
  */
 package com.optimizely.ab.config.parser;
 
+import com.optimizely.ab.internal.JsonLibraryDetector;
 import com.optimizely.ab.internal.PropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,13 +71,12 @@ public final class DefaultConfigParser {
             return supplier.get();
         }
 
+        String getClassName() {
+            return className;
+        }
+
         private boolean isPresent() {
-            try {
-                Class.forName(className);
-                return true;
-            } catch (ClassNotFoundException e) {
-                return false;
-            }
+            return JsonLibraryDetector.isPresent(className);
         }
     }
     /**

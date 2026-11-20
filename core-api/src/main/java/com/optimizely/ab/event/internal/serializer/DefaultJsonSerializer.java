@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.optimizely.ab.config.parser.MissingJsonParserException;
+import com.optimizely.ab.internal.JsonLibraryDetector;
 
 import javax.annotation.Nonnull;
 
@@ -67,12 +68,7 @@ public final class DefaultJsonSerializer {
     }
 
     private static boolean isPresent(@Nonnull String className) {
-        try {
-            Class.forName(className);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
+        return JsonLibraryDetector.isPresent(className);
     }
 
     //======== Lazy-init Holder ========//
